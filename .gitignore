@@ -1,0 +1,6 @@
+vendor
+.phpunit.*
+data
+.php_cs.cache
+.idea
+.vscode

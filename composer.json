@@ -1,0 +1,52 @@
+{
+    "name": "chemaclass/gacela",
+    "type": "library",
+    "description": "Gacela is a nice animal...",
+    "keywords": ["php","modular","kernel"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jose Maria Valera Reales",
+            "email": "chemaclass@outlook.es"
+        },
+        {
+            "name": "Jesus Valera Reales",
+            "email": "jesus1902@outlook.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "vimeo/psalm": "^4.6",
+        "friendsofphp/php-cs-fixer": "^2.18",
+        "symfony/var-dumper": "^5.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gacela\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GacelaTest\\": "tests"
+        }
+    },
+    "scripts": {
+        "test-all": [
+            "@test-quality",
+            "@test-phpunit"
+        ],
+        "test-quality": [
+            "@csrun",
+            "@psalm"
+        ],
+        "test-phpunit": "./vendor/bin/phpunit --testsuite=integration,unit",
+        "test-phpunit:coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=integration,unit --coverage-html=data/coverage-html --coverage-xml=data/coverage-xml --log-junit=data/coverage-xml/junit.xml",
+        "test-infection": "XDEBUG_MODE=coverage ./vendor/bin/infection --threads=4 --only-covered --coverage=data/coverage-xml",
+        "psalm": "./vendor/bin/psalm",
+        "csfix": "./vendor/bin/php-cs-fixer fix --allow-risky=yes",
+        "csrun": "./vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run"
+    }
+}

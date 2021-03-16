@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="2"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="src" />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+<!--        <MissingClosureParamType errorLevel="suppress"/>-->
+<!--        <MissingClosureReturnType errorLevel="suppress"/>-->
+        <UnresolvableInclude errorLevel="suppress"/>
+        <ImplementedReturnTypeMismatch errorLevel="suppress"/>
+        <ImplicitToStringCast errorLevel="suppress"/>
+        <UndefinedMagicMethod errorLevel="suppress"/>
+        <InvalidStringClass errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

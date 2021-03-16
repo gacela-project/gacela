@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         defaultTestSuite="unit"
+         executionOrder="random"
+         processIsolation="false"
+         resolveDependencies="true"
+         stopOnFailure="false"
+         verbose="true"
+>
+    <php>
+        <ini name="error_reporting" value="-1" />
+    </php>
+
+    <testsuites>
+        <testsuite name="integration">
+            <directory suffix="Test.php">tests/Integration</directory>
+        </testsuite>
+
+        <testsuite name="unit">
+            <directory suffix="Test.php">tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </coverage>
+</phpunit>

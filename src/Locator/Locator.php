@@ -8,8 +8,6 @@ final class Locator
 {
     private ?ModuleProxy $moduleProxy = null;
 
-    private ?array $locator = null;
-
     private static ?self $instance = null;
 
     public static function getInstance(): self
@@ -32,22 +30,17 @@ final class Locator
     public function __call(string $moduleName, array $arguments = []): ModuleProxy
     {
         if ($this->moduleProxy === null) {
-            $this->moduleProxy = $this->getModuleProxy();
+            $this->moduleProxy = $this->prepareModuleProxy();
         }
 
         return $this->moduleProxy->setModuleName($moduleName);
     }
 
-    private function getModuleProxy(): ModuleProxy
+    private function prepareModuleProxy(): ModuleProxy
     {
-        $bundleProxy = new ModuleProxy();
-        if ($this->locator === null) {
-            $this->locator = [
-                new FacadeLocator(),
-            ];
-        }
-        $bundleProxy->setLocators($this->locator);
+        $moduleProxy = new ModuleProxy();
+        $moduleProxy->addLocator(new FacadeLocator());
 
-        return $bundleProxy;
+        return $moduleProxy;
     }
 }

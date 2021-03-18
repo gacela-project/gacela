@@ -31,18 +31,6 @@ final class ModuleProxy
     }
 
     /**
-     * @param LocatorInterface[] $locators
-     */
-    public function setLocators(array $locators = []): self
-    {
-        foreach ($locators as $locator) {
-            $this->addLocator($locator);
-        }
-
-        return $this;
-    }
-
-    /**
      * @throws \LogicException
      */
     public function addLocator(LocatorInterface $locator): self

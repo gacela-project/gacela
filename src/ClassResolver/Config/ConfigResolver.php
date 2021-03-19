@@ -12,11 +12,9 @@ final class ConfigResolver extends AbstractClassResolver
     protected const RESOLVABLE_TYPE = 'Config';
 
     /**
-     * @param object|string $callerClass
-     *
      * @throws ConfigNotFoundException
      */
-    public function resolve($callerClass): AbstractConfig
+    public function resolve(object $callerClass): AbstractConfig
     {
         /** @var ?AbstractConfig $resolved */
         $resolved = $this->doResolve($callerClass);

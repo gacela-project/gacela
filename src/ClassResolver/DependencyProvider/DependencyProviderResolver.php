@@ -12,11 +12,9 @@ final class DependencyProviderResolver extends AbstractClassResolver
     protected const RESOLVABLE_TYPE = 'DependencyProvider';
 
     /**
-     * @param object|string $callerClass
-     *
      * @throws DependencyProviderNotFoundException
      */
-    public function resolve($callerClass): AbstractDependencyProvider
+    public function resolve(object $callerClass): AbstractDependencyProvider
     {
         /** @var ?AbstractDependencyProvider $resolved */
         $resolved = $this->doResolve($callerClass);

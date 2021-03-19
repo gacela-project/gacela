@@ -8,28 +8,17 @@ use RuntimeException;
 
 final class ClassInfo
 {
-    private const KEY_MODULE_NAME = 1;
-
     private ?string $cacheKey = null;
     private string $callerModuleName = '';
+    private string $callerNamespace = '';
 
-    /**
-     * @param object|string $callerClass
-     */
-    public function setClass($callerClass): self
+    public function __construct(object $callerObject)
     {
-        if (is_object($callerClass)) {
-            $callerClass = get_class($callerClass);
-        }
+        $callerClass = get_class($callerObject);
+        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
 
-        $callerClassParts = [self::KEY_MODULE_NAME => $callerClass];
-        if ($this->isFullyQualifiedClassName($callerClass)) {
-            $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-        }
-
-        $this->callerModuleName = $callerClassParts[self::KEY_MODULE_NAME];
-
-        return $this;
+        $this->callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
+        $this->callerModuleName = $callerClassParts[count($callerClassParts) - 2];
     }
 
     public function getCacheKey(string $resolvableType): string
@@ -51,14 +40,19 @@ final class ClassInfo
         return (strpos($callerClass, '\\') !== false);
     }
 
-    /**
-     * @throws \RuntimeException
-     */
     public function getModule(): string
     {
         if (empty($this->callerModuleName)) {
             throw new RuntimeException('Could not extract a module name which is mandatory for the resolver to work!');
         }
         return $this->callerModuleName;
+    }
+
+    public function getFullNamespace(): string
+    {
+        if (empty($this->callerNamespace)) {
+            throw new RuntimeException('Could not extract the namespace which is mandatory for the resolver to work!');
+        }
+        return $this->callerNamespace;
     }
 }

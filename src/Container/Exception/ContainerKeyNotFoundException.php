@@ -14,8 +14,7 @@ final class ContainerKeyNotFoundException extends RuntimeException
      */
     public function __construct($callerClass, string $key)
     {
-        $classInfo = new ClassInfo();
-        $classInfo->setClass($callerClass);
+        $classInfo = new ClassInfo($callerClass);
 
         parent::__construct($this->buildMessage($classInfo, $key));
     }

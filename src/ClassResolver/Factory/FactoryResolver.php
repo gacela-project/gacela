@@ -16,11 +16,9 @@ final class FactoryResolver extends AbstractClassResolver
     protected const RESOLVABLE_TYPE = 'Factory';
 
     /**
-     * @param object|string $callerClass
-     *
      * @throws FactoryNotFoundException
      */
-    public function resolve($callerClass): AbstractFactory
+    public function resolve(object $callerClass): AbstractFactory
     {
         /** @var ?AbstractFactory $resolved */
         $resolved = $this->doResolve($callerClass);

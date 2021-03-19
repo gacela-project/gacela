@@ -6,8 +6,7 @@ namespace Gacela\ClassResolver\Factory;
 
 use Exception;
 use Gacela\ClassResolver\ClassInfo;
-use Gacela\ClassResolver\ClassResolverConfig;
-use Gacela\Config;
+use Gacela\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Exception\Backtrace;
 
 final class FactoryNotFoundException extends Exception
@@ -28,9 +27,8 @@ final class FactoryNotFoundException extends Exception
         $message .= 'You can fix this by adding the missing Factory to your module.';
 
         $message .= sprintf(
-            'E.g. %1$s\\%2$s\\%2$sFactory',
-            Config::get(ClassResolverConfig::PROJECT_NAMESPACE),
-            $callerClassInfo->getModule()
+            'E.g. %s',
+            (string)(new ClassNameFinder())->findClassName($callerClassInfo, 'Factory')
         ) . PHP_EOL;
 
         return $message . Backtrace::get();

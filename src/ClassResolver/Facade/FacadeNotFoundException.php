@@ -6,8 +6,7 @@ namespace Gacela\ClassResolver\Facade;
 
 use Exception;
 use Gacela\ClassResolver\ClassInfo;
-use Gacela\ClassResolver\ClassResolverConfig;
-use Gacela\Config;
+use Gacela\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Exception\Backtrace;
 
 final class FacadeNotFoundException extends Exception
@@ -28,9 +27,8 @@ final class FacadeNotFoundException extends Exception
         $message .= 'You can fix this by adding the missing Facade to your module.' . PHP_EOL;
 
         $message .= sprintf(
-            'E.g. %1$s\\%2$s\\%2$sFacade',
-            Config::get(ClassResolverConfig::PROJECT_NAMESPACE),
-            $callerClassInfo->getModule()
+            'E.g. %s',
+            (string)(new ClassNameFinder())->findClassName($callerClassInfo, 'Facade')
         ) . PHP_EOL;
 
         return $message . Backtrace::get();

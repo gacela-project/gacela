@@ -4,30 +4,23 @@ declare(strict_types=1);
 
 namespace Gacela\ClassResolver\ClassNameFinder;
 
-use Gacela\ClassResolver\ClassNameCandidatesBuilder\ClassNameCandidatesBuilderInterface;
+use Gacela\ClassResolver\ClassInfo;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
-    protected ClassNameCandidatesBuilderInterface $classNameCandidatesBuilder;
-
-    public function __construct(ClassNameCandidatesBuilderInterface $classNameCandidatesBuilder)
+    public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
     {
-        $this->classNameCandidatesBuilder = $classNameCandidatesBuilder;
-    }
+        $className = $this->buildClassName($classInfo, $resolvableType);
 
-    public function findClassName(string $moduleName, string $classNamePattern): ?string
-    {
-        $classNameCandidate = $this->classNameCandidatesBuilder->buildClassName($moduleName, $classNamePattern);
-
-        return $this->tryClassName($classNameCandidate);
-    }
-
-    private function tryClassName(string $classNameCandidate): ?string
-    {
-        if (class_exists($classNameCandidate)) {
-            return $classNameCandidate;
+        if (class_exists($className)) {
+            return $className;
         }
 
         return null;
+    }
+
+    private function buildClassName(ClassInfo $classInfo, string $resolvableType): string
+    {
+        return sprintf('\\%s\\%s%s', $classInfo->getFullNamespace(), $classInfo->getModule(), $resolvableType);
     }
 }

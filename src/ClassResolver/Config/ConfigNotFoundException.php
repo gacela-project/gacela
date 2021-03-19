@@ -6,8 +6,7 @@ namespace Gacela\ClassResolver\Config;
 
 use Exception;
 use Gacela\ClassResolver\ClassInfo;
-use Gacela\ClassResolver\ClassResolverConfig;
-use Gacela\Config;
+use Gacela\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Exception\Backtrace;
 
 final class ConfigNotFoundException extends Exception
@@ -28,9 +27,8 @@ final class ConfigNotFoundException extends Exception
         $message .= 'You can fix this by adding the missing Config to your module.' . PHP_EOL;
 
         $message .= sprintf(
-            'E.g. %s\\%2$s\\%2$sConfig',
-            Config::get(ClassResolverConfig::PROJECT_NAMESPACE),
-            $callerClassInfo->getModule()
+            'E.g. %s',
+            (string)(new ClassNameFinder())->findClassName($callerClassInfo, 'Config')
         ) . PHP_EOL;
 
         return $message . Backtrace::get();

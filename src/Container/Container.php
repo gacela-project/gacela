@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Container;
 
 use Gacela\Container\Exception\NotFoundException;
-use Gacela\Locator\Locator;
 
 final class Container implements ContainerInterface
 {
@@ -14,18 +13,6 @@ final class Container implements ContainerInterface
 
     /** @var mixed[] */
     private array $raw = [];
-
-    public function __construct(array $services = [])
-    {
-        foreach ($services as $key => $value) {
-            $this->set($key, $value);
-        }
-    }
-
-    public function getLocator(): Locator
-    {
-        return Locator::getInstance();
-    }
 
     /**
      * @param mixed $service

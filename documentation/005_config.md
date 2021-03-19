@@ -10,7 +10,7 @@ when you do the creation of your domain classes.
 See an example:
 
 ```php
-final class ModuleAConfig extends AbstractConfig
+final class ExampleModuleConfig extends AbstractConfig
 {
 public const NUMBER_OF_BARS = 'NUMBER_OF_BARS';
 
@@ -22,9 +22,9 @@ public const NUMBER_OF_BARS = 'NUMBER_OF_BARS';
 }
 
 /**
- * @method ModuleAConfig getConfig()
+ * @method ExampleModuleConfig getConfig()
  */
-final class ModuleAFactory extends AbstractFactory
+final class ExampleModuleFactory extends AbstractFactory
 {
     public function createFooService(): FooServiceInterface
     {
@@ -36,13 +36,13 @@ final class ModuleAFactory extends AbstractFactory
 }
 ```
 
-The Config is reading the data from the `app-src/config/config_default.php`. The data is easily accessible by using
+The Config is reading the data from the `src/config/config_default.php`. The data is easily accessible by using
 the `$this->get('key')` from Config.
 
 An example of that `config_default.php` would be:
 
-```
-php use YourApp\ModuleA\ModuleAConfig;
+```php
+use YourApp\ExampleModule\ExampleModuleConfig;
 
-$config[ModuleAConfig::NUMBER_OF_BARS] = 123;
+$config[ExampleModuleConfig::NUMBER_OF_BARS] = 123;
 ```

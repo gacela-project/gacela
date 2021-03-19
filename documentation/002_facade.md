@@ -3,15 +3,15 @@
 The Facade is the entry point of your module. See an example:
 
 ```php
-interface ModuleAFacadeInterface 
+interface ExampleModuleFacadeInterface 
 {
-    public function executeFooService(): void;
+    public function runFoo(): void;
 }
 
 /**
- * @method ModuleAFactory getFactory()
+ * @method ExampleModuleFactory getFactory()
  */
-final class ModuleAFacade extends AbstractFacade implements ModuleAFacadeInterface
+final class ExampleModuleFacade extends AbstractFacade implements ExampleModuleFacadeInterface
 {
     public function runFoo(): void
     {
@@ -25,7 +25,7 @@ final class ModuleAFacade extends AbstractFacade implements ModuleAFacadeInterfa
 A Facade is a ready to use thing:
 
 ```php 
-$facade = new ModuleAFacade();
+$facade = new ExampleModuleFacade();
 $facade->runFoo();
 ```
 

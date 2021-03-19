@@ -1,7 +1,7 @@
 {
     "name": "chemaclass/gacela",
     "type": "library",
-    "description": "Gacela is a nice animal...",
+    "description": "Gacela Framework",
     "keywords": ["php","modular","kernel"],
     "license": "MIT",
     "authors": [

@@ -9,12 +9,11 @@ abstract class AbstractConfig
     use ConfigResolverAwareTrait;
 
     /**
-     * @param string $key
      * @param mixed $default
      *
      * @return mixed
      */
-    protected function get($key, $default = null)
+    protected function get(string $key, $default = null)
     {
         return $this->getConfig()->get($key, $default);
     }

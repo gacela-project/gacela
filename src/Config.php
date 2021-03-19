@@ -9,8 +9,7 @@ use RuntimeException;
 
 final class Config
 {
-    public const CONFIG_FILE_PREFIX = '/config/config_';
-    public const CONFIG_FILE_SUFFIX = '.php';
+    public const CONFIG_FILE_PREFIX = '/config.php';
 
     public static string $applicationRootDir = '';
 
@@ -27,14 +26,13 @@ final class Config
     }
 
     /**
-     * @param string $key
      * @param mixed|null $default
      *
      * @throws \Exception
      *
      * @return mixed
      */
-    public static function get($key, $default = null)
+    public static function get(string $key, $default = null)
     {
         if (empty(static::$config)) {
             static::init();
@@ -64,19 +62,12 @@ final class Config
     public static function init(): void
     {
         $config = new ArrayObject();
-        // config_default.php
-        static::buildConfig('default', $config);
+        $fileName = static::$applicationRootDir . static::CONFIG_FILE_PREFIX;
 
-        static::$config = $config;
-    }
-
-    private static function buildConfig(string $type, ArrayObject $config): ArrayObject
-    {
-        $fileName = static::$applicationRootDir . static::CONFIG_FILE_PREFIX . $type . static::CONFIG_FILE_SUFFIX;
         if (file_exists($fileName)) {
             include $fileName;
         }
 
-        return $config;
+        static::$config = $config;
     }
 }

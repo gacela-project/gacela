@@ -5,9 +5,9 @@ To the Factory can access ONLY the Facade.
 
 ```php
 /**
- * @method ModuleAConfig getConfig()
+ * @method ExampleModuleConfig getConfig()
  */
-final class ModuleAFactory extends AbstractFactory
+final class ExampleModuleFactory extends AbstractFactory
 {
     public function createFooService(): FooServiceInterface
     {
@@ -19,9 +19,9 @@ final class ModuleAFactory extends AbstractFactory
 }
 
 /**
- * @method ModuleAFactory getFactory()
+ * @method ExampleModuleFactory getFactory()
  */
-final class ModuleAFacade extends AbstractFacade implements ModuleAFacadeInterface
+final class ExampleModuleFacade extends AbstractFacade implements ExampleModuleFacadeInterface
 {
     public function runFoo(): void
     {

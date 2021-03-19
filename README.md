@@ -14,11 +14,11 @@ Help your modules to interact with each other in a unified way by following thes
 - The Factory creates the objects from that module and has access to its own Config.
 - The Config can get the values from the "config_default.php" file.
 
-## Docu
+## Documentation
 
-- [How to start](docu/001_basic_concepts.md)
+- [How to start](documentation/001_basic_concepts.md)
 - How to start with these?
-  - [Facade](docu/002_facade.md)
-  - [Factory](docu/003_factory.md)
-  - [DependencyProvider](docu/004_dependency_provider.md)
-  - [Config](docu/005_config.md)
+  - [Facade](documentation/002_facade.md)
+  - [Factory](documentation/003_factory.md)
+  - [DependencyProvider](documentation/004_dependency_provider.md)
+  - [Config](documentation/005_config.md)

@@ -11,8 +11,7 @@ final class Config
 {
     public const CONFIG_FILE_PREFIX = '/config.php';
 
-    public static string $applicationRootDir = '';
-
+    private static string $applicationRootDir = '';
     private static ?ArrayObject $config = null;
     private static ?self $instance = null;
 
@@ -23,6 +22,16 @@ final class Config
         }
 
         return static::$instance;
+    }
+
+    public static function getApplicationRootDir(): string
+    {
+        return static::$applicationRootDir;
+    }
+
+    public static function setApplicationRootDir(string $dir): void
+    {
+        static::$applicationRootDir = $dir;
     }
 
     /**

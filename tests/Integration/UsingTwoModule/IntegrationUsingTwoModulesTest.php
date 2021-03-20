@@ -12,7 +12,7 @@ final class IntegrationUsingTwoModulesTest extends TestCase
 {
     public function setUp(): void
     {
-        Config::$applicationRootDir = __DIR__;
+        Config::setApplicationRootDir(__DIR__);
         Config::init();
     }
 

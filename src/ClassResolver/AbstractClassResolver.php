@@ -10,25 +10,27 @@ abstract class AbstractClassResolver
 {
     protected const RESOLVABLE_TYPE = '';
 
-    protected static ?ClassResolverFactory $classResolverFactory = null;
-
-    protected static ?ClassNameFinderInterface $classNameFinder = null;
-    protected ?ClassInfo $classInfo = null;
     /** @var object[] */
     protected static array $cachedInstances = [];
+
+    protected static ?ClassResolverFactory $classResolverFactory = null;
+    protected static ?ClassNameFinderInterface $classNameFinder = null;
+
+    protected ?ClassInfo $classInfo = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
     public function doResolve(object $callerClass): ?object
     {
         $this->setCallerObject($callerClass);
-
         $cacheKey = $this->findCacheKey();
 
         if ($cacheKey !== null && isset(static::$cachedInstances[$cacheKey])) {
             return static::$cachedInstances[$cacheKey];
         }
+
         $resolvedClassName = $this->resolveClassName();
+
         if ($resolvedClassName !== null) {
             $resolvedInstance = $this->createInstance($resolvedClassName);
             if ($cacheKey !== null) {

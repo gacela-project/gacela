@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Gacela\Container;
 
-use Gacela\Container\Exception\NotFoundException;
+use Gacela\Container\Exception\ContainerException;
 
 final class Container implements ContainerInterface
 {
-    /** @var mixed[] */
-    private array $services = [];
-
-    /** @var mixed[] */
+    /** @var array<string,mixed> */
     private array $raw = [];
+
+    /** @var array<string,mixed> */
+    private array $services = [];
 
     /**
      * @param mixed $service
@@ -28,14 +28,14 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * @throws NotFoundException
+     * @throws ContainerException
      *
      * @return mixed
      */
     public function get(string $id)
     {
         if (!$this->has($id)) {
-            throw new NotFoundException(sprintf('The requested service "%s" was not found in the container!', $id));
+            throw ContainerException::notFound($id);
         }
 
         if (
@@ -56,6 +56,9 @@ final class Container implements ContainerInterface
 
     public function remove(string $id): void
     {
-        unset($this->services[$id]);
+        unset(
+            $this->raw[$id],
+            $this->services[$id],
+        );
     }
 }

@@ -19,10 +19,6 @@ final class ExampleBDependencyProvider extends AbstractDependencyProvider
 
     private function addFacadeCalculator(Container $container): void
     {
-//        $container->set(self::FACADE_A, function (Container $container): ExampleAFacade {
-//            return $container->getLocator()->get(ExampleAFacade::class);
-//        });
-
         $container->set(self::FACADE_A, fn () => new ExampleAFacade());
     }
 }

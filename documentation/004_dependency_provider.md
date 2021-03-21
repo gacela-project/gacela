@@ -39,9 +39,7 @@ final class CalculatorDependencyProvider extends AbstractDependencyProvider
 
     private function addFacadeAnotherModule(Container $container): void
     {
-        $container->set(self::FACADE_ANOTHER_MODULE, function (Container $container) {
-            return $container->getLocator()->get(AnotherModuleFacade::class);
-        });
+        $container->set(self::FACADE_ANOTHER_MODULE, fn () => new AnotherModuleFacade());
     }
 }
 ```

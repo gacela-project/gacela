@@ -22,15 +22,11 @@ final class ExampleCDependencyProvider extends AbstractDependencyProvider
 
     private function addFacadeA(Container $container): void
     {
-        $container->set(self::FACADE_A, function (Container $container): ExampleAFacade {
-            return $container->getLocator()->get(ExampleAFacade::class);
-        });
+        $container->set(self::FACADE_A, new ExampleAFacade());
     }
 
     private function addFacadeB(Container $container): void
     {
-        $container->set(self::FACADE_B, function (Container $container): ExampleBFacade {
-            return $container->getLocator()->get(ExampleBFacade::class);
-        });
+        $container->set(self::FACADE_B, new ExampleBFacade());
     }
 }

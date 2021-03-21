@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration;
 
+use Gacela\ClassResolver\Config\ConfigNotFoundException;
+use Gacela\ClassResolver\Factory\FactoryNotFoundException;
 use Gacela\Config;
 use GacelaTest\Fixtures\ExampleA\ExampleAFacade;
 use GacelaTest\Fixtures\ExampleB\ExampleBFacade;
 use GacelaTest\Fixtures\ExampleC\ExampleCFacade;
+use GacelaTest\Fixtures\MissingConfigModule\MissingConfigModuleFacade;
+use GacelaTest\Fixtures\MissingFactoryModule\MissingFactoryModuleFacade;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
@@ -54,5 +58,21 @@ final class IntegrationTest extends TestCase
             ],
             $facade->greet('Gacela')
         );
+    }
+
+    public function testMissingFactoryModule(): void
+    {
+        $this->expectException(FactoryNotFoundException::class);
+
+        $facade = new MissingFactoryModuleFacade();
+        $facade->error();
+    }
+
+    public function testMissingConfigModule(): void
+    {
+        $this->expectException(ConfigNotFoundException::class);
+
+        $facade = new MissingConfigModuleFacade();
+        $facade->error();
     }
 }

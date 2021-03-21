@@ -44,7 +44,6 @@
         ],
         "test-phpunit": "./vendor/bin/phpunit --testsuite=integration",
         "test-phpunit:coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=integration --coverage-html=data/coverage-html --coverage-xml=data/coverage-xml --log-junit=data/coverage-xml/junit.xml",
-        "test-infection": "XDEBUG_MODE=coverage ./vendor/bin/infection --threads=4 --only-covered --coverage=data/coverage-xml",
         "psalm": "./vendor/bin/psalm",
         "csfix": "./vendor/bin/php-cs-fixer fix --allow-risky=yes",
         "csrun": "./vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run"

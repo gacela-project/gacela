@@ -33,17 +33,19 @@ rules:
 ## Documentation
 
 - [How to start](documentation/001_basic_concepts.md)
-- How to start with these?
-    - [Facade](documentation/002_facade.md)
-    - [Factory](documentation/003_factory.md)
-    - [DependencyProvider](documentation/004_dependency_provider.md)
-    - [Config](documentation/005_config.md)
+- Examples:
+    - [Facade](documentation/002_facade.md): The entry point of your module.
+    - [Factory](documentation/003_factory.md): The place where you create your domain services and objects.
+    - [DependencyProvider](documentation/004_dependency_provider.md): It defines the dependencies between modules.
+    - [Config](documentation/005_config.md): Reads the `config.php` key-values.
 
 ### Examples
 
-You can see an example of some modules under the tests folder. In `/tests/Fixtures/`, you will find:
+You can see an example of some modules under the `tests` folder.
 
-- `ExampleModuleCalculator`: an example of an independent module without interaction with other modules.
-- `ExampleModuleGreeting`: an example of a module which interact with another module.
+You can find three modules:
+- ExampleA: it doesn't interact with any other module.
+- ExampleB: it interacts with the ExampleA module.
+- ExampleC: it interacts with the ExampleA and ExampleB modules.
 
-You can see how they work by looking inside the `/tests/Integration/` directory.
+You can see how they work by looking inside the `IntegrationTest` directory.

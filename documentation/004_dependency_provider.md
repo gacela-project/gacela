@@ -1,39 +1,47 @@
+[Back to the index](../documentation)
+
 # Dependency Provider
 
 This is the place where you can define the dependencies that a particular module has with other modules.
 
-In this example you can see that in the `ModuleOne` we have a service (`FooService`) which needs the
-`ModuleTwoFacade` as a dependency, for example. For this we can define the dependency inside the
-`ExampleModuleOneDependencyProvider`.
+In this example you can see that in the `Calculator` we have a service (`Adder`) which needs the
+`AnotherModuleFacade` as a dependency. In this case, we can define the dependency inside the
+`CalculatorDependencyProvider`.
 
 ```php
-final class ModuleOneFactory extends AbstractFactory
+# src/Calculator/CalculatorFactory.php
+final class CalculatorFactory extends AbstractFactory
 {
-    public function createFooService(): FooServiceInterface
+    public function createAdder(): AdderInterface
     {
-        return new FooService(
-            $this->getModuleTwoFacade()
+        return new Adder(
+            $this->getAnotherModuleFacade()
         );
     }
     
-    private function getModuleTwoFacade(): ModuleTwoFacade
+    private function getAnotherModuleFacade(): AnotherModuleFacade
     {
-        return $this->getProvidedDependency(ModuleOneDependencyProvider::FACADE_MODULE_TWO);
+        return $this->getProvidedDependency(CalculatorDependencyProvider::FACADE_MODULE_TWO);
     }
 }
+```
 
-final class ModuleOneDependencyProvider extends AbstractDependencyProvider
+```php
+# src/Calculator/CalculatorDependencyProvider.php
+final class CalculatorDependencyProvider extends AbstractDependencyProvider
 {
-    public const FACADE_MODULE_TWO = 'FACADE_MODULE_TWO';
+    public const FACADE_ANOTHER_MODULE = 'FACADE_ANOTHER_MODULE';
 
     public function provideModuleDependencies(Container $container): void
     {
-        $this->addFacadeModuleTwo($container);
+        $this->addFacadeAnotherModule($container);
     }
 
-    private function addFacadeModuleTwo(Container $container): void
+    private function addFacadeAnotherModule(Container $container): void
     {
-        $container->set(self::FACADE_MODULE_TWO, fn () => new ModuleTwoFacade());
+        $container->set(self::FACADE_ANOTHER_MODULE, function (Container $container) {
+            return $container->getLocator()->get(AnotherModuleFacade::class);
+        });
     }
 }
 ```

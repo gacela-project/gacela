@@ -1,48 +1,55 @@
+[Back to the index](../documentation)
+
 # Config
 
-This is tightly coupled with the infrastructure layer, because there is IO involved!
-It's not bad itself, you just need to be aware of this, though. Bad will be if you use this directly in your domain
-services, then you would couple them with infrastructure code, and you would not be able to unit test them.
+You can simply use it in order to construct your business domain classes by injecting the data 
+from the Config using the Factory when you do the creation of your domain classes.
 
-The Config is used only via the Factory. How to properly use by injecting the data from the config using the Factory
-when you do the creation of your domain classes.
+Key-points here:
 
-See an example:
+- The Config will get the data from the `config.php`.
+- The data is easily accessible by using the `$this->get('key')`.
+- The Factory is the only one who can access the Config.
+
+> This is tightly coupled with the infrastructure layer, because there is IO involved. 
+> It's not bad itself, you just need to be aware of this, though. Bad will be if you use 
+> this directly in your domain services, because you would couple them with infrastructure code, 
+> and you would not be able to unit test them.
+
+### An example
 
 ```php
-final class ExampleModuleConfig extends AbstractConfig
-{
-public const NUMBER_OF_BARS = 'NUMBER_OF_BARS';
+# src/config.php
+use YourApp\Calculator\CalculatorConfig;
 
-    public function getNumberOfBars(): int
-    {
-        return $this->get(self::NUMBER_OF_BARS, $default = 0);
-    }
-    // ...
-}
+$config[CalculatorConfig::MAX_ADDITIONS] = 20;
+```
 
-/**
- * @method ExampleModuleConfig getConfig()
- */
-final class ExampleModuleFactory extends AbstractFactory
+```php
+# src/Calculator/CalculatorConfig.php
+final class CalculatorConfig extends AbstractConfig
 {
-    public function createFooService(): FooServiceInterface
+    public const MAX_ADDITIONS = 'MAX_ADDITIONS';
+
+    public function getMaxAdditions(): int
     {
-        return new FooService(
-            $this->getConfig()->getNumberOfBars()
-        );
+        return $this->get(self::MAX_ADDITIONS, $default = 0);
     }
-    // ...
 }
 ```
 
-The Config is reading the data from the `src/config/config_default.php`. The data is easily accessible by using
-the `$this->get('key')` from Config.
-
-An example of that `config_default.php` would be:
-
 ```php
-use YourApp\ExampleModule\ExampleModuleConfig;
-
-$config[ExampleModuleConfig::NUMBER_OF_BARS] = 123;
+# src/Calculator/CalculatorFactory.php
+/**
+ * @method CalculatorConfig getConfig()
+ */
+final class CalculatorFactory extends AbstractFactory
+{
+    public function createAdder(): AdderInterface
+    {
+        return new Adder(
+            $this->getConfig()->getMaxAdditions()
+        );
+    }
+}
 ```

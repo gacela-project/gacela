@@ -17,6 +17,7 @@ final class ExampleCFactory extends AbstractFactory
     public function createGreeter(): ServiceC
     {
         return new ServiceC(
+            $this->getConfig()->getNumber(),
             $this->getExampleAFacade(),
             $this->getExampleBFacade()
         );

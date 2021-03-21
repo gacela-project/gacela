@@ -8,4 +8,8 @@ use Gacela\AbstractConfig;
 
 final class ExampleCConfig extends AbstractConfig
 {
+    public function getNumber(): int
+    {
+        return $this->get('test-number');
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration;
 
+use Gacela\Config;
 use GacelaTest\Fixtures\ExampleA\ExampleAFacade;
 use GacelaTest\Fixtures\ExampleB\ExampleBFacade;
 use GacelaTest\Fixtures\ExampleC\ExampleCFacade;
@@ -11,6 +12,11 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::setApplicationRootDir(__DIR__);
+    }
+
     public function testExampleA(): void
     {
         $facade = new ExampleAFacade();
@@ -40,6 +46,7 @@ final class IntegrationTest extends TestCase
 
         self::assertEquals(
             [
+                '1',
                 'Hello, Gacela from A.',
                 'Hello, Gacela from A.',
                 'Hello, Gacela from B.',

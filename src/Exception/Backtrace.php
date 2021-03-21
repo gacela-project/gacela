@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Exception;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class Backtrace
 {
     private string $backtrace = '';

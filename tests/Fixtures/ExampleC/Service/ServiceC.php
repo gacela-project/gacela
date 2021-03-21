@@ -9,22 +9,24 @@ use GacelaTest\Fixtures\ExampleB\ExampleBFacade;
 
 final class ServiceC
 {
+    private int $number;
     private ExampleAFacade $exampleAFacade;
     private ExampleBFacade $exampleBFacade;
-    private ExampleBFacade $exampleBFacade2;
 
     public function __construct(
+        int $number,
         ExampleAFacade $exampleAFacade,
         ExampleBFacade $exampleBFacade
     ) {
+        $this->number = $number;
         $this->exampleAFacade = $exampleAFacade;
         $this->exampleBFacade = $exampleBFacade;
-//        $this->exampleBFacade2 = $exampleBFacade2;
     }
 
     public function greet(string $name): array
     {
         return array_merge(
+            [$this->number],
             $this->exampleAFacade->greet($name),
             $this->exampleBFacade->greet($name),
             ["Hello, $name from C."]

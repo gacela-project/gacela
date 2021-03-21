@@ -17,21 +17,21 @@ final class Config
 
     public static function getInstance(): self
     {
-        if (static::$instance === null) {
-            static::$instance = new self();
+        if (self::$instance === null) {
+            self::$instance = new self();
         }
 
-        return static::$instance;
+        return self::$instance;
     }
 
     public static function getApplicationRootDir(): string
     {
-        return static::$applicationRootDir;
+        return self::$applicationRootDir;
     }
 
     public static function setApplicationRootDir(string $dir): void
     {
-        static::$applicationRootDir = $dir;
+        self::$applicationRootDir = $dir;
     }
 
     /**
@@ -43,15 +43,15 @@ final class Config
      */
     public static function get(string $key, $default = null)
     {
-        if (empty(static::$config)) {
-            static::init();
+        if (empty(self::$config)) {
+            self::init();
         }
 
-        if (!static::hasValue($key) && $default !== null) {
+        if ($default !== null && !self::hasValue($key)) {
             return $default;
         }
 
-        if (!static::hasValue($key)) {
+        if (!self::hasValue($key)) {
             throw new RuntimeException(sprintf(
                 'Could not find config key "%s" in "%s"',
                 $key,
@@ -60,23 +60,23 @@ final class Config
         }
 
         /** @psalm-suppress PossiblyNullReference, PossiblyNullArrayAccess */
-        return static::$config[$key];
+        return self::$config[$key];
     }
 
     public static function hasValue(string $key): bool
     {
-        return isset(static::$config[$key]);
+        return isset(self::$config[$key]);
     }
 
     public static function init(): void
     {
         $config = new ArrayObject();
-        $fileName = static::$applicationRootDir . static::CONFIG_FILE_PREFIX;
+        $fileName = self::$applicationRootDir . self::CONFIG_FILE_PREFIX;
 
         if (file_exists($fileName)) {
             include $fileName;
         }
 
-        static::$config = $config;
+        self::$config = $config;
     }
 }

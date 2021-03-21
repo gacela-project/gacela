@@ -10,7 +10,7 @@ abstract class AbstractClassResolver
 {
     protected const RESOLVABLE_TYPE = '';
 
-    /** @var object[] */
+    /** @var array<string,mixed> */
     protected static array $cachedInstances = [];
 
     protected static ?ClassResolverFactory $classResolverFactory = null;
@@ -34,7 +34,7 @@ abstract class AbstractClassResolver
         if ($resolvedClassName !== null) {
             $resolvedInstance = $this->createInstance($resolvedClassName);
             if ($cacheKey !== null) {
-                static::$cachedInstances[$cacheKey] = $resolvedInstance;
+                self::$cachedInstances[$cacheKey] = $resolvedInstance;
             }
             return $resolvedInstance;
         }
@@ -81,10 +81,14 @@ abstract class AbstractClassResolver
     }
 
     /**
-     * @return object
+     * @return object|null
      */
     private function createInstance(string $resolvedClassName)
     {
+        if (!class_exists($resolvedClassName)) {
+            return null;
+        }
+
         return new $resolvedClassName();
     }
 

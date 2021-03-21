@@ -35,11 +35,11 @@ abstract class AbstractFactory
     {
         $containerKey = static::class;
 
-        if (!isset(static::$containers[$containerKey])) {
-            static::$containers[$containerKey] = $this->createContainerWithProvidedDependencies();
+        if (!isset(self::$containers[$containerKey])) {
+            self::$containers[$containerKey] = $this->createContainerWithProvidedDependencies();
         }
 
-        return static::$containers[$containerKey];
+        return self::$containers[$containerKey];
     }
 
     private function createContainerWithProvidedDependencies(): Container

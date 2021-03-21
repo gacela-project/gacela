@@ -14,6 +14,11 @@ final class Container implements ContainerInterface
     /** @var array<string,mixed> */
     private array $services = [];
 
+    public function getLocator(): Locator
+    {
+        return Locator::getInstance();
+    }
+
     /**
      * @param mixed $service
      */

@@ -1,4 +1,3 @@
-
 <p align="center">
   <a href="https://github.com/Chemaclass/gacela/actions">
     <img src="https://github.com/Chemaclass/gacela/workflows/CI/badge.svg" alt="GitHub Build Status">
@@ -22,19 +21,29 @@ This framework helps you to improve the design of your modules.
 
 ### What is the goal of this?
 
-Splitting your project into different modules will help them in terms of maintainability and scalability.
-Help your modules to interact with each other in a unified way by following these rules:
+Splitting your project into different modules will help the design of your project in terms of maintainability and
+scalability. It will certainly encourage your modules to interact with each other in a unified way by following these
+rules:
 
-- Different modules can interact ONLY via their Facade.
-- The Facade has access ONLY to the Factory.
-- The Factory creates the objects from that module and has access to its own Config.
-- The Config can get the values from the "config_default.php" file.
+- Different modules can interact **ONLY** via their `Facade`.
+- The `Facade` has access **ONLY** to the `Factory`.
+- The `Factory` creates the objects from that module and has access to the Module's `Config`.
+- The `Config` can get the values from the `/config.php` file at the root of the project.
 
 ## Documentation
 
 - [How to start](documentation/001_basic_concepts.md)
 - How to start with these?
-  - [Facade](documentation/002_facade.md)
-  - [Factory](documentation/003_factory.md)
-  - [DependencyProvider](documentation/004_dependency_provider.md)
-  - [Config](documentation/005_config.md)
+    - [Facade](documentation/002_facade.md)
+    - [Factory](documentation/003_factory.md)
+    - [DependencyProvider](documentation/004_dependency_provider.md)
+    - [Config](documentation/005_config.md)
+
+### Examples
+
+You can see an example of some modules under the tests folder. In `/tests/Fixtures/`, you will find:
+
+- `ExampleModuleCalculator`: an example of an independent module without interaction with other modules.
+- `ExampleModuleGreeting`: an example of a module which interact with another module.
+
+You can see how they work by looking inside the `/tests/Integration/` directory.

@@ -23,47 +23,33 @@ abstract class AbstractClassResolver
     public function doResolve(object $callerClass): ?object
     {
         $this->setCallerObject($callerClass);
-        $cacheKey = $this->findCacheKey();
+        $cacheKey = $this->getCacheKey();
 
-        if ($cacheKey !== null && isset(static::$cachedInstances[$cacheKey])) {
+        if (isset(static::$cachedInstances[$cacheKey])) {
             return static::$cachedInstances[$cacheKey];
         }
 
-        $resolvedClassName = $this->resolveClassName();
+        $resolvedClassName = $this->findClassName();
 
         if ($resolvedClassName !== null) {
             $resolvedInstance = $this->createInstance($resolvedClassName);
-            if ($cacheKey !== null) {
-                self::$cachedInstances[$cacheKey] = $resolvedInstance;
-            }
+            self::$cachedInstances[$cacheKey] = $resolvedInstance;
             return $resolvedInstance;
         }
 
         return null;
     }
 
-    public function setCallerObject(object $callerClass): self
+    public function setCallerObject(object $callerClass): void
     {
         $this->classInfo = new ClassInfo($callerClass);
-
-        return $this;
     }
 
-    public function getClassInfo(): ClassInfo
+    protected function getCacheKey(): string
     {
         assert($this->classInfo instanceof ClassInfo);
 
-        return $this->classInfo;
-    }
-
-    private function findCacheKey(): ?string
-    {
-        return $this->getCacheKey();
-    }
-
-    private function resolveClassName(): ?string
-    {
-        return $this->findClassName();
+        return $this->classInfo->getCacheKey(static::RESOLVABLE_TYPE);
     }
 
     private function findClassName(): ?string
@@ -80,6 +66,22 @@ abstract class AbstractClassResolver
         return static::$classNameFinder;
     }
 
+    private function getClassResolverFactory(): ClassResolverFactory
+    {
+        if (static::$classResolverFactory === null) {
+            static::$classResolverFactory = new ClassResolverFactory();
+        }
+
+        return static::$classResolverFactory;
+    }
+
+    public function getClassInfo(): ClassInfo
+    {
+        assert($this->classInfo instanceof ClassInfo);
+
+        return $this->classInfo;
+    }
+
     /**
      * @return object|null
      */
@@ -90,21 +92,5 @@ abstract class AbstractClassResolver
         }
 
         return new $resolvedClassName();
-    }
-
-    private function getClassResolverFactory(): ClassResolverFactory
-    {
-        if (static::$classResolverFactory === null) {
-            static::$classResolverFactory = new ClassResolverFactory();
-        }
-
-        return static::$classResolverFactory;
-    }
-
-    protected function getCacheKey(): string
-    {
-        assert($this->classInfo instanceof ClassInfo);
-
-        return $this->classInfo->getCacheKey(static::RESOLVABLE_TYPE);
     }
 }

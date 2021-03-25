@@ -21,7 +21,7 @@ final class CalculatorFactory extends AbstractFactory
     
     private function getAnotherModuleFacade(): AnotherModuleFacade
     {
-        return $this->getProvidedDependency(CalculatorDependencyProvider::FACADE_MODULE_TWO);
+        return $this->getProvidedDependency(CalculatorDependencyProvider::FACADE_ANOTHER_MODULE);
     }
 }
 ```

@@ -17,7 +17,7 @@ interface CalculatorFacadeInterface
 /**
  * @method CalculatorFactory getFactory()
  */
-final class CalculatorFacade extends AbstractFacade implements ModuleAFacadeInterface
+final class CalculatorFacade extends AbstractFacade implements CalculatorFacadeInterface
 {
     public function sum(int ...$numbers): int
     {
@@ -35,5 +35,5 @@ $facade = new CalculatorFacade();
 $result = $facade->sum(2, 3);  
 ```
 
-The Facade uses the Factory to create its domain instances and execute the desired behaviour from them. 
+The Facade uses the Factory to create the module's domain instances and executes the desired behaviour from them. 
 Nothing less, nothing more. 

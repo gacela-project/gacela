@@ -48,4 +48,4 @@ You can find three modules:
 - ExampleB: it interacts with the ExampleA module.
 - ExampleC: it interacts with the ExampleA and ExampleB modules.
 
-You can see how they work by looking inside the `IntegrationTest` directory.
+You can see how they work by looking inside the `Integration` directory.

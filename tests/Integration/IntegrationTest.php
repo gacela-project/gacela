@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         Config::setApplicationRootDir(__DIR__);
     }

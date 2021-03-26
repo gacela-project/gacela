@@ -3,7 +3,7 @@
 # Factory
 
 The Factory is the place where you create your domain services and objects. 
-The Facade is the only one who can access the Factory.
+The Facade is the class that can access the Factory.
 
 ```php
 # src/Calculator/CalculatorFactory.php
@@ -26,7 +26,7 @@ final class CalculatorFactory extends AbstractFactory
 /**
  * @method CalculatorFactory getFactory()
  */
-final class CalculatorFacade extends AbstractFacade implements ModuleAFacadeInterface
+final class CalculatorFacade extends AbstractFacade implements CalculatorFacadeInterface
 {
     public function sum(int ...$numbers): int
     {

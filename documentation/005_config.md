@@ -2,25 +2,25 @@
 
 # Config
 
-You can simply use it in order to construct your business domain classes by injecting the data 
+Use a Config Class to construct your business domain classes by injecting the data 
 from the Config using the Factory when you do the creation of your domain classes.
 
 Key-points here:
 
-- The Config will get the data from the `config.php`.
+- The Config will get the data from the `config.php` in your root directory.
 - The data is easily accessible by using the `$this->get('key')`.
-- The Factory is the only one who can access the Config.
+- The Factory is the only class that can access the Config.
 
-> This is tightly coupled with the infrastructure layer, because there is IO involved. 
-> It's not bad itself, you just need to be aware of this, though. Bad will be if you use 
-> this directly in your domain services, because you would couple them with infrastructure code, 
-> and you would not be able to unit test them.
+> This is tightly coupled with the infrastructure layer, because there is I/O involved. 
+> It's not bad itself, you just need to be aware of potential risks, though. Don't 
+> access data from `config.php` directly in your domain services.
+> In this way, you would couple your logic with infrastructure code, and not be able to unit test it.
 
 ### An example
 
 ```php
-# src/config.php
-use YourApp\Calculator\CalculatorConfig;
+# config.php
+use src\Calculator\CalculatorConfig;
 
 $config[CalculatorConfig::MAX_ADDITIONS] = 20;
 ```

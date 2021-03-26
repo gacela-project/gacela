@@ -9,7 +9,7 @@ use Gacela\AbstractFacade;
 /**
  * @method ExampleAFactory getFactory()
  */
-final class ExampleAFacade extends AbstractFacade
+final class ExampleAFacade extends AbstractFacade implements ExampleAFacadeInterface
 {
     public function greet(string $name): array
     {

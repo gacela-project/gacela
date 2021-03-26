@@ -13,6 +13,6 @@ final class MissingConfigModuleFacade extends AbstractFacade
 {
     public function error(): void
     {
-        $this->getFactory()->createGreeter();
+        $this->getFactory()->createDomainService();
     }
 }

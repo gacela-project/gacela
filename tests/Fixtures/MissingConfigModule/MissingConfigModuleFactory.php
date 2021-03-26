@@ -8,7 +8,7 @@ use Gacela\AbstractFactory;
 
 final class MissingConfigModuleFactory extends AbstractFactory
 {
-    public function createGreeter(): void
+    public function createDomainService(): void
     {
         $this->getConfig();
     }

@@ -6,16 +6,19 @@ namespace Gacela;
 
 use Gacela\ClassResolver\DependencyProvider\DependencyProviderResolver;
 use Gacela\Container\Container;
+use Gacela\Container\Exception\ContainerException;
 use Gacela\Container\Exception\ContainerKeyNotFoundException;
 
 abstract class AbstractFactory
 {
     use ConfigResolverAwareTrait;
+    use RepositoryResolverAwareTrait;
 
     /** @var Container[] */
     private static array $containers = [];
 
     /**
+     * @throws ContainerException
      * @throws ContainerKeyNotFoundException
      *
      * @return mixed

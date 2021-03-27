@@ -5,33 +5,28 @@ declare(strict_types=1);
 namespace Gacela\ClassResolver\ClassNameFinder;
 
 use Gacela\ClassResolver\ClassInfo;
+use Gacela\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
+    /** @var FinderRuleInterface[] */
+    private array $finderRules;
+
+    public function __construct(FinderRuleInterface ...$finderRules)
+    {
+        $this->finderRules = $finderRules;
+    }
+
     public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
     {
-        $className = $this->buildClassNameWithPrefix($classInfo, $resolvableType);
+        foreach ($this->finderRules as $finderRule) {
+            $className = $finderRule->buildClass($classInfo, $resolvableType);
 
-        if (class_exists($className)) {
-            return $className;
-        }
-
-        $className = $this->buildClassNameWithoutPrefix($classInfo, $resolvableType);
-
-        if (class_exists($className)) {
-            return $className;
+            if (class_exists($className)) {
+                return $className;
+            }
         }
 
         return null;
-    }
-
-    private function buildClassNameWithPrefix(ClassInfo $classInfo, string $resolvableType): string
-    {
-        return sprintf('\\%s\\%s%s', $classInfo->getFullNamespace(), $classInfo->getModule(), $resolvableType);
-    }
-
-    private function buildClassNameWithoutPrefix(ClassInfo $classInfo, string $resolvableType): string
-    {
-        return sprintf('\\%s\\%s', $classInfo->getFullNamespace(), $resolvableType);
     }
 }

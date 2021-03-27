@@ -10,7 +10,13 @@ final class ClassNameFinder implements ClassNameFinderInterface
 {
     public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
     {
-        $className = $this->buildClassName($classInfo, $resolvableType);
+        $className = $this->buildClassNameWithPrefix($classInfo, $resolvableType);
+
+        if (class_exists($className)) {
+            return $className;
+        }
+
+        $className = $this->buildClassNameWithoutPrefix($classInfo, $resolvableType);
 
         if (class_exists($className)) {
             return $className;
@@ -19,8 +25,13 @@ final class ClassNameFinder implements ClassNameFinderInterface
         return null;
     }
 
-    private function buildClassName(ClassInfo $classInfo, string $resolvableType): string
+    private function buildClassNameWithPrefix(ClassInfo $classInfo, string $resolvableType): string
     {
         return sprintf('\\%s\\%s%s', $classInfo->getFullNamespace(), $classInfo->getModule(), $resolvableType);
+    }
+
+    private function buildClassNameWithoutPrefix(ClassInfo $classInfo, string $resolvableType): string
+    {
+        return sprintf('\\%s\\%s', $classInfo->getFullNamespace(), $resolvableType);
     }
 }

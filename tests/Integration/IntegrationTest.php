@@ -8,8 +8,10 @@ use Gacela\ClassResolver\Config\ConfigNotFoundException;
 use Gacela\ClassResolver\Factory\FactoryNotFoundException;
 use Gacela\Config;
 use GacelaTest\Fixtures\ExampleA\ExampleAFacade;
+use GacelaTest\Fixtures\ExampleA2;
 use GacelaTest\Fixtures\ExampleB\ExampleBFacade;
 use GacelaTest\Fixtures\ExampleC\ExampleCFacade;
+use GacelaTest\Fixtures\ExampleC\ExampleD\ExampleDFacade;
 use GacelaTest\Fixtures\MissingConfigModule\MissingConfigModuleFacade;
 use GacelaTest\Fixtures\MissingFactoryModule\MissingFactoryModuleFacade;
 use PHPUnit\Framework\TestCase;
@@ -21,6 +23,9 @@ final class IntegrationTest extends TestCase
         Config::setApplicationRootDir(__DIR__);
     }
 
+    /**
+     * A module (ExampleA) in the root dir without any external module-dependencies.
+     */
     public function testExampleA(): void
     {
         $facade = new ExampleAFacade();
@@ -31,6 +36,22 @@ final class IntegrationTest extends TestCase
         );
     }
 
+    /**
+     * A module (ExampleA2) in the root dir without module-prefix in the class names.
+     */
+    public function testExampleA2(): void
+    {
+        $facade = new ExampleA2\Facade();
+
+        self::assertEquals(
+            ['Hello, Gacela from A.'],
+            $facade->greet('Gacela')
+        );
+    }
+
+    /**
+     * A module (ExampleB) in the root dir with one module-dependency (ExampleA).
+     */
     public function testExampleB(): void
     {
         $facade = new ExampleBFacade();
@@ -44,6 +65,9 @@ final class IntegrationTest extends TestCase
         );
     }
 
+    /**
+     * A module (ExampleC) in the root dir with multiple module-dependencies (ExampleA, ExampleB).
+     */
     public function testExampleC(): void
     {
         $facade = new ExampleCFacade();
@@ -56,6 +80,19 @@ final class IntegrationTest extends TestCase
                 'Hello, Gacela from B.',
                 'Hello, Gacela from C.',
             ],
+            $facade->greet('Gacela')
+        );
+    }
+
+    /**
+     * A module (ExampleD) inside another module (ExampleC).
+     */
+    public function testExampleD(): void
+    {
+        $facade = new ExampleDFacade();
+
+        self::assertEquals(
+            ['Hello, Gacela from A.'],
             $facade->greet('Gacela')
         );
     }

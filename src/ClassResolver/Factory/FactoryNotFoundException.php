@@ -6,7 +6,7 @@ namespace Gacela\ClassResolver\Factory;
 
 use Exception;
 use Gacela\ClassResolver\ClassInfo;
-use Gacela\ClassResolver\ClassNameFinder\ClassNameFinder;
+use Gacela\ClassResolver\ClassResolverFactory;
 use Gacela\Exception\Backtrace;
 
 final class FactoryNotFoundException extends Exception
@@ -28,9 +28,16 @@ final class FactoryNotFoundException extends Exception
 
         $message .= sprintf(
             'E.g. %s',
-            (string)(new ClassNameFinder())->findClassName($callerClassInfo, 'Factory')
+            $this->findClassNameExample($callerClassInfo, 'Factory')
         ) . PHP_EOL;
 
         return $message . Backtrace::get();
+    }
+
+    private function findClassNameExample(ClassInfo $callerClassInfo, string $resolvableType): string
+    {
+        return (string)(new ClassResolverFactory())
+            ->createClassNameFinder()
+            ->findClassName($callerClassInfo, $resolvableType);
     }
 }

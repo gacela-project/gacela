@@ -6,7 +6,7 @@ namespace Gacela\ClassResolver\Config;
 
 use Exception;
 use Gacela\ClassResolver\ClassInfo;
-use Gacela\ClassResolver\ClassNameFinder\ClassNameFinder;
+use Gacela\ClassResolver\ClassResolverFactory;
 use Gacela\Exception\Backtrace;
 
 final class ConfigNotFoundException extends Exception
@@ -28,9 +28,16 @@ final class ConfigNotFoundException extends Exception
 
         $message .= sprintf(
             'E.g. %s',
-            (string)(new ClassNameFinder())->findClassName($callerClassInfo, 'Config')
+            $this->findClassNameExample($callerClassInfo, 'Config')
         ) . PHP_EOL;
 
         return $message . Backtrace::get();
+    }
+
+    private function findClassNameExample(ClassInfo $callerClassInfo, string $resolvableType): string
+    {
+        return (string)(new ClassResolverFactory())
+            ->createClassNameFinder()
+            ->findClassName($callerClassInfo, $resolvableType);
     }
 }

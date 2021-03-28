@@ -9,17 +9,20 @@ use Gacela\ClassResolver\AbstractClassResolver;
 
 final class RepositoryResolver extends AbstractClassResolver
 {
-    protected const RESOLVABLE_TYPE = 'Repository';
-
     public function resolve(object $callerClass): AbstractRepository
     {
         /** @var ?AbstractRepository $resolved */
         $resolved = $this->doResolve($callerClass);
 
-        if ($resolved !== null) {
-            return $resolved;
+        if ($resolved === null) {
+            throw new RepositoryNotFoundException($this->getClassInfo());
         }
 
-        throw new RepositoryNotFoundException($this->getClassInfo());
+        return $resolved;
+    }
+
+    protected function getResolvableType(): string
+    {
+        return 'Repository';
     }
 }

@@ -21,10 +21,10 @@ abstract class AbstractFacade
 
     private function resolveFactory(): AbstractFactory
     {
-        return $this->getFactoryResolver()->resolve($this);
+        return $this->createFactoryResolver()->resolve($this);
     }
 
-    private function getFactoryResolver(): FactoryResolver
+    private function createFactoryResolver(): FactoryResolver
     {
         return new FactoryResolver();
     }

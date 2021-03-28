@@ -13,8 +13,6 @@ use Gacela\ClassResolver\AbstractClassResolver;
  */
 final class FactoryResolver extends AbstractClassResolver
 {
-    protected const RESOLVABLE_TYPE = 'Factory';
-
     /**
      * @throws FactoryNotFoundException
      */
@@ -23,10 +21,15 @@ final class FactoryResolver extends AbstractClassResolver
         /** @var ?AbstractFactory $resolved */
         $resolved = $this->doResolve($callerClass);
 
-        if ($resolved !== null) {
-            return $resolved;
+        if ($resolved === null) {
+            throw new FactoryNotFoundException($this->getClassInfo());
         }
 
-        throw new FactoryNotFoundException($this->getClassInfo());
+        return $resolved;
+    }
+
+    protected function getResolvableType(): string
+    {
+        return 'Factory';
     }
 }

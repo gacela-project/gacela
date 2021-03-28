@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace GacelaTest\Fixtures\ExampleB\Service;
 
-use GacelaTest\Fixtures\ExampleA\ExampleAFacade;
+use GacelaTest\Fixtures\ExampleA;
 
 final class ServiceB
 {
-    private ExampleAFacade $exampleAFacade;
+    private ExampleA\FacadeInterface $exampleAFacade;
 
-    public function __construct(ExampleAFacade $exampleAFacade)
+    public function __construct(ExampleA\FacadeInterface $exampleAFacade)
     {
         $this->exampleAFacade = $exampleAFacade;
     }

@@ -9,8 +9,6 @@ use Gacela\ClassResolver\AbstractClassResolver;
 
 final class ConfigResolver extends AbstractClassResolver
 {
-    protected const RESOLVABLE_TYPE = 'Config';
-
     /**
      * @throws ConfigNotFoundException
      */
@@ -19,10 +17,15 @@ final class ConfigResolver extends AbstractClassResolver
         /** @var ?AbstractConfig $resolved */
         $resolved = $this->doResolve($callerClass);
 
-        if ($resolved !== null) {
-            return $resolved;
+        if ($resolved === null) {
+            throw new ConfigNotFoundException($this->getClassInfo());
         }
 
-        throw new ConfigNotFoundException($this->getClassInfo());
+        return $resolved;
+    }
+
+    protected function getResolvableType(): string
+    {
+        return 'Config';
     }
 }

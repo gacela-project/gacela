@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Fixtures\ExampleA;
 
-use Gacela\AbstractConfig;
-
-final class ExampleAConfig extends AbstractConfig
+interface FacadeInterface
 {
+    public function greet(string $name): array;
 }

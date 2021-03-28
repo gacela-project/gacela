@@ -9,8 +9,6 @@ use Gacela\ClassResolver\AbstractClassResolver;
 
 final class DependencyProviderResolver extends AbstractClassResolver
 {
-    protected const RESOLVABLE_TYPE = 'DependencyProvider';
-
     /**
      * @throws DependencyProviderNotFoundException
      */
@@ -19,10 +17,15 @@ final class DependencyProviderResolver extends AbstractClassResolver
         /** @var ?AbstractDependencyProvider $resolved */
         $resolved = $this->doResolve($callerClass);
 
-        if ($resolved !== null) {
-            return $resolved;
+        if ($resolved === null) {
+            throw new DependencyProviderNotFoundException($this->getClassInfo());
         }
 
-        throw new DependencyProviderNotFoundException($this->getClassInfo());
+        return $resolved;
+    }
+
+    protected function getResolvableType(): string
+    {
+        return 'DependencyProvider';
     }
 }

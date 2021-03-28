@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Gacela\ClassResolver\ClassNameFinder\Rule;
 
 use Gacela\ClassResolver\ClassInfo;
+use Generator;
 
 interface FinderRuleInterface
 {
-    public function buildClass(ClassInfo $classInfo, string $resolvableType): string;
+    /**
+     * @return Generator<string>
+     */
+    public function buildClassCandidates(ClassInfo $classInfo, string $resolvableType): Generator;
 }

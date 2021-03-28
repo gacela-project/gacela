@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Fixtures\ExampleA2;
+namespace GacelaTest\Fixtures\ExampleC;
 
 interface FacadeInterface
 {

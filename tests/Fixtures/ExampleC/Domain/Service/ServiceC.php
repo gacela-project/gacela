@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Fixtures\ExampleC\Service;
+namespace GacelaTest\Fixtures\ExampleC\Domain\Service;
 
-use GacelaTest\Fixtures\ExampleA\ExampleAFacadeInterface;
-use GacelaTest\Fixtures\ExampleB\ExampleBFacadeInterface;
-use GacelaTest\Fixtures\ExampleC\ExampleCRepositoryInterface;
+use GacelaTest\Fixtures\ExampleA;
+use GacelaTest\Fixtures\ExampleB;
+use GacelaTest\Fixtures\ExampleC\Infrastructure\Persistence\RepositoryInterface;
 
 final class ServiceC
 {
     private int $number;
-    private ExampleAFacadeInterface $exampleAFacade;
-    private ExampleBFacadeInterface $exampleBFacade;
-    private ExampleCRepositoryInterface $repository;
+    private ExampleA\FacadeInterface $exampleAFacade;
+    private ExampleB\FacadeInterface $exampleBFacade;
+    private RepositoryInterface $repository;
 
     public function __construct(
         int $number,
-        ExampleAFacadeInterface $exampleAFacade,
-        ExampleBFacadeInterface $exampleBFacade,
-        ExampleCRepositoryInterface $repository
+        ExampleA\FacadeInterface $exampleAFacade,
+        ExampleB\FacadeInterface $exampleBFacade,
+        RepositoryInterface $repository
     ) {
         $this->number = $number;
         $this->exampleAFacade = $exampleAFacade;

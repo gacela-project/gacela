@@ -7,10 +7,7 @@ namespace GacelaTest\Fixtures\ExampleA;
 use Gacela\AbstractFactory;
 use GacelaTest\Fixtures\ExampleA\Service\ServiceA;
 
-/**
- * @method ExampleAConfig getConfig()
- */
-final class ExampleAFactory extends AbstractFactory
+final class Factory extends AbstractFactory
 {
     public function createServiceA(): ServiceA
     {

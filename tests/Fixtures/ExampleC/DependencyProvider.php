@@ -6,12 +6,10 @@ namespace GacelaTest\Fixtures\ExampleC;
 
 use Gacela\AbstractDependencyProvider;
 use Gacela\Container\Container;
-use GacelaTest\Fixtures\ExampleA\ExampleAFacade;
-use GacelaTest\Fixtures\ExampleA\ExampleAFacadeInterface;
-use GacelaTest\Fixtures\ExampleB\ExampleBFacade;
-use GacelaTest\Fixtures\ExampleB\ExampleBFacadeInterface;
+use GacelaTest\Fixtures\ExampleA\FacadeInterface as ExampleAFacade;
+use GacelaTest\Fixtures\ExampleB\FacadeInterface as ExampleBFacade;
 
-final class ExampleCDependencyProvider extends AbstractDependencyProvider
+final class DependencyProvider extends AbstractDependencyProvider
 {
     public const FACADE_A = 'FACADE_A';
     public const FACADE_B = 'FACADE_B';
@@ -24,14 +22,14 @@ final class ExampleCDependencyProvider extends AbstractDependencyProvider
 
     private function addFacadeA(Container $container): void
     {
-        $container->set(self::FACADE_A, function (Container $container): ExampleAFacadeInterface {
+        $container->set(self::FACADE_A, function (Container $container): ExampleAFacade {
             return $container->getLocator()->get(ExampleAFacade::class);
         });
     }
 
     private function addFacadeB(Container $container): void
     {
-        $container->set(self::FACADE_B, function (Container $container): ExampleBFacadeInterface {
+        $container->set(self::FACADE_B, function (Container $container): ExampleBFacade {
             return $container->getLocator()->get(ExampleBFacade::class);
         });
     }

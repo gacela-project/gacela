@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Fixtures\ExampleB;
+namespace GacelaTest\Fixtures\ExampleC;
 
 use Gacela\AbstractFacade;
 
 /**
- * @method ExampleBFactory getFactory()
+ * @method Factory getFactory()
  */
-final class ExampleBFacade extends AbstractFacade implements ExampleBFacadeInterface
+final class Facade extends AbstractFacade implements FacadeInterface
 {
     public function greet(string $name): array
     {

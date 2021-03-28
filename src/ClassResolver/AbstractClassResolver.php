@@ -8,8 +8,6 @@ use Gacela\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 
 abstract class AbstractClassResolver
 {
-    protected const RESOLVABLE_TYPE = '';
-
     /** @var array<string,mixed> */
     protected static array $cachedInstances = [];
 
@@ -19,6 +17,8 @@ abstract class AbstractClassResolver
     protected ?ClassInfo $classInfo = null;
 
     abstract public function resolve(object $callerClass): ?object;
+
+    abstract protected function getResolvableType(): string;
 
     public function doResolve(object $callerClass): ?object
     {
@@ -31,13 +31,13 @@ abstract class AbstractClassResolver
 
         $resolvedClassName = $this->findClassName();
 
-        if ($resolvedClassName !== null) {
-            $resolvedInstance = $this->createInstance($resolvedClassName);
-            self::$cachedInstances[$cacheKey] = $resolvedInstance;
-            return $resolvedInstance;
+        if ($resolvedClassName === null) {
+            return null;
         }
 
-        return null;
+        self::$cachedInstances[$cacheKey] = $this->createInstance($resolvedClassName);
+
+        return self::$cachedInstances[$cacheKey];
     }
 
     public function setCallerObject(object $callerClass): void
@@ -45,16 +45,19 @@ abstract class AbstractClassResolver
         $this->classInfo = new ClassInfo($callerClass);
     }
 
-    protected function getCacheKey(): string
+    private function getCacheKey(): string
     {
         assert($this->classInfo instanceof ClassInfo);
 
-        return $this->classInfo->getCacheKey(static::RESOLVABLE_TYPE);
+        return $this->classInfo->getCacheKey($this->getResolvableType());
     }
 
     private function findClassName(): ?string
     {
-        return $this->getClassNameFinder()->findClassName($this->getClassInfo(), static::RESOLVABLE_TYPE);
+        return $this->getClassNameFinder()->findClassName(
+            $this->getClassInfo(),
+            $this->getResolvableType()
+        );
     }
 
     private function getClassNameFinder(): ClassNameFinderInterface
@@ -87,10 +90,10 @@ abstract class AbstractClassResolver
      */
     private function createInstance(string $resolvedClassName)
     {
-        if (!class_exists($resolvedClassName)) {
-            return null;
+        if (class_exists($resolvedClassName)) {
+            return new $resolvedClassName();
         }
 
-        return new $resolvedClassName();
+        return null;
     }
 }

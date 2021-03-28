@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Fixtures\ExampleC;
+namespace GacelaTest\Fixtures\ExampleC\Infrastructure\Persistence;
 
 use Gacela\AbstractRepository;
 
-final class ExampleCRepository extends AbstractRepository implements ExampleCRepositoryInterface
+final class Repository extends AbstractRepository implements RepositoryInterface
 {
     public function findExampleQuery(): string
     {

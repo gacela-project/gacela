@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace GacelaTest\Fixtures\ExampleB;
 
 use Gacela\AbstractFactory;
-use GacelaTest\Fixtures\ExampleA\ExampleAFacade;
+use GacelaTest\Fixtures\ExampleA;
 use GacelaTest\Fixtures\ExampleB\Service\ServiceB;
 
-/**
- * @method ExampleBConfig getConfig()
- */
-final class ExampleBFactory extends AbstractFactory
+final class Factory extends AbstractFactory
 {
     public function createGreeter(): ServiceB
     {
@@ -20,8 +17,8 @@ final class ExampleBFactory extends AbstractFactory
         );
     }
 
-    private function getExampleAFacade(): ExampleAFacade
+    private function getExampleAFacade(): ExampleA\FacadeInterface
     {
-        return $this->getProvidedDependency(ExampleBDependencyProvider::FACADE_A);
+        return $this->getProvidedDependency(DependencyProvider::FACADE_A);
     }
 }

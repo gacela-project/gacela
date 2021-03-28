@@ -6,6 +6,8 @@ namespace Gacela\Container;
 
 final class Locator
 {
+    private const INTERFACE_SUFFIX = 'Interface';
+
     private static ?Locator $instance = null;
 
     /** @var mixed[] */
@@ -31,16 +33,27 @@ final class Locator
     /**
      * @return mixed
      */
-    public function get(string $id)
+    public function get(string $className)
     {
-        if (isset(static::$instanceCache[$id])) {
-            return static::$instanceCache[$id];
+        $concreteClass = $this->getConcreteClass($className);
+
+        if (isset(self::$instanceCache[$concreteClass])) {
+            return self::$instanceCache[$concreteClass];
         }
 
-        $newInstance = $this->newInstance($id);
-        static::$instanceCache[$id] = $newInstance;
+        $newInstance = $this->newInstance($concreteClass);
+        self::$instanceCache[$concreteClass] = $newInstance;
 
         return $newInstance;
+    }
+
+    private function getConcreteClass(string $className): string
+    {
+        if ($this->isInterface($className)) {
+            return $this->getConcreteClassFromInterface($className);
+        }
+
+        return $className;
     }
 
     /**
@@ -48,10 +61,20 @@ final class Locator
      */
     private function newInstance(string $className)
     {
-        if (!class_exists($className)) {
-            return $className;
+        if (class_exists($className)) {
+            return new $className();
         }
 
-        return new $className();
+        return $className;
+    }
+
+    private function isInterface(string $className): bool
+    {
+        return false !== strpos($className, self::INTERFACE_SUFFIX);
+    }
+
+    private function getConcreteClassFromInterface(string $interface): string
+    {
+        return str_replace(self::INTERFACE_SUFFIX, '', $interface);
     }
 }

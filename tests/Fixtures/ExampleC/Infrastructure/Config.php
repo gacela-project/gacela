@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Fixtures\ExampleC;
+namespace GacelaTest\Fixtures\ExampleC\Infrastructure;
 
 use Gacela\AbstractConfig;
 
-final class ExampleCConfig extends AbstractConfig
+final class Config extends AbstractConfig
 {
     public function getNumber(): int
     {

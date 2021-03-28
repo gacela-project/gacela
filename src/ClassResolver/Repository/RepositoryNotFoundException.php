@@ -8,7 +8,7 @@ use Exception;
 use Gacela\ClassResolver\ClassInfo;
 use Gacela\ClassResolver\ClassResolverExceptionTrait;
 
-class RepositoryNotFoundException extends Exception
+final class RepositoryNotFoundException extends Exception
 {
     use ClassResolverExceptionTrait;
 

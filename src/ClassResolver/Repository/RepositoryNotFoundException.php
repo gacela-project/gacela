@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Gacela\ClassResolver\Factory;
+namespace Gacela\ClassResolver\Repository;
 
 use Exception;
 use Gacela\ClassResolver\ClassInfo;
 use Gacela\ClassResolver\ClassResolverExceptionTrait;
 
-final class FactoryNotFoundException extends Exception
+final class RepositoryNotFoundException extends Exception
 {
     use ClassResolverExceptionTrait;
 
     public function __construct(ClassInfo $callerClassInfo)
     {
-        parent::__construct($this->buildMessage($callerClassInfo, 'Factory'));
+        parent::__construct($this->buildMessage($callerClassInfo, 'Repository'));
     }
 }

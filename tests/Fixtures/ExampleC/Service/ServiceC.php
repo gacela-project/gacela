@@ -4,23 +4,27 @@ declare(strict_types=1);
 
 namespace GacelaTest\Fixtures\ExampleC\Service;
 
-use GacelaTest\Fixtures\ExampleA\ExampleAFacade;
-use GacelaTest\Fixtures\ExampleB\ExampleBFacade;
+use GacelaTest\Fixtures\ExampleA\ExampleAFacadeInterface;
+use GacelaTest\Fixtures\ExampleB\ExampleBFacadeInterface;
+use GacelaTest\Fixtures\ExampleC\ExampleCRepositoryInterface;
 
 final class ServiceC
 {
     private int $number;
-    private ExampleAFacade $exampleAFacade;
-    private ExampleBFacade $exampleBFacade;
+    private ExampleAFacadeInterface $exampleAFacade;
+    private ExampleBFacadeInterface $exampleBFacade;
+    private ExampleCRepositoryInterface $repository;
 
     public function __construct(
         int $number,
-        ExampleAFacade $exampleAFacade,
-        ExampleBFacade $exampleBFacade
+        ExampleAFacadeInterface $exampleAFacade,
+        ExampleBFacadeInterface $exampleBFacade,
+        ExampleCRepositoryInterface $repository
     ) {
         $this->number = $number;
         $this->exampleAFacade = $exampleAFacade;
         $this->exampleBFacade = $exampleBFacade;
+        $this->repository = $repository;
     }
 
     public function greet(string $name): array
@@ -29,7 +33,8 @@ final class ServiceC
             [$this->number],
             $this->exampleAFacade->greet($name),
             $this->exampleBFacade->greet($name),
-            ["Hello, $name from C."]
+            ["Hello, $name from C."],
+            [$this->repository->findExampleQuery()],
         );
     }
 }

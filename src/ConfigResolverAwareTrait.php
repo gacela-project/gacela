@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela;
 
+use Gacela\ClassResolver\Config\ConfigNotFoundException;
 use Gacela\ClassResolver\Config\ConfigResolver;
 
 trait ConfigResolverAwareTrait
 {
     private ?AbstractConfig $config = null;
-
-    public function setConfig(AbstractConfig $config): self
-    {
-        $this->config = $config;
-
-        return $this;
-    }
 
     protected function getConfig(): AbstractConfig
     {
@@ -26,6 +20,9 @@ trait ConfigResolverAwareTrait
         return $this->config;
     }
 
+    /**
+     * @throws ConfigNotFoundException
+     */
     private function resolveConfig(): AbstractConfig
     {
         $resolver = new ConfigResolver();

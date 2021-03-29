@@ -6,7 +6,6 @@ namespace Gacela;
 
 use Gacela\ClassResolver\DependencyProvider\DependencyProviderResolver;
 use Gacela\Container\Container;
-use Gacela\Container\Exception\ContainerException;
 use Gacela\Container\Exception\ContainerKeyNotFoundException;
 
 abstract class AbstractFactory
@@ -17,7 +16,6 @@ abstract class AbstractFactory
     private static array $containers = [];
 
     /**
-     * @throws ContainerException
      * @throws ContainerKeyNotFoundException
      *
      * @return mixed
@@ -25,10 +23,6 @@ abstract class AbstractFactory
     protected function getProvidedDependency(string $key)
     {
         $container = $this->getContainer();
-
-        if ($container->has($key) === false) {
-            throw new ContainerKeyNotFoundException($this, $key);
-        }
 
         return $container->get($key);
     }

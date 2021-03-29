@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Container;
 
-use Gacela\Container\Exception\ContainerException;
+use Gacela\Container\Exception\ContainerKeyNotFoundException;
 
 final class Container implements ContainerInterface
 {
@@ -33,14 +33,14 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * @throws ContainerException
+     * @throws ContainerKeyNotFoundException
      *
      * @return mixed
      */
     public function get(string $id)
     {
         if (!$this->has($id)) {
-            throw ContainerException::notFound($id);
+            throw new ContainerKeyNotFoundException($this, $id);
         }
 
         if (

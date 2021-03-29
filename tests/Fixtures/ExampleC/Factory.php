@@ -7,12 +7,9 @@ namespace GacelaTest\Fixtures\ExampleC;
 use Gacela\AbstractFactory;
 use GacelaTest\Fixtures\ExampleA\FacadeInterface as ExampleAFacade;
 use GacelaTest\Fixtures\ExampleB\FacadeInterface as ExampleBFacade;
-use GacelaTest\Fixtures\ExampleC\Domain\Service\ServiceC;
-use GacelaTest\Fixtures\ExampleC\Infrastructure\Config;
-use GacelaTest\Fixtures\ExampleC\Infrastructure\Persistence\Repository;
+use GacelaTest\Fixtures\ExampleC\Service\ServiceC;
 
 /**
- * @method Repository getRepository()
  * @method Config getConfig()
  */
 final class Factory extends AbstractFactory
@@ -22,8 +19,7 @@ final class Factory extends AbstractFactory
         return new ServiceC(
             $this->getConfig()->getNumber(),
             $this->getExampleAFacade(),
-            $this->getExampleBFacade(),
-            $this->getRepository()
+            $this->getExampleBFacade()
         );
     }
 

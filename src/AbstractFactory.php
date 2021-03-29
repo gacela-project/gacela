@@ -12,7 +12,6 @@ use Gacela\Container\Exception\ContainerKeyNotFoundException;
 abstract class AbstractFactory
 {
     use ConfigResolverAwareTrait;
-    use RepositoryResolverAwareTrait;
 
     /** @var Container[] */
     private static array $containers = [];

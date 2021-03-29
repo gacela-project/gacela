@@ -12,8 +12,6 @@ final class FinderRuleWithModulePrefix extends AbstractFinderRule
     {
         return [
             '\\%s\\%s%s',
-            '\\%s\\Infrastructure\\%s%s',
-            '\\%s\\Infrastructure\\Persistence\\%s%s',
         ];
     }
 

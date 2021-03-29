@@ -64,7 +64,6 @@ final class IntegrationTest extends TestCase
                 'Hello, Gacela from A.',
                 'Hello, Gacela from B.',
                 'Hello, Gacela from C.',
-                'result from a repository',
             ],
             $facade->greet('Gacela')
         );

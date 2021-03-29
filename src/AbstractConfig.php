@@ -15,11 +15,6 @@ abstract class AbstractConfig
      */
     protected function get(string $key, $default = null)
     {
-        return $this->getConfig()->get($key, $default);
-    }
-
-    protected function getConfig(): Config
-    {
-        return Config::getInstance();
+        return Config::getInstance()->get($key, $default);
     }
 }

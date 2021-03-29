@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\MissingFile\MissingRepositoryFile;
+namespace GacelaTest\Integration\UsingConfig\SimpleModule;
 
 use Gacela\AbstractFacade;
 
@@ -11,8 +11,8 @@ use Gacela\AbstractFacade;
  */
 final class Facade extends AbstractFacade
 {
-    public function error(): void
+    public function doSomething(): int
     {
-        $this->getFactory()->createDomainService();
+        return $this->getFactory()->getNumber();
     }
 }

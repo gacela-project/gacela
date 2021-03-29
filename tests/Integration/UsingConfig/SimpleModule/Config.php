@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Fixtures\ExampleC;
+namespace GacelaTest\Integration\UsingConfig\SimpleModule;
 
 use Gacela\AbstractConfig;
 
@@ -10,6 +10,6 @@ final class Config extends AbstractConfig
 {
     public function getNumber(): int
     {
-        return $this->get('test-number');
+        return (int) $this->get('number');
     }
 }

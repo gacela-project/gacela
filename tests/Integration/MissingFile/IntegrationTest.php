@@ -7,7 +7,6 @@ namespace GacelaTest\Integration\MissingFile;
 use Gacela\ClassResolver\Config\ConfigNotFoundException;
 use Gacela\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
 use Gacela\ClassResolver\Factory\FactoryNotFoundException;
-use Gacela\ClassResolver\Repository\RepositoryNotFoundException;
 use Gacela\Container\Exception\ContainerKeyNotFoundException;
 use PHPUnit\Framework\TestCase;
 
@@ -29,14 +28,6 @@ final class IntegrationTest extends TestCase
         $facade->error();
     }
 
-    public function testMissingRepositoryModule(): void
-    {
-        $this->expectException(RepositoryNotFoundException::class);
-
-        $facade = new MissingRepositoryFile\Facade();
-        $facade->error();
-    }
-
     public function testMissingDependencyProviderModule(): void
     {
         $this->expectException(DependencyProviderNotFoundException::class);
@@ -50,14 +41,6 @@ final class IntegrationTest extends TestCase
         $this->expectException(ContainerKeyNotFoundException::class);
 
         $facade = new MissingContainerServiceKey\Facade();
-        $facade->error();
-    }
-
-    public function testRemoveKeyFromContainer(): void
-    {
-        $this->expectException(ContainerKeyNotFoundException::class);
-
-        $facade = new RemoveKeyFromContainer\Facade();
         $facade->error();
     }
 }

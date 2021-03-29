@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\MissingFile\RemoveKeyFromContainer;
+namespace GacelaTest\Integration\RemoveKeyFromContainer\AddAndRemoveKey;
 
 use Gacela\AbstractFacade;
 
@@ -11,7 +11,7 @@ use Gacela\AbstractFacade;
  */
 final class Facade extends AbstractFacade
 {
-    public function error(): void
+    public function doSomething(): void
     {
         $this->getFactory()->createDomainService();
     }

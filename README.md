@@ -26,26 +26,19 @@ scalability. It will certainly encourage your modules to interact with each othe
 rules:
 
 - Different modules can interact **ONLY** via their `Facade`.
-- The `Facade` has access **ONLY** to the `Factory`.
-- The `Factory` creates the objects from that module and has access to the Module's `Config`.
+- The `Facade` is the **ONLY** one who has access to the `Factory`.
+- The `Factory` creates the objects from the module and has access to the Module's `Config`.
 - The `Config` can get the values from the `/config.php` file at the root of the project.
+- The `DependencyProvider` uses the Locator to get the Facades from different modules.
 
 ## Documentation
 
 - [How to start](documentation/001_basic_concepts.md)
-- Examples:
-    - [Facade](documentation/002_facade.md): The entry point of your module.
-    - [Factory](documentation/003_factory.md): The place where you create your domain services and objects.
-    - [DependencyProvider](documentation/004_dependency_provider.md): It defines the dependencies between modules.
-    - [Config](documentation/005_config.md): Reads the `config.php` key-values.
+  - [Facade](documentation/002_facade.md): The entry point of your module.
+  - [Factory](documentation/003_factory.md): The place where you create your domain services and objects.
+  - [Config](documentation/004_config.md): Reads the `config.php` key-values.
+  - [DependencyProvider](documentation/005_dependency_provider.md): It defines the dependencies between modules.
 
 ### Examples
 
-You can see an example of some modules under the `tests` folder.
-
-You can find three modules:
-- ExampleA: it doesn't interact with any other module.
-- ExampleB: it interacts with the ExampleA module.
-- ExampleC: it interacts with the ExampleA and ExampleB modules.
-
-You can see how they work by looking inside the `Integration` directory.
+You can see an example of some modules under the `tests/Integration` folder.

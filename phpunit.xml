@@ -11,6 +11,7 @@
          resolveDependencies="true"
          stopOnFailure="false"
          verbose="true"
+         testdox="true"
 >
     <php>
         <ini name="error_reporting" value="-1" />

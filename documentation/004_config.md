@@ -22,7 +22,9 @@ Key-points here:
 # config.php
 use src\Calculator\CalculatorConfig;
 
-$config[CalculatorConfig::MAX_ADDITIONS] = 20;
+return [
+    CalculatorConfig::MAX_ADDITIONS => 20,
+];
 ```
 
 ```php

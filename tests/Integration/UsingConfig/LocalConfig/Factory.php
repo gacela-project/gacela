@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\UsingConfig\SimpleModule;
+namespace GacelaTest\Integration\UsingConfig\LocalConfig;
 
 use Gacela\AbstractFactory;
 
@@ -11,8 +11,8 @@ use Gacela\AbstractFactory;
  */
 final class Factory extends AbstractFactory
 {
-    public function getNumber(): int
+    public function getArrayConfig(): array
     {
-        return $this->getConfig()->getNumber();
+        return $this->getConfig()->getArrayConfig();
     }
 }

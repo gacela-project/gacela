@@ -1,6 +1,6 @@
+/data/
+/.idea/
+/.vscode/
+/vendor/
 .phpunit.*
 .php_cs.cache
-.idea
-.vscode
-vendor/
-data/

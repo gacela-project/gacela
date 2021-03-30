@@ -12,11 +12,19 @@ final class IntegrationTest extends TestCase
     public function setUp(): void
     {
         Config::setApplicationRootDir(__DIR__);
+        Config::init();
     }
 
     public function testRemoveKeyFromContainer(): void
     {
-        $facade = new SimpleModule\Facade();
-        self::assertSame(1, $facade->doSomething());
+        $facade = new LocalConfig\Facade();
+        self::assertSame(
+            [
+                'config' => 1,
+                'config_local' => 2,
+                'override' => 5,
+            ],
+            $facade->doSomething()
+        );
     }
 }

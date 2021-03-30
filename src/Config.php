@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela;
 
-use ArrayObject;
 use RuntimeException;
 
 final class Config
 {
-    public const CONFIG_FILE_PREFIX = '/config.php';
+    public const CONFIG_FILE_SUFFIX = '.php';
 
     private static string $applicationRootDir = '';
-    private static ?ArrayObject $config = null;
+    private static array $config = [];
     private static ?self $instance = null;
 
     public static function getInstance(): self
@@ -59,7 +58,6 @@ final class Config
             ));
         }
 
-        /** @psalm-suppress PossiblyNullReference, PossiblyNullArrayAccess */
         return self::$config[$key];
     }
 
@@ -70,13 +68,20 @@ final class Config
 
     public static function init(): void
     {
-        $config = new ArrayObject();
-        $fileName = self::$applicationRootDir . self::CONFIG_FILE_PREFIX;
+        self::$config = array_merge(
+            self::populateConfig('/config'),
+            self::populateConfig('/config_local'),
+        );
+    }
+
+    private static function populateConfig(string $type): array
+    {
+        $fileName = self::$applicationRootDir . $type . self::CONFIG_FILE_SUFFIX;
 
         if (file_exists($fileName)) {
-            include $fileName;
+            return include $fileName;
         }
 
-        self::$config = $config;
+        return [];
     }
 }

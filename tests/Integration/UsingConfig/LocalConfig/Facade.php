@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\UsingConfig\SimpleModule;
+namespace GacelaTest\Integration\UsingConfig\LocalConfig;
 
 use Gacela\AbstractFacade;
 
@@ -11,8 +11,8 @@ use Gacela\AbstractFacade;
  */
 final class Facade extends AbstractFacade
 {
-    public function doSomething(): int
+    public function doSomething(): array
     {
-        return $this->getFactory()->getNumber();
+        return $this->getFactory()->getArrayConfig();
     }
 }

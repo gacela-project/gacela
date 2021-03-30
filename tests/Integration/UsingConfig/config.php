@@ -2,4 +2,7 @@
 
 declare(strict_types=1);
 
-$config['number'] = 1;
+return [
+    'config' => 1,
+    'override' => 3,
+];

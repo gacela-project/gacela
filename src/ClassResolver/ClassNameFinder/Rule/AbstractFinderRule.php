@@ -17,7 +17,7 @@ abstract class AbstractFinderRule implements FinderRuleInterface
     }
 
     /**
-     * @return list<string>
+     * @return string[]
      */
     abstract protected function getPatternPaths(): array;
 

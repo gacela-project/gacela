@@ -63,7 +63,7 @@ final class Container implements ContainerInterface
     {
         unset(
             $this->raw[$id],
-            $this->services[$id],
+            $this->services[$id]
         );
     }
 }

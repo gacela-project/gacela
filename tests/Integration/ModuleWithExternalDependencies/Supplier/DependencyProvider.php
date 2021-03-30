@@ -6,8 +6,7 @@ namespace GacelaTest\Integration\ModuleWithExternalDependencies\Supplier;
 
 use Gacela\AbstractDependencyProvider;
 use Gacela\Container\Container;
-use GacelaTest\Integration\ModuleWithExternalDependencies\Dependent\Facade;
-use GacelaTest\Integration\ModuleWithExternalDependencies\Dependent\FacadeInterface;
+use GacelaTest\Integration\ModuleWithExternalDependencies\Dependent;
 
 final class DependencyProvider extends AbstractDependencyProvider
 {
@@ -20,8 +19,8 @@ final class DependencyProvider extends AbstractDependencyProvider
 
     private function addFacadeCalculator(Container $container): void
     {
-        $container->set(self::FACADE_DEPENDENT, function (Container $container): FacadeInterface {
-            return $container->getLocator()->get(Facade::class);
+        $container->set(self::FACADE_DEPENDENT, function (Container $container): Dependent\FacadeInterface {
+            return $container->getLocator()->get(Dependent\Facade::class);
         });
     }
 }

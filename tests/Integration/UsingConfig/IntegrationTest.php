@@ -15,9 +15,10 @@ final class IntegrationTest extends TestCase
         Config::init();
     }
 
-    public function testRemoveKeyFromContainer(): void
+    public function test_remove_key_from_container(): void
     {
         $facade = new LocalConfig\Facade();
+
         self::assertSame(
             [
                 'config' => 1,

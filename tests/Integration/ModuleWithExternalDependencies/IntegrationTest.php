@@ -11,7 +11,7 @@ final class IntegrationTest extends TestCase
     /**
      * A module (ModuleWithDependencies\Facade) with one module-dependency (DependentModule).
      */
-    public function testWithADependency(): void
+    public function test_with_a_dependency(): void
     {
         $facade = new Supplier\Facade();
 

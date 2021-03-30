@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    public function testWithPrefix(): void
+    public function test_with_prefix(): void
     {
         $facade = new WithPrefix\WithPrefixFacade();
 
@@ -18,7 +18,7 @@ final class IntegrationTest extends TestCase
         );
     }
 
-    public function testWithoutPrefix(): void
+    public function test_without_prefix(): void
     {
         $facade = new WithoutPrefix\Facade();
 

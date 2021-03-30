@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    public function testMissingFactoryModule(): void
+    public function test_missing_factory_module(): void
     {
         $this->expectException(FactoryNotFoundException::class);
 
@@ -20,7 +20,7 @@ final class IntegrationTest extends TestCase
         $facade->error();
     }
 
-    public function testMissingConfigModule(): void
+    public function test_missing_config_module(): void
     {
         $this->expectException(ConfigNotFoundException::class);
 
@@ -28,7 +28,7 @@ final class IntegrationTest extends TestCase
         $facade->error();
     }
 
-    public function testMissingDependencyProviderModule(): void
+    public function test_missing_dependency_provider_module(): void
     {
         $this->expectException(DependencyProviderNotFoundException::class);
 
@@ -36,7 +36,7 @@ final class IntegrationTest extends TestCase
         $facade->error();
     }
 
-    public function testMissingContainerServiceKeyModule(): void
+    public function test_missing_container_service_key_module(): void
     {
         $this->expectException(ContainerKeyNotFoundException::class);
 

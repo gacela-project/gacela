@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    public function testRemoveKeyFromContainer(): void
+    public function test_remove_key_from_container(): void
     {
         $this->expectException(ContainerKeyNotFoundException::class);
 

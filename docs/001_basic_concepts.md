@@ -1,4 +1,4 @@
-[Back to the index](../documentation)
+[Back to the index](../docs)
 
 # Basic concepts about modules
 

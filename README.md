@@ -33,11 +33,11 @@ rules:
 
 ## Documentation
 
-- [How to start](documentation/001_basic_concepts.md)
-  - [Facade](documentation/002_facade.md): The entry point of your module
-  - [Factory](documentation/003_factory.md): The place where you create your domain services and objects
-  - [Config](documentation/004_config.md): Reads the `config.php` key-values
-  - [DependencyProvider](documentation/005_dependency_provider.md): It defines the dependencies between modules
+- [How to start](docs/001_basic_concepts.md)
+  - [Facade](docs/002_facade.md): The entry point of your module
+  - [Factory](docs/003_factory.md): The place where you create your domain services and objects
+  - [Config](docs/004_config.md): Reads the `config.php` key-values
+  - [DependencyProvider](docs/005_dependency_provider.md): It defines the dependencies between modules
 
 ### Examples
 

@@ -1,5 +1,5 @@
 {
-    "name": "chemaclass/gacela",
+    "name": "gacela-project/gacela",
     "type": "library",
     "description": "Gacela Framework",
     "keywords": ["php","modular","kernel"],

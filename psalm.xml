@@ -14,8 +14,6 @@
     </projectFiles>
 
     <issueHandlers>
-<!--        <MissingClosureParamType errorLevel="suppress"/>-->
-<!--        <MissingClosureReturnType errorLevel="suppress"/>-->
         <UnresolvableInclude errorLevel="suppress"/>
         <ImplementedReturnTypeMismatch errorLevel="suppress"/>
         <ImplicitToStringCast errorLevel="suppress"/>

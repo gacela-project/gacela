@@ -26,6 +26,9 @@ final class Locator
     {
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     private function __clone()
     {
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\MissingFile\MissingDependencyProviderFile;
 
-use Gacela\AbstractFacade;
+use Gacela\Framework\AbstractFacade;
 
 /**
  * @method Factory getFactory()

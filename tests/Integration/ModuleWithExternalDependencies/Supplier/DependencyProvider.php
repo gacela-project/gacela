@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\ModuleWithExternalDependencies\Supplier;
 
-use Gacela\AbstractDependencyProvider;
-use Gacela\Container\Container;
+use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\Container\Container;
 use GacelaTest\Integration\ModuleWithExternalDependencies\Dependent;
 
 final class DependencyProvider extends AbstractDependencyProvider

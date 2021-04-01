@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\MissingFile;
 
-use Gacela\ClassResolver\Config\ConfigNotFoundException;
-use Gacela\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
-use Gacela\ClassResolver\Factory\FactoryNotFoundException;
-use Gacela\Container\Exception\ContainerKeyNotFoundException;
+use Gacela\Framework\ClassResolver\Config\ConfigNotFoundException;
+use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
+use Gacela\Framework\ClassResolver\Factory\FactoryNotFoundException;
+use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase

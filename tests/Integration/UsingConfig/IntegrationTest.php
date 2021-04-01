@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\UsingConfig;
 
-use Gacela\Config;
+use Gacela\Framework\Config;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\UsingConfig\LocalConfig;
 
-use Gacela\AbstractConfig;
+use Gacela\Framework\AbstractConfig;
 
 final class Config extends AbstractConfig
 {

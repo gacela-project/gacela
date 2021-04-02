@@ -1,16 +1,12 @@
 #!/usr/bin/env php
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Gacela\CodeGenerator\CodeGeneratorFacade;
 use Gacela\Framework\Config;
 
-$slash = DIRECTORY_SEPARATOR;
-$projectRootDir = getcwd() . $slash;
-$autoloadPath = $projectRootDir . 'vendor' . $slash . 'autoload.php';
-
-if (!file_exists($autoloadPath)) {
+if (!file_exists($autoloadPath = getcwd() . '/vendor/autoload.php')) {
     exit("Cannot load composer's autoload file: " . $autoloadPath);
 }
 

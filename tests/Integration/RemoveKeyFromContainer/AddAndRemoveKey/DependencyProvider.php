@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\RemoveKeyFromContainer\AddAndRemoveKey;
 
-use Gacela\AbstractDependencyProvider;
-use Gacela\Container\Container;
+use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\Container\Container;
 
 final class DependencyProvider extends AbstractDependencyProvider
 {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\UsingConfig\LocalConfig;
 
-use Gacela\AbstractFacade;
+use Gacela\Framework\AbstractFacade;
 
 /**
  * @method Factory getFactory()

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\RemoveKeyFromContainer;
 
-use Gacela\Container\Exception\ContainerKeyNotFoundException;
+use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase

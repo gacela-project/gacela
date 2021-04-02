@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\ModuleWithExternalDependencies\Supplier;
 
-use Gacela\AbstractFactory;
+use Gacela\Framework\AbstractFactory;
 use GacelaTest\Integration\ModuleWithExternalDependencies\Dependent;
 use GacelaTest\Integration\ModuleWithExternalDependencies\Supplier\Service\HelloName;
 

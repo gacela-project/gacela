@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\ModuleWithoutDependencies\WithoutPrefix;
 
-use Gacela\AbstractFactory;
+use Gacela\Framework\AbstractFactory;
 use GacelaTest\Integration\ModuleWithoutDependencies\WithoutPrefix\Service\HelloName;
 
 final class Factory extends AbstractFactory

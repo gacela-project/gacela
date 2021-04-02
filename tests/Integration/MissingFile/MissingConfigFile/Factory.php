@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\MissingFile\MissingConfigFile;
 
-use Gacela\AbstractFactory;
+use Gacela\Framework\AbstractFactory;
 
 final class Factory extends AbstractFactory
 {

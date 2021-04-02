@@ -4,10 +4,19 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
-use Psr\Container\ContainerInterface as PsrContainerInterface;
+use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 
-interface ContainerInterface extends PsrContainerInterface
+interface ContainerInterface
 {
+    /**
+     * @throws ContainerKeyNotFoundException
+     *
+     * @return mixed
+     */
+    public function get(string $id);
+
+    public function has(string $id): bool;
+
     /**
      * @param mixed $service
      */

@@ -19,8 +19,6 @@ This framework helps you to improve the design of your modules.
 
 > Inspired by Spryker Framework: https://github.com/spryker
 
-### What is the goal of this?
-
 Splitting your project into different modules will help the design of your project in terms of maintainability and
 scalability. It will certainly encourage your modules to interact with each other in a unified way by following these
 rules:
@@ -31,14 +29,24 @@ rules:
 - The `Config` can get the values from the `/config.php` file at the root of the project
 - The `DependencyProvider` uses the Locator to get the Facades from different modules
 
+### Installation
+
+```bash
+composer require gacela-project/gacela
+```
+
 ## Documentation
 
-- [How to start](docs/001_basic_concepts.md)
-  - [Facade](docs/002_facade.md): The entry point of your module
-  - [Factory](docs/003_factory.md): The place where you create your domain services and objects
-  - [Config](docs/004_config.md): Reads the `config.php` key-values
-  - [DependencyProvider](docs/005_dependency_provider.md): It defines the dependencies between modules
+- [Basic concepts](docs/001_basic_concepts.md): What are the characteristics of a module?
+- [Facade](docs/002_facade.md): The entry point of your module
+- [Factory](docs/003_factory.md): The place where you create your domain services and objects
+- [Config](docs/004_config.md): Reads the `config.php` key-values
+- [DependencyProvider](docs/005_dependency_provider.md): It defines the dependencies between modules
 
 ### Examples
 
 You can see an example of some modules under the `tests/Integration` folder.
+
+### Contribute
+
+You are more than welcome to contribute reporting issues, sharing ideas, or contributing with your Pull Requests.

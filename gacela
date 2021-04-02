@@ -1,0 +1,27 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gacela\CodeGenerator\CodeGeneratorFacade;
+use Gacela\Framework\Config;
+
+$cwd = getcwd();
+if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
+    exit("Cannot load composer's autoload file: " . $autoloadPath);
+}
+
+require $autoloadPath;
+
+if ($argc <= 1) {
+    exit(CodeGeneratorFacade::HELP_TEXT);
+}
+
+Config::setApplicationRootDir($cwd);
+
+try {
+    $codeGenerator = new CodeGeneratorFacade();
+    $codeGenerator->runCommand($argv[1], array_slice($argv, 2));
+} catch (Throwable $e) {
+    print 'Error: ' . $e->getMessage() . PHP_EOL;
+}

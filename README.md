@@ -1,15 +1,15 @@
 <p align="center">
-  <a href="https://github.com/Chemaclass/gacela/actions">
-    <img src="https://github.com/Chemaclass/gacela/workflows/CI/badge.svg" alt="GitHub Build Status">
+  <a href="https://github.com/gacela-project/gacela/actions">
+    <img src="https://github.com/gacela-project/gacela/workflows/CI/badge.svg" alt="GitHub Build Status">
   </a>
-  <a href="https://scrutinizer-ci.com/g/Chemaclass/gacela/?branch=master">
-    <img src="https://scrutinizer-ci.com/g/Chemaclass/gacela/badges/quality-score.png?b=master" alt="Scrutinizer Code Quality">
+  <a href="https://scrutinizer-ci.com/g/gacela-project/gacela/?branch=master">
+    <img src="https://scrutinizer-ci.com/g/gacela-project/gacela/badges/quality-score.png?b=master" alt="Scrutinizer Code Quality">
   </a>
-  <a href="https://scrutinizer-ci.com/g/Chemaclass/gacela/?branch=master">
-    <img src="https://scrutinizer-ci.com/g/Chemaclass/gacela/badges/coverage.png?b=master" alt="Scrutinizer Code Coverage">
+  <a href="https://scrutinizer-ci.com/g/gacela-project/gacela/?branch=master">
+    <img src="https://scrutinizer-ci.com/g/gacela-project/gacela/badges/coverage.png?b=master" alt="Scrutinizer Code Coverage">
   </a>
-  <a href="https://shepherd.dev/github/Chemaclass/gacela">
-    <img src="https://shepherd.dev/github/Chemaclass/gacela/coverage.svg" alt="Psalm Type-coverage Status">
+  <a href="https://shepherd.dev/github/gacela-project/gacela">
+    <img src="https://shepherd.dev/github/gacela-project/gacela/coverage.svg" alt="Psalm Type-coverage Status">
   </a>
 </p>
 

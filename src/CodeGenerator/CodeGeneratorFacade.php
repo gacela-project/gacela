@@ -26,8 +26,7 @@ Commands:
         Generate a new Config.
     
     generate:module <root-namespace> <target-directory>
-        If no <root-namespace> is provided, it will use 'App' by default.
-        If no <target-directory> is provided, it will use 'src/Generated' by default.
+        Generate a Facade, Factory and Config inside
 
     help
         Show this help message.
@@ -39,57 +38,59 @@ HELP;
      */
     public function runCommand(string $commandName, array $arguments = []): void
     {
+        [$rootNamespace, $targetDirectory] = array_pad($arguments, 2, null);
+
+        if ($rootNamespace === null) {
+            throw new InvalidArgumentException('Expected 1st argument to be root-namespace of the project');
+        }
+
+        if ($targetDirectory === null) {
+            throw new InvalidArgumentException('Expected 2nd argument to be target-directory inside the project');
+        }
+
         switch ($commandName) {
             case 'generate:facade':
-                $this->executeGenerateFacade($arguments);
+                $this->executeGenerateFacade($rootNamespace, $targetDirectory);
                 break;
             case 'generate:factory':
-                $this->executeGenerateFactory($arguments);
+                $this->executeGenerateFactory($rootNamespace, $targetDirectory);
                 break;
             case 'generate:config':
-                $this->executeGenerateConfig($arguments);
+                $this->executeGenerateConfig($rootNamespace, $targetDirectory);
                 break;
             case 'generate:module':
-                $this->executeGenerateModule($arguments);
+                $this->executeGenerateModule($rootNamespace, $targetDirectory);
                 break;
             default:
                 throw new InvalidArgumentException(self::HELP_TEXT);
         }
     }
 
-    private function executeGenerateFacade(array $arguments): void
+    private function executeGenerateFacade(string $rootNamespace, string $targetDirectory): void
     {
-        [$rootNamespace, $targetDirectory] = $arguments;
-
         $this->getFactory()
             ->createFacadeGenerator()
             ->generate($rootNamespace, $targetDirectory);
     }
 
-    private function executeGenerateFactory(array $arguments): void
+    private function executeGenerateFactory(string $rootNamespace, string $targetDirectory): void
     {
-        [$rootNamespace, $targetDirectory] = $arguments;
-
         $this->getFactory()
             ->createFactoryGenerator()
             ->generate($rootNamespace, $targetDirectory);
     }
 
-    private function executeGenerateConfig(array $arguments): void
+    private function executeGenerateConfig(string $rootNamespace, string $targetDirectory): void
     {
-        [$rootNamespace, $targetDirectory] = $arguments;
-
         $this->getFactory()
             ->createConfigGenerator()
             ->generate($rootNamespace, $targetDirectory);
     }
 
-    private function executeGenerateModule(array $arguments): void
+    private function executeGenerateModule(string $rootNamespace, string $targetDirectory): void
     {
-        [$rootNamespace, $targetDirectory] = array_pad($arguments, 2, null);
-
         $this->getFactory()
             ->createModuleGenerator()
-            ->generate($rootNamespace ?? 'App', $targetDirectory ?? 'src/Generated');
+            ->generate($rootNamespace, $targetDirectory);
     }
 }

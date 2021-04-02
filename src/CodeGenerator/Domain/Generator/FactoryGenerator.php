@@ -4,34 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Domain\Generator;
 
-use Gacela\CodeGenerator\Domain\Io\GeneratorIoInterface;
-
-final class FactoryGenerator implements GeneratorInterface
+final class FactoryGenerator extends AbstractGenerator
 {
-    private GeneratorIoInterface $io;
-
-    public function __construct(GeneratorIoInterface $io)
+    protected function generateFileContent(string $namespace): string
     {
-        $this->io = $io;
-    }
-
-    public function generate(string $rootNamespace, string $targetDirectory): void
-    {
-        $pieces = explode('/', $targetDirectory);
-        $moduleName = end($pieces);
-
-        $this->io->createDirectory($targetDirectory);
-
-        $path = sprintf('%s/%sFactory.php', $targetDirectory, $moduleName);
-        $this->io->filePutContents($path, $this->generateFileContent($rootNamespace, $moduleName));
-
-        $this->io->writeln("> Path $path created successfully");
-    }
-
-    private function generateFileContent(string $rootNamespace, string $moduleName): string
-    {
-        $namespace = "$rootNamespace\\$moduleName";
-
         return <<<TEXT
 <?php
 
@@ -44,11 +20,16 @@ use Gacela\Framework\AbstractFactory;
 /**
  * @see https://github.com/gacela-project/gacela/blob/master/docs/003_factory.md
  *
- * @method {$moduleName}Config getConfig()
+ * @method Config getConfig()
  */
-final class {$moduleName}Factory extends AbstractFactory
+final class {$this->classType()} extends AbstractFactory
 {
 }
 TEXT;
+    }
+
+    protected function classType(): string
+    {
+        return 'Factory';
     }
 }

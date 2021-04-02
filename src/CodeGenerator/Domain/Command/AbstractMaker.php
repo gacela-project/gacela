@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Generator;
+namespace Gacela\CodeGenerator\Domain\Command;
 
 use Gacela\CodeGenerator\Domain\Io\GeneratorIoInterface;
 
-abstract class AbstractGenerator implements GeneratorInterface
+abstract class AbstractMaker implements MakerInterface
 {
     private GeneratorIoInterface $io;
 
@@ -22,7 +22,7 @@ abstract class AbstractGenerator implements GeneratorInterface
 
         $this->io->createDirectory($targetDirectory);
 
-        $path = sprintf('%s/%s.php', $targetDirectory, $this->classType());
+        $path = sprintf('%s/%s.php', $targetDirectory, $this->className());
         $this->io->filePutContents($path, $this->generateFileContent("$rootNamespace\\$moduleName"));
 
         $this->io->writeln("> Path '$path' created successfully");
@@ -30,5 +30,5 @@ abstract class AbstractGenerator implements GeneratorInterface
 
     abstract protected function generateFileContent(string $namespace): string;
 
-    abstract protected function classType(): string;
+    abstract protected function className(): string;
 }

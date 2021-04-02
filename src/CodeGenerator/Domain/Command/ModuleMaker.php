@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Generator;
+namespace Gacela\CodeGenerator\Domain\Command;
 
 use Gacela\CodeGenerator\Domain\Io\GeneratorIoInterface;
 
-final class ModuleGenerator
+final class ModuleMaker implements MakerInterface
 {
     private GeneratorIoInterface $io;
 
-    /** @var GeneratorInterface[] */
+    /** @var MakerInterface[] */
     private array $generators;
 
     /**
-     * @param GeneratorInterface[] $generators
+     * @param MakerInterface[] $generators
      */
     public function __construct(GeneratorIoInterface $io, array $generators)
     {

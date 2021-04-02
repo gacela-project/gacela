@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Generator;
+namespace Gacela\CodeGenerator\Domain\Command;
 
-final class FactoryGenerator extends AbstractGenerator
+final class FactoryMaker extends AbstractMaker
 {
     protected function generateFileContent(string $namespace): string
     {
@@ -18,18 +18,16 @@ namespace {$namespace};
 use Gacela\Framework\AbstractFactory;
 
 /**
- * @see https://github.com/gacela-project/gacela/blob/master/docs/003_factory.md
- *
  * @method Config getConfig()
  */
-final class {$this->classType()} extends AbstractFactory
+final class {$this->className()} extends AbstractFactory
 {
 }
 
 TEXT;
     }
 
-    protected function classType(): string
+    protected function className(): string
     {
         return 'Factory';
     }

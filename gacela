@@ -6,7 +6,8 @@ declare(strict_types=1);
 use Gacela\CodeGenerator\CodeGeneratorFacade;
 use Gacela\Framework\Config;
 
-if (!file_exists($autoloadPath = getcwd() . '/vendor/autoload.php')) {
+$cwd = getcwd();
+if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
     exit("Cannot load composer's autoload file: " . $autoloadPath);
 }
 
@@ -16,7 +17,7 @@ if ($argc <= 1) {
     exit(CodeGeneratorFacade::HELP_TEXT);
 }
 
-Config::setApplicationRootDir(realpath(__DIR__));
+Config::setApplicationRootDir($cwd);
 
 try {
     $codeGenerator = new CodeGeneratorFacade();

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Generator;
+namespace Gacela\CodeGenerator\Domain\Command;
 
-final class FacadeGenerator extends AbstractGenerator
+final class FacadeMaker extends AbstractMaker
 {
     protected function generateFileContent(string $namespace): string
     {
@@ -18,18 +18,16 @@ namespace {$namespace};
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @see https://github.com/gacela-project/gacela/blob/master/docs/002_facade.md
- *
  * @method Factory getFactory()
  */
-final class {$this->classType()} extends AbstractFacade
+final class {$this->className()} extends AbstractFacade
 {
 }
 
 TEXT;
     }
 
-    protected function classType(): string
+    protected function className(): string
     {
         return 'Facade';
     }

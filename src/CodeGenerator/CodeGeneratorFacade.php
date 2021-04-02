@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator;
 
+use Gacela\CodeGenerator\Domain\Command\MakerInterface;
 use Gacela\Framework\AbstractFacade;
 use InvalidArgumentException;
 
@@ -12,29 +13,35 @@ use InvalidArgumentException;
  */
 final class CodeGeneratorFacade extends AbstractFacade
 {
-    public const HELP_TEXT = <<<HELP
+    public const HELP_TEXT = <<<'HELP'
 Usage: gacela [command]
 
 Commands:
-    generate:facade <root-namespace> <target-directory>
-        Generate a new Facade.
+    make:facade <root-namespace> <target-directory>
+        Create a new Facade.
 
-    generate:factory <root-namespace> <target-directory>
-        Generate a new Factory.
+    make:factory <root-namespace> <target-directory>
+        Create a new Factory.
 
-    generate:config <root-namespace> <target-directory>
-        Generate a new Config.
+    make:config <root-namespace> <target-directory>
+        Create a new Config.
 
-    generate:dependency-provider <root-namespace> <target-directory>
-        Generate a new Config.
+    make:dependency-provider <root-namespace> <target-directory>
+        Create a new Config.
 
-    generate:module <root-namespace> <target-directory>
-        Generate a Facade, Factory and Config inside
+    make:module <root-namespace> <target-directory>
+        Create a Facade, Factory and Config inside
 
     help
         Show this help message.
 
 HELP;
+
+    private const MAKE_FACADE_COMMAND = 'make:facade';
+    private const MAKE_FACTORY_COMMAND = 'make:factory';
+    private const MAKE_CONFIG_COMMAND = 'make:config';
+    private const MAKE_DEPENDENCY_PROVIDER_COMMAND = 'make:dependency-provider';
+    private const MAKE_MODULE_COMMAND = 'make:module';
 
     /**
      * @throws InvalidArgumentException
@@ -51,59 +58,24 @@ HELP;
             throw new InvalidArgumentException('Expected 2nd argument to be target-directory inside the project');
         }
 
+        $this->createMaker($commandName)->generate($rootNamespace, $targetDirectory);
+    }
+
+    private function createMaker(string $commandName): MakerInterface
+    {
         switch ($commandName) {
-            case 'generate:facade':
-                $this->executeGenerateFacade($rootNamespace, $targetDirectory);
-                break;
-            case 'generate:factory':
-                $this->executeGenerateFactory($rootNamespace, $targetDirectory);
-                break;
-            case 'generate:config':
-                $this->executeGenerateConfig($rootNamespace, $targetDirectory);
-                break;
-            case 'generate:dependency-provider':
-                $this->executeGenerateDependencyProvider($rootNamespace, $targetDirectory);
-                break;
-            case 'generate:module':
-                $this->executeGenerateModule($rootNamespace, $targetDirectory);
-                break;
+            case self::MAKE_FACADE_COMMAND:
+                return $this->getFactory()->createFacadeMaker();
+            case self::MAKE_FACTORY_COMMAND:
+                return $this->getFactory()->createFactoryMaker();
+            case self::MAKE_CONFIG_COMMAND:
+                return $this->getFactory()->createConfigMaker();
+            case self::MAKE_DEPENDENCY_PROVIDER_COMMAND:
+                return $this->getFactory()->createDependencyProviderMaker();
+            case self::MAKE_MODULE_COMMAND:
+                return $this->getFactory()->createModuleMaker();
             default:
                 throw new InvalidArgumentException(self::HELP_TEXT);
         }
-    }
-
-    private function executeGenerateFacade(string $rootNamespace, string $targetDirectory): void
-    {
-        $this->getFactory()
-            ->createFacadeGenerator()
-            ->generate($rootNamespace, $targetDirectory);
-    }
-
-    private function executeGenerateFactory(string $rootNamespace, string $targetDirectory): void
-    {
-        $this->getFactory()
-            ->createFactoryGenerator()
-            ->generate($rootNamespace, $targetDirectory);
-    }
-
-    private function executeGenerateConfig(string $rootNamespace, string $targetDirectory): void
-    {
-        $this->getFactory()
-            ->createConfigGenerator()
-            ->generate($rootNamespace, $targetDirectory);
-    }
-
-    private function executeGenerateDependencyProvider(string $rootNamespace, string $targetDirectory): void
-    {
-        $this->getFactory()
-            ->createDependencyProviderGenerator()
-            ->generate($rootNamespace, $targetDirectory);
-    }
-
-    private function executeGenerateModule(string $rootNamespace, string $targetDirectory): void
-    {
-        $this->getFactory()
-            ->createModuleGenerator()
-            ->generate($rootNamespace, $targetDirectory);
     }
 }

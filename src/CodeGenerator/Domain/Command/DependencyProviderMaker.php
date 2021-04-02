@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Generator;
+namespace Gacela\CodeGenerator\Domain\Command;
 
-final class DependencyProviderGenerator extends AbstractGenerator
+final class DependencyProviderMaker extends AbstractMaker
 {
     protected function generateFileContent(string $namespace): string
     {
@@ -18,10 +18,7 @@ namespace {$namespace};
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\Container\Container;
 
-/**
- * @see https://github.com/gacela-project/gacela/blob/master/docs/005_dependency_provider.md
- */
-final class {$this->classType()} extends AbstractDependencyProvider
+final class {$this->className()} extends AbstractDependencyProvider
 {
     public function provideModuleDependencies(Container \$container): void
     {
@@ -31,7 +28,7 @@ final class {$this->classType()} extends AbstractDependencyProvider
 TEXT;
     }
 
-    protected function classType(): string
+    protected function className(): string
     {
         return 'DependencyProvider';
     }

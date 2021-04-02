@@ -25,6 +25,7 @@ use Gacela\Framework\AbstractFacade;
 final class {$this->classType()} extends AbstractFacade
 {
 }
+
 TEXT;
     }
 

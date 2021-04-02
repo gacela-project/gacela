@@ -25,6 +25,7 @@ use Gacela\Framework\AbstractFactory;
 final class {$this->classType()} extends AbstractFactory
 {
 }
+
 TEXT;
     }
 

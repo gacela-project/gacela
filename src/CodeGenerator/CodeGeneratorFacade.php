@@ -18,13 +18,16 @@ Usage: gacela [command]
 Commands:
     generate:facade <root-namespace> <target-directory>
         Generate a new Facade.
-        
+
     generate:factory <root-namespace> <target-directory>
         Generate a new Factory.
-    
+
     generate:config <root-namespace> <target-directory>
         Generate a new Config.
-    
+
+    generate:dependency-provider <root-namespace> <target-directory>
+        Generate a new Config.
+
     generate:module <root-namespace> <target-directory>
         Generate a Facade, Factory and Config inside
 
@@ -58,6 +61,9 @@ HELP;
             case 'generate:config':
                 $this->executeGenerateConfig($rootNamespace, $targetDirectory);
                 break;
+            case 'generate:dependency-provider':
+                $this->executeGenerateDependencyProvider($rootNamespace, $targetDirectory);
+                break;
             case 'generate:module':
                 $this->executeGenerateModule($rootNamespace, $targetDirectory);
                 break;
@@ -84,6 +90,13 @@ HELP;
     {
         $this->getFactory()
             ->createConfigGenerator()
+            ->generate($rootNamespace, $targetDirectory);
+    }
+
+    private function executeGenerateDependencyProvider(string $rootNamespace, string $targetDirectory): void
+    {
+        $this->getFactory()
+            ->createDependencyProviderGenerator()
             ->generate($rootNamespace, $targetDirectory);
     }
 

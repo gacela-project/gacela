@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator;
 
 use Gacela\CodeGenerator\Domain\Generator\ConfigGenerator;
+use Gacela\CodeGenerator\Domain\Generator\DependencyProviderGenerator;
 use Gacela\CodeGenerator\Domain\Generator\FacadeGenerator;
 use Gacela\CodeGenerator\Domain\Generator\FactoryGenerator;
 use Gacela\CodeGenerator\Domain\Generator\ModuleGenerator;
@@ -35,6 +36,13 @@ final class CodeGeneratorFactory extends AbstractFactory
         );
     }
 
+    public function createDependencyProviderGenerator(): DependencyProviderGenerator
+    {
+        return new DependencyProviderGenerator(
+            $this->createGeneratorIo()
+        );
+    }
+
     public function createModuleGenerator(): ModuleGenerator
     {
         return new ModuleGenerator(
@@ -43,6 +51,7 @@ final class CodeGeneratorFactory extends AbstractFactory
                 $this->createFacadeGenerator(),
                 $this->createFactoryGenerator(),
                 $this->createConfigGenerator(),
+                $this->createDependencyProviderGenerator(),
             ]
         );
     }

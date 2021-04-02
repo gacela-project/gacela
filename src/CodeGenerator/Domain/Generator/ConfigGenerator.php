@@ -26,6 +26,7 @@ use Gacela\Framework\AbstractConfig;
 final class {$this->classType()} extends AbstractConfig
 {
 }
+
 TEXT;
     }
 

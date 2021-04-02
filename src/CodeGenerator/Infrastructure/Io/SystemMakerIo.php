@@ -7,6 +7,9 @@ namespace Gacela\CodeGenerator\Infrastructure\Io;
 use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
 use RuntimeException;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class SystemMakerIo implements MakerIoInterface
 {
     public function createDirectory(string $directory): void

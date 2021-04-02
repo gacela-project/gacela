@@ -19,7 +19,7 @@ use Gacela\Framework\AbstractConfig;
 
 /**
  * @see https://github.com/gacela-project/gacela/blob/master/docs/004_config.md
- * 
+ *
  * Remember to placed this in the entry point of your application:
  * Config::setApplicationRootDir(realpath(__DIR__));
  */

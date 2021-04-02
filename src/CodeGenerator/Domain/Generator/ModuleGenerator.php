@@ -18,8 +18,8 @@ final class ModuleGenerator
      */
     public function __construct(GeneratorIoInterface $io, array $generators)
     {
-        $this->generators = $generators;
         $this->io = $io;
+        $this->generators = $generators;
     }
 
     public function generate(string $rootNamespace, string $targetDirectory): void

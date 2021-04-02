@@ -9,12 +9,25 @@ use Gacela\CodeGenerator\Domain\Command\DependencyProviderMaker;
 use Gacela\CodeGenerator\Domain\Command\FacadeMaker;
 use Gacela\CodeGenerator\Domain\Command\FactoryMaker;
 use Gacela\CodeGenerator\Domain\Command\ModuleMaker;
-use Gacela\CodeGenerator\Domain\Io\GeneratorIoInterface;
-use Gacela\CodeGenerator\Infrastructure\Io\SystemGeneratorIo;
+use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
+use Gacela\CodeGenerator\Infrastructure\Io\SystemMakerIo;
 use Gacela\Framework\AbstractFactory;
 
 final class CodeGeneratorFactory extends AbstractFactory
 {
+    public function createModuleMaker(): ModuleMaker
+    {
+        return new ModuleMaker(
+            $this->createGeneratorIo(),
+            [
+                $this->createFacadeMaker(),
+                $this->createFactoryMaker(),
+                $this->createConfigMaker(),
+                $this->createDependencyProviderMaker(),
+            ]
+        );
+    }
+
     public function createFacadeMaker(): FacadeMaker
     {
         return new FacadeMaker(
@@ -43,21 +56,8 @@ final class CodeGeneratorFactory extends AbstractFactory
         );
     }
 
-    public function createModuleMaker(): ModuleMaker
+    private function createGeneratorIo(): MakerIoInterface
     {
-        return new ModuleMaker(
-            $this->createGeneratorIo(),
-            [
-                $this->createFacadeMaker(),
-                $this->createFactoryMaker(),
-                $this->createConfigMaker(),
-                $this->createDependencyProviderMaker(),
-            ]
-        );
-    }
-
-    private function createGeneratorIo(): GeneratorIoInterface
-    {
-        return new SystemGeneratorIo();
+        return new SystemMakerIo();
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Domain\Io;
 
-interface GeneratorIoInterface
+interface MakerIoInterface
 {
     public function createDirectory(string $directory): void;
 

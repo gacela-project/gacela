@@ -6,5 +6,5 @@ namespace Gacela\CodeGenerator\Domain\Command;
 
 interface MakerInterface
 {
-    public function generate(string $rootNamespace, string $targetDirectory): void;
+    public function make(string $rootNamespace, string $targetDirectory): void;
 }

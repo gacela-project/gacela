@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Domain\Command;
 
-use Gacela\CodeGenerator\Domain\Io\GeneratorIoInterface;
+use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
 
 abstract class AbstractMaker implements MakerInterface
 {
-    private GeneratorIoInterface $io;
+    private MakerIoInterface $io;
 
-    public function __construct(GeneratorIoInterface $io)
+    public function __construct(MakerIoInterface $io)
     {
         $this->io = $io;
     }
 
-    public function generate(string $rootNamespace, string $targetDirectory): void
+    public function make(string $rootNamespace, string $targetDirectory): void
     {
         $pieces = explode('/', $targetDirectory);
         $moduleName = end($pieces);

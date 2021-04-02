@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Infrastructure\Io;
 
-use Gacela\CodeGenerator\Domain\Io\GeneratorIoInterface;
+use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
 use RuntimeException;
 
-final class SystemGeneratorIo implements GeneratorIoInterface
+final class SystemMakerIo implements MakerIoInterface
 {
     public function createDirectory(string $directory): void
     {

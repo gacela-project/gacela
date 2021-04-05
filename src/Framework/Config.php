@@ -8,7 +8,11 @@ use RuntimeException;
 
 final class Config
 {
-    public const CONFIG_FILE_SUFFIX = '.php';
+    /**
+     * This file config/local.php could be ignore in your project, and it will be read the last one
+     * so it will override every possible value.
+     */
+    private const CONFIG_LOCAL_FILENAME = 'local.php';
 
     private static string $applicationRootDir = '';
     private static array $config = [];
@@ -68,15 +72,28 @@ final class Config
 
     public static function init(): void
     {
-        self::$config = array_merge(
-            self::populateConfig('/config'),
-            self::populateConfig('/config_local'),
+        $configs = [];
+
+        foreach (self::scanAllConfigFiles() as $filename) {
+            $configs[] = self::readConfigFromFile($filename);
+        }
+
+        $configs[] = self::readConfigFromFile(self::CONFIG_LOCAL_FILENAME);
+
+        self::$config = array_merge(...$configs);
+    }
+
+    private static function scanAllConfigFiles(): array
+    {
+        return array_diff(
+            scandir(self::$applicationRootDir . '/config/'),
+            ['..', '.', self::CONFIG_LOCAL_FILENAME]
         );
     }
 
-    private static function populateConfig(string $type): array
+    private static function readConfigFromFile(string $type): array
     {
-        $fileName = self::$applicationRootDir . $type . self::CONFIG_FILE_SUFFIX;
+        $fileName = self::$applicationRootDir . '/config/' . $type;
 
         if (file_exists($fileName)) {
             return include $fileName;

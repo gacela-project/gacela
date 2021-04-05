@@ -4,13 +4,12 @@
 
 This is the place where you can define the dependencies that a particular module has with other modules.
 
-In this example you can see that in the `Calculator` we have a service (`Adder`) which needs the
-`AnotherModuleFacade` as a dependency. In this case, we can define the dependency inside the
-`CalculatorDependencyProvider`.
+In this example you can see that in the `Calculator` we have a service (`Adder`) which needs the `AnotherModuleFacade`
+as a dependency. In this case, we can define the dependency inside the `DependencyProvider`.
 
 ```php
-# src/Calculator/CalculatorFactory.php
-final class CalculatorFactory extends AbstractFactory
+# src/Calculator/Factory.php
+final class Factory extends AbstractFactory
 {
     public function createAdder(): AdderInterface
     {
@@ -21,14 +20,14 @@ final class CalculatorFactory extends AbstractFactory
     
     private function getAnotherModuleFacade(): AnotherModuleFacade
     {
-        return $this->getProvidedDependency(CalculatorDependencyProvider::FACADE_ANOTHER_MODULE);
+        return $this->getProvidedDependency(DependencyProvider::FACADE_ANOTHER_MODULE);
     }
 }
 ```
 
 ```php
-# src/Calculator/CalculatorDependencyProvider.php
-final class CalculatorDependencyProvider extends AbstractDependencyProvider
+# src/Calculator/DependencyProvider.php
+final class DependencyProvider extends AbstractDependencyProvider
 {
     public const FACADE_ANOTHER_MODULE = 'FACADE_ANOTHER_MODULE';
 

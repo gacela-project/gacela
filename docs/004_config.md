@@ -7,32 +7,34 @@ when you do the creation of your domain classes.
 
 Key-points here:
 
-- The Config will get the data from the `config.php` in your root directory.
+- The `Config` will get the data from all php files under the `config` directory.
 - The data is easily accessible by using the `$this->get('key')`.
-- The Factory is the only class that can access the Config.
+- The `Factory` is the only class that can access the `Config`.
+
+Extra:
+
+- The `config/local.php` will be loaded the last one. So you can easily add it to your `.gitignore` and set your local
+  config values in case you want to have something different for some cases.
 
 > This is tightly coupled with the infrastructure layer, because there is I/O involved.
 > It's not bad itself, you just need to be aware of potential risks, though. Don't
-> access data from `config.php` directly in your domain services.
+> access data from your `config` files (files under the `config` directory) directly in your domain services.
 > In this way, you would couple your logic with infrastructure code, and not be able to unit test it.
-
-Use the Config class to get the values from the config.php files (under the config directory), and to access them using
-the Factory when you create your module classes.
 
 ### An example
 
 ```php
-# config.php
-use src\Calculator\CalculatorConfig;
+# config/default.php
+use src\Calculator\Config;
 
 return [
-    CalculatorConfig::MAX_ADDITIONS => 20,
+    Config::MAX_ADDITIONS => 20,
 ];
 ```
 
 ```php
-# src/Calculator/CalculatorConfig.php
-final class CalculatorConfig extends AbstractConfig
+# src/Calculator/Config.php
+final class Config extends AbstractConfig
 {
     public const MAX_ADDITIONS = 'MAX_ADDITIONS';
 
@@ -44,11 +46,11 @@ final class CalculatorConfig extends AbstractConfig
 ```
 
 ```php
-# src/Calculator/CalculatorFactory.php
+# src/Calculator/Factory.php
 /**
- * @method CalculatorConfig getConfig()
+ * @method Config getConfig()
  */
-final class CalculatorFactory extends AbstractFactory
+final class Factory extends AbstractFactory
 {
     public function createAdder(): AdderInterface
     {

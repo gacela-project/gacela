@@ -5,19 +5,19 @@
 The Facade is the entry point of your module. See an example:
 
 ```php
-# src/Calculator/CalculatorFacadeInterface.php
-interface CalculatorFacadeInterface 
+# src/Calculator/FacadeInterface.php
+interface FacadeInterface 
 {
     public function sum(): void;
 }
 ```
 
 ```php
-# src/Calculator/CalculatorFacade.php
+# src/Calculator/Facade.php
 /**
- * @method CalculatorFactory getFactory()
+ * @method Factory getFactory()
  */
-final class CalculatorFacade extends AbstractFacade implements CalculatorFacadeInterface
+final class Facade extends AbstractFacade implements FacadeInterface
 {
     public function sum(int ...$numbers): int
     {
@@ -31,9 +31,9 @@ final class CalculatorFacade extends AbstractFacade implements CalculatorFacadeI
 A Facade is a "ready to use" thing:
 
 ```php 
-$facade = new CalculatorFacade();
+$facade = new Facade();
 $result = $facade->sum(2, 3);  
 ```
 
-The Facade uses the Factory to create the module's domain instances and executes the desired behaviour from them. 
+The Facade uses the Factory to create the module's domain instances and executes the desired behaviour from them.
 Nothing less, nothing more. 

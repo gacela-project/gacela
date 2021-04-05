@@ -2,8 +2,8 @@
 
 # Config
 
-Use a Config Class to construct your business domain classes by injecting the data 
-from the Config using the Factory when you do the creation of your domain classes.
+Use a Config Class to construct your business domain classes by injecting the data from the Config using the Factory
+when you do the creation of your domain classes.
 
 Key-points here:
 
@@ -11,10 +11,13 @@ Key-points here:
 - The data is easily accessible by using the `$this->get('key')`.
 - The Factory is the only class that can access the Config.
 
-> This is tightly coupled with the infrastructure layer, because there is I/O involved. 
-> It's not bad itself, you just need to be aware of potential risks, though. Don't 
+> This is tightly coupled with the infrastructure layer, because there is I/O involved.
+> It's not bad itself, you just need to be aware of potential risks, though. Don't
 > access data from `config.php` directly in your domain services.
 > In this way, you would couple your logic with infrastructure code, and not be able to unit test it.
+
+Use the Config class to get the values from the config.php files (under the config directory), and to access them using
+the Factory when you create your module classes.
 
 ### An example
 
@@ -54,4 +57,10 @@ final class CalculatorFactory extends AbstractFactory
         );
     }
 }
+```
+
+Do not forget to define the `$applicationRootDir` in your bootstrap application file.
+
+```php
+\Gacela\Framework\Config::setApplicationRootDir(getcwd());
 ```

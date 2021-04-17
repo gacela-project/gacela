@@ -71,6 +71,8 @@ final class CodeGeneratorFactory extends AbstractFactory
 
     public function createCommandArgumentsParser(): CommandArgumentsParser
     {
-        return new CommandArgumentsParser();
+        return new CommandArgumentsParser(
+            $this->getConfig()->getComposerJsonContentAsArray()
+        );
     }
 }

@@ -2,6 +2,5 @@
 /.idea/
 /.vscode/
 /vendor/
-/TestModule/
 .phpunit.*
 .php_cs.cache

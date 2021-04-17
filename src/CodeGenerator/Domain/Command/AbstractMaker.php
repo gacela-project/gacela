@@ -20,13 +20,10 @@ abstract class AbstractMaker implements MakerInterface
 
     public function make(CommandArguments $commandArguments): void
     {
-        $pieces = explode('/', $commandArguments->targetDirectory());
-        $moduleName = end($pieces);
+        $this->io->createDirectory($commandArguments->directory());
 
-        $this->io->createDirectory($commandArguments->targetDirectory());
-
-        $path = sprintf('%s/%s.php', $commandArguments->targetDirectory(), $this->className());
-        $this->io->filePutContents($path, $this->generateFileContent("{$commandArguments->rootNamespace()}\\$moduleName"));
+        $path = sprintf('%s/%s.php', $commandArguments->directory(), $this->className());
+        $this->io->filePutContents($path, $this->generateFileContent($commandArguments->namespace()));
 
         $this->io->writeln("> Path '$path' created successfully");
     }

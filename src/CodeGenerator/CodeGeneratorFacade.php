@@ -48,17 +48,11 @@ HELP;
      */
     public function runCommand(string $commandName, array $arguments = []): void
     {
-        [$rootNamespace, $targetDirectory] = array_pad($arguments, 2, null);
+        $commandArguments = $this->getFactory()
+            ->createCommandArgumentsParser()
+            ->parse($arguments);
 
-        if ($rootNamespace === null) {
-            throw new InvalidArgumentException('Expected 1st argument to be root-namespace of the project');
-        }
-
-        if ($targetDirectory === null) {
-            throw new InvalidArgumentException('Expected 2nd argument to be target-directory inside the project');
-        }
-
-        $this->createMaker($commandName)->make($rootNamespace, $targetDirectory);
+        $this->createMaker($commandName)->make($commandArguments);
     }
 
     private function createMaker(string $commandName): MakerInterface

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator\Domain\Command;
 
 use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
+use Gacela\CodeGenerator\Domain\ReadModel\CommandArguments;
 
 abstract class AbstractMaker implements MakerInterface
 {
@@ -15,15 +16,15 @@ abstract class AbstractMaker implements MakerInterface
         $this->io = $io;
     }
 
-    public function make(string $rootNamespace, string $targetDirectory): void
+    public function make(CommandArguments $commandArguments): void
     {
-        $pieces = explode('/', $targetDirectory);
+        $pieces = explode('/', $commandArguments->targetDirectory());
         $moduleName = end($pieces);
 
-        $this->io->createDirectory($targetDirectory);
+        $this->io->createDirectory($commandArguments->targetDirectory());
 
-        $path = sprintf('%s/%s.php', $targetDirectory, $this->className());
-        $this->io->filePutContents($path, $this->generateFileContent("$rootNamespace\\$moduleName"));
+        $path = sprintf('%s/%s.php', $commandArguments->targetDirectory(), $this->className());
+        $this->io->filePutContents($path, $this->generateFileContent("{$commandArguments->rootNamespace()}\\$moduleName"));
 
         $this->io->writeln("> Path '$path' created successfully");
     }

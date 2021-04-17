@@ -36,3 +36,5 @@ final class Facade extends AbstractFacade implements FacadeInterface
     }
 }
 ```
+
+[<< Facade](../docs/002_facade.md) | [Config >>](../docs/004_config.md)

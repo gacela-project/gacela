@@ -44,3 +44,5 @@ final class DependencyProvider extends AbstractDependencyProvider
     }
 }
 ```
+
+[<< Config](../docs/004_config.md) | [Code Generator >>](../docs/006_code_generator.md)

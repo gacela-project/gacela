@@ -37,3 +37,5 @@ $result = $facade->sum(2, 3);
 
 The Facade uses the Factory to create the module's domain instances and executes the desired behaviour from them.
 Nothing less, nothing more. 
+
+[<< Basic Concepts](../docs/001_basic_concepts.md) | [Factory >>](../docs/003_factory.md)

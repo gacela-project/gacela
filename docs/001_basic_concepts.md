@@ -39,3 +39,5 @@ should be decouple from the outside.
 
 All the responsibilities that a module handles should remain close and together. The domain of that module should guide
 its design.
+
+[Facade >>](../docs/002_facade.md)

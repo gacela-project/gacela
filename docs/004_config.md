@@ -66,3 +66,5 @@ Do not forget to define the `$applicationRootDir` in your bootstrap application 
 ```php
 \Gacela\Framework\Config::setApplicationRootDir(getcwd());
 ```
+
+[<< Factory](../docs/003_factory.md) | [Dependency Provider >>](../docs/005_dependency_provider.md)

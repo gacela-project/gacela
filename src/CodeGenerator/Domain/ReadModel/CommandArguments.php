@@ -6,22 +6,22 @@ namespace Gacela\CodeGenerator\Domain\ReadModel;
 
 final class CommandArguments
 {
-    private string $rootNamespace;
-    private string $targetDirectory;
+    private string $namespace;
+    private string $directory;
 
-    public function __construct(string $rootNamespace, string $targetDirectory)
+    public function __construct(string $namespace, string $directory)
     {
-        $this->rootNamespace = $rootNamespace;
-        $this->targetDirectory = $targetDirectory;
+        $this->namespace = $namespace;
+        $this->directory = $directory;
     }
 
-    public function rootNamespace(): string
+    public function namespace(): string
     {
-        return $this->rootNamespace;
+        return $this->namespace;
     }
 
-    public function targetDirectory(): string
+    public function directory(): string
     {
-        return $this->targetDirectory;
+        return $this->directory;
     }
 }

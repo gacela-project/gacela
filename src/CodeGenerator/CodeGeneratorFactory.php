@@ -9,7 +9,7 @@ use Gacela\CodeGenerator\Domain\Command\DependencyProviderMaker;
 use Gacela\CodeGenerator\Domain\Command\FacadeMaker;
 use Gacela\CodeGenerator\Domain\Command\FactoryMaker;
 use Gacela\CodeGenerator\Domain\Command\ModuleMaker;
-use Gacela\CodeGenerator\Domain\Io\CommandArgumentsParser;
+use Gacela\CodeGenerator\Domain\Io\CommandArguments\CommandArgumentsParser;
 use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
 use Gacela\CodeGenerator\Infrastructure\Io\SystemMakerIo;
 use Gacela\Framework\AbstractFactory;
@@ -71,6 +71,8 @@ final class CodeGeneratorFactory extends AbstractFactory
 
     public function createCommandArgumentsParser(): CommandArgumentsParser
     {
-        return new CommandArgumentsParser();
+        return new CommandArgumentsParser(
+            $this->getConfig()->getComposerJsonContentAsArray()
+        );
     }
 }

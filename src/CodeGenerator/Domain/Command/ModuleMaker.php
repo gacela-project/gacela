@@ -29,7 +29,7 @@ final class ModuleMaker implements MakerInterface
             $generator->make($commandArguments);
         }
 
-        $pieces = explode('/', $commandArguments->targetDirectory());
+        $pieces = explode('/', $commandArguments->directory());
         $moduleName = end($pieces);
         $this->io->writeln("Module $moduleName created successfully");
     }

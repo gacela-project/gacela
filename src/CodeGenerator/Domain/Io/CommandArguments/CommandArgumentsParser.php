@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Io;
+namespace Gacela\CodeGenerator\Domain\Io\CommandArguments;
 
+use Gacela\CodeGenerator\Domain\Io\CommandArguments\Exception\CommandArgumentsException;
 use Gacela\CodeGenerator\Domain\ReadModel\CommandArguments;
 use InvalidArgumentException;
-use LogicException;
 
 final class CommandArgumentsParser
 {
@@ -31,6 +31,14 @@ final class CommandArgumentsParser
 
     private function createCommandArguments(string $desiredNamespace): CommandArguments
     {
+        if (!isset($this->composerJson['autoload'])) {
+            throw CommandArgumentsException::noAutoloadFound();
+        }
+
+        if (!isset($this->composerJson['autoload']['psr-4'])) {
+            throw CommandArgumentsException::noAutoloadPsr4Found();
+        }
+
         $psr4 = $this->composerJson['autoload']['psr-4'];
         $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);
 
@@ -41,7 +49,7 @@ final class CommandArgumentsParser
             }
         }
 
-        throw new LogicException('No autoload psr-4 match found for ' . $desiredNamespace);
+        throw CommandArgumentsException::noAutoloadPsr4MatchFound($desiredNamespace);
     }
 
     /**

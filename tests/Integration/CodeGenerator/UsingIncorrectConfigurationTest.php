@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\CodeGenerator;
 
 use Gacela\CodeGenerator\CodeGeneratorFacade;
+use Gacela\CodeGenerator\Domain\Io\CommandArguments\Exception\CommandArgumentsException;
 use Gacela\Framework\Config;
 use InvalidArgumentException;
-use LogicException;
 use PHPUnit\Framework\TestCase;
 
 final class UsingIncorrectConfigurationTest extends TestCase
@@ -34,7 +34,7 @@ final class UsingIncorrectConfigurationTest extends TestCase
 
     public function test_unknown_target(): void
     {
-        $this->expectException(LogicException::class);
+        $this->expectExceptionObject(CommandArgumentsException::noAutoloadPsr4MatchFound('UnknownNamespace'));
         $facade = new CodeGeneratorFacade();
         $facade->runCommand('make:module', ['UnknownNamespace']);
     }

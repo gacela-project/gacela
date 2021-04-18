@@ -2,15 +2,38 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Io;
+namespace GacelaTest\Unit\CodeGenerator\Io\CommandArguments;
 
-use Gacela\CodeGenerator\Domain\Io\CommandArgumentsParser;
+use Gacela\CodeGenerator\Domain\Io\CommandArguments\CommandArgumentsParser;
+use Gacela\CodeGenerator\Domain\Io\CommandArguments\Exception\CommandArgumentsException;
 use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use function json_decode;
 
 final class CommandArgumentsParserTest extends TestCase
 {
+    public function test_exception_when_no_arguments_are_given(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $parser = new CommandArgumentsParser([]);
+        $parser->parse([]);
+    }
+
+    public function test_exception_when_no_autoload_found(): void
+    {
+        $this->expectExceptionObject(CommandArgumentsException::noAutoloadFound());
+        $parser = new CommandArgumentsParser([]);
+        $parser->parse(['']);
+    }
+
+    public function test_exception_when_no_psr4_found(): void
+    {
+        $this->expectExceptionObject(CommandArgumentsException::noAutoloadPsr4Found());
+        $parser = new CommandArgumentsParser(['autoload' => []]);
+        $parser->parse(['']);
+    }
+
     /**
      * @dataProvider providerOneLevelRootNamespace
      */

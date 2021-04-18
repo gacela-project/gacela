@@ -15,6 +15,7 @@
         }
     ],
     "require": {
+        "ext-json": "*",
         "php": ">=7.4"
     },
     "require-dev": {
@@ -39,14 +40,16 @@
     "scripts": {
         "test-all": [
             "@test-quality",
+            "@test-unit",
             "@test-integration"
         ],
         "test-quality": [
             "@csrun",
             "@psalm"
         ],
+        "test-unit": "./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",
-        "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=integration --coverage-html=coverage",
+        "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration --coverage-html=coverage",
         "psalm": "./vendor/bin/psalm",
         "csfix": "./vendor/bin/php-cs-fixer fix --allow-risky=yes",
         "csrun": "./vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run"

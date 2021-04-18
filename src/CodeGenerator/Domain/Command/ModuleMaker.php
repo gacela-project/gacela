@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator\Domain\Command;
 
 use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
+use Gacela\CodeGenerator\Domain\ReadModel\CommandArguments;
 
 final class ModuleMaker implements MakerInterface
 {
@@ -22,13 +23,13 @@ final class ModuleMaker implements MakerInterface
         $this->generators = $generators;
     }
 
-    public function make(string $rootNamespace, string $targetDirectory): void
+    public function make(CommandArguments $commandArguments): void
     {
         foreach ($this->generators as $generator) {
-            $generator->make($rootNamespace, $targetDirectory);
+            $generator->make($commandArguments);
         }
 
-        $pieces = explode('/', $targetDirectory);
+        $pieces = explode('/', $commandArguments->directory());
         $moduleName = end($pieces);
         $this->io->writeln("Module $moduleName created successfully");
     }

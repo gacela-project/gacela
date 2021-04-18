@@ -25,16 +25,16 @@ Extra:
 
 ```php
 # config/default.php
-use src\Calculator\CalculatorConfig;
+use src\Calculator\Config;
 
 return [
-    CalculatorConfig::MAX_ADDITIONS => 20,
+    Config::MAX_ADDITIONS => 20,
 ];
 ```
 
 ```php
-# src/Calculator/CalculatorConfig.php
-final class CalculatorConfig extends AbstractConfig
+# src/Calculator/Config.php
+final class Config extends AbstractConfig
 {
     public const MAX_ADDITIONS = 'MAX_ADDITIONS';
 
@@ -46,11 +46,11 @@ final class CalculatorConfig extends AbstractConfig
 ```
 
 ```php
-# src/Calculator/CalculatorFactory.php
+# src/Calculator/Factory.php
 /**
- * @method CalculatorConfig getConfig()
+ * @method Config getConfig()
  */
-final class CalculatorFactory extends AbstractFactory
+final class Factory extends AbstractFactory
 {
     public function createAdder(): AdderInterface
     {
@@ -60,3 +60,11 @@ final class CalculatorFactory extends AbstractFactory
     }
 }
 ```
+
+Do not forget to define the `$applicationRootDir` in your bootstrap application file.
+
+```php
+\Gacela\Framework\Config::setApplicationRootDir(getcwd());
+```
+
+[<< Factory](../docs/003_factory.md) | [Dependency Provider >>](../docs/005_dependency_provider.md)

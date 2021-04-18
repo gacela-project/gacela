@@ -1,4 +1,10 @@
 <p align="center">
+  <a href="http://gacela-project.com/" title="Gacela Website">
+    <img src="docs/imgs/gacela-logo.png" width="350" alt="Gacela logo"/>
+  </a>
+</p>
+
+<p align="center">
   <a href="https://github.com/gacela-project/gacela/actions">
     <img src="https://github.com/gacela-project/gacela/workflows/CI/badge.svg" alt="GitHub Build Status">
   </a>
@@ -40,8 +46,9 @@ composer require gacela-project/gacela
 - [Basic concepts](docs/001_basic_concepts.md): What are the characteristics of a module?
 - [Facade](docs/002_facade.md): The entry point of your module
 - [Factory](docs/003_factory.md): The place where you create your domain services and objects
-- [Config](docs/004_config.md): Reads the `config` key-values
+- [Config](docs/004_config.md): Reads the all the files under the `config` folder
 - [DependencyProvider](docs/005_dependency_provider.md): It defines the dependencies between modules
+- [Code generator](docs/006_code_generator.md): Some commands out-of-the-box for generating code
 
 ### Examples
 

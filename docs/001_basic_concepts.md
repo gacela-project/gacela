@@ -37,6 +37,7 @@ You should consider a module as an individual thing in order to decouple it from
 charge of reading from the IO (Config) is the only class which is coupled somehow with the infrastructure, but the rest
 should be decouple from the outside.
 
-All the responsibilities that a module handles should remain close and together. The domain of that module should guide its
-design.
+All the responsibilities that a module handles should remain close and together. The domain of that module should guide
+its design.
 
+[Facade >>](../docs/002_facade.md)

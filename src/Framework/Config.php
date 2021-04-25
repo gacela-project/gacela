@@ -27,11 +27,6 @@ final class Config
         return self::$instance;
     }
 
-    public static function getApplicationRootDir(): string
-    {
-        return self::$applicationRootDir;
-    }
-
     public static function setApplicationRootDir(string $dir): void
     {
         self::$applicationRootDir = $dir;
@@ -85,20 +80,34 @@ final class Config
 
     private static function scanAllConfigFiles(): array
     {
+        $configDir = self::getApplicationRootDir() . '/config/';
+        if (!is_dir($configDir)) {
+            throw new RuntimeException('"config" directory not found on application root dir');
+        }
+
         return array_diff(
-            scandir(self::$applicationRootDir . '/config/'),
+            scandir($configDir),
             ['..', '.', self::CONFIG_LOCAL_FILENAME]
         );
     }
 
     private static function readConfigFromFile(string $type): array
     {
-        $fileName = self::$applicationRootDir . '/config/' . $type;
+        $fileName = self::getApplicationRootDir() . '/config/' . $type;
 
         if (file_exists($fileName)) {
             return include $fileName;
         }
 
         return [];
+    }
+
+    public static function getApplicationRootDir(): string
+    {
+        if (empty(self::$applicationRootDir)) {
+            self::$applicationRootDir = getcwd() ?: '';
+        }
+
+        return self::$applicationRootDir;
     }
 }

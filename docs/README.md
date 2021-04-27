@@ -1,7 +1,7 @@
 [Back to the homepage](../README.md)
 
 <p align="center">
-  <img src="imgs/gacela-logo.png" width="350" alt="Gacela logo"/>
+  <img src="imgs/gacela-logo-blue.svg" width="350" alt="Gacela logo"/>
 </p>
 
 ## Documentation

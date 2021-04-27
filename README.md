@@ -1,6 +1,6 @@
 <p align="center">
   <a href="http://gacela-project.com/" title="Gacela Website">
-    <img src="docs/imgs/gacela-logo.png" width="350" alt="Gacela logo"/>
+    <img src="docs/imgs/gacela-logo-blue.svg" width="350" alt="Gacela logo"/>
   </a>
 </p>
 

@@ -6,6 +6,7 @@ namespace Gacela\CodeGenerator\Domain;
 
 use Gacela\CodeGenerator\Domain\ReadModel\CommandArguments;
 use Gacela\CodeGenerator\Infrastructure\Template\CodeTemplateInterface;
+use RuntimeException;
 
 final class FileContentGenerator
 {
@@ -16,17 +17,15 @@ final class FileContentGenerator
         $this->codeTemplate = $codeTemplate;
     }
 
-    public function generate(
-        CommandArguments $commandArguments,
-        string $moduleName
-    ): void {
+    public function generate(CommandArguments $commandArguments, string $filename): void
+    {
         $this->mkdir($commandArguments->directory());
 
-        $path = sprintf('%s/%s.php', $commandArguments->directory(), $moduleName);
+        $path = sprintf('%s/%s.php', $commandArguments->directory(), $filename);
         $search = ['$NAMESPACE$', '$CLASS_NAME$'];
-        $replace = [$commandArguments->namespace(), $moduleName];
+        $replace = [$commandArguments->namespace(), $filename];
 
-        $template = $this->findTemplate($moduleName);
+        $template = $this->findTemplate($filename);
         $fileContent = str_replace($search, $replace, $template);
 
         file_put_contents($path, $fileContent);
@@ -38,23 +37,26 @@ final class FileContentGenerator
             return;
         }
         if (!mkdir($directory) && !is_dir($directory)) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $directory));
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
         }
     }
 
-    private function findTemplate(string $moduleName): string
+    private function findTemplate(string $filename): string
     {
-        switch (strtolower($moduleName)) {
-            case 'facade':
+        switch ($filename) {
+            case FilenameSanitizer::FACADE:
                 return $this->codeTemplate->getFacadeMakerTemplate();
-            case 'factory':
+            case FilenameSanitizer::FACTORY:
                 return $this->codeTemplate->getFactoryMakerTemplate();
-            case 'config':
+            case FilenameSanitizer::CONFIG:
                 return $this->codeTemplate->getConfigMakerTemplate();
-            case 'dependencyprovider':
+            case FilenameSanitizer::DEPENDENCY_PROVIDER:
                 return $this->codeTemplate->getDependencyProviderMakerTemplate();
-
+            default:
+                throw new RuntimeException(sprintf(
+                    'Unknown template for "%s"?',
+                    $filename
+                ));
         }
-        throw new \RuntimeException('Unknown template for module ' . $moduleName);
     }
 }

@@ -19,6 +19,7 @@ Config::setApplicationRootDir($cwd);
 $codeGeneratorFactory = new CodeGeneratorFactory();
 
 $application = new Application();
-$application->add($codeGeneratorFactory->createMakerCommand());
+$application->add($codeGeneratorFactory->createMakerFileCommand());
+$application->add($codeGeneratorFactory->createMakerModuleCommand());
 $application->run();
 

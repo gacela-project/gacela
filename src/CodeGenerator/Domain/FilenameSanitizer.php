@@ -37,7 +37,8 @@ final class FilenameSanitizer
 
         if (count($maxValKeys) > 1) {
             throw new RuntimeException(sprintf(
-                'Which filename do you mean [%s]?',
+                'When using "%s", which filename do you mean [%s]?',
+                $filename,
                 implode(' or ', $maxValKeys)
             ));
         }

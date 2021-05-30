@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Io\CommandArguments;
+namespace Gacela\CodeGenerator\Domain;
 
-use Gacela\CodeGenerator\Domain\Io\CommandArguments\Exception\CommandArgumentsException;
+use Gacela\CodeGenerator\Domain\Exception\CommandArgumentsException;
 use Gacela\CodeGenerator\Domain\ReadModel\CommandArguments;
 use InvalidArgumentException;
 
@@ -18,18 +18,11 @@ final class CommandArgumentsParser
     }
 
     /**
+     * @param string $desiredNamespace The location of the new module. For example: App/TestModule
+     *
      * @throws InvalidArgumentException
      */
-    public function parse(array $arguments): CommandArguments
-    {
-        if (empty($arguments)) {
-            throw new InvalidArgumentException('Expected argument to be the location of the new module. For example: App/TestModule');
-        }
-
-        return $this->createCommandArguments($arguments[0]);
-    }
-
-    private function createCommandArguments(string $desiredNamespace): CommandArguments
+    public function parse(string $desiredNamespace): CommandArguments
     {
         if (!isset($this->composerJson['autoload'])) {
             throw CommandArgumentsException::noAutoloadFound();

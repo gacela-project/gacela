@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator;
 
-use Gacela\CodeGenerator\Domain\Command\ConfigMaker;
-use Gacela\CodeGenerator\Domain\Command\DependencyProviderMaker;
-use Gacela\CodeGenerator\Domain\Command\FacadeMaker;
-use Gacela\CodeGenerator\Domain\Command\FactoryMaker;
-use Gacela\CodeGenerator\Domain\Command\ModuleMaker;
-use Gacela\CodeGenerator\Domain\Io\CommandArguments\CommandArgumentsParser;
-use Gacela\CodeGenerator\Domain\Io\MakerIoInterface;
-use Gacela\CodeGenerator\Infrastructure\Io\SystemMakerIo;
+use Gacela\CodeGenerator\Domain\CommandArgumentsParser;
+use Gacela\CodeGenerator\Domain\FileContentGenerator;
+use Gacela\CodeGenerator\Domain\FilenameSanitizer;
+use Gacela\CodeGenerator\Infrastructure\Command\MakeFileCommand;
+use Gacela\CodeGenerator\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Framework\AbstractFactory;
 
 /**
@@ -19,60 +16,37 @@ use Gacela\Framework\AbstractFactory;
  */
 final class CodeGeneratorFactory extends AbstractFactory
 {
-    public function createModuleMaker(): ModuleMaker
+    public function createMakerModuleCommand(): MakeModuleCommand
     {
-        return new ModuleMaker(
-            $this->createGeneratorIo(),
-            [
-                $this->createFacadeMaker(),
-                $this->createFactoryMaker(),
-                $this->createConfigMaker(),
-                $this->createDependencyProviderMaker(),
-            ]
+        return new MakeModuleCommand(
+            $this->createCommandArgumentsParser(),
+            $this->createFileContentGenerator()
         );
     }
 
-    public function createFacadeMaker(): FacadeMaker
+    public function createMakerFileCommand(): MakeFileCommand
     {
-        return new FacadeMaker(
-            $this->createGeneratorIo(),
-            $this->getConfig()->getFacadeMakerTemplate()
+        return new MakeFileCommand(
+            $this->createCommandArgumentsParser(),
+            $this->createFilenameSanitizer(),
+            $this->createFileContentGenerator()
         );
     }
 
-    public function createFactoryMaker(): FactoryMaker
-    {
-        return new FactoryMaker(
-            $this->createGeneratorIo(),
-            $this->getConfig()->getFactoryMakerTemplate()
-        );
-    }
-
-    public function createConfigMaker(): ConfigMaker
-    {
-        return new ConfigMaker(
-            $this->createGeneratorIo(),
-            $this->getConfig()->getConfigMakerTemplate()
-        );
-    }
-
-    public function createDependencyProviderMaker(): DependencyProviderMaker
-    {
-        return new DependencyProviderMaker(
-            $this->createGeneratorIo(),
-            $this->getConfig()->getDependencyProviderMakerTemplate()
-        );
-    }
-
-    private function createGeneratorIo(): MakerIoInterface
-    {
-        return new SystemMakerIo();
-    }
-
-    public function createCommandArgumentsParser(): CommandArgumentsParser
+    private function createCommandArgumentsParser(): CommandArgumentsParser
     {
         return new CommandArgumentsParser(
             $this->getConfig()->getComposerJsonContentAsArray()
         );
+    }
+
+    private function createFilenameSanitizer(): FilenameSanitizer
+    {
+        return new FilenameSanitizer();
+    }
+
+    private function createFileContentGenerator(): FileContentGenerator
+    {
+        return new FileContentGenerator($this->getConfig());
     }
 }

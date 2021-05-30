@@ -6,18 +6,14 @@ namespace Gacela\CodeGenerator\Infrastructure\Command;
 
 use Gacela\CodeGenerator\Domain\CommandArgumentsParser;
 use Gacela\CodeGenerator\Domain\FileContentGenerator;
-use RuntimeException;
+use Gacela\CodeGenerator\Domain\FilenameSanitizer;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use function in_array;
-use function json_encode;
 
 final class MakeModuleCommand extends Command
 {
-    private const FILENAMES = ['Facade', 'Factory', 'Config', 'DependencyProvider'];
-
     private CommandArgumentsParser $argumentsParser;
     private FileContentGenerator $fileContentGenerator;
 
@@ -32,7 +28,7 @@ final class MakeModuleCommand extends Command
 
     protected function configure(): void
     {
-        $this->setDescription('Generate a basic module with an empty Facade|Factory|Config|DependencyProvider.')
+        $this->setDescription('Generate a basic module with an empty ' . FilenameSanitizer::expectedFilenames())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"');
     }
 
@@ -42,7 +38,7 @@ final class MakeModuleCommand extends Command
         $path = $input->getArgument('path');
         $commandArguments = $this->argumentsParser->parse($path);
 
-        foreach (self::FILENAMES as $filename) {
+        foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
             $this->fileContentGenerator->generate($commandArguments, $filename);
             $output->writeln("> Path '$path/$filename' created successfully");
         }
@@ -52,15 +48,5 @@ final class MakeModuleCommand extends Command
         $output->writeln("Module '$moduleName' created successfully");
 
         return 0;
-    }
-
-    private function verifyFilename(string $filename): void
-    {
-        if (!in_array($filename, self::FILENAMES)) {
-            throw new RuntimeException(sprintf(
-                'Filename must be one of these values: %s',
-                json_encode(self::FILENAMES, JSON_THROW_ON_ERROR)
-            ));
-        }
     }
 }

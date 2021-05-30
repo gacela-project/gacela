@@ -13,12 +13,17 @@ final class FilenameSanitizer
     public const CONFIG = 'Config';
     public const DEPENDENCY_PROVIDER = 'DependencyProvider';
 
-    private const EXPECTED_FILENAMES = [
+    public const EXPECTED_FILENAMES = [
         self::FACADE,
         self::FACTORY,
         self::CONFIG,
         self::DEPENDENCY_PROVIDER,
     ];
+
+    public static function expectedFilenames(string $glue = ', '): string
+    {
+        return implode($glue, self::EXPECTED_FILENAMES);
+    }
 
     public function sanitize(string $filename): string
     {

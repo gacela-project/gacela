@@ -18,7 +18,7 @@ final class FilenameSanitizerTest extends TestCase
 
     public function test_facade_or_factory_problem(): void
     {
-        $this->expectExceptionMessageMatches('/Which filename do you mean/');
+        $this->expectExceptionMessage('When using "fac", which filename do you mean [Facade or Factory]?');
         $this->filenameSanitizer->sanitize('fac');
     }
 

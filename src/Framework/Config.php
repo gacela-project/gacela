@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Exception;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RecursiveRegexIterator;
+use RegexIterator;
 use RuntimeException;
 
 final class Config
@@ -27,15 +32,10 @@ final class Config
         return self::$instance;
     }
 
-    public static function setApplicationRootDir(string $dir): void
-    {
-        self::$applicationRootDir = $dir;
-    }
-
     /**
      * @param mixed|null $default
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return mixed
      */
@@ -60,20 +60,24 @@ final class Config
         return self::$config[$key];
     }
 
-    public static function hasValue(string $key): bool
-    {
-        return isset(self::$config[$key]);
-    }
-
     public static function init(): void
     {
         $configs = [];
 
         foreach (self::scanAllConfigFiles() as $filename) {
-            $configs[] = self::readConfigFromFile($filename);
+            $fileNameOrDir = self::fullPath($filename);
+            if (is_dir($fileNameOrDir)) {
+                foreach (self::createRecursiveIterator($fileNameOrDir) as $fileInfo) {
+                    if (self::isPhpFile($fileInfo[0])) {
+                        $configs[] = self::readConfigFromFile($fileInfo[0]);
+                    }
+                }
+            } elseif (self::isPhpFile($fileNameOrDir)) {
+                $configs[] = self::readConfigFromFile($fileNameOrDir);
+            }
         }
 
-        $configs[] = self::readConfigFromFile(self::CONFIG_LOCAL_FILENAME);
+        $configs[] = self::readConfigFromFile(self::fullPath(self::CONFIG_LOCAL_FILENAME));
 
         self::$config = array_merge(...$configs);
     }
@@ -91,17 +95,6 @@ final class Config
         );
     }
 
-    private static function readConfigFromFile(string $type): array
-    {
-        $fileName = self::getApplicationRootDir() . '/config/' . $type;
-
-        if (file_exists($fileName)) {
-            return include $fileName;
-        }
-
-        return [];
-    }
-
     public static function getApplicationRootDir(): string
     {
         if (empty(self::$applicationRootDir)) {
@@ -109,5 +102,44 @@ final class Config
         }
 
         return self::$applicationRootDir;
+    }
+
+    public static function setApplicationRootDir(string $dir): void
+    {
+        self::$applicationRootDir = $dir;
+    }
+
+    private static function fullPath(string $fileNameOrDir): string
+    {
+        return self::getApplicationRootDir() . '/config/' . $fileNameOrDir;
+    }
+
+    private static function createRecursiveIterator(string $path): RegexIterator
+    {
+        return new RegexIterator(
+            new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path)),
+            '/^.+\.php$/i',
+            RecursiveRegexIterator::GET_MATCH
+        );
+    }
+
+    private static function isPhpFile(string $path): bool
+    {
+        return is_file($path) && pathinfo($path, PATHINFO_EXTENSION) === 'php';
+    }
+
+    private static function readConfigFromFile(string $file): array
+    {
+        if (file_exists($file)) {
+            $content = include $file;
+            return is_array($content) ? $content : [];
+        }
+
+        return [];
+    }
+
+    public static function hasValue(string $key): bool
+    {
+        return isset(self::$config[$key]);
     }
 }

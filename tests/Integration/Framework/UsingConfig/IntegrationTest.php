@@ -24,6 +24,7 @@ final class IntegrationTest extends TestCase
                 'config' => 1,
                 'config_local' => 2,
                 'override' => 5,
+                'subfolder' => 1,
             ],
             $facade->doSomething()
         );

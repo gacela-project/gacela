@@ -3,8 +3,9 @@
 
 declare(strict_types=1);
 
-use Gacela\CodeGenerator\CodeGeneratorFacade;
+use Gacela\CodeGenerator\CodeGeneratorFactory;
 use Gacela\Framework\Config;
+use Symfony\Component\Console\Application;
 
 $cwd = getcwd();
 if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
@@ -13,15 +14,11 @@ if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
 
 require $autoloadPath;
 
-if ($argc <= 1) {
-    exit(CodeGeneratorFacade::HELP_TEXT);
-}
-
 Config::setApplicationRootDir($cwd);
 
-try {
-    $codeGenerator = new CodeGeneratorFacade();
-    $codeGenerator->runCommand($argv[1], array_slice($argv, 2));
-} catch (Throwable $e) {
-    print 'Error: ' . $e->getMessage() . PHP_EOL;
-}
+$codeGeneratorFactory = new CodeGeneratorFactory();
+
+$application = new Application();
+$application->add($codeGeneratorFactory->createMakerCommand());
+$application->run();
+

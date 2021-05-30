@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator;
 
+use Gacela\CodeGenerator\Infrastructure\Template\CodeTemplateInterface;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\Config;
 use LogicException;
 
-final class CodeGeneratorConfig extends AbstractConfig
+final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateInterface
 {
     public function getFacadeMakerTemplate(): string
     {

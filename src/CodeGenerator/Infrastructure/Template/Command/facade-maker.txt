@@ -7,7 +7,7 @@ namespace $NAMESPACE$;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method Factory getFactory()
+ * @method $MODULE_NAME$Factory getFactory()
  */
 final class $CLASS_NAME$ extends AbstractFacade
 {

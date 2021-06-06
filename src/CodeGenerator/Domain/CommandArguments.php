@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\ReadModel;
+namespace Gacela\CodeGenerator\Domain;
 
 final class CommandArguments
 {
@@ -23,5 +23,10 @@ final class CommandArguments
     public function directory(): string
     {
         return $this->directory;
+    }
+
+    public function basename(): string
+    {
+        return basename($this->directory);
     }
 }

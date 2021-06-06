@@ -10,6 +10,7 @@ use Gacela\CodeGenerator\Domain\FilenameSanitizer;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 final class MakeModuleCommand extends Command
@@ -29,7 +30,8 @@ final class MakeModuleCommand extends Command
     protected function configure(): void
     {
         $this->setDescription('Generate a basic module with an empty ' . FilenameSanitizer::expectedFilenames())
-            ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"');
+            ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
+            ->addOption('long-name', 'l', InputOption::VALUE_NONE, 'Add module as prefix to the class name');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -39,8 +41,12 @@ final class MakeModuleCommand extends Command
         $commandArguments = $this->argumentsParser->parse($path);
 
         foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
-            $this->fileContentGenerator->generate($commandArguments, $filename);
-            $output->writeln("> Path '$path/$filename' created successfully");
+            $fullPath = $this->fileContentGenerator->generate(
+                $commandArguments,
+                $filename,
+                (bool)$input->getOption('long-name')
+            );
+            $output->writeln("> Path '$fullPath' created successfully");
         }
 
         $pieces = explode('/', $commandArguments->directory());

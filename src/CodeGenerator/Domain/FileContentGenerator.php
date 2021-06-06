@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Domain;
 
-use Gacela\CodeGenerator\Domain\ValueObject\CommandArguments;
 use Gacela\CodeGenerator\Infrastructure\Template\CodeTemplateInterface;
 use RuntimeException;
 
@@ -22,12 +21,12 @@ final class FileContentGenerator
      */
     public function generate(CommandArguments $commandArguments, string $filename, bool $withLongName): string
     {
-        $this->mkdir($commandArguments->targetDirectory());
+        $this->mkdir($commandArguments->directory());
 
-        $moduleName = $withLongName ? $commandArguments->dirname() : '';
+        $moduleName = $withLongName ? $commandArguments->basename() : '';
         $className = $moduleName . $filename;
 
-        $path = sprintf('%s/%s.php', $commandArguments->targetDirectory(), $className);
+        $path = sprintf('%s/%s.php', $commandArguments->directory(), $className);
         $search = ['$NAMESPACE$', '$MODULE_NAME$', '$CLASS_NAME$'];
         $replace = [$commandArguments->namespace(), $moduleName, $className];
 

@@ -49,7 +49,7 @@ final class MakeModuleCommand extends Command
             $output->writeln("> Path '$fullPath' created successfully");
         }
 
-        $pieces = explode('/', $commandArguments->targetDirectory());
+        $pieces = explode('/', $commandArguments->directory());
         $moduleName = end($pieces);
         $output->writeln("Module '$moduleName' created successfully");
 

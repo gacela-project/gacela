@@ -46,7 +46,7 @@ final class CommandArgumentsParserTest extends TestCase
         $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
         $args = $parser->parse('App/TestModule');
 
-        self::assertSame('src/TestModule', $args->targetDirectory());
+        self::assertSame('src/TestModule', $args->directory());
     }
 
     public function test_parse_multi_level_from_target_directory(): void
@@ -54,7 +54,7 @@ final class CommandArgumentsParserTest extends TestCase
         $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
         $args = $parser->parse('App/TestModule/TestSubModule');
 
-        self::assertSame('src/TestModule/TestSubModule', $args->targetDirectory());
+        self::assertSame('src/TestModule/TestSubModule', $args->directory());
     }
 
 
@@ -85,7 +85,7 @@ JSON;
         $parser = new CommandArgumentsParser($this->exampleMultiLevelComposerJson());
         $args = $parser->parse('App/TestModule/TestSubModule');
 
-        self::assertSame('src/TestSubModule', $args->targetDirectory());
+        self::assertSame('src/TestSubModule', $args->directory());
     }
 
     private function exampleMultiLevelComposerJson(): array

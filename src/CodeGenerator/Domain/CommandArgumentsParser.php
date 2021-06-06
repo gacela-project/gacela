@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator\Domain;
 
 use Gacela\CodeGenerator\Domain\Exception\CommandArgumentsException;
-use Gacela\CodeGenerator\Domain\ReadModel\CommandArguments;
+use Gacela\CodeGenerator\Domain\ValueObject\CommandArguments;
 use InvalidArgumentException;
 
 final class CommandArgumentsParser

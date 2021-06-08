@@ -23,7 +23,8 @@
         "phpunit/phpunit": "^9.5",
         "vimeo/psalm": "^4.6",
         "friendsofphp/php-cs-fixer": "^2.18",
-        "symfony/var-dumper": "^5.2"
+        "symfony/var-dumper": "^5.2",
+        "phpstan/phpstan": "^0.12.88"
     },
     "autoload": {
         "psr-4": {
@@ -46,12 +47,14 @@
         ],
         "test-quality": [
             "@csrun",
-            "@psalm"
+            "@psalm",
+            "@phpstan"
         ],
         "test-unit": "./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration --coverage-html=coverage",
         "psalm": "./vendor/bin/psalm",
+        "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src tests",
         "csfix": "./vendor/bin/php-cs-fixer fix --allow-risky=yes",
         "csrun": "./vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run"
     }

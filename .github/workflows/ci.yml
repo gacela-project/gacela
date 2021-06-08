@@ -47,6 +47,9 @@ jobs:
       - name: Run vimeo/psalm on internal code
         run: ./vendor/bin/psalm --config=psalm.xml --no-progress --shepherd --show-info=false --stats
 
+      - name: Run phpstan on internal code
+        run: ./vendor/bin/phpstan analyze -c phpstan.neon src tests
+
   tests:
     name: Tests
     runs-on: ubuntu-latest

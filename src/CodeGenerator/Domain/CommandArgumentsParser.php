@@ -33,8 +33,6 @@ final class CommandArgumentsParser
 
         /** @var array{psr-4: string[]} $composerAutoload */
         $composerAutoload = $this->composerJson['autoload'];
-
-        /** @var string[] $psr4 */
         $psr4 = $composerAutoload['psr-4'];
         $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);
 

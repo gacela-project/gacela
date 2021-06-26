@@ -9,8 +9,12 @@ use InvalidArgumentException;
 
 final class CommandArgumentsParser
 {
+    /** @var array{autoload: array{psr-4: array<string,string>}} */
     private array $composerJson;
 
+    /**
+     * @param array{autoload: array{psr-4: array<string,string>}} $composerJson
+     */
     public function __construct(array $composerJson)
     {
         $this->composerJson = $composerJson;

@@ -54,7 +54,7 @@
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration --coverage-html=coverage",
         "psalm": "./vendor/bin/psalm",
-        "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src tests",
+        "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src",
         "csfix": "./vendor/bin/php-cs-fixer fix --allow-risky=yes",
         "csrun": "./vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run"
     }

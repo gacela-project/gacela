@@ -33,9 +33,12 @@ final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateIn
 
     private function getCommandTemplateContent(string $filename): string
     {
-        return file_get_contents(__DIR__ . '/Infrastructure/Template/Command/' . $filename);
+        return (string)file_get_contents(__DIR__ . '/Infrastructure/Template/Command/' . $filename);
     }
 
+    /**
+     * @return array{autoload: array{psr-4: array<string,string>}}
+     */
     public function getComposerJsonContentAsArray(): array
     {
         $filename = Config::getApplicationRootDir() . '/composer.json';
@@ -43,6 +46,11 @@ final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateIn
             throw new LogicException('composer.json file not found but it is required');
         }
 
-        return (array)json_decode(file_get_contents($filename), true);
+        /** @var array{autoload: array{psr-4: array<string,string>}} $json */
+        $json = (array)json_decode((string)file_get_contents($filename), true);
+
+        assert(isset($json['autoload']['psr-4']));
+
+        return $json;
     }
 }

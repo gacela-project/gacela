@@ -88,6 +88,9 @@ JSON;
         self::assertSame('src/TestSubModule', $args->directory());
     }
 
+    /**
+     * @return array{autoload: array{psr-4: array<string,string>}}
+     */
     private function exampleMultiLevelComposerJson(): array
     {
         $composerJson = <<<'JSON'
@@ -99,6 +102,6 @@ JSON;
     }
 }
 JSON;
-        return json_decode($composerJson, true);
+        return (array)json_decode($composerJson, true);
     }
 }

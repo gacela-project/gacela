@@ -20,7 +20,10 @@ final class Config
     private const CONFIG_LOCAL_FILENAME = 'local.php';
 
     private static string $applicationRootDir = '';
+
+    /** @var array<mixed,mixed>  */
     private static array $config = [];
+
     private static ?self $instance = null;
 
     public static function getInstance(): self

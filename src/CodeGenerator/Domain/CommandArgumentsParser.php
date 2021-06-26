@@ -31,7 +31,11 @@ final class CommandArgumentsParser
             throw CommandArgumentsException::noAutoloadPsr4Found();
         }
 
-        $psr4 = $this->composerJson['autoload']['psr-4'];
+        /** @var array{psr-4: string[]} $composerAutoload */
+        $composerAutoload = $this->composerJson['autoload'];
+
+        /** @var string[] $psr4 */
+        $psr4 = $composerAutoload['psr-4'];
         $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);
 
         foreach ($allPsr4Combinations as $psr4Combination) {
@@ -53,6 +57,8 @@ final class CommandArgumentsParser
      *   'App/TestModule',
      *   'App',
      * ].
+     *
+     * @return string[]
      */
     private function allPossiblePsr4Combinations(string $desiredNamespace): array
     {

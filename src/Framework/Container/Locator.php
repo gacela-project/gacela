@@ -10,7 +10,7 @@ final class Locator
 
     private static ?Locator $instance = null;
 
-    /** @var mixed[] */
+    /** @var array<string, mixed> */
     private static array $instanceCache = [];
 
     public static function getInstance(): self
@@ -44,7 +44,9 @@ final class Locator
             return self::$instanceCache[$concreteClass];
         }
 
+        /** @var mixed $newInstance */
         $newInstance = $this->newInstance($concreteClass);
+        /** @psalm-suppress MixedAssignment */
         self::$instanceCache[$concreteClass] = $newInstance;
 
         return $newInstance;
@@ -65,6 +67,7 @@ final class Locator
     private function newInstance(string $className)
     {
         if (class_exists($className)) {
+            /** @psalm-suppress MixedMethodCall */
             return new $className();
         }
 

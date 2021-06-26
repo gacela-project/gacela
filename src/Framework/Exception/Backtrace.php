@@ -27,7 +27,7 @@ final class Backtrace
     private function getTraceLine(array $backtrace): string
     {
         if (isset($backtrace['file'])) {
-            return $backtrace['file'] . ':' . $backtrace['line'];
+            return ((string)$backtrace['file']) . ':' . ((string)$backtrace['line']);
         }
 
         return $this->getTraceLineFromTestCase($backtrace);
@@ -35,6 +35,8 @@ final class Backtrace
 
     private function getTraceLineFromTestCase(array $backtrace): string
     {
-        return $backtrace['class'] . $backtrace['type'] . $backtrace['function'];
+        return ((string)$backtrace['class'])
+            . ((string)$backtrace['type'])
+            . ((string)$backtrace['function']);
     }
 }

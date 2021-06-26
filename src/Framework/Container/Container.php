@@ -52,8 +52,12 @@ final class Container implements ContainerInterface
         }
 
         $rawService = $this->services[$id];
+
         /** @psalm-suppress InvalidFunctionCall */
-        $resolvedService = $this->services[$id] = $rawService($this);
+        $this->services[$id] = $rawService($this);
+
+        /** @var mixed $resolvedService */
+        $resolvedService = $this->services[$id];
         $this->raw[$id] = $rawService;
 
         return $resolvedService;

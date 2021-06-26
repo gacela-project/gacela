@@ -67,6 +67,7 @@ final class Config
         foreach (self::scanAllConfigFiles() as $filename) {
             $fileNameOrDir = self::fullPath($filename);
             if (is_dir($fileNameOrDir)) {
+                /** @var array{0:string} $fileInfo */
                 foreach (self::createRecursiveIterator($fileNameOrDir) as $fileInfo) {
                     if (self::isPhpFile($fileInfo[0])) {
                         $configs[] = self::readConfigFromFile($fileInfo[0]);
@@ -82,6 +83,9 @@ final class Config
         self::$config = array_merge(...$configs);
     }
 
+    /**
+     * @return string[]
+     */
     private static function scanAllConfigFiles(): array
     {
         $configDir = self::getApplicationRootDir() . '/config/';
@@ -89,10 +93,12 @@ final class Config
             throw new RuntimeException('"config" directory not found on application root dir');
         }
 
-        return array_diff(
+        $paths = array_diff(
             scandir($configDir),
             ['..', '.', self::CONFIG_LOCAL_FILENAME]
         );
+
+        return array_map(static fn ($p) => (string)$p, $paths);
     }
 
     public static function getApplicationRootDir(): string
@@ -131,6 +137,7 @@ final class Config
     private static function readConfigFromFile(string $file): array
     {
         if (file_exists($file)) {
+            /** @var array|null $content */
             $content = include $file;
             return is_array($content) ? $content : [];
         }

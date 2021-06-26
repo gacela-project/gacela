@@ -8,7 +8,7 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 
 abstract class AbstractClassResolver
 {
-    /** @var array<string,mixed> */
+    /** @var array<string,object|mixed> */
     protected static array $cachedInstances = [];
 
     protected static ?ClassResolverFactory $classResolverFactory = null;
@@ -20,7 +20,10 @@ abstract class AbstractClassResolver
 
     abstract protected function getResolvableType(): string;
 
-    public function doResolve(object $callerClass): ?object
+    /**
+     * @return mixed|null
+     */
+    public function doResolve(object $callerClass)
     {
         $this->setCallerObject($callerClass);
         $cacheKey = $this->getCacheKey();
@@ -91,6 +94,7 @@ abstract class AbstractClassResolver
     private function createInstance(string $resolvedClassName)
     {
         if (class_exists($resolvedClassName)) {
+            /** @psalm-suppress MixedMethodCall */
             return new $resolvedClassName();
         }
 

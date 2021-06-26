@@ -43,6 +43,6 @@ final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateIn
             throw new LogicException('composer.json file not found but it is required');
         }
 
-        return json_decode(file_get_contents($filename), true);
+        return (array)json_decode(file_get_contents($filename), true);
     }
 }

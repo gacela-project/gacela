@@ -35,7 +35,7 @@ rules:
 - Different modules can interact **ONLY** via their `Facade`
 - The `Facade` is the **ONLY** one who has access to the `Factory`
 - The `Factory` creates the objects from the module and has access to the Module's `Config`
-- The `Config` can get the values from the `/config.php` file at the root of the project
+- The `Config` can get the values from the `config/*.php` files
 - The `DependencyProvider` uses the Locator to get the Facades from different modules
 
 ### Installation
@@ -55,7 +55,7 @@ composer require gacela-project/gacela
 
 ### Examples
 
-You can see an example of some modules under the `tests/Integration` folder.
+You can see an example of a module using gacela in [this repository](https://github.com/gacela-project/gacela-example).
 
 ### Contribute
 

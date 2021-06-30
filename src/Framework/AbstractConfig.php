@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Exception\ConfigException;
+
 abstract class AbstractConfig
 {
     use ConfigResolverAwareTrait;
 
     /**
      * @param mixed $default
+     *
+     * @throws ConfigException
      *
      * @return mixed
      */

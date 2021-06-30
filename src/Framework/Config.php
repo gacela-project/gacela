@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Exception;
+use Gacela\Framework\Exception\ConfigException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RecursiveRegexIterator;
 use RegexIterator;
-use RuntimeException;
 
 final class Config
 {
@@ -38,7 +37,7 @@ final class Config
     /**
      * @param mixed|null $default
      *
-     * @throws Exception
+     * @throws ConfigException
      *
      * @return mixed
      */
@@ -53,16 +52,15 @@ final class Config
         }
 
         if (!self::hasValue($key)) {
-            throw new RuntimeException(sprintf(
-                'Could not find config key "%s" in "%s"',
-                $key,
-                self::class
-            ));
+            throw ConfigException::keyNotFound($key, self::class);
         }
 
         return self::$config[$key];
     }
 
+    /**
+     * @throws ConfigException
+     */
     public static function init(): void
     {
         $configs = [];
@@ -87,13 +85,15 @@ final class Config
     }
 
     /**
+     * @throws ConfigException
+     *
      * @return string[]
      */
     private static function scanAllConfigFiles(): array
     {
         $configDir = self::getApplicationRootDir() . '/config/';
         if (!is_dir($configDir)) {
-            throw new RuntimeException('"config" directory not found on application root dir');
+            throw ConfigException::configDirNotFound(self::getApplicationRootDir());
         }
 
         $paths = array_diff(

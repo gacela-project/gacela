@@ -56,9 +56,7 @@ final class Config
      */
     public static function init(): void
     {
-        $gacelaJsonFileContent = file_get_contents(self::getApplicationRootDir() . '/gacela.json');
-        self::$gacelaJson = GacelaJsonConfig::fromArray((array)json_decode($gacelaJsonFileContent, true));
-
+        self::$gacelaJson = self::createGacelaJsonConfig();
         $configs = [];
 
         foreach (self::scanAllConfigFiles() as $fullPath) {
@@ -100,10 +98,9 @@ final class Config
     {
         $rootDir = self::getApplicationRootDir();
         $configDir = sprintf('%s/%s', $rootDir, self::$gacelaJson->path());
-        $allPaths = glob($configDir);
 
         $filteredPaths = array_diff(
-            $allPaths,
+            glob($configDir),
             [sprintf('%s/%s', $rootDir, self::$gacelaJson->pathLocal())]
         );
 
@@ -135,5 +132,18 @@ final class Config
     private static function readConfigFromFile(string $file): array
     {
         return ReaderFactory::create(self::$gacelaJson->type())->read($file);
+    }
+
+    private static function createGacelaJsonConfig(): GacelaJsonConfig
+    {
+        $gacelaJsonPath = self::getApplicationRootDir() . '/gacela.json';
+
+        if (is_file($gacelaJsonPath)) {
+            return GacelaJsonConfig::fromArray(
+                (array)json_decode(file_get_contents($gacelaJsonPath), true)
+            );
+        }
+
+        return GacelaJsonConfig::withDefaults();
     }
 }

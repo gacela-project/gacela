@@ -12,18 +12,23 @@ final class GacelaJsonConfig
 
     public static function fromArray(array $json): self
     {
-        $type = (string)($json['config']['type'] ?? 'php');
-        $path = (string)($json['config']['path'] ?? 'config/*.php');
-        $pathLocal = (string)($json['config']['path_local'] ?? 'config/local.php');
+        $type = (string)($json['config']['type'] ?? '');
+        $path = (string)($json['config']['path'] ?? '');
+        $pathLocal = (string)($json['config']['path_local'] ?? '');
 
         return new self($type, $path, $pathLocal);
     }
 
+    public static function withDefaults(): self
+    {
+        return new self('', '', '');
+    }
+
     private function __construct(string $type, string $path, string $pathLocal)
     {
-        $this->type = $type;
-        $this->path = $path;
-        $this->pathLocal = $pathLocal;
+        $this->type = $type ?: 'php';
+        $this->path = $path ?: 'config/*.php';
+        $this->pathLocal = $pathLocal ?: 'config/local.php';
     }
 
     public function type(): string

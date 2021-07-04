@@ -9,6 +9,8 @@ use Gacela\CodeGenerator\Domain\FileContentGenerator;
 use Gacela\CodeGenerator\Domain\FilenameSanitizer;
 use Gacela\CodeGenerator\Infrastructure\Command\MakeFileCommand;
 use Gacela\CodeGenerator\Infrastructure\Command\MakeModuleCommand;
+use Gacela\CodeGenerator\Infrastructure\FileContentIo;
+use Gacela\CodeGenerator\Infrastructure\FileContentIoInterface;
 use Gacela\Framework\AbstractFactory;
 
 /**
@@ -47,6 +49,14 @@ final class CodeGeneratorFactory extends AbstractFactory
 
     private function createFileContentGenerator(): FileContentGenerator
     {
-        return new FileContentGenerator($this->getConfig());
+        return new FileContentGenerator(
+            $this->getConfig(),
+            $this->createFileContentIo()
+        );
+    }
+
+    private function createFileContentIo(): FileContentIoInterface
+    {
+        return new FileContentIo();
     }
 }

@@ -102,6 +102,6 @@ JSON;
     }
 }
 JSON;
-        return (array)json_decode($composerJson, true);
+        return json_decode($composerJson, true);
     }
 }

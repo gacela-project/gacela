@@ -4,24 +4,29 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Domain;
 
+use Gacela\CodeGenerator\Infrastructure\FileContentIoInterface;
 use Gacela\CodeGenerator\Infrastructure\Template\CodeTemplateInterface;
 use RuntimeException;
 
 final class FileContentGenerator
 {
     private CodeTemplateInterface $codeTemplate;
+    private FileContentIoInterface $fileContentIo;
 
-    public function __construct(CodeTemplateInterface $codeTemplate)
-    {
+    public function __construct(
+        CodeTemplateInterface $codeTemplate,
+        FileContentIoInterface $fileContentIo
+    ) {
         $this->codeTemplate = $codeTemplate;
+        $this->fileContentIo = $fileContentIo;
     }
 
     /**
      * @return string path result where the file was generated
      */
-    public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName): string
+    public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName = false): string
     {
-        $this->mkdir($commandArguments->directory());
+        $this->fileContentIo->mkdir($commandArguments->directory());
 
         $moduleName = $withShortName ? '' : $commandArguments->basename();
         $className = $moduleName . $filename;
@@ -33,19 +38,9 @@ final class FileContentGenerator
         $template = $this->findTemplate($filename);
         $fileContent = str_replace($search, $replace, $template);
 
-        file_put_contents($path, $fileContent);
+        $this->fileContentIo->filePutContents($path, $fileContent);
 
         return $path;
-    }
-
-    private function mkdir(string $directory): void
-    {
-        if (is_dir($directory)) {
-            return;
-        }
-        if (!mkdir($directory) && !is_dir($directory)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
-        }
     }
 
     private function findTemplate(string $filename): string

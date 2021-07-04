@@ -65,7 +65,7 @@ final class Config
             }
         }
 
-        $configs[] = self::readConfigFromFile(self::configLocalAbsolutePath());
+        $configs[] = self::loadLocalConfigFile();
 
         self::$config = array_merge(...$configs);
     }
@@ -107,15 +107,6 @@ final class Config
         return array_map(static fn ($p) => (string)$p, $filteredPaths);
     }
 
-    private static function configLocalAbsolutePath(): string
-    {
-        return sprintf(
-            '%s/%s',
-            self::getApplicationRootDir(),
-            self::$gacelaJson->pathLocal()
-        );
-    }
-
     private static function isValidConfigExtensionFile(string $path): bool
     {
         if (!is_file($path)) {
@@ -145,5 +136,20 @@ final class Config
         }
 
         return GacelaJsonConfig::withDefaults();
+    }
+
+    private static function loadLocalConfigFile(): array
+    {
+        $configLocalAbsolutePath = sprintf(
+            '%s/%s',
+            self::getApplicationRootDir(),
+            self::$gacelaJson->pathLocal()
+        );
+
+        if (is_file($configLocalAbsolutePath)) {
+            return self::readConfigFromFile($configLocalAbsolutePath);
+        }
+
+        return [];
     }
 }

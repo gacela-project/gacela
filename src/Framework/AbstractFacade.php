@@ -12,7 +12,7 @@ abstract class AbstractFacade
 
     protected function getFactory(): AbstractFactory
     {
-        if ($this->factory === null) {
+        if (null === $this->factory) {
             $this->factory = $this->resolveFactory();
         }
 

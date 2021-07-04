@@ -15,7 +15,7 @@ final class Locator
 
     public static function getInstance(): self
     {
-        if (self::$instance === null) {
+        if (null === self::$instance) {
             self::$instance = new self();
         }
 
@@ -76,7 +76,7 @@ final class Locator
 
     private function isInterface(string $className): bool
     {
-        return false !== strpos($className, self::INTERFACE_SUFFIX);
+        return false !== mb_strpos($className, self::INTERFACE_SUFFIX);
     }
 
     private function getConcreteClassFromInterface(string $interface): string

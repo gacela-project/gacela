@@ -28,6 +28,7 @@ final class FilenameSanitizer
     public function sanitize(string $filename): string
     {
         $percents = [];
+
         foreach (self::EXPECTED_FILENAMES as $expected) {
             $percents[$expected] = similar_text($expected, $filename, $percent);
         }

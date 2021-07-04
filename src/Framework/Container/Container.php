@@ -19,9 +19,6 @@ final class Container implements ContainerInterface
         return Locator::getInstance();
     }
 
-    /**
-     * @param mixed $service
-     */
     public function set(string $id, $service): void
     {
         $this->services[$id] = $service;

@@ -9,6 +9,6 @@
 - [How to start](001_basic_concepts.md)
   - [Facade](002_facade.md): The entry point of your module
   - [Factory](003_factory.md): The place where you create your domain services and objects
-  - [Config](004_config.md): Reads the all the files under the `config` folder
+  - [Config](004_config.md): Reads the values defined in your config path
   - [DependencyProvider](005_dependency_provider.md): It defines the dependencies between modules
   - [Code generator](006_code_generator.md): Some commands out-of-the-box for generating code

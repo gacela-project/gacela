@@ -7,7 +7,10 @@ when you do the creation of your domain classes.
 
 In order to achieve that, you need to create a `gacela.json` file in your application root with the following values:
 
-`gacela.json` file examples:
+### gacela.json examples
+
+Using PHP config files:
+
 ```json
 {
   "config": {
@@ -18,12 +21,14 @@ In order to achieve that, you need to create a `gacela.json` file in your applic
 }
 ```
 
+Using `.env` config files:
+
 ```json
 {
   "config": {
     "type": "env",
-    "path": "config/.env*",
-    "path_local": "config/.env.local.dist"
+    "path": ".env*",
+    "path_local": ".env.local.dist"
   }
 }
 ```
@@ -33,6 +38,8 @@ In order to achieve that, you need to create a `gacela.json` file in your applic
    You can use `?` or `*` in order to match 1 or multiple characters. Check [`glob()`](https://www.php.net/manual/en/function.glob.php) function for more info.
 - `path_local`: this is the last file loaded, which means, it will override the previous configuration,
   so you can easily add it to your `.gitignore` and set your local config values in case you want to have something different for some cases
+
+---
 
 > This is tightly coupled with the infrastructure layer, because there is I/O involved.
 > It's not bad itself, you just need to be aware of potential risks, though. Don't

@@ -33,9 +33,9 @@ scalability. It will certainly encourage your modules to interact with each othe
 rules:
 
 - Different modules can interact **ONLY** via their `Facade`
-- The `Facade` is the **ONLY** one who has access to the `Factory`
+- The `Facade` has access to the `Factory`
 - The `Factory` creates the objects from the module and has access to the Module's `Config`
-- The `Config` can get the values from the `config/*.php` files
+- The `Config` gets the values from your defined config files
 - The `DependencyProvider` uses the Locator to get the Facades from different modules
 
 ### Installation
@@ -49,7 +49,7 @@ composer require gacela-project/gacela
 - [Basic concepts](docs/001_basic_concepts.md): What are the characteristics of a module?
 - [Facade](docs/002_facade.md): The entry point of your module
 - [Factory](docs/003_factory.md): The place where you create your domain services and objects
-- [Config](docs/004_config.md): Reads the all the files under the `config` folder
+- [Config](docs/004_config.md): Reads the values defined in your config path
 - [DependencyProvider](docs/005_dependency_provider.md): It defines the dependencies between modules
 - [Code generator](docs/006_code_generator.md): Some commands out-of-the-box for generating code
 

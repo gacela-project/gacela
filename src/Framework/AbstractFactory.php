@@ -40,16 +40,11 @@ abstract class AbstractFactory
 
     private function createContainerWithProvidedDependencies(): Container
     {
-        $container = $this->createContainer();
+        $container = new Container();
         $dependencyProvider = $this->resolveDependencyProvider();
-        $this->provideExternalDependencies($dependencyProvider, $container);
+        $dependencyProvider->provideModuleDependencies($container);
 
         return $container;
-    }
-
-    private function createContainer(): Container
-    {
-        return new Container();
     }
 
     private function resolveDependencyProvider(): AbstractDependencyProvider
@@ -60,10 +55,5 @@ abstract class AbstractFactory
     private function createDependencyProviderResolver(): DependencyProviderResolver
     {
         return new DependencyProviderResolver();
-    }
-
-    private function provideExternalDependencies(AbstractDependencyProvider $dependencyProvider, Container $container): void
-    {
-        $dependencyProvider->provideModuleDependencies($container);
     }
 }

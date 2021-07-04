@@ -20,14 +20,13 @@ final class Config
 
     private static string $applicationRootDir = '';
 
-    /** @var array<mixed,mixed>  */
     private static array $config = [];
 
     private static ?self $instance = null;
 
     public static function getInstance(): self
     {
-        if (self::$instance === null) {
+        if (null === self::$instance) {
             self::$instance = new self();
         }
 
@@ -35,7 +34,7 @@ final class Config
     }
 
     /**
-     * @param mixed|null $default
+     * @param null|mixed $default
      *
      * @throws ConfigException
      *
@@ -47,7 +46,7 @@ final class Config
             self::init();
         }
 
-        if ($default !== null && !self::hasValue($key)) {
+        if (null !== $default && !self::hasValue($key)) {
             return $default;
         }
 
@@ -67,6 +66,7 @@ final class Config
 
         foreach (self::scanAllConfigFiles() as $filename) {
             $fileNameOrDir = self::fullPath($filename);
+
             if (is_dir($fileNameOrDir)) {
                 /** @var array{0:string} $fileInfo */
                 foreach (self::createRecursiveIterator($fileNameOrDir) as $fileInfo) {
@@ -84,26 +84,6 @@ final class Config
         self::$config = array_merge(...$configs);
     }
 
-    /**
-     * @throws ConfigException
-     *
-     * @return string[]
-     */
-    private static function scanAllConfigFiles(): array
-    {
-        $configDir = self::getApplicationRootDir() . '/config/';
-        if (!is_dir($configDir)) {
-            throw ConfigException::configDirNotFound(self::getApplicationRootDir());
-        }
-
-        $paths = array_diff(
-            scandir($configDir),
-            ['..', '.', self::CONFIG_LOCAL_FILENAME]
-        );
-
-        return array_map(static fn ($p) => (string)$p, $paths);
-    }
-
     public static function getApplicationRootDir(): string
     {
         if (empty(self::$applicationRootDir)) {
@@ -116,6 +96,32 @@ final class Config
     public static function setApplicationRootDir(string $dir): void
     {
         self::$applicationRootDir = $dir;
+    }
+
+    public static function hasValue(string $key): bool
+    {
+        return isset(self::$config[$key]);
+    }
+
+    /**
+     * @throws ConfigException
+     *
+     * @return string[]
+     */
+    private static function scanAllConfigFiles(): array
+    {
+        $configDir = self::getApplicationRootDir() . '/config/';
+
+        if (!is_dir($configDir)) {
+            throw ConfigException::configDirNotFound(self::getApplicationRootDir());
+        }
+
+        $paths = array_diff(
+            scandir($configDir),
+            ['..', '.', self::CONFIG_LOCAL_FILENAME]
+        );
+
+        return array_map(static fn ($p) => (string) $p, $paths);
     }
 
     private static function fullPath(string $fileNameOrDir): string
@@ -134,22 +140,18 @@ final class Config
 
     private static function isPhpFile(string $path): bool
     {
-        return is_file($path) && pathinfo($path, PATHINFO_EXTENSION) === 'php';
+        return is_file($path) && 'php' === pathinfo($path, PATHINFO_EXTENSION);
     }
 
     private static function readConfigFromFile(string $file): array
     {
         if (file_exists($file)) {
-            /** @var array|null $content */
+            /** @var null|array $content */
             $content = include $file;
+
             return is_array($content) ? $content : [];
         }
 
         return [];
-    }
-
-    public static function hasValue(string $key): bool
-    {
-        return isset(self::$config[$key]);
     }
 }

@@ -44,9 +44,13 @@ final class FilenameSanitizerTest extends TestCase
     public function providerFacade(): iterable
     {
         yield ['faca'];
+
         yield ['facad'];
+
         yield ['facade'];
+
         yield ['Facade'];
+
         yield ['cade'];
     }
 
@@ -64,10 +68,15 @@ final class FilenameSanitizerTest extends TestCase
     public function providerFactory(): iterable
     {
         yield ['fact'];
+
         yield ['facto'];
+
         yield ['factor'];
+
         yield ['factory'];
+
         yield ['Factory'];
+
         yield ['tory'];
     }
 

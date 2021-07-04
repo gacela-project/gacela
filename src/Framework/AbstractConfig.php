@@ -11,7 +11,7 @@ abstract class AbstractConfig
     use ConfigResolverAwareTrait;
 
     /**
-     * @param mixed $default
+     * @param null|mixed $default
      *
      * @throws ConfigException
      *

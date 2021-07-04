@@ -8,20 +8,16 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 
 abstract class AbstractClassResolver
 {
-    /** @var array<string,object|mixed> */
+    /** @var array<string,mixed|object> */
     protected static array $cachedInstances = [];
-
     protected static ?ClassResolverFactory $classResolverFactory = null;
     protected static ?ClassNameFinderInterface $classNameFinder = null;
-
     protected ?ClassInfo $classInfo = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
-    abstract protected function getResolvableType(): string;
-
     /**
-     * @return mixed|null
+     * @return null|mixed
      */
     public function doResolve(object $callerClass)
     {
@@ -34,7 +30,7 @@ abstract class AbstractClassResolver
 
         $resolvedClassName = $this->findClassName();
 
-        if ($resolvedClassName === null) {
+        if (null === $resolvedClassName) {
             return null;
         }
 
@@ -47,6 +43,15 @@ abstract class AbstractClassResolver
     {
         $this->classInfo = new ClassInfo($callerClass);
     }
+
+    public function getClassInfo(): ClassInfo
+    {
+        assert($this->classInfo instanceof ClassInfo);
+
+        return $this->classInfo;
+    }
+
+    abstract protected function getResolvableType(): string;
 
     private function getCacheKey(): string
     {
@@ -65,7 +70,7 @@ abstract class AbstractClassResolver
 
     private function getClassNameFinder(): ClassNameFinderInterface
     {
-        if (static::$classNameFinder === null) {
+        if (null === static::$classNameFinder) {
             static::$classNameFinder = $this->getClassResolverFactory()->createClassNameFinder();
         }
 
@@ -74,22 +79,15 @@ abstract class AbstractClassResolver
 
     private function getClassResolverFactory(): ClassResolverFactory
     {
-        if (static::$classResolverFactory === null) {
+        if (null === static::$classResolverFactory) {
             static::$classResolverFactory = new ClassResolverFactory();
         }
 
         return static::$classResolverFactory;
     }
 
-    public function getClassInfo(): ClassInfo
-    {
-        assert($this->classInfo instanceof ClassInfo);
-
-        return $this->classInfo;
-    }
-
     /**
-     * @return object|null
+     * @return null|object
      */
     private function createInstance(string $resolvedClassName)
     {

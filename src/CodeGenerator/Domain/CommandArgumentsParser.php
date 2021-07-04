@@ -42,6 +42,7 @@ final class CommandArgumentsParser
 
         foreach ($allPsr4Combinations as $psr4Combination) {
             $psr4Key = $psr4Combination . '\\';
+
             if (isset($psr4[$psr4Key])) {
                 return $this->foundPsr4($psr4Key, $psr4[$psr4Key], $desiredNamespace);
             }
@@ -80,8 +81,8 @@ final class CommandArgumentsParser
 
     private function foundPsr4(string $psr4Key, string $psr4Value, string $desiredNamespace): CommandArguments
     {
-        $rootDir = substr($psr4Value, 0, -1);
-        $rootNamespace = substr($psr4Key, 0, -1);
+        $rootDir = mb_substr($psr4Value, 0, -1);
+        $rootNamespace = mb_substr($psr4Key, 0, -1);
         $targetDirectory = str_replace(['/', $rootNamespace, '\\'], ['\\', $rootDir, '/'], $desiredNamespace);
         $namespace = str_replace([$rootDir, '/'], [$rootNamespace, '\\'], $targetDirectory);
 

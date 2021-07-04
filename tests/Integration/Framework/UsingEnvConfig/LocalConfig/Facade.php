@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfig\LocalConfig;
+namespace GacelaTest\Integration\Framework\UsingEnvConfig\LocalConfig;
 
 use Gacela\Framework\AbstractFacade;
 

@@ -4,25 +4,19 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Config\GacelaJsonConfig;
+use Gacela\Framework\Config\ReaderFactory;
 use Gacela\Framework\Exception\ConfigException;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use RecursiveRegexIterator;
-use RegexIterator;
 
 final class Config
 {
-    /**
-     * This file config/local.php could be ignore in your project, and it will be read the last one
-     * so it will override every possible value.
-     */
-    private const CONFIG_LOCAL_FILENAME = 'local.php';
-
     private static string $applicationRootDir = '';
 
     private static array $config = [];
 
     private static ?self $instance = null;
+
+    private static GacelaJsonConfig $gacelaJson;
 
     public static function getInstance(): self
     {
@@ -62,24 +56,18 @@ final class Config
      */
     public static function init(): void
     {
+        $gacelaJsonFileContent = file_get_contents(self::getApplicationRootDir() . '/gacela.json');
+        self::$gacelaJson = GacelaJsonConfig::fromArray((array)json_decode($gacelaJsonFileContent, true));
+
         $configs = [];
 
-        foreach (self::scanAllConfigFiles() as $filename) {
-            $fileNameOrDir = self::fullPath($filename);
-
-            if (is_dir($fileNameOrDir)) {
-                /** @var array{0:string} $fileInfo */
-                foreach (self::createRecursiveIterator($fileNameOrDir) as $fileInfo) {
-                    if (self::isPhpFile($fileInfo[0])) {
-                        $configs[] = self::readConfigFromFile($fileInfo[0]);
-                    }
-                }
-            } elseif (self::isPhpFile($fileNameOrDir)) {
-                $configs[] = self::readConfigFromFile($fileNameOrDir);
+        foreach (self::scanAllConfigFiles() as $fullPath) {
+            if (self::isValidConfigExtensionFile($fullPath)) {
+                $configs[] = self::readConfigFromFile($fullPath);
             }
         }
 
-        $configs[] = self::readConfigFromFile(self::fullPath(self::CONFIG_LOCAL_FILENAME));
+        $configs[] = self::readConfigFromFile(self::configLocalAbsolutePath());
 
         self::$config = array_merge(...$configs);
     }
@@ -110,48 +98,42 @@ final class Config
      */
     private static function scanAllConfigFiles(): array
     {
-        $configDir = self::getApplicationRootDir() . '/config/';
+        $rootDir = self::getApplicationRootDir();
+        $configDir = sprintf('%s/%s', $rootDir, self::$gacelaJson->path());
+        $allPaths = glob($configDir);
 
-        if (!is_dir($configDir)) {
-            throw ConfigException::configDirNotFound(self::getApplicationRootDir());
+        $filteredPaths = array_diff(
+            $allPaths,
+            [sprintf('%s/%s', $rootDir, self::$gacelaJson->pathLocal())]
+        );
+
+        return array_map(static fn ($p) => (string)$p, $filteredPaths);
+    }
+
+    private static function configLocalAbsolutePath(): string
+    {
+        return sprintf(
+            '%s/%s',
+            self::getApplicationRootDir(),
+            self::$gacelaJson->pathLocal()
+        );
+    }
+
+    private static function isValidConfigExtensionFile(string $path): bool
+    {
+        if (!is_file($path)) {
+            return false;
         }
 
-        $paths = array_diff(
-            scandir($configDir),
-            ['..', '.', self::CONFIG_LOCAL_FILENAME]
-        );
+        $extension = (false !== strpos($path, '.env'))
+            ? 'env'
+            : pathinfo($path, PATHINFO_EXTENSION);
 
-        return array_map(static fn ($p) => (string) $p, $paths);
-    }
-
-    private static function fullPath(string $fileNameOrDir): string
-    {
-        return self::getApplicationRootDir() . '/config/' . $fileNameOrDir;
-    }
-
-    private static function createRecursiveIterator(string $path): RegexIterator
-    {
-        return new RegexIterator(
-            new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path)),
-            '/^.+\.php$/i',
-            RecursiveRegexIterator::GET_MATCH
-        );
-    }
-
-    private static function isPhpFile(string $path): bool
-    {
-        return is_file($path) && 'php' === pathinfo($path, PATHINFO_EXTENSION);
+        return self::$gacelaJson->type() === $extension;
     }
 
     private static function readConfigFromFile(string $file): array
     {
-        if (file_exists($file)) {
-            /** @var null|array $content */
-            $content = include $file;
-
-            return is_array($content) ? $content : [];
-        }
-
-        return [];
+        return ReaderFactory::create(self::$gacelaJson->type())->read($file);
     }
 }

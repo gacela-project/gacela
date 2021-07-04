@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfig\LocalConfig;
+namespace GacelaTest\Integration\Framework\UsingPhpConfig\LocalConfig;
 
 use Gacela\Framework\AbstractFactory;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfig;
+namespace GacelaTest\Integration\Framework\UsingPhpConfig;
 
 use Gacela\Framework\Config;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,6 @@ final class IntegrationTest extends TestCase
                 'config' => 1,
                 'config_local' => 2,
                 'override' => 5,
-                'subfolder' => 1,
             ],
             $facade->doSomething()
         );

@@ -19,11 +19,11 @@ final class FileContentGenerator
     /**
      * @return string path result where the file was generated
      */
-    public function generate(CommandArguments $commandArguments, string $filename, bool $withLongName): string
+    public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName): string
     {
         $this->mkdir($commandArguments->directory());
 
-        $moduleName = $withLongName ? $commandArguments->basename() : '';
+        $moduleName = $withShortName ? '' : $commandArguments->basename();
         $className = $moduleName . $filename;
 
         $path = sprintf('%s/%s.php', $commandArguments->directory(), $className);

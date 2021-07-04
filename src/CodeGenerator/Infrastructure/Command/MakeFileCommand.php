@@ -35,7 +35,7 @@ final class MakeFileCommand extends Command
         $this->setDescription('Generate a ' . FilenameSanitizer::expectedFilenames())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
             ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, FilenameSanitizer::expectedFilenames(' | '))
-            ->addOption('long-name', 'l', InputOption::VALUE_NONE, 'Add module as prefix to the class name');
+            ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -48,16 +48,17 @@ final class MakeFileCommand extends Command
         /** @var string $path */
         $path = $input->getArgument('path');
         $commandArguments = $this->argumentsParser->parse($path);
+        $shortName = (bool)$input->getOption('short-name');
 
         foreach ($filenames as $filename) {
             $fullPath = $this->fileContentGenerator->generate(
                 $commandArguments,
                 $filename,
-                (bool)$input->getOption('long-name')
+                $shortName
             );
             $output->writeln("> Path '$fullPath' created successfully");
         }
 
-        return 0;
+        return self::SUCCESS;
     }
 }

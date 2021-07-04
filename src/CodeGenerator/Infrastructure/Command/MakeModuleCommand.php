@@ -31,7 +31,7 @@ final class MakeModuleCommand extends Command
     {
         $this->setDescription('Generate a basic module with an empty ' . FilenameSanitizer::expectedFilenames())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
-            ->addOption('long-name', 'l', InputOption::VALUE_NONE, 'Add module as prefix to the class name');
+            ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -39,12 +39,13 @@ final class MakeModuleCommand extends Command
         /** @var string $path */
         $path = $input->getArgument('path');
         $commandArguments = $this->argumentsParser->parse($path);
+        $shortName = (bool)$input->getOption('short-name');
 
         foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
             $fullPath = $this->fileContentGenerator->generate(
                 $commandArguments,
                 $filename,
-                (bool)$input->getOption('long-name')
+                $shortName
             );
             $output->writeln("> Path '$fullPath' created successfully");
         }
@@ -53,6 +54,6 @@ final class MakeModuleCommand extends Command
         $moduleName = end($pieces);
         $output->writeln("Module '$moduleName' created successfully");
 
-        return 0;
+        return self::SUCCESS;
     }
 }

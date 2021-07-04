@@ -16,6 +16,14 @@ final class FilenameSanitizerTest extends TestCase
         $this->filenameSanitizer = new FilenameSanitizer();
     }
 
+    public function test_expected_filenames(): void
+    {
+        self::assertSame(
+            'Facade, Factory, Config, DependencyProvider',
+            FilenameSanitizer::expectedFilenames()
+        );
+    }
+
     public function test_facade_or_factory_problem(): void
     {
         $this->expectExceptionMessage('When using "fac", which filename do you mean [Facade or Factory]?');

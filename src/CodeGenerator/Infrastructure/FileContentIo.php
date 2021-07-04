@@ -6,6 +6,9 @@ namespace Gacela\CodeGenerator\Infrastructure;
 
 use RuntimeException;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class FileContentIo implements FileContentIoInterface
 {
     public function mkdir(string $directory): void

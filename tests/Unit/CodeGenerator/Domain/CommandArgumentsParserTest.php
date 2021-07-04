@@ -57,7 +57,6 @@ final class CommandArgumentsParserTest extends TestCase
         self::assertSame('src/TestModule/TestSubModule', $args->directory());
     }
 
-
     private function exampleOneLevelComposerJson(): array
     {
         $composerJson = <<<'JSON'
@@ -103,5 +102,15 @@ JSON;
 }
 JSON;
         return json_decode($composerJson, true);
+    }
+
+    public function test_no_autoload_psr4_match_found(): void
+    {
+        $this->expectExceptionObject(
+            CommandArgumentsException::noAutoloadPsr4MatchFound('Unknown/Module')
+        );
+
+        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+        $parser->parse('Unknown/Module');
     }
 }

@@ -8,8 +8,10 @@ use Gacela\Framework\Exception\Backtrace;
 
 trait ClassResolverExceptionTrait
 {
-    private function buildMessage(ClassInfo $callerClassInfo, string $resolvableType): string
+    private function buildMessage(object $callerClass, string $resolvableType): string
     {
+        $callerClassInfo = new ClassInfo($callerClass);
+
         $message = 'ClassResolver Exception' . PHP_EOL;
         $message .= sprintf(
             'Cannot resolve the "%s" for your module "%s"',

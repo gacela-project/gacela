@@ -12,7 +12,6 @@ abstract class AbstractClassResolver
     protected static array $cachedInstances = [];
     protected static ?ClassResolverFactory $classResolverFactory = null;
     protected static ?ClassNameFinderInterface $classNameFinder = null;
-    protected ?ClassInfo $classInfo = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -21,14 +20,14 @@ abstract class AbstractClassResolver
      */
     public function doResolve(object $callerClass)
     {
-        $this->setCallerObject($callerClass);
-        $cacheKey = $this->getCacheKey();
+        $classInfo = new ClassInfo($callerClass);
+        $cacheKey = $this->getCacheKey($classInfo);
 
         if (isset(static::$cachedInstances[$cacheKey])) {
             return static::$cachedInstances[$cacheKey];
         }
 
-        $resolvedClassName = $this->findClassName();
+        $resolvedClassName = $this->findClassName($classInfo);
 
         if (null === $resolvedClassName) {
             return null;
@@ -39,31 +38,17 @@ abstract class AbstractClassResolver
         return self::$cachedInstances[$cacheKey];
     }
 
-    public function setCallerObject(object $callerClass): void
-    {
-        $this->classInfo = new ClassInfo($callerClass);
-    }
-
-    public function getClassInfo(): ClassInfo
-    {
-        assert($this->classInfo instanceof ClassInfo);
-
-        return $this->classInfo;
-    }
-
     abstract protected function getResolvableType(): string;
 
-    private function getCacheKey(): string
+    private function getCacheKey(ClassInfo $classInfo): string
     {
-        assert($this->classInfo instanceof ClassInfo);
-
-        return $this->classInfo->getCacheKey($this->getResolvableType());
+        return $classInfo->getCacheKey($this->getResolvableType());
     }
 
-    private function findClassName(): ?string
+    private function findClassName(ClassInfo $classInfo): ?string
     {
         return $this->getClassNameFinder()->findClassName(
-            $this->getClassInfo(),
+            $classInfo,
             $this->getResolvableType()
         );
     }

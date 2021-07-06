@@ -18,7 +18,7 @@ final class ConfigResolver extends AbstractClassResolver
         $resolved = $this->doResolve($callerClass);
 
         if (null === $resolved) {
-            throw new ConfigNotFoundException($this->getClassInfo());
+            throw new ConfigNotFoundException($callerClass);
         }
 
         return $resolved;

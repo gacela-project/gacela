@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Factory;
 
-use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
-/**
- * @method AbstractConfig getResolvedClassInstance()
- */
 final class FactoryResolver extends AbstractClassResolver
 {
     /**
@@ -22,7 +18,7 @@ final class FactoryResolver extends AbstractClassResolver
         $resolved = $this->doResolve($callerClass);
 
         if (null === $resolved) {
-            throw new FactoryNotFoundException($this->getClassInfo());
+            throw new FactoryNotFoundException($callerClass);
         }
 
         return $resolved;

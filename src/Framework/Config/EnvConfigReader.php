@@ -17,9 +17,7 @@ final class EnvConfigReader implements ConfigReaderInterface
             }
 
             [$name, $value] = explode('=', $line, 2);
-            $name = trim($name);
-            $value = trim($value);
-            $config[$name] = $value;
+            $config[trim($name)] = trim($value);
         }
 
         return $config;

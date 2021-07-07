@@ -22,7 +22,7 @@ final class ReaderFactory
         }
 
         throw new RuntimeException(sprintf(
-            'ConfigReader not supported: "%s". Valid types: %s',
+            'ConfigReader type not supported: "%s". Valid types: %s',
             $type,
             implode(',', self::VALID_TYPES)
         ));

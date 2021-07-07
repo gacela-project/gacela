@@ -20,12 +20,10 @@ final class ClassNameFinder implements ClassNameFinderInterface
     public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
     {
         foreach ($this->finderRules as $finderRule) {
-            $classNameCandidates = $finderRule->buildClassCandidates($classInfo, $resolvableType);
+            $className = $finderRule->buildClassCandidate($classInfo, $resolvableType);
 
-            foreach ($classNameCandidates as $className) {
-                if (class_exists($className)) {
-                    return $className;
-                }
+            if (class_exists($className)) {
+                return $className;
             }
         }
 

@@ -6,19 +6,12 @@ namespace Gacela\Framework\ClassResolver\ClassNameFinder\Rule;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 
-final class FinderRuleWithoutModulePrefix extends AbstractFinderRule
+final class FinderRuleWithoutModulePrefix implements FinderRuleInterface
 {
-    protected function getPatternPaths(): array
-    {
-        return [
-            '\\%s\\%s',
-        ];
-    }
-
-    protected function withPattern(string $pattern, ClassInfo $classInfo, string $resolvableType): string
+    public function buildClassCandidate(ClassInfo $classInfo, string $resolvableType): string
     {
         return sprintf(
-            $pattern,
+            '\\%s\\%s',
             $classInfo->getFullNamespace(),
             $resolvableType
         );

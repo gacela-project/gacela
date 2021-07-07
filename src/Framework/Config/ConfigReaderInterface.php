@@ -7,4 +7,6 @@ namespace Gacela\Framework\Config;
 interface ConfigReaderInterface
 {
     public function read(string $fullPath): array;
+
+    public function canRead(string $file): bool;
 }

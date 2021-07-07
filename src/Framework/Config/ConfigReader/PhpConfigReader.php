@@ -8,6 +8,13 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {
+    public function canRead(string $file): bool
+    {
+        $extension = pathinfo($file, PATHINFO_EXTENSION);
+
+        return 'php' === $extension;
+    }
+
     public function read(string $fullPath): array
     {
         if (file_exists($fullPath)) {

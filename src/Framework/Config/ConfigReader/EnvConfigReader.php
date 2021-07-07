@@ -8,6 +8,11 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 
 final class EnvConfigReader implements ConfigReaderInterface
 {
+    public function canRead(string $file): bool
+    {
+        return false !== strpos($file, '.env');
+    }
+
     public function read(string $fullPath): array
     {
         $config = [];

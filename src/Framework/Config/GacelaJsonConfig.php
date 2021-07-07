@@ -6,43 +6,45 @@ namespace Gacela\Framework\Config;
 
 final class GacelaJsonConfig
 {
-    private string $type;
-    private string $path;
-    private string $pathLocal;
+    /** @var GacelaJsonConfigItem[] */
+    private array $configs;
 
-    public static function fromArray(array $json): self
+    private function __construct(GacelaJsonConfigItem ...$configs)
     {
-        $type = (string)($json['config']['type'] ?? '');
-        $path = (string)($json['config']['path'] ?? '');
-        $pathLocal = (string)($json['config']['path_local'] ?? '');
+        $this->configs = $configs;
+    }
 
-        return new self($type, $path, $pathLocal);
+    /**
+     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $array
+     */
+    public static function fromArray(array $array): self
+    {
+        $first = reset($array['config']);
+
+        if (is_array($first)) {
+            /** @var array<array{type:string,path:string,path_local:string}> $configs */
+            $configs = $array['config'];
+            $map = array_values(array_map(
+                static fn (array $c) => GacelaJsonConfigItem::fromArray($c),
+                $configs
+            ));
+
+            return new self(...$map);
+        }
+
+        return new self(GacelaJsonConfigItem::fromArray($array['config']));
     }
 
     public static function withDefaults(): self
     {
-        return new self('', '', '');
+        return new self(GacelaJsonConfigItem::withDefaults());
     }
 
-    private function __construct(string $type, string $path, string $pathLocal)
+    /**
+     * @return GacelaJsonConfigItem[]
+     */
+    public function configs(): array
     {
-        $this->type = $type ?: 'php';
-        $this->path = $path ?: 'config/*.php';
-        $this->pathLocal = $pathLocal ?: 'config/local.php';
-    }
-
-    public function type(): string
-    {
-        return $this->type;
-    }
-
-    public function path(): string
-    {
-        return $this->path;
-    }
-
-    public function pathLocal(): string
-    {
-        return $this->pathLocal;
+        return $this->configs;
     }
 }

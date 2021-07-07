@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config;
+namespace Gacela\Framework\Config\ConfigReader;
+
+use Gacela\Framework\Config\ConfigReaderInterface;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {

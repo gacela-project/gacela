@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
+use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use RuntimeException;
 
 final class ReaderFactory

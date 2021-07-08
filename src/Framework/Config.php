@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\Config\GacelaJsonConfig;
+use Gacela\Framework\Config\GacelaJsonConfigItem;
 use Gacela\Framework\Config\ReaderFactory;
 use Gacela\Framework\Exception\ConfigException;
 
@@ -60,6 +61,7 @@ final class Config
         foreach (self::scanAllConfigFiles($gacelaJson) as $fullPath) {
             $configs[] = self::readConfigFromFile($gacelaJson, $fullPath);
         }
+
         $configs[] = self::loadLocalConfigFile($gacelaJson);
 
         self::$config = array_merge(...$configs);
@@ -82,6 +84,20 @@ final class Config
     public static function hasValue(string $key): bool
     {
         return isset(self::$config[$key]);
+    }
+
+    private static function createGacelaJsonConfig(): GacelaJsonConfig
+    {
+        $gacelaJsonPath = self::getApplicationRootDir() . '/gacela.json';
+
+        if (is_file($gacelaJsonPath)) {
+            /** @psalm-suppress MixedArgumentTypeCoercion */
+            return GacelaJsonConfig::fromArray(
+                (array)json_decode(file_get_contents($gacelaJsonPath), true)
+            );
+        }
+
+        return GacelaJsonConfig::withDefaults();
     }
 
     /**
@@ -108,31 +124,15 @@ final class Config
         return array_merge(...$configGroup);
     }
 
-    private static function readConfigFromFile(GacelaJsonConfig $gacelaJson, string $file): array
+    private static function readConfigFromFile(GacelaJsonConfig $gacelaJson, string $fullPath): array
     {
         $result = [];
+
         foreach ($gacelaJson->configs() as $config) {
-            $reader = ReaderFactory::create($config->type());
-            if ($reader->canRead($file)) {
-                $result[] = $reader->read($file);
-            }
+            $result[] = self::readConfigItem($config, $fullPath);
         }
 
         return array_merge(...array_filter($result));
-    }
-
-    private static function createGacelaJsonConfig(): GacelaJsonConfig
-    {
-        $gacelaJsonPath = self::getApplicationRootDir() . '/gacela.json';
-
-        if (is_file($gacelaJsonPath)) {
-            /** @psalm-suppress MixedArgumentTypeCoercion */
-            return GacelaJsonConfig::fromArray(
-                (array)json_decode(file_get_contents($gacelaJsonPath), true)
-            );
-        }
-
-        return GacelaJsonConfig::withDefaults();
     }
 
     private static function loadLocalConfigFile(GacelaJsonConfig $gacelaJson): array
@@ -147,13 +147,21 @@ final class Config
             );
 
             if (is_file($configLocalAbsolutePath)) {
-                $reader = ReaderFactory::create($config->type());
-                if ($reader->canRead($configLocalAbsolutePath)) {
-                    $result[] = $reader->read($configLocalAbsolutePath);
-                }
+                $result[] = self::readConfigItem($config, $configLocalAbsolutePath);
             }
         }
 
         return array_merge(...array_filter($result));
+    }
+
+    private static function readConfigItem(GacelaJsonConfigItem $configItem, string $fullPath): array
+    {
+        $reader = ReaderFactory::create($configItem->type());
+
+        if ($reader->canRead($fullPath)) {
+            return $reader->read($fullPath);
+        }
+
+        return [];
     }
 }

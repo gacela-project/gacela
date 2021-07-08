@@ -8,16 +8,16 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 
 final class EnvConfigReader implements ConfigReaderInterface
 {
-    public function canRead(string $file): bool
+    public function canRead(string $absolutePath): bool
     {
-        return false !== strpos($file, '.env');
+        return false !== strpos($absolutePath, '.env');
     }
 
-    public function read(string $fullPath): array
+    public function read(string $absolutePath): array
     {
         $config = [];
 
-        $lines = file($fullPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
             if (strpos(trim($line), '#') === 0) {
                 continue;

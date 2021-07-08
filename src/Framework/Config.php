@@ -11,6 +11,8 @@ use Gacela\Framework\Exception\ConfigException;
 
 final class Config
 {
+    private const GACELA_CONFIG_FILENAME = 'gacela.json';
+
     private static string $applicationRootDir = '';
 
     private static array $config = [];
@@ -58,8 +60,8 @@ final class Config
         $gacelaJson =  self::createGacelaJsonConfig();
         $configs = [];
 
-        foreach (self::scanAllConfigFiles($gacelaJson) as $fullPath) {
-            $configs[] = self::readConfigFromFile($gacelaJson, $fullPath);
+        foreach (self::scanAllConfigFiles($gacelaJson) as $absolutePath) {
+            $configs[] = self::readConfigFromFile($gacelaJson, $absolutePath);
         }
 
         $configs[] = self::loadLocalConfigFile($gacelaJson);
@@ -88,7 +90,7 @@ final class Config
 
     private static function createGacelaJsonConfig(): GacelaJsonConfig
     {
-        $gacelaJsonPath = self::getApplicationRootDir() . '/gacela.json';
+        $gacelaJsonPath = self::getApplicationRootDir() . '/' . self::GACELA_CONFIG_FILENAME;
 
         if (is_file($gacelaJsonPath)) {
             /** @psalm-suppress MixedArgumentTypeCoercion */
@@ -107,29 +109,26 @@ final class Config
      */
     private static function scanAllConfigFiles(GacelaJsonConfig $gacelaJsonConfig): array
     {
-        $rootDir = self::getApplicationRootDir();
-        $configGroup = [];
-
-        foreach ($gacelaJsonConfig->configs() as $config) {
-            $configDir = sprintf('%s/%s', $rootDir, $config->path());
-
-            $filteredPaths = array_diff(
-                glob($configDir),
-                [sprintf('%s/%s', $rootDir, $config->pathLocal())]
-            );
-
-            $configGroup[] = array_map(static fn ($p) => (string)$p, $filteredPaths);
-        }
+        $configGroup = array_map(
+            static fn (GacelaJsonConfigItem $config): array => array_map(
+                static fn ($p): string => (string)$p,
+                array_diff(
+                    glob(self::generateAbsolutePath($config->path())),
+                    [self::generateAbsolutePath($config->pathLocal())]
+                )
+            ),
+            $gacelaJsonConfig->configs()
+        );
 
         return array_merge(...$configGroup);
     }
 
-    private static function readConfigFromFile(GacelaJsonConfig $gacelaJson, string $fullPath): array
+    private static function readConfigFromFile(GacelaJsonConfig $gacelaJson, string $absolutePath): array
     {
         $result = [];
 
         foreach ($gacelaJson->configs() as $config) {
-            $result[] = self::readConfigItem($config, $fullPath);
+            $result[] = self::readConfigItem($config, $absolutePath);
         }
 
         return array_merge(...array_filter($result));
@@ -140,11 +139,7 @@ final class Config
         $result = [];
 
         foreach ($gacelaJson->configs() as $config) {
-            $configLocalAbsolutePath = sprintf(
-                '%s/%s',
-                self::getApplicationRootDir(),
-                $config->pathLocal()
-            );
+            $configLocalAbsolutePath = self::generateAbsolutePath($config->pathLocal());
 
             if (is_file($configLocalAbsolutePath)) {
                 $result[] = self::readConfigItem($config, $configLocalAbsolutePath);
@@ -154,12 +149,21 @@ final class Config
         return array_merge(...array_filter($result));
     }
 
-    private static function readConfigItem(GacelaJsonConfigItem $configItem, string $fullPath): array
+    private static function generateAbsolutePath(string $path): string
+    {
+        return sprintf(
+            '%s/%s',
+            self::getApplicationRootDir(),
+            $path
+        );
+    }
+
+    private static function readConfigItem(GacelaJsonConfigItem $configItem, string $absolutePath): array
     {
         $reader = ReaderFactory::create($configItem->type());
 
-        if ($reader->canRead($fullPath)) {
-            return $reader->read($fullPath);
+        if ($reader->canRead($absolutePath)) {
+            return $reader->read($absolutePath);
         }
 
         return [];

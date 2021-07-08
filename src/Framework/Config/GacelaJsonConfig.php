@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use function is_array;
+
 final class GacelaJsonConfig
 {
     /** @var GacelaJsonConfigItem[] */
@@ -15,24 +17,35 @@ final class GacelaJsonConfig
     }
 
     /**
-     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $array
+     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
      */
-    public static function fromArray(array $array): self
+    public static function fromArray(array $json): self
     {
-        $first = reset($array['config']);
+        return new self(
+            ...self::getConfigItems($json)
+        );
+    }
 
-        if (is_array($first)) {
-            /** @var array<array{type:string,path:string,path_local:string}> $configs */
-            $configs = $array['config'];
-            $map = array_values(array_map(
-                static fn (array $c) => GacelaJsonConfigItem::fromArray($c),
-                $configs
-            ));
+    /**
+     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
+     *
+     * @return GacelaJsonConfigItem[]
+     */
+    private static function getConfigItems(array $json): array
+    {
+        $first = reset($json['config']);
 
-            return new self(...$map);
+        if (!is_array($first)) {
+            return [GacelaJsonConfigItem::fromArray($json['config'])];
         }
 
-        return new self(GacelaJsonConfigItem::fromArray($array['config']));
+        /** @var array<array{type:string,path:string,path_local:string}> $configs */
+        $configs = $json['config'];
+
+        return array_values(array_map(
+            static fn (array $c) => GacelaJsonConfigItem::fromArray($c),
+            $configs
+        ));
     }
 
     public static function withDefaults(): self

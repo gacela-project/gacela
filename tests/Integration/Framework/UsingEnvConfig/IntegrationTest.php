@@ -12,7 +12,7 @@ final class IntegrationTest extends TestCase
     public function setUp(): void
     {
         Config::setApplicationRootDir(__DIR__);
-        Config::init();
+        Config::getInstance()->init();
     }
 
     public function test_remove_key_from_container(): void

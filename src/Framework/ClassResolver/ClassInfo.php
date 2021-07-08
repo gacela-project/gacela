@@ -22,7 +22,7 @@ final class ClassInfo
     public function getCacheKey(string $resolvableType): string
     {
         if (!$this->cacheKey) {
-            $this->cacheKey = $this->getModule() . $resolvableType;
+            $this->cacheKey = $this->getFullNamespace() . $this->getModule() . $resolvableType;
         }
 
         return $this->cacheKey;

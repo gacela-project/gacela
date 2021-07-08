@@ -10,7 +10,6 @@ abstract class AbstractClassResolver
 {
     /** @var array<string,mixed|object> */
     protected static array $cachedInstances = [];
-    protected static ?ClassResolverFactory $classResolverFactory = null;
     protected static ?ClassNameFinderInterface $classNameFinder = null;
 
     abstract public function resolve(object $callerClass): ?object;
@@ -23,8 +22,8 @@ abstract class AbstractClassResolver
         $classInfo = new ClassInfo($callerClass);
         $cacheKey = $this->getCacheKey($classInfo);
 
-        if (isset(static::$cachedInstances[$cacheKey])) {
-            return static::$cachedInstances[$cacheKey];
+        if (isset(self::$cachedInstances[$cacheKey])) {
+            return self::$cachedInstances[$cacheKey];
         }
 
         $resolvedClassName = $this->findClassName($classInfo);
@@ -55,20 +54,12 @@ abstract class AbstractClassResolver
 
     private function getClassNameFinder(): ClassNameFinderInterface
     {
-        if (null === static::$classNameFinder) {
-            static::$classNameFinder = $this->getClassResolverFactory()->createClassNameFinder();
+        if (null === self::$classNameFinder) {
+            $classResolverFactory = new ClassResolverFactory();
+            self::$classNameFinder = $classResolverFactory->createClassNameFinder();
         }
 
-        return static::$classNameFinder;
-    }
-
-    private function getClassResolverFactory(): ClassResolverFactory
-    {
-        if (null === static::$classResolverFactory) {
-            static::$classResolverFactory = new ClassResolverFactory();
-        }
-
-        return static::$classResolverFactory;
+        return self::$classNameFinder;
     }
 
     /**

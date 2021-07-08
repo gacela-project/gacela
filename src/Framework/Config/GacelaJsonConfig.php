@@ -4,45 +4,60 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use function is_array;
+
 final class GacelaJsonConfig
 {
-    private string $type;
-    private string $path;
-    private string $pathLocal;
+    /** @var GacelaJsonConfigItem[] */
+    private array $configs;
 
+    private function __construct(GacelaJsonConfigItem ...$configs)
+    {
+        $this->configs = $configs;
+    }
+
+    /**
+     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
+     */
     public static function fromArray(array $json): self
     {
-        $type = (string)($json['config']['type'] ?? '');
-        $path = (string)($json['config']['path'] ?? '');
-        $pathLocal = (string)($json['config']['path_local'] ?? '');
+        return new self(
+            ...self::getConfigItems($json)
+        );
+    }
 
-        return new self($type, $path, $pathLocal);
+    /**
+     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
+     *
+     * @return GacelaJsonConfigItem[]
+     */
+    private static function getConfigItems(array $json): array
+    {
+        $first = reset($json['config']);
+
+        if (!is_array($first)) {
+            return [GacelaJsonConfigItem::fromArray($json['config'])];
+        }
+
+        /** @var array<array{type:string,path:string,path_local:string}> $configs */
+        $configs = $json['config'];
+
+        return array_values(array_map(
+            static fn (array $c) => GacelaJsonConfigItem::fromArray($c),
+            $configs
+        ));
     }
 
     public static function withDefaults(): self
     {
-        return new self('', '', '');
+        return new self(GacelaJsonConfigItem::withDefaults());
     }
 
-    private function __construct(string $type, string $path, string $pathLocal)
+    /**
+     * @return GacelaJsonConfigItem[]
+     */
+    public function configs(): array
     {
-        $this->type = $type ?: 'php';
-        $this->path = $path ?: 'config/*.php';
-        $this->pathLocal = $pathLocal ?: 'config/local.php';
-    }
-
-    public function type(): string
-    {
-        return $this->type;
-    }
-
-    public function path(): string
-    {
-        return $this->path;
-    }
-
-    public function pathLocal(): string
-    {
-        return $this->pathLocal;
+        return $this->configs;
     }
 }

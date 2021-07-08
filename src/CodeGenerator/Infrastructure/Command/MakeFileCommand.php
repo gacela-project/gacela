@@ -51,12 +51,12 @@ final class MakeFileCommand extends Command
         $shortName = (bool)$input->getOption('short-name');
 
         foreach ($filenames as $filename) {
-            $fullPath = $this->fileContentGenerator->generate(
+            $absolutePath = $this->fileContentGenerator->generate(
                 $commandArguments,
                 $filename,
                 $shortName
             );
-            $output->writeln("> Path '$fullPath' created successfully");
+            $output->writeln("> Path '$absolutePath' created successfully");
         }
 
         return self::SUCCESS;

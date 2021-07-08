@@ -1,0 +1,12 @@
+{
+  "config": [
+    {
+      "type": "env",
+      "path": "config/.env*"
+    },
+    {
+      "type": "php",
+      "path": "config/*.php"
+    }
+  ]
+}

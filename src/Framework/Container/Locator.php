@@ -11,7 +11,7 @@ final class Locator
     private static ?Locator $instance = null;
 
     /** @var array<string, mixed> */
-    private static array $instanceCache = [];
+    private array $instanceCache = [];
 
     public static function getInstance(): self
     {
@@ -20,6 +20,11 @@ final class Locator
         }
 
         return self::$instance;
+    }
+
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
     }
 
     private function __construct()
@@ -40,14 +45,14 @@ final class Locator
     {
         $concreteClass = $this->getConcreteClass($className);
 
-        if (isset(self::$instanceCache[$concreteClass])) {
-            return self::$instanceCache[$concreteClass];
+        if (isset($this->instanceCache[$concreteClass])) {
+            return $this->instanceCache[$concreteClass];
         }
 
         /** @var mixed $newInstance */
         $newInstance = $this->newInstance($concreteClass);
         /** @psalm-suppress MixedAssignment */
-        self::$instanceCache[$concreteClass] = $newInstance;
+        $this->instanceCache[$concreteClass] = $newInstance;
 
         return $newInstance;
     }

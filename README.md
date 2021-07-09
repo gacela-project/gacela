@@ -24,7 +24,7 @@
 
 ## Gacela Framework
 
-This framework helps you to improve the design of your modules.
+Gacela is a class resolver. It helps you to improve the design of your modules.
 
 > Inspired by Spryker Framework: https://github.com/spryker
 
@@ -32,11 +32,11 @@ Splitting your project into different modules will help the design of your proje
 scalability. It will certainly encourage your modules to interact with each other in a unified way by following these
 rules:
 
-- Different modules can interact **ONLY** via their `Facade`
-- The `Facade` has access to the `Factory`
-- The `Factory` creates the objects from the module and has access to the Module's `Config`
-- The `Config` gets the values from your defined config files
-- The `DependencyProvider` uses the Locator to get the Facades from different modules
+- Different modules can interact **only** via their `Facade`.
+- The `Facade` has access to the `Factory`.
+- The `Factory` creates the objects from the module and has access to the Module's `Config`.
+- The `Config` gets the values from your defined config files.
+- The `DependencyProvider` uses the Locator to get the Facades from different modules.
 
 ### Installation
 

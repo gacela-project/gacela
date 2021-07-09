@@ -6,5 +6,5 @@ namespace GacelaTest\Fixtures;
 
 interface StringValueInterface
 {
-    public function setValue(string $value): void;
+    public function value(): string;
 }

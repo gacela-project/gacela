@@ -37,7 +37,7 @@ final class LocatorTest extends TestCase
         self::assertSame('updated value', $stringValue2->value());
     }
 
-    public function test_get_singleton_from_concrete_interface(): void
+    public function test_get_singleton_from_interface(): void
     {
         /** @var StringValue $stringValue */
         $stringValue = $this->locator->get(StringValueInterface::class);

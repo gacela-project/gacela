@@ -10,43 +10,71 @@ use PHPUnit\Framework\TestCase;
 
 final class ContainerTest extends TestCase
 {
+    private Container $container;
+
+    protected function setUp(): void
+    {
+        $this->container = new Container();
+    }
+
     public function test_get_non_existing_service(): void
     {
         $this->expectException(ContainerKeyNotFoundException::class);
-        $container = new Container();
-        $container->get('non-existing-service');
+        $this->container->get('unknown-service_name');
     }
 
     public function test_has_service(): void
     {
-        $container = new Container();
-        $container->set('existing-service', 'test');
+        $this->container->set('service_name', 'value');
 
-        self::assertTrue($container->has('existing-service'));
-        self::assertFalse($container->has('non-existing-service'));
+        self::assertTrue($this->container->has('service_name'));
+        self::assertFalse($this->container->has('unknown-service_name'));
     }
 
-    public function test_get_existing_service_as_raw_string(): void
+    public function test_remove_existing_service(): void
     {
-        $container = new Container();
-        $container->set('existing-service', 'test');
+        $this->container->set('service_name', 'value');
+        $this->container->remove('service_name');
 
-        $resolvedService = $container->get('existing-service');
-        self::assertSame('test', $resolvedService);
-
-        $cachedResolvedService = $container->get('existing-service');
-        self::assertSame('test', $cachedResolvedService);
+        $this->expectException(ContainerKeyNotFoundException::class);
+        $this->container->get('service_name');
     }
 
-    public function test_get_existing_service_as_function(): void
+    public function test_resolve_service_as_raw_string(): void
     {
-        $container = new Container();
-        $container->set('existing-service', static fn (): string => 'test');
+        $this->container->set('service_name', 'value');
 
-        $resolvedService = $container->get('existing-service');
-        self::assertSame('test', $resolvedService);
+        $resolvedService = $this->container->get('service_name');
+        self::assertSame('value', $resolvedService);
 
-        $cachedResolvedService = $container->get('existing-service');
-        self::assertSame('test', $cachedResolvedService);
+        $cachedResolvedService = $this->container->get('service_name');
+        self::assertSame('value', $cachedResolvedService);
+    }
+
+    public function test_resolve_service_as_function(): void
+    {
+        $this->container->set('service_name', static fn (): string => 'value');
+
+        $resolvedService = $this->container->get('service_name');
+        self::assertSame('value', $resolvedService);
+
+        $cachedResolvedService = $this->container->get('service_name');
+        self::assertSame('value', $cachedResolvedService);
+    }
+
+    public function test_resolve_service_as_callable_class(): void
+    {
+        $this->container->set('service_name', new class() {
+            public function __invoke(): string
+            {
+                return 'value';
+            }
+        });
+
+        $resolvedService = $this->container->get('service_name');
+        self::assertSame('value', $resolvedService);
+
+        $cachedResolvedService = $this->container->get('service_name');
+        self::assertSame('value', $cachedResolvedService);
     }
 }

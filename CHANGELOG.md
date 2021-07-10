@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.4.0
+##### 2021-07-10
+
+- Allow multiple (and different) config files defined in `gacela.json`.
+- Make extensible the Config Readers.
+
 ### 0.3.0
 ##### 2021-07-04
 

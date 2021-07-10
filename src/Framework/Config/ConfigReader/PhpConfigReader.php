@@ -17,13 +17,13 @@ final class PhpConfigReader implements ConfigReaderInterface
 
     public function read(string $absolutePath): array
     {
-        if (file_exists($absolutePath)) {
-            /** @var null|array $content */
-            $content = include $absolutePath;
-
-            return is_array($content) ? $content : [];
+        if (!file_exists($absolutePath)) {
+            return [];
         }
 
-        return [];
+        /** @var null|array $content */
+        $content = include $absolutePath;
+
+        return is_array($content) ? $content : [];
     }
 }

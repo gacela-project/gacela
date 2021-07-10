@@ -15,9 +15,13 @@ final class EnvConfigReader implements ConfigReaderInterface
 
     public function read(string $absolutePath): array
     {
-        $config = [];
+        if (!is_file($absolutePath)) {
+            return [];
+        }
 
+        $config = [];
         $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
         foreach ($lines as $line) {
             if (strpos(trim($line), '#') === 0) {
                 continue;

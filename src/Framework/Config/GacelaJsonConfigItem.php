@@ -6,7 +6,8 @@ namespace Gacela\Framework\Config;
 
 final class GacelaJsonConfigItem
 {
-    private const DEFAULT_TYPE = 'php';
+    public const DEFAULT_TYPE = 'php';
+
     private const DEFAULT_PATH = 'config/*.php';
     private const DEFAULT_PATH_LOCAL = 'config/local.php';
 

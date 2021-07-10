@@ -24,13 +24,40 @@ final class Config
 
     private array $config = [];
 
+    /** @var array<string, ConfigReaderInterface> */
+    private array $configReaders;
+
+    /**
+     * @param array<string, ConfigReaderInterface> $configReaders
+     */
+    private function __construct(array $configReaders)
+    {
+        $this->configReaders = $configReaders;
+    }
+
     public static function getInstance(): self
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            self::$instance = new self([
+                'php' => new PhpConfigReader(),
+                'env' => new EnvConfigReader(),
+            ]);
         }
 
         return self::$instance;
+    }
+
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
+     * @param array<string, ConfigReaderInterface> $configReaders
+     */
+    public function setConfigReaders(array $configReaders = []): void
+    {
+        $this->configReaders = $configReaders;
     }
 
     public static function setApplicationRootDir(string $dir): void
@@ -80,7 +107,7 @@ final class Config
             self::getApplicationRootDir(),
             $this->createGacelaJsonConfigCreator(),
             $this->createPathFinder(),
-            $this->createConfigReaders()
+            $this->configReaders
         ))->readAll();
     }
 
@@ -95,17 +122,6 @@ final class Config
     private function createPathFinder(): PathFinderInterface
     {
         return new PathFinder();
-    }
-
-    /**
-     * @return array<string, ConfigReaderInterface>
-     */
-    private function createConfigReaders(): array
-    {
-        return [
-            'php' => new PhpConfigReader(),
-            'env' => new EnvConfigReader(),
-        ];
     }
 
     private function hasValue(string $key): bool

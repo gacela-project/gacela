@@ -28,17 +28,36 @@ Using `.env` config files:
   "config": {
     "type": "env",
     "path": ".env*",
-    "path_local": ".env.local.dist"
+    "path_local": ".env.local"
   }
 }
 ```
 
-- `type`: enum with possible values `php` or `env`
-- `path`: this is the path of the folder which contains your application configuration.
-   You can use `?` or `*` in order to match 1 or multiple characters. Check [`glob()`](https://www.php.net/manual/en/function.glob.php) function for more info.
-- `path_local`: this is the last file loaded, which means, it will override the previous configuration,
-  so you can easily add it to your `.gitignore` and set your local config values in case you want to have something different for some cases
+Or even multiple types of config files:
 
+```json
+{
+  "config": [
+    {
+      "type": "php",
+      "path": "config/*.php",
+      "path_local": "config/local.php"
+    },
+    {
+      "type": "env",
+      "path": ".env*",
+      "path_local": ".env.local"
+    }
+  ]
+}
+```
+
+- `"type"`: possible values `php` or `env`
+- `"path"`: the path of the folder which contains your application configuration.
+  You can use `?` or `*` in order to match 1 or multiple characters. 
+  Check [`glob()`](https://www.php.net/manual/en/function.glob.php) function for more info.
+- `"path_local"`: this is the last file loaded, which means, it will override the previous configuration,
+  so you can add it to your `.gitignore` and set your own local config values.
 ---
 
 > This is tightly coupled with the infrastructure layer, because there is I/O involved.
@@ -47,6 +66,17 @@ Using `.env` config files:
 > In this way, you would couple your logic with infrastructure code, and not be able to unit test it.
 
 ### An example
+
+```json
+# gacela.json
+{
+  "config": {
+    "type": "php",
+    "path": "config/*.php",
+    "path_local": "config/local.php"
+  }
+}
+```
 
 ```php
 # config/default.php

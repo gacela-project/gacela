@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\Framework\Container;
+namespace GacelaTest\Unit\Framework;
 
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\ConfigReaderInterface;

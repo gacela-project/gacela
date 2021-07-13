@@ -8,6 +8,6 @@ final class PathFinder implements PathFinderInterface
 {
     public function matchingPattern(string $pattern): array
     {
-        return glob($pattern);
+        return glob($pattern, GLOB_BRACE);
     }
 }

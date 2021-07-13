@@ -7,6 +7,7 @@ namespace Gacela\Framework;
 use Gacela\Framework\Config\ConfigInit;
 use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
+use Gacela\Framework\Config\ConfigReader\YamlConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaJsonConfigFactory;
 use Gacela\Framework\Config\GacelaJsonConfigFactoryInterface;
@@ -41,6 +42,8 @@ final class Config
             self::$instance = new self([
                 'php' => new PhpConfigReader(),
                 'env' => new EnvConfigReader(),
+                'yml' => new YamlConfigReader(),
+                'yaml' => new YamlConfigReader(),
             ]);
         }
 

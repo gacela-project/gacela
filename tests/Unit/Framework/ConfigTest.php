@@ -36,7 +36,7 @@ final class ConfigTest extends TestCase
 
     public function test_get_using_custom_reader(): void
     {
-        $this->config->setConfigReaders([
+        Config::setConfigReaders([
             Config\GacelaJsonConfigItem::DEFAULT_TYPE => new class() implements ConfigReaderInterface {
                 public function read(string $absolutePath): array
                 {
@@ -50,8 +50,6 @@ final class ConfigTest extends TestCase
             },
         ]);
 
-        $this->config->init();
-
-        self::assertSame('value', $this->config->get('key'));
+        self::assertSame('value', Config::getInstance()->get('key'));
     }
 }

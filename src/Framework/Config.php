@@ -18,9 +18,9 @@ final class Config
 {
     private const GACELA_CONFIG_FILENAME = 'gacela.json';
 
-    private static string $applicationRootDir = '';
-
     private static ?self $instance = null;
+
+    private string $applicationRootDir = '';
 
     private array $config = [];
 
@@ -55,23 +55,9 @@ final class Config
     /**
      * @param array<string, ConfigReaderInterface> $configReaders
      */
-    public function setConfigReaders(array $configReaders = []): void
+    public static function setConfigReaders(array $configReaders = []): void
     {
-        $this->configReaders = $configReaders;
-    }
-
-    public static function setApplicationRootDir(string $dir): void
-    {
-        self::$applicationRootDir = $dir;
-    }
-
-    public static function getApplicationRootDir(): string
-    {
-        if (empty(self::$applicationRootDir)) {
-            self::$applicationRootDir = getcwd() ?: '';
-        }
-
-        return self::$applicationRootDir;
+        self::$instance = new self($configReaders);
     }
 
     /**
@@ -84,7 +70,7 @@ final class Config
     public function get(string $key, $default = null)
     {
         if (empty($this->config)) {
-            $this->init();
+            $this->init($this->getApplicationRootDir());
         }
 
         if ($default !== null && !$this->hasValue($key)) {
@@ -101,20 +87,36 @@ final class Config
     /**
      * @throws ConfigException
      */
-    public function init(): void
+    public function init(string $applicationRootDir): void
     {
+        $this->setApplicationRootDir($applicationRootDir);
+
         $this->config = (new ConfigInit(
-            self::getApplicationRootDir(),
+            $this->getApplicationRootDir(),
             $this->createGacelaJsonConfigCreator(),
             $this->createPathFinder(),
             $this->configReaders
         ))->readAll();
     }
 
+    public function setApplicationRootDir(string $dir): void
+    {
+        $this->applicationRootDir = $dir;
+    }
+
+    public function getApplicationRootDir(): string
+    {
+        if (empty($this->applicationRootDir)) {
+            $this->applicationRootDir = getcwd() ?: '';
+        }
+
+        return $this->applicationRootDir;
+    }
+
     private function createGacelaJsonConfigCreator(): GacelaJsonConfigFactoryInterface
     {
         return new GacelaJsonConfigFactory(
-            self::$applicationRootDir,
+            $this->getApplicationRootDir(),
             self::GACELA_CONFIG_FILENAME
         );
     }

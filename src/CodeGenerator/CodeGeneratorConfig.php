@@ -41,7 +41,7 @@ final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateIn
      */
     public function getComposerJsonContentAsArray(): array
     {
-        $filename = Config::getApplicationRootDir() . '/composer.json';
+        $filename = Config::getInstance()->getApplicationRootDir() . '/composer.json';
         if (!file_exists($filename)) {
             throw new LogicException('composer.json file not found but it is required');
         }

@@ -31,20 +31,20 @@ scalability. It will certainly encourage your modules to interact with each othe
 rules:
 
 - Different modules can interact **only** via their `Facade`.
-- The `Facade` has access to the `Factory`.
-- The `Factory` creates the objects from the module and has access to the Module's `Config`.
-- The `Config` gets the values from your defined config files.
-- The `DependencyProvider` uses the Locator to get the Facades from different modules.
-
-### You can check the full documentation [here](https://gacela-project.com/)
-
----
+- The [`Facade`](https://gacela-project.com/docs/facade/) has access to the `Factory`.
+- The [`Factory`](https://gacela-project.com/docs/factory/) creates the objects from the module and has access to the Module's `Config`.
+- The [`Config`](https://gacela-project.com/docs/config/) gets the values from your defined config files.
+- The [`DependencyProvider`](https://gacela-project.com/docs/dependency-provider/) uses the Locator to get the Facades from different modules.
 
 ### Installation
 
 ```bash
 composer require gacela-project/gacela
 ```
+
+### Documentation
+
+You can check the full documentation in the official [website](https://gacela-project.com/).
 
 ### Examples
 

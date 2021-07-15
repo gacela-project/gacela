@@ -1,7 +1,5 @@
 <p align="center">
-  <a href="http://gacela-project.com/" title="Gacela Website">
-    <img src="docs/imgs/gacela-logo-blue.svg" width="350" alt="Gacela logo"/>
-  </a>
+  <img src="gacela-logo.svg" width="350" alt="Gacela logo"/>
 </p>
 
 <p align="center">
@@ -33,10 +31,10 @@ scalability. It will certainly encourage your modules to interact with each othe
 rules:
 
 - Different modules can interact **only** via their `Facade`.
-- The `Facade` has access to the `Factory`.
-- The `Factory` creates the objects from the module and has access to the Module's `Config`.
-- The `Config` gets the values from your defined config files.
-- The `DependencyProvider` uses the Locator to get the Facades from different modules.
+- The [`Facade`](https://gacela-project.com/docs/facade/) has access to the `Factory`.
+- The [`Factory`](https://gacela-project.com/docs/factory/) creates the objects from the module and has access to the Module's `Config`.
+- The [`Config`](https://gacela-project.com/docs/config/) gets the values from your defined config files.
+- The [`DependencyProvider`](https://gacela-project.com/docs/dependency-provider/) uses the Locator to get the Facades from different modules.
 
 ### Installation
 
@@ -44,14 +42,9 @@ rules:
 composer require gacela-project/gacela
 ```
 
-## Documentation
+### Documentation
 
-- [Basic concepts](docs/001_basic_concepts.md): What are the characteristics of a module?
-- [Facade](docs/002_facade.md): The entry point of your module
-- [Factory](docs/003_factory.md): The place where you create your domain services and objects
-- [Config](docs/004_config.md): Reads the values defined in your config path
-- [DependencyProvider](docs/005_dependency_provider.md): It defines the dependencies between modules
-- [Code generator](docs/006_code_generator.md): Some commands out-of-the-box for generating code
+You can check the full documentation in the official [website](https://gacela-project.com/).
 
 ### Examples
 

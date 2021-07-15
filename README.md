@@ -1,7 +1,5 @@
 <p align="center">
-  <a href="http://gacela-project.com/" title="Gacela Website">
-    <img src="docs/imgs/gacela-logo-blue.svg" width="350" alt="Gacela logo"/>
-  </a>
+  <img src="gacela-logo.svg" width="350" alt="Gacela logo"/>
 </p>
 
 <p align="center">
@@ -38,20 +36,15 @@ rules:
 - The `Config` gets the values from your defined config files.
 - The `DependencyProvider` uses the Locator to get the Facades from different modules.
 
+### You can check the full documentation [here](https://gacela-project.com/)
+
+---
+
 ### Installation
 
 ```bash
 composer require gacela-project/gacela
 ```
-
-## Documentation
-
-- [Basic concepts](docs/001_basic_concepts.md): What are the characteristics of a module?
-- [Facade](docs/002_facade.md): The entry point of your module
-- [Factory](docs/003_factory.md): The place where you create your domain services and objects
-- [Config](docs/004_config.md): Reads the values defined in your config path
-- [DependencyProvider](docs/005_dependency_provider.md): It defines the dependencies between modules
-- [Code generator](docs/006_code_generator.md): Some commands out-of-the-box for generating code
 
 ### Examples
 

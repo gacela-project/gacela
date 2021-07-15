@@ -1,5 +1,9 @@
 # Changelog
 
+### Not released yet
+
+- Config::setConfigReaders() create a new config instance singleton.
+
 ### 0.4.0
 ##### 2021-07-10
 

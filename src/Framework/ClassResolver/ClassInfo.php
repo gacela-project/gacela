@@ -20,10 +20,12 @@ final class ClassInfo
 
         /** @var string[] $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-        if (count($callerClassParts) <= 1) {
+        $last = end($callerClassParts);
+
+        if (false !== strpos($last, 'anonymous')) {
             $callerClassParts = [
                 'module-name@anonymous',
-                'class-name@anonymous',
+                $last,
             ];
         }
 

@@ -7,6 +7,7 @@ on:
 name: CI
 
 jobs:
+
   coding-guidelines:
     name: Coding Guidelines
     runs-on: ubuntu-latest
@@ -15,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 7.4
@@ -35,7 +36,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 7.4
@@ -45,23 +46,27 @@ jobs:
         run: composer install --no-interaction --no-ansi --no-progress
 
       - name: Run vimeo/psalm on internal code
-        run: ./vendor/bin/psalm --config=psalm.xml --no-progress --shepherd --show-info=false --stats
+        run: ./vendor/bin/psalm --config=psalm.xml --no-progress --shepherd --show-info=false --stats --output-format=github
 
       - name: Run phpstan on internal code
         run: ./vendor/bin/phpstan analyze -c phpstan.neon src
 
   tests:
-    name: Tests
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        operating-system: ['ubuntu-latest', 'windows-latest', 'macos-latest']
+        php: ['7.4', '8.0']
+    name: Tests on PHP ${{ matrix.php }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 7.4
+          php-version: ${{ matrix.php }}
           coverage: none
 
       - name: Install dependencies

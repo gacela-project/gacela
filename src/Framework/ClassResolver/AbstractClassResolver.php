@@ -12,7 +12,15 @@ abstract class AbstractClassResolver
     protected static array $cachedInstances = [];
     protected static ?ClassNameFinderInterface $classNameFinder = null;
 
+    /** @var array<string,object> */
+    private static array $globalResolvedClasses = [];
+
     abstract public function resolve(object $callerClass): ?object;
+
+    public static function addGlobal(string $key, object $resolvedClass): void
+    {
+        self::$globalResolvedClasses[$key] = $resolvedClass;
+    }
 
     /**
      * @return null|mixed
@@ -29,7 +37,7 @@ abstract class AbstractClassResolver
         $resolvedClassName = $this->findClassName($classInfo);
 
         if (null === $resolvedClassName) {
-            return null;
+            return $this->resolveGlobal($cacheKey);
         }
 
         self::$cachedInstances[$cacheKey] = $this->createInstance($resolvedClassName);
@@ -38,6 +46,22 @@ abstract class AbstractClassResolver
     }
 
     abstract protected function getResolvableType(): string;
+
+    /**
+     * @return null|mixed
+     */
+    private function resolveGlobal(string $cacheKey)
+    {
+        $resolvedClass = self::$globalResolvedClasses[$cacheKey] ?? null;
+
+        if (null === $resolvedClass) {
+            return null;
+        }
+
+        self::$cachedInstances[$cacheKey] = $resolvedClass;
+
+        return self::$cachedInstances[$cacheKey];
+    }
 
     private function getCacheKey(ClassInfo $classInfo): string
     {

@@ -2,5 +2,7 @@
 /.idea/
 /.vscode/
 /vendor/
+/data/
+/.phpbench/
 .phpunit.*
 .php_cs.cache

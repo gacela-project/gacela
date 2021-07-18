@@ -10,6 +10,8 @@ use function get_class;
 
 final class ClassInfo
 {
+    public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
+
     private ?string $cacheKey = null;
     private string $callerModuleName;
     private string $callerNamespace;
@@ -20,17 +22,18 @@ final class ClassInfo
 
         /** @var string[] $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-        $last = end($callerClassParts);
+        $filepath = end($callerClassParts);
+        $filename = $this->normalizeFilename($filepath);
 
-        if (false !== strpos($last, 'anonymous')) {
+        if (false !== strpos($filepath, 'anonymous')) {
             $callerClassParts = [
-                'module-name@anonymous',
-                $last,
+                self::MODULE_NAME_ANONYMOUS . '\\' . $filename,
+                $filepath,
             ];
         }
 
-        $this->callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
-        $this->callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
+        $this->callerNamespace = $this->normalizeCallerNamespace(...$callerClassParts);
+        $this->callerModuleName = $this->normalizeCallerModuleName(...$callerClassParts);
     }
 
     public function getCacheKey(string $resolvableType): string
@@ -54,5 +57,27 @@ final class ClassInfo
     public function getFullNamespace(): string
     {
         return $this->callerNamespace;
+    }
+
+    private function normalizeFilename(string $filepath): string
+    {
+        $filename = basename($filepath);
+        $filename = substr($filename, 0, (int)strpos($filename, ':'));
+
+        if (false === ($pos = strpos($filename, '.'))) {
+            return $filename;
+        }
+
+        return substr($filename, 0, $pos);
+    }
+
+    private function normalizeCallerNamespace(string ...$callerClassParts): string
+    {
+        return implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
+    }
+
+    private function normalizeCallerModuleName(string ...$callerClassParts): string
+    {
+        return $callerClassParts[count($callerClassParts) - 2] ?? '';
     }
 }

@@ -3,6 +3,7 @@
 ### Not released yet
 
 - Config::setConfigReaders() create a new config instance singleton.
+- Added AbstractClassResolver::addAnonymousGlobal(); you can use anonymous classes now.
 
 ### 0.4.0
 ##### 2021-07-10

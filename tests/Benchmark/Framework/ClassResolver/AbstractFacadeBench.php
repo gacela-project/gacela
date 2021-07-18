@@ -12,7 +12,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 /**
  * @BeforeMethods("setUp")
  * @Revs(100)
- * @Iterations(5)
+ * @Iterations(6)
  */
 final class AbstractFacadeBench
 {
@@ -20,18 +20,20 @@ final class AbstractFacadeBench
 
     public function setUp(): void
     {
-        AbstractClassResolver::addGlobal(
-            '\module-name@anonymous\Config',
+        AbstractClassResolver::addAnonymousGlobal(
+            $this,
+            'Config',
             new class() extends AbstractConfig {
                 public function getValues(): array
                 {
-                    return ['1', 2, '3'];
+                    return ['1', 2, [3]];
                 }
             }
         );
 
-        AbstractClassResolver::addGlobal(
-            '\module-name@anonymous\Factory',
+        AbstractClassResolver::addAnonymousGlobal(
+            $this,
+            'Factory',
             new class() extends AbstractFactory {
                 public function createDomainClass(): object
                 {

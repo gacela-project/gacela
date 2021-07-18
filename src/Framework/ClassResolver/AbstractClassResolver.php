@@ -5,27 +5,62 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
+use RuntimeException;
+use function in_array;
 
 abstract class AbstractClassResolver
 {
-    /** @var array<string,mixed|object> */
+    private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = ['Config', 'Factory', 'DependencyProvider'];
+
+    /** @var array<string,null|object> */
     protected static array $cachedInstances = [];
-    protected static ?ClassNameFinderInterface $classNameFinder = null;
 
     /** @var array<string,object> */
-    private static array $globalResolvedClasses = [];
+    private static array $cachedGlobalInstances = [];
+
+    protected static ?ClassNameFinderInterface $classNameFinder = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
-    public static function addGlobal(string $key, object $resolvedClass): void
-    {
-        self::$globalResolvedClasses[$key] = $resolvedClass;
-    }
+    abstract protected function getResolvableType(): string;
 
     /**
-     * @return null|mixed
+     * @param object|string $context
      */
-    public function doResolve(object $callerClass)
+    public static function addAnonymousGlobal($context, string $type, object $resolvedClass): void
+    {
+        self::validateTypeForAnonymousGlobalRegistration($type);
+
+        if (is_object($context)) {
+            $callerClass = get_class($context);
+            /** @var string[] $callerClassParts */
+            $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
+            $contextName = end($callerClassParts);
+        } else {
+            $contextName = $context;
+        }
+
+        self::addGlobal(
+            sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type),
+            $resolvedClass
+        );
+    }
+
+    private static function validateTypeForAnonymousGlobalRegistration(string $type): void
+    {
+        if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)) {
+            throw new RuntimeException(
+                "Type '$type' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)
+            );
+        }
+    }
+
+    private static function addGlobal(string $key, object $resolvedClass): void
+    {
+        self::$cachedGlobalInstances[$key] = $resolvedClass;
+    }
+
+    public function doResolve(object $callerClass): ?object
     {
         $classInfo = new ClassInfo($callerClass);
         $cacheKey = $this->getCacheKey($classInfo);
@@ -45,14 +80,9 @@ abstract class AbstractClassResolver
         return self::$cachedInstances[$cacheKey];
     }
 
-    abstract protected function getResolvableType(): string;
-
-    /**
-     * @return null|mixed
-     */
-    private function resolveGlobal(string $cacheKey)
+    private function resolveGlobal(string $cacheKey): ?object
     {
-        $resolvedClass = self::$globalResolvedClasses[$cacheKey] ?? null;
+        $resolvedClass = self::$cachedGlobalInstances[$cacheKey] ?? null;
 
         if (null === $resolvedClass) {
             return null;
@@ -79,17 +109,13 @@ abstract class AbstractClassResolver
     private function getClassNameFinder(): ClassNameFinderInterface
     {
         if (null === self::$classNameFinder) {
-            $classResolverFactory = new ClassResolverFactory();
-            self::$classNameFinder = $classResolverFactory->createClassNameFinder();
+            self::$classNameFinder = (new ClassResolverFactory())->createClassNameFinder();
         }
 
         return self::$classNameFinder;
     }
 
-    /**
-     * @return null|object
-     */
-    private function createInstance(string $resolvedClassName)
+    private function createInstance(string $resolvedClassName): ?object
     {
         if (class_exists($resolvedClassName)) {
             /** @psalm-suppress MixedMethodCall */

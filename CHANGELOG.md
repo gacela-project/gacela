@@ -1,9 +1,11 @@
 # Changelog
 
-### Not released yet
+### 0.5.0
+##### 2021-07-19
 
 - Config::setConfigReaders() create a new config instance singleton.
-- Added AbstractClassResolver::addAnonymousGlobal(); you can use anonymous classes now.
+- Added AbstractClassResolver::addAnonymousGlobal(); you can now use anonymous classes.
+- Added matrix for the GitHub CI for diff PHP versions (7.4,8.0), and diff OS (mac,linux,windows).
 
 ### 0.4.0
 ##### 2021-07-10

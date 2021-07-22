@@ -27,6 +27,9 @@
         "phpstan/phpstan": "^0.12.90",
         "phpbench/phpbench": "^1.0"
     },
+    "suggest": {
+        "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files"
+    },
     "autoload": {
         "psr-4": {
             "Gacela\\": "src/"

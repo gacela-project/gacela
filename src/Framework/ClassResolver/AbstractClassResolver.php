@@ -46,6 +46,11 @@ abstract class AbstractClassResolver
         );
     }
 
+    public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
+    {
+        self::addGlobal($className, $resolvedClass);
+    }
+
     private static function validateTypeForAnonymousGlobalRegistration(string $type): void
     {
         if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)) {
@@ -64,15 +69,18 @@ abstract class AbstractClassResolver
     {
         $classInfo = new ClassInfo($callerClass);
         $cacheKey = $this->getCacheKey($classInfo);
-
         if (isset(self::$cachedInstances[$cacheKey])) {
             return self::$cachedInstances[$cacheKey];
         }
 
-        $resolvedClassName = $this->findClassName($classInfo);
+        $resolvedClass = $this->resolveGlobal($cacheKey);
+        if (null !== $resolvedClass) {
+            return $resolvedClass;
+        }
 
+        $resolvedClassName = $this->findClassName($classInfo);
         if (null === $resolvedClassName) {
-            return $this->resolveGlobal($cacheKey);
+            return null;
         }
 
         self::$cachedInstances[$cacheKey] = $this->createInstance($resolvedClassName);

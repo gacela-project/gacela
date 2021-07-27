@@ -39,11 +39,11 @@ final class ClassInfo
     public function getCacheKey(string $resolvableType): string
     {
         if (!$this->cacheKey) {
-            $this->cacheKey = sprintf(
+            $this->cacheKey = GlobalKey::fromClassName(sprintf(
                 '\\%s\\%s',
                 $this->getFullNamespace(),
                 $resolvableType
-            );
+            ));
         }
 
         return $this->cacheKey;

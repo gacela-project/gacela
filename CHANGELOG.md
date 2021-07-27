@@ -1,5 +1,11 @@
 # Changelog
 
+### Not released yet
+
+- Added AbstractClassResolver::overrideExistingResolvedClass().
+- Locator uses AbstractClassResolver::getGlobalInstance() before creating a new instance.
+- Unify the cacheKey using GlobalKey.
+
 ### 0.5.0
 ##### 2021-07-19
 

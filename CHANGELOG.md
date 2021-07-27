@@ -1,6 +1,7 @@
 # Changelog
 
-### Not released yet
+### 0.6.0
+##### 2021-07-27
 
 - Added AbstractClassResolver::overrideExistingResolvedClass().
 - Locator uses AbstractClassResolver::getGlobalInstance() before creating a new instance.

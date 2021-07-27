@@ -70,13 +70,5 @@ final class AbstractClassResolverTest extends TestCase
         yield 'starting with \ and not using the module prefix in the class' => [
             '\App\Module\ClassName',
         ];
-
-        yield 'DependencyProvider using the module prefix' => [
-            'App\Module\ModuleDependencyProvider',
-        ];
-
-        yield 'DependencyProvider not using the module prefix' => [
-            'App\Module\DependencyProvider',
-        ];
     }
 }

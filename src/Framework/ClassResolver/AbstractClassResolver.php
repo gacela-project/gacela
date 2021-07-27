@@ -67,12 +67,7 @@ abstract class AbstractClassResolver
 
     private static function getGlobalKeyFromClassName(string $className): string
     {
-        preg_match('~(?<pre_namespace>.*)\\\((?:^|[A-Z])[a-z]+)(?<resolvable_type>.*)~', $className, $matches);
-        $resolvableType = $matches['resolvable_type'] ?? '';
-
-        return (empty($resolvableType) || $resolvableType === 'Provider')
-            ? $className
-            : sprintf('\\%s\\%s', ltrim($matches['pre_namespace'], '\\'), $resolvableType);
+        return GlobalKey::fromClassName($className);
     }
 
     private static function validateTypeForAnonymousGlobalRegistration(string $type): void

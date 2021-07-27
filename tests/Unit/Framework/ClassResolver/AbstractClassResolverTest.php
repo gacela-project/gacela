@@ -40,4 +40,43 @@ final class AbstractClassResolverTest extends TestCase
 
         self::assertTrue(true); # Assert non error is thrown
     }
+
+    /**
+     * @dataProvider providerOverrideExistingResolvedClass
+     */
+    public function test_override_existing_resolved_class(string $className): void
+    {
+        $resolvedClass = new class() {
+        };
+        AbstractClassResolver::overrideExistingResolvedClass($className, $resolvedClass);
+
+        self::assertSame($resolvedClass, AbstractClassResolver::getGlobalInstance($className));
+    }
+
+    public function providerOverrideExistingResolvedClass(): iterable
+    {
+        yield 'using the module prefix' => [
+            'App\Module\ModuleClassName',
+        ];
+
+        yield 'not using the module prefix in the class' => [
+            'App\Module\ClassName',
+        ];
+
+        yield 'starting with \ and using the module prefix' => [
+            '\App\Module\ModuleClassName',
+        ];
+
+        yield 'starting with \ and not using the module prefix in the class' => [
+            '\App\Module\ClassName',
+        ];
+
+        yield 'DependencyProvider using the module prefix' => [
+            'App\Module\ModuleDependencyProvider',
+        ];
+
+        yield 'DependencyProvider not using the module prefix' => [
+            'App\Module\DependencyProvider',
+        ];
+    }
 }

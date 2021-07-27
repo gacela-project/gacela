@@ -48,7 +48,31 @@ abstract class AbstractClassResolver
 
     public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
     {
-        self::addGlobal($className, $resolvedClass);
+        $key = self::getGlobalKeyFromClassName($className);
+
+        self::addGlobal($key, $resolvedClass);
+    }
+
+    /**
+     * @internal so the Locator can access to the global instances before creating a new instance
+     */
+    public static function getGlobalInstance(string $className): ?object
+    {
+        $key = self::getGlobalKeyFromClassName($className);
+
+        return self::$cachedGlobalInstances[$key]
+            ?? self::$cachedGlobalInstances['\\' . $key]
+            ?? null;
+    }
+
+    private static function getGlobalKeyFromClassName(string $className): string
+    {
+        preg_match('~(?<pre_namespace>.*)\\\((?:^|[A-Z])[a-z]+)(?<resolvable_type>.*)~', $className, $matches);
+        $resolvableType = $matches['resolvable_type'] ?? '';
+
+        return (empty($resolvableType) || $resolvableType === 'Provider')
+            ? $className
+            : sprintf('\\%s\\%s', ltrim($matches['pre_namespace'], '\\'), $resolvableType);
     }
 
     private static function validateTypeForAnonymousGlobalRegistration(string $type): void

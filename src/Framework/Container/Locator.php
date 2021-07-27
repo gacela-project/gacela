@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
+
 final class Locator
 {
     private const INTERFACE_SUFFIX = 'Interface';
@@ -49,12 +51,14 @@ final class Locator
             return $this->instanceCache[$concreteClass];
         }
 
-        /** @var mixed $newInstance */
-        $newInstance = $this->newInstance($concreteClass);
-        /** @psalm-suppress MixedAssignment */
-        $this->instanceCache[$concreteClass] = $newInstance;
+        /** @var mixed $locatedInstance */
+        $locatedInstance = AbstractClassResolver::getGlobalInstance($concreteClass)
+            ?? $this->newInstance($concreteClass);
 
-        return $newInstance;
+        /** @psalm-suppress MixedAssignment */
+        $this->instanceCache[$concreteClass] = $locatedInstance;
+
+        return $locatedInstance;
     }
 
     private function getConcreteClass(string $className): string

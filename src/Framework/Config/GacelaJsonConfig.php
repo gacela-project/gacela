@@ -8,10 +8,13 @@ use function is_array;
 
 final class GacelaJsonConfig
 {
-    /** @var GacelaJsonConfigItem[] */
+    /** @var array<string,GacelaJsonConfigItem> */
     private array $configs;
 
-    private function __construct(GacelaJsonConfigItem ...$configs)
+    /**
+     * @param array<string,GacelaJsonConfigItem> $configs
+     */
+    private function __construct(array $configs)
     {
         $this->configs = $configs;
     }
@@ -22,39 +25,45 @@ final class GacelaJsonConfig
     public static function fromArray(array $json): self
     {
         return new self(
-            ...self::getConfigItems($json)
+            self::getConfigItems($json)
         );
     }
 
     /**
      * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
      *
-     * @return GacelaJsonConfigItem[]
+     * @return array<string,GacelaJsonConfigItem>
      */
     private static function getConfigItems(array $json): array
     {
         $first = reset($json['config']);
 
         if (!is_array($first)) {
-            return [GacelaJsonConfigItem::fromArray($json['config'])];
+            $c = GacelaJsonConfigItem::fromArray($json['config']);
+            return [$c->type() => $c];
         }
+
+        $result = [];
 
         /** @var array<array{type:string,path:string,path_local:string}> $configs */
         $configs = $json['config'];
+        foreach ($configs as $config) {
+            $c = GacelaJsonConfigItem::fromArray($config);
+            $result[$c->type()] = $c;
+        }
 
-        return array_values(array_map(
-            static fn (array $c) => GacelaJsonConfigItem::fromArray($c),
-            $configs
-        ));
+        return $result;
     }
 
     public static function withDefaults(): self
     {
-        return new self(GacelaJsonConfigItem::withDefaults());
+        $configItem = GacelaJsonConfigItem::withDefaults();
+
+        return new self([$configItem->type() => $configItem]);
     }
 
     /**
-     * @return GacelaJsonConfigItem[]
+     * @return array<string,GacelaJsonConfigItem>
      */
     public function configs(): array
     {

@@ -12,7 +12,7 @@ use Gacela\Framework\Config\GacelaJsonConfigFactoryInterface;
 use Gacela\Framework\Config\PathFinderInterface;
 use PHPUnit\Framework\TestCase;
 
-final class ConfigReaderTest extends TestCase
+final class ConfigInitTest extends TestCase
 {
     public function test_no_config(): void
     {
@@ -33,7 +33,7 @@ final class ConfigReaderTest extends TestCase
         self::assertSame([], $configInit->readAll());
     }
 
-    public function test_non_supported_reader_type(): void
+    public function test_non_supported_reader_type_throw_exception(): void
     {
         $gacelaJsonConfigCreator = $this->createStub(GacelaJsonConfigFactoryInterface::class);
         $gacelaJsonConfigCreator
@@ -58,6 +58,33 @@ final class ConfigReaderTest extends TestCase
 
         $this->expectException(ConfigReaderException::class);
         $configInit->readAll();
+    }
+
+    public function test_non_supported_optional_reader_type_returns_empty_array(): void
+    {
+        $gacelaJsonConfigCreator = $this->createStub(GacelaJsonConfigFactoryInterface::class);
+        $gacelaJsonConfigCreator
+            ->method('createGacelaJsonConfig')
+            ->willReturn(GacelaJsonConfig::fromArray([
+                'config' => [
+                    'type' => 'non-supported-type',
+                    'path' => 'path-value',
+                    'path_local' => 'path_local-value',
+                    'optional' => true,
+                ],
+            ]));
+
+        $pathFinder = $this->createMock(PathFinderInterface::class);
+        $pathFinder->method('matchingPattern')->willReturn(['path1']);
+
+        $configInit = new ConfigInit(
+            'application_root_dir',
+            $gacelaJsonConfigCreator,
+            $pathFinder,
+            []
+        );
+
+        self::assertSame([], $configInit->readAll());
     }
 
     public function test_read_single_config(): void

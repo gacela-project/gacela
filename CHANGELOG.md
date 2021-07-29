@@ -1,5 +1,9 @@
 # Changelog
 
+### Non released yet
+
+- Allow optional config readers in gacela.json
+
 ### 0.6.0
 ##### 2021-07-27
 

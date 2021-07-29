@@ -101,13 +101,15 @@ final class ConfigInit
         $reader = $this->readers[$config->type()] ?? null;
 
         if ($reader === null) {
+            if ($config->isOptional()) {
+                return [];
+            }
+
             throw ConfigReaderException::notSupported($config->type(), $this->readers);
         }
 
-        if ($reader->canRead($absolutePath)) {
-            return $reader->read($absolutePath);
-        }
-
-        return [];
+        return $reader->canRead($absolutePath)
+            ? $reader->read($absolutePath)
+            : [];
     }
 }

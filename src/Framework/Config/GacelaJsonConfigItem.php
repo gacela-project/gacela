@@ -10,30 +10,38 @@ final class GacelaJsonConfigItem
 
     private const DEFAULT_PATH = 'config/*.php';
     private const DEFAULT_PATH_LOCAL = 'config/local.php';
+    private const DEFAULT_IS_OPTIONAL = false;
 
     private string $type;
     private string $path;
     private string $pathLocal;
+    private bool $isOptional;
 
     public static function fromArray(array $json): self
     {
-        $type = (string)($json['type'] ?? '');
-        $path = (string)($json['path'] ?? '');
-        $pathLocal = (string)($json['path_local'] ?? '');
-
-        return new self($type, $path, $pathLocal);
+        return new self(
+            (string)($json['type'] ?? self::DEFAULT_TYPE),
+            (string)($json['path'] ?? self::DEFAULT_PATH),
+            (string)($json['path_local'] ?? self::DEFAULT_PATH_LOCAL),
+            (bool)($json['optional'] ?? self::DEFAULT_IS_OPTIONAL)
+        );
     }
 
     public static function withDefaults(): self
     {
-        return new self('', '', '');
+        return new self();
     }
 
-    private function __construct(string $type, string $path, string $pathLocal)
-    {
-        $this->type = $type ?: self::DEFAULT_TYPE;
-        $this->path = $path ?: self::DEFAULT_PATH;
-        $this->pathLocal = $pathLocal ?: self::DEFAULT_PATH_LOCAL;
+    private function __construct(
+        string $type = self::DEFAULT_TYPE,
+        string $path = self::DEFAULT_PATH,
+        string $pathLocal = self::DEFAULT_PATH_LOCAL,
+        bool $isOptional = self::DEFAULT_IS_OPTIONAL
+    ) {
+        $this->type = $type;
+        $this->path = $path;
+        $this->pathLocal = $pathLocal;
+        $this->isOptional = $isOptional;
     }
 
     public function type(): string
@@ -49,5 +57,10 @@ final class GacelaJsonConfigItem
     public function pathLocal(): string
     {
         return $this->pathLocal;
+    }
+
+    public function isOptional(): bool
+    {
+        return $this->isOptional;
     }
 }

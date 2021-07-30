@@ -60,15 +60,23 @@ final class ConfigInit
             $gacelaJsonConfig->configs()
         );
 
-        return array_merge(...$configGroup);
+        return array_merge(...array_values($configGroup));
     }
 
     private function readConfigFromFile(GacelaJsonConfig $gacelaJson, string $absolutePath): array
     {
         $result = [];
+        $configs = $gacelaJson->configs();
 
-        foreach ($gacelaJson->configs() as $config) {
-            $result[] = $this->readConfigItem($config, $absolutePath);
+        foreach ($this->readers as $type => $reader) {
+            $config = $configs[$type] ?? null;
+            if ($config === null) {
+                continue;
+            }
+
+            $result[] = $reader->canRead($absolutePath)
+                ? $reader->read($absolutePath)
+                : [];
         }
 
         return array_merge(...array_filter($result));
@@ -77,11 +85,18 @@ final class ConfigInit
     private function readLocalConfigFile(GacelaJsonConfig $gacelaJson): array
     {
         $result = [];
+        $configs = $gacelaJson->configs();
 
-        foreach ($gacelaJson->configs() as $config) {
+        foreach ($this->readers as $type => $reader) {
+            $config = $configs[$type] ?? null;
+            if ($config === null) {
+                continue;
+            }
             $absolutePath = $this->generateAbsolutePath($config->pathLocal());
 
-            $result[] = $this->readConfigItem($config, $absolutePath);
+            $result[] = $reader->canRead($absolutePath)
+                ? $reader->read($absolutePath)
+                : [];
         }
 
         return array_merge(...array_filter($result));
@@ -94,20 +109,5 @@ final class ConfigInit
             $this->applicationRootDir,
             $relativePath
         );
-    }
-
-    private function readConfigItem(GacelaJsonConfigItem $config, string $absolutePath): array
-    {
-        $reader = $this->readers[$config->type()] ?? null;
-
-        if ($reader === null) {
-            throw ConfigReaderException::notSupported($config->type(), $this->readers);
-        }
-
-        if ($reader->canRead($absolutePath)) {
-            return $reader->read($absolutePath);
-        }
-
-        return [];
     }
 }

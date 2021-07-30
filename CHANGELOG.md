@@ -1,5 +1,9 @@
 # Changelog
 
+### Non released yet
+
+- Improve the flexibility from the ConfigReaders.
+
 ### 0.6.0
 ##### 2021-07-27
 

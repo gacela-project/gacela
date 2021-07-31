@@ -57,4 +57,20 @@ final class GlobalKeyTest extends TestCase
             GlobalKey::fromClassName('\App\Module\DependencyProvider')
         );
     }
+
+    public function test_using_a_multi_word_module_prefix(): void
+    {
+        self::assertSame(
+            '\App\PriceListChecker\Facade',
+            GlobalKey::fromClassName('\App\PriceListChecker\PriceListCheckerFacade')
+        );
+    }
+
+    public function test_dependency_provider_using_a_multi_word_module_prefix(): void
+    {
+        self::assertSame(
+            '\App\PriceListChecker\DependencyProvider',
+            GlobalKey::fromClassName('\App\PriceListChecker\PriceListCheckerDependencyProvider')
+        );
+    }
 }

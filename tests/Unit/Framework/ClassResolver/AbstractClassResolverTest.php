@@ -56,19 +56,19 @@ final class AbstractClassResolverTest extends TestCase
     public function providerOverrideExistingResolvedClass(): iterable
     {
         yield 'using the module prefix' => [
-            'App\Module\ModuleClassName',
+            'App\Module\ModuleClassNameFacade',
         ];
 
         yield 'not using the module prefix in the class' => [
-            'App\Module\ClassName',
+            'App\Module\ClassNameFacade',
         ];
 
         yield 'starting with \ and using the module prefix' => [
-            '\App\Module\ModuleClassName',
+            '\App\Module\ModuleClassNameFacade',
         ];
 
         yield 'starting with \ and not using the module prefix in the class' => [
-            '\App\Module\ClassName',
+            '\App\Module\ClassNameFacade',
         ];
     }
 }

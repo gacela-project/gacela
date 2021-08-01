@@ -6,7 +6,9 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use RuntimeException;
+use function get_class;
 use function in_array;
+use function is_string;
 
 abstract class AbstractClassResolver
 {
@@ -25,25 +27,43 @@ abstract class AbstractClassResolver
     abstract protected function getResolvableType(): string;
 
     /**
+     * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
+     * bound to the context that it's pass as first argument. It can be the string-key
+     * (from a non-class/file context) or the class/object itself.
+     *
      * @param object|string $context
      */
-    public static function addAnonymousGlobal($context, string $type, object $resolvedClass): void
+    public static function addAnonymousGlobal($context, object $resolvedClass): void
     {
-        self::validateTypeForAnonymousGlobalRegistration($type);
+        $contextName = self::extractContextNameFromContext($context);
+        $parentClass = get_parent_class($resolvedClass);
 
-        if (is_object($context)) {
-            $callerClass = get_class($context);
-            /** @var string[] $callerClassParts */
-            $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-            $contextName = end($callerClassParts);
-        } else {
-            $contextName = $context;
-        }
+        $type = is_string($parentClass)
+            ? ResolvableType::fromClassName($parentClass)->resolvableType()
+            : $contextName;
+
+        self::validateTypeForAnonymousGlobalRegistration($type);
 
         self::addGlobal(
             sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type),
             $resolvedClass
         );
+    }
+
+    /**
+     * @param object|string $context
+     */
+    private static function extractContextNameFromContext($context): string
+    {
+        if (is_string($context)) {
+            return $context;
+        }
+
+        $callerClass = get_class($context);
+        /** @var list<string> $callerClassParts */
+        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
+
+        return end($callerClassParts);
     }
 
     public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void

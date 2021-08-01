@@ -4,22 +4,31 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\ClassResolver;
 
+use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\Container\Container;
 use PHPUnit\Framework\TestCase;
 
 final class AbstractClassResolverTest extends TestCase
 {
+    /**
+     * The anon-class is not extending from Abstract[Factory,Config,DependencyProvider]
+     * For this reason, the context of this anon-global will be the one of this (test)class
+     * therefore it's not allowed.
+     */
     public function test_error_when_non_allowed_anon_global_type(): void
     {
-        $this->expectErrorMessage("Type 'Custom' not allowed");
+        $this->expectErrorMessage("Type 'AbstractClassResolverTest' not allowed");
 
-        AbstractClassResolver::addAnonymousGlobal($this, 'Custom', new class() {
+        AbstractClassResolver::addAnonymousGlobal($this, new class() {
         });
     }
 
     public function test_allowed_factory_anon_global(): void
     {
-        AbstractClassResolver::addAnonymousGlobal($this, 'Factory', new class() {
+        AbstractClassResolver::addAnonymousGlobal($this, new class() extends AbstractFactory {
         });
 
         self::assertTrue(true); # Assert non error is thrown
@@ -27,7 +36,7 @@ final class AbstractClassResolverTest extends TestCase
 
     public function test_allowed_config_anon_global(): void
     {
-        AbstractClassResolver::addAnonymousGlobal($this, 'Config', new class() {
+        AbstractClassResolver::addAnonymousGlobal($this, new class() extends AbstractConfig {
         });
 
         self::assertTrue(true); # Assert non error is thrown
@@ -35,7 +44,10 @@ final class AbstractClassResolverTest extends TestCase
 
     public function test_allowed_dependency_provider_anon_global(): void
     {
-        AbstractClassResolver::addAnonymousGlobal($this, 'DependencyProvider', new class() {
+        AbstractClassResolver::addAnonymousGlobal($this, new class() extends AbstractDependencyProvider {
+            public function provideModuleDependencies(Container $container): void
+            {
+            }
         });
 
         self::assertTrue(true); # Assert non error is thrown

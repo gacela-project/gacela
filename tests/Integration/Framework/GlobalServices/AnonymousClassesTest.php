@@ -47,7 +47,6 @@ final class AnonymousClassesTest extends TestCase
     {
         AbstractClassResolver::addAnonymousGlobal(
             $this,
-            'Config',
             new class() extends AbstractConfig {
                 /**
                  * @return int[]
@@ -67,7 +66,6 @@ final class AnonymousClassesTest extends TestCase
     {
         AbstractClassResolver::addAnonymousGlobal(
             'AnonymousClassesTest',
-            'Factory',
             new class() extends AbstractFactory {
                 public function createDomainClass(): object
                 {
@@ -109,7 +107,6 @@ final class AnonymousClassesTest extends TestCase
     {
         AbstractClassResolver::addAnonymousGlobal(
             $this,
-            'DependencyProvider',
             new class() extends AbstractDependencyProvider {
                 public function provideModuleDependencies(Container $container): void
                 {

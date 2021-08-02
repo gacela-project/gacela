@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
+use Gacela\Framework\Config;
+use Gacela\Framework\Config\GacelaJsonConfig;
 use RuntimeException;
 use function get_class;
 use function in_array;
@@ -166,9 +168,23 @@ abstract class AbstractClassResolver
     {
         if (class_exists($resolvedClassName)) {
             /** @psalm-suppress MixedMethodCall */
-            return new $resolvedClassName();
+            return new $resolvedClassName(...$this->resolveDependencies($resolvedClassName));
         }
 
         return null;
     }
+
+    private function resolveDependencies(string $resolvedClassName): array
+    {
+        /** @var GacelaJsonConfig $gacelaJsonConfig */
+
+        return $gacelaJsonConfig->dependencies()[$resolvedClassName] ?? [];
+    }
 }
+
+// gacela.json
+//"dependencies" : {
+//    "App\\Product\\ProductFactory": [
+//        "App\\Shared\\Infrastructure\\Repository\\ProductRepository"
+//    ]
+//  }

@@ -69,4 +69,12 @@ final class GacelaJsonConfig
     {
         return $this->configs;
     }
+
+    /**
+     * @return array<string,GacelaJsonDependencyItem>
+     */
+    public function dependencies(): array
+    {
+
+    }
 }

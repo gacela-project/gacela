@@ -11,7 +11,7 @@ final class ConfigInit
 {
     private string $applicationRootDir;
 
-    private GacelaFileConfigFactoryInterface $configFactory;
+    private GacelaConfigFileFactoryInterface $configFactory;
 
     private PathFinderInterface $pathFinder;
 
@@ -23,7 +23,7 @@ final class ConfigInit
      */
     public function __construct(
         string $applicationRootDir,
-        GacelaFileConfigFactoryInterface $configFactory,
+        GacelaConfigFileFactoryInterface $configFactory,
         PathFinderInterface $pathFinder,
         array $readers
     ) {

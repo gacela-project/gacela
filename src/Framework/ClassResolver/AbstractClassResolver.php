@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
-use Gacela\Framework\Config;
-use Gacela\Framework\Config\GacelaJsonConfig;
+use Gacela\Framework\Config\ConfigFactory;
 use RuntimeException;
 use function get_class;
 use function in_array;
@@ -22,7 +21,9 @@ abstract class AbstractClassResolver
     /** @var array<string,object> */
     private static array $cachedGlobalInstances = [];
 
-    protected static ?ClassNameFinderInterface $classNameFinder = null;
+    private static ?ClassNameFinderInterface $classNameFinder = null;
+
+    private ?ConfigFactory $configFactory = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -174,17 +175,38 @@ abstract class AbstractClassResolver
         return null;
     }
 
+    /**
+     * @return list<mixed>
+     */
     private function resolveDependencies(string $resolvedClassName): array
     {
-        /** @var GacelaJsonConfig $gacelaJsonConfig */
+        $gacelaJsonConfig = $this->getConfigFactory()
+            ->createGacelaJsonConfigCreator()
+            ->createGacelaJsonConfig();
 
-        return $gacelaJsonConfig->dependencies()[$resolvedClassName] ?? [];
+        $dependencies = $gacelaJsonConfig->dependencies();
+        $dependencyFullNamesList = $dependencies[$resolvedClassName] ?? [];
+
+        $instantiatedDependencies = [];
+        foreach ($dependencyFullNamesList as $fullClassName) {
+            if (!class_exists($fullClassName)) {
+                throw new RuntimeException("Class {$fullClassName} doesn't exist.");
+            }
+            // TODO: What with the inner dependencies? We need to think about implementing an autowiring
+            // TODO: for the dependencies of the dependencies
+            /** @psalm-suppress MixedMethodCall */
+            $instantiatedDependencies[] = new $fullClassName();
+        }
+
+        return $instantiatedDependencies;
+    }
+
+    private function getConfigFactory(): ConfigFactory
+    {
+        if (null === $this->configFactory) {
+            $this->configFactory = new ConfigFactory();
+        }
+
+        return $this->configFactory;
     }
 }
-
-// gacela.json
-//"dependencies" : {
-//    "App\\Product\\ProductFactory": [
-//        "App\\Shared\\Infrastructure\\Repository\\ProductRepository"
-//    ]
-//  }

@@ -4,20 +4,15 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\ConfigInit;
 use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Config\GacelaJsonConfigFactory;
-use Gacela\Framework\Config\GacelaJsonConfigFactoryInterface;
-use Gacela\Framework\Config\PathFinder;
-use Gacela\Framework\Config\PathFinderInterface;
 use Gacela\Framework\Exception\ConfigException;
 
 final class Config
 {
-    private const GACELA_CONFIG_FILENAME = 'gacela.json';
-
     private static ?self $instance = null;
 
     private string $applicationRootDir = '';
@@ -26,6 +21,8 @@ final class Config
 
     /** @var array<string, ConfigReaderInterface> */
     private array $configReaders;
+
+    private ?ConfigFactory $configFactory = null;
 
     /**
      * @param array<string, ConfigReaderInterface> $configReaders
@@ -93,8 +90,8 @@ final class Config
 
         $this->config = (new ConfigInit(
             $this->getApplicationRootDir(),
-            $this->createGacelaJsonConfigCreator(),
-            $this->createPathFinder(),
+            $this->getFactory()->createGacelaJsonConfigCreator(),
+            $this->getFactory()->createPathFinder(),
             $this->configReaders
         ))->readAll();
     }
@@ -113,21 +110,17 @@ final class Config
         return $this->applicationRootDir;
     }
 
-    private function createGacelaJsonConfigCreator(): GacelaJsonConfigFactoryInterface
-    {
-        return new GacelaJsonConfigFactory(
-            $this->getApplicationRootDir(),
-            self::GACELA_CONFIG_FILENAME
-        );
-    }
-
-    private function createPathFinder(): PathFinderInterface
-    {
-        return new PathFinder();
-    }
-
     private function hasValue(string $key): bool
     {
         return isset($this->config[$key]);
+    }
+
+    private function getFactory(): ConfigFactory
+    {
+        if (null === $this->configFactory) {
+            $this->configFactory = new ConfigFactory();
+        }
+
+        return $this->configFactory;
     }
 }

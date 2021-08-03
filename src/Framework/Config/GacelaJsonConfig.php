@@ -11,44 +11,54 @@ final class GacelaJsonConfig
     /** @var array<string,GacelaJsonConfigItem> */
     private array $configs;
 
+    /** @var array<string,list<string>> */
+    private array $dependencies;
+
     /**
      * @param array<string,GacelaJsonConfigItem> $configs
+     * @param array<string,list<string>> $dependencies
      */
-    private function __construct(array $configs)
-    {
+    private function __construct(
+        array $configs,
+        array $dependencies
+    ) {
         $this->configs = $configs;
+        $this->dependencies = $dependencies;
     }
 
     /**
-     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
+     * @param array{
+     *     config: array<array>|array{type:string,path:string,path_local:string},
+     *     dependencies: array<string,list<string>>,
+     * } $json
      */
     public static function fromArray(array $json): self
     {
         return new self(
-            self::getConfigItems($json)
+            self::getConfigItems($json['config'] ?? []),
+            $json['dependencies'] ?? [],
         );
     }
 
     /**
-     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
+     * @param array<array>|array{type:string,path:string,path_local:string} $config
      *
      * @return array<string,GacelaJsonConfigItem>
      */
-    private static function getConfigItems(array $json): array
+    private static function getConfigItems(array $config): array
     {
-        $first = reset($json['config']);
+        $first = reset($config);
 
         if (!is_array($first)) {
-            $c = GacelaJsonConfigItem::fromArray($json['config']);
+            $c = GacelaJsonConfigItem::fromArray($config);
             return [$c->type() => $c];
         }
 
         $result = [];
 
-        /** @var array<array{type:string,path:string,path_local:string}> $configs */
-        $configs = $json['config'];
-        foreach ($configs as $config) {
-            $c = GacelaJsonConfigItem::fromArray($config);
+        /** @var array<array{type:string,path:string,path_local:string}> $config */
+        foreach ($config as $configItem) {
+            $c = GacelaJsonConfigItem::fromArray($configItem);
             $result[$c->type()] = $c;
         }
 
@@ -59,7 +69,10 @@ final class GacelaJsonConfig
     {
         $configItem = GacelaJsonConfigItem::withDefaults();
 
-        return new self([$configItem->type() => $configItem]);
+        return new self(
+            [$configItem->type() => $configItem],
+            []
+        );
     }
 
     /**
@@ -71,10 +84,10 @@ final class GacelaJsonConfig
     }
 
     /**
-     * @return array<string,GacelaJsonDependencyItem>
+     * @return array<string,list<string>>
      */
     public function dependencies(): array
     {
-
+        return $this->dependencies;
     }
 }

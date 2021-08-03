@@ -6,11 +6,10 @@ namespace GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\I
 
 use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Domain\NumberGeneratorInterface;
 
-final class CustomNumberGenerator implements NumberGeneratorInterface
+final class CustomNameGenerator implements NumberGeneratorInterface
 {
-    public function getNumber(): int
+    public function getNames(): string
     {
-        return 100;
-//        return random_int(0, 100);
+        return 'Chemaclass & Jesus';
     }
 }

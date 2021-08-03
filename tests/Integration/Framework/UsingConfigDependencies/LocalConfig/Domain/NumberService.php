@@ -4,23 +4,19 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Domain;
 
+use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Infrastructure\CustomCompanyGenerator;
+
 final class NumberService
 {
-    private NumberGeneratorInterface $numberGenerator;
-    private GreeterGeneratorInterface $greeterGenerator;
+    private CustomCompanyGenerator $numberGenerator;
 
-    public function __construct(
-        NumberGeneratorInterface $numberGenerator,
-        GreeterGeneratorInterface $greeterGenerator
-    ) {
+    public function __construct(CustomCompanyGenerator $numberGenerator)
+    {
         $this->numberGenerator = $numberGenerator;
-        $this->greeterGenerator = $greeterGenerator;
     }
 
-    public function generateNumberString(): string
+    public function generateCompanyAndName(): string
     {
-        $number = $this->numberGenerator->getNumber();
-
-        return $this->greeterGenerator->greet((string)$number);
+        return $this->numberGenerator->company('Gacela');
     }
 }

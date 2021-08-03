@@ -6,6 +6,7 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\Config\ConfigFactory;
+use ReflectionClass;
 use RuntimeException;
 use function get_class;
 use function in_array;
@@ -192,10 +193,9 @@ abstract class AbstractClassResolver
             if (!class_exists($fullClassName)) {
                 throw new RuntimeException("Class {$fullClassName} doesn't exist.");
             }
-            // TODO: What with the inner dependencies? We need to think about implementing an autowiring
-            // TODO: for the dependencies of the dependencies
+
             /** @psalm-suppress MixedMethodCall */
-            $instantiatedDependencies[] = new $fullClassName();
+            $instantiatedDependencies[] = $this->resolveDependenciesRecursively($fullClassName);
         }
 
         return $instantiatedDependencies;
@@ -208,5 +208,32 @@ abstract class AbstractClassResolver
         }
 
         return $this->configFactory;
+    }
+
+    /**
+     * @param class-string $className
+     */
+    private function resolveDependenciesRecursively(string $className): object
+    {
+        $reflection = new ReflectionClass($className);
+        $constructor = $reflection->getConstructor();
+
+        if (!$constructor) {
+            return $reflection->newInstance();
+        }
+
+        $dependencies = [];
+
+        $params = $constructor->getParameters();
+        foreach ($params as $param) {
+            $paramType = $param->getClass();
+            if ($paramType) {
+                /** @var class-string $name */
+                $name = $paramType->name;
+                $dependencies[] = $this->resolveDependenciesRecursively($name);
+            }
+        }
+
+        return $reflection->newInstanceArgs($dependencies);
     }
 }

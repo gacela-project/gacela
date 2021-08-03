@@ -6,30 +6,22 @@ namespace GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig;
 
 use Gacela\Framework\AbstractFactory;
 use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Domain\NumberService;
-use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Infrastructure\CustomGreeterGenerator;
-use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Infrastructure\CustomNumberGenerator;
+use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Infrastructure\CustomCompanyGenerator;
 
 /**
  * @method Config getConfig()
  */
 final class Factory extends AbstractFactory
 {
-    private CustomNumberGenerator $numberGenerator;
-    private CustomGreeterGenerator $greeterGenerator;
+    private CustomCompanyGenerator $companyGenerator;
 
-    public function __construct(
-        CustomNumberGenerator $numberGenerator,
-        CustomGreeterGenerator $greeterGenerator
-    ) {
-        $this->numberGenerator = $numberGenerator;
-        $this->greeterGenerator = $greeterGenerator;
+    public function __construct(CustomCompanyGenerator $companyGenerator)
+    {
+        $this->companyGenerator = $companyGenerator;
     }
 
-    public function createNumberService(): NumberService
+    public function createCompanyService(): NumberService
     {
-        return new NumberService(
-            $this->numberGenerator,
-            $this->greeterGenerator
-        );
+        return new NumberService($this->companyGenerator);
     }
 }

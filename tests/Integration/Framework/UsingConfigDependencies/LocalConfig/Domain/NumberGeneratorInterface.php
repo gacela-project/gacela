@@ -6,5 +6,5 @@ namespace GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\D
 
 interface NumberGeneratorInterface
 {
-    public function getNumber(): int;
+    public function getNames(): string;
 }

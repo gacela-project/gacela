@@ -6,5 +6,5 @@ namespace GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\D
 
 interface GreeterGeneratorInterface
 {
-    public function greet(string $name): string;
+    public function company(string $name): string;
 }

@@ -11,10 +11,10 @@ use Gacela\Framework\AbstractFacade;
  */
 final class Facade extends AbstractFacade
 {
-    public function generateNumberString(): string
+    public function generateCompanyAndName(): string
     {
         return $this->getFactory()
-            ->createNumberService()
-            ->generateNumberString();
+            ->createCompanyService()
+            ->generateCompanyAndName();
     }
 }

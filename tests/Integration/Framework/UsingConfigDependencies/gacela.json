@@ -1,8 +1,7 @@
 {
   "dependencies": {
     "\\GacelaTest\\Integration\\Framework\\UsingConfigDependencies\\LocalConfig\\Factory": [
-      "\\GacelaTest\\Integration\\Framework\\UsingConfigDependencies\\LocalConfig\\Infrastructure\\CustomNumberGenerator",
-      "\\GacelaTest\\Integration\\Framework\\UsingConfigDependencies\\LocalConfig\\Infrastructure\\CustomGreeterGenerator"
+      "\\GacelaTest\\Integration\\Framework\\UsingConfigDependencies\\LocalConfig\\Infrastructure\\CustomCompanyGenerator"
     ]
   }
 }

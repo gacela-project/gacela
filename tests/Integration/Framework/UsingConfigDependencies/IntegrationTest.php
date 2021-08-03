@@ -19,8 +19,8 @@ final class IntegrationTest extends TestCase
         $facade = new LocalConfig\Facade();
 
         self::assertSame(
-            'Hello 100!',
-            $facade->generateNumberString()
+            'Hello Gacela! Name: Chemaclass & Jesus',
+            $facade->generateCompanyAndName()
         );
     }
 }

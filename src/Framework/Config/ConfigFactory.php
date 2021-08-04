@@ -8,13 +8,18 @@ use Gacela\Framework\Config;
 
 final class ConfigFactory
 {
-    private const GACELA_CONFIG_FILENAME = 'gacela.json';
+    /** @deprecated */
+    private const GACELA_JSON_CONFIG_FILENAME = 'gacela.json';
 
-    public function createGacelaJsonConfigCreator(): GacelaJsonConfigFactoryInterface
+    private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
+
+    public function createGacelaConfigFileFactory(): GacelaConfigFileFactoryInterface
     {
-        return new GacelaJsonConfigFactory(
+        /** @psalm-suppress DeprecatedConstant */
+        return new GacelaConfigFileFactory(
             Config::getInstance()->getApplicationRootDir(),
-            self::GACELA_CONFIG_FILENAME
+            self::GACELA_PHP_CONFIG_FILENAME,
+            self::GACELA_JSON_CONFIG_FILENAME
         );
     }
 

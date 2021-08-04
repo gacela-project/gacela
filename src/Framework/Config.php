@@ -90,7 +90,7 @@ final class Config
 
         $this->config = (new ConfigInit(
             $this->getApplicationRootDir(),
-            $this->getFactory()->createGacelaJsonConfigCreator(),
+            $this->getFactory()->createGacelaConfigFileFactory(),
             $this->getFactory()->createPathFinder(),
             $this->configReaders
         ))->readAll();

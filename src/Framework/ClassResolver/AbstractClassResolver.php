@@ -7,6 +7,7 @@ namespace Gacela\Framework\ClassResolver;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\Config\ConfigFactory;
 use ReflectionClass;
+use ReflectionNamedType;
 use RuntimeException;
 use function get_class;
 use function in_array;
@@ -182,8 +183,8 @@ abstract class AbstractClassResolver
     private function resolveDependencies(string $resolvedClassName): array
     {
         $gacelaJsonConfig = $this->getConfigFactory()
-            ->createGacelaJsonConfigCreator()
-            ->createGacelaJsonConfig();
+            ->createGacelaConfigFileFactory()
+            ->createGacelaFileConfig();
 
         $dependencies = $gacelaJsonConfig->dependencies();
         $dependencyFullNamesList = $dependencies[$resolvedClassName] ?? [];
@@ -226,10 +227,15 @@ abstract class AbstractClassResolver
 
         $params = $constructor->getParameters();
         foreach ($params as $param) {
-            $paramType = $param->getClass();
+            $paramType = $param->getType();
             if ($paramType) {
-                /** @var class-string $name */
-                $name = $paramType->name;
+                /**
+                 * @psalm-suppress UndefinedMethod
+                 *
+                 * @var ReflectionNamedType $paramType
+                 * @var class-string $name
+                 */
+                $name = $paramType->getName();
                 $dependencies[] = $this->resolveDependenciesRecursively($name);
             }
         }

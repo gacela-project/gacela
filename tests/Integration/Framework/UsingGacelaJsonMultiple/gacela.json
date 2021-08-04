@@ -7,10 +7,6 @@
     {
       "type": "php",
       "path": "config/*.php"
-    },
-    {
-      "type": "custom",
-      "path": "config/*.custom"
     }
   ]
 }

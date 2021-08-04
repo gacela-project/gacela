@@ -36,7 +36,7 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     {
         $configuration = $gacelaConfig['config'];
 
-        if (!self::isMultiConfigFile($configuration)) {
+        if (self::isSingleConfigFile($configuration)) {
             $c = GacelaPhpConfigItem::fromArray($gacelaConfig['config']);
             return [$c->type() => $c];
         }
@@ -53,9 +53,11 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
         return $result;
     }
 
-    private static function isMultiConfigFile(array $config): bool
+    private static function isSingleConfigFile(array $config): bool
     {
-        return count(array_filter($config, 'is_array')) >= 1;
+        return isset($config['type'])
+            || isset($config['path'])
+            || isset($config['path_local']);
     }
 
     public static function withDefaults(): self

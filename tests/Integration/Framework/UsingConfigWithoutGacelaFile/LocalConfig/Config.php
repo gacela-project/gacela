@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigWithoutGacelaJsonFile\LocalConfig;
+namespace GacelaTest\Integration\Framework\UsingConfigWithoutGacelaFile\LocalConfig;
 
 use Gacela\Framework\AbstractConfig;
 

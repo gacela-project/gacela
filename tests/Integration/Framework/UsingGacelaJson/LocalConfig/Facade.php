@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigWithoutGacelaJsonFile\LocalConfig;
+namespace GacelaTest\Integration\Framework\UsingGacelaJson\LocalConfig;
 
 use Gacela\Framework\AbstractFacade;
 

@@ -3,6 +3,7 @@
 ### Non released yet
 
 - Improve the flexibility from the ConfigReaders.
+- Deprecated `gacela.json` config file, should be used instead `gacela.php`.
 
 ### 0.6.0
 ##### 2021-07-27

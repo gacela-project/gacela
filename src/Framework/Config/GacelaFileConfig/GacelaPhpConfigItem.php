@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config;
+namespace Gacela\Framework\Config\GacelaFileConfig;
 
-final class GacelaJsonConfigItem
+final class GacelaPhpConfigItem implements GacelaFileConfigItem
 {
     public const DEFAULT_TYPE = 'php';
 

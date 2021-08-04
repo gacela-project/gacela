@@ -2,17 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config;
+namespace Gacela\Framework\Config\GacelaFileConfig;
 
 use function is_array;
 
-final class GacelaJsonConfig
+/**
+ * @psalm-suppress DeprecatedClass
+ *
+ * @deprecated
+ */
+final class GacelaJsonConfig implements GacelaFileConfig
 {
-    /** @var array<string,GacelaJsonConfigItem> */
+    /** @var array<string,GacelaFileConfigItem> */
     private array $configs;
 
     /**
-     * @param array<string,GacelaJsonConfigItem> $configs
+     * @param array<string,GacelaFileConfigItem> $configs
      */
     private function __construct(array $configs)
     {
@@ -32,13 +37,14 @@ final class GacelaJsonConfig
     /**
      * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
      *
-     * @return array<string,GacelaJsonConfigItem>
+     * @return array<string,GacelaFileConfigItem>
      */
     private static function getConfigItems(array $json): array
     {
         $first = reset($json['config']);
 
         if (!is_array($first)) {
+            /** @psalm-suppress DeprecatedClass */
             $c = GacelaJsonConfigItem::fromArray($json['config']);
             return [$c->type() => $c];
         }
@@ -48,6 +54,7 @@ final class GacelaJsonConfig
         /** @var array<array{type:string,path:string,path_local:string}> $configs */
         $configs = $json['config'];
         foreach ($configs as $config) {
+            /** @psalm-suppress DeprecatedClass */
             $c = GacelaJsonConfigItem::fromArray($config);
             $result[$c->type()] = $c;
         }
@@ -57,13 +64,14 @@ final class GacelaJsonConfig
 
     public static function withDefaults(): self
     {
+        /** @psalm-suppress DeprecatedClass */
         $configItem = GacelaJsonConfigItem::withDefaults();
 
         return new self([$configItem->type() => $configItem]);
     }
 
     /**
-     * @return array<string,GacelaJsonConfigItem>
+     * @return array<string,GacelaFileConfigItem>
      */
     public function configs(): array
     {

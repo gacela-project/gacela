@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\Config\GacelaFileConfig\GacelaFileConfig;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaFileConfigItem;
+
 final class ConfigInit
 {
     private string $applicationRootDir;
 
-    private GacelaJsonConfigFactoryInterface $configFactory;
+    private GacelaFileConfigFactoryInterface $configFactory;
 
     private PathFinderInterface $pathFinder;
 
@@ -20,7 +23,7 @@ final class ConfigInit
      */
     public function __construct(
         string $applicationRootDir,
-        GacelaJsonConfigFactoryInterface $configFactory,
+        GacelaFileConfigFactoryInterface $configFactory,
         PathFinderInterface $pathFinder,
         array $readers
     ) {
@@ -32,14 +35,14 @@ final class ConfigInit
 
     public function readAll(): array
     {
-        $gacelaJsonConfig = $this->configFactory->createGacelaJsonConfig();
+        $gacelaFileConfig = $this->configFactory->createGacelaFileConfig();
         $configs = [];
 
-        foreach ($this->scanAllConfigFiles($gacelaJsonConfig) as $absolutePath) {
-            $configs[] = $this->readConfigFromFile($gacelaJsonConfig, $absolutePath);
+        foreach ($this->scanAllConfigFiles($gacelaFileConfig) as $absolutePath) {
+            $configs[] = $this->readConfigFromFile($gacelaFileConfig, $absolutePath);
         }
 
-        $configs[] = $this->readLocalConfigFile($gacelaJsonConfig);
+        $configs[] = $this->readLocalConfigFile($gacelaFileConfig);
 
         return array_merge(...$configs);
     }
@@ -47,23 +50,23 @@ final class ConfigInit
     /**
      * @return string[]
      */
-    private function scanAllConfigFiles(GacelaJsonConfig $gacelaJsonConfig): array
+    private function scanAllConfigFiles(GacelaFileConfig $gacelaFileConfig): array
     {
         $configGroup = array_map(
-            fn (GacelaJsonConfigItem $config): array => array_map(
+            fn (GacelaFileConfigItem $config): array => array_map(
                 static fn ($p): string => (string)$p,
                 array_diff(
                     $this->pathFinder->matchingPattern($this->generateAbsolutePath($config->path())),
                     [$this->generateAbsolutePath($config->pathLocal())]
                 )
             ),
-            $gacelaJsonConfig->configs()
+            $gacelaFileConfig->configs()
         );
 
         return array_merge(...array_values($configGroup));
     }
 
-    private function readConfigFromFile(GacelaJsonConfig $gacelaJson, string $absolutePath): array
+    private function readConfigFromFile(GacelaFileConfig $gacelaJson, string $absolutePath): array
     {
         $result = [];
         $configs = $gacelaJson->configs();
@@ -82,7 +85,7 @@ final class ConfigInit
         return array_merge(...array_filter($result));
     }
 
-    private function readLocalConfigFile(GacelaJsonConfig $gacelaJson): array
+    private function readLocalConfigFile(GacelaFileConfig $gacelaJson): array
     {
         $result = [];
         $configs = $gacelaJson->configs();

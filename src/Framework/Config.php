@@ -8,15 +8,18 @@ use Gacela\Framework\Config\ConfigInit;
 use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Config\GacelaJsonConfigFactory;
-use Gacela\Framework\Config\GacelaJsonConfigFactoryInterface;
+use Gacela\Framework\Config\GacelaConfigFileFactory;
+use Gacela\Framework\Config\GacelaFileConfigFactoryInterface;
 use Gacela\Framework\Config\PathFinder;
 use Gacela\Framework\Config\PathFinderInterface;
 use Gacela\Framework\Exception\ConfigException;
 
 final class Config
 {
-    private const GACELA_CONFIG_FILENAME = 'gacela.json';
+    /** @deprecated */
+    private const GACELA_JSON_CONFIG_FILENAME = 'gacela.json';
+
+    private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
 
     private static ?self $instance = null;
 
@@ -93,7 +96,7 @@ final class Config
 
         $this->config = (new ConfigInit(
             $this->getApplicationRootDir(),
-            $this->createGacelaJsonConfigCreator(),
+            $this->createGacelaFileConfigCreator(),
             $this->createPathFinder(),
             $this->configReaders
         ))->readAll();
@@ -113,11 +116,13 @@ final class Config
         return $this->applicationRootDir;
     }
 
-    private function createGacelaJsonConfigCreator(): GacelaJsonConfigFactoryInterface
+    private function createGacelaFileConfigCreator(): GacelaFileConfigFactoryInterface
     {
-        return new GacelaJsonConfigFactory(
+        /** @psalm-suppress DeprecatedConstant */
+        return new GacelaConfigFileFactory(
             $this->getApplicationRootDir(),
-            self::GACELA_CONFIG_FILENAME
+            self::GACELA_PHP_CONFIG_FILENAME,
+            self::GACELA_JSON_CONFIG_FILENAME
         );
     }
 

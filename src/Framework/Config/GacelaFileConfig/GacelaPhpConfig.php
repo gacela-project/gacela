@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-use function is_array;
-
 final class GacelaPhpConfig implements GacelaFileConfig
 {
     /** @var array<string,GacelaFileConfigItem> */

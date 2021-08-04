@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-final class GacelaPhpConfigItem implements GacelaFileConfigItem
+final class GacelaPhpConfigItem implements GacelaConfigItemInterface
 {
     public const DEFAULT_TYPE = 'php';
 

@@ -9,7 +9,7 @@ namespace Gacela\Framework\Config\GacelaFileConfig;
  *
  * @psalm-suppress DeprecatedClass
  */
-final class GacelaJsonConfigItem implements GacelaFileConfigItem
+final class GacelaJsonConfigItem implements GacelaConfigItemInterface
 {
     public const DEFAULT_TYPE = 'php';
 

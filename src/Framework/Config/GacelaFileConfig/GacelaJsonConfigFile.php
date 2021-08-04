@@ -11,13 +11,13 @@ use function is_array;
  *
  * @deprecated
  */
-final class GacelaJsonConfig implements GacelaFileConfig
+final class GacelaJsonConfigFile implements GacelaConfigFileInterface
 {
-    /** @var array<string,GacelaFileConfigItem> */
+    /** @var array<string,GacelaConfigItemInterface> */
     private array $configs;
 
     /**
-     * @param array<string,GacelaFileConfigItem> $configs
+     * @param array<string,GacelaConfigItemInterface> $configs
      */
     private function __construct(array $configs)
     {
@@ -37,7 +37,7 @@ final class GacelaJsonConfig implements GacelaFileConfig
     /**
      * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $json
      *
-     * @return array<string,GacelaFileConfigItem>
+     * @return array<string,GacelaConfigItemInterface>
      */
     private static function getConfigItems(array $json): array
     {
@@ -71,7 +71,7 @@ final class GacelaJsonConfig implements GacelaFileConfig
     }
 
     /**
-     * @return array<string,GacelaFileConfigItem>
+     * @return array<string,GacelaConfigItemInterface>
      */
     public function configs(): array
     {

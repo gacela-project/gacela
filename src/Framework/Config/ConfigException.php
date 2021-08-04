@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaFileConfigItem;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItemInterface;
 use RuntimeException;
 
 final class ConfigException extends RuntimeException
 {
     /**
-     * @param array<string,GacelaFileConfigItem> $configs
+     * @param array<string,GacelaConfigItemInterface> $configs
      */
     public static function notFound(string $type, array $configs): self
     {

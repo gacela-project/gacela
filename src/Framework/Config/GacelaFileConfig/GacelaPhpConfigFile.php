@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-final class GacelaPhpConfig implements GacelaFileConfig
+final class GacelaPhpConfigFile implements GacelaConfigFileInterface
 {
-    /** @var array<string,GacelaFileConfigItem> */
+    /** @var array<string,GacelaConfigItemInterface> */
     private array $configs;
 
     /**
-     * @param array<string,GacelaFileConfigItem> $configs
+     * @param array<string,GacelaConfigItemInterface> $configs
      */
     private function __construct(array $configs)
     {
@@ -30,7 +30,7 @@ final class GacelaPhpConfig implements GacelaFileConfig
     /**
      * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $gacelaConfig
      *
-     * @return array<string,GacelaFileConfigItem>
+     * @return array<string,GacelaConfigItemInterface>
      */
     private static function getConfigItems(array $gacelaConfig): array
     {
@@ -66,7 +66,7 @@ final class GacelaPhpConfig implements GacelaFileConfig
     }
 
     /**
-     * @return array<string,GacelaFileConfigItem>
+     * @return array<string,GacelaConfigItemInterface>
      */
     public function configs(): array
     {

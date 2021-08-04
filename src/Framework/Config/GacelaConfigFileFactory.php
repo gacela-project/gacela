@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaFileConfig;
-use Gacela\Framework\Config\GacelaFileConfig\GacelaJsonConfig;
-use Gacela\Framework\Config\GacelaFileConfig\GacelaPhpConfig;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaJsonConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaPhpConfigFile;
 
 final class GacelaConfigFileFactory implements GacelaFileConfigFactoryInterface
 {
@@ -24,12 +24,12 @@ final class GacelaConfigFileFactory implements GacelaFileConfigFactoryInterface
         $this->gacelaJsonConfigFilename = $gacelaJsonConfigFilename;
     }
 
-    public function createGacelaFileConfig(): GacelaFileConfig
+    public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $gacelaPhpPath = $this->applicationRootDir . '/' . $this->gacelaPhpConfigFilename;
         if (is_file($gacelaPhpPath)) {
             /** @psalm-suppress MixedArgument */
-            return GacelaPhpConfig::fromArray(
+            return GacelaPhpConfigFile::fromArray(
                 include $gacelaPhpPath
             );
         }
@@ -37,16 +37,17 @@ final class GacelaConfigFileFactory implements GacelaFileConfigFactoryInterface
         /** ☟ DEPRECATED ☟ */
         $gacelaJsonPath = $this->applicationRootDir . '/' . $this->gacelaJsonConfigFilename;
         if (is_file($gacelaJsonPath)) {
+//            trigger_error('gacela.json is deprecated. Use gacela.php instead.',E_USER_DEPRECATED);
             /**
              * @psalm-suppress MixedArgumentTypeCoercion
              * @psalm-suppress DeprecatedClass GacelaJsonConfig
              */
-            return GacelaJsonConfig::fromArray(
+            return GacelaJsonConfigFile::fromArray(
                 (array)json_decode(file_get_contents($gacelaJsonPath), true)
             );
         }
-        /** ☝☝☝☝☝☝☝☝☝☝☝☝☝ */
+        /** ☝☝☝☝☝☝☝☝☝ */
 
-        return GacelaPhpConfig::withDefaults();
+        return GacelaPhpConfigFile::withDefaults();
     }
 }

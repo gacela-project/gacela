@@ -6,7 +6,7 @@ namespace GacelaTest\Unit\Framework\Config;
 
 use Gacela\Framework\Config\ConfigInit;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Config\GacelaFileConfig\GacelaJsonConfig;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaJsonConfigFile;
 use Gacela\Framework\Config\GacelaFileConfigFactoryInterface;
 use Gacela\Framework\Config\PathFinderInterface;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +18,7 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaFileConfigFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn(GacelaJsonConfig::withDefaults());
+            ->willReturn(GacelaJsonConfigFile::withDefaults());
 
         $readers = [
             'php' => $this->createStub(ConfigReaderInterface::class),
@@ -39,7 +39,7 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaFileConfigFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn(GacelaJsonConfig::withDefaults());
+            ->willReturn(GacelaJsonConfigFile::withDefaults());
 
         $pathFinder = $this->createMock(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
@@ -63,7 +63,7 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaFileConfigFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn(GacelaJsonConfig::withDefaults());
+            ->willReturn(GacelaJsonConfigFile::withDefaults());
 
         $pathFinder = $this->createMock(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
@@ -85,7 +85,7 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaFileConfigFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn(GacelaJsonConfig::fromArray([
+            ->willReturn(GacelaJsonConfigFile::fromArray([
                 'config' => [
                     [
                         'type' => 'supported-type',
@@ -116,7 +116,7 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaFileConfigFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn(GacelaJsonConfig::fromArray([
+            ->willReturn(GacelaJsonConfigFile::fromArray([
                 'config' => [
                     [
                         'type' => 'supported-type1',

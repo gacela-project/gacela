@@ -49,10 +49,8 @@ abstract class AbstractClassResolver
 
         self::validateTypeForAnonymousGlobalRegistration($type);
 
-        self::addGlobal(
-            sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type),
-            $resolvedClass
-        );
+        $key = sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
+        self::addGlobal($key, $resolvedClass);
     }
 
     /**
@@ -87,6 +85,7 @@ abstract class AbstractClassResolver
 
         return self::$cachedGlobalInstances[$key]
             ?? self::$cachedGlobalInstances['\\' . $key]
+            ?? self::$cachedGlobalInstances[$className]
             ?? null;
     }
 
@@ -104,7 +103,7 @@ abstract class AbstractClassResolver
         }
     }
 
-    private static function addGlobal(string $key, object $resolvedClass): void
+    public static function addGlobal(string $key, object $resolvedClass): void
     {
         self::$cachedGlobalInstances[$key] = $resolvedClass;
     }
@@ -179,55 +178,84 @@ abstract class AbstractClassResolver
     }
 
     /**
+     * @param class-string $resolvedClassName
+     *
      * @return list<mixed>
      */
     private function resolveDependencies(string $resolvedClassName): array
     {
-        $gacelaFileConfig = $this->getConfigFactory()
-            ->createGacelaConfigFileFactory()
-            ->createGacelaFileConfig();
+        $reflection = new ReflectionClass($resolvedClassName);
+        $constructor = $reflection->getConstructor();
+        if (!$constructor) {
+            return [$reflection->newInstance()];
+        }
+        /** @var \ReflectionParameter[] $dependencyFullNamesList */
+        $dependencyFullNamesList = $constructor->getParameters();
 
-        $dependencies = $gacelaFileConfig->dependencies();
-        $resolvedClassName = ltrim($resolvedClassName, '\\');
-        $dependencyFullNamesList = $dependencies[$resolvedClassName] ?? [];
+        /** @var list<mixed> $dependencies */
+        $dependencies = [];
+        foreach ($dependencyFullNamesList as $dependency) {
+            $paramType = $dependency->getType();
+            if ($paramType) {
+                /**
+                 * @psalm-suppress UndefinedMethod
+                 *
+                 * @var ReflectionNamedType $paramType
+                 * @var class-string $name
+                 */
+                $name = $paramType->getName();
 
-        $instantiatedDependencies = [];
-        /** @var mixed $dependency */
-        foreach ($dependencyFullNamesList as $key => $dependency) {
-            if (is_string($dependency) && class_exists($dependency)) {
-                /** @psalm-suppress MixedMethodCall */
-                $instantiatedDependencies[] = $this->resolveDependenciesRecursively($dependency);
-            } elseif (is_scalar($dependency) || is_callable($dependency)) {
-                $instantiatedDependencies[] = $dependency;
-            } else {
-                throw new RuntimeException("Dependency unknown with key {$key}!");
+                /** @psalm-suppress MixedAssignment */
+                $dependencies[] = $this->resolveDependenciesRecursively($name);
             }
         }
 
-        return $instantiatedDependencies;
-    }
-
-    private function getConfigFactory(): ConfigFactory
-    {
-        if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory();
-        }
-
-        return $this->configFactory;
+        return $dependencies;
     }
 
     /**
-     * @param class-string $className
+     * @param class-string|string $type
+     *
+     * @return mixed
      */
-    private function resolveDependenciesRecursively(string $className): object
+    private function resolveDependenciesRecursively(string $type)
     {
-        $reflection = new ReflectionClass($className);
+        if (!class_exists($type) && !interface_exists($type)) {
+            if ($type === 'array') {
+                return [];
+            }
+            return $type;
+        }
+
+        $reflection = new ReflectionClass($type);
+
+        if ($reflection->isInterface()) {
+            # TODO: clean me, please
+            $gacelaFileConfig = $this->getConfigFactory()
+                ->createGacelaConfigFileFactory()
+                ->createGacelaFileConfig();
+
+            $dependencies = $gacelaFileConfig->dependencies();
+            $concreteClass = $dependencies[$reflection->getName()];
+            if (\is_callable($concreteClass)) {
+                return $concreteClass();
+            }
+
+            /** @var class-string $concreteClass */
+            $reflection = new ReflectionClass($concreteClass);
+            # TODO: find THE concrete class that implements that interface
+            # TODO: IF there are more than 1 than Exception! You have to define it
+            # TODO: in gacela.php
+        }
+
+        # Concrete classes
         $constructor = $reflection->getConstructor();
 
         if (!$constructor) {
             return $reflection->newInstance();
         }
 
+        /** @var list<mixed> $dependencies */
         $dependencies = [];
 
         $params = $constructor->getParameters();
@@ -241,9 +269,20 @@ abstract class AbstractClassResolver
                  * @var class-string $name
                  */
                 $name = $paramType->getName();
+                /** @psalm-suppress MixedAssignment */
                 $dependencies[] = $this->resolveDependenciesRecursively($name);
             }
         }
+
         return $reflection->newInstanceArgs($dependencies);
+    }
+
+    private function getConfigFactory(): ConfigFactory
+    {
+        if (null === $this->configFactory) {
+            $this->configFactory = new ConfigFactory();
+        }
+
+        return $this->configFactory;
     }
 }

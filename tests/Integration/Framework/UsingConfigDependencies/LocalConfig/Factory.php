@@ -14,27 +14,11 @@ use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Domain\
 final class Factory extends AbstractFactory
 {
     private GreeterGeneratorInterface $companyGenerator;
-    private string $randomString;
-    private bool $bool;
-    private int $integer;
-    private float $float;
-    /** @var callable */
-    private $callable;
 
     public function __construct(
-        GreeterGeneratorInterface $companyGenerator,
-        string $randomString,
-        bool $bool,
-        int $integer,
-        float $float,
-        callable $callable
+        GreeterGeneratorInterface $companyGenerator
     ) {
         $this->companyGenerator = $companyGenerator;
-        $this->randomString = $randomString;
-        $this->bool = $bool;
-        $this->integer = $integer;
-        $this->float = $float;
-        $this->callable = $callable;
     }
 
     public function createCompanyService(): NumberService

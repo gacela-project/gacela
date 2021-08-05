@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "\\GacelaTest\\Integration\\Framework\\UsingConfigDependencies\\LocalConfig\\Factory": [
-      "\\GacelaTest\\Integration\\Framework\\UsingConfigDependencies\\LocalConfig\\Infrastructure\\CustomCompanyGenerator"
-    ]
-  }
-}

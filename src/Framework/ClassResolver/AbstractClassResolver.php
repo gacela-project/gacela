@@ -170,8 +170,9 @@ abstract class AbstractClassResolver
     private function createInstance(string $resolvedClassName): ?object
     {
         if (class_exists($resolvedClassName)) {
+            $dependencies = $this->resolveDependencies($resolvedClassName);
             /** @psalm-suppress MixedMethodCall */
-            return new $resolvedClassName(...$this->resolveDependencies($resolvedClassName));
+            return new $resolvedClassName(...$dependencies);
         }
 
         return null;
@@ -182,11 +183,12 @@ abstract class AbstractClassResolver
      */
     private function resolveDependencies(string $resolvedClassName): array
     {
-        $gacelaJsonConfig = $this->getConfigFactory()
+        $gacelaFileConfig = $this->getConfigFactory()
             ->createGacelaConfigFileFactory()
             ->createGacelaFileConfig();
 
-        $dependencies = $gacelaJsonConfig->dependencies();
+        $dependencies = $gacelaFileConfig->dependencies();
+        $resolvedClassName = ltrim($resolvedClassName, '\\');
         $dependencyFullNamesList = $dependencies[$resolvedClassName] ?? [];
 
         $instantiatedDependencies = [];
@@ -239,7 +241,6 @@ abstract class AbstractClassResolver
                 $dependencies[] = $this->resolveDependenciesRecursively($name);
             }
         }
-
         return $reflection->newInstanceArgs($dependencies);
     }
 }

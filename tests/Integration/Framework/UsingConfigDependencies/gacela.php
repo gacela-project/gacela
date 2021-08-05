@@ -9,6 +9,11 @@ return [
     'dependencies' => [
         LocalConfigFactory::class => [
             CustomCompanyGenerator::class,
+            'random-string',
+            true,
+            100,
+            1.23,
+            fn () => 2,
         ],
     ],
 ];

@@ -12,7 +12,7 @@ interface GacelaConfigFileInterface
     public function configs(): array;
 
     /**
-     * @return array<string,list<string>>
+     * @return array<string,list<mixed>>
      */
     public function dependencies(): array;
 }

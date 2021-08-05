@@ -9,12 +9,12 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     /** @var array<string,GacelaConfigItemInterface> */
     private array $configs;
 
-    /** @var array<string,list<string>> */
+    /** @var array<string,list<mixed>> */
     private array $dependencies;
 
     /**
      * @param array<string,GacelaConfigItemInterface> $configs
-     * @param array<string,list<string>> $dependencies
+     * @param array<string,list<mixed>> $dependencies
      */
     private function __construct(
         array $configs,
@@ -87,7 +87,7 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     }
 
     /**
-     * @return array<string,list<string>>
+     * @return array<string,list<mixed>>
      */
     public function dependencies(): array
     {

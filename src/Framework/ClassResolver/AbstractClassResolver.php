@@ -192,13 +192,16 @@ abstract class AbstractClassResolver
         $dependencyFullNamesList = $dependencies[$resolvedClassName] ?? [];
 
         $instantiatedDependencies = [];
-        foreach ($dependencyFullNamesList as $fullClassName) {
-            if (!class_exists($fullClassName)) {
-                throw new RuntimeException("Class {$fullClassName} doesn't exist.");
+        /** @var mixed $dependency */
+        foreach ($dependencyFullNamesList as $key => $dependency) {
+            if (is_string($dependency) && class_exists($dependency)) {
+                /** @psalm-suppress MixedMethodCall */
+                $instantiatedDependencies[] = $this->resolveDependenciesRecursively($dependency);
+            } elseif (is_scalar($dependency) || is_callable($dependency)) {
+                $instantiatedDependencies[] = $dependency;
+            } else {
+                throw new RuntimeException("Dependency unknown with key {$key}!");
             }
-
-            /** @psalm-suppress MixedMethodCall */
-            $instantiatedDependencies[] = $this->resolveDependenciesRecursively($fullClassName);
         }
 
         return $instantiatedDependencies;

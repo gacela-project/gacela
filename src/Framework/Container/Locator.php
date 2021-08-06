@@ -52,7 +52,7 @@ final class Locator
         }
 
         /** @var mixed $locatedInstance */
-        $locatedInstance = AbstractClassResolver::getGlobalInstance($concreteClass)
+        $locatedInstance = AbstractClassResolver::getCachedGlobalInstance($concreteClass)
             ?? $this->newInstance($concreteClass);
 
         /** @psalm-suppress MixedAssignment */

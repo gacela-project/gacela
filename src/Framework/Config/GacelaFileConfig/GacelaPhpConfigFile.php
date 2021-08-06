@@ -9,44 +9,52 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     /** @var array<string,GacelaConfigItemInterface> */
     private array $configs;
 
+    /** @var array<string,string|callable> */
+    private array $dependencies;
+
     /**
      * @param array<string,GacelaConfigItemInterface> $configs
+     * @param array<string,string|callable> $dependencies
      */
-    private function __construct(array $configs)
-    {
+    private function __construct(
+        array $configs,
+        array $dependencies
+    ) {
         $this->configs = $configs;
+        $this->dependencies = $dependencies;
     }
 
     /**
-     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $config
+     * @param array{
+     *     config: array<array>|array{type:string,path:string,path_local:string},
+     *     dependencies: array<string,string|callable>,
+     * } $array
      */
-    public static function fromArray(array $config): self
+    public static function fromArray(array $array): self
     {
         return new self(
-            self::getConfigItems($config)
+            self::getConfigItems($array['config'] ?? []),
+            $array['dependencies'] ?? []
         );
     }
 
     /**
-     * @param array{config: array<array>|array{type:string,path:string,path_local:string}} $gacelaConfig
+     * @param array<array>|array{type:string,path:string,path_local:string} $config
      *
      * @return array<string,GacelaConfigItemInterface>
      */
-    private static function getConfigItems(array $gacelaConfig): array
+    private static function getConfigItems(array $config): array
     {
-        $configuration = $gacelaConfig['config'];
-
-        if (self::isSingleConfigFile($configuration)) {
-            $c = GacelaPhpConfigItem::fromArray($gacelaConfig['config']);
+        if (self::isSingleConfigFile($config)) {
+            $c = GacelaPhpConfigItem::fromArray($config);
             return [$c->type() => $c];
         }
 
         $result = [];
 
-        /** @var array<array{type:string,path:string,path_local:string}> $configs */
-        $configs = $gacelaConfig['config'];
-        foreach ($configs as $config) {
-            $c = GacelaPhpConfigItem::fromArray($config);
+        /** @var array<array{type:string,path:string,path_local:string}> $config */
+        foreach ($config as $configItem) {
+            $c = GacelaPhpConfigItem::fromArray($configItem);
             $result[$c->type()] = $c;
         }
 
@@ -64,7 +72,10 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     {
         $configItem = GacelaPhpConfigItem::withDefaults();
 
-        return new self([$configItem->type() => $configItem]);
+        return new self(
+            [$configItem->type() => $configItem],
+            []
+        );
     }
 
     /**
@@ -73,5 +84,13 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     public function configs(): array
     {
         return $this->configs;
+    }
+
+    /**
+     * @return array<string,string|callable>
+     */
+    public function dependencies(): array
+    {
+        return $this->dependencies;
     }
 }

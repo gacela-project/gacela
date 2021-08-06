@@ -4,23 +4,15 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\ConfigInit;
 use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Config\GacelaConfigFileFactory;
-use Gacela\Framework\Config\GacelaFileConfigFactoryInterface;
-use Gacela\Framework\Config\PathFinder;
-use Gacela\Framework\Config\PathFinderInterface;
 use Gacela\Framework\Exception\ConfigException;
 
 final class Config
 {
-    /** @deprecated */
-    private const GACELA_JSON_CONFIG_FILENAME = 'gacela.json';
-
-    private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
-
     private static ?self $instance = null;
 
     private string $applicationRootDir = '';
@@ -29,6 +21,8 @@ final class Config
 
     /** @var array<string, ConfigReaderInterface> */
     private array $configReaders;
+
+    private ?ConfigFactory $configFactory = null;
 
     /**
      * @param array<string, ConfigReaderInterface> $configReaders
@@ -96,8 +90,8 @@ final class Config
 
         $this->config = (new ConfigInit(
             $this->getApplicationRootDir(),
-            $this->createGacelaFileConfigCreator(),
-            $this->createPathFinder(),
+            $this->getFactory()->createGacelaConfigFileFactory(),
+            $this->getFactory()->createPathFinder(),
             $this->configReaders
         ))->readAll();
     }
@@ -116,23 +110,17 @@ final class Config
         return $this->applicationRootDir;
     }
 
-    private function createGacelaFileConfigCreator(): GacelaFileConfigFactoryInterface
-    {
-        /** @psalm-suppress DeprecatedConstant */
-        return new GacelaConfigFileFactory(
-            $this->getApplicationRootDir(),
-            self::GACELA_PHP_CONFIG_FILENAME,
-            self::GACELA_JSON_CONFIG_FILENAME
-        );
-    }
-
-    private function createPathFinder(): PathFinderInterface
-    {
-        return new PathFinder();
-    }
-
     private function hasValue(string $key): bool
     {
         return isset($this->config[$key]);
+    }
+
+    private function getFactory(): ConfigFactory
+    {
+        if (null === $this->configFactory) {
+            $this->configFactory = new ConfigFactory();
+        }
+
+        return $this->configFactory;
     }
 }

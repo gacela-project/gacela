@@ -5,22 +5,29 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
+use Gacela\Framework\ClassResolver\DependencyResolver\DependencyResolver;
+use Gacela\Framework\Config\ConfigFactory;
 use RuntimeException;
 use function get_class;
 use function in_array;
 use function is_string;
+use function sprintf;
 
 abstract class AbstractClassResolver
 {
     private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = ['Config', 'Factory', 'DependencyProvider'];
 
     /** @var array<string,null|object> */
-    protected static array $cachedInstances = [];
+    private static array $cachedInstances = [];
 
     /** @var array<string,object> */
     private static array $cachedGlobalInstances = [];
 
-    protected static ?ClassNameFinderInterface $classNameFinder = null;
+    private static ?ClassNameFinderInterface $classNameFinder = null;
+
+    private ?ConfigFactory $configFactory = null;
+
+    private ?DependencyResolver $dependencyResolver = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -44,10 +51,8 @@ abstract class AbstractClassResolver
 
         self::validateTypeForAnonymousGlobalRegistration($type);
 
-        self::addGlobal(
-            sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type),
-            $resolvedClass
-        );
+        $key = sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
+        self::addCachedGlobalInstance($key, $resolvedClass);
     }
 
     /**
@@ -70,13 +75,13 @@ abstract class AbstractClassResolver
     {
         $key = self::getGlobalKeyFromClassName($className);
 
-        self::addGlobal($key, $resolvedClass);
+        self::addCachedGlobalInstance($key, $resolvedClass);
     }
 
     /**
      * @internal so the Locator can access to the global instances before creating a new instance
      */
-    public static function getGlobalInstance(string $className): ?object
+    public static function getCachedGlobalInstance(string $className): ?object
     {
         $key = self::getGlobalKeyFromClassName($className);
 
@@ -99,7 +104,7 @@ abstract class AbstractClassResolver
         }
     }
 
-    private static function addGlobal(string $key, object $resolvedClass): void
+    private static function addCachedGlobalInstance(string $key, object $resolvedClass): void
     {
         self::$cachedGlobalInstances[$key] = $resolvedClass;
     }
@@ -165,10 +170,35 @@ abstract class AbstractClassResolver
     private function createInstance(string $resolvedClassName): ?object
     {
         if (class_exists($resolvedClassName)) {
+            $dependencies = $this->getDependencyResolver()
+                ->resolveDependencies($resolvedClassName);
+
             /** @psalm-suppress MixedMethodCall */
-            return new $resolvedClassName();
+            return new $resolvedClassName(...$dependencies);
         }
 
         return null;
+    }
+
+    private function getDependencyResolver(): DependencyResolver
+    {
+        if (null === $this->dependencyResolver) {
+            $gacelaFileConfig = $this->getConfigFactory()
+                ->createGacelaConfigFileFactory()
+                ->createGacelaFileConfig();
+
+            $this->dependencyResolver = new DependencyResolver($gacelaFileConfig);
+        }
+
+        return $this->dependencyResolver;
+    }
+
+    private function getConfigFactory(): ConfigFactory
+    {
+        if (null === $this->configFactory) {
+            $this->configFactory = new ConfigFactory();
+        }
+
+        return $this->configFactory;
     }
 }

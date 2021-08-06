@@ -62,7 +62,7 @@ final class AbstractClassResolverTest extends TestCase
         };
         AbstractClassResolver::overrideExistingResolvedClass($className, $resolvedClass);
 
-        self::assertSame($resolvedClass, AbstractClassResolver::getGlobalInstance($className));
+        self::assertSame($resolvedClass, AbstractClassResolver::getCachedGlobalInstance($className));
     }
 
     public function providerOverrideExistingResolvedClass(): iterable

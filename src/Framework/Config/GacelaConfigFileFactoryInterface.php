@@ -6,7 +6,7 @@ namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
-interface GacelaFileConfigFactoryInterface
+interface GacelaConfigFileFactoryInterface
 {
     public function createGacelaFileConfig(): GacelaConfigFileInterface;
 }

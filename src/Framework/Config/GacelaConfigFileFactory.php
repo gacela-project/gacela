@@ -8,7 +8,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaJsonConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaPhpConfigFile;
 
-final class GacelaConfigFileFactory implements GacelaFileConfigFactoryInterface
+final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 {
     private string $applicationRootDir;
     private string $gacelaPhpConfigFilename;

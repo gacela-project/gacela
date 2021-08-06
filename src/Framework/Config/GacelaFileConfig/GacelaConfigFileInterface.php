@@ -10,4 +10,9 @@ interface GacelaConfigFileInterface
      * @return array<string,GacelaConfigItemInterface>
      */
     public function configs(): array;
+
+    /**
+     * @return array<string,string|callable>
+     */
+    public function dependencies(): array;
 }

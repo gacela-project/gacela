@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DependencyResolver;
 
-use Composer\Autoload\ClassLoader;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use RuntimeException;
-use function count;
 use function is_callable;
 
 final class DependencyResolver
@@ -116,84 +114,19 @@ final class DependencyResolver
      */
     private function findConcreteClassThatImplements(ReflectionClass $interface): string
     {
-        $this->loadComposerAutoloaderClasses();
+        // TODO: Not implemented yet
 
-        $classes = get_declared_classes();
-        $implementsInterface = [];
-        foreach ($classes as $class) {
-            $reflect = new ReflectionClass($class);
-            if ($reflect->implementsInterface($interface->getName())) {
-                $implementsInterface[] = $class;
-            }
-        }
-        if (count($implementsInterface) > 1) {
-            throw new RuntimeException(sprintf(
-                'more than 1 concrete class implements %s',
-                $interface->getName()
-            ));
-        }
-
-        $concreteClass = reset($implementsInterface);
-        if (!$concreteClass) {
-            throw new RuntimeException(sprintf(
-                'No concrete class was found that implements %s',
-                $interface->getName()
-            ));
+        // Dummy solution
+        $concreteClass = str_replace('Interface', '', $interface->getName());
+        if (!class_exists($concreteClass)) {
+            $error = <<<TXT
+No concrete class was found that implements:
+{$interface->getName()}
+Did you forget to map this interface to a concrete class in gacela.json using the 'dependencies' key?
+TXT;
+            throw new RuntimeException($error);
         }
 
         return $concreteClass;
-    }
-
-    private function loadComposerAutoloaderClasses(): void
-    {
-        if (!empty(self::$requiredCached)) {
-            return;
-        }
-
-        $classLoader = $this->getAutoloaderClassName();
-
-        /** @var string $path */
-        foreach ($classLoader->getClassMap() as $path) {
-            if (isset(self::$requiredCached[$path])) {
-                continue;
-            }
-
-            if ($this->canLoadRequiredCache($path)) {
-                self::$requiredCached[$path] = true;
-                /** @psalm-suppress UnresolvableInclude */
-                require_once $path;
-            }
-        }
-    }
-
-    private function getAutoloaderClassName(): ClassLoader
-    {
-        $declaredClasses = get_declared_classes();
-        foreach ($declaredClasses as $className) {
-            if (strncmp($className, 'ComposerAutoloaderInit', 22) === 0) {
-                /**
-                 * @psalm-suppress MixedReturnStatement
-                 * @psalm-suppress MixedMethodCall
-                 *
-                 * @var ClassLoader $classLoader
-                 */
-                $classLoader = $className::getLoader();
-                return $classLoader;
-            }
-        }
-
-        throw new RuntimeException('ComposerAutoloaderInit not found!');
-    }
-
-    private function canLoadRequiredCache(string $path): bool
-    {
-        $autoloadDependencies = $this->gacelaConfigFile->autoloadDependencies();
-        foreach ($autoloadDependencies as $preLoadPath) {
-            if (false !== stripos($path, $preLoadPath)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

@@ -98,14 +98,4 @@ final class GacelaJsonConfigFile implements GacelaConfigFileInterface
     {
         return $this->dependencies;
     }
-
-    /**
-     * Non supported for JSON.
-     *
-     * @return list<string>
-     */
-    public function autoloadDependencies(): array
-    {
-        return [];
-    }
 }

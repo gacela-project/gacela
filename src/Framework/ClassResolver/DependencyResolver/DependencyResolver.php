@@ -7,14 +7,12 @@ namespace Gacela\Framework\ClassResolver\DependencyResolver;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use ReflectionClass;
 use ReflectionNamedType;
+use ReflectionParameter;
 use RuntimeException;
 use function is_callable;
 
 final class DependencyResolver
 {
-    /** @var array<string,bool> */
-    private static array $requiredCached = [];
-
     private GacelaConfigFileInterface $gacelaConfigFile;
 
     public function __construct(GacelaConfigFileInterface $gacelaConfigFile)
@@ -37,17 +35,11 @@ final class DependencyResolver
 
         /** @var list<mixed> $dependencies */
         $dependencies = [];
-        foreach ($constructor->getParameters() as $dependency) {
-            $paramType = $dependency->getType();
+        foreach ($constructor->getParameters() as $parameter) {
+            $paramType = $parameter->getType();
             if ($paramType) {
-                /**
-                 * @var class-string $name
-                 * @var ReflectionNamedType $paramType
-                 */
-                $name = $paramType->getName();
-
                 /** @psalm-suppress MixedAssignment */
-                $dependencies[] = $this->resolveDependenciesRecursively($name);
+                $dependencies[] = $this->resolveDependenciesRecursively($parameter);
             }
         }
 
@@ -55,25 +47,31 @@ final class DependencyResolver
     }
 
     /**
-     * @param class-string|string $type
-     *
      * @return mixed
      */
-    private function resolveDependenciesRecursively(string $type)
+    private function resolveDependenciesRecursively(ReflectionParameter $parameter)
     {
+        /** @var ReflectionNamedType $paramType */
+        $paramType = $parameter->getType();
+        $type = $paramType->getName();
+
         if (!class_exists($type) && !interface_exists($type)) {
-            return ($type === 'array') ? [] : $type;
+            return $parameter->getDefaultValue();
         }
 
         $reflection = new ReflectionClass($type);
 
+        // If it's an interface we need to figure out which concrete class do we want to use
         if ($reflection->isInterface()) {
             $gacelaFileDependencies = $this->gacelaConfigFile->dependencies();
             $concreteClass = $gacelaFileDependencies[$reflection->getName()] ?? '';
+            // a callable will be a way to bypass the instantiation and instead
+            // use the result from the callable that was defined in the gacela config file.
             if (is_callable($concreteClass)) {
                 return $concreteClass();
             }
-
+            // if at this point there is no concrete class found for the interface we can
+            // try one more thing looking for 1 concrete class that implements this interface
             if (empty($concreteClass)) {
                 $concreteClass = $this->findConcreteClassThatImplements($reflection);
             }
@@ -87,26 +85,18 @@ final class DependencyResolver
             return $reflection->newInstance();
         }
 
-        /** @var list<mixed> $dependencies */
-        $dependencies = [];
+        /** @var list<mixed> $innerDependencies */
+        $innerDependencies = [];
 
-        $params = $constructor->getParameters();
-        foreach ($params as $param) {
-            $paramType = $param->getType();
+        foreach ($constructor->getParameters() as $constructorParameter) {
+            $paramType = $constructorParameter->getType();
             if ($paramType) {
-                /**
-                 * @psalm-suppress UndefinedMethod
-                 *
-                 * @var ReflectionNamedType $paramType
-                 * @var class-string $name
-                 */
-                $name = $paramType->getName();
                 /** @psalm-suppress MixedAssignment */
-                $dependencies[] = $this->resolveDependenciesRecursively($name);
+                $innerDependencies[] = $this->resolveDependenciesRecursively($constructorParameter);
             }
         }
 
-        return $reflection->newInstanceArgs($dependencies);
+        return $reflection->newInstanceArgs($innerDependencies);
     }
 
     /**
@@ -116,7 +106,7 @@ final class DependencyResolver
     {
         // TODO: Not implemented yet
 
-        // Dummy solution
+        // Dummy solution: if the concrete class lives next to its interface, and with the same name.
         $concreteClass = str_replace('Interface', '', $interface->getName());
         if (!class_exists($concreteClass)) {
             $error = <<<TXT

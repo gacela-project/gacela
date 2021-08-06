@@ -18,7 +18,7 @@ abstract class AbstractClassResolver
     private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = ['Config', 'Factory', 'DependencyProvider'];
 
     /** @var array<string,null|object> */
-    protected static array $cachedInstances = [];
+    private static array $cachedInstances = [];
 
     /** @var array<string,object> */
     private static array $cachedGlobalInstances = [];
@@ -52,7 +52,7 @@ abstract class AbstractClassResolver
         self::validateTypeForAnonymousGlobalRegistration($type);
 
         $key = sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
-        self::addGlobal($key, $resolvedClass);
+        self::addCachedGlobalInstance($key, $resolvedClass);
     }
 
     /**
@@ -75,19 +75,18 @@ abstract class AbstractClassResolver
     {
         $key = self::getGlobalKeyFromClassName($className);
 
-        self::addGlobal($key, $resolvedClass);
+        self::addCachedGlobalInstance($key, $resolvedClass);
     }
 
     /**
      * @internal so the Locator can access to the global instances before creating a new instance
      */
-    public static function getGlobalInstance(string $className): ?object
+    public static function getCachedGlobalInstance(string $className): ?object
     {
         $key = self::getGlobalKeyFromClassName($className);
 
         return self::$cachedGlobalInstances[$key]
             ?? self::$cachedGlobalInstances['\\' . $key]
-            ?? self::$cachedGlobalInstances[$className]
             ?? null;
     }
 
@@ -105,7 +104,7 @@ abstract class AbstractClassResolver
         }
     }
 
-    public static function addGlobal(string $key, object $resolvedClass): void
+    private static function addCachedGlobalInstance(string $key, object $resolvedClass): void
     {
         self::$cachedGlobalInstances[$key] = $resolvedClass;
     }

@@ -9,25 +9,32 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     /** @var array<string,GacelaConfigItemInterface> */
     private array $configs;
 
-    /** @var array<string,list<mixed>> */
+    /** @var array<string,string|callable> */
     private array $dependencies;
+
+    /** @var list<string> */
+    private array $autoloadDependencies;
 
     /**
      * @param array<string,GacelaConfigItemInterface> $configs
-     * @param array<string,list<mixed>> $dependencies
+     * @param array<string,string|callable> $dependencies
+     * @param list<string> $autoloadDependencies
      */
     private function __construct(
         array $configs,
-        array $dependencies
+        array $dependencies,
+        array $autoloadDependencies
     ) {
         $this->configs = $configs;
         $this->dependencies = $dependencies;
+        $this->autoloadDependencies = $autoloadDependencies;
     }
 
     /**
      * @param array{
      *     config: array<array>|array{type:string,path:string,path_local:string},
-     *     dependencies: array<string,list<string>>,
+     *     dependencies: array<string,string|callable>,
+     *     autoload-dependencies: list<string>,
      * } $array
      */
     public static function fromArray(array $array): self
@@ -35,6 +42,7 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
         return new self(
             self::getConfigItems($array['config'] ?? []),
             $array['dependencies'] ?? [],
+            $array['autoload-dependencies'] ?? [],
         );
     }
 
@@ -74,6 +82,7 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
 
         return new self(
             [$configItem->type() => $configItem],
+            [],
             []
         );
     }
@@ -87,10 +96,18 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     }
 
     /**
-     * @return array<string,list<mixed>>
+     * @return array<string,string|callable>
      */
     public function dependencies(): array
     {
         return $this->dependencies;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function autoloadDependencies(): array
+    {
+        return $this->autoloadDependencies;
     }
 }

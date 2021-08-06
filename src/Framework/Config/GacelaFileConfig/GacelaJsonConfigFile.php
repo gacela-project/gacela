@@ -16,12 +16,12 @@ final class GacelaJsonConfigFile implements GacelaConfigFileInterface
     /** @var array<string,GacelaConfigItemInterface> */
     private array $configs;
 
-    /** @var array<string,list<mixed>> */
+    /** @var array<string,string|callable> */
     private array $dependencies;
 
     /**
      * @param array<string,GacelaConfigItemInterface> $configs
-     * @param array<string,list<mixed>> $dependencies
+     * @param array<string,string|callable> $dependencies
      */
     private function __construct(
         array $configs,
@@ -34,7 +34,7 @@ final class GacelaJsonConfigFile implements GacelaConfigFileInterface
     /**
      * @param array{
      *     config: array<array>|array{type:string,path:string,path_local:string},
-     *     dependencies: array<string,list<string>>,
+     *     dependencies: array<string,string|callable>,
      * } $json
      */
     public static function fromArray(array $json): self
@@ -92,10 +92,20 @@ final class GacelaJsonConfigFile implements GacelaConfigFileInterface
     }
 
     /**
-     * @return array<string,list<mixed>>
+     * @return array<string,string|callable>
      */
     public function dependencies(): array
     {
         return $this->dependencies;
+    }
+
+    /**
+     * Non supported for JSON.
+     *
+     * @return list<string>
+     */
+    public function autoloadDependencies(): array
+    {
+        return [];
     }
 }

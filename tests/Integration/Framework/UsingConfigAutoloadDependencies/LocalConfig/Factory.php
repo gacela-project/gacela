@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig;
+namespace GacelaTest\Integration\Framework\UsingConfigAutoloadDependencies\LocalConfig;
 
 use Gacela\Framework\AbstractFactory;
-use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
-use GacelaTest\Integration\Framework\UsingConfigDependencies\LocalConfig\Domain\NumberService;
+use GacelaTest\Integration\Framework\UsingConfigAutoloadDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
+use GacelaTest\Integration\Framework\UsingConfigAutoloadDependencies\LocalConfig\Domain\NumberService;
 
 final class Factory extends AbstractFactory
 {

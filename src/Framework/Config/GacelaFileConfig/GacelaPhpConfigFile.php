@@ -10,18 +10,18 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     private array $configs;
 
     /** @var array<string,string|callable> */
-    private array $dependencies;
+    private array $mappingInterfaces;
 
     /**
      * @param array<string,GacelaConfigItemInterface> $configs
-     * @param array<string,string|callable> $dependencies
+     * @param array<string,string|callable> $mappingInterfaces
      */
     private function __construct(
         array $configs,
-        array $dependencies
+        array $mappingInterfaces
     ) {
         $this->configs = $configs;
-        $this->dependencies = $dependencies;
+        $this->mappingInterfaces = $mappingInterfaces;
     }
 
     /**
@@ -89,8 +89,8 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     /**
      * @return array<string,string|callable>
      */
-    public function dependencies(): array
+    public function mappingInterfaces(): array
     {
-        return $this->dependencies;
+        return $this->mappingInterfaces;
     }
 }

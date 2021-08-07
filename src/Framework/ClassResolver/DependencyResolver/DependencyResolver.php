@@ -51,20 +51,23 @@ final class DependencyResolver
      */
     private function resolveDependenciesRecursively(ReflectionParameter $parameter)
     {
+        if (!$parameter->hasType()) {
+            throw new RuntimeException("No parameter type for '{$parameter->getName()}'");
+        }
+
         /** @var ReflectionNamedType $paramType */
         $paramType = $parameter->getType();
-        $type = $paramType->getName();
-
-        if (!class_exists($type) && !interface_exists($type)) {
+        $paramTypeName = $paramType->getName();
+        if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
             return $parameter->getDefaultValue();
         }
 
-        $reflection = new ReflectionClass($type);
+        $reflection = new ReflectionClass($paramTypeName);
 
         // If it's an interface we need to figure out which concrete class do we want to use
         if ($reflection->isInterface()) {
-            $gacelaFileDependencies = $this->gacelaConfigFile->dependencies();
-            $concreteClass = $gacelaFileDependencies[$reflection->getName()] ?? '';
+            $mappingInterfaces = $this->gacelaConfigFile->mappingInterfaces();
+            $concreteClass = $mappingInterfaces[$reflection->getName()] ?? '';
             // a callable will be a way to bypass the instantiation and instead
             // use the result from the callable that was defined in the gacela config file.
             if (is_callable($concreteClass)) {

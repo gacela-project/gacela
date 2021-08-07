@@ -12,7 +12,10 @@ interface GacelaConfigFileInterface
     public function configs(): array;
 
     /**
+     * Map interfaces to concrete classes or callable (which will be resolved on runtime).
+     * This is util to inject dependencies to Gacela services (such as Factories, for example) via their constructor.
+     *
      * @return array<string,string|callable>
      */
-    public function dependencies(): array;
+    public function mappingInterfaces(): array;
 }

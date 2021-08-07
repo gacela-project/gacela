@@ -37,7 +37,6 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         /** ☟ DEPRECATED ☟ */
         $gacelaJsonPath = $this->applicationRootDir . '/' . $this->gacelaJsonConfigFilename;
         if (is_file($gacelaJsonPath)) {
-//            trigger_error('gacela.json is deprecated. Use gacela.php instead.',E_USER_DEPRECATED);
             /**
              * @psalm-suppress MixedArgumentTypeCoercion
              * @psalm-suppress DeprecatedClass GacelaJsonConfig

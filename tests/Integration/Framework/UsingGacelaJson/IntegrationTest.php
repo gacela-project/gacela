@@ -9,13 +9,10 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    public function setUp(): void
-    {
-        Config::getInstance()->init(__DIR__);
-    }
-
     public function test_remove_key_from_container(): void
     {
+        $this->expectDeprecation();
+        Config::getInstance()->init(__DIR__);
         $facade = new LocalConfig\Facade();
 
         self::assertSame(

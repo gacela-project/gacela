@@ -60,7 +60,7 @@ final class ConfigInit
                     [$this->generateAbsolutePath($config->pathLocal())]
                 )
             ),
-            $gacelaFileConfig->configs()
+            $gacelaFileConfig->getConfigs()
         );
 
         return array_merge(...array_values($configGroup));
@@ -69,7 +69,7 @@ final class ConfigInit
     private function readConfigFromFile(GacelaConfigFileInterface $gacelaJson, string $absolutePath): array
     {
         $result = [];
-        $configs = $gacelaJson->configs();
+        $configs = $gacelaJson->getConfigs();
 
         foreach ($this->readers as $type => $reader) {
             $config = $configs[$type] ?? null;
@@ -88,7 +88,7 @@ final class ConfigInit
     private function readLocalConfigFile(GacelaConfigFileInterface $gacelaJson): array
     {
         $result = [];
-        $configs = $gacelaJson->configs();
+        $configs = $gacelaJson->getConfigs();
 
         foreach ($this->readers as $type => $reader) {
             $config = $configs[$type] ?? null;

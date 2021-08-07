@@ -9,7 +9,7 @@ interface GacelaConfigFileInterface
     /**
      * @return array<string,GacelaConfigItemInterface>
      */
-    public function configs(): array;
+    public function getConfigs(): array;
 
     /**
      * Map interfaces to concrete classes or callable (which will be resolved on runtime).
@@ -17,5 +17,5 @@ interface GacelaConfigFileInterface
      *
      * @return array<string,string|callable>
      */
-    public function mappingInterfaces(): array;
+    public function getInterfacesMapping(): array;
 }

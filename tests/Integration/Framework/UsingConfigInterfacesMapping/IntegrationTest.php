@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigDependencies;
+namespace GacelaTest\Integration\Framework\UsingConfigInterfacesMapping;
 
 use Gacela\Framework\Config;
 use PHPUnit\Framework\TestCase;

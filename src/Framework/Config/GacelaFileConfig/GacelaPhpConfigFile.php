@@ -10,31 +10,31 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     private array $configs;
 
     /** @var array<string,string|callable> */
-    private array $mappingInterfaces;
+    private array $interfacesMapping;
 
     /**
      * @param array<string,GacelaConfigItemInterface> $configs
-     * @param array<string,string|callable> $mappingInterfaces
+     * @param array<string,string|callable> $interfacesMapping
      */
     private function __construct(
         array $configs,
-        array $mappingInterfaces
+        array $interfacesMapping
     ) {
         $this->configs = $configs;
-        $this->mappingInterfaces = $mappingInterfaces;
+        $this->interfacesMapping = $interfacesMapping;
     }
 
     /**
      * @param array{
      *     config: array<array>|array{type:string,path:string,path_local:string},
-     *     dependencies: array<string,string|callable>,
+     *     interfaces-mapping: array<string,string|callable>,
      * } $array
      */
     public static function fromArray(array $array): self
     {
         return new self(
             self::getConfigItems($array['config'] ?? []),
-            $array['dependencies'] ?? []
+            $array['interfaces-mapping'] ?? []
         );
     }
 
@@ -81,7 +81,7 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     /**
      * @return array<string,GacelaConfigItemInterface>
      */
-    public function configs(): array
+    public function getConfigs(): array
     {
         return $this->configs;
     }
@@ -89,8 +89,8 @@ final class GacelaPhpConfigFile implements GacelaConfigFileInterface
     /**
      * @return array<string,string|callable>
      */
-    public function mappingInterfaces(): array
+    public function getInterfacesMapping(): array
     {
-        return $this->mappingInterfaces;
+        return $this->interfacesMapping;
     }
 }

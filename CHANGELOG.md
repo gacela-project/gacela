@@ -1,9 +1,12 @@
 # Changelog
 
-### Non released yet
+### 0.7.0
+##### 2021-08-07
 
-- Improve the flexibility from the ConfigReaders.
-- Deprecated `gacela.json` config file, should be used instead `gacela.php`.
+- Improve the flexibility from the `ConfigReaders`.
+- Deprecated `gacela.json` config file, in favor of `gacela.php`.
+- Added autowiring for Factory dependencies.
+- Added `'interfaces-mapping'` key to `gacela.php`.
 
 ### 0.6.0
 ##### 2021-07-27

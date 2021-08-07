@@ -7,17 +7,11 @@ namespace GacelaTest\Integration\Framework\MissingFile;
 use Gacela\Framework\ClassResolver\Config\ConfigNotFoundException;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Factory\FactoryNotFoundException;
-use Gacela\Framework\Config;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    public function setUp(): void
-    {
-        Config::getInstance()->init(__DIR__);
-    }
-
     public function test_missing_factory_module(): void
     {
         $this->expectException(FactoryNotFoundException::class);

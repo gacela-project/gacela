@@ -9,6 +9,11 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
+    public static function tearDownAfterClass(): void
+    {
+        Config::resetInstance();
+    }
+
     public function test_remove_key_from_container(): void
     {
         $this->expectDeprecation();

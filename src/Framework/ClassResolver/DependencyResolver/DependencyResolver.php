@@ -66,8 +66,8 @@ final class DependencyResolver
 
         // If it's an interface we need to figure out which concrete class do we want to use
         if ($reflection->isInterface()) {
-            $interfacesMapping = $this->gacelaConfigFile->getInterfacesMapping();
-            $concreteClass = $interfacesMapping[$reflection->getName()] ?? '';
+            $mappingInterfaces = $this->gacelaConfigFile->getMappingInterfaces();
+            $concreteClass = $mappingInterfaces[$reflection->getName()] ?? '';
             // a callable will be a way to bypass the instantiation and instead
             // use the result from the callable that was defined in the gacela config file.
             if (is_callable($concreteClass)) {
@@ -115,7 +115,7 @@ final class DependencyResolver
             $error = <<<TXT
 No concrete class was found that implements:
 {$interface->getName()}
-Did you forget to map this interface to a concrete class in gacela.json using the 'interfaces-mapping' key?
+Did you forget to map this interface to a concrete class in gacela.json using the 'mapping-interfaces' key?
 TXT;
             throw new RuntimeException($error);
         }

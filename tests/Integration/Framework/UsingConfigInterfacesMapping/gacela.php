@@ -6,7 +6,7 @@ use GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Do
 use GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Infrastructure\CustomCompanyGenerator;
 
 return [
-    'interfaces-mapping' => [
+    'mapping-interfaces' => [
         GreeterGeneratorInterface::class => CustomCompanyGenerator::class,
     ],
 ];

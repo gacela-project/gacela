@@ -5,7 +5,7 @@
 
 - Improve the flexibility from the ConfigReaders.
 - Deprecated `gacela.json` config file, in favor of `gacela.php`.
-- Added 'interfaces-mapping' key to `gacela.php`.
+- Added 'mapping-interfaces' key to `gacela.php`.
 - Added autowiring for Factory dependencies.
 
 ### 0.6.0

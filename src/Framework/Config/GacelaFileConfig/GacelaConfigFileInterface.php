@@ -17,5 +17,5 @@ interface GacelaConfigFileInterface
      *
      * @return array<string,string|callable>
      */
-    public function getInterfacesMapping(): array;
+    public function getMappingInterfaces(): array;
 }

@@ -17,32 +17,32 @@ final class GacelaJsonConfigFile implements GacelaConfigFileInterface
     private array $configs;
 
     /** @var array<string,string|callable> */
-    private array $interfacesMapping;
+    private array $mappingInterfaces;
 
     /**
      * @param array<string,GacelaConfigItemInterface> $configs
-     * @param array<string,string|callable> $interfacesMapping
+     * @param array<string,string|callable> $mappingInterfaces
      */
     private function __construct(
         array $configs,
-        array $interfacesMapping
+        array $mappingInterfaces
     ) {
         trigger_error('gacela.json is deprecated. Use gacela.php instead.', E_USER_DEPRECATED);
         $this->configs = $configs;
-        $this->interfacesMapping = $interfacesMapping;
+        $this->mappingInterfaces = $mappingInterfaces;
     }
 
     /**
      * @param array{
      *     config: array<array>|array{type:string,path:string,path_local:string},
-     *     interfaces-mapping: array<string,string|callable>,
+     *     mapping-interfaces: array<string,string|callable>,
      * } $json
      */
     public static function fromArray(array $json): self
     {
         return new self(
             self::getConfigItems($json['config'] ?? []),
-            $json['interfaces-mapping'] ?? [],
+            $json['mapping-interfaces'] ?? [],
         );
     }
 
@@ -95,8 +95,8 @@ final class GacelaJsonConfigFile implements GacelaConfigFileInterface
     /**
      * @return array<string,string|callable>
      */
-    public function getInterfacesMapping(): array
+    public function getMappingInterfaces(): array
     {
-        return $this->interfacesMapping;
+        return $this->mappingInterfaces;
     }
 }

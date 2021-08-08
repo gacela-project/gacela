@@ -24,17 +24,17 @@ final class MakeFileCommand extends Command
         FileContentGeneratorInterface $fileContentGenerator,
         FilenameSanitizerInterface $filenameSanitizer
     ) {
-        parent::__construct('make:file');
         $this->argumentsParser = $argumentsParser;
         $this->fileContentGenerator = $fileContentGenerator;
         $this->filenameSanitizer = $filenameSanitizer;
+        parent::__construct('make:file');
     }
 
     protected function configure(): void
     {
         $this->setDescription('Generate a ' . $this->getExpectedFilenames())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
-            ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, $this->getExpectedFilenames('| '))
+            ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, $this->getExpectedFilenames())
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
     }
 

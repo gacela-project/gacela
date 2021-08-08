@@ -24,10 +24,10 @@ final class MakeModuleCommand extends Command
         FileContentGeneratorInterface $fileContentGenerator,
         FilenameSanitizerInterface $filenameSanitizer
     ) {
-        parent::__construct('make:module');
         $this->argumentsParser = $argumentsParser;
         $this->fileContentGenerator = $fileContentGenerator;
         $this->filenameSanitizer = $filenameSanitizer;
+        parent::__construct('make:module');
     }
 
     protected function configure(): void

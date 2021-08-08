@@ -19,7 +19,7 @@ final class FileContentGeneratorTest extends TestCase
         $fileContentIo = $this->createStub(FileContentIoInterface::class);
         $generator = new FileContentGenerator($codeTemplate, $fileContentIo);
 
-        $this->expectExceptionMessage('Unknown template for "unknown_template"?');
+        $this->expectExceptionMessage("Unknown template for 'unknown_template'?");
         $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
             'unknown_template'

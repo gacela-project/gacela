@@ -35,7 +35,7 @@ final class FileContentGenerator
         $search = ['$NAMESPACE$', '$MODULE_NAME$', '$CLASS_NAME$'];
         $replace = [$commandArguments->namespace(), $moduleName, $className];
 
-        $template = $this->findTemplate($filename);
+        $template = $this->findTemplateByFilename($filename);
         $fileContent = str_replace($search, $replace, $template);
 
         $this->fileContentIo->filePutContents($path, $fileContent);
@@ -43,7 +43,7 @@ final class FileContentGenerator
         return $path;
     }
 
-    private function findTemplate(string $filename): string
+    private function findTemplateByFilename(string $filename): string
     {
         switch ($filename) {
             case FilenameSanitizer::FACADE:
@@ -55,10 +55,7 @@ final class FileContentGenerator
             case FilenameSanitizer::DEPENDENCY_PROVIDER:
                 return $this->codeTemplate->getDependencyProviderMakerTemplate();
             default:
-                throw new RuntimeException(sprintf(
-                    'Unknown template for "%s"?',
-                    $filename
-                ));
+                throw new RuntimeException("Unknown template for '$filename'?");
         }
     }
 }

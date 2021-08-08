@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\Exception;
+namespace Gacela\CodeGenerator\Domain\CommandArguments;
 
 use RuntimeException;
 

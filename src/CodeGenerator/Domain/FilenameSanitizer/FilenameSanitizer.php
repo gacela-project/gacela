@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain;
+namespace Gacela\CodeGenerator\Domain\FilenameSanitizer;
 
 use RuntimeException;
 
-final class FilenameSanitizer
+final class FilenameSanitizer implements FilenameSanitizerInterface
 {
     public const FACADE = 'Facade';
     public const FACTORY = 'Factory';
@@ -20,9 +20,12 @@ final class FilenameSanitizer
         self::DEPENDENCY_PROVIDER,
     ];
 
-    public static function expectedFilenames(string $glue = ', '): string
+    /**
+     * @return list<string>
+     */
+    public function getExpectedFilenames(): array
     {
-        return implode($glue, self::EXPECTED_FILENAMES);
+        return self::EXPECTED_FILENAMES;
     }
 
     public function sanitize(string $filename): string

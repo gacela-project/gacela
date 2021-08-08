@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator;
 
-use Gacela\CodeGenerator\Infrastructure\Template\CodeTemplateInterface;
+use Gacela\CodeGenerator\Domain\FileContent\CodeTemplateInterface;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\Config;
 use JsonException;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Infrastructure;
 
+use Gacela\CodeGenerator\Domain\FileContent\FileContentIoInterface;
 use RuntimeException;
 
 /**

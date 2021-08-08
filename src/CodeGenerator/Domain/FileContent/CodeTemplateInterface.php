@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Infrastructure\Template;
+namespace Gacela\CodeGenerator\Domain\FileContent;
 
 interface CodeTemplateInterface
 {

@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain;
+namespace Gacela\CodeGenerator\Domain\CommandArguments;
 
-use Gacela\CodeGenerator\Domain\Exception\CommandArgumentsException;
 use InvalidArgumentException;
 
-final class CommandArgumentsParser
+final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {
     /** @var array{autoload: array{psr-4: array<string,string>}} */
     private array $composerJson;

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator;
 
-use Gacela\CodeGenerator\Infrastructure\Template\CodeTemplateInterface;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\Config;
+use JsonException;
 use LogicException;
+use function assert;
 
-final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateInterface
+final class CodeGeneratorConfig extends AbstractConfig
 {
     public function getFacadeMakerTemplate(): string
     {
@@ -37,6 +38,8 @@ final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateIn
     }
 
     /**
+     * @throws JsonException
+     *
      * @return array{autoload: array{psr-4: array<string,string>}}
      */
     public function getComposerJsonContentAsArray(): array
@@ -47,7 +50,7 @@ final class CodeGeneratorConfig extends AbstractConfig implements CodeTemplateIn
         }
 
         /** @var array{autoload: array{psr-4: array<string,string>}} $json */
-        $json = (array)json_decode((string)file_get_contents($filename), true);
+        $json = (array)json_decode((string)file_get_contents($filename), true, 512, JSON_THROW_ON_ERROR);
 
         assert(isset($json['autoload']['psr-4']));
 

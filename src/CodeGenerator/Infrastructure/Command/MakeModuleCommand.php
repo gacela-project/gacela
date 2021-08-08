@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator\Infrastructure\Command;
 
-use Gacela\CodeGenerator\Domain\CommandArgumentsParser;
-use Gacela\CodeGenerator\Domain\FileContentGenerator;
-use Gacela\CodeGenerator\Domain\FilenameSanitizer;
+use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsParserInterface;
+use Gacela\CodeGenerator\Domain\FileContent\FileContentGeneratorInterface;
+use Gacela\CodeGenerator\Domain\FilenameSanitizer\FilenameSanitizerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,21 +15,24 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class MakeModuleCommand extends Command
 {
-    private CommandArgumentsParser $argumentsParser;
-    private FileContentGenerator $fileContentGenerator;
+    private CommandArgumentsParserInterface $argumentsParser;
+    private FileContentGeneratorInterface $fileContentGenerator;
+    private FilenameSanitizerInterface $filenameSanitizer;
 
     public function __construct(
-        CommandArgumentsParser $argumentsParser,
-        FileContentGenerator $fileContentGenerator
+        CommandArgumentsParserInterface $argumentsParser,
+        FileContentGeneratorInterface $fileContentGenerator,
+        FilenameSanitizerInterface $filenameSanitizer
     ) {
-        parent::__construct('make:module');
         $this->argumentsParser = $argumentsParser;
         $this->fileContentGenerator = $fileContentGenerator;
+        $this->filenameSanitizer = $filenameSanitizer;
+        parent::__construct('make:module');
     }
 
     protected function configure(): void
     {
-        $this->setDescription('Generate a basic module with an empty ' . FilenameSanitizer::expectedFilenames())
+        $this->setDescription('Generate a basic module with an empty ' . $this->getExpectedFilenames())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
     }
@@ -41,7 +44,7 @@ final class MakeModuleCommand extends Command
         $commandArguments = $this->argumentsParser->parse($path);
         $shortName = (bool)$input->getOption('short-name');
 
-        foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
+        foreach ($this->filenameSanitizer->getExpectedFilenames() as $filename) {
             $fullPath = $this->fileContentGenerator->generate(
                 $commandArguments,
                 $filename,
@@ -55,5 +58,10 @@ final class MakeModuleCommand extends Command
         $output->writeln("Module '$moduleName' created successfully");
 
         return self::SUCCESS;
+    }
+
+    private function getExpectedFilenames(): string
+    {
+        return implode(', ', $this->filenameSanitizer->getExpectedFilenames());
     }
 }

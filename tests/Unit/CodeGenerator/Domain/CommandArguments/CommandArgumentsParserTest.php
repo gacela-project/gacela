@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Domain;
+namespace GacelaTest\Unit\CodeGenerator\Domain\CommandArguments;
 
-use Gacela\CodeGenerator\Domain\CommandArgumentsParser;
-use Gacela\CodeGenerator\Domain\Exception\CommandArgumentsException;
+use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsException;
+use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsParser;
 use PHPUnit\Framework\TestCase;
 use function json_decode;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Domain;
+namespace GacelaTest\Unit\CodeGenerator\Domain\FilenameSanitizer;
 
-use Gacela\CodeGenerator\Domain\FilenameSanitizer;
+use Gacela\CodeGenerator\Domain\FilenameSanitizer\FilenameSanitizer;
 use PHPUnit\Framework\TestCase;
 
 final class FilenameSanitizerTest extends TestCase
@@ -18,10 +18,9 @@ final class FilenameSanitizerTest extends TestCase
 
     public function test_expected_filenames(): void
     {
-        self::assertSame(
-            'Facade, Factory, Config, DependencyProvider',
-            FilenameSanitizer::expectedFilenames()
-        );
+        $actual = implode(', ', $this->filenameSanitizer->getExpectedFilenames());
+
+        self::assertSame('Facade, Factory, Config, DependencyProvider', $actual);
     }
 
     public function test_facade_or_factory_problem(): void

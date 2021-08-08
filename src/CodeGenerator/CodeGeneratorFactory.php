@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Gacela\CodeGenerator;
 
-use Gacela\CodeGenerator\Domain\CommandArgumentsParser;
-use Gacela\CodeGenerator\Domain\FileContentGenerator;
-use Gacela\CodeGenerator\Domain\FilenameSanitizer;
+use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsParser;
+use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsParserInterface;
+use Gacela\CodeGenerator\Domain\FileContent\FileContentGenerator;
+use Gacela\CodeGenerator\Domain\FileContent\FileContentGeneratorInterface;
+use Gacela\CodeGenerator\Domain\FileContent\FileContentIoInterface;
+use Gacela\CodeGenerator\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\CodeGenerator\Domain\FilenameSanitizer\FilenameSanitizerInterface;
 use Gacela\CodeGenerator\Infrastructure\Command\MakeFileCommand;
 use Gacela\CodeGenerator\Infrastructure\Command\MakeModuleCommand;
 use Gacela\CodeGenerator\Infrastructure\FileContentIo;
-use Gacela\CodeGenerator\Infrastructure\FileContentIoInterface;
 use Gacela\Framework\AbstractFactory;
 
 /**
@@ -22,7 +25,8 @@ final class CodeGeneratorFactory extends AbstractFactory
     {
         return new MakeModuleCommand(
             $this->createCommandArgumentsParser(),
-            $this->createFileContentGenerator()
+            $this->createFileContentGenerator(),
+            $this->createFilenameSanitizer()
         );
     }
 
@@ -30,33 +34,43 @@ final class CodeGeneratorFactory extends AbstractFactory
     {
         return new MakeFileCommand(
             $this->createCommandArgumentsParser(),
-            $this->createFilenameSanitizer(),
-            $this->createFileContentGenerator()
+            $this->createFileContentGenerator(),
+            $this->createFilenameSanitizer()
         );
     }
 
-    private function createCommandArgumentsParser(): CommandArgumentsParser
+    private function createCommandArgumentsParser(): CommandArgumentsParserInterface
     {
         return new CommandArgumentsParser(
             $this->getConfig()->getComposerJsonContentAsArray()
         );
     }
 
-    private function createFilenameSanitizer(): FilenameSanitizer
+    private function createFilenameSanitizer(): FilenameSanitizerInterface
     {
         return new FilenameSanitizer();
     }
 
-    private function createFileContentGenerator(): FileContentGenerator
+    private function createFileContentGenerator(): FileContentGeneratorInterface
     {
         return new FileContentGenerator(
-            $this->getConfig(),
-            $this->createFileContentIo()
+            $this->createFileContentIo(),
+            $this->getTemplateByFilenameMap()
         );
     }
 
     private function createFileContentIo(): FileContentIoInterface
     {
         return new FileContentIo();
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    private function getTemplateByFilenameMap(): array
+    {
+        /** @var array<string,string> $map */
+        $map = $this->getProvidedDependency(CodeGeneratorDependencyProvider::TEMPLATE_BY_FILENAME_MAP);
+        return $map;
     }
 }

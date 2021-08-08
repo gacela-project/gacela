@@ -3,7 +3,7 @@
 
 declare(strict_types=1);
 
-use Gacela\CodeGenerator\CodeGeneratorFactory;
+use Gacela\CodeGenerator\CodeGeneratorFacade;
 use Gacela\Framework\Config;
 use Symfony\Component\Console\Application;
 
@@ -16,10 +16,10 @@ require $autoloadPath;
 
 Config::getInstance()->setApplicationRootDir($cwd);
 
-$codeGeneratorFactory = new CodeGeneratorFactory();
+$codeGeneratorFacade = new CodeGeneratorFacade();
 
 $application = new Application();
-$application->add($codeGeneratorFactory->createMakerFileCommand());
-$application->add($codeGeneratorFactory->createMakerModuleCommand());
+$application->add($codeGeneratorFacade->getMakerFileCommand());
+$application->add($codeGeneratorFacade->getMakerModuleCommand());
 $application->run();
 

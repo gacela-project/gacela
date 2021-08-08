@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain;
+namespace Gacela\CodeGenerator\Domain\CommandArguments;
 
 final class CommandArguments
 {

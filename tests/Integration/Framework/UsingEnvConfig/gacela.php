@@ -2,10 +2,17 @@
 
 declare(strict_types=1);
 
-return [
-    'config' => [
-        'type' => 'env',
-        'path' => 'config/.env*',
-        'path_local' => 'config/.env.local.dist',
-    ],
-];
+use Gacela\Framework\AbstractConfigGacela;
+
+return static function (array $globalServices = []): AbstractConfigGacela {
+    return new class($globalServices) extends AbstractConfigGacela {
+        public function config(): array
+        {
+            return [
+                'type' => 'env',
+                'path' => 'config/.env*',
+                'path_local' => 'config/.env.local.dist',
+            ];
+        }
+    };
+};

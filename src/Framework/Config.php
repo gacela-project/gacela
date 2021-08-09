@@ -22,6 +22,9 @@ final class Config
     /** @var array<string, ConfigReaderInterface> */
     private array $configReaders;
 
+    /** @var array<string, mixed> */
+    private array $globalServices = [];
+
     private ?ConfigFactory $configFactory = null;
 
     /**
@@ -96,9 +99,21 @@ final class Config
         ))->readAll();
     }
 
-    public function setApplicationRootDir(string $dir): void
+    public function setApplicationRootDir(string $dir): self
     {
         $this->applicationRootDir = $dir;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, mixed> $globalServices
+     */
+    public function addGlobalServices(array $globalServices): self
+    {
+        $this->globalServices = $globalServices;
+
+        return $this;
     }
 
     public function getApplicationRootDir(): string
@@ -118,7 +133,7 @@ final class Config
     private function getFactory(): ConfigFactory
     {
         if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory();
+            $this->configFactory = new ConfigFactory($this->globalServices);
         }
 
         return $this->configFactory;

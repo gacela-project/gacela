@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigWithoutGacelaFile;
+namespace GacelaTest\Integration\Framework\UsingConfigTypePhp;
 
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;

@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 use Gacela\CodeGenerator\CodeGeneratorFacade;
-use Gacela\Framework\Config;
+use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Application;
 
 $cwd = getcwd();
@@ -14,7 +14,7 @@ if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
 
 require $autoloadPath;
 
-Config::getInstance()->setApplicationRootDir($cwd);
+Gacela::init($cwd);
 
 $codeGeneratorFacade = new CodeGeneratorFacade();
 

@@ -8,10 +8,16 @@ use Gacela\Framework\ClassResolver\Config\ConfigNotFoundException;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Factory\FactoryNotFoundException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Gacela::init(__DIR__);
+    }
+
     public function test_missing_factory_module(): void
     {
         $this->expectException(FactoryNotFoundException::class);

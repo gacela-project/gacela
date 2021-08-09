@@ -19,9 +19,6 @@ final class ConfigFactory
         $this->globalServices = $globalServices;
     }
 
-    /** @deprecated */
-    private const GACELA_JSON_CONFIG_FILENAME = 'gacela.json';
-
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
 
     public function createGacelaConfigFileFactory(): GacelaConfigFileFactoryInterface
@@ -30,8 +27,7 @@ final class ConfigFactory
         return new GacelaConfigFileFactory(
             Config::getInstance()->getApplicationRootDir(),
             $this->globalServices,
-            self::GACELA_PHP_CONFIG_FILENAME,
-            self::GACELA_JSON_CONFIG_FILENAME
+            self::GACELA_PHP_CONFIG_FILENAME
         );
     }
 

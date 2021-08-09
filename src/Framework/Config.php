@@ -99,11 +99,9 @@ final class Config
         ))->readAll();
     }
 
-    public function setApplicationRootDir(string $dir): self
+    public function setApplicationRootDir(string $dir): void
     {
         $this->applicationRootDir = $dir;
-
-        return $this;
     }
 
     /**

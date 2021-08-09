@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DependencyResolver;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -13,9 +13,9 @@ use function is_callable;
 
 final class DependencyResolver
 {
-    private GacelaConfigFileInterface $gacelaConfigFile;
+    private GacelaConfigFile $gacelaConfigFile;
 
-    public function __construct(GacelaConfigFileInterface $gacelaConfigFile)
+    public function __construct(GacelaConfigFile $gacelaConfigFile)
     {
         $this->gacelaConfigFile = $gacelaConfigFile;
     }
@@ -115,7 +115,7 @@ final class DependencyResolver
             $error = <<<TXT
 No concrete class was found that implements:
 {$interface->getName()}
-Did you forget to map this interface to a concrete class in gacela.json using the 'mapping-interfaces' key?
+Did you forget to map this interface to a concrete class in gacela.php overriding the mappingInterfaces() method?
 TXT;
             throw new RuntimeException($error);
         }

@@ -37,7 +37,7 @@ final class ConfigTest extends TestCase
     public function test_get_using_custom_reader(): void
     {
         Config::setConfigReaders([
-            Config\GacelaFileConfig\GacelaPhpConfigItem::DEFAULT_TYPE => new class() implements ConfigReaderInterface {
+            Config\GacelaFileConfig\GacelaConfigItem::DEFAULT_TYPE => new class() implements ConfigReaderInterface {
                 public function read(string $absolutePath): array
                 {
                     return ['key' => 'value'];

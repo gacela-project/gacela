@@ -12,7 +12,7 @@ final class Gacela
     public static function init(string $rootDir, array $globalServices = []): void
     {
         Config::getInstance()
-            ->setApplicationRootDir($rootDir)
-            ->addGlobalServices($globalServices);
+            ->addGlobalServices($globalServices)
+            ->init($rootDir);
     }
 }

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\UsingMultipleConfig;
 
-use Gacela\Framework\Config;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
     public function setUp(): void
     {
-        Config::getInstance()->init(__DIR__);
+        Gacela::init(__DIR__);
     }
 
     public function test_remove_key_from_container(): void

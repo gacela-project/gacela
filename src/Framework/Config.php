@@ -104,6 +104,15 @@ final class Config
         $this->applicationRootDir = $dir;
     }
 
+    public function getApplicationRootDir(): string
+    {
+        if (empty($this->applicationRootDir)) {
+            $this->applicationRootDir = getcwd() ?: '';
+        }
+
+        return $this->applicationRootDir;
+    }
+
     /**
      * @param array<string, mixed> $globalServices
      */
@@ -114,13 +123,12 @@ final class Config
         return $this;
     }
 
-    public function getApplicationRootDir(): string
+    /**
+     * @return array<string, mixed>
+     */
+    public function getGlobalServices(): array
     {
-        if (empty($this->applicationRootDir)) {
-            $this->applicationRootDir = getcwd() ?: '';
-        }
-
-        return $this->applicationRootDir;
+        return $this->globalServices;
     }
 
     private function hasValue(string $key): bool

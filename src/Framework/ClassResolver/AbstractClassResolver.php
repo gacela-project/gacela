@@ -6,6 +6,7 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\DependencyResolver\DependencyResolver;
+use Gacela\Framework\Config;
 use Gacela\Framework\Config\ConfigFactory;
 use RuntimeException;
 use function get_class;
@@ -196,7 +197,7 @@ abstract class AbstractClassResolver
     private function getConfigFactory(): ConfigFactory
     {
         if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory([]);
+            $this->configFactory = new ConfigFactory(Config::getInstance()->getGlobalServices());
         }
 
         return $this->configFactory;

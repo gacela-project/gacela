@@ -13,7 +13,7 @@ return static function (array $globalServices = []): AbstractConfigGacela {
             $globalService = $this->getGlobalService('isWorking?');
 
             $interfaces = [];
-            if ($globalService === 'yes!' || true) {
+            if ($globalService === 'yes!') {
                 $interfaces = [GreeterGeneratorInterface::class => CustomCompanyGenerator::class];
             }
 

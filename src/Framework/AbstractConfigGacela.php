@@ -18,7 +18,7 @@ abstract class AbstractConfigGacela
      */
     protected function getGlobalService(string $key)
     {
-        return $this->globalServices[$key];
+        return $this->globalServices[$key] ?? null;
     }
 
     public function config(): array

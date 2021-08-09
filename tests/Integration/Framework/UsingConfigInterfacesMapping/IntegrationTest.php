@@ -9,10 +9,13 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    public function test_remove_key_from_container(): void
+    protected function setUp(): void
     {
-        $this->expectDeprecation();
-        Gacela::init(__DIR__);
+        Gacela::init(__DIR__, ['isWorking?' => 'yes!']);
+    }
+
+    public function test_mapping_interfaces_from_config(): void
+    {
         $facade = new LocalConfig\Facade();
 
         self::assertSame(

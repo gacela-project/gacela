@@ -14,7 +14,7 @@ final class IntegrationTest extends TestCase
         Gacela::init(__DIR__);
     }
 
-    public function test_remove_key_from_container(): void
+    public function test_config_env_files(): void
     {
         $facade = new LocalConfig\Facade();
 

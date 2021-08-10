@@ -23,7 +23,7 @@ final class Config
     private array $configReaders;
 
     /** @var array<string, mixed> */
-    private array $globalServices = [];
+    private array $globalConfigServices = [];
 
     private ?ConfigFactory $configFactory = null;
 
@@ -114,34 +114,30 @@ final class Config
     }
 
     /**
-     * @param array<string, mixed> $globalServices
+     * @param array<string, mixed> $globalConfigServices
      */
-    public function setGlobalServices(array $globalServices): self
+    public function setGlobalConfigServices(array $globalConfigServices): self
     {
-        $this->globalServices = $globalServices;
+        $this->configFactory = null;
+        $this->globalConfigServices = $globalConfigServices;
 
         return $this;
     }
 
     /**
-     * @return array<string, mixed>
+     * @internal
      */
-    public function getGlobalServices(): array
+    public function getFactory(): ConfigFactory
     {
-        return $this->globalServices;
+        if (null === $this->configFactory) {
+            $this->configFactory = new ConfigFactory($this->globalConfigServices);
+        }
+
+        return $this->configFactory;
     }
 
     private function hasValue(string $key): bool
     {
         return isset($this->config[$key]);
-    }
-
-    private function getFactory(): ConfigFactory
-    {
-        if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory($this->globalServices);
-        }
-
-        return $this->configFactory;
     }
 }

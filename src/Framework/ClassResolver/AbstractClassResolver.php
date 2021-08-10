@@ -7,7 +7,6 @@ namespace Gacela\Framework\ClassResolver;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\DependencyResolver\DependencyResolver;
 use Gacela\Framework\Config;
-use Gacela\Framework\Config\ConfigFactory;
 use RuntimeException;
 use function get_class;
 use function in_array;
@@ -25,8 +24,6 @@ abstract class AbstractClassResolver
     private static array $cachedGlobalInstances = [];
 
     private static ?ClassNameFinderInterface $classNameFinder = null;
-
-    private ?ConfigFactory $configFactory = null;
 
     private ?DependencyResolver $dependencyResolver = null;
 
@@ -184,7 +181,8 @@ abstract class AbstractClassResolver
     private function getDependencyResolver(): DependencyResolver
     {
         if (null === $this->dependencyResolver) {
-            $gacelaFileConfig = $this->getConfigFactory()
+            $gacelaFileConfig = Config::getInstance()
+                ->getFactory()
                 ->createGacelaConfigFileFactory()
                 ->createGacelaFileConfig();
 
@@ -192,16 +190,5 @@ abstract class AbstractClassResolver
         }
 
         return $this->dependencyResolver;
-    }
-
-    private function getConfigFactory(): ConfigFactory
-    {
-        if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory(
-                Config::getInstance()->getGlobalServices()
-            );
-        }
-
-        return $this->configFactory;
     }
 }

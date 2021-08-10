@@ -12,7 +12,7 @@ final class Gacela
     public static function bootstrap(string $applicationRootDir, array $globalServices = []): void
     {
         Config::getInstance()
-            ->setGlobalServices($globalServices)
+            ->setGlobalConfigServices($globalServices)
             ->init($applicationRootDir);
     }
 }

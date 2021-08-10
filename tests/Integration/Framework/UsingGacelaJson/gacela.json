@@ -1,7 +1,0 @@
-{
-  "config": {
-    "type": "php",
-    "path": "config/*.php",
-    "path_local": "config/local.php"
-  }
-}

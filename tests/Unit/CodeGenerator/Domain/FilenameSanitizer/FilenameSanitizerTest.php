@@ -11,7 +11,7 @@ final class FilenameSanitizerTest extends TestCase
 {
     private FilenameSanitizer $filenameSanitizer;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         $this->filenameSanitizer = new FilenameSanitizer();
     }

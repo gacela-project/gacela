@@ -2,20 +2,18 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigInterfacesMapping;
+namespace GacelaTest\Integration\Framework\UsingDeprecatedArrayConfig;
 
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
-    public function setUp(): void
+    public function test_deprecated_mapping_interfaces_from_container(): void
     {
-        Gacela::bootstrap(__DIR__, ['isWorking?' => 'yes!']);
-    }
+        $this->expectDeprecation();
+        Gacela::bootstrap(__DIR__);
 
-    public function test_mapping_interfaces_from_config(): void
-    {
         $facade = new LocalConfig\Facade();
 
         self::assertSame(

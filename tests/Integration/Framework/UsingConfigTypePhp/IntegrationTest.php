@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigWithoutGacelaFile;
+namespace GacelaTest\Integration\Framework\UsingConfigTypePhp;
 
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +14,7 @@ final class IntegrationTest extends TestCase
         Gacela::bootstrap(__DIR__);
     }
 
-    public function test_load_default_config(): void
+    public function test_config_php_files(): void
     {
         $facade = new LocalConfig\Facade();
 

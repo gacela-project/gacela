@@ -12,7 +12,7 @@ final class ContainerTest extends TestCase
 {
     private Container $container;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         $this->container = new Container();
     }

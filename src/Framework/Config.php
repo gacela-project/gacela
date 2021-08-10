@@ -22,6 +22,9 @@ final class Config
     /** @var array<string, ConfigReaderInterface> */
     private array $configReaders;
 
+    /** @var array<string, mixed> */
+    private array $globalConfigServices = [];
+
     private ?ConfigFactory $configFactory = null;
 
     /**
@@ -110,17 +113,31 @@ final class Config
         return $this->applicationRootDir;
     }
 
-    private function hasValue(string $key): bool
+    /**
+     * @param array<string, mixed> $globalConfigServices
+     */
+    public function setGlobalConfigServices(array $globalConfigServices): self
     {
-        return isset($this->config[$key]);
+        $this->configFactory = null;
+        $this->globalConfigServices = $globalConfigServices;
+
+        return $this;
     }
 
-    private function getFactory(): ConfigFactory
+    /**
+     * @internal
+     */
+    public function getFactory(): ConfigFactory
     {
         if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory();
+            $this->configFactory = new ConfigFactory($this->globalConfigServices);
         }
 
         return $this->configFactory;
+    }
+
+    private function hasValue(string $key): bool
+    {
+        return isset($this->config[$key]);
     }
 }

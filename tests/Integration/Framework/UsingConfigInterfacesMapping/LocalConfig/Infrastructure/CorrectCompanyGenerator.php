@@ -6,7 +6,7 @@ namespace GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalCon
 
 use GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Domain\GreeterGeneratorInterface;
 
-final class CustomCompanyGenerator implements GreeterGeneratorInterface
+final class CorrectCompanyGenerator implements GreeterGeneratorInterface
 {
     private CustomNameGenerator $nameGenerator;
 

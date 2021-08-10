@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\UsingDeprecatedArrayConfig\LocalConfig;
 
 use Gacela\Framework\AbstractFactory;
-use GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Domain\GreeterGeneratorInterface;
-use GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Domain\NumberService;
+use GacelaTest\Integration\Framework\UsingDeprecatedArrayConfig\LocalConfig\Domain\GreeterGeneratorInterface;
+use GacelaTest\Integration\Framework\UsingDeprecatedArrayConfig\LocalConfig\Domain\NumberService;
 
 final class Factory extends AbstractFactory
 {

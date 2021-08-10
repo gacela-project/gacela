@@ -17,4 +17,39 @@ final class Facade extends AbstractFacade
             ->createCompanyService()
             ->generateCompanyAndName();
     }
+
+    public function generateResolvedClass(): array
+    {
+        return $this->getFactory()
+            ->createCompanyService()
+            ->generateResolvedClass();
+    }
+
+    public function generateTypesAnonClassCallable(): array
+    {
+        return $this->getFactory()
+            ->createCompanyService()
+            ->generateTypesAnonClassCallable();
+    }
+
+    public function generateTypesAnonClassFunction(): array
+    {
+        return $this->getFactory()
+            ->createCompanyService()
+            ->generateTypesAnonClassFunction();
+    }
+
+    public function generateAbstractTypesAnonClassCallable(): array
+    {
+        return $this->getFactory()
+            ->createCompanyService()
+            ->generateTypesAbstractAnonClassCallable();
+    }
+
+    public function generateAbstractTypesAnonClassFunction(): array
+    {
+        return $this->getFactory()
+            ->createCompanyService()
+            ->generateTypesAbstractAnonClassFunction();
+    }
 }

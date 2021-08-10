@@ -9,10 +9,10 @@ final class Gacela
     /**
      * @param array<string, mixed> $globalServices
      */
-    public static function init(string $rootDir, array $globalServices = []): void
+    public static function bootstrap(string $applicationRootDir, array $globalServices = []): void
     {
         Config::getInstance()
-            ->addGlobalServices($globalServices)
-            ->init($rootDir);
+            ->setGlobalServices($globalServices)
+            ->init($applicationRootDir);
     }
 }

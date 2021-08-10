@@ -11,7 +11,7 @@ final class IntegrationTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::init(__DIR__, ['isWorking?' => 'yes!']);
+        Gacela::bootstrap(__DIR__, ['isWorking?' => 'yes!']);
     }
 
     public function test_mapping_interfaces_from_config(): void

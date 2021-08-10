@@ -116,7 +116,7 @@ final class Config
     /**
      * @param array<string, mixed> $globalServices
      */
-    public function addGlobalServices(array $globalServices): self
+    public function setGlobalServices(array $globalServices): self
     {
         $this->globalServices = $globalServices;
 

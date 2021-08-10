@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 final class AbstractClassResolverTest extends TestCase
 {
     /**
-     * The anon-class is not extending from Abstract[Factory,Config,DependencyProvider]
+     * The anonymous class is not extending from Abstract[Factory,Config,DependencyProvider]
      * For this reason, the context of this anon-global will be the one of this (test)class
      * therefore it's not allowed.
      */

@@ -11,7 +11,7 @@ final class IntegrationTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::init(__DIR__);
+        Gacela::bootstrap(__DIR__);
     }
 
     public function test_load_multiple_config_files(): void

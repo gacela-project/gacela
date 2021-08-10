@@ -14,7 +14,7 @@ if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
 
 require $autoloadPath;
 
-Gacela::init($cwd);
+Gacela::bootstrap($cwd);
 
 $codeGeneratorFacade = new CodeGeneratorFacade();
 

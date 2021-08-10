@@ -197,7 +197,9 @@ abstract class AbstractClassResolver
     private function getConfigFactory(): ConfigFactory
     {
         if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory(Config::getInstance()->getGlobalServices());
+            $this->configFactory = new ConfigFactory(
+                Config::getInstance()->getGlobalServices()
+            );
         }
 
         return $this->configFactory;

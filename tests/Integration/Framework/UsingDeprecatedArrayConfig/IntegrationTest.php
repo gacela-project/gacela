@@ -12,7 +12,7 @@ final class IntegrationTest extends TestCase
     public function test_deprecated_mapping_interfaces_from_container(): void
     {
         $this->expectDeprecation();
-        Gacela::init(__DIR__);
+        Gacela::bootstrap(__DIR__);
 
         $facade = new LocalConfig\Facade();
 

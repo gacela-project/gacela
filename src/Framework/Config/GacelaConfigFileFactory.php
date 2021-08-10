@@ -6,6 +6,9 @@ namespace Gacela\Framework\Config;
 
 use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use RuntimeException;
+use function is_array;
+use function is_callable;
 
 final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 {
@@ -41,7 +44,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
             /** @var AbstractConfigGacela $configGacelaClass */
             $configGacelaClass = $configGacela($this->globalServices);
             if (!is_subclass_of($configGacelaClass, AbstractConfigGacela::class)) {
-                throw new \RuntimeException('Your anon-class must extends AbstractConfigGacela');
+                throw new RuntimeException('Your anonymous class must extends AbstractConfigGacela');
             }
 
             /** @psalm-suppress ArgumentTypeCoercion */
@@ -52,11 +55,11 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         }
 
         if (is_array($configGacela)) {
-            trigger_error('You should switch to an anon-class which extends AbstractConfigGacela. Check documentation for more info', E_USER_DEPRECATED);
+            trigger_error('Use a function that returns an anonymous class that extends AbstractConfigGacela. Check the documentation for more info. Array is deprecated.', E_USER_DEPRECATED);
             /** @psalm-suppress MixedArgumentTypeCoercion */
             return GacelaConfigFile::fromArray($configGacela);
         }
 
-        throw new \RuntimeException('Create a function that returns an anon-class that extends AbstractConfigGacela');
+        throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
     }
 }

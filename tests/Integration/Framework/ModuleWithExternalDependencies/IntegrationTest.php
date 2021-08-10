@@ -11,7 +11,7 @@ final class IntegrationTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::init(__DIR__);
+        Gacela::bootstrap(__DIR__);
     }
 
     /**

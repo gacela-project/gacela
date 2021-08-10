@@ -1,5 +1,12 @@
 # Changelog
 
+### 0.8.0
+
+- Updated `gacela.php` config file:
+  - returning a simple array has been deprecated,
+  - an anonymous function that extends from `AbstractConfigGacela` should be used.
+- Remove deprecated `gacela.json` config file.
+
 ### 0.7.0
 ##### 2021-08-07
 

@@ -59,29 +59,25 @@ final class DependencyResolver
         $paramType = $parameter->getType();
         $paramTypeName = $paramType->getName();
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
-            return $parameter->getDefaultValue();
+            if ($parameter->isDefaultValueAvailable()) {
+                return $parameter->getDefaultValue();
+            }
+
+            /** @psalm-suppress PossiblyNullReference */
+            throw new RuntimeException("Unable to resolve [$parameter] from {$parameter->getDeclaringClass()->getName()}");
         }
 
-        $reflection = new ReflectionClass($paramTypeName);
-
-        // If it's an interface we need to figure out which concrete class do we want to use.
-        if ($reflection->isInterface()) {
-            $mappingInterfaces = $this->gacelaConfigFile->getMappingInterfaces();
-            $concreteClass = $mappingInterfaces[$reflection->getName()] ?? '';
-            // a callable will be a way to bypass the instantiation and instead
-            // use the result from the callable that was defined in the gacela config file.
-            if (is_callable($concreteClass)) {
-                return $concreteClass();
-            }
-            // an Exception will be thrown if there is no concrete class found for the interface.
-            if (empty($concreteClass)) {
-                throw new DependencyResolverNotFoundException($reflection->getName());
-            }
-            // finally, override the $reflection (the interface) by the concrete resolved class.
-            /** @var class-string $concreteClass */
-            $reflection = new ReflectionClass($concreteClass);
+        /** @var mixed $mappedClass */
+        $mappedClass = $this->gacelaConfigFile->getMappingInterface($paramTypeName);
+        if (is_callable($mappedClass)) {
+            return $mappedClass();
         }
 
+        if (is_object($mappedClass)) {
+            return $mappedClass;
+        }
+
+        $reflection = $this->resolveReflectionClass($paramTypeName);
         $constructor = $reflection->getConstructor();
         if (!$constructor) {
             return $reflection->newInstance();
@@ -99,5 +95,27 @@ final class DependencyResolver
         }
 
         return $reflection->newInstanceArgs($innerDependencies);
+    }
+
+    /**
+     * @param class-string $paramTypeName
+     */
+    private function resolveReflectionClass(string $paramTypeName): ReflectionClass
+    {
+        $reflection = new ReflectionClass($paramTypeName);
+
+        if ($reflection->isInstantiable()) {
+            return $reflection;
+        }
+
+        /** @var mixed $concreteClass */
+        $concreteClass = $this->gacelaConfigFile->getMappingInterface($reflection->getName());
+
+        if (null !== $concreteClass) {
+            /** @var class-string $concreteClass */
+            return new ReflectionClass($concreteClass);
+        }
+
+        throw DependencyResolverNotFoundException::forClassName($reflection->getName());
     }
 }

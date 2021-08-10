@@ -90,10 +90,10 @@ final class GacelaConfigFile
      * Map interfaces to concrete classes or callable (which will be resolved on runtime).
      * This is util to inject dependencies to Gacela services (such as Factories, for example) via their constructor.
      *
-     * @return array<string,string|callable>
+     * @return mixed
      */
-    public function getMappingInterfaces(): array
+    public function getMappingInterface(string $key)
     {
-        return $this->mappingInterfaces;
+        return $this->mappingInterfaces[$key] ?? null;
     }
 }

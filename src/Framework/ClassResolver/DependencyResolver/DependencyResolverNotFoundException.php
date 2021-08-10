@@ -8,13 +8,13 @@ use RuntimeException;
 
 final class DependencyResolverNotFoundException extends RuntimeException
 {
-    public function __construct(string $className)
+    public static function forClassName(string $className): self
     {
         $message = <<<TXT
 No concrete class was found that implements:
 {$className}
 Did you forget to map this interface to a concrete class in gacela.php overriding the mappingInterfaces() method?
 TXT;
-        parent::__construct($message);
+        return new self($message);
     }
 }

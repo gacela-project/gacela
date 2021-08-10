@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.8.0
+### Non released yet
 
 - Updated `gacela.php` config file:
   - returning a simple array has been deprecated,

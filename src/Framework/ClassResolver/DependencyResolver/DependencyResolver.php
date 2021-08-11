@@ -63,8 +63,9 @@ final class DependencyResolver
                 return $parameter->getDefaultValue();
             }
 
-            /** @psalm-suppress PossiblyNullReference */
-            throw new RuntimeException("Unable to resolve [$parameter] from {$parameter->getDeclaringClass()->getName()}");
+            /** @var ReflectionClass $reflectionClass */
+            $reflectionClass = $parameter->getDeclaringClass();
+            throw new RuntimeException("Unable to resolve [$parameter] from {$reflectionClass->getName()}");
         }
 
         /** @var mixed $mappedClass */

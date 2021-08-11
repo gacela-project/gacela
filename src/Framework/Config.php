@@ -17,6 +17,7 @@ final class Config
 
     private string $applicationRootDir = '';
 
+    /** @var array<array-key, mixed> */
     private array $config = [];
 
     /** @var array<string, ConfigReaderInterface> */

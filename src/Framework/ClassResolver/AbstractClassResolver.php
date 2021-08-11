@@ -66,7 +66,9 @@ abstract class AbstractClassResolver
         /** @var list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
 
-        return end($callerClassParts);
+        $lastCallerClassParts = end($callerClassParts);
+
+        return is_string($lastCallerClassParts) ? $lastCallerClassParts : '';
     }
 
     public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void

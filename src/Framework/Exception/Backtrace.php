@@ -25,6 +25,9 @@ final class Backtrace
         }
     }
 
+    /**
+     * @param array<array-key, mixed> $backtrace
+     */
     private function getTraceLine(array $backtrace): string
     {
         if (isset($backtrace['file'])) {
@@ -34,6 +37,9 @@ final class Backtrace
         return $this->getTraceLineFromTestCase($backtrace);
     }
 
+    /**
+     * @param array<array-key, mixed> $backtrace
+     */
     private function getTraceLineFromTestCase(array $backtrace): string
     {
         return ((string) $backtrace['class'])

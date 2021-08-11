@@ -15,12 +15,15 @@ final class GacelaConfigItem
     private string $path;
     private string $pathLocal;
 
-    public static function fromArray(array $json): self
+    /**
+     * @param array<array-key, mixed> $item
+     */
+    public static function fromArray(array $item): self
     {
         return new self(
-            (string)($json['type'] ?? self::DEFAULT_TYPE),
-            (string)($json['path'] ?? self::DEFAULT_PATH),
-            (string)($json['path_local'] ?? self::DEFAULT_PATH_LOCAL)
+            (string)($item['type'] ?? self::DEFAULT_TYPE),
+            (string)($item['path'] ?? self::DEFAULT_PATH),
+            (string)($item['path_local'] ?? self::DEFAULT_PATH_LOCAL)
         );
     }
 
@@ -57,7 +60,7 @@ final class GacelaConfigItem
     public function __toString(): string
     {
         return sprintf(
-            'GacelaJsonConfigItem{ type:%s, path:%s, pathLocal:%s }',
+            'GacelaConfigItem{ type:%s, path:%s, pathLocal:%s }',
             $this->type,
             $this->path,
             $this->pathLocal

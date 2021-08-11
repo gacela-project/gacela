@@ -33,6 +33,9 @@ final class ConfigInit
         $this->readers = $readers;
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function readAll(): array
     {
         $gacelaFileConfig = $this->configFactory->createGacelaFileConfig();
@@ -54,7 +57,7 @@ final class ConfigInit
     {
         $configGroup = array_map(
             fn (GacelaConfigItem $config): array => array_map(
-                static fn ($p): string => (string)$p,
+                static fn ($p): string => $p,
                 array_diff(
                     $this->pathFinder->matchingPattern($this->generateAbsolutePath($config->path())),
                     [$this->generateAbsolutePath($config->pathLocal())]
@@ -66,10 +69,13 @@ final class ConfigInit
         return array_merge(...array_values($configGroup));
     }
 
-    private function readConfigFromFile(GacelaConfigFile $gacelaJson, string $absolutePath): array
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function readConfigFromFile(GacelaConfigFile $gacelaConfigFile, string $absolutePath): array
     {
         $result = [];
-        $configs = $gacelaJson->getConfigs();
+        $configs = $gacelaConfigFile->getConfigs();
 
         foreach ($this->readers as $type => $reader) {
             $config = $configs[$type] ?? null;
@@ -85,10 +91,13 @@ final class ConfigInit
         return array_merge(...array_filter($result));
     }
 
-    private function readLocalConfigFile(GacelaConfigFile $gacelaJson): array
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function readLocalConfigFile(GacelaConfigFile $gacelaConfigFile): array
     {
         $result = [];
-        $configs = $gacelaJson->getConfigs();
+        $configs = $gacelaConfigFile->getConfigs();
 
         foreach ($this->readers as $type => $reader) {
             $config = $configs[$type] ?? null;

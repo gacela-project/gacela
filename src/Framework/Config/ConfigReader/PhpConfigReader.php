@@ -15,13 +15,16 @@ final class PhpConfigReader implements ConfigReaderInterface
         return 'php' === $extension;
     }
 
+    /**
+     * @return array<array-key, string>
+     */
     public function read(string $absolutePath): array
     {
         if (!file_exists($absolutePath)) {
             return [];
         }
 
-        /** @var null|array $content */
+        /** @var null|string[] $content */
         $content = include $absolutePath;
 
         return is_array($content) ? $content : [];

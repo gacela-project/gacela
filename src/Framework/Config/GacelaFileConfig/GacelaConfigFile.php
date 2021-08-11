@@ -61,6 +61,9 @@ final class GacelaConfigFile
         return $result;
     }
 
+    /**
+     * @param array<array>|array{type:string,path:string,path_local:string} $config
+     */
     private static function isSingleConfigFile(array $config): bool
     {
         return isset($config['type'])

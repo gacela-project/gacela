@@ -13,6 +13,9 @@ final class EnvConfigReader implements ConfigReaderInterface
         return false !== strpos($absolutePath, '.env');
     }
 
+    /**
+     * @return array<array-key, string>
+     */
     public function read(string $absolutePath): array
     {
         if (!is_file($absolutePath)) {
@@ -20,6 +23,8 @@ final class EnvConfigReader implements ConfigReaderInterface
         }
 
         $config = [];
+
+        /** @var string[] $lines */
         $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
         foreach ($lines as $line) {

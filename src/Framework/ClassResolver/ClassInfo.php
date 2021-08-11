@@ -22,7 +22,8 @@ final class ClassInfo
 
         /** @var string[] $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-        $filepath = end($callerClassParts);
+        $lastCallerClassPart = end($callerClassParts);
+        $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
         $filename = $this->normalizeFilename($filepath);
 
         if (false !== strpos($filepath, 'anonymous')) {

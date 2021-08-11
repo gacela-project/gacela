@@ -13,8 +13,10 @@ use function is_callable;
 final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 {
     private string $applicationRootDir;
-    private array $globalServices;
     private string $gacelaPhpConfigFilename;
+
+    /** @var array<string, mixed> */
+    private array $globalServices;
 
     /**
      * @param array<string, mixed> $globalServices
@@ -56,7 +58,10 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 
         if (is_array($configGacela)) {
             trigger_error('Use a function that returns an anonymous class that extends AbstractConfigGacela. Check the documentation for more info. Array is deprecated.', E_USER_DEPRECATED);
-            /** @psalm-suppress MixedArgumentTypeCoercion */
+            /** @var array{
+             *     config: array<array>|array{type:string,path:string,path_local:string},
+             *     mapping-interfaces: array<string,string|callable>,
+             * } $configGacela */
             return GacelaConfigFile::fromArray($configGacela);
         }
 

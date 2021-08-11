@@ -6,8 +6,13 @@ namespace Gacela\Framework\Config;
 
 final class PathFinder implements PathFinderInterface
 {
+    /**
+     * @return string[]
+     */
     public function matchingPattern(string $pattern): array
     {
-        return glob($pattern, GLOB_BRACE);
+        $glob = glob($pattern, GLOB_BRACE);
+
+        return is_array($glob) ? $glob : [];
     }
 }

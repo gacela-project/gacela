@@ -6,5 +6,8 @@ namespace Gacela\Framework\Config;
 
 interface PathFinderInterface
 {
+    /**
+     * @return string[]
+     */
     public function matchingPattern(string $pattern): array;
 }

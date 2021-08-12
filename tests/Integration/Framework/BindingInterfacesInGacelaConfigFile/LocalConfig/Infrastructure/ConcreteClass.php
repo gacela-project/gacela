@@ -6,7 +6,7 @@ namespace GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\L
 
 use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractClass;
 
-final class SpecificClass extends AbstractClass
+final class ConcreteClass extends AbstractClass
 {
     private bool $bool;
     private string $string;

@@ -8,7 +8,7 @@ use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalCo
 use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromCallable;
 use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromAnonymousClass;
 use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromCallable;
-use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\SpecificClass;
+use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
 return static function (array $globalServices = []): AbstractConfigGacela {
     return new class($globalServices) extends AbstractConfigGacela {
@@ -16,7 +16,7 @@ return static function (array $globalServices = []): AbstractConfigGacela {
         {
             return [
                 // Resolve an abstract class from a concrete instance of a class
-                AbstractClass::class => new SpecificClass(true, 'string', 1, 1.2, ['array']),
+                AbstractClass::class => new ConcreteClass(true, 'string', 1, 1.2, ['array']),
 
                 // Resolve anonymous-classes/callables from abstract classes and interfaces
                 AbstractFromAnonymousClass::class  => $this->resolveAbstractFromAnonymousClass(),

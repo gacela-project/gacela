@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Infrastructure;
+namespace GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure;
 
-use GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Domain\ResolvedClassInterface;
+use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractClass;
 
-final class CustomResolvedClass extends ResolvedClassInterface
+final class SpecificClass extends AbstractClass
 {
     private bool $bool;
     private string $string;

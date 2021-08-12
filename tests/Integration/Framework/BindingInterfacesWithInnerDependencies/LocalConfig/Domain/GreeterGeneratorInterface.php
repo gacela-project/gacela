@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Domain;
+namespace GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain;
 
 interface GreeterGeneratorInterface
 {

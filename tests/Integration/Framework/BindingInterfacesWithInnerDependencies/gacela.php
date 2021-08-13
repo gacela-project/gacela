@@ -8,7 +8,7 @@ use GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\Loca
 use GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Infrastructure\IncorrectCompanyGenerator;
 
 /**
- * This integration-test does two things:.
+ * This integration-test does two things:
  *
  * - 1: Check the "globalService" variable was properly defined in the 'Gacela::bootstrap()' with the key `isWorking?`.
  *

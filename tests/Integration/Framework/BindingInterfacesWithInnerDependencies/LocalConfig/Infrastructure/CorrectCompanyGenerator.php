@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Infrastructure;
+namespace GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Infrastructure;
 
-use GacelaTest\Integration\Framework\UsingConfigInterfacesMapping\LocalConfig\Domain\GreeterGeneratorInterface;
+use GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
 
 final class CorrectCompanyGenerator implements GreeterGeneratorInterface
 {

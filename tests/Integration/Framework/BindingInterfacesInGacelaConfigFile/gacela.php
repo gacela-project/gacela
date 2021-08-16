@@ -50,9 +50,9 @@ return static function (array $globalServices = []): AbstractConfigGacela {
             };
         }
 
-        private function resolveInterfaceFromAnonymousClass(): callable
+        private function resolveInterfaceFromAnonymousClass(): InterfaceFromAnonymousClass
         {
-            return static fn () => new class() implements InterfaceFromAnonymousClass {
+            return new class() implements InterfaceFromAnonymousClass {
                 public function getClassName(): string
                 {
                     return InterfaceFromAnonymousClass::class;
@@ -60,9 +60,9 @@ return static function (array $globalServices = []): AbstractConfigGacela {
             };
         }
 
-        private function resolveInterfaceFromCallable(): InterfaceFromCallable
+        private function resolveInterfaceFromCallable(): callable
         {
-            return new class() implements InterfaceFromCallable {
+            return static fn () =>  new class() implements InterfaceFromCallable {
                 public function getClassName(): string
                 {
                     return InterfaceFromCallable::class;

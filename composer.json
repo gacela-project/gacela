@@ -47,7 +47,8 @@
         "test-all": [
             "@test-quality",
             "@test-unit",
-            "@test-integration"
+            "@test-integration",
+            "@test-feature"
         ],
         "test-quality": [
             "@csrun",
@@ -56,6 +57,7 @@
         ],
         "test-unit": "./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",
+        "test-feature": "./vendor/bin/phpunit --testsuite=feature",
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration --coverage-html=coverage",
         "psalm": "./vendor/bin/psalm",
         "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src",

@@ -15,17 +15,17 @@
         }
     ],
     "require": {
-        "ext-json": "*",
         "php": ">=7.4",
-        "symfony/console": "^5.2"
+        "ext-json": "*",
+        "symfony/console": "^5.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
-        "vimeo/psalm": "^4.6",
+        "vimeo/psalm": "^4.9",
         "friendsofphp/php-cs-fixer": "^3.0",
         "symfony/var-dumper": "^5.3",
-        "phpstan/phpstan": "^0.12.90",
-        "phpbench/phpbench": "^1.0"
+        "phpstan/phpstan": "^0.12",
+        "phpbench/phpbench": "^1.1"
     },
     "suggest": {
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files"
@@ -43,12 +43,18 @@
     "bin": [
         "gacela"
     ],
+    "config": {
+        "platform": {
+            "php": "7.4"
+        }
+    },
     "scripts": {
         "test-all": [
             "@test-quality",
             "@test-unit",
             "@test-integration",
-            "@test-feature"
+            "@test-feature",
+            "@phpbench"
         ],
         "test-quality": [
             "@csrun",

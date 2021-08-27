@@ -14,7 +14,7 @@ final class EnvConfigReader implements ConfigReaderInterface
     }
 
     /**
-     * @return array<array-key, string>
+     * @return array<string,mixed>
      */
     public function read(string $absolutePath): array
     {

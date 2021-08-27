@@ -6,10 +6,10 @@ namespace Gacela\Framework\Config;
 
 interface ConfigReaderInterface
 {
+    public function canRead(string $absolutePath): bool;
+
     /**
-     * @return array<array-key, string>
+     * @return array<string,mixed>
      */
     public function read(string $absolutePath): array;
-
-    public function canRead(string $absolutePath): bool;
 }

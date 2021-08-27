@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.9.0
+##### 2021-08-27
+
+- Allow return JsonSerializable objects in PHP config files.
+
 ### 0.8.0
 ##### 2021-08-16
 

@@ -15,17 +15,15 @@ use GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\Loca
  * - 2: Let Gacela resolve in the factory the mapping from `GreeterGeneratorInterface` to `CorrectCompanyGenerator`
  *      AND auto-resolve the class `CustomNameGenerator` from the `CorrectCompanyGenerator` constructor.
  */
-return static function (array $globalServices): AbstractConfigGacela {
-    return new class($globalServices) extends AbstractConfigGacela {
-        public function mappingInterfaces(): array
-        {
-            $interfaces = [GreeterGeneratorInterface::class => IncorrectCompanyGenerator::class];
+return static fn (array $services) => new class($services) extends AbstractConfigGacela {
+    public function mappingInterfaces(): array
+    {
+        $interfaces = [GreeterGeneratorInterface::class => IncorrectCompanyGenerator::class];
 
-            if ('yes!' === $this->getGlobalService('isWorking?')) {
-                $interfaces[GreeterGeneratorInterface::class] = CorrectCompanyGenerator::class;
-            }
-
-            return $interfaces;
+        if ('yes!' === $this->getGlobalService('isWorking?')) {
+            $interfaces[GreeterGeneratorInterface::class] = CorrectCompanyGenerator::class;
         }
-    };
+
+        return $interfaces;
+    }
 };

@@ -20,10 +20,17 @@ final class GacelaConfigItem
      */
     public static function fromArray(array $item): self
     {
+        /** @var null|string $type */
+        $type = $item['type'] ?? null;
+        /** @var null|string $path */
+        $path = $item['path'] ?? null;
+        /** @var null|string $pathLocal */
+        $pathLocal = $item['path_local'] ?? null;
+
         return new self(
-            (string)($item['type'] ?? self::DEFAULT_TYPE),
-            (string)($item['path'] ?? self::DEFAULT_PATH),
-            (string)($item['path_local'] ?? self::DEFAULT_PATH_LOCAL)
+            $type ?? self::DEFAULT_TYPE,
+            $path ?? self::DEFAULT_PATH,
+            $pathLocal ?? self::DEFAULT_PATH_LOCAL
         );
     }
 

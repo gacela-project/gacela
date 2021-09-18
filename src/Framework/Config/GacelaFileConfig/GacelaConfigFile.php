@@ -32,6 +32,7 @@ final class GacelaConfigFile
      */
     public static function fromArray(array $array): self
     {
+        /** @var null|array<array> $array['config'] */
         return new self(
             self::getConfigItems($array['config'] ?? []),
             $array['mapping-interfaces'] ?? []
@@ -46,6 +47,7 @@ final class GacelaConfigFile
     private static function getConfigItems(array $config): array
     {
         if (self::isSingleConfigFile($config)) {
+            /** @var array $config */
             $c = GacelaConfigItem::fromArray($config);
             return [$c->type() => $c];
         }

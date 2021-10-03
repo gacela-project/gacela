@@ -36,6 +36,17 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $gacelaPhpPath = $this->applicationRootDir . '/' . $this->gacelaPhpConfigFilename;
 
         if (!is_file($gacelaPhpPath)) {
+            if (isset($this->globalServices['config'])) {
+                /** @var array{
+                 *     config: array<array>|array{type:string,path:string,path_local:string},
+                 *     mapping-interfaces: array<string,string|callable>,
+                 * } $configFromGlobalServices
+                 */
+                $configFromGlobalServices = $this->globalServices;
+
+                return GacelaConfigFile::fromArray($configFromGlobalServices);
+            }
+
             return GacelaConfigFile::withDefaults();
         }
 

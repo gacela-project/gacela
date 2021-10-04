@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 0.10.0
+#### 2021-10-04
 
 - Allow setup custom config from Gacela::bootstrap directly.
 

@@ -68,9 +68,6 @@ final class Locator
         return $locatedInstance;
     }
 
-    /**
-     * @template T
-     */
     private function getConcreteClass(string $className): string
     {
         if ($this->isInterface($className)) {

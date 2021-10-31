@@ -79,15 +79,24 @@ abstract class AbstractClassResolver
     }
 
     /**
+     * @template T
+     *
+     * @param class-string<T> $className
+     *
      * @internal so the Locator can access to the global instances before creating a new instance
+     *
+     * @return ?T
      */
-    public static function getCachedGlobalInstance(string $className): ?object
+    public static function getCachedGlobalInstance(string $className)
     {
         $key = self::getGlobalKeyFromClassName($className);
 
-        return self::$cachedGlobalInstances[$key]
+        /** @var ?T $instance */
+        $instance = self::$cachedGlobalInstances[$key]
             ?? self::$cachedGlobalInstances['\\' . $key]
             ?? null;
+
+        return $instance;
     }
 
     private static function getGlobalKeyFromClassName(string $className): string

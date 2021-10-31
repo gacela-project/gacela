@@ -41,17 +41,24 @@ final class Locator
     }
 
     /**
-     * @return mixed
+     * @template T
+     *
+     * @param class-string<T> $className
+     *
+     * @return ?T
      */
     public function get(string $className)
     {
+        /** @var class-string<T> $concreteClass */
         $concreteClass = $this->getConcreteClass($className);
 
         if (isset($this->instanceCache[$concreteClass])) {
-            return $this->instanceCache[$concreteClass];
+            /** @var T $instance */
+            $instance = $this->instanceCache[$concreteClass];
+
+            return $instance;
         }
 
-        /** @var mixed $locatedInstance */
         $locatedInstance = AbstractClassResolver::getCachedGlobalInstance($concreteClass)
             ?? $this->newInstance($concreteClass);
 
@@ -71,7 +78,11 @@ final class Locator
     }
 
     /**
-     * @return mixed
+     * @template T
+     *
+     * @param class-string<T> $className
+     *
+     * @return ?T
      */
     private function newInstance(string $className)
     {
@@ -80,7 +91,7 @@ final class Locator
             return new $className();
         }
 
-        return $className;
+        return null;
     }
 
     private function isInterface(string $className): bool

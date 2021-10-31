@@ -52,8 +52,8 @@ final class LocatorTest extends TestCase
 
     public function test_get_singleton_from_string(): void
     {
-        /** @var string $stringValue */
-        $stringValue = $this->locator->get('NonExistingClass');
-        self::assertSame('NonExistingClass', $stringValue);
+        /** @var null $nullValue */
+        $nullValue = $this->locator->get('NonExistingClass');
+        self::assertNull($nullValue);
     }
 }

@@ -34,7 +34,6 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             throw CommandArgumentsException::noAutoloadPsr4Found();
         }
 
-        /** @var array{psr-4: string[]} $composerAutoload */
         $composerAutoload = $this->composerJson['autoload'];
         $psr4 = $composerAutoload['psr-4'];
         $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);

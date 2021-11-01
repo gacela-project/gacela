@@ -40,9 +40,11 @@ final class MakeFileCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        /** @var array $inputFileNames */
+        $inputFileNames = $input->getArgument('filenames');
         $filenames = array_map(
             fn (string $raw): string => $this->filenameSanitizer->sanitize($raw),
-            (array)$input->getArgument('filenames')
+            $inputFileNames
         );
 
         /** @var string $path */

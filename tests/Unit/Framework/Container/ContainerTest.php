@@ -64,7 +64,7 @@ final class ContainerTest extends TestCase
 
     public function test_resolve_service_as_callable_class(): void
     {
-        $this->container->set('service_name', new class() {
+        $this->container->set('service_name', new class () {
             public function __invoke(): string
             {
                 return 'value';

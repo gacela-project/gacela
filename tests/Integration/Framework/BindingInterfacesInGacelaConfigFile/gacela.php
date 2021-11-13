@@ -10,7 +10,7 @@ use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalCo
 use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromCallable;
 use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
-return static fn () => new class() extends AbstractConfigGacela {
+return static fn () => new class () extends AbstractConfigGacela {
     public function mappingInterfaces(): array
     {
         return [
@@ -31,7 +31,7 @@ return static fn () => new class() extends AbstractConfigGacela {
 
     private function resolveAbstractFromAnonymousClass(): AbstractFromAnonymousClass
     {
-        return new class() extends AbstractFromAnonymousClass {
+        return new class () extends AbstractFromAnonymousClass {
             public function getClassName(): string
             {
                 return AbstractFromAnonymousClass::class;
@@ -41,7 +41,7 @@ return static fn () => new class() extends AbstractConfigGacela {
 
     private function resolveAbstractFromCallable(): callable
     {
-        return static fn () => new class() extends AbstractFromCallable {
+        return static fn () => new class () extends AbstractFromCallable {
             public function getClassName(): string
             {
                 return AbstractFromCallable::class;
@@ -51,7 +51,7 @@ return static fn () => new class() extends AbstractConfigGacela {
 
     private function resolveInterfaceFromAnonymousClass(): InterfaceFromAnonymousClass
     {
-        return new class() implements InterfaceFromAnonymousClass {
+        return new class () implements InterfaceFromAnonymousClass {
             public function getClassName(): string
             {
                 return InterfaceFromAnonymousClass::class;
@@ -61,7 +61,7 @@ return static fn () => new class() extends AbstractConfigGacela {
 
     private function resolveInterfaceFromCallable(): callable
     {
-        return static fn () => new class() implements InterfaceFromCallable {
+        return static fn () => new class () implements InterfaceFromCallable {
             public function getClassName(): string
             {
                 return InterfaceFromCallable::class;

@@ -64,7 +64,7 @@
         "test-unit": "./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",
         "test-feature": "./vendor/bin/phpunit --testsuite=feature",
-        "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration --coverage-html=coverage",
+        "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=coverage",
         "psalm": "./vendor/bin/psalm",
         "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src",
         "csfix": "./vendor/bin/php-cs-fixer fix --allow-risky=yes",

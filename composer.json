@@ -50,16 +50,19 @@
     },
     "scripts": {
         "test-all": [
-            "@test-quality",
-            "@test-unit",
-            "@test-integration",
-            "@test-feature",
+            "@quality",
+            "@phpunit",
             "@phpbench"
         ],
-        "test-quality": [
+        "quality": [
             "@csrun",
             "@psalm",
             "@phpstan"
+        ],
+        "phpunit": [
+            "@test-unit",
+            "@test-integration",
+            "@test-feature"
         ],
         "test-unit": "./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",

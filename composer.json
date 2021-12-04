@@ -70,8 +70,8 @@
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=coverage",
         "psalm": "./vendor/bin/psalm",
         "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src",
-        "csfix": "./vendor/bin/php-cs-fixer fix --allow-risky=yes",
-        "csrun": "./vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run",
+        "csfix": "./vendor/bin/php-cs-fixer fix",
+        "csrun": "./vendor/bin/php-cs-fixer fix --dry-run",
         "phpbench": "vendor/bin/phpbench run --report=aggregate --ansi"
     }
 }

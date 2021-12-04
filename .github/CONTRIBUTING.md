@@ -50,7 +50,7 @@ $ ./vendor/bin/psalm
 This project comes with a configuration file (located at `/.php_cs.dist` in the repository) that you can use to (re)format your source code for compliance with this project's coding guidelines:
 
 ```bash
-$ ./vendor/bin/php-cs-fixer fix --allow-risky=yes
+$ ./vendor/bin/php-cs-fixer fix
 ```
 
 Please understand that we will not accept a pull request when its changes violate this project's coding guidelines.

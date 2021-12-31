@@ -8,14 +8,6 @@ use RuntimeException;
 
 final class ConfigException extends RuntimeException
 {
-    public static function configDirNotFound(string $rootDir): self
-    {
-        throw new self(sprintf(
-            '"config" directory not found in %s directory',
-            $rootDir
-        ));
-    }
-
     public static function keyNotFound(string $key, string $class): self
     {
         return new self(sprintf(

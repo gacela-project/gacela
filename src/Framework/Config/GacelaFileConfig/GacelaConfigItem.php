@@ -15,6 +15,16 @@ final class GacelaConfigItem
     private string $path;
     private string $pathLocal;
 
+    public function __construct(
+        string $type = self::DEFAULT_TYPE,
+        string $path = self::DEFAULT_PATH,
+        string $pathLocal = self::DEFAULT_PATH_LOCAL
+    ) {
+        $this->type = $type;
+        $this->path = $path;
+        $this->pathLocal = $pathLocal;
+    }
+
     /**
      * @param array<array-key, mixed> $item
      */
@@ -37,16 +47,6 @@ final class GacelaConfigItem
     public static function withDefaults(): self
     {
         return new self();
-    }
-
-    private function __construct(
-        string $type = self::DEFAULT_TYPE,
-        string $path = self::DEFAULT_PATH,
-        string $pathLocal = self::DEFAULT_PATH_LOCAL
-    ) {
-        $this->type = $type;
-        $this->path = $path;
-        $this->pathLocal = $pathLocal;
     }
 
     public function type(): string

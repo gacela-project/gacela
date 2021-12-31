@@ -12,22 +12,27 @@ use function is_callable;
 final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 {
     private string $applicationRootDir;
+
     private string $gacelaPhpConfigFilename;
 
     /** @var array<string, mixed> */
     private array $globalServices;
+
+    private ConfigGacelaMapper $configGacelaMapper;
 
     /**
      * @param array<string, mixed> $globalServices
      */
     public function __construct(
         string $applicationRootDir,
+        string $gacelaPhpConfigFilename,
         array $globalServices,
-        string $gacelaPhpConfigFilename
+        ConfigGacelaMapper $configGacelaMapper
     ) {
         $this->applicationRootDir = $applicationRootDir;
-        $this->globalServices = $globalServices;
         $this->gacelaPhpConfigFilename = $gacelaPhpConfigFilename;
+        $this->globalServices = $globalServices;
+        $this->configGacelaMapper = $configGacelaMapper;
     }
 
     public function createGacelaFileConfig(): GacelaConfigFile
@@ -52,10 +57,9 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */
-        return GacelaConfigFile::fromArray([
-            'config' => $configGacelaClass->config(),
-            'mapping-interfaces' => $configGacelaClass->mappingInterfaces(),
-        ]);
+        return (new GacelaConfigFile())
+            ->setConfigs($this->configGacelaMapper->mapConfigItems($configGacelaClass->config()))
+            ->setMappingInterfaces($configGacelaClass->mappingInterfaces());
     }
 
     private function createDefaultGacelaPhpConfig(): GacelaConfigFile
@@ -63,12 +67,13 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         if (isset($this->globalServices['config'])) {
             /** @var array{
              *     config: array<array>|array{type:string,path:string,path_local:string},
-             *     mapping-interfaces: array<string,string|callable>,
+             *     mapping-interfaces: array<string,string|callable>|null,
              * } $configFromGlobalServices
              */
             $configFromGlobalServices = $this->globalServices;
-
-            return GacelaConfigFile::fromArray($configFromGlobalServices);
+            return (new GacelaConfigFile())
+                ->setConfigs($this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config']))
+                ->setMappingInterfaces($configFromGlobalServices['mapping-interfaces'] ?? []);
         }
 
         return GacelaConfigFile::withDefaults();

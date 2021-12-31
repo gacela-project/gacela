@@ -8,6 +8,7 @@ use Gacela\Framework\Config\ConfigInit;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use Gacela\Framework\Config\PathFinderInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -85,13 +86,10 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn(GacelaConfigFile::fromArray([
-                'config' => [
-                    [
-                        'type' => 'supported-type',
-                    ],
-                ],
-            ]));
+            ->willReturn((new GacelaConfigFile())
+                ->setConfigs([
+                    'supported-type' => new GacelaConfigItem('supported-type'),
+                ]));
 
         $reader = $this->createStub(ConfigReaderInterface::class);
         $reader->method('canRead')->willReturn(true);
@@ -116,16 +114,11 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn(GacelaConfigFile::fromArray([
-                'config' => [
-                    [
-                        'type' => 'supported-type1',
-                    ],
-                    [
-                        'type' => 'supported-type2',
-                    ],
-                ],
-            ]));
+            ->willReturn((new GacelaConfigFile())
+                ->setConfigs([
+                    'supported-type1' => new GacelaConfigItem('supported-type1'),
+                    'supported-type2' => new GacelaConfigItem('supported-type2'),
+                ]));
 
         $reader1 = $this->createStub(ConfigReaderInterface::class);
         $reader1->method('canRead')->willReturn(true);

@@ -78,12 +78,12 @@ jobs:
         run: ./vendor/bin/phpstan analyze -c phpstan.neon src
 
   tests:
+    name: Tests on PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php: ['7.4', '8.0', '8.1']
-    name: Tests on PHP ${{ matrix.php }} - ${{ matrix.operating-system }}
     steps:
       - uses: actions/checkout@v2
 
@@ -107,38 +107,14 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-ansi --no-progress
 
-      - name: Run tests
-        run: vendor/bin/phpunit
+      - name: Run unit tests
+        run: vendor/bin/phpunit --testsuite unit
 
-  bench-tests:
-    name: Bench tests on PHP ${{ matrix.php }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: [ '7.4']
-    steps:
-      - uses: actions/checkout@v2
+      - name: Run integration tests
+        run: vendor/bin/phpunit --testsuite integration
 
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          coverage: none
-          tools: composer
-
-      - name: Get composer cache directory
-        id: composer-cache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-ansi --no-progress
+      - name: Run feature tests
+        run: vendor/bin/phpunit --testsuite feature
 
       - name: Run PHPBench
         run: vendor/bin/phpbench run --iterations=3 --warmup=1 --report=aggregate

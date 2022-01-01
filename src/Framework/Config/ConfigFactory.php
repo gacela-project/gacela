@@ -8,6 +8,8 @@ use Gacela\Framework\Config;
 
 final class ConfigFactory
 {
+    private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
+
     /** @var array<string, mixed> */
     private array $globalServices;
 
@@ -19,20 +21,23 @@ final class ConfigFactory
         $this->globalServices = $globalServices;
     }
 
-    private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
-
     public function createGacelaConfigFileFactory(): GacelaConfigFileFactoryInterface
     {
-        /** @psalm-suppress DeprecatedConstant */
         return new GacelaConfigFileFactory(
             Config::getInstance()->getApplicationRootDir(),
+            self::GACELA_PHP_CONFIG_FILENAME,
             $this->globalServices,
-            self::GACELA_PHP_CONFIG_FILENAME
+            $this->createConfigGacelaMapper()
         );
     }
 
     public function createPathFinder(): PathFinderInterface
     {
         return new PathFinder();
+    }
+
+    private function createConfigGacelaMapper(): ConfigGacelaMapper
+    {
+        return new ConfigGacelaMapper();
     }
 }

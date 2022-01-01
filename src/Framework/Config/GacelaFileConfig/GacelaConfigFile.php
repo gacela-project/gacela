@@ -7,80 +7,37 @@ namespace Gacela\Framework\Config\GacelaFileConfig;
 final class GacelaConfigFile
 {
     /** @var array<string,GacelaConfigItem> */
-    private array $configs;
+    private array $configs = [];
 
     /** @var array<string,string|callable> */
-    private array $mappingInterfaces;
+    private array $mappingInterfaces = [];
 
     /**
      * @param array<string,GacelaConfigItem> $configs
-     * @param array<string,string|callable>  $mappingInterfaces
      */
-    private function __construct(
-        array $configs,
-        array $mappingInterfaces
-    ) {
+    public function setConfigs(array $configs): self
+    {
         $this->configs = $configs;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string,string|callable> $mappingInterfaces
+     */
+    public function setMappingInterfaces(array $mappingInterfaces): self
+    {
         $this->mappingInterfaces = $mappingInterfaces;
-    }
 
-    /**
-     * @param array{
-     *     config: array<array>|array{type:string,path:string,path_local:string},
-     *     mapping-interfaces: array<string,string|callable>,
-     * } $array
-     */
-    public static function fromArray(array $array): self
-    {
-        /** @var null|array<array> $array['config'] */
-        return new self(
-            self::getConfigItems($array['config'] ?? []),
-            $array['mapping-interfaces'] ?? []
-        );
-    }
-
-    /**
-     * @param array<array>|array{type:string,path:string,path_local:string} $config
-     *
-     * @return array<string,GacelaConfigItem>
-     */
-    private static function getConfigItems(array $config): array
-    {
-        if (self::isSingleConfigFile($config)) {
-            /** @var array $config */
-            $c = GacelaConfigItem::fromArray($config);
-            return [$c->type() => $c];
-        }
-
-        $result = [];
-
-        /** @var array<array{type:string,path:string,path_local:string}> $config */
-        foreach ($config as $configItem) {
-            $c = GacelaConfigItem::fromArray($configItem);
-            $result[$c->type()] = $c;
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param array<array>|array{type:string,path:string,path_local:string} $config
-     */
-    private static function isSingleConfigFile(array $config): bool
-    {
-        return isset($config['type'])
-            || isset($config['path'])
-            || isset($config['path_local']);
+        return $this;
     }
 
     public static function withDefaults(): self
     {
         $configItem = GacelaConfigItem::withDefaults();
 
-        return new self(
-            [$configItem->type() => $configItem],
-            []
-        );
+        return (new self())
+            ->setConfigs([$configItem->type() => $configItem]);
     }
 
     /**

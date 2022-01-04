@@ -11,7 +11,7 @@ final class MakeFileCommandTest extends TestCase
 {
     private const ENTRY_POINT = __DIR__ . '/../../../';
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
     }

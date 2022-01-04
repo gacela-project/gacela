@@ -11,13 +11,21 @@ final class MakeModuleCommandTest extends TestCase
 {
     private const ENTRY_POINT = __DIR__ . '/../../../';
 
+    protected function setUp(): void
+    {
+        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+    }
+
     /**
      * @dataProvider createModulesProvider
      */
     public function test_make_module(string $fileName, string $shortName): void
     {
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
-
         $command = sprintf('%sgacela make:module %s Gacela/TestModule', self::ENTRY_POINT, $shortName);
         exec($command, $output);
 
@@ -31,9 +39,6 @@ final class MakeModuleCommandTest extends TestCase
         self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}Factory.php");
         self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}Config.php");
         self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}DependencyProvider.php");
-
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
-        self::assertDirectoryDoesNotExist(self::ENTRY_POINT . 'src/TestModule');
     }
 
     public function createModulesProvider(): iterable

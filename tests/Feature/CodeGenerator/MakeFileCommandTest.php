@@ -11,21 +11,26 @@ final class MakeFileCommandTest extends TestCase
 {
     private const ENTRY_POINT = __DIR__ . '/../../../';
 
+    protected function setUp(): void
+    {
+        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+    }
+
     /**
      * @dataProvider createFilesProvider
      */
     public function test_make_file(string $action, string $fileName, string $shortName): void
     {
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
-
         $command = sprintf('%sgacela make:file %s Gacela/TestModule %s', self::ENTRY_POINT, $shortName, $action);
         exec($command, $output);
 
         self::assertSame("> Path 'src/TestModule/{$fileName}.php' created successfully", $output[0]);
         self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}.php");
-
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
-        self::assertDirectoryDoesNotExist(self::ENTRY_POINT . 'src/TestModule');
     }
 
     public function createFilesProvider(): iterable

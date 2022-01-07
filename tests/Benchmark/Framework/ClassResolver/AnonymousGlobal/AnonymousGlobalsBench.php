@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Benchmark\Framework\ClassResolver;
+namespace GacelaTest\Benchmark\Framework\ClassResolver\AnonymousGlobal;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractDependencyProvider;

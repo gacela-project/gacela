@@ -34,6 +34,11 @@ final class ConfigTest extends TestCase
         self::assertSame('default', $this->config->get('key', 'default'));
     }
 
+    public function test_null_as_default_value_from_undefined_key(): void
+    {
+        self::assertNull($this->config->get('key', null));
+    }
+
     public function test_get_using_custom_reader(): void
     {
         Config::setConfigReaders([

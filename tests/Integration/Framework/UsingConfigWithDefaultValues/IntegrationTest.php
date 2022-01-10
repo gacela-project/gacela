@@ -23,6 +23,7 @@ final class IntegrationTest extends TestCase
                 'config' => 1,
                 'config_local' => 2,
                 'override' => 5,
+                'allowing_null_as_default_value' => null,
             ],
             $facade->doSomething()
         );

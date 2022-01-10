@@ -13,6 +13,8 @@ use Gacela\Framework\Exception\ConfigException;
 
 final class Config
 {
+    public const DEFAULT_CONFIG_VALUE = 'Gacela\Framework\Config::DEFAULT_CONFIG_VALUE';
+
     private static ?self $instance = null;
 
     private string $applicationRootDir = '';
@@ -68,13 +70,13 @@ final class Config
      *
      * @return mixed
      */
-    public function get(string $key, $default = null)
+    public function get(string $key, $default = self::DEFAULT_CONFIG_VALUE)
     {
         if (empty($this->config)) {
             $this->init($this->getApplicationRootDir());
         }
 
-        if ($default !== null && !$this->hasValue($key)) {
+        if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasValue($key)) {
             return $default;
         }
 

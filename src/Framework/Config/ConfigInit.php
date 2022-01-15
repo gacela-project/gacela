@@ -15,11 +15,11 @@ final class ConfigInit
 
     private PathFinderInterface $pathFinder;
 
-    /** @var array<string,ConfigReaderInterface> */
+    /** @var array<string, ConfigReaderInterface> */
     private array $readers;
 
     /**
-     * @param array<string,ConfigReaderInterface> $readers
+     * @param array<string, ConfigReaderInterface> $readers
      */
     public function __construct(
         string $applicationRootDir,
@@ -34,7 +34,7 @@ final class ConfigInit
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array<string, mixed>
      */
     public function readAll(): array
     {
@@ -51,26 +51,25 @@ final class ConfigInit
     }
 
     /**
-     * @return string[]
+     * @return array<string>
      */
     private function scanAllConfigFiles(GacelaConfigFile $gacelaFileConfig): array
     {
         $configGroup = array_map(
-            fn (GacelaConfigItem $config): array => array_map(
-                static fn ($p): string => $p,
-                array_diff(
-                    $this->pathFinder->matchingPattern($this->generateAbsolutePath($config->path())),
-                    [$this->generateAbsolutePath($config->pathLocal())]
-                )
+            fn (GacelaConfigItem $config): array => array_diff(
+                $this->pathFinder->matchingPattern($this->generateAbsolutePath($config->path())),
+                [$this->generateAbsolutePath($config->pathLocal())]
             ),
             $gacelaFileConfig->getConfigs()
         );
 
-        return array_merge(...array_values($configGroup));
+        $groupsValues = array_values($configGroup);
+
+        return array_merge(...$groupsValues);
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array<string, mixed>
      */
     private function readConfigFromFile(GacelaConfigFile $gacelaConfigFile, string $absolutePath): array
     {
@@ -92,7 +91,7 @@ final class ConfigInit
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array<string, mixed>
      */
     private function readLocalConfigFile(GacelaConfigFile $gacelaConfigFile): array
     {

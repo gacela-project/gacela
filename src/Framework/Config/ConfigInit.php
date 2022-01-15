@@ -51,9 +51,11 @@ final class ConfigInit
     }
 
     /**
-     * @return array<string>
+     * All config files except the local config file.
+     *
+     * @return iterable<string>
      */
-    private function scanAllConfigFiles(GacelaConfigFile $gacelaFileConfig): array
+    private function scanAllConfigFiles(GacelaConfigFile $gacelaFileConfig): iterable
     {
         $configGroup = array_map(
             fn (GacelaConfigItem $config): array => array_diff(
@@ -65,7 +67,9 @@ final class ConfigInit
 
         $groupsValues = array_values($configGroup);
 
-        return array_merge(...$groupsValues);
+        foreach (array_merge(...$groupsValues) as $path) {
+            yield $path;
+        }
     }
 
     /**

@@ -59,7 +59,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         /** @psalm-suppress ArgumentTypeCoercion */
         return (new GacelaConfigFile())
             ->setConfigs($this->configGacelaMapper->mapConfigItems($configGacelaClass->config()))
-            ->setMappingInterfaces($configGacelaClass->mappingInterfaces());
+            ->setMappingInterfaces($configGacelaClass->mappingInterfaces($this->globalServices));
     }
 
     private function createDefaultGacelaPhpConfig(): GacelaConfigFile

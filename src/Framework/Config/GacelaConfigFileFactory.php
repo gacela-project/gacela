@@ -56,7 +56,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 
         /** @psalm-suppress ArgumentTypeCoercion */
         return (new GacelaConfigFile())
-            ->setConfigs($this->configGacelaMapper->mapConfigItems($configGacelaClass->config()))
+            ->setConfigItems($this->configGacelaMapper->mapConfigItems($configGacelaClass->config()))
             ->setMappingInterfaces($configGacelaClass->mappingInterfaces($this->globalServices));
     }
 
@@ -68,12 +68,12 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
          * } $configFromGlobalServices
          */
         $configFromGlobalServices = $this->globalServices;
-        $configs = $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'] ?? []);
+        $configItems = $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'] ?? []);
         $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
 
-        if (!empty($configs) || !empty($mappingInterfaces)) {
+        if (!empty($configItems) || !empty($mappingInterfaces)) {
             return (new GacelaConfigFile())
-                ->setConfigs($configs)
+                ->setConfigItems($configItems)
                 ->setMappingInterfaces($mappingInterfaces);
         }
 

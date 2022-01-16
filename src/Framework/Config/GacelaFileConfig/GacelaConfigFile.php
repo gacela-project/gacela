@@ -7,17 +7,17 @@ namespace Gacela\Framework\Config\GacelaFileConfig;
 final class GacelaConfigFile
 {
     /** @var array<string,GacelaConfigItem> */
-    private array $configs = [];
+    private array $configItems = [];
 
     /** @var array<class-string,class-string|callable> */
     private array $mappingInterfaces = [];
 
     /**
-     * @param array<string,GacelaConfigItem> $configs
+     * @param array<string,GacelaConfigItem> $configItems
      */
-    public function setConfigs(array $configs): self
+    public function setConfigItems(array $configItems): self
     {
-        $this->configs = $configs;
+        $this->configItems = $configItems;
 
         return $this;
     }
@@ -37,15 +37,15 @@ final class GacelaConfigFile
         $configItem = GacelaConfigItem::withDefaults();
 
         return (new self())
-            ->setConfigs([$configItem->type() => $configItem]);
+            ->setConfigItems([$configItem->type() => $configItem]);
     }
 
     /**
      * @return array<string,GacelaConfigItem>
      */
-    public function getConfigs(): array
+    public function getConfigItems(): array
     {
-        return $this->configs;
+        return $this->configItems;
     }
 
     /**

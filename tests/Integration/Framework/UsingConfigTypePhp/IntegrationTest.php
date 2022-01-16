@@ -21,8 +21,9 @@ final class IntegrationTest extends TestCase
         self::assertSame(
             [
                 'config' => 1,
-                'config_local' => 2,
-                'override' => 5,
+                'override' => 2,
+                'local' => 3,
+                'override_from_local' => 4,
             ],
             $facade->doSomething()
         );

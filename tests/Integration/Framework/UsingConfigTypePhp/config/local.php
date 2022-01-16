@@ -6,8 +6,8 @@ return new class () implements JsonSerializable {
     public function jsonSerialize(): array
     {
         return [
-            'config_local' => 2,
-            'override' => 5,
+            'local_key' => 3,
+            'override_key_from_local' => 4,
         ];
     }
 };

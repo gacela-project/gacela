@@ -87,7 +87,7 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
             ->willReturn((new GacelaConfigFile())
-                ->setConfigs([
+                ->setConfigItems([
                     'supported-type' => new GacelaConfigItem('supported-type'),
                 ]));
 
@@ -115,7 +115,7 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
             ->willReturn((new GacelaConfigFile())
-                ->setConfigs([
+                ->setConfigItems([
                     'supported-type1' => new GacelaConfigItem('supported-type1'),
                     'supported-type2' => new GacelaConfigItem('supported-type2'),
                 ]));

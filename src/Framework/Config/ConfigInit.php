@@ -16,21 +16,21 @@ final class ConfigInit
     private PathFinderInterface $pathFinder;
 
     /** @var array<string, ConfigReaderInterface> */
-    private array $readers;
+    private array $configReaders;
 
     /**
-     * @param array<string, ConfigReaderInterface> $readers
+     * @param array<string, ConfigReaderInterface> $configReaders
      */
     public function __construct(
         string $applicationRootDir,
         GacelaConfigFileFactoryInterface $configFactory,
         PathFinderInterface $pathFinder,
-        array $readers
+        array $configReaders
     ) {
         $this->applicationRootDir = $applicationRootDir;
         $this->configFactory = $configFactory;
         $this->pathFinder = $pathFinder;
-        $this->readers = $readers;
+        $this->configReaders = $configReaders;
     }
 
     /**
@@ -62,7 +62,7 @@ final class ConfigInit
                 $this->pathFinder->matchingPattern($this->generateAbsolutePath($config->path())),
                 [$this->generateAbsolutePath($config->pathLocal())]
             ),
-            $gacelaFileConfig->getConfigs()
+            $gacelaFileConfig->getConfigItems()
         );
 
         $groupsValues = array_values($configGroup);
@@ -78,10 +78,10 @@ final class ConfigInit
     private function readConfigFromFile(GacelaConfigFile $gacelaConfigFile, string $absolutePath): array
     {
         $result = [];
-        $configs = $gacelaConfigFile->getConfigs();
+        $configItems = $gacelaConfigFile->getConfigItems();
 
-        foreach ($this->readers as $type => $reader) {
-            $config = $configs[$type] ?? null;
+        foreach ($this->configReaders as $type => $reader) {
+            $config = $configItems[$type] ?? null;
             if ($config === null) {
                 continue;
             }
@@ -100,10 +100,10 @@ final class ConfigInit
     private function readLocalConfigFile(GacelaConfigFile $gacelaConfigFile): array
     {
         $result = [];
-        $configs = $gacelaConfigFile->getConfigs();
+        $configItems = $gacelaConfigFile->getConfigItems();
 
-        foreach ($this->readers as $type => $reader) {
-            $config = $configs[$type] ?? null;
+        foreach ($this->configReaders as $type => $reader) {
+            $config = $configItems[$type] ?? null;
             if ($config === null) {
                 continue;
             }

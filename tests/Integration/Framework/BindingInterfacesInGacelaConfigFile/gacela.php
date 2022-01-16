@@ -11,7 +11,7 @@ use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalCo
 use GacelaTest\Integration\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
 return static fn () => new class () extends AbstractConfigGacela {
-    public function mappingInterfaces(): array
+    public function mappingInterfaces(array $globalServices): array
     {
         return [
             // Resolve an abstract class from a concrete instance of a class

@@ -14,7 +14,7 @@ final class Facade extends AbstractFacade
     public function generateCompanyAndName(): string
     {
         return $this->getFactory()
-            ->createCompanyService()
+            ->createGreeterService()
             ->generateCompanyAndName();
     }
 }

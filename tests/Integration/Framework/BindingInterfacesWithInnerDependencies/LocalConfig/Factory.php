@@ -6,19 +6,19 @@ namespace GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencie
 
 use Gacela\Framework\AbstractFactory;
 use GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
-use GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\NumberService;
+use GacelaTest\Integration\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterService;
 
 final class Factory extends AbstractFactory
 {
-    private GreeterGeneratorInterface $companyGenerator;
+    private GreeterGeneratorInterface $greeterGenerator;
 
-    public function __construct(GreeterGeneratorInterface $companyGenerator)
+    public function __construct(GreeterGeneratorInterface $greeterGenerator)
     {
-        $this->companyGenerator = $companyGenerator;
+        $this->greeterGenerator = $greeterGenerator;
     }
 
-    public function createCompanyService(): NumberService
+    public function createGreeterService(): GreeterService
     {
-        return new NumberService($this->companyGenerator);
+        return new GreeterService($this->greeterGenerator);
     }
 }

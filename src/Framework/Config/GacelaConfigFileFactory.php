@@ -43,37 +43,38 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
             return $this->createDefaultGacelaPhpConfig();
         }
 
-        /** @var array|callable|mixed $configGacela */
         $configGacela = include $gacelaPhpPath;
-
         if (!is_callable($configGacela)) {
             throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
         }
 
         /** @var AbstractConfigGacela $configGacelaClass */
-        $configGacelaClass = $configGacela($this->globalServices);
+        $configGacelaClass = $configGacela();
         if (!is_subclass_of($configGacelaClass, AbstractConfigGacela::class)) {
             throw new RuntimeException('Your anonymous class must extends AbstractConfigGacela');
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */
         return (new GacelaConfigFile())
-            ->setConfigs($this->configGacelaMapper->mapConfigItems($configGacelaClass->config()))
-            ->setMappingInterfaces($configGacelaClass->mappingInterfaces());
+            ->setConfigItems($this->configGacelaMapper->mapConfigItems($configGacelaClass->config()))
+            ->setMappingInterfaces($configGacelaClass->mappingInterfaces($this->globalServices));
     }
 
     private function createDefaultGacelaPhpConfig(): GacelaConfigFile
     {
-        if (isset($this->globalServices['config'])) {
-            /** @var array{
-             *     config: array<array>|array{type:string,path:string,path_local:string},
-             *     mapping-interfaces: array<string,string|callable>|null,
-             * } $configFromGlobalServices
-             */
-            $configFromGlobalServices = $this->globalServices;
+        /** @var array{
+         *     config: array<array>|array{type:string,path:string,path_local:string}|null,
+         *     mapping-interfaces: array<class-string,class-string|callable>|null,
+         * } $configFromGlobalServices
+         */
+        $configFromGlobalServices = $this->globalServices;
+        $configItems = $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'] ?? []);
+        $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
+
+        if (!empty($configItems) || !empty($mappingInterfaces)) {
             return (new GacelaConfigFile())
-                ->setConfigs($this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config']))
-                ->setMappingInterfaces($configFromGlobalServices['mapping-interfaces'] ?? []);
+                ->setConfigItems($configItems)
+                ->setMappingInterfaces($mappingInterfaces);
         }
 
         return GacelaConfigFile::withDefaults();

@@ -17,7 +17,7 @@ abstract class AbstractConfigGacela
     /**
      * @param array<string,mixed> $globalServices
      *
-     * @return array<string,string|callable>
+     * @return array<class-string,class-string|callable>
      */
     public function mappingInterfaces(array $globalServices): array
     {

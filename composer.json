@@ -17,13 +17,13 @@
     "require": {
         "php": ">=7.4",
         "ext-json": "*",
-        "symfony/console": "^5.3"
+        "symfony/console": "^5.4"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
         "vimeo/psalm": "^4.10",
-        "phpstan/phpstan": "^1.0",
-        "friendsofphp/php-cs-fixer": "^3.2",
+        "phpstan/phpstan": "^1.4",
+        "friendsofphp/php-cs-fixer": "^3.5",
         "phpbench/phpbench": "^1.1",
         "symfony/var-dumper": "^5.3"
     },
@@ -46,6 +46,9 @@
     "config": {
         "platform": {
             "php": "7.4"
+        },
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true
         }
     },
     "scripts": {

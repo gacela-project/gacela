@@ -1,10 +1,11 @@
 # Changelog
 
-### Unreleased
-#### 2022-01-XX
+### 0.11.0
+#### 2022-01-18
 
-- Updated `gacela.php` config file:
-  - The `$globalServices` are passed into `mappingInterfaces()` and not as `AbstractConfigGacela` constructor argument.
+- Deleted deprecated array config in gacela.php
+- Allow null as default config value
+- The globalServices are passed into mappingInterfaces() and not as constructor argument.
 
 ### 0.10.0
 #### 2021-10-04

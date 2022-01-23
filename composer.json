@@ -1,5 +1,6 @@
 {
     "name": "gacela-project/gacela",
+    "homepage": "https://gacela-project.com/",
     "type": "library",
     "description": "Gacela Framework",
     "keywords": ["php", "modular", "kernel"],

@@ -8,8 +8,6 @@ use Gacela\Framework\Exception\ConfigException;
 
 abstract class AbstractConfig
 {
-    use ConfigResolverAwareTrait;
-
     /**
      * @param null|mixed $default
      *
@@ -20,5 +18,10 @@ abstract class AbstractConfig
     protected function get(string $key, $default = Config::DEFAULT_CONFIG_VALUE)
     {
         return Config::getInstance()->get($key, $default);
+    }
+
+    protected function getAppRootDir(): string
+    {
+        return Config::getInstance()->getApplicationRootDir();
     }
 }

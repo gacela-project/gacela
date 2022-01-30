@@ -29,7 +29,7 @@ trait ClassResolverExceptionTrait
             $this->findClassNameExample($callerClassInfo, $resolvableType)
         ) . PHP_EOL;
 
-        return $message . Backtrace::get();
+        return $message . (new Backtrace())->get();
     }
 
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string

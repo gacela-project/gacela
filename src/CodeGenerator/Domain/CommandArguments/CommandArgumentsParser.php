@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator\Domain\CommandArguments;
 
 use InvalidArgumentException;
+use function count;
 
 final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {

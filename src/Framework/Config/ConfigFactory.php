@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
-use Gacela\Framework\Config;
-
 final class ConfigFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
+
+    private string $appRootDir;
 
     /** @var array<string,mixed> */
     private array $globalServices;
@@ -16,15 +16,16 @@ final class ConfigFactory
     /**
      * @param array<string,mixed> $globalServices
      */
-    public function __construct(array $globalServices)
+    public function __construct(string $appRootDir, array $globalServices)
     {
+        $this->appRootDir = $appRootDir;
         $this->globalServices = $globalServices;
     }
 
     public function createGacelaConfigFileFactory(): GacelaConfigFileFactoryInterface
     {
         return new GacelaConfigFileFactory(
-            Config::getInstance()->getApplicationRootDir(),
+            $this->appRootDir,
             self::GACELA_PHP_CONFIG_FILENAME,
             $this->globalServices,
             $this->createConfigGacelaMapper()

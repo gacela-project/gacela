@@ -128,7 +128,10 @@ final class Config
     public function getFactory(): ConfigFactory
     {
         if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory($this->globalConfigServices);
+            $this->configFactory = new ConfigFactory(
+                $this->getApplicationRootDir(),
+                $this->globalConfigServices
+            );
         }
 
         return $this->configFactory;

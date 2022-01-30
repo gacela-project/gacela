@@ -22,6 +22,6 @@ abstract class AbstractConfig
 
     protected function getAppRootDir(): string
     {
-        return Config::getInstance()->getApplicationRootDir();
+        return Config::getInstance()->getAppRootDir();
     }
 }

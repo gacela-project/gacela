@@ -17,7 +17,7 @@ final class Config
 
     private static ?self $instance = null;
 
-    private string $applicationRootDir = '';
+    private string $appRootDir = '';
 
     /** @var array<string,mixed> */
     private array $config = [];
@@ -73,7 +73,7 @@ final class Config
     public function get(string $key, $default = self::DEFAULT_CONFIG_VALUE)
     {
         if (empty($this->config)) {
-            $this->init($this->getApplicationRootDir());
+            $this->init($this->getAppRootDir());
         }
 
         if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasValue($key)) {
@@ -90,25 +90,41 @@ final class Config
     /**
      * @throws ConfigException
      */
-    public function init(string $applicationRootDir): void
+    public function init(string $appRootDir): void
     {
-        $this->setApplicationRootDir($applicationRootDir);
+        $this->setAppRootDir($appRootDir);
 
         $this->config = $this->loadAllConfigValues();
     }
 
-    public function setApplicationRootDir(string $dir): void
+    public function setAppRootDir(string $dir): void
     {
-        $this->applicationRootDir = $dir;
+        $this->appRootDir = $dir;
     }
 
-    public function getApplicationRootDir(): string
+    public function getAppRootDir(): string
     {
-        if (empty($this->applicationRootDir)) {
-            $this->applicationRootDir = getcwd() ?: '';
+        if (empty($this->appRootDir)) {
+            $this->appRootDir = getcwd() ?: '';
         }
 
-        return $this->applicationRootDir;
+        return $this->appRootDir;
+    }
+
+    /**
+     * @deprecated Use `setAppRootDir(string $dir)` instead
+     */
+    public function setApplicationRootDir(string $dir): void
+    {
+        $this->setAppRootDir($dir);
+    }
+
+    /**
+     * @deprecated use `getAppRootDir()` instead
+     */
+    public function getApplicationRootDir(): string
+    {
+        return $this->getAppRootDir();
     }
 
     /**
@@ -129,7 +145,7 @@ final class Config
     {
         if (null === $this->configFactory) {
             $this->configFactory = new ConfigFactory(
-                $this->getApplicationRootDir(),
+                $this->getAppRootDir(),
                 $this->globalConfigServices
             );
         }
@@ -148,7 +164,7 @@ final class Config
     private function loadAllConfigValues(): array
     {
         $configLoader = new ConfigLoader(
-            $this->getApplicationRootDir(),
+            $this->getAppRootDir(),
             $this->getFactory()->createGacelaConfigFileFactory(),
             $this->getFactory()->createPathFinder(),
             $this->configReaders

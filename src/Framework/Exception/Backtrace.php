@@ -26,7 +26,7 @@ final class Backtrace
     }
 
     /**
-     * @param array<array-key, mixed> $backtrace
+     * @param array<array-key,mixed> $backtrace
      */
     private function getTraceLine(array $backtrace): string
     {
@@ -42,7 +42,7 @@ final class Backtrace
     }
 
     /**
-     * @param array<array-key, mixed> $backtrace
+     * @param array<array-key,mixed> $backtrace
      */
     private function getTraceLineFromTestCase(array $backtrace): string
     {

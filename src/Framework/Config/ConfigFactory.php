@@ -10,11 +10,11 @@ final class ConfigFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private array $globalServices;
 
     /**
-     * @param array<string, mixed> $globalServices
+     * @param array<string,mixed> $globalServices
      */
     public function __construct(array $globalServices)
     {

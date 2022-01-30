@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigFactory;
-use Gacela\Framework\Config\ConfigInit;
+use Gacela\Framework\Config\ConfigLoader;
 use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
@@ -17,21 +17,21 @@ final class Config
 
     private static ?self $instance = null;
 
-    private string $applicationRootDir = '';
+    private string $appRootDir = '';
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private array $config = [];
 
-    /** @var array<string, ConfigReaderInterface> */
+    /** @var array<string,ConfigReaderInterface> */
     private array $configReaders;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private array $globalConfigServices = [];
 
     private ?ConfigFactory $configFactory = null;
 
     /**
-     * @param array<string, ConfigReaderInterface> $configReaders
+     * @param array<string,ConfigReaderInterface> $configReaders
      */
     private function __construct(array $configReaders)
     {
@@ -56,7 +56,7 @@ final class Config
     }
 
     /**
-     * @param array<string, ConfigReaderInterface> $configReaders
+     * @param array<string,ConfigReaderInterface> $configReaders
      */
     public static function setConfigReaders(array $configReaders = []): void
     {
@@ -73,7 +73,7 @@ final class Config
     public function get(string $key, $default = self::DEFAULT_CONFIG_VALUE)
     {
         if (empty($this->config)) {
-            $this->init($this->getApplicationRootDir());
+            $this->init($this->getAppRootDir());
         }
 
         if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasValue($key)) {
@@ -90,34 +90,45 @@ final class Config
     /**
      * @throws ConfigException
      */
-    public function init(string $applicationRootDir): void
+    public function init(string $appRootDir): void
     {
-        $this->setApplicationRootDir($applicationRootDir);
+        $this->setAppRootDir($appRootDir);
 
-        $this->config = (new ConfigInit(
-            $this->getApplicationRootDir(),
-            $this->getFactory()->createGacelaConfigFileFactory(),
-            $this->getFactory()->createPathFinder(),
-            $this->configReaders
-        ))->readAll();
+        $this->config = $this->loadAllConfigValues();
     }
 
-    public function setApplicationRootDir(string $dir): void
+    public function setAppRootDir(string $dir): void
     {
-        $this->applicationRootDir = $dir;
+        $this->appRootDir = $dir;
     }
 
-    public function getApplicationRootDir(): string
+    public function getAppRootDir(): string
     {
-        if (empty($this->applicationRootDir)) {
-            $this->applicationRootDir = getcwd() ?: '';
+        if (empty($this->appRootDir)) {
+            $this->appRootDir = getcwd() ?: '';
         }
 
-        return $this->applicationRootDir;
+        return $this->appRootDir;
     }
 
     /**
-     * @param array<string, mixed> $globalConfigServices
+     * @deprecated Use `setAppRootDir(string $dir)` instead
+     */
+    public function setApplicationRootDir(string $dir): void
+    {
+        $this->setAppRootDir($dir);
+    }
+
+    /**
+     * @deprecated use `getAppRootDir()` instead
+     */
+    public function getApplicationRootDir(): string
+    {
+        return $this->getAppRootDir();
+    }
+
+    /**
+     * @param array<string,mixed> $globalConfigServices
      */
     public function setGlobalConfigServices(array $globalConfigServices): self
     {
@@ -133,7 +144,10 @@ final class Config
     public function getFactory(): ConfigFactory
     {
         if (null === $this->configFactory) {
-            $this->configFactory = new ConfigFactory($this->globalConfigServices);
+            $this->configFactory = new ConfigFactory(
+                $this->getAppRootDir(),
+                $this->globalConfigServices
+            );
         }
 
         return $this->configFactory;
@@ -142,5 +156,20 @@ final class Config
     private function hasValue(string $key): bool
     {
         return isset($this->config[$key]);
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function loadAllConfigValues(): array
+    {
+        $configLoader = new ConfigLoader(
+            $this->getAppRootDir(),
+            $this->getFactory()->createGacelaConfigFileFactory(),
+            $this->getFactory()->createPathFinder(),
+            $this->configReaders
+        );
+
+        return $configLoader->loadAll();
     }
 }

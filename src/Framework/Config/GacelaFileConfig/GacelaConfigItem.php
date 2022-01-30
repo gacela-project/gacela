@@ -26,7 +26,7 @@ final class GacelaConfigItem
     }
 
     /**
-     * @param array<array-key, mixed> $item
+     * @param array<array-key,mixed> $item
      */
     public static function fromArray(array $item): self
     {

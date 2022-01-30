@@ -15,13 +15,13 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 
     private string $gacelaPhpConfigFilename;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private array $globalServices;
 
     private ConfigGacelaMapper $configGacelaMapper;
 
     /**
-     * @param array<string, mixed> $globalServices
+     * @param array<string,mixed> $globalServices
      */
     public function __construct(
         string $applicationRootDir,

@@ -7,7 +7,7 @@ namespace Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
-final class ConfigInit
+final class ConfigLoader
 {
     private string $applicationRootDir;
 
@@ -15,11 +15,11 @@ final class ConfigInit
 
     private PathFinderInterface $pathFinder;
 
-    /** @var array<string, ConfigReaderInterface> */
+    /** @var array<string,ConfigReaderInterface> */
     private array $configReaders;
 
     /**
-     * @param array<string, ConfigReaderInterface> $configReaders
+     * @param array<string,ConfigReaderInterface> $configReaders
      */
     public function __construct(
         string $applicationRootDir,
@@ -34,9 +34,9 @@ final class ConfigInit
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string,mixed>
      */
-    public function readAll(): array
+    public function loadAll(): array
     {
         $gacelaFileConfig = $this->configFactory->createGacelaFileConfig();
         $configs = [];
@@ -73,7 +73,7 @@ final class ConfigInit
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string,mixed>
      */
     private function readConfigFromFile(GacelaConfigFile $gacelaConfigFile, string $absolutePath): array
     {
@@ -95,7 +95,7 @@ final class ConfigInit
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string,mixed>
      */
     private function readLocalConfigFile(GacelaConfigFile $gacelaConfigFile): array
     {

@@ -19,6 +19,9 @@ abstract class AbstractFacade
         return $this->factory;
     }
 
+    /**
+     * @throws ClassResolver\Factory\FactoryNotFoundException
+     */
     private function resolveFactory(): AbstractFactory
     {
         return $this->createFactoryResolver()->resolve($this);

@@ -12,7 +12,7 @@ abstract class AbstractFactory
 {
     use ConfigResolverAwareTrait;
 
-    /** @var Container[] */
+    /** @var array<string,Container> */
     private static array $containers = [];
 
     /**
@@ -22,9 +22,7 @@ abstract class AbstractFactory
      */
     protected function getProvidedDependency(string $key)
     {
-        $container = $this->getContainer();
-
-        return $container->get($key);
+        return $this->getContainer()->get($key);
     }
 
     private function getContainer(): Container
@@ -47,6 +45,9 @@ abstract class AbstractFactory
         return $container;
     }
 
+    /**
+     * @throws ClassResolver\DependencyProvider\DependencyProviderNotFoundException
+     */
     private function resolveDependencyProvider(): AbstractDependencyProvider
     {
         return $this->createDependencyProviderResolver()->resolve($this);

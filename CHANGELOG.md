@@ -1,10 +1,15 @@
 # Changelog
 
+### Unreleased
+
+- Add getAppRootDir() to AbstractConfig.
+- Deprecate getApplicationRootDir() from Config. Use getAppRootDir() instead.
+
 ### 0.11.0
 #### 2022-01-18
 
-- Deleted deprecated array config in gacela.php
-- Allow null as default config value
+- Deleted deprecated array config in gacela.php.
+- Allow null as default config value.
 - The globalServices are passed into mappingInterfaces() and not as constructor argument.
 
 ### 0.10.0

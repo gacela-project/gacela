@@ -4,55 +4,42 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Exception;
 
-/**
- * @codeCoverageIgnore
- */
-final class Backtrace
+class Backtrace
 {
     private string $backtrace = '';
 
-    public static function get(): string
+    public function get(): string
     {
-        return (new self())->backtrace;
-    }
-
-    private function __construct()
-    {
-        $backtraceCollection = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-
-        foreach ($backtraceCollection as $backtrace) {
+        foreach ($this->getBacktraces() as $backtrace) {
             $this->backtrace .= $this->getTraceLine($backtrace) . PHP_EOL;
         }
+
+        return $this->backtrace;
     }
 
     /**
-     * @param array<array-key,mixed> $backtrace
+     * @param array{file:string, line:int} $backtrace
      */
     private function getTraceLine(array $backtrace): string
     {
-        /** @var null|string $file */
-        $file = $backtrace['file'];
-        if (isset($file)) {
-            /** @var string $line */
-            $line = $backtrace['line'];
-            return $file . ':' . $line;
-        }
-
-        return $this->getTraceLineFromTestCase($backtrace);
+        return $backtrace['file'] . ':' . $backtrace['line'];
     }
 
     /**
-     * @param array<array-key,mixed> $backtrace
+     * @return list<array{
+     *     args?: list<mixed>,
+     *     class?: class-string,
+     *     file: string,
+     *     function: string,
+     *     line: int,
+     *     object?: object,
+     *     type?: string
+     * }>
+     *
+     * @internal for testing purposes
      */
-    private function getTraceLineFromTestCase(array $backtrace): string
+    public function getBacktraces(): array
     {
-        /** @var string $class */
-        $class = $backtrace['class'];
-        /** @var string $type */
-        $type = $backtrace['type'];
-        /** @var string $function */
-        $function = $backtrace['function'];
-
-        return $class . $type . $function;
+        return debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);//@phpstan-ignore-line
     }
 }

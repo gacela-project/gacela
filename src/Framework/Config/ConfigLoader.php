@@ -46,6 +46,7 @@ final class ConfigLoader
         }
 
         $configs[] = $this->readLocalConfigFile($gacelaFileConfig);
+        // dd($configs);
 
         return array_merge(...$configs);
     }

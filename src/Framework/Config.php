@@ -44,11 +44,6 @@ final class Config
         return self::$instance;
     }
 
-    public static function resetInstance(): void
-    {
-        self::$instance = null;
-    }
-
     /**
      * @param array<string,ConfigReaderInterface> $configReaders
      */
@@ -65,7 +60,6 @@ final class Config
 
         return $this;
     }
-
 
     /**
      * @param null|mixed $default

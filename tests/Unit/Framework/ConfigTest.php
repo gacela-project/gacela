@@ -13,17 +13,17 @@ final class ConfigTest extends TestCase
     public function test_get_undefined_key(): void
     {
         $this->expectExceptionMessageMatches('/Could not find config key "undefined-key"/');
-        (Config::getInstance())->get('undefined-key');
+        Config::getInstance()->get('undefined-key');
     }
 
     public function test_get_default_value_from_undefined_key(): void
     {
-        self::assertSame('default', (Config::getInstance())->get('undefined-key', 'default'));
+        self::assertSame('default', Config::getInstance()->get('undefined-key', 'default'));
     }
 
     public function test_null_as_default_value_from_undefined_key(): void
     {
-        self::assertNull((Config::getInstance())->get('undefined-key', null));
+        self::assertNull(Config::getInstance()->get('undefined-key', null));
     }
 
     public function test_get_using_custom_reader(): void

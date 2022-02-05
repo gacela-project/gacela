@@ -29,6 +29,7 @@
         "symfony/var-dumper": "^5.4"
     },
     "suggest": {
+        "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files"
     },
     "autoload": {

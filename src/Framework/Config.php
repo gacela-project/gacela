@@ -6,7 +6,6 @@ namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\ConfigLoader;
-use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Exception\ConfigException;
@@ -50,10 +49,7 @@ final class Config
     public function setConfigReaders(array $configReaders = []): self
     {
         if (empty($configReaders)) {
-            $configReaders = [
-                'php' => new PhpConfigReader(),
-                'env' => new EnvConfigReader(),
-            ];
+            $configReaders = ['php' => new PhpConfigReader()];
         }
 
         $this->configReaders = $configReaders;

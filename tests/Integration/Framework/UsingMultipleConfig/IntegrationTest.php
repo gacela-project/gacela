@@ -4,14 +4,34 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\UsingMultipleConfig;
 
+use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Gacela;
+use GacelaTest\Integration\Framework\UsingMultipleConfig\LocalConfig\Domain\SimpleEnvConfigReader;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        $globalServices = [
+            'config' => [
+                [
+                    'type' => 'env',
+                    'path' => 'config/.env*',
+                ],
+                [
+                    'type' => 'php',
+                    'path' => 'config/*.php',
+                ],
+            ],
+        ];
+
+        $configReaders = [
+            'php' => new PhpConfigReader(),
+            'env' => new SimpleEnvConfigReader(),
+        ];
+
+        Gacela::bootstrap(__DIR__, $globalServices, $configReaders);
     }
 
     public function test_load_multiple_config_files(): void

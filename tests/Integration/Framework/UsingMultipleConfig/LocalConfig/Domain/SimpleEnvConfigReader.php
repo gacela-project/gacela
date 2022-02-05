@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config\ConfigReader;
+namespace GacelaTest\Integration\Framework\UsingMultipleConfig\LocalConfig\Domain;
 
 use Gacela\Framework\Config\ConfigReaderInterface;
 
-final class EnvConfigReader implements ConfigReaderInterface
+final class SimpleEnvConfigReader implements ConfigReaderInterface
 {
     public function canRead(string $absolutePath): bool
     {

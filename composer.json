@@ -22,13 +22,14 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
-        "vimeo/psalm": "^4.19",
+        "vimeo/psalm": "^4.20",
         "phpstan/phpstan": "^1.4",
         "friendsofphp/php-cs-fixer": "^3.5",
         "phpbench/phpbench": "^1.2",
         "symfony/var-dumper": "^5.4"
     },
     "suggest": {
+        "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files"
     },
     "autoload": {
@@ -67,6 +68,10 @@
             "@test-unit",
             "@test-integration",
             "@test-feature"
+        ],
+        "static-clear-cache": [
+            "vendor/bin/psalm --clear-cache",
+            "vendor/bin/phpstan clear-result-cache"
         ],
         "test-unit": "./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",

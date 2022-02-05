@@ -6,7 +6,6 @@ namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\ConfigLoader;
-use Gacela\Framework\Config\ConfigReader\EnvConfigReader;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Exception\ConfigException;
@@ -30,37 +29,32 @@ final class Config
 
     private ?ConfigFactory $configFactory = null;
 
-    /**
-     * @param array<string,ConfigReaderInterface> $configReaders
-     */
-    private function __construct(array $configReaders)
+    private function __construct()
     {
-        $this->configReaders = $configReaders;
+        $this->setConfigReaders([]);
     }
 
     public static function getInstance(): self
     {
         if (self::$instance === null) {
-            self::$instance = new self([
-                'php' => new PhpConfigReader(),
-                'env' => new EnvConfigReader(),
-            ]);
+            self::$instance = new self();
         }
 
         return self::$instance;
     }
 
-    public static function resetInstance(): void
-    {
-        self::$instance = null;
-    }
-
     /**
      * @param array<string,ConfigReaderInterface> $configReaders
      */
-    public static function setConfigReaders(array $configReaders = []): void
+    public function setConfigReaders(array $configReaders = []): self
     {
-        self::$instance = new self($configReaders);
+        if (empty($configReaders)) {
+            $configReaders = ['php' => new PhpConfigReader()];
+        }
+
+        $this->configReaders = $configReaders;
+
+        return $this;
     }
 
     /**
@@ -73,7 +67,7 @@ final class Config
     public function get(string $key, $default = self::DEFAULT_CONFIG_VALUE)
     {
         if (empty($this->config)) {
-            $this->init($this->getAppRootDir());
+            $this->init();
         }
 
         if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasValue($key)) {
@@ -90,24 +84,24 @@ final class Config
     /**
      * @throws ConfigException
      */
-    public function init(string $appRootDir): void
+    public function init(): void
     {
-        $this->setAppRootDir($appRootDir);
-
         $this->config = $this->loadAllConfigValues();
     }
 
-    public function setAppRootDir(string $dir): void
+    public function setAppRootDir(string $dir): self
     {
         $this->appRootDir = $dir;
-    }
 
-    public function getAppRootDir(): string
-    {
         if (empty($this->appRootDir)) {
             $this->appRootDir = getcwd() ?: '';
         }
 
+        return $this;
+    }
+
+    public function getAppRootDir(): string
+    {
         return $this->appRootDir;
     }
 

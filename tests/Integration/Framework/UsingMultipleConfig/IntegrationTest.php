@@ -24,14 +24,13 @@ final class IntegrationTest extends TestCase
                     'path' => 'config/*.php',
                 ],
             ],
+            'config-readers' =>  [
+                'php' => new PhpConfigReader(),
+                'env' => new SimpleEnvConfigReader(),
+            ],
         ];
 
-        $configReaders = [
-            'php' => new PhpConfigReader(),
-            'env' => new SimpleEnvConfigReader(),
-        ];
-
-        Gacela::bootstrap(__DIR__, $globalServices, $configReaders);
+        Gacela::bootstrap(__DIR__, $globalServices);
     }
 
     public function test_load_multiple_config_files(): void

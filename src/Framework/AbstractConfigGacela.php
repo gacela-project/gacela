@@ -4,12 +4,26 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Config\ConfigReaderInterface;
+
 abstract class AbstractConfigGacela
 {
     /**
-     * @return array<array>|array{type:string,path:string,path_local:string}
+     * @return array<array>|array{
+     *     type?:string,
+     *     path?:string,
+     *     path_local?:string
+     * }
      */
     public function config(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array<string,ConfigReaderInterface>
+     */
+    public function configReaders(): array
     {
         return [];
     }

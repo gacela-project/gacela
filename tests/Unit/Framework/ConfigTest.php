@@ -28,18 +28,20 @@ final class ConfigTest extends TestCase
 
     public function test_get_using_custom_reader(): void
     {
-        Config::getInstance()->setConfigReaders([
-            Config\GacelaFileConfig\GacelaConfigItem::DEFAULT_TYPE => new class () implements ConfigReaderInterface {
-                public function read(string $absolutePath): array
-                {
-                    return ['key' => 'value'];
-                }
+        Config::getInstance()->setGlobalServices([
+            'config-readers' => [
+                Config\GacelaFileConfig\GacelaConfigItem::DEFAULT_TYPE => new class () implements ConfigReaderInterface {
+                    public function read(string $absolutePath): array
+                    {
+                        return ['key' => 'value'];
+                    }
 
-                public function canRead(string $absolutePath): bool
-                {
-                    return true;
-                }
-            },
+                    public function canRead(string $absolutePath): bool
+                    {
+                        return true;
+                    }
+                },
+            ],
         ]);
 
         self::assertSame('value', Config::getInstance()->get('key'));

@@ -6,8 +6,6 @@ namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\ConfigLoader;
-use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
-use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Exception\ConfigException;
 
 final class Config
@@ -21,17 +19,13 @@ final class Config
     /** @var array<string,mixed> */
     private array $config = [];
 
-    /** @var array<string,ConfigReaderInterface> */
-    private array $configReaders;
-
     /** @var array<string,mixed> */
-    private array $globalConfigServices = [];
+    private array $globalServices = [];
 
     private ?ConfigFactory $configFactory = null;
 
     private function __construct()
     {
-        $this->setConfigReaders([]);
     }
 
     public static function getInstance(): self
@@ -41,20 +35,6 @@ final class Config
         }
 
         return self::$instance;
-    }
-
-    /**
-     * @param array<string,ConfigReaderInterface> $configReaders
-     */
-    public function setConfigReaders(array $configReaders = []): self
-    {
-        if (empty($configReaders)) {
-            $configReaders = ['php' => new PhpConfigReader()];
-        }
-
-        $this->configReaders = $configReaders;
-
-        return $this;
     }
 
     /**
@@ -122,12 +102,12 @@ final class Config
     }
 
     /**
-     * @param array<string,mixed> $globalConfigServices
+     * @param array<string,mixed> $globalServices
      */
-    public function setGlobalConfigServices(array $globalConfigServices): self
+    public function setGlobalServices(array $globalServices): self
     {
         $this->configFactory = null;
-        $this->globalConfigServices = $globalConfigServices;
+        $this->globalServices = $globalServices;
 
         return $this;
     }
@@ -140,7 +120,7 @@ final class Config
         if (null === $this->configFactory) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
-                $this->globalConfigServices
+                $this->globalServices
             );
         }
 
@@ -161,7 +141,6 @@ final class Config
             $this->getAppRootDir(),
             $this->getFactory()->createGacelaConfigFileFactory(),
             $this->getFactory()->createPathFinder(),
-            $this->configReaders
         );
 
         return $configLoader->loadAll();

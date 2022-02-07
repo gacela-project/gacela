@@ -6,6 +6,7 @@ namespace Gacela\Framework\Config;
 
 use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use RuntimeException;
 use function is_callable;
 
@@ -54,29 +55,51 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
             throw new RuntimeException('Your anonymous class must extends AbstractConfigGacela');
         }
 
-        /** @psalm-suppress ArgumentTypeCoercion */
-        return (new GacelaConfigFile())
-            ->setConfigItems($this->configGacelaMapper->mapConfigItems($configGacelaClass->config()))
-            ->setMappingInterfaces($configGacelaClass->mappingInterfaces($this->globalServices));
+        $configItems = $this->configGacelaMapper->mapConfigItems($configGacelaClass->config());
+        $configReaders = $configGacelaClass->configReaders();
+        $mappingInterfaces = $configGacelaClass->mappingInterfaces($this->globalServices);
+
+        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces);
     }
 
     private function createDefaultGacelaPhpConfig(): GacelaConfigFile
     {
         /** @var array{
-         *     config: array<array>|array{type:string,path:string,path_local:string}|null,
-         *     mapping-interfaces: array<class-string,class-string|callable>|null,
+         *     config?: array<array>|array{type:string,path:string,path_local:string},
+         *     config-readers?: array<string,ConfigReaderInterface>,
+         *     mapping-interfaces?: array<class-string,class-string|callable>,
          * } $configFromGlobalServices
          */
         $configFromGlobalServices = $this->globalServices;
         $configItems = $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'] ?? []);
+        $configReaders = $configFromGlobalServices['config-readers'] ?? [];
         $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
 
-        if (!empty($configItems) || !empty($mappingInterfaces)) {
-            return (new GacelaConfigFile())
-                ->setConfigItems($configItems)
-                ->setMappingInterfaces($mappingInterfaces);
+        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces);
+    }
+
+    /**
+     * @param array<string,GacelaConfigItem> $configItems
+     * @param array<string,ConfigReaderInterface> $configReaders
+     * @param array<class-string,class-string|callable> $mappingInterfaces
+     */
+    private function createWithDefaultIfEmpty(
+        array $configItems,
+        array $configReaders,
+        array $mappingInterfaces
+    ): GacelaConfigFile {
+        $gacelaConfigFile = GacelaConfigFile::withDefaults();
+
+        if (!empty($configItems)) {
+            $gacelaConfigFile->setConfigItems($configItems);
+        }
+        if (!empty($configReaders)) {
+            $gacelaConfigFile->setConfigReaders($configReaders);
+        }
+        if (!empty($mappingInterfaces)) {
+            $gacelaConfigFile->setMappingInterfaces($mappingInterfaces);
         }
 
-        return GacelaConfigFile::withDefaults();
+        return $gacelaConfigFile;
     }
 }

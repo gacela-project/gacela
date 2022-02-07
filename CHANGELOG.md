@@ -4,8 +4,8 @@
 
 - Add getAppRootDir() to AbstractConfig.
 - Deprecate getApplicationRootDir() from Config. Use getAppRootDir() instead.
-- The Gacela::bootstrap() now accepts a 3rd parameter to add config readers
-- Remove EnvConfigReader, if you want to read .env values, you should require `gacela-project/gacela-env-config-reader`
+- The Gacela::bootstrap() now accepts to add config readers as `config-readers` key in the globalServices array
+- Remove `EnvConfigReader`, if you want to read .env values, you should require `gacela-project/gacela-env-config-reader`
 
 ### 0.11.0
 #### 2022-01-18

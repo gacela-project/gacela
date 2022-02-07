@@ -15,22 +15,14 @@ final class ConfigLoader
 
     private PathFinderInterface $pathFinder;
 
-    /** @var array<string,ConfigReaderInterface> */
-    private array $configReaders;
-
-    /**
-     * @param array<string,ConfigReaderInterface> $configReaders
-     */
     public function __construct(
         string $applicationRootDir,
         GacelaConfigFileFactoryInterface $configFactory,
-        PathFinderInterface $pathFinder,
-        array $configReaders
+        PathFinderInterface $pathFinder
     ) {
         $this->applicationRootDir = $applicationRootDir;
         $this->configFactory = $configFactory;
         $this->pathFinder = $pathFinder;
-        $this->configReaders = $configReaders;
     }
 
     /**
@@ -80,7 +72,7 @@ final class ConfigLoader
         $result = [];
         $configItems = $gacelaConfigFile->getConfigItems();
 
-        foreach ($this->configReaders as $type => $reader) {
+        foreach ($gacelaConfigFile->getConfigReaders() as $type => $reader) {
             $config = $configItems[$type] ?? null;
             if ($config === null) {
                 continue;
@@ -102,7 +94,7 @@ final class ConfigLoader
         $result = [];
         $configItems = $gacelaConfigFile->getConfigItems();
 
-        foreach ($this->configReaders as $type => $reader) {
+        foreach ($gacelaConfigFile->getConfigReaders() as $type => $reader) {
             $config = $configItems[$type] ?? null;
             if ($config === null) {
                 continue;

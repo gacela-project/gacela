@@ -38,6 +38,14 @@ final class Config
     }
 
     /**
+     * @internal for testing purposes
+     */
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
      * @param null|mixed $default
      *
      * @throws ConfigException
@@ -62,10 +70,13 @@ final class Config
     }
 
     /**
+     * Force loading all config values in memory.
+     *
      * @throws ConfigException
      */
     public function init(): void
     {
+        $this->configFactory = null;
         $this->config = $this->loadAllConfigValues();
     }
 
@@ -106,7 +117,6 @@ final class Config
      */
     public function setGlobalServices(array $globalServices): self
     {
-        $this->configFactory = null;
         $this->globalServices = $globalServices;
 
         return $this;

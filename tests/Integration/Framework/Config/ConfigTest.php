@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\Framework;
+namespace GacelaTest\Integration\Framework\Config;
 
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\ConfigReaderInterface;
@@ -10,6 +10,11 @@ use PHPUnit\Framework\TestCase;
 
 final class ConfigTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::resetInstance();
+    }
+
     public function test_get_undefined_key(): void
     {
         $this->expectExceptionMessageMatches('/Could not find config key "undefined-key"/');

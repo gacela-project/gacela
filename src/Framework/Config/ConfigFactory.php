@@ -41,4 +41,9 @@ final class ConfigFactory
     {
         return new ConfigGacelaMapper();
     }
+
+    public function getEnvironment(): string
+    {
+        return getenv('APPLICATION_ENV') ?: '';
+    }
 }

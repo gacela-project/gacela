@@ -14,14 +14,18 @@ final class ConfigLoader
 
     private PathFinderInterface $pathFinder;
 
+    private string $configFileNameSuffix;
+
     public function __construct(
         string $applicationRootDir,
         GacelaConfigFileFactoryInterface $configFactory,
-        PathFinderInterface $pathFinder
+        PathFinderInterface $pathFinder,
+        string $configFileNameSuffix = ''
     ) {
         $this->applicationRootDir = $applicationRootDir;
         $this->configFactory = $configFactory;
         $this->pathFinder = $pathFinder;
+        $this->configFileNameSuffix = $configFileNameSuffix;
     }
 
     /**
@@ -109,10 +113,29 @@ final class ConfigLoader
 
     private function generateAbsolutePath(string $relativePath): string
     {
+        // place the file suffix right before the file extension
+        $dotPos = strpos($relativePath, '.');
+        $suffix = $this->getConfigFileNameSuffix();
+
+        if ($dotPos !== false && !empty($suffix)) {
+            $relativePathWithFileSuffix = substr($relativePath, 0, $dotPos)
+                . '-' . $this->getConfigFileNameSuffix()
+                . substr($relativePath, $dotPos);
+        } elseif (!empty($suffix)) {
+            $relativePathWithFileSuffix = $relativePath . $this->getConfigFileNameSuffix();
+        } else {
+            $relativePathWithFileSuffix = $relativePath;
+        }
+
         return sprintf(
             '%s/%s',
             $this->applicationRootDir,
-            $relativePath
+            $relativePathWithFileSuffix
         );
+    }
+
+    private function getConfigFileNameSuffix(): string
+    {
+        return $this->configFileNameSuffix;
     }
 }

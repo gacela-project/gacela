@@ -151,6 +151,7 @@ final class Config
             $this->getAppRootDir(),
             $this->getFactory()->createGacelaConfigFileFactory(),
             $this->getFactory()->createPathFinder(),
+            $this->getFactory()->getEnvironment(),
         );
 
         return $configLoader->loadAll();

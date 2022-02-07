@@ -21,15 +21,10 @@ final class ConfigInitTest extends TestCase
             ->method('createGacelaFileConfig')
             ->willReturn(GacelaConfigFile::withDefaults());
 
-        $readers = [
-            'php' => $this->createStub(ConfigReaderInterface::class),
-        ];
-
         $configInit = new ConfigLoader(
             'application_root_dir',
             $gacelaJsonConfigCreator,
-            $this->createMock(PathFinderInterface::class),
-            $readers
+            $this->createMock(PathFinderInterface::class)
         );
 
         self::assertSame([], $configInit->loadAll());
@@ -45,15 +40,10 @@ final class ConfigInitTest extends TestCase
         $pathFinder = $this->createMock(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
-        $readers = [
-            'unsupported_type' => $this->createStub(ConfigReaderInterface::class),
-        ];
-
         $configInit = new ConfigLoader(
             'application_root_dir',
             $gacelaJsonConfigCreator,
             $pathFinder,
-            $readers
         );
 
         self::assertSame([], $configInit->loadAll());
@@ -69,13 +59,10 @@ final class ConfigInitTest extends TestCase
         $pathFinder = $this->createMock(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
-        $readers = [];
-
         $configInit = new ConfigLoader(
             'application_root_dir',
             $gacelaJsonConfigCreator,
-            $pathFinder,
-            $readers
+            $pathFinder
         );
 
         self::assertSame([], $configInit->loadAll());

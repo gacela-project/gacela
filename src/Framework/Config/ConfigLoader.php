@@ -54,7 +54,7 @@ final class ConfigLoader
     {
         $configGroup = [];
         foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
-            $absolutePath = $this->generateAbsolutePath($configItem->path());
+            $absolutePath = $this->generateAbsolutePathWithSuffix($configItem->path());
             $matchingPattern = $this->pathFinder->matchingPattern($absolutePath);
             $excludePattern = [$this->generateAbsolutePath($configItem->pathLocal())];
 
@@ -111,7 +111,7 @@ final class ConfigLoader
         return array_merge(...array_filter($result));
     }
 
-    private function generateAbsolutePath(string $relativePath): string
+    private function generateAbsolutePathWithSuffix(string $relativePath): string
     {
         // place the file suffix right before the file extension
         $dotPos = strpos($relativePath, '.');
@@ -127,10 +127,15 @@ final class ConfigLoader
             $relativePathWithFileSuffix = $relativePath;
         }
 
+        return $this->generateAbsolutePath($relativePathWithFileSuffix);
+    }
+
+    private function generateAbsolutePath(string $relativePath): string
+    {
         return sprintf(
             '%s/%s',
             $this->applicationRootDir,
-            $relativePathWithFileSuffix
+            $relativePath
         );
     }
 

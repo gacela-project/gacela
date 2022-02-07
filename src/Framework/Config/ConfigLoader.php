@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 final class ConfigLoader
 {
@@ -49,17 +48,16 @@ final class ConfigLoader
      */
     private function scanAllConfigFiles(GacelaConfigFile $gacelaFileConfig): iterable
     {
-        $configGroup = array_map(
-            fn (GacelaConfigItem $config): array => array_diff(
-                $this->pathFinder->matchingPattern($this->generateAbsolutePath($config->path())),
-                [$this->generateAbsolutePath($config->pathLocal())]
-            ),
-            $gacelaFileConfig->getConfigItems()
-        );
+        $configGroup = [];
+        foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
+            $absolutePath = $this->generateAbsolutePath($configItem->path());
+            $matchingPattern = $this->pathFinder->matchingPattern($absolutePath);
+            $excludePattern = [$this->generateAbsolutePath($configItem->pathLocal())];
 
-        $groupsValues = array_values($configGroup);
+            $configGroup[] = array_diff($matchingPattern, $excludePattern);
+        }
 
-        foreach (array_merge(...$groupsValues) as $path) {
+        foreach (array_merge(...$configGroup) as $path) {
             yield $path;
         }
     }

@@ -14,7 +14,7 @@ final class Config
 
     private static ?self $instance = null;
 
-    private string $appRootDir = '';
+    private ?string $appRootDir = null;
 
     /** @var array<string,mixed> */
     private array $config = [];
@@ -93,7 +93,7 @@ final class Config
 
     public function getAppRootDir(): string
     {
-        return $this->appRootDir;
+        return $this->appRootDir ?? getcwd() ?: '';
     }
 
     /**

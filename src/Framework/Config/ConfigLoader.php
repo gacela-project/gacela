@@ -5,27 +5,24 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 final class ConfigLoader
 {
-    private string $applicationRootDir;
-
     private GacelaConfigFileFactoryInterface $configFactory;
 
     private PathFinderInterface $pathFinder;
 
-    private string $configFileNameSuffix;
+    private PathNormalizerInterface $pathNormalizer;
 
     public function __construct(
-        string $applicationRootDir,
         GacelaConfigFileFactoryInterface $configFactory,
         PathFinderInterface $pathFinder,
-        string $configFileNameSuffix = ''
+        PathNormalizerInterface $configPathGenerator
     ) {
-        $this->applicationRootDir = $applicationRootDir;
         $this->configFactory = $configFactory;
         $this->pathFinder = $pathFinder;
-        $this->configFileNameSuffix = $configFileNameSuffix;
+        $this->pathNormalizer = $configPathGenerator;
     }
 
     /**
@@ -35,8 +32,7 @@ final class ConfigLoader
     {
         $gacelaFileConfig = $this->configFactory->createGacelaFileConfig();
         $configs = [];
-
-        foreach ($this->scanAllConfigFiles($gacelaFileConfig) as $absolutePath) {
+        foreach ($this->scanAllPatternConfigFiles($gacelaFileConfig) as $absolutePath) {
             $configs[] = $this->readConfigFromFile($gacelaFileConfig, $absolutePath);
         }
 
@@ -46,24 +42,51 @@ final class ConfigLoader
     }
 
     /**
-     * All config files except the local config file.
-     *
      * @return iterable<string>
      */
-    private function scanAllConfigFiles(GacelaConfigFile $gacelaFileConfig): iterable
+    private function scanAllPatternConfigFiles(GacelaConfigFile $gacelaFileConfig): iterable
     {
         $configGroup = [];
-        foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
-            $absolutePath = $this->generateAbsolutePathWithSuffix($configItem->path());
-            $matchingPattern = $this->pathFinder->matchingPattern($absolutePath);
-            $excludePattern = [$this->generateAbsolutePath($configItem->pathLocal())];
-
-            $configGroup[] = array_diff($matchingPattern, $excludePattern);
-        }
+        $configGroup[] = $this->scanAllConfigFileWithPattern($gacelaFileConfig);
+        $configGroup[] = $this->scanAllConfigFileWithEnvPattern($gacelaFileConfig);
 
         foreach (array_merge(...$configGroup) as $path) {
             yield $path;
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function scanAllConfigFileWithPattern(GacelaConfigFile $gacelaFileConfig): array
+    {
+        $configGroup = [];
+        foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
+            $absolutePatternPath = $this->normalizePathPattern($configItem);
+            $matchingPattern = $this->pathFinder->matchingPattern($absolutePatternPath);
+            $excludePattern = [$this->normalizePathLocal($configItem)];
+
+            $configGroup[] = array_diff($matchingPattern, $excludePattern);
+        }
+
+        return array_values(array_merge(...$configGroup));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function scanAllConfigFileWithEnvPattern(GacelaConfigFile $gacelaFileConfig): array
+    {
+        $configGroup = [];
+        foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
+            $absolutePatternPath = $this->normalizePathPatternWithEnv($configItem);
+            $matchingPattern = $this->pathFinder->matchingPattern($absolutePatternPath);
+            $excludePattern = [$this->normalizePathLocal($configItem)];
+
+            $configGroup[] = array_diff($matchingPattern, $excludePattern);
+        }
+
+        return array_values(array_merge(...$configGroup));
     }
 
     /**
@@ -101,7 +124,7 @@ final class ConfigLoader
             if ($config === null) {
                 continue;
             }
-            $absolutePath = $this->generateAbsolutePath($config->pathLocal());
+            $absolutePath = $this->normalizePathLocal($config);
 
             $result[] = $reader->canRead($absolutePath)
                 ? $reader->read($absolutePath)
@@ -111,36 +134,18 @@ final class ConfigLoader
         return array_merge(...array_filter($result));
     }
 
-    private function generateAbsolutePathWithSuffix(string $relativePath): string
+    private function normalizePathLocal(GacelaConfigItem $configItem): string
     {
-        // place the file suffix right before the file extension
-        $dotPos = strpos($relativePath, '.');
-        $suffix = $this->getConfigFileNameSuffix();
-
-        if ($dotPos !== false && !empty($suffix)) {
-            $relativePathWithFileSuffix = substr($relativePath, 0, $dotPos)
-                . '-' . $this->getConfigFileNameSuffix()
-                . substr($relativePath, $dotPos);
-        } elseif (!empty($suffix)) {
-            $relativePathWithFileSuffix = $relativePath . $this->getConfigFileNameSuffix();
-        } else {
-            $relativePathWithFileSuffix = $relativePath;
-        }
-
-        return $this->generateAbsolutePath($relativePathWithFileSuffix);
+        return $this->pathNormalizer->normalizePathLocal($configItem);
     }
 
-    private function generateAbsolutePath(string $relativePath): string
+    private function normalizePathPattern(GacelaConfigItem $configItem): string
     {
-        return sprintf(
-            '%s/%s',
-            $this->applicationRootDir,
-            $relativePath
-        );
+        return $this->pathNormalizer->normalizePathPattern($configItem);
     }
 
-    private function getConfigFileNameSuffix(): string
+    private function normalizePathPatternWithEnv(GacelaConfigItem $configItem): string
     {
-        return $this->configFileNameSuffix;
+        return $this->pathNormalizer->normalizePathPatternWithEnv($configItem);
     }
 }

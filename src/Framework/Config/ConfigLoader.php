@@ -54,7 +54,7 @@ final class ConfigLoader
     {
         $configGroup = [];
         $configGroup[] = $this->scanAllConfigFileWithPattern($gacelaFileConfig);
-        $configGroup[] = $this->scanAllConfigFileWithEnvPattern($gacelaFileConfig);
+        $configGroup[] = $this->scanAllConfigFileWithEnvironmentPattern($gacelaFileConfig);
 
         foreach (array_merge(...$configGroup) as $path) {
             yield $path;
@@ -81,11 +81,11 @@ final class ConfigLoader
     /**
      * @return list<string>
      */
-    private function scanAllConfigFileWithEnvPattern(GacelaConfigFile $gacelaFileConfig): array
+    private function scanAllConfigFileWithEnvironmentPattern(GacelaConfigFile $gacelaFileConfig): array
     {
         $configGroup = [];
         foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
-            $absolutePatternPath = $this->normalizePathPatternWithEnv($configItem);
+            $absolutePatternPath = $this->normalizePathPatternWithEnvironment($configItem);
             $matchingPattern = $this->pathFinder->matchingPattern($absolutePatternPath);
             $excludePattern = [$this->normalizePathLocal($configItem)];
 
@@ -150,8 +150,8 @@ final class ConfigLoader
         return $this->pathNormalizer->normalizePathPattern($configItem);
     }
 
-    private function normalizePathPatternWithEnv(GacelaConfigItem $configItem): string
+    private function normalizePathPatternWithEnvironment(GacelaConfigItem $configItem): string
     {
-        return $this->pathNormalizer->normalizePathPatternWithEnv($configItem);
+        return $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem);
     }
 }

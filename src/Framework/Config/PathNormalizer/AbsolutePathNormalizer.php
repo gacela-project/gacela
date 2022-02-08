@@ -30,7 +30,7 @@ final class AbsolutePathNormalizer implements PathNormalizerInterface
             ->generateAbsolutePath($configItem->path());
     }
 
-    public function normalizePathPatternWithEnv(GacelaConfigItem $configItem): string
+    public function normalizePathPatternWithEnvironment(GacelaConfigItem $configItem): string
     {
         return $this->absolutePathStrategies[self::PATTERN_WITH_ENV]
             ->generateAbsolutePath($configItem->path());

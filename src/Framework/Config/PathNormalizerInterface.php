@@ -10,7 +10,7 @@ interface PathNormalizerInterface
 {
     public function normalizePathPattern(GacelaConfigItem $configItem): string;
 
-    public function normalizePathPatternWithEnv(GacelaConfigItem $configItem): string;
+    public function normalizePathPatternWithEnvironment(GacelaConfigItem $configItem): string;
 
     public function normalizePathLocal(GacelaConfigItem $configItem): string;
 }

@@ -66,6 +66,6 @@ final class ConfigFactory
 
     private function getEnv(): string
     {
-        return getenv('APPLICATION_ENV') ?: '';
+        return getenv('APP_ENV') ?: '';
     }
 }

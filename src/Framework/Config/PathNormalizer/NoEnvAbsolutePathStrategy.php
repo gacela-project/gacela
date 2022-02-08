@@ -6,19 +6,19 @@ namespace Gacela\Framework\Config\PathNormalizer;
 
 final class NoEnvAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
-    private string $applicationRootDir;
+    private string $appRootDir;
 
-    public function __construct(string $applicationRootDir)
+    public function __construct(string $appRootDir)
     {
-        $this->applicationRootDir = $applicationRootDir;
+        $this->appRootDir = $appRootDir;
     }
 
     public function generateAbsolutePath(string $relativePath): string
     {
         return sprintf(
             '%s/%s',
-            $this->applicationRootDir,
-            $relativePath
+            rtrim($this->appRootDir, '/'),
+            ltrim($relativePath, '/')
         );
     }
 }

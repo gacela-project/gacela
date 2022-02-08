@@ -6,15 +6,15 @@ namespace Gacela\Framework\Config\PathNormalizer;
 
 final class SuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
-    private string $applicationRootDir;
+    private string $appRootDir;
 
     private string $configFileNameSuffix;
 
     public function __construct(
-        string $applicationRootDir,
+        string $appRootDir,
         string $configFileNameSuffix = ''
     ) {
-        $this->applicationRootDir = $applicationRootDir;
+        $this->appRootDir = $appRootDir;
         $this->configFileNameSuffix = $configFileNameSuffix;
     }
 
@@ -29,15 +29,15 @@ final class SuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
                 . '-' . $this->getConfigFileNameSuffix()
                 . substr($relativePath, $dotPos);
         } elseif (!empty($suffix)) {
-            $relativePathWithFileSuffix = $relativePath . $suffix;
+            $relativePathWithFileSuffix = $relativePath . '-' . $suffix;
         } else {
             $relativePathWithFileSuffix = $relativePath;
         }
 
         return sprintf(
             '%s/%s',
-            $this->applicationRootDir,
-            $relativePathWithFileSuffix
+            rtrim($this->appRootDir, '/'),
+            ltrim($relativePathWithFileSuffix, '/')
         );
     }
 

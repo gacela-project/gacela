@@ -32,8 +32,14 @@ final class ConfigLoader
     {
         $gacelaFileConfig = $this->configFactory->createGacelaFileConfig();
         $configs = [];
+        $cacheConfigFileContent = [];
+
         foreach ($this->scanAllPatternConfigFiles($gacelaFileConfig) as $absolutePath) {
-            $configs[] = $this->readConfigFromFile($gacelaFileConfig, $absolutePath);
+            if (!isset($cacheConfigFileContent[$absolutePath])) {
+                $fileResult = $this->readConfigFromFile($gacelaFileConfig, $absolutePath);
+                $cacheConfigFileContent[$absolutePath] = $fileResult;
+            }
+            $configs[] = $cacheConfigFileContent[$absolutePath];
         }
 
         $configs[] = $this->readLocalConfigFile($gacelaFileConfig);

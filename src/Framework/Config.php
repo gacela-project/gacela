@@ -62,7 +62,6 @@ final class Config
         }
 
         if (!$this->hasValue($key)) {
-            dump($this->config);
             throw ConfigException::keyNotFound($key, self::class);
         }
 

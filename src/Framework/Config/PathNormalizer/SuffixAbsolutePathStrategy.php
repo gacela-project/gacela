@@ -29,7 +29,7 @@ final class SuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
                 . '-' . $this->getConfigFileNameSuffix()
                 . substr($relativePath, $dotPos);
         } elseif (!empty($suffix)) {
-            $relativePathWithFileSuffix = $relativePath . $this->getConfigFileNameSuffix();
+            $relativePathWithFileSuffix = $relativePath . $suffix;
         } else {
             $relativePathWithFileSuffix = $relativePath;
         }

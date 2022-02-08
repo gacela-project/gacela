@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'config-php' => 1,
-    'override' => 1,
+    'from-default' => 1,
+    'from-default-env-override' => 1,
+    'from-local-override' => 1,
 ];

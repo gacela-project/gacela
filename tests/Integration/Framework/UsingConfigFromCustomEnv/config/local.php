@@ -3,5 +3,5 @@
 declare(strict_types=1);
 
 return [
-    'override' => 4,
+    'from-local-override' => 4,
 ];

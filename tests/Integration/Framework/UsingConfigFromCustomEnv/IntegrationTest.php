@@ -23,8 +23,9 @@ final class IntegrationTest extends TestCase
 
         self::assertSame(
             [
-                'config-php' => 2,
-                'override' => 4,
+                'from-default' => 1,
+                'from-default-env-override' => 2,
+                'from-local-override' => 4,
             ],
             $facade->doSomething()
         );
@@ -38,8 +39,9 @@ final class IntegrationTest extends TestCase
 
         self::assertSame(
             [
-                'config-php' => 3,
-                'override' => 4,
+                'from-default' => 1,
+                'from-default-env-override' => 3,
+                'from-local-override' => 4,
             ],
             $facade->doSomething()
         );

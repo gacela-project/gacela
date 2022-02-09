@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
+use Gacela\Framework\Config\PathNormalizer\NoEnvAbsolutePathStrategy;
+use Gacela\Framework\Config\PathNormalizer\SuffixAbsolutePathStrategy;
+
 final class ConfigFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
@@ -22,6 +26,15 @@ final class ConfigFactory
         $this->globalServices = $globalServices;
     }
 
+    public function createConfigLoader(): ConfigLoader
+    {
+        return new ConfigLoader(
+            $this->createGacelaConfigFileFactory(),
+            $this->createPathFinder(),
+            $this->createPathNormalizer(),
+        );
+    }
+
     public function createGacelaConfigFileFactory(): GacelaConfigFileFactoryInterface
     {
         return new GacelaConfigFileFactory(
@@ -32,7 +45,7 @@ final class ConfigFactory
         );
     }
 
-    public function createPathFinder(): PathFinderInterface
+    private function createPathFinder(): PathFinderInterface
     {
         return new PathFinder();
     }
@@ -40,5 +53,19 @@ final class ConfigFactory
     private function createConfigGacelaMapper(): ConfigGacelaMapper
     {
         return new ConfigGacelaMapper();
+    }
+
+    private function createPathNormalizer(): PathNormalizerInterface
+    {
+        return new AbsolutePathNormalizer([
+            AbsolutePathNormalizer::PATTERN => new NoEnvAbsolutePathStrategy($this->appRootDir),
+            AbsolutePathNormalizer::PATTERN_WITH_ENV => new SuffixAbsolutePathStrategy($this->appRootDir, $this->getEnv()),
+            AbsolutePathNormalizer::LOCAL => new NoEnvAbsolutePathStrategy($this->appRootDir),
+        ]);
+    }
+
+    private function getEnv(): string
+    {
+        return getenv('APP_ENV') ?: '';
     }
 }

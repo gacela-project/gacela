@@ -12,7 +12,7 @@ use function is_callable;
 
 final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 {
-    private string $applicationRootDir;
+    private string $appRootDir;
 
     private string $gacelaPhpConfigFilename;
 
@@ -25,12 +25,12 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
      * @param array<string,mixed> $globalServices
      */
     public function __construct(
-        string $applicationRootDir,
+        string $appRootDir,
         string $gacelaPhpConfigFilename,
         array $globalServices,
         ConfigGacelaMapper $configGacelaMapper
     ) {
-        $this->applicationRootDir = $applicationRootDir;
+        $this->appRootDir = $appRootDir;
         $this->gacelaPhpConfigFilename = $gacelaPhpConfigFilename;
         $this->globalServices = $globalServices;
         $this->configGacelaMapper = $configGacelaMapper;
@@ -38,7 +38,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 
     public function createGacelaFileConfig(): GacelaConfigFile
     {
-        $gacelaPhpPath = $this->applicationRootDir . '/' . $this->gacelaPhpConfigFilename;
+        $gacelaPhpPath = $this->appRootDir . '/' . $this->gacelaPhpConfigFilename;
 
         if (!is_file($gacelaPhpPath)) {
             return $this->createDefaultGacelaPhpConfig();

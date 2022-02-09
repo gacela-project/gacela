@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigFactory;
-use Gacela\Framework\Config\ConfigLoader;
 use Gacela\Framework\Exception\ConfigException;
 
 final class Config
@@ -147,12 +146,8 @@ final class Config
      */
     private function loadAllConfigValues(): array
     {
-        $configLoader = new ConfigLoader(
-            $this->getAppRootDir(),
-            $this->getFactory()->createGacelaConfigFileFactory(),
-            $this->getFactory()->createPathFinder(),
-        );
-
-        return $configLoader->loadAll();
+        return $this->getFactory()
+            ->createConfigLoader()
+            ->loadAll();
     }
 }

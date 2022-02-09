@@ -9,7 +9,7 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 
 final class GacelaConfigFile
 {
-    /** @var array<string,GacelaConfigItem> */
+    /** @var list<GacelaConfigItem> */
     private array $configItems = [];
 
     /** @var array<class-string,class-string|callable> */
@@ -20,15 +20,13 @@ final class GacelaConfigFile
 
     public static function withDefaults(): self
     {
-        $configItem = GacelaConfigItem::withDefaults();
-
         return (new self())
-            ->setConfigItems([$configItem->type() => $configItem])
+            ->setConfigItems([GacelaConfigItem::withDefaults()])
             ->setConfigReaders(['php' => new PhpConfigReader()]);
     }
 
     /**
-     * @param array<string,GacelaConfigItem> $configItems
+     * @param list<GacelaConfigItem> $configItems
      */
     public function setConfigItems(array $configItems): self
     {
@@ -38,7 +36,7 @@ final class GacelaConfigFile
     }
 
     /**
-     * @return array<string,GacelaConfigItem>
+     * @return list<GacelaConfigItem>
      */
     public function getConfigItems(): array
     {

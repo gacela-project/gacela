@@ -35,7 +35,7 @@ final class ConfigTest extends TestCase
     {
         Config::getInstance()->setGlobalServices([
             'config-readers' => [
-                Config\GacelaFileConfig\GacelaConfigItem::DEFAULT_TYPE => new class () implements ConfigReaderInterface {
+                new class () implements ConfigReaderInterface {
                     public function read(string $absolutePath): array
                     {
                         return ['key' => 'value'];

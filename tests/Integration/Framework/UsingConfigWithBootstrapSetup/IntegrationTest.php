@@ -13,7 +13,6 @@ final class IntegrationTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, [
             'config' => [
-                'type' => 'php',
                 'path' => 'custom-config.php',
                 'path_local' => 'custom-config_local.php',
             ],

@@ -76,9 +76,9 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $configItems = $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'] ?? []);
         $configReaders = $configFromGlobalServices['config-readers'] ?? [];
         $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
-        $flexibleServices = $configFromGlobalServices['custom-service-paths'] ?? [];
+        $customServicePaths = $configFromGlobalServices['custom-service-paths'] ?? [];
 
-        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces, $flexibleServices);
+        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces, $customServicePaths);
     }
 
     /**

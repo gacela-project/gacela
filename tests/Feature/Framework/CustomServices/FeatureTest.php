@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceOnFacade;
+namespace GacelaTest\Feature\Framework\CustomServices;
 
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule\Facade;
+use GacelaTest\Feature\Framework\CustomServices\CustomModule\Facade;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
@@ -22,7 +22,7 @@ final class FeatureTest extends TestCase
         ]);
     }
 
-    public function test_load_custom_service(): void
+    public function test_using_custom_services_from_facade(): void
     {
         $facade = new Facade();
 
@@ -37,7 +37,22 @@ final class FeatureTest extends TestCase
                     'from-infrastructure-factory' => 3,
                 ],
             ],
-            $facade->findAllKeyValuesUsingRepository()
+            $facade->usingCustomServicesFromFacade()
+        );
+    }
+
+    public function test_using_custom_services_from_factory(): void
+    {
+        $facade = new Facade();
+
+        self::assertSame(
+            [
+                'from-application-repository' => [
+                    'from-config' => 1,
+                    'from-application-factory' => 2,
+                ],
+            ],
+            $facade->usingCustomServicesFromFactory()
         );
     }
 }

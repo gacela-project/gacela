@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule\Infrastructure;
+namespace GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure;
 
 use Gacela\Framework\AbstractCustomService;
-use GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule\Config;
+use GacelaTest\Feature\Framework\CustomServices\CustomModule\Config;
 
 /**
  * @method Factory getFactory()
  * @method Config getConfig()
  */
-final class EntityManager extends AbstractCustomService
+final class Repository extends AbstractCustomService
 {
     /**
      * @return array<string,array<string,int>>
      */
-    public function manageFromEntityManager(): array
+    public function findFromRepository(): array
     {
         return [
-            'from-infrastructure-entity-manager' =>
+            'from-infrastructure-repository' =>
                 $this->getConfig()->getAllKeyValues()
                 + $this->getFactory()->createDummyArray(),
         ];

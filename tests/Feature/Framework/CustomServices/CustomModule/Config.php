@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule;
+namespace GacelaTest\Feature\Framework\CustomServices\CustomModule;
 
 use Gacela\Framework\AbstractConfig;
 

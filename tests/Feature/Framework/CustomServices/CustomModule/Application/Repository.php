@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule\Infrastructure;
+namespace GacelaTest\Feature\Framework\CustomServices\CustomModule\Application;
 
 use Gacela\Framework\AbstractCustomService;
-use GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule\Config;
+use GacelaTest\Feature\Framework\CustomServices\CustomModule\Config;
 
 /**
  * @method Factory getFactory()
@@ -19,7 +19,7 @@ final class Repository extends AbstractCustomService
     public function findFromRepository(): array
     {
         return [
-            'from-infrastructure-repository' =>
+            'from-application-repository' =>
                 $this->getConfig()->getAllKeyValues()
                 + $this->getFactory()->createDummyArray(),
         ];

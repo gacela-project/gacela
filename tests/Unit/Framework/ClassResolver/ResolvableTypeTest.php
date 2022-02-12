@@ -17,12 +17,20 @@ final class ResolvableTypeTest extends TestCase
         self::assertSame('', $actual->resolvableType());
     }
 
+    public function test_custom_resolvable_name(): void
+    {
+        $actual = ResolvableType::fromClassName('ModuleName\\CustomResolvable');
+
+        self::assertSame('ModuleName', $actual->moduleName());
+        self::assertSame('CustomResolvable', $actual->resolvableType());
+    }
+
     public function test_using_module_prefix_custom_without_any_resolvable_type(): void
     {
         $actual = ResolvableType::fromClassName('Custom');
 
-        self::assertSame('Custom', $actual->moduleName());
-        self::assertSame('', $actual->resolvableType());
+        self::assertSame('', $actual->moduleName());
+        self::assertSame('Custom', $actual->resolvableType());
     }
 
     public function test_not_using_the_module_prefix_facade(): void

@@ -37,4 +37,12 @@ abstract class AbstractConfigGacela
     {
         return [];
     }
+
+    /**
+     * @return list<string>
+     */
+    public function customServicePaths(): array
+    {
+        return [];
+    }
 }

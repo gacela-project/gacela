@@ -7,6 +7,7 @@ namespace Gacela\Framework\ClassResolver;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\DependencyResolver\DependencyResolver;
 use Gacela\Framework\Config;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use RuntimeException;
 use function get_class;
 use function in_array;
@@ -23,9 +24,11 @@ abstract class AbstractClassResolver
     /** @var array<string,object> */
     private static array $cachedGlobalInstances = [];
 
-    private static ?ClassNameFinderInterface $classNameFinder = null;
+    private ?ClassNameFinderInterface $classNameFinder = null;
 
     private ?DependencyResolver $dependencyResolver = null;
+
+    private ?GacelaConfigFile $gacelaFileConfig = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -169,11 +172,12 @@ abstract class AbstractClassResolver
 
     private function getClassNameFinder(): ClassNameFinderInterface
     {
-        if (null === self::$classNameFinder) {
-            self::$classNameFinder = (new ClassResolverFactory())->createClassNameFinder();
+        if (null === $this->classNameFinder) {
+            $this->classNameFinder = (new ClassResolverFactory($this->getGacelaConfigFile()))
+                ->createClassNameFinder();
         }
 
-        return self::$classNameFinder;
+        return $this->classNameFinder;
     }
 
     private function createInstance(string $resolvedClassName): ?object
@@ -192,14 +196,23 @@ abstract class AbstractClassResolver
     private function getDependencyResolver(): DependencyResolver
     {
         if (null === $this->dependencyResolver) {
-            $gacelaFileConfig = Config::getInstance()
-                ->getFactory()
-                ->createGacelaConfigFileFactory()
-                ->createGacelaFileConfig();
-
-            $this->dependencyResolver = new DependencyResolver($gacelaFileConfig);
+            $this->dependencyResolver = new DependencyResolver(
+                $this->getGacelaConfigFile()
+            );
         }
 
         return $this->dependencyResolver;
+    }
+
+    private function getGacelaConfigFile(): GacelaConfigFile
+    {
+        if (null === $this->gacelaFileConfig) {
+            $this->gacelaFileConfig = Config::getInstance()
+                ->getFactory()
+                ->createGacelaConfigFileFactory()
+                ->createGacelaFileConfig();
+        }
+
+        return $this->gacelaFileConfig;
     }
 }

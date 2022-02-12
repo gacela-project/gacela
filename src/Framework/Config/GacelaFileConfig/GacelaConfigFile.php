@@ -18,6 +18,9 @@ final class GacelaConfigFile
     /** @var array<string,ConfigReaderInterface> */
     private array $configReaders = [];
 
+    /** @var list<string> */
+    private array $customServicePaths = [];
+
     public static function withDefaults(): self
     {
         return (new self())
@@ -80,5 +83,23 @@ final class GacelaConfigFile
     public function getMappingInterface(string $key)
     {
         return $this->mappingInterfaces[$key] ?? null;
+    }
+
+    /**
+     * @param list<string> $customServicePaths
+     */
+    public function setCustomServicePaths(array $customServicePaths): self
+    {
+        $this->customServicePaths = $customServicePaths;
+
+        return $this;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getCustomServicePaths(): array
+    {
+        return $this->customServicePaths;
     }
 }

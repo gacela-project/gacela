@@ -8,7 +8,7 @@ use function strlen;
 
 final class ResolvableType
 {
-    private const ALLOWED_TYPES = [
+    private const DEFAULT_ALLOWED_TYPES = [
         'Facade',
         'Factory',
         'Config',
@@ -23,7 +23,7 @@ final class ResolvableType
      */
     public static function fromClassName(string $className): self
     {
-        foreach (self::ALLOWED_TYPES as $resolvableType) {
+        foreach (self::DEFAULT_ALLOWED_TYPES as $resolvableType) {
             if (false !== strpos($className, $resolvableType)) {
                 return new self(
                     $resolvableType,
@@ -32,13 +32,15 @@ final class ResolvableType
             }
         }
 
-        return new self('', $className);
+        $lastPos = (int)strrpos($className, '\\');
+        $customResolvableType = substr($className, $lastPos);
+        $moduleName = str_replace($customResolvableType, '', $className);
+
+        return new self(ltrim($customResolvableType, '\\'), $moduleName);
     }
 
-    private function __construct(
-        string $resolvableType,
-        string $moduleName
-    ) {
+    private function __construct(string $resolvableType, string $moduleName)
+    {
         $this->resolvableType = $resolvableType;
         $this->moduleName = $moduleName;
     }

@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace GacelaTest\Feature\Framework\RemoveKeyFromContainer;
+
+use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
+use Gacela\Framework\Gacela;
+use PHPUnit\Framework\TestCase;
+
+final class FeatureTest extends TestCase
+{
+    public function setUp(): void
+    {
+        Gacela::bootstrap(__DIR__);
+    }
+
+    public function test_remove_key_from_container(): void
+    {
+        $this->expectException(ContainerKeyNotFoundException::class);
+
+        $facade = new AddAndRemoveKey\Facade();
+        $facade->doSomething();
+    }
+}

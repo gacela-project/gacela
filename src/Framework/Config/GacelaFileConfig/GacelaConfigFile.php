@@ -18,6 +18,9 @@ final class GacelaConfigFile
     /** @var array<string,ConfigReaderInterface> */
     private array $configReaders = [];
 
+    /** @var array{paths?:list<string>,resolvable-types?:list<string>} */
+    private array $flexibleServices = [];
+
     public static function withDefaults(): self
     {
         return (new self())
@@ -80,5 +83,23 @@ final class GacelaConfigFile
     public function getMappingInterface(string $key)
     {
         return $this->mappingInterfaces[$key] ?? null;
+    }
+
+    /**
+     * @param array{paths?:list<string>,resolvable-types?:list<string>} $flexibleServices
+     */
+    public function setFlexibleServices(array $flexibleServices): self
+    {
+        $this->flexibleServices = $flexibleServices;
+
+        return $this;
+    }
+
+    /**
+     * @return array{paths?:list<string>,resolvable-types?:list<string>}
+     */
+    public function getFlexibleServices(): array
+    {
+        return $this->flexibleServices;
     }
 }

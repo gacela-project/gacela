@@ -81,4 +81,56 @@ final class ClassInfo
     {
         return $callerClassParts[count($callerClassParts) - 2] ?? '';
     }
+
+    public function toString(): string
+    {
+        return sprintf(
+            'ClassInfo{$cacheKey:%s, $callerModuleName:%s, $callerNamespace:%s}',
+            $this->cacheKey ?? 'null',
+            $this->callerModuleName,
+            $this->callerNamespace,
+        );
+    }
+
+    public function copyWith1LevelUpNamespace(): ?self
+    {
+        try {
+            $this->checkCanCopyWith1LevelUpNamespace();
+        } catch (\RuntimeException $e) {
+            // TODO: echo/log? $e->getMessage()
+            return null;
+        }
+
+        $clone = clone $this;
+        $lastPos = (int)strrpos($this->callerNamespace, '\\');
+        $oldModuleName = substr($this->callerNamespace, $lastPos);
+        $newCallerNamespace = str_replace($oldModuleName, '', $this->callerNamespace);
+
+        $lastPos2 = (int)strrpos($newCallerNamespace, '\\');
+        $newModuleName = substr($newCallerNamespace, $lastPos2);
+
+        if ($clone->cacheKey !== null) {
+            $clone->cacheKey = str_replace($oldModuleName, '', (string)$this->cacheKey);
+        }
+        $clone->callerNamespace = $newCallerNamespace;
+        $clone->callerModuleName = ltrim($newModuleName, '\\');
+
+        return $clone;
+    }
+
+    private function checkCanCopyWith1LevelUpNamespace(): void
+    {
+        /** @var array<int,int> $charsInBytes */
+        $charsInBytes = \count_chars($this->callerNamespace, 1);
+        $charsInBytesWithMinCount = \array_filter($charsInBytes, static fn (int $v) => $v >= 2);
+        $chars = \array_map(static fn ($k) => \chr($k), array_keys($charsInBytesWithMinCount));
+        $chars = \array_flip($chars);
+
+        if (!isset($chars['\\'])) {
+            throw new \RuntimeException(sprintf(
+                'Cannot copy classInfo with 1 level up namespace: %s',
+                $this->callerNamespace
+            ));
+        }
+    }
 }

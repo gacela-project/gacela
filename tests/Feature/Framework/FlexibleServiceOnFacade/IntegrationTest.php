@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FlexibleApi;
+namespace GacelaTest\Feature\Framework\FlexibleServiceOnFacade;
 
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\FlexibleApi\FlexibleApiModule\Facade;
+use GacelaTest\Feature\Framework\FlexibleServiceOnFacade\FlexibleApiModule\Facade;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationTest extends TestCase

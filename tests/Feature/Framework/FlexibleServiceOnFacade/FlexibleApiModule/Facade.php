@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FlexibleApi\FlexibleApiModule;
+namespace GacelaTest\Feature\Framework\FlexibleServiceOnFacade\FlexibleApiModule;
 
 use Gacela\Framework\AbstractFacade;
-use GacelaTest\Feature\Framework\FlexibleApi\FlexibleApiModule\Infrastructure\Repository;
+use GacelaTest\Feature\Framework\FlexibleServiceOnFacade\FlexibleApiModule\Infrastructure\Repository;
 
 /**
  * @method Repository getRepository()

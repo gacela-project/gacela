@@ -82,7 +82,9 @@
         "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src",
         "csfix": "./vendor/bin/php-cs-fixer fix",
         "csrun": "./vendor/bin/php-cs-fixer fix --dry-run",
-        "phpbench": "./vendor/bin/phpbench run --report=aggregate --ansi",
+        "phpbench": "vendor/bin/phpbench run --report=aggregate --ansi",
+        "phpbench-base": "vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
+        "phpbench-ref": "vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
         "metrics-report": "./vendor/bin/phpmetrics --report-html=data/metrics-report --junit=phpunit.xml src tests"
     }
 }

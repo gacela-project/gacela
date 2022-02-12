@@ -79,7 +79,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
     }
 
     /**
-     * @param array<string,GacelaConfigItem> $configItems
+     * @param list<GacelaConfigItem> $configItems
      * @param array<string,ConfigReaderInterface> $configReaders
      * @param array<class-string,class-string|callable> $mappingInterfaces
      */

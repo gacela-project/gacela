@@ -15,18 +15,12 @@ final class IntegrationTest extends TestCase
     {
         $globalServices = [
             'config' => [
-                [
-                    'type' => 'env',
-                    'path' => 'config/.env*',
-                ],
-                [
-                    'type' => 'php',
-                    'path' => 'config/*.php',
-                ],
+                ['path' => 'config/.env*'],
+                ['path' => 'config/*.php'],
             ],
             'config-readers' =>  [
-                'php' => new PhpConfigReader(),
-                'env' => new SimpleEnvConfigReader(),
+                new PhpConfigReader(),
+                new SimpleEnvConfigReader(),
             ],
         ];
 

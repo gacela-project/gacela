@@ -8,7 +8,6 @@ return static fn () => new class () extends AbstractConfigGacela {
     public function config(): array
     {
         return [
-            'type' => 'php',
             'path' => 'config/*.php',
             'path_local' => 'config/local.php',
         ];

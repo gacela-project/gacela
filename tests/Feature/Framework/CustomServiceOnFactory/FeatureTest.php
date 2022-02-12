@@ -2,21 +2,18 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FlexibleServiceOnFacade;
+namespace GacelaTest\Feature\Framework\CustomServiceOnFactory;
 
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\FlexibleServiceOnFacade\FlexibleApiModule\Facade;
+use GacelaTest\Feature\Framework\CustomServiceOnFactory\CustomModule\Facade;
 use PHPUnit\Framework\TestCase;
 
-final class IntegrationTest extends TestCase
+final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, [
-            'flexible-services' => [
-                'paths' => ['Infrastructure'],
-                'resolvable-types' => ['Repository'],
-            ],
+            'custom-service-paths' => ['Infrastructure'],
         ]);
     }
 

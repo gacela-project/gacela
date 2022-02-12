@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FlexibleServiceOnFactory\FlexibleApiModule;
+namespace GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule;
 
 use Gacela\Framework\AbstractConfig;
 

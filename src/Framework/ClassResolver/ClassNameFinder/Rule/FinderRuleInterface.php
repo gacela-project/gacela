@@ -11,6 +11,6 @@ interface FinderRuleInterface
     public function buildClassCandidate(
         ClassInfo $classInfo,
         string $resolvableType,
-        string $flexibleServicePath = ''
+        string $customServicePath = ''
     ): string;
 }

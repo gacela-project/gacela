@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-abstract class AbstractFlexibleService
+abstract class AbstractCustomService
 {
     use ConfigResolverAwareTrait;
     use FactoryResolverAwareTrait;

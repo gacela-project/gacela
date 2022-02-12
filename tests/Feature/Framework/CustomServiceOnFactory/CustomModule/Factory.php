@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FlexibleServiceOnFactory\FlexibleApiModule;
+namespace GacelaTest\Feature\Framework\CustomServiceOnFactory\CustomModule;
 
 use Gacela\Framework\AbstractFactory;
-use GacelaTest\Feature\Framework\FlexibleServiceOnFactory\FlexibleApiModule\Infrastructure\Repository;
+use GacelaTest\Feature\Framework\CustomServiceOnFactory\CustomModule\Infrastructure\Repository;
 
 /**
  * @method Repository getRepository()

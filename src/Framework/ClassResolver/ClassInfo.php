@@ -12,6 +12,8 @@ final class ClassInfo
 {
     public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
 
+    private const MIN_LEVEL_NAMESPACE_TO_COPY = 2;
+
     private ?string $cacheKey = null;
     private string $callerModuleName;
     private string $callerNamespace;
@@ -122,7 +124,10 @@ final class ClassInfo
     {
         /** @var array<int,int> $charsInBytes */
         $charsInBytes = \count_chars($this->callerNamespace, 1);
-        $charsInBytesWithMinCount = \array_filter($charsInBytes, static fn (int $v) => $v >= 2);
+        $charsInBytesWithMinCount = \array_filter(
+            $charsInBytes,
+            static fn (int $v) => $v >= self::MIN_LEVEL_NAMESPACE_TO_COPY
+        );
         $chars = \array_map(static fn ($k) => \chr($k), array_keys($charsInBytesWithMinCount));
         $chars = \array_flip($chars);
 

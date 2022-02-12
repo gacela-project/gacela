@@ -12,45 +12,40 @@ final class ClassNameFinder implements ClassNameFinderInterface
     /** @var list<FinderRuleInterface> */
     private array $finderRules;
 
-    /** @var array{paths?:list<string>,resolvable-types?:list<string>} */
-    private $flexibleServices;
+    /** @var list<string> */
+    private $customServicePaths;
 
     /**
      * @param list<FinderRuleInterface> $finderRules
-     * @param array{paths?:list<string>,resolvable-types?:list<string>} $flexibleServices
+     * @param list<string> $customServicePaths
      */
-    public function __construct(
-        array $finderRules,
-        array $flexibleServices
-    ) {
+    public function __construct(array $finderRules, array $customServicePaths)
+    {
         $this->finderRules = $finderRules;
-        $this->flexibleServices = $flexibleServices;
+        $this->customServicePaths = $customServicePaths;
     }
 
     public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
     {
         foreach ($this->finderRules as $finderRule) {
-            // First look for flexibleServicePaths
-            if ($resolvableType === 'FlexibleService') {
-                foreach ($this->flexibleServices['paths'] ?? [] as $flexibleServicePath) {
-                    foreach ($this->flexibleServices['resolvable-types'] ?? [] as $flexibleResolvableType) {
-                        $className = $finderRule->buildClassCandidate(
-                            $classInfo,
-                            $flexibleResolvableType,
-                            $flexibleServicePath
-                        );
-
-                        if (class_exists($className)) {
-                            return $className;
-                        }
-                    }
-                }
-            }
-            // Otherwise, we look in the module-root dir
+            // First we look in the module-root dir
             $className = $finderRule->buildClassCandidate($classInfo, $resolvableType);
 
             if (class_exists($className)) {
                 return $className;
+            }
+
+            // Otherwise, look for customServicePaths
+            foreach ($this->customServicePaths as $customServicePath) {
+                $className = $finderRule->buildClassCandidate(
+                    $classInfo,
+                    $resolvableType,
+                    $customServicePath
+                );
+
+                if (class_exists($className)) {
+                    return $className;
+                }
             }
         }
 

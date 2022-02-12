@@ -39,9 +39,9 @@ abstract class AbstractConfigGacela
     }
 
     /**
-     * @return array{paths?:list<string>,resolvable-types?:list<string>}
+     * @return list<string>
      */
-    public function flexibleServices(): array
+    public function customServicePaths(): array
     {
         return [];
     }

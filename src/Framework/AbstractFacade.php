@@ -7,5 +7,5 @@ namespace Gacela\Framework;
 abstract class AbstractFacade
 {
     use FactoryResolverAwareTrait;
-    use FlexibleServiceAwareTrait;
+    use CustomServiceAwareTrait;
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FlexibleServiceOnFacade\FlexibleApiModule\Infrastructure;
+namespace GacelaTest\Feature\Framework\CustomServiceOnFactory\CustomModule\Infrastructure;
 
 use Gacela\Framework\AbstractFactory;
 

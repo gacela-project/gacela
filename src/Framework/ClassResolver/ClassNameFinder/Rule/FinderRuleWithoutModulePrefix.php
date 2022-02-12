@@ -11,10 +11,10 @@ final class FinderRuleWithoutModulePrefix implements FinderRuleInterface
     public function buildClassCandidate(
         ClassInfo $classInfo,
         string $resolvableType,
-        string $flexibleServicePath = ''
+        string $customServicePath = ''
     ): string {
-        $classname = !empty($flexibleServicePath)
-            ? $flexibleServicePath . '\\' . $resolvableType
+        $classname = !empty($customServicePath)
+            ? $customServicePath . '\\' . $resolvableType
             : $resolvableType;
 
         return sprintf(

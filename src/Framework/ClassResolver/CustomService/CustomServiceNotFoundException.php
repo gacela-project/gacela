@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver\FlexibleService;
+namespace Gacela\Framework\ClassResolver\CustomService;
 
 use Exception;
 use Gacela\Framework\ClassResolver\ClassResolverExceptionTrait;
 
-final class FlexibleServiceNotFoundException extends Exception
+final class CustomServiceNotFoundException extends Exception
 {
     use ClassResolverExceptionTrait;
 
     public function __construct(object $callerClass)
     {
-        parent::__construct($this->buildMessage($callerClass, 'FlexibleService'));
+        parent::__construct($this->buildMessage($callerClass, 'CustomService'));
     }
 }

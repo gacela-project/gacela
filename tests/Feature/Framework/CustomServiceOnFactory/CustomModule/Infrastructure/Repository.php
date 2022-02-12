@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FlexibleServiceOnFactory\FlexibleApiModule\Infrastructure;
+namespace GacelaTest\Feature\Framework\CustomServiceOnFactory\CustomModule\Infrastructure;
 
-use Gacela\Framework\AbstractFlexibleService;
-use GacelaTest\Feature\Framework\FlexibleServiceOnFactory\FlexibleApiModule\Config;
+use Gacela\Framework\AbstractCustomService;
+use GacelaTest\Feature\Framework\CustomServiceOnFactory\CustomModule\Config;
 
 /**
  * @method Factory getFactory()
  * @method Config getConfig()
  */
-final class Repository extends AbstractFlexibleService
+final class Repository extends AbstractCustomService
 {
     /**
      * @return array<string,int>

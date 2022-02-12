@@ -18,8 +18,8 @@ final class GacelaConfigFile
     /** @var array<string,ConfigReaderInterface> */
     private array $configReaders = [];
 
-    /** @var array{paths?:list<string>,resolvable-types?:list<string>} */
-    private array $flexibleServices = [];
+    /** @var list<string> */
+    private array $customServicePaths = [];
 
     public static function withDefaults(): self
     {
@@ -86,20 +86,20 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param array{paths?:list<string>,resolvable-types?:list<string>} $flexibleServices
+     * @param list<string> $customServicePaths
      */
-    public function setFlexibleServices(array $flexibleServices): self
+    public function setCustomServicePaths(array $customServicePaths): self
     {
-        $this->flexibleServices = $flexibleServices;
+        $this->customServicePaths = $customServicePaths;
 
         return $this;
     }
 
     /**
-     * @return array{paths?:list<string>,resolvable-types?:list<string>}
+     * @return list<string>
      */
-    public function getFlexibleServices(): array
+    public function getCustomServicePaths(): array
     {
-        return $this->flexibleServices;
+        return $this->customServicePaths;
     }
 }

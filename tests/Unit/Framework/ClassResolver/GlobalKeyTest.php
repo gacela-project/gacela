@@ -9,6 +9,16 @@ use PHPUnit\Framework\TestCase;
 
 final class GlobalKeyTest extends TestCase
 {
+    public function test_empty_class_name(): void
+    {
+        self::assertSame('\\', GlobalKey::fromClassName(''));
+    }
+
+    public function test_only_class_name(): void
+    {
+        self::assertSame('\ClassName', GlobalKey::fromClassName('ClassName'));
+    }
+
     public function test_using_the_module_prefix(): void
     {
         self::assertSame(

@@ -24,7 +24,7 @@ abstract class AbstractClassResolver
     /** @var array<string,object> */
     private static array $cachedGlobalInstances = [];
 
-    private static ?ClassNameFinderInterface $classNameFinder = null;
+    private ?ClassNameFinderInterface $classNameFinder = null;
 
     private ?DependencyResolver $dependencyResolver = null;
 
@@ -172,12 +172,12 @@ abstract class AbstractClassResolver
 
     private function getClassNameFinder(): ClassNameFinderInterface
     {
-        if (null === self::$classNameFinder) {
-            self::$classNameFinder = (new ClassResolverFactory($this->getGacelaConfigFile()))
+        if (null === $this->classNameFinder) {
+            $this->classNameFinder = (new ClassResolverFactory($this->getGacelaConfigFile()))
                 ->createClassNameFinder();
         }
 
-        return self::$classNameFinder;
+        return $this->classNameFinder;
     }
 
     private function createInstance(string $resolvedClassName): ?object

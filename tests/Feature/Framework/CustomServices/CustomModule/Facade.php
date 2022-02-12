@@ -15,7 +15,7 @@ use GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure\Enti
 final class Facade extends AbstractFacade
 {
     /**
-     * @return array<string,int>
+     * @return array<string,array<string,int>>
      */
     public function usingCustomServicesFromFacade(): array
     {
@@ -24,7 +24,7 @@ final class Facade extends AbstractFacade
     }
 
     /**
-     * @return array<string,int>
+     * @return array<string,array<string,int>>
      */
     public function usingCustomServicesFromFactory(): array
     {

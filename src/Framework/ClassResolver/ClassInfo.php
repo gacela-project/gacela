@@ -91,8 +91,8 @@ final class ClassInfo
 
         $clone = clone $this;
         $clone->callerNamespace = $parentNamespace;
-        $oldModuleName = trim(str_replace($parentNamespace, '', $this->callerNamespace), '\\');
-        $clone->callerModuleName = $oldModuleName;
+        $oldModuleName = str_replace($parentNamespace, '', $this->callerNamespace);
+        $clone->callerModuleName = trim($oldModuleName, '\\');
 
         if ($clone->cacheKey !== null) {
             $clone->cacheKey = str_replace($oldModuleName, '', (string)$this->cacheKey);
@@ -114,7 +114,7 @@ final class ClassInfo
     /**
      * @internal
      */
-    public function __toString(): string
+    public function toString(): string
     {
         return sprintf(
             'ClassInfo{$cacheKey:%s, $callerModuleName:%s, $callerNamespace:%s}',

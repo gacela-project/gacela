@@ -11,8 +11,8 @@ final class CustomServiceNotFoundException extends Exception
 {
     use ClassResolverExceptionTrait;
 
-    public function __construct(object $callerClass)
+    public function __construct(object $callerClass, string $resolvableType)
     {
-        parent::__construct($this->buildMessage($callerClass, 'CustomService'));
+        parent::__construct($this->buildMessage($callerClass, $resolvableType));
     }
 }

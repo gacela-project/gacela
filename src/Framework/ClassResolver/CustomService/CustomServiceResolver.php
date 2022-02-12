@@ -25,7 +25,7 @@ final class CustomServiceResolver extends AbstractClassResolver
         $resolved = $this->doResolve($callerClass);
 
         if (null === $resolved) {
-            throw new CustomServiceNotFoundException($callerClass);
+            throw new CustomServiceNotFoundException($callerClass, $this->resolvableType);
         }
 
         return $resolved;

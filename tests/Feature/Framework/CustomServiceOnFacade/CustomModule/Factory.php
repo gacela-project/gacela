@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule\Infrastructure;
+namespace GacelaTest\Feature\Framework\CustomServiceOnFacade\CustomModule;
 
 use Gacela\Framework\AbstractFactory;
 
@@ -14,7 +14,7 @@ final class Factory extends AbstractFactory
     public function createDummyArray(): array
     {
         return [
-            'from-infrastructure-factory' => 3,
+            'from-factory' => 1,
         ];
     }
 }

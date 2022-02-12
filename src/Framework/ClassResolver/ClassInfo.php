@@ -129,9 +129,16 @@ final class ClassInfo
             static fn (int $v) => $v >= self::MIN_LEVEL_NAMESPACE_TO_COPY
         );
         $chars = \array_map(static fn ($k) => \chr($k), array_keys($charsInBytesWithMinCount));
-        $chars = \array_flip($chars);
+        $chars2 = \array_flip($chars);
+//        dd([
+//            '$this->callerNamespace' => $this->callerNamespace,
+//            '$charsInBytes' => $charsInBytes,
+//            '$charsInBytesWithMinCount' => $charsInBytesWithMinCount,
+//            '$chars' => $chars,
+//            '$chars2' => $chars2,
+//            ]);
 
-        if (!isset($chars['\\'])) {
+        if (!isset($chars2['\\'])) {
             throw new \RuntimeException(sprintf(
                 'Cannot copy classInfo with 1 level up namespace: %s',
                 $this->callerNamespace

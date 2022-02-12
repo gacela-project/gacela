@@ -13,7 +13,10 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, [
-            'custom-service-paths' => ['Infrastructure'],
+            'custom-service-paths' => [
+                'Application',
+                'Infrastructure',
+            ],
         ]);
     }
 
@@ -23,13 +26,17 @@ final class FeatureTest extends TestCase
 
         self::assertSame(
             [
-                'from-repository' => [
+                'from-application-repository' => [
                     'from-config' => 1,
-                    'from-factory' => 1,
+                    'from-application-factory' => 2,
                 ],
-                'from-entity-manager' => [
+                'from-infrastructure-entity-manager' => [
                     'from-config' => 1,
-                    'from-factory' => 1,
+                    'from-infrastructure-factory' => 3,
+                ],
+                'from-application-service' => [
+                    'from-config' => 1,
+                    'from-application-factory' => 2,
                 ],
             ],
             $facade->findAllKeyValuesUsingRepository()

@@ -19,7 +19,7 @@ final class Repository extends AbstractCustomService
     public function findFromRepository(): array
     {
         return [
-            'from-repository' =>
+            'from-infrastructure-repository' =>
                 $this->getConfig()->getAllKeyValues()
                 + $this->getFactory()->createDummyArray(),
         ];

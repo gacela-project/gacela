@@ -13,6 +13,8 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, [
+            // The order is relevant for the priority in case the same
+            // class name is found in both. The first found will be used.
             'custom-service-paths' => [
                 'Application',
                 'Infrastructure',
@@ -33,10 +35,6 @@ final class FeatureTest extends TestCase
                 'from-infrastructure-entity-manager' => [
                     'from-config' => 1,
                     'from-infrastructure-factory' => 3,
-                ],
-                'from-application-service' => [
-                    'from-config' => 1,
-                    'from-application-factory' => 2,
                 ],
             ],
             $facade->findAllKeyValuesUsingRepository()

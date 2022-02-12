@@ -12,8 +12,6 @@ final class ClassInfo
 {
     public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
 
-    private const MIN_LEVEL_NAMESPACE_TO_COPY = 2;
-
     private ?string $cacheKey = null;
     private string $callerModuleName;
     private string $callerNamespace;
@@ -84,7 +82,39 @@ final class ClassInfo
         return $callerClassParts[count($callerClassParts) - 2] ?? '';
     }
 
-    public function toString(): string
+    public function copyWith1LevelUpNamespace(): ?self
+    {
+        $parentNamespace = $this->parentNamespace();
+        if (empty($parentNamespace)) {
+            return null;
+        }
+
+        $clone = clone $this;
+        $clone->callerNamespace = $parentNamespace;
+        $oldModuleName = trim(str_replace($parentNamespace, '', $this->callerNamespace), '\\');
+        $clone->callerModuleName = $oldModuleName;
+
+        if ($clone->cacheKey !== null) {
+            $clone->cacheKey = str_replace($oldModuleName, '', (string)$this->cacheKey);
+        }
+
+        return $clone;
+    }
+
+    private function parentNamespace(): string
+    {
+        return $this->removeLastNamespace($this->callerNamespace);
+    }
+
+    private function removeLastNamespace(string $string): string
+    {
+        return substr($string, 0, (int)strrpos($string, '\\'));
+    }
+
+    /**
+     * @internal
+     */
+    public function __toString(): string
     {
         return sprintf(
             'ClassInfo{$cacheKey:%s, $callerModuleName:%s, $callerNamespace:%s}',
@@ -92,57 +122,5 @@ final class ClassInfo
             $this->callerModuleName,
             $this->callerNamespace,
         );
-    }
-
-    public function copyWith1LevelUpNamespace(): ?self
-    {
-        try {
-            $this->checkCanCopyWith1LevelUpNamespace();
-        } catch (\RuntimeException $e) {
-            // TODO: echo/log? $e->getMessage()
-            return null;
-        }
-
-        $clone = clone $this;
-        $lastPos = (int)strrpos($this->callerNamespace, '\\');
-        $oldModuleName = substr($this->callerNamespace, $lastPos);
-        $newCallerNamespace = str_replace($oldModuleName, '', $this->callerNamespace);
-
-        $lastPos2 = (int)strrpos($newCallerNamespace, '\\');
-        $newModuleName = substr($newCallerNamespace, $lastPos2);
-
-        if ($clone->cacheKey !== null) {
-            $clone->cacheKey = str_replace($oldModuleName, '', (string)$this->cacheKey);
-        }
-        $clone->callerNamespace = $newCallerNamespace;
-        $clone->callerModuleName = ltrim($newModuleName, '\\');
-
-        return $clone;
-    }
-
-    private function checkCanCopyWith1LevelUpNamespace(): void
-    {
-        /** @var array<int,int> $charsInBytes */
-        $charsInBytes = \count_chars($this->callerNamespace, 1);
-        $charsInBytesWithMinCount = \array_filter(
-            $charsInBytes,
-            static fn (int $v) => $v >= self::MIN_LEVEL_NAMESPACE_TO_COPY
-        );
-        $chars = \array_map(static fn ($k) => \chr($k), array_keys($charsInBytesWithMinCount));
-        $chars2 = \array_flip($chars);
-//        dd([
-//            '$this->callerNamespace' => $this->callerNamespace,
-//            '$charsInBytes' => $charsInBytes,
-//            '$charsInBytesWithMinCount' => $charsInBytesWithMinCount,
-//            '$chars' => $chars,
-//            '$chars2' => $chars2,
-//            ]);
-
-        if (!isset($chars2['\\'])) {
-            throw new \RuntimeException(sprintf(
-                'Cannot copy classInfo with 1 level up namespace: %s',
-                $this->callerNamespace
-            ));
-        }
     }
 }

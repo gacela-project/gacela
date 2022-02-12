@@ -3,10 +3,11 @@
 ### Unreleased
 
 - Added getAppRootDir() to AbstractConfig.
+- Added APP_ENV environment key, to define different config files on different environments.
+- Added 'config-readers' key in the globalServices and gacela.php.
+- Added 'custom-service-paths' key in the globalServices and gacela.php.
 - Deprecated getApplicationRootDir() from Config. Use getAppRootDir() instead.
-- Gacela::bootstrap() now accepts to add config readers as 'config-readers' key in the globalServices array.
-- Remove EnvConfigReader, if you want to read .env values, you should require `gacela-project/gacela-env-config-reader`.
-- Added APP_ENV env key, to define different config files on different environments.
+- Removed EnvConfigReader, if you want to read .env values, you should require `gacela-project/gacela-env-config-reader`.
 
 ### 0.11.0
 #### 2022-01-18

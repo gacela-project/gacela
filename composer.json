@@ -24,8 +24,9 @@
         "phpunit/phpunit": "^9.5",
         "vimeo/psalm": "^4.20",
         "phpstan/phpstan": "^1.4",
-        "friendsofphp/php-cs-fixer": "^3.5",
+        "friendsofphp/php-cs-fixer": "^3.6",
         "phpbench/phpbench": "^1.2",
+        "phpmetrics/phpmetrics": "^2.7",
         "symfony/var-dumper": "^5.4"
     },
     "suggest": {
@@ -81,6 +82,7 @@
         "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src",
         "csfix": "./vendor/bin/php-cs-fixer fix",
         "csrun": "./vendor/bin/php-cs-fixer fix --dry-run",
-        "phpbench": "vendor/bin/phpbench run --report=aggregate --ansi"
+        "phpbench": "./vendor/bin/phpbench run --report=aggregate --ansi",
+        "metrics-report": "./vendor/bin/phpmetrics --report-html=data/metrics-report --junit=phpunit.xml src tests"
     }
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+### Unreleased
+
+- Added `CustomServiceInterface` that custom services must implement.
+  - Although, the `AbstractCustomService` implements that interface.
+
 ### 0.12.0
 #### 2022-02-13
 

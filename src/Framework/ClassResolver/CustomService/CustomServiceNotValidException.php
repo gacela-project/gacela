@@ -16,7 +16,7 @@ final class CustomServiceNotValidException extends Exception
 
         $message = 'ClassResolver Exception' . PHP_EOL;
         $message .= sprintf(
-            'Is your custom service "%s" from your module "%s" extending %s',
+            'Is your custom service "%s" from your module "%s" extending %s?',
             $resolvableType,
             $callerClassInfo->getModule(),
             AbstractCustomService::class

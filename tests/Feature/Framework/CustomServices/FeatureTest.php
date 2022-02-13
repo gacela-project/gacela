@@ -16,7 +16,7 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(__DIR__, [
             // The order is relevant for the priority in case the same
             // class name is found in both. The first found will be used.
-            'custom-service-paths' => [
+            'custom-services-location' => [
                 'Application',
                 'Infrastructure\Persistence',
             ],

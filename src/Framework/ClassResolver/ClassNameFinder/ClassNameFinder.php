@@ -13,16 +13,16 @@ final class ClassNameFinder implements ClassNameFinderInterface
     private array $finderRules;
 
     /** @var list<string> */
-    private $customServicePaths;
+    private $customServicesLocation;
 
     /**
      * @param list<FinderRuleInterface> $finderRules
-     * @param list<string> $customServicePaths
+     * @param list<string> $customServicesLocation
      */
-    public function __construct(array $finderRules, array $customServicePaths)
+    public function __construct(array $finderRules, array $customServicesLocation)
     {
         $this->finderRules = $finderRules;
-        $this->customServicePaths = $customServicePaths;
+        $this->customServicesLocation = $customServicesLocation;
     }
 
     public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
@@ -34,8 +34,8 @@ final class ClassNameFinder implements ClassNameFinderInterface
                 return $className;
             }
 
-            // Otherwise, look for customServicePaths
-            foreach ($this->customServicePaths as $customServicePath) {
+            // Otherwise, look for customServicesLocation
+            foreach ($this->customServicesLocation as $customServicePath) {
                 $className = $finderRule->buildClassCandidate(
                     $classInfo,
                     $resolvableType,

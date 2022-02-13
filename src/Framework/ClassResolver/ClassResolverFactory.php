@@ -24,7 +24,7 @@ final class ClassResolverFactory
     {
         return new ClassNameFinder(
             $this->createFinderRules(),
-            $this->gacelaConfigFile->getCustomServicePaths()
+            $this->gacelaConfigFile->getCustomServicesLocation()
         );
     }
 

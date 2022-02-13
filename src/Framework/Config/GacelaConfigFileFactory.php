@@ -58,9 +58,9 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $configItems = $this->configGacelaMapper->mapConfigItems($configGacelaClass->config());
         $configReaders = $configGacelaClass->configReaders();
         $mappingInterfaces = $configGacelaClass->mappingInterfaces($this->globalServices);
-        $customServicePaths = $configGacelaClass->customServicePaths();
+        $customServicesLocation = $configGacelaClass->customServicesLocation();
 
-        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces, $customServicePaths);
+        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces, $customServicesLocation);
     }
 
     private function createDefaultGacelaPhpConfig(): GacelaConfigFile
@@ -69,29 +69,29 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
          *     config?: array<array>|array{type:string,path:string,path_local:string},
          *     config-readers?: array<string,ConfigReaderInterface>,
          *     mapping-interfaces?: array<class-string,class-string|callable>,
-         *     custom-service-paths?: list<string>,
+         *     custom-services-location?: list<string>,
          * } $configFromGlobalServices
          */
         $configFromGlobalServices = $this->globalServices;
         $configItems = $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'] ?? []);
         $configReaders = $configFromGlobalServices['config-readers'] ?? [];
         $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
-        $customServicePaths = $configFromGlobalServices['custom-service-paths'] ?? [];
+        $customServicesLocation = $configFromGlobalServices['custom-services-location'] ?? [];
 
-        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces, $customServicePaths);
+        return $this->createWithDefaultIfEmpty($configItems, $configReaders, $mappingInterfaces, $customServicesLocation);
     }
 
     /**
      * @param list<GacelaConfigItem> $configItems
      * @param array<string,ConfigReaderInterface> $configReaders
      * @param array<class-string,class-string|callable> $mappingInterfaces
-     * @param list<string> $customServicePaths
+     * @param list<string> $customServicesLocation
      */
     private function createWithDefaultIfEmpty(
         array $configItems,
         array $configReaders,
         array $mappingInterfaces,
-        array $customServicePaths
+        array $customServicesLocation
     ): GacelaConfigFile {
         $gacelaConfigFile = GacelaConfigFile::withDefaults();
 
@@ -104,8 +104,8 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         if (!empty($mappingInterfaces)) {
             $gacelaConfigFile->setMappingInterfaces($mappingInterfaces);
         }
-        if (!empty($customServicePaths)) {
-            $gacelaConfigFile->setCustomServicePaths($customServicePaths);
+        if (!empty($customServicesLocation)) {
+            $gacelaConfigFile->setCustomServicesLocation($customServicesLocation);
         }
 
         return $gacelaConfigFile;

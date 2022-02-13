@@ -9,8 +9,29 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 abstract class AbstractConfigGacela
 {
     /**
+     * e.g:
+     * <code>
+     * return [
+     *   'path' => '.env*',
+     *   'path_local' => '.env',
+     * ];
+     * # OR
+     * return [
+     *   [
+     *     'path' => '.env*',
+     *     'path_local' => '.env',
+     *   ],
+     *   [
+     *     'path' => 'config/*.php',
+     *     'path_local' => 'config/local.php',
+     *   ],
+     * ];
+     * </code>
+     *
+     * <b>path</b>: Define the path where Gacela will read all the config files. Default: <i>config/*.php</i><br>
+     * <b>path_local</b>: Define the path where Gacela will read the local config file. Default: <i>config/local.php</i>
+     *
      * @return array<array>|array{
-     *     type?:string,
      *     path?:string,
      *     path_local?:string
      * }
@@ -21,6 +42,15 @@ abstract class AbstractConfigGacela
     }
 
     /**
+     * e.g:
+     * <code>
+     * return [
+     *     'php' => new \Gacela\Framework\Config\ConfigReader\PhpConfigReader(),
+     * ];
+     * </code>
+     *
+     * Define the reader class which will read and parse the config files. Default: <i>PhpConfigReader</i>
+     *
      * @return array<string,ConfigReaderInterface>
      */
     public function configReaders(): array
@@ -29,6 +59,19 @@ abstract class AbstractConfigGacela
     }
 
     /**
+     * e.g:
+     * <code>
+     * return [
+     *     // It instantiates the specific class on runtime
+     *     AbstractClass::class => SpecificClass::class,
+     *
+     *     // It resolves the callable on runtime
+     *     InterfaceClass::class => fn() => new SpecificClass($dependencies),
+     * ];
+     * </code>
+     *
+     * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
+     *
      * @param array<string,mixed> $globalServices
      *
      * @return array<class-string,class-string|callable>
@@ -39,6 +82,17 @@ abstract class AbstractConfigGacela
     }
 
     /**
+     * e.g:
+     * <code>
+     * return [
+     *     'Application',
+     *     'Infrastructure\Persistence',
+     * ];
+     * </code>
+     *
+     * Define paths (relative to each module) where Gacela should check for custom services that will be auto-resolved.
+     * The classes must extend `Gacela\Framework\AbstractCustomService`.
+     *
      * @return list<string>
      */
     public function customServicePaths(): array

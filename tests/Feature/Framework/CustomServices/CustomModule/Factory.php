@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\CustomServices\CustomModule;
 
 use Gacela\Framework\AbstractFactory;
-use GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure\Repository;
+use GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure\Persistence\Repository;
 
 /**
  * @method Repository getRepository()

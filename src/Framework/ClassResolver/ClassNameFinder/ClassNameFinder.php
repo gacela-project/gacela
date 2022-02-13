@@ -30,7 +30,6 @@ final class ClassNameFinder implements ClassNameFinderInterface
         foreach ($this->finderRules as $finderRule) {
             // First we look in the module-root dir
             $className = $finderRule->buildClassCandidate($classInfo, $resolvableType);
-
             if (class_exists($className)) {
                 return $className;
             }

@@ -15,6 +15,17 @@ abstract class AbstractConfigGacela
      *   'path' => '.env*',
      *   'path_local' => '.env',
      * ];
+     * # OR
+     * return [
+     *   [
+     *     'path' => '.env*',
+     *     'path_local' => '.env',
+     *   ],
+     *   [
+     *     'path' => 'config/*.php',
+     *     'path_local' => 'config/local.php',
+     *   ],
+     * ];
      * </code>
      *
      * <b>path</b>: Define the path where Gacela will read all the config files. Default: <i>config/*.php</i><br>
@@ -33,7 +44,9 @@ abstract class AbstractConfigGacela
     /**
      * e.g:
      * <code>
-     * return ['php' => new \Gacela\Framework\Config\ConfigReader\PhpConfigReader()];
+     * return [
+     *     'php' => new \Gacela\Framework\Config\ConfigReader\PhpConfigReader(),
+     * ];
      * </code>
      *
      * Define the reader class which will read and parse the config files. Default: <i>PhpConfigReader</i>
@@ -49,11 +62,15 @@ abstract class AbstractConfigGacela
      * e.g:
      * <code>
      * return [
-     *     Abstractclass::class => new SpecificClass($dependencies),
+     *     // It instantiates the specific class on runtime
+     *     AbstractClass::class => SpecificClass::class,
+     *
+     *     // It resolves the callable on runtime
+     *     InterfaceClass::class => fn() => new SpecificClass($dependencies),
      * ];
      * </code>
      *
-     * Define the mapping between interfaces and concretions, so, Gacela will auto-resolve them automatically.
+     * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
      * @param array<string,mixed> $globalServices
      *
@@ -65,7 +82,15 @@ abstract class AbstractConfigGacela
     }
 
     /**
-     * Define path/s where Gacela should check when an interface should be auto-resolve.
+     * e.g:
+     * <code>
+     * return [
+     *     'Infrastructure/Persistence',
+     * ];
+     * </code>
+     *
+     * Define paths (relative to each module) where Gacela should check for custom services that will be auto-resolved.
+     * The classes must extend `Gacela\Framework\AbstractCustomService`.
      *
      * @return list<string>
      */

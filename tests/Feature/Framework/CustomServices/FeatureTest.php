@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\CustomServices;
 
+use Gacela\Framework\ClassResolver\CustomService\CustomServiceNotValidException;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\CustomServices\CustomModule\Facade;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +18,7 @@ final class FeatureTest extends TestCase
             // class name is found in both. The first found will be used.
             'custom-service-paths' => [
                 'Application',
-                'Infrastructure',
+                'Infrastructure\Persistence',
             ],
         ]);
     }
@@ -54,5 +55,13 @@ final class FeatureTest extends TestCase
             ],
             $facade->usingCustomServicesFromFactory()
         );
+    }
+
+    public function test_custom_service_which_does_not_extends_abstract_custom_service(): void
+    {
+        $this->expectException(CustomServiceNotValidException::class);
+        $this->expectErrorMessageMatches('~"Greeter".*"CustomModule".*AbstractCustomService~');
+        $facade = new Facade();
+        $facade->greetUsingPlainCustomService('Gacela');
     }
 }

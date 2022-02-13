@@ -18,6 +18,7 @@ final class CustomServiceResolver extends AbstractClassResolver
 
     /**
      * @throws CustomServiceNotFoundException
+     * @throws CustomServiceNotValidException
      */
     public function resolve(object $callerClass): AbstractCustomService
     {
@@ -26,6 +27,10 @@ final class CustomServiceResolver extends AbstractClassResolver
 
         if (null === $resolved) {
             throw new CustomServiceNotFoundException($callerClass, $this->resolvableType);
+        }
+
+        if (!$resolved instanceof AbstractCustomService) {
+            throw new CustomServiceNotValidException($callerClass, $this->resolvableType);
         }
 
         return $resolved;

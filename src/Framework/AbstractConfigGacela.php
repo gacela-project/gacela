@@ -85,7 +85,8 @@ abstract class AbstractConfigGacela
      * e.g:
      * <code>
      * return [
-     *     'Infrastructure/Persistence',
+     *     'Application',
+     *     'Infrastructure\Persistence',
      * ];
      * </code>
      *

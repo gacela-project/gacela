@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure;
+namespace GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure\Persistence;
 
 use Gacela\Framework\AbstractCustomService;
 use GacelaTest\Feature\Framework\CustomServices\CustomModule\Config;
+use GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure\Factory;
 
 /**
  * @method Factory getFactory()

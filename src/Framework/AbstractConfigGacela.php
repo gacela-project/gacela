@@ -90,12 +90,12 @@ abstract class AbstractConfigGacela
      * ];
      * </code>
      *
-     * Define paths (relative to each module) where Gacela should check for custom services that will be auto-resolved.
-     * The classes must extend `Gacela\Framework\AbstractCustomService`.
+     * Define namespaces (relative to a module) where Gacela should check for custom services that will be auto-resolved.
+     * The classes that you want to use as custom services must extend `Gacela\Framework\AbstractCustomService`.
      *
      * @return list<string>
      */
-    public function customServicePaths(): array
+    public function customServicesLocation(): array
     {
         return [];
     }

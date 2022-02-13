@@ -18,8 +18,8 @@ final class GacelaConfigFile
     /** @var array<string,ConfigReaderInterface> */
     private array $configReaders = [];
 
-    /** @var list<string> */
-    private array $customServicePaths = [];
+    /** @var list<string> Namespaces relative to a module */
+    private array $customServicesLocation = [];
 
     public static function withDefaults(): self
     {
@@ -86,11 +86,11 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param list<string> $customServicePaths
+     * @param list<string> $customServicesLocation
      */
-    public function setCustomServicePaths(array $customServicePaths): self
+    public function setCustomServicesLocation(array $customServicesLocation): self
     {
-        $this->customServicePaths = $customServicePaths;
+        $this->customServicesLocation = $customServicesLocation;
 
         return $this;
     }
@@ -98,8 +98,8 @@ final class GacelaConfigFile
     /**
      * @return list<string>
      */
-    public function getCustomServicePaths(): array
+    public function getCustomServicesLocation(): array
     {
-        return $this->customServicePaths;
+        return $this->customServicesLocation;
     }
 }

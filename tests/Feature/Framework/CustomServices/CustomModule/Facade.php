@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\CustomServices\CustomModule;
 
 use Gacela\Framework\AbstractFacade;
-use GacelaTest\Feature\Framework\CustomServices\CustomModule\Application\Greeter;
+use GacelaTest\Feature\Framework\CustomServices\CustomModule\Application\InvalidGreeter;
 use GacelaTest\Feature\Framework\CustomServices\CustomModule\Application\Repository;
+use GacelaTest\Feature\Framework\CustomServices\CustomModule\Application\ValidGreeter;
 use GacelaTest\Feature\Framework\CustomServices\CustomModule\Infrastructure\Persistence\EntityManager;
 
 /**
+ * @method Factory getFactory()
  * @method Repository getRepository()
  * @method EntityManager getEntityManager()
- * @method Greeter getGreeter()
+ * @method InvalidGreeter getInvalidGreeter()
+ * @method ValidGreeter getValidGreeter()
  */
 final class Facade extends AbstractFacade
 {
@@ -33,8 +36,21 @@ final class Facade extends AbstractFacade
         return $this->getFactory()->findAllKeyValuesUsingRepositoryFromFactory();
     }
 
-    public function greetUsingPlainCustomService(string $name): string
+    /**
+     * When `getInvalidGreeter()` is trying to be resolved as `Application/InvalidGreeter`, it will throw an
+     * CustomServiceNotValidException because it's not implementing `CustomServiceInterface`.
+     */
+    public function greetUsingInvalidCustomService(string $name): string
     {
-        return $this->getGreeter()->greet($name);
+        return $this->getInvalidGreeter()->greet($name);
+    }
+
+    /**
+     * The `getValidGreeter()` will be resolved successfully as `Application/ValidGreeter` because it's
+     * implementing `CustomServiceInterface`.
+     */
+    public function greetUsingValidCustomService(string $name): string
+    {
+        return $this->getValidGreeter()->greet($name);
     }
 }

@@ -8,10 +8,10 @@ use Gacela\Framework\ClassResolver\CustomService\CustomServiceResolver;
 
 trait CustomServiceAwareTrait
 {
-    /** @var array<string,AbstractCustomService> */
+    /** @var array<string,CustomServiceInterface> */
     private array $customServices = [];
 
-    public function __call(string $name, array $arguments = []): AbstractCustomService
+    public function __call(string $name, array $arguments = []): CustomServiceInterface
     {
         $resolvableType = ltrim($name, 'get');
 

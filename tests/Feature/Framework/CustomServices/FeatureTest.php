@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
+    private Facade $facade;
+
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, [
@@ -21,12 +23,11 @@ final class FeatureTest extends TestCase
                 'Infrastructure\Persistence',
             ],
         ]);
+        $this->facade = new Facade();
     }
 
     public function test_using_custom_services_from_facade(): void
     {
-        $facade = new Facade();
-
         self::assertSame(
             [
                 'from-application-repository' => [
@@ -38,14 +39,12 @@ final class FeatureTest extends TestCase
                     'from-infrastructure-factory' => 3,
                 ],
             ],
-            $facade->usingCustomServicesFromFacade()
+            $this->facade->usingCustomServicesFromFacade()
         );
     }
 
     public function test_using_custom_services_from_factory(): void
     {
-        $facade = new Facade();
-
         self::assertSame(
             [
                 'from-application-repository' => [
@@ -53,15 +52,23 @@ final class FeatureTest extends TestCase
                     'from-application-factory' => 2,
                 ],
             ],
-            $facade->usingCustomServicesFromFactory()
+            $this->facade->usingCustomServicesFromFactory()
         );
     }
 
-    public function test_custom_service_which_does_not_extends_abstract_custom_service(): void
+    public function test_custom_service_which_does_not_implement_custom_service_interface(): void
     {
         $this->expectException(CustomServiceNotValidException::class);
-        $this->expectErrorMessageMatches('~"Greeter".*"CustomModule".*AbstractCustomService~');
-        $facade = new Facade();
-        $facade->greetUsingPlainCustomService('Gacela');
+        $this->expectErrorMessageMatches('~"InvalidGreeter".*"CustomModule".*CustomServiceInterface~');
+
+        $this->facade->greetUsingInvalidCustomService('Gacela');
+    }
+
+    public function test_custom_service_which_implements_custom_service_interface(): void
+    {
+        self::assertSame(
+            'Hi, Gacela!',
+            $this->facade->greetUsingValidCustomService('Gacela')
+        );
     }
 }

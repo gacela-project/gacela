@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\CustomService;
 
-use Gacela\Framework\AbstractCustomService;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\CustomServiceInterface;
 
 final class CustomServiceResolver extends AbstractClassResolver
 {
@@ -20,16 +20,16 @@ final class CustomServiceResolver extends AbstractClassResolver
      * @throws CustomServiceNotFoundException
      * @throws CustomServiceNotValidException
      */
-    public function resolve(object $callerClass): AbstractCustomService
+    public function resolve(object $callerClass): CustomServiceInterface
     {
-        /** @var ?AbstractCustomService $resolved */
+        /** @var ?CustomServiceInterface $resolved */
         $resolved = $this->doResolve($callerClass);
 
         if (null === $resolved) {
             throw new CustomServiceNotFoundException($callerClass, $this->resolvableType);
         }
 
-        if (!$resolved instanceof AbstractCustomService) {
+        if (!$resolved instanceof CustomServiceInterface) {
             throw new CustomServiceNotValidException($callerClass, $this->resolvableType);
         }
 

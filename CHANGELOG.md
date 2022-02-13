@@ -1,25 +1,27 @@
 # Changelog
 
-### Unreleased
+### 0.12.0
+#### 2022-02-XX
 
-- Added getAppRootDir() to AbstractConfig.
-- Added APP_ENV environment key, to define different config files on different environments.
-- Added 'config-readers' key in the globalServices and gacela.php.
-- Added 'custom-service-paths' key in the globalServices and gacela.php.
-- Deprecated getApplicationRootDir() from Config. Use getAppRootDir() instead.
-- Removed EnvConfigReader, if you want to read .env values, you should require `gacela-project/gacela-env-config-reader`.
+- Added `getAppRootDir()` to AbstractConfig.
+- Added `APP_ENV` environment key, to define different config files on different environments.
+- Added `'config-readers'` key in the globalServices and `gacela.php`.
+- Added `'custom-service-paths'` key in the globalServices and `gacela.php`.
+- Deprecated `getApplicationRootDir()` from Config. Use `getAppRootDir()` instead.
+- Removed `EnvConfigReader` from `gacela-project/gacela`. 
+  - If you want to read `.env` values, you should require `gacela-project/gacela-env-config-reader`.
 
 ### 0.11.0
 #### 2022-01-18
 
-- Deleted deprecated array config in gacela.php.
-- Allow null as default config value.
-- The globalServices are passed into mappingInterfaces() and not as constructor argument.
+- Deleted deprecated array config in `gacela.php`.
+- Allow `null` as default config value.
+- The globalServices are passed into `mappingInterfaces()` and not as constructor argument.
 
 ### 0.10.0
 #### 2021-10-04
 
-- Allow setup custom config from Gacela::bootstrap directly.
+- Allow setup custom config from `Gacela::bootstrap()` directly.
 
 ### 0.9.0
 ##### 2021-08-27
@@ -31,7 +33,7 @@
 
 - Updated `gacela.php` config file:
   - returning a simple array has been deprecated,
-  - an anonymous function that creates an anonymous class that extends from `AbstractConfigGacela` should be used.
+  - an anonymous function that creates an anonymous class that extends from AbstractConfigGacela should be used.
 - Remove deprecated `gacela.json` config file.
 
 ### 0.7.0
@@ -45,15 +47,15 @@
 ### 0.6.0
 ##### 2021-07-27
 
-- Added AbstractClassResolver::overrideExistingResolvedClass().
-- Locator uses AbstractClassResolver::getGlobalInstance() before creating a new instance.
-- Unify the cacheKey using GlobalKey.
+- Added `AbstractClassResolver::overrideExistingResolvedClass()`.
+- Locator uses `AbstractClassResolver::getGlobalInstance()` before creating a new instance.
+- Unify the cacheKey using `GlobalKey`.
 
 ### 0.5.0
 ##### 2021-07-19
 
-- Config::setConfigReaders() create a new config instance singleton.
-- Added AbstractClassResolver::addAnonymousGlobal(); you can now use anonymous classes.
+- `Config::setConfigReaders()` create a new config instance singleton.
+- Added `AbstractClassResolver::addAnonymousGlobal()` you can now use anonymous classes.
 - Added matrix for the GitHub CI for diff PHP versions (7.4,8.0), and diff OS (mac,linux,windows).
 
 ### 0.4.0

@@ -10,12 +10,12 @@ use GacelaTest\Feature\Framework\CustomServicesLevel\CustomModule\Config;
 /**
  * @method Config getConfig()
  */
-final class HappyService4 extends AbstractCustomService
+final class CheersService4 extends AbstractCustomService
 {
-    public function greet(string $name): string
+    public function cheers(string $name): string
     {
         $configValue = $this->getConfig()->getConfigValue();
 
-        return "Hi, $name! From level 4 ($configValue)";
+        return "Cheers, $name! From level 4 ($configValue)";
     }
 }

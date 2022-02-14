@@ -25,8 +25,16 @@ final class FeatureTest extends TestCase
     public function test_custom_service_which_uses_config_from_module(): void
     {
         self::assertSame(
-            'Hi, Gacela! From level 4 (config-value)',
-            $this->facade->greet('Gacela')
+            'Cheers, Gacela! From level 4 (config-value)',
+            $this->facade->cheers('Gacela')
+        );
+    }
+
+    public function test_custom_service_directly_from_facade(): void
+    {
+        self::assertSame(
+            'Greetings, Gacela! From level 4',
+            $this->facade->greetService4()->greet('Gacela')
         );
     }
 }

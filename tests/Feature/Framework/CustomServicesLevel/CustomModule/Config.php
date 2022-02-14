@@ -9,18 +9,8 @@ use Gacela\Framework\CustomServiceInterface;
 
 final class Config extends AbstractConfig implements CustomServiceInterface
 {
-    /**
-     * @return array<string,int>
-     */
-    public function getAllKeyValues(): array
+    public function getConfigValue(): string
     {
-        return [
-            'from-config' => (int)$this->get('from-config'),
-        ];
-    }
-
-    public function ok(): string
-    {
-        return 'config-ok';
+        return (string)$this->get('config-key');
     }
 }

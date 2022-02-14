@@ -14,6 +14,8 @@ final class HappyService4 extends AbstractCustomService
 {
     public function greet(string $name): string
     {
-        return "Hi, $name! " . $this->getConfig()->ok();
+        $configValue = $this->getConfig()->getConfigValue();
+
+        return "Hi, $name! From level 4 ($configValue)";
     }
 }

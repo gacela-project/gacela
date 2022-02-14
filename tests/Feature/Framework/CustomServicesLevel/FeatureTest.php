@@ -15,8 +15,6 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, [
-            // The order is relevant for the priority in case the same
-            // class name is found in both. The first found will be used.
             'custom-services-location' => [
                 'Level1\Level2\Level3\Level4',
             ],
@@ -24,10 +22,10 @@ final class FeatureTest extends TestCase
         $this->facade = new Facade();
     }
 
-    public function test_using_custom_services_from_factory(): void
+    public function test_custom_service_which_uses_config_from_module(): void
     {
         self::assertSame(
-            'Hi, Gacela! config-ok',
+            'Hi, Gacela! From level 4 (config-value)',
             $this->facade->greet('Gacela')
         );
     }

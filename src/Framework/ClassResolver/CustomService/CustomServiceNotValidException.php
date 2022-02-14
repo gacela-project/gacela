@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver\CustomService;
 
 use Exception;
-use Gacela\Framework\AbstractCustomService;
 use Gacela\Framework\ClassResolver\ClassInfo;
+use Gacela\Framework\CustomServiceInterface;
 
 final class CustomServiceNotValidException extends Exception
 {
@@ -16,10 +16,10 @@ final class CustomServiceNotValidException extends Exception
 
         $message = 'ClassResolver Exception' . PHP_EOL;
         $message .= sprintf(
-            'Is your custom service "%s" from your module "%s" extending %s?',
+            'Is your custom service "%s" from your module "%s" implementing %s?',
             $resolvableType,
             $callerClassInfo->getModule(),
-            AbstractCustomService::class
+            CustomServiceInterface::class
         ) . PHP_EOL;
 
         parent::__construct($message);

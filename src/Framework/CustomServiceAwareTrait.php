@@ -13,7 +13,8 @@ trait CustomServiceAwareTrait
 
     public function __call(string $name, array $arguments = []): CustomServiceInterface
     {
-        $resolvableType = ltrim($name, 'get');
+        $normalizedName = (string)preg_replace('/^get/', '', $name);
+        $resolvableType = ucfirst($normalizedName);
 
         if (!isset($this->customServices[$resolvableType])) {
             $this->customServices[$resolvableType] = (new CustomServiceResolver($resolvableType))

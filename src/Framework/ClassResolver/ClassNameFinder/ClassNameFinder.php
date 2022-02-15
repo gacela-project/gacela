@@ -9,6 +9,9 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
+    /** @var array<string,array<string,string>> */
+    private static array $cachedClassNames = [];
+
     /** @var list<FinderRuleInterface> */
     private array $finderRules;
 
@@ -27,10 +30,15 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
     public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
     {
+        if (isset(self::$cachedClassNames[$classInfo->toString()][$resolvableType])) {
+            return self::$cachedClassNames[$classInfo->toString()][$resolvableType];
+        }
+
         foreach ($this->finderRules as $finderRule) {
             // First we look in the module-root dir
             $className = $finderRule->buildClassCandidate($classInfo, $resolvableType);
             if (class_exists($className)) {
+                self::$cachedClassNames[$classInfo->toString()][$resolvableType] = $className;
                 return $className;
             }
 
@@ -43,6 +51,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
                 );
 
                 if (class_exists($className)) {
+                    self::$cachedClassNames[$classInfo->toString()][$resolvableType] = $className;
                     return $className;
                 }
             }

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Transfer;
 
-use RuntimeException;
+use function get_object_vars;
+use function lcfirst;
+use function preg_replace;
+use function property_exists;
+use function reset;
 
 abstract class AbstractTransfer
 {
@@ -35,7 +39,7 @@ abstract class AbstractTransfer
     }
 
     /**
-     * @return mixed
+     * @return mixed|static
      */
     public function __call(string $name, array $arguments = [])
     {
@@ -54,6 +58,29 @@ abstract class AbstractTransfer
             return $this;
         }
 
-        throw new RuntimeException("Unknown property with name: $normalizedName");
+        throw UnknownPropertyException::withName($normalizedName);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function __get(string $name)
+    {
+        return $this->__call($name);
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return mixed|static
+     */
+    public function __set(string $name, $value)
+    {
+        return $this->__call($name, [$value]);
+    }
+
+    public function __isset(string $name): bool
+    {
+        return $this->__call($name) !== null;
     }
 }

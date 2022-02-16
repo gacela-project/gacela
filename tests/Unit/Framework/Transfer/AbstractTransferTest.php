@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Transfer;
 
+use Gacela\Framework\Transfer\UnknownPropertyException;
 use GacelaTest\Unit\Framework\Transfer\Fixtures\PersonTransfer;
 use PHPUnit\Framework\TestCase;
 
@@ -71,9 +72,19 @@ final class AbstractTransferTest extends TestCase
         self::assertInstanceOf(PersonTransfer::class, $person);
     }
 
-    public function test_set_nonexistent_property(): void
+    public function test_set_nonexistent_property_using_public_property(): void
     {
-        $this->expectErrorMessageMatches('/.*Unknown property with name: nonExistentProperty/');
+        $this->expectException(UnknownPropertyException::class);
+        $this->expectExceptionMessage('Unknown property with name: nonExistentProperty');
+
+        $person = new PersonTransfer();
+        $person->nonExistentProperty = 123;
+    }
+
+    public function test_set_nonexistent_property_using_setter(): void
+    {
+        $this->expectException(UnknownPropertyException::class);
+        $this->expectExceptionMessage('Unknown property with name: nonExistentProperty');
 
         (new PersonTransfer())->setNonExistentProperty(123);
     }

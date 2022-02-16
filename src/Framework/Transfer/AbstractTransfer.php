@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Transfer;
 
+use RuntimeException;
+
 abstract class AbstractTransfer
 {
     /**
@@ -52,6 +54,6 @@ abstract class AbstractTransfer
             return $this;
         }
 
-        throw new \RuntimeException("Unknown property with name: $normalizedName");
+        throw new RuntimeException("Unknown property with name: $normalizedName");
     }
 }

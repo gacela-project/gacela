@@ -52,14 +52,14 @@ final class AbstractTransferTest extends TestCase
 
     public function test_set_wrong_type_from_setter(): void
     {
-        $this->expectErrorMessageMatches('/.*Typed property .*PersonTransfer.*age must be int or null, float used/');
+        $this->expectErrorMessageMatches('/.*PersonTransfer.*age.*/');
 
         (new PersonTransfer())->setAge(10.5);
     }
 
     public function test_set_wrong_type_from_array(): void
     {
-        $this->expectErrorMessageMatches('/.*Typed property .*PersonTransfer.*age must be int or null, float used/');
+        $this->expectErrorMessageMatches('/.*PersonTransfer.*age.*/');
 
         (new PersonTransfer())->fromArray(['age' => 10.5]);
     }

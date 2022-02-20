@@ -82,38 +82,6 @@ final class ClassInfo
         return $callerClassParts[count($callerClassParts) - 2] ?? '';
     }
 
-    public function copyWith1LevelUpNamespace(): ?self
-    {
-        $parentNamespace = $this->parentNamespace();
-        if (empty($parentNamespace)) {
-            return null;
-        }
-
-        $clone = clone $this;
-        $clone->callerNamespace = $parentNamespace;
-        $oldModuleName = str_replace($parentNamespace, '', $this->callerNamespace);
-        $clone->callerModuleName = trim($oldModuleName, '\\');
-
-        if ($clone->cacheKey !== null) {
-            $clone->cacheKey = str_replace($oldModuleName, '', (string)$this->cacheKey);
-        }
-
-        return $clone;
-    }
-
-    private function parentNamespace(): string
-    {
-        return $this->removeLastNamespace($this->callerNamespace);
-    }
-
-    private function removeLastNamespace(string $string): string
-    {
-        return substr($string, 0, (int)strrpos($string, '\\'));
-    }
-
-    /**
-     * @internal
-     */
     public function toString(): string
     {
         return sprintf(

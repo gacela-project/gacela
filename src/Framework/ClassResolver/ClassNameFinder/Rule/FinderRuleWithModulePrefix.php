@@ -8,19 +8,12 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 
 final class FinderRuleWithModulePrefix implements FinderRuleInterface
 {
-    public function buildClassCandidate(
-        ClassInfo $classInfo,
-        string $resolvableType,
-        string $customServicePath = ''
-    ): string {
-        $classname = !empty($customServicePath)
-            ? $customServicePath . '\\' . $classInfo->getModule() . $resolvableType
-            : $classInfo->getModule() . $resolvableType;
-
+    public function buildClassCandidate(ClassInfo $classInfo, string $resolvableType): string
+    {
         return sprintf(
             '\\%s\\%s',
             $classInfo->getFullNamespace(),
-            $classname
+            $classInfo->getModule() . $resolvableType
         );
     }
 }

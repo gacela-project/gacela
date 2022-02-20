@@ -80,23 +80,4 @@ abstract class AbstractConfigGacela
     {
         return [];
     }
-
-    /**
-     * e.g:
-     * <code>
-     * return [
-     *     'Application',
-     *     'Infrastructure\Persistence',
-     * ];
-     * </code>
-     *
-     * Define namespaces (relative to a module) where Gacela should check for custom services that will be auto-resolved.
-     * The classes that you want to use as custom services must extend `Gacela\Framework\AbstractCustomService`.
-     *
-     * @return list<string>
-     */
-    public function customServicesLocation(): array
-    {
-        return [];
-    }
 }

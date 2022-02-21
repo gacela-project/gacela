@@ -4,7 +4,8 @@
 
 - Deprecated and removed `CustomService` feature. Use `MappingInterfaces` feature instead.
   - Why? Too much magic.
-- Removed `getApplicationRootDir()` & `setApplicationRootDir()` from Config.
+- Removed deprecated methods `getApplicationRootDir()` & `setApplicationRootDir()` from Config.
+  - Use `getAppRootDir()` & `setAppRootDir()` instead.
 
 ### 0.12.0
 #### 2022-02-13

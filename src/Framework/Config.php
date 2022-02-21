@@ -84,7 +84,7 @@ final class Config
         $this->appRootDir = $dir;
 
         if (empty($this->appRootDir)) {
-            $this->appRootDir = getcwd() ?: '';
+            $this->appRootDir = getcwd() ?: ''; // @codeCoverageIgnore
         }
 
         return $this;
@@ -93,22 +93,6 @@ final class Config
     public function getAppRootDir(): string
     {
         return $this->appRootDir ?? getcwd() ?: '';
-    }
-
-    /**
-     * @deprecated Use `setAppRootDir(string $dir)` instead
-     */
-    public function setApplicationRootDir(string $dir): void
-    {
-        $this->setAppRootDir($dir);
-    }
-
-    /**
-     * @deprecated use `getAppRootDir()` instead
-     */
-    public function getApplicationRootDir(): string
-    {
-        return $this->getAppRootDir();
     }
 
     /**

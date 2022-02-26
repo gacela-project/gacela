@@ -34,41 +34,26 @@ final class ConfigLoader
         $configs = [];
         $cacheConfigFileContent = [];
 
+        /** @var list<array<string,mixed>> $result */
         $result = [];
         foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
             $absolutePatternPath = $this->pathNormalizer->normalizePathPattern($configItem);
-            $matchingPattern = $this->pathFinder->matchingPattern($absolutePatternPath);
-            $excludePattern = [$this->normalizePathLocal($configItem)];
-            $configPaths = array_diff($matchingPattern, $excludePattern);
-
-            foreach ($configPaths as $absolutePath) {
-                if (!isset($cacheConfigFileContent[$absolutePath])) {
-                    $cacheConfigFileContent[$absolutePath] = $configItem->reader()->read($absolutePath);
-                }
-
-                $result[] = $cacheConfigFileContent[$absolutePath];
-            }
+            $result[] = $this->readAbsolutePatternPath($absolutePatternPath, $configItem, $cacheConfigFileContent);
         }
 
         foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
-            $absolutePatternPathWithEnvironment = $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem);
-            $matchingPatternWithEnvironment = $this->pathFinder->matchingPattern($absolutePatternPathWithEnvironment);
-            $excludePattern = [$this->normalizePathLocal($configItem)];
-            $configPaths = array_diff($matchingPatternWithEnvironment, $excludePattern);
-
-            foreach ($configPaths as $absolutePath) {
-                if (!isset($cacheConfigFileContent[$absolutePath])) {
-                    $cacheConfigFileContent[$absolutePath] = $configItem->reader()->read($absolutePath);
-                }
-
-                $result[] = $cacheConfigFileContent[$absolutePath];
-            }
+            $absolutePatternPath = $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem);
+            $result[] = $this->readAbsolutePatternPath($absolutePatternPath, $configItem, $cacheConfigFileContent);
         }
 
-        $configs[] = array_merge(...$result);
+        /** @psalm-suppress MixedArgument */
+        $configs[] = array_merge(...array_merge(...$result));//@phpstan-ignore-line
         $configs[] = $this->readLocalConfigFile($gacelaFileConfig);
 
-        return array_merge(...$configs);
+        /** @var array<string,mixed> $allConfigKeyValues */
+        $allConfigKeyValues = array_merge(...$configs);
+
+        return $allConfigKeyValues;
     }
 
     /**
@@ -90,5 +75,32 @@ final class ConfigLoader
     private function normalizePathLocal(GacelaConfigItem $configItem): string
     {
         return $this->pathNormalizer->normalizePathLocal($configItem);
+    }
+
+    /**
+     * @param array<string,array<string,mixed>> $cacheConfigFileContent
+     *
+     * @return list<array<string,mixed>>
+     */
+    private function readAbsolutePatternPath(
+        string $pattern,
+        GacelaConfigItem $configItem,
+        array &$cacheConfigFileContent
+    ): array {
+        $matchingPattern = $this->pathFinder->matchingPattern($pattern);
+        $excludePattern = [$this->normalizePathLocal($configItem)];
+        $configPaths = array_diff($matchingPattern, $excludePattern);
+
+        /** @var list<array<string,mixed>> $result */
+        $result = [];
+        foreach ($configPaths as $absolutePath) {
+            if (!isset($cacheConfigFileContent[$absolutePath])) {
+                $cacheConfigFileContent[$absolutePath] = $configItem->reader()->read($absolutePath);
+            }
+
+            $result[] = $cacheConfigFileContent[$absolutePath];
+        }
+
+        return $result;
     }
 }

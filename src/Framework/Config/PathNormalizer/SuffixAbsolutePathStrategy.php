@@ -20,18 +20,20 @@ final class SuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 
     public function generateAbsolutePath(string $relativePath): string
     {
+        $suffix = $this->configFileNameSuffix;
+        if ($suffix === '') {
+            return '';
+        }
+
         // place the file suffix right before the file extension
         $dotPos = strpos($relativePath, '.');
-        $suffix = $this->getConfigFileNameSuffix();
 
-        if ($dotPos !== false && !empty($suffix)) {
+        if ($dotPos !== false) {
             $relativePathWithFileSuffix = substr($relativePath, 0, $dotPos)
-                . '-' . $this->getConfigFileNameSuffix()
+                . '-' . $suffix
                 . substr($relativePath, $dotPos);
-        } elseif (!empty($suffix)) {
-            $relativePathWithFileSuffix = $relativePath . '-' . $suffix;
         } else {
-            $relativePathWithFileSuffix = $relativePath;
+            $relativePathWithFileSuffix = $relativePath . '-' . $suffix;
         }
 
         return sprintf(
@@ -39,10 +41,5 @@ final class SuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
             rtrim($this->appRootDir, '/'),
             ltrim($relativePathWithFileSuffix, '/')
         );
-    }
-
-    private function getConfigFileNameSuffix(): string
-    {
-        return $this->configFileNameSuffix;
     }
 }

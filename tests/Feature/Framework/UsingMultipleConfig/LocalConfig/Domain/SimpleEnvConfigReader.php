@@ -8,17 +8,12 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 
 final class SimpleEnvConfigReader implements ConfigReaderInterface
 {
-    public function canRead(string $absolutePath): bool
-    {
-        return false !== strpos($absolutePath, '.env');
-    }
-
     /**
      * @return array<string,mixed>
      */
     public function read(string $absolutePath): array
     {
-        if (!is_file($absolutePath)) {
+        if (!$this->canRead($absolutePath)) {
             return [];
         }
 
@@ -28,7 +23,7 @@ final class SimpleEnvConfigReader implements ConfigReaderInterface
         $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
         foreach ($lines as $line) {
-            if (strpos(trim($line), '#') === 0) {
+            if (strncmp(trim($line), '#', 1) === 0) {
                 continue;
             }
 
@@ -37,5 +32,11 @@ final class SimpleEnvConfigReader implements ConfigReaderInterface
         }
 
         return $config;
+    }
+
+    private function canRead(string $absolutePath): bool
+    {
+        return false !== strpos($absolutePath, '.env')
+            && is_file($absolutePath);
     }
 }

@@ -14,6 +14,7 @@ final class Config extends AbstractConfig
             'config-env' => (int) $this->get('config-env'),
             'config-php' => (int) $this->get('config-php'),
             'override' => (int) $this->get('override'),
+            'local' => (int) $this->get('local'),
         ];
     }
 }

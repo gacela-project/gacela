@@ -9,33 +9,25 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 final class ConfigGacelaMapper
 {
     /**
-     * @param array<array>|array{path:string,path_local:string} $config
+     * @param list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface} $config
      *
      * @return list<GacelaConfigItem>
      */
     public function mapConfigItems(array $config): array
     {
-        if ($this->isSingleConfigFile($config)) {
-            return [GacelaConfigItem::fromArray($config)];
+        if (isset($config['path']) || isset($config['path_local'])) {
+            /** @psalm-suppress InvalidArgument */
+            return [GacelaConfigItem::fromArray($config)];//@phpstan-ignore-line
         }
 
         $result = [];
 
-        /** @var array<array{path:string,path_local:string}> $config */
+        /** @var list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface}> $config */
         foreach ($config as $configItem) {
             $c = GacelaConfigItem::fromArray($configItem);
             $result[] = $c;
         }
 
         return $result;
-    }
-
-    /**
-     * @param array<array>|array{path:string,path_local:string} $config
-     */
-    private function isSingleConfigFile(array $config): bool
-    {
-        return isset($config['path'])
-            || isset($config['path_local']);
     }
 }

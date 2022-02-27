@@ -82,13 +82,20 @@ abstract class AbstractConfigGacela
     }
 
     /**
-     * @return array{
-     *     Factory?:string,
-     *     Config?:string,
-     *     DependencyProvider?:string,
-     * }
+     * e.g:
+     * <code>
+     * return [
+     *     'Factory' => 'Creator',
+     *     'Config' => 'Configuration',
+     *     'DependencyProvider' => 'Binding',
+     * ];
+     * </code>
+     *
+     * Allow overriding gacela resolvable types.
+     *
+     * @return array{Factory?:string,Config?:string,DependencyProvider?:string}
      */
-    public function overrideSuffix(): array
+    public function overrideResolvableTypes(): array
     {
         return [];
     }

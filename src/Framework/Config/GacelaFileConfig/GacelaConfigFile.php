@@ -18,6 +18,9 @@ final class GacelaConfigFile
     /** @var array<string,ConfigReaderInterface> */
     private array $configReaders = [];
 
+    /** @var array{Factory?:string,Config?:string,DependencyProvider?:string} */
+    private array $overrideResolvableTypes = [];
+
     public static function withDefaults(): self
     {
         return (new self())
@@ -80,5 +83,23 @@ final class GacelaConfigFile
     public function getMappingInterface(string $key)
     {
         return $this->mappingInterfaces[$key] ?? null;
+    }
+
+    /**
+     * @param array{Factory?:string,Config?:string,DependencyProvider?:string} $overrideResolvableTypes
+     */
+    public function setOverrideResolvableTypes(array $overrideResolvableTypes): self
+    {
+        $this->overrideResolvableTypes = $overrideResolvableTypes;
+
+        return $this;
+    }
+
+    /**
+     * @return array{Factory?:string,Config?:string,DependencyProvider?:string}
+     */
+    public function getOverrideResolvableTypes(): array
+    {
+        return $this->overrideResolvableTypes;
     }
 }

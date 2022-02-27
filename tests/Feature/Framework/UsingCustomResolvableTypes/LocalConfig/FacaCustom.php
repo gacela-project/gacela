@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomGacelaFileSuffix\LocalConfig;
+namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes\LocalConfig;
 
 use Gacela\Framework\AbstractFacade;
 

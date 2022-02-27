@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomGacelaFileSuffix;
+namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes;
 
 use Gacela\Framework\AbstractConfigGacela;
 
 return static fn () => new class () extends AbstractConfigGacela {
-    public function overrideSuffix(): array
+    public function overrideResolvableTypes(): array
     {
         return [
             'Factory' => 'FactCustom',

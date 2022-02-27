@@ -55,6 +55,10 @@
         }
     },
     "scripts": {
+        "ctal": [
+            "@csfix",
+            "@test-all"
+        ],
         "test-all": [
             "@quality",
             "@phpunit",

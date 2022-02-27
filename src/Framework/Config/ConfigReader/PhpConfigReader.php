@@ -11,23 +11,20 @@ use function is_array;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {
-    public function canRead(string $absolutePath): bool
-    {
-        $extension = pathinfo($absolutePath, PATHINFO_EXTENSION);
-
-        return 'php' === $extension;
-    }
-
     /**
      * @return array<string,mixed>
      */
     public function read(string $absolutePath): array
     {
-        if (!file_exists($absolutePath)) {
+        if (!$this->canRead($absolutePath)) {
             return [];
         }
 
-        /** @var null|string[]|JsonSerializable|mixed $content */
+        /**
+         * @psalm-suppress UnresolvableInclude
+         *
+         * @var null|string[]|JsonSerializable|mixed $content
+         */
         $content = include $absolutePath;
 
         if (null === $content) {
@@ -46,5 +43,12 @@ final class PhpConfigReader implements ConfigReaderInterface
 
         /** @var array<string,mixed> $content */
         return $content;
+    }
+
+    private function canRead(string $absolutePath): bool
+    {
+        $extension = pathinfo($absolutePath, PATHINFO_EXTENSION);
+
+        return 'php' === $extension && file_exists($absolutePath);
     }
 }

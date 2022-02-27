@@ -12,48 +12,32 @@ abstract class AbstractConfigGacela
      * e.g:
      * <code>
      * return [
-     *   'path' => '.env*',
-     *   'path_local' => '.env',
-     * ];
+     *   'path' => 'config/*.php',
+     *   'path_local' => 'config/local.php',
+     *   'reader' => new PhpConfigReader(),
+     * ],
      * # OR
      * return [
      *   [
      *     'path' => '.env*',
      *     'path_local' => '.env',
+     *     'reader' => new EnvConfigReader(),
      *   ],
      *   [
      *     'path' => 'config/*.php',
      *     'path_local' => 'config/local.php',
+     *     'reader' => new PhpConfigReader(),
      *   ],
      * ];
      * </code>
      *
      * <b>path</b>: Define the path where Gacela will read all the config files. Default: <i>config/*.php</i><br>
-     * <b>path_local</b>: Define the path where Gacela will read the local config file. Default: <i>config/local.php</i>
+     * <b>path_local</b>: Define the path where Gacela will read the local config file. Default: <i>config/local.php</i><br>
+     * <b>reader</b>: Define the reader class which will read and parse the config files. Default: <i>new PhpConfigReader()</i><br>
      *
-     * @return array<array>|array{
-     *     path?:string,
-     *     path_local?:string
-     * }
+     * @return list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface}
      */
     public function config(): array
-    {
-        return [];
-    }
-
-    /**
-     * e.g:
-     * <code>
-     * return [
-     *     'php' => new \Gacela\Framework\Config\ConfigReader\PhpConfigReader(),
-     * ];
-     * </code>
-     *
-     * Define the reader class which will read and parse the config files. Default: <i>PhpConfigReader</i>
-     *
-     * @return array<string,ConfigReaderInterface>
-     */
-    public function configReaders(): array
     {
         return [];
     }

@@ -4,10 +4,12 @@
 
 - Moved the "config readers" next to their config item itself.
   - Performance improvement specially when using different config readers in the same project.
-- Deprecated and removed `CustomService` feature. Use `MappingInterfaces` feature instead.
-  - Why? Too much magic.
+- Added OverrideResolvableTypes feature
+  - Allow overriding Gacela resolvable types (Factory, Config, DependencyProvider).
 - Removed deprecated methods `getApplicationRootDir()` & `setApplicationRootDir()` from Config.
   - Use `getAppRootDir()` & `setAppRootDir()` instead.
+- Deprecated and removed `CustomService` feature. Use `MappingInterfaces` feature instead.
+  - Why? Too much magic.
 
 ### 0.12.0
 #### 2022-02-13

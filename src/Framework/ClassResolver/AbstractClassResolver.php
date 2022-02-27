@@ -159,14 +159,14 @@ abstract class AbstractClassResolver
 
     private function getCacheKey(ClassInfo $classInfo): string
     {
-        return $classInfo->getCacheKey($this->getResolvableType());
+        return $classInfo->getCacheKey($this->getFinalResolvableType());
     }
 
     private function findClassName(ClassInfo $classInfo): ?string
     {
         return $this->getClassNameFinder()->findClassName(
             $classInfo,
-            $this->getResolvableType()
+            $this->getFinalResolvableType()
         );
     }
 
@@ -178,6 +178,16 @@ abstract class AbstractClassResolver
         }
 
         return $this->classNameFinder;
+    }
+
+    /**
+     * Allow overriding gacela resolvable types.
+     */
+    private function getFinalResolvableType(): string
+    {
+        $overrideResolvableTypes = $this->getGacelaConfigFile()->getOverrideResolvableTypes();
+
+        return $overrideResolvableTypes[$this->getResolvableType()] ?? $this->getResolvableType();
     }
 
     private function createInstance(string $resolvedClassName): ?object

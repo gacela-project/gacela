@@ -15,12 +15,8 @@ final class FeatureTest extends TestCase
     {
         $globalServices = [
             'config' => [
-                ['path' => 'config/.env*'],
-                ['path' => 'config/*.php'],
-            ],
-            'config-readers' =>  [
-                new PhpConfigReader(),
-                new SimpleEnvConfigReader(),
+                ['path' => 'config/.env*', 'reader' => new SimpleEnvConfigReader()],
+                ['path' => 'config/*.php', 'reader' => new PhpConfigReader()],
             ],
         ];
 
@@ -36,6 +32,7 @@ final class FeatureTest extends TestCase
                 'config-env' => 1,
                 'config-php' => 3,
                 'override' => 4,
+                'local' => 5,
             ],
             $facade->doSomething()
         );

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
-use Gacela\Framework\Config\ConfigReaderInterface;
-
 final class GacelaConfigFile
 {
     /** @var list<GacelaConfigItem> */
@@ -15,17 +12,13 @@ final class GacelaConfigFile
     /** @var array<class-string,class-string|callable> */
     private array $mappingInterfaces = [];
 
-    /** @var array<string,ConfigReaderInterface> */
-    private array $configReaders = [];
-
     /** @var array{Factory?:string,Config?:string,DependencyProvider?:string} */
     private array $overrideResolvableTypes = [];
 
     public static function withDefaults(): self
     {
         return (new self())
-            ->setConfigItems([GacelaConfigItem::withDefaults()])
-            ->setConfigReaders(['php' => new PhpConfigReader()]);
+            ->setConfigItems([GacelaConfigItem::withDefaults()]);
     }
 
     /**
@@ -44,24 +37,6 @@ final class GacelaConfigFile
     public function getConfigItems(): array
     {
         return $this->configItems;
-    }
-
-    /**
-     * @param array<string,ConfigReaderInterface> $configReaders
-     */
-    public function setConfigReaders(array $configReaders): self
-    {
-        $this->configReaders = $configReaders;
-
-        return $this;
-    }
-
-    /**
-     * @return array<string,ConfigReaderInterface>
-     */
-    public function getConfigReaders(): array
-    {
-        return $this->configReaders;
     }
 
     /**

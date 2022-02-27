@@ -72,18 +72,14 @@ final class ConfigInitTest extends TestCase
     public function test_read_single_config(): void
     {
         $reader = $this->createStub(ConfigReaderInterface::class);
-        $reader->method('canRead')->willReturn(true);
         $reader->method('read')->willReturn(['key' => 'value']);
 
         $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
             ->willReturn((new GacelaConfigFile())
-                ->setConfigReaders([
-                    'supported-type' => $reader,
-                ])
                 ->setConfigItems([
-                    'supported-type' => new GacelaConfigItem('supported-type'),
+                    new GacelaConfigItem('path', 'path_local', $reader),
                 ]));
 
         $configInit = new ConfigLoader(
@@ -98,24 +94,18 @@ final class ConfigInitTest extends TestCase
     public function test_read_multiple_config(): void
     {
         $reader1 = $this->createStub(ConfigReaderInterface::class);
-        $reader1->method('canRead')->willReturn(true);
         $reader1->method('read')->willReturn(['key1' => 'value1']);
 
         $reader2 = $this->createStub(ConfigReaderInterface::class);
-        $reader2->method('canRead')->willReturn(true);
         $reader2->method('read')->willReturn(['key2' => 'value2']);
 
         $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
             ->willReturn((new GacelaConfigFile())
-                ->setConfigReaders([
-                    'supported-type1' => $reader1,
-                    'supported-type2' => $reader2,
-                ])
                 ->setConfigItems([
-                    'supported-type1' => new GacelaConfigItem('supported-type1'),
-                    'supported-type2' => new GacelaConfigItem('supported-type2'),
+                    new GacelaConfigItem('path', 'path_local', $reader1),
+                    new GacelaConfigItem('path', 'path_local', $reader2),
                 ]));
 
         $configInit = new ConfigLoader(

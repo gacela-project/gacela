@@ -185,9 +185,9 @@ abstract class AbstractClassResolver
      */
     private function getFinalResolvableType(): string
     {
-        $gacelaFile = $this->getGacelaConfigFile()->getOverrideResolvableTypes();
+        $overrideResolvableTypes = $this->getGacelaConfigFile()->getOverrideResolvableTypes();
 
-        return $gacelaFile[$this->getResolvableType()] ?? $this->getResolvableType();
+        return $overrideResolvableTypes[$this->getResolvableType()] ?? $this->getResolvableType();
     }
 
     private function createInstance(string $resolvedClassName): ?object

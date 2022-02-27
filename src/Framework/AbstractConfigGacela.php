@@ -80,4 +80,16 @@ abstract class AbstractConfigGacela
     {
         return [];
     }
+
+    /**
+     * @return array{
+     *     Factory?:string,
+     *     Config?:string,
+     *     DependencyProvider?:string,
+     * }
+     */
+    public function overrideSuffix(): array
+    {
+        return [];
+    }
 }

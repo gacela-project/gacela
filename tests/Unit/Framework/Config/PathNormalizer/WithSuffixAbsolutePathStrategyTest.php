@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Config\PathNormalizer;
 
-use Gacela\Framework\Config\PathNormalizer\SuffixAbsolutePathStrategy;
+use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 use PHPUnit\Framework\TestCase;
 
-final class SuffixAbsolutePathStrategyTest extends TestCase
+final class WithSuffixAbsolutePathStrategyTest extends TestCase
 {
     public function test_file_without_extension_neither_suffix_then_empty_string(): void
     {
-        $strategy = new SuffixAbsolutePathStrategy('/app/root/');
+        $strategy = new WithSuffixAbsolutePathStrategy('/app/root/');
         $relativePath = '/file-name';
 
         self::assertSame('', $strategy->generateAbsolutePath($relativePath));
@@ -19,7 +19,7 @@ final class SuffixAbsolutePathStrategyTest extends TestCase
 
     public function test_file_without_extension_but_suffix(): void
     {
-        $strategy = new SuffixAbsolutePathStrategy('/app/root/', 'suffix');
+        $strategy = new WithSuffixAbsolutePathStrategy('/app/root/', 'suffix');
         $relativePath = '/file-name';
 
         self::assertSame(
@@ -30,7 +30,7 @@ final class SuffixAbsolutePathStrategyTest extends TestCase
 
     public function test_file_with_extension_but_no_suffix_then_empty_string(): void
     {
-        $strategy = new SuffixAbsolutePathStrategy('/app/root/');
+        $strategy = new WithSuffixAbsolutePathStrategy('/app/root/');
         $relativePath = '/file-name.ext';
 
         self::assertSame('', $strategy->generateAbsolutePath($relativePath));
@@ -38,7 +38,7 @@ final class SuffixAbsolutePathStrategyTest extends TestCase
 
     public function test_file_with_extension_and_suffix(): void
     {
-        $strategy = new SuffixAbsolutePathStrategy('/app/root/', 'suffix');
+        $strategy = new WithSuffixAbsolutePathStrategy('/app/root/', 'suffix');
         $relativePath = '/file-name.ext';
 
         self::assertSame(

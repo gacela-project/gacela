@@ -40,6 +40,6 @@ class Backtrace
      */
     public function getBacktraces(): array
     {
-        return debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);//@phpstan-ignore-line
+        return debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS); // @phpstan-ignore-line
     }
 }

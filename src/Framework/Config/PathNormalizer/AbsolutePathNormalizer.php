@@ -9,9 +9,8 @@ use Gacela\Framework\Config\PathNormalizerInterface;
 
 final class AbsolutePathNormalizer implements PathNormalizerInterface
 {
-    public const PATTERN = 'PATTERN';
-    public const PATTERN_WITH_ENV = 'PATTERN_WITH_ENV';
-    public const LOCAL = 'LOCAL';
+    public const WITHOUT_SUFFIX = 'WITHOUT_SUFFIX';
+    public const WITH_SUFFIX = 'WITH_SUFFIX';
 
     /** @var array<string,AbsolutePathStrategyInterface> */
     private array $absolutePathStrategies;
@@ -26,19 +25,19 @@ final class AbsolutePathNormalizer implements PathNormalizerInterface
 
     public function normalizePathPattern(GacelaConfigItem $configItem): string
     {
-        return $this->absolutePathStrategies[self::PATTERN]
+        return $this->absolutePathStrategies[self::WITHOUT_SUFFIX]
             ->generateAbsolutePath($configItem->path());
     }
 
     public function normalizePathPatternWithEnvironment(GacelaConfigItem $configItem): string
     {
-        return $this->absolutePathStrategies[self::PATTERN_WITH_ENV]
+        return $this->absolutePathStrategies[self::WITH_SUFFIX]
             ->generateAbsolutePath($configItem->path());
     }
 
     public function normalizePathLocal(GacelaConfigItem $configItem): string
     {
-        return $this->absolutePathStrategies[self::LOCAL]
+        return $this->absolutePathStrategies[self::WITHOUT_SUFFIX]
             ->generateAbsolutePath($configItem->pathLocal());
     }
 }

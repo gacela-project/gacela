@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
-use Gacela\Framework\Config\PathNormalizer\NoEnvAbsolutePathStrategy;
-use Gacela\Framework\Config\PathNormalizer\SuffixAbsolutePathStrategy;
+use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
+use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 
 final class ConfigFactory
 {
@@ -58,13 +58,12 @@ final class ConfigFactory
     private function createPathNormalizer(): PathNormalizerInterface
     {
         return new AbsolutePathNormalizer([
-            AbsolutePathNormalizer::PATTERN => new NoEnvAbsolutePathStrategy($this->appRootDir),
-            AbsolutePathNormalizer::PATTERN_WITH_ENV => new SuffixAbsolutePathStrategy($this->appRootDir, $this->getEnv()),
-            AbsolutePathNormalizer::LOCAL => new NoEnvAbsolutePathStrategy($this->appRootDir),
+            AbsolutePathNormalizer::WITHOUT_SUFFIX => new WithoutSuffixAbsolutePathStrategy($this->appRootDir),
+            AbsolutePathNormalizer::WITH_SUFFIX => new WithSuffixAbsolutePathStrategy($this->appRootDir, $this->env()),
         ]);
     }
 
-    private function getEnv(): string
+    private function env(): string
     {
         return getenv('APP_ENV') ?: '';
     }

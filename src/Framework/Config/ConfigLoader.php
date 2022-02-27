@@ -47,7 +47,7 @@ final class ConfigLoader
         }
 
         /** @psalm-suppress MixedArgument */
-        $configs[] = array_merge(...array_merge(...$result));//@phpstan-ignore-line
+        $configs[] = array_merge(...array_merge(...$result)); // @phpstan-ignore-line
         $configs[] = $this->readLocalConfigFile($gacelaFileConfig);
 
         /** @var array<string,mixed> $allConfigKeyValues */

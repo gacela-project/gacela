@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\PathNormalizer;
 
-final class SuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
+final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
     private string $appRootDir;
 

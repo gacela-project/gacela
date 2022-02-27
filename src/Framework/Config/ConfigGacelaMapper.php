@@ -17,7 +17,7 @@ final class ConfigGacelaMapper
     {
         if (isset($config['path']) || isset($config['path_local'])) {
             /** @psalm-suppress InvalidArgument */
-            return [GacelaConfigItem::fromArray($config)];//@phpstan-ignore-line
+            return [GacelaConfigItem::fromArray($config)]; // @phpstan-ignore-line
         }
 
         $result = [];

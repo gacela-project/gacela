@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Added allow defining a config reader as class-string too.
 - Moved the "config readers" next to their config item itself.
   - Performance improvement specially when using different config readers in the same project.
 - Added OverrideResolvableTypes feature

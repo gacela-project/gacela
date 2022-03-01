@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 0.13.0
+#### 2022-03-01
 
 - Added allow defining a config reader as class-string too.
 - Moved the "config readers" next to their config item itself.

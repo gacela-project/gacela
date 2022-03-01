@@ -9,7 +9,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 final class ConfigGacelaMapper
 {
     /**
-     * @param list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface} $config
+     * @param list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string} $config
      *
      * @return list<GacelaConfigItem>
      */
@@ -22,7 +22,7 @@ final class ConfigGacelaMapper
 
         $result = [];
 
-        /** @var list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface}> $config */
+        /** @var list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string}> $config */
         foreach ($config as $configItem) {
             $c = GacelaConfigItem::fromArray($configItem);
             $result[] = $c;

@@ -66,7 +66,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
     {
         /**
          * @var array{
-         *     config?: list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface},
+         *     config?: list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string},
          *     mapping-interfaces?: array<class-string,class-string|callable>,
          *     override-resolvable-types?: array{Factory?:string,Config?:string,DependencyProvider?:string}
          * } $configFromGlobalServices

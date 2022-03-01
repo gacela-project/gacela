@@ -15,8 +15,8 @@ final class FeatureTest extends TestCase
     {
         $globalServices = [
             'config' => [
-                ['path' => 'config/.env*', 'reader' => new SimpleEnvConfigReader()],
-                ['path' => 'config/*.php', 'reader' => new PhpConfigReader()],
+                ['reader' => SimpleEnvConfigReader::class, 'path' => 'config/.env*'],
+                ['reader' => new PhpConfigReader(), 'path' => 'config/*.php'],
             ],
         ];
 

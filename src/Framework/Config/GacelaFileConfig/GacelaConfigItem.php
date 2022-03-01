@@ -28,14 +28,22 @@ final class GacelaConfigItem
     }
 
     /**
-     * @param array{path?:string, path_local?:string, reader?:ConfigReaderInterface} $item
+     * @param array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string} $item
      */
     public static function fromArray(array $item): self
     {
+        $reader = new PhpConfigReader();
+
+        if (isset($item['reader']) && is_string($item['reader'])) {
+            /** @psalm-suppress MixedMethodCall */
+            $reader = new $item['reader']();
+            assert($reader instanceof ConfigReaderInterface);
+        }
+
         return new self(
             $item['path'] ?? self::DEFAULT_PATH,
             $item['path_local'] ?? self::DEFAULT_PATH_LOCAL,
-            $item['reader'] ?? new PhpConfigReader(),
+            $reader
         );
     }
 

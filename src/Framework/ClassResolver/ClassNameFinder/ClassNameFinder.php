@@ -6,11 +6,14 @@ namespace Gacela\Framework\ClassResolver\ClassNameFinder;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
+use function implode;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
-    /** @var array<string,array<string,string>> */
+    /** @var array<string,string> */
     private static array $cachedClassNames = [];
+
+    private ClassValidatorInterface $classValidator;
 
     /** @var list<FinderRuleInterface> */
     private array $finderRules;
@@ -18,25 +21,50 @@ final class ClassNameFinder implements ClassNameFinderInterface
     /**
      * @param list<FinderRuleInterface> $finderRules
      */
-    public function __construct(array $finderRules)
-    {
+    public function __construct(
+        ClassValidatorInterface $classValidator,
+        array $finderRules
+    ) {
+        $this->classValidator = $classValidator;
         $this->finderRules = $finderRules;
     }
 
-    public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string
+    /**
+     * @internal for testing purposes
+     */
+    public static function resetCachedClassNames(): void
     {
-        if (isset(self::$cachedClassNames[$classInfo->toString()][$resolvableType])) {
-            return self::$cachedClassNames[$classInfo->toString()][$resolvableType];
+        self::$cachedClassNames = [];
+    }
+
+    /**
+     * @param list<string> $resolvableTypes
+     */
+    public function findClassName(ClassInfo $classInfo, array $resolvableTypes): ?string
+    {
+        $cacheKey = $this->generateUniqueKey($classInfo, $resolvableTypes);
+        if (isset(self::$cachedClassNames[$cacheKey])) {
+            return self::$cachedClassNames[$cacheKey];
         }
 
         foreach ($this->finderRules as $finderRule) {
-            $className = $finderRule->buildClassCandidate($classInfo, $resolvableType);
-            if (class_exists($className)) {
-                self::$cachedClassNames[$classInfo->toString()][$resolvableType] = $className;
-                return $className;
+            foreach ($resolvableTypes as $resolvableType) {
+                $className = $finderRule->buildClassCandidate($classInfo, $resolvableType);
+                if ($this->classValidator->isClassNameValid($className)) {
+                    self::$cachedClassNames[$cacheKey] = $className;
+                    return $className;
+                }
             }
         }
 
         return null;
+    }
+
+    /**
+     * @param list<string> $resolvableTypes
+     */
+    private function generateUniqueKey(ClassInfo $classInfo, array $resolvableTypes): string
+    {
+        return $classInfo->toString() . implode('-', $resolvableTypes);
     }
 }

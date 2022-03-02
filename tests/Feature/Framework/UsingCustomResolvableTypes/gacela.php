@@ -10,9 +10,9 @@ return static fn () => new class () extends AbstractConfigGacela {
     public function overrideResolvableTypes(): array
     {
         return [
-            'Factory' => 'FactCustom',
-            'Config' => 'ConfCustom',
-            'DependencyProvider' => 'DepProvCustom',
+            'Factory' => ['FactoryModuleA', 'FactoryModuleB'],
+            'Config' => ['ConfModuleA', 'ConfModuleB'],
+            'DependencyProvider' => ['DepProModuleA', 'DepProModuleB'],
         ];
     }
 };

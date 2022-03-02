@@ -8,5 +8,8 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 
 interface ClassNameFinderInterface
 {
-    public function findClassName(ClassInfo $classInfo, string $resolvableType): ?string;
+    /**
+     * @param list<string> $resolvableTypes
+     */
+    public function findClassName(ClassInfo $classInfo, array $resolvableTypes): ?string;
 }

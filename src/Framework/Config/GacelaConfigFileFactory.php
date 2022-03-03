@@ -19,7 +19,9 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
     /** @var array<string,mixed> */
     private array $globalServices;
 
-    private ConfigGacelaMapper $configGacelaMapper;
+    private ConfigGacelaMapperInterface $configGacelaMapper;
+
+    private FileIoInterface $fileIo;
 
     /**
      * @param array<string,mixed> $globalServices
@@ -28,23 +30,25 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         string $appRootDir,
         string $gacelaPhpConfigFilename,
         array $globalServices,
-        ConfigGacelaMapper $configGacelaMapper
+        ConfigGacelaMapperInterface $configGacelaMapper,
+        FileIoInterface $fileIo
     ) {
         $this->appRootDir = $appRootDir;
         $this->gacelaPhpConfigFilename = $gacelaPhpConfigFilename;
         $this->globalServices = $globalServices;
         $this->configGacelaMapper = $configGacelaMapper;
+        $this->fileIo = $fileIo;
     }
 
     public function createGacelaFileConfig(): GacelaConfigFile
     {
         $gacelaPhpPath = $this->appRootDir . '/' . $this->gacelaPhpConfigFilename;
 
-        if (!is_file($gacelaPhpPath)) {
+        if (!$this->fileIo->existsFile($gacelaPhpPath)) {
             return $this->createDefaultGacelaPhpConfig();
         }
 
-        $configGacela = include $gacelaPhpPath;
+        $configGacela = $this->fileIo->include($gacelaPhpPath);
         if (!is_callable($configGacela)) {
             throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
         }
@@ -72,7 +76,9 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
          * } $configFromGlobalServices
          */
         $configFromGlobalServices = $this->globalServices;
-        $configItems = $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'] ?? []);
+        $configItems = isset($configFromGlobalServices['config'])
+            ? $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'])
+            : [];
         $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
         $overrideResolvableTypes = $configFromGlobalServices['override-resolvable-types'] ?? [];
 

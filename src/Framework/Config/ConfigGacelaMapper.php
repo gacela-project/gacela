@@ -6,7 +6,7 @@ namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
-final class ConfigGacelaMapper
+final class ConfigGacelaMapper implements ConfigGacelaMapperInterface
 {
     /**
      * @param list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string} $config

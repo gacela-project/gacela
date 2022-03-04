@@ -123,8 +123,8 @@ abstract class AbstractClassResolver
 
     public function doResolve(object $callerClass): ?object
     {
-        $classInfo = ClassInfo::fromObject($callerClass);
-        $cacheKey = $this->getCacheKey($classInfo);
+        $classInfo = ClassInfo::fromObject($callerClass, $this->getResolvableType());
+        $cacheKey = $classInfo->getCacheKey();
         if (isset(self::$cachedInstances[$cacheKey])) {
             return self::$cachedInstances[$cacheKey];
         }
@@ -155,11 +155,6 @@ abstract class AbstractClassResolver
         self::$cachedInstances[$cacheKey] = $resolvedClass;
 
         return self::$cachedInstances[$cacheKey];
-    }
-
-    private function getCacheKey(ClassInfo $classInfo): string
-    {
-        return $classInfo->getCacheKey($this->getResolvableType());
     }
 
     private function findClassName(ClassInfo $classInfo): ?string

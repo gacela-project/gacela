@@ -9,6 +9,7 @@ use Gacela\Framework\ClassResolver\DependencyResolver\DependencyResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use function class_exists;
 use function is_string;
 
 abstract class AbstractClassResolver

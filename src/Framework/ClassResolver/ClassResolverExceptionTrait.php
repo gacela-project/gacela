@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\Exception\Backtrace;
+use function sprintf;
 
 trait ClassResolverExceptionTrait
 {

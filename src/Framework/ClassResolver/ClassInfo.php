@@ -5,9 +5,17 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use function array_slice;
+use function basename;
 use function count;
+use function end;
+use function explode;
 use function get_class;
+use function implode;
 use function is_string;
+use function ltrim;
+use function sprintf;
+use function strpos;
+use function substr;
 
 final class ClassInfo
 {

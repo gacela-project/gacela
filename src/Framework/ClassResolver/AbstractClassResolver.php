@@ -86,9 +86,9 @@ abstract class AbstractClassResolver
      *
      * @param class-string<T> $className
      *
-     * @internal so the Locator can access to the global instances before creating a new instance
-     *
      * @return ?T
+     *
+     * @internal so the Locator can access to the global instances before creating a new instance
      */
     public static function getCachedGlobalInstance(string $className)
     {
@@ -123,8 +123,8 @@ abstract class AbstractClassResolver
 
     public function doResolve(object $callerClass): ?object
     {
-        $classInfo = new ClassInfo($callerClass);
-        $cacheKey = $this->getCacheKey($classInfo);
+        $classInfo = ClassInfo::fromObject($callerClass, $this->getResolvableType());
+        $cacheKey = $classInfo->getCacheKey();
         if (isset(self::$cachedInstances[$cacheKey])) {
             return self::$cachedInstances[$cacheKey];
         }
@@ -157,16 +157,11 @@ abstract class AbstractClassResolver
         return self::$cachedInstances[$cacheKey];
     }
 
-    private function getCacheKey(ClassInfo $classInfo): string
-    {
-        return $classInfo->getCacheKey($this->getFinalResolvableType());
-    }
-
     private function findClassName(ClassInfo $classInfo): ?string
     {
         return $this->getClassNameFinder()->findClassName(
             $classInfo,
-            $this->getFinalResolvableType()
+            $this->getFinalResolvableTypes()
         );
     }
 
@@ -182,12 +177,20 @@ abstract class AbstractClassResolver
 
     /**
      * Allow overriding gacela resolvable types.
+     *
+     * @return list<string>
      */
-    private function getFinalResolvableType(): string
+    private function getFinalResolvableTypes(): array
     {
         $overrideResolvableTypes = $this->getGacelaConfigFile()->getOverrideResolvableTypes();
 
-        return $overrideResolvableTypes[$this->getResolvableType()] ?? $this->getResolvableType();
+        $overrideResolvable = $overrideResolvableTypes[$this->getResolvableType()] ?? $this->getResolvableType();
+
+        if (is_string($overrideResolvable)) {
+            $overrideResolvable = [$overrideResolvable];
+        }
+
+        return $overrideResolvable;
     }
 
     private function createInstance(string $resolvedClassName): ?object

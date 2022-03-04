@@ -5,18 +5,37 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use function array_slice;
+use function basename;
 use function count;
+use function end;
+use function explode;
 use function get_class;
+use function implode;
+use function is_string;
+use function ltrim;
+use function sprintf;
+use function strpos;
+use function substr;
 
 final class ClassInfo
 {
     public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
 
-    private ?string $cacheKey = null;
     private string $callerModuleName;
     private string $callerNamespace;
+    private string $cacheKey;
 
-    public function __construct(object $callerObject)
+    public function __construct(
+        string $callerNamespace,
+        string $callerModuleName,
+        string $cacheKey
+    ) {
+        $this->callerNamespace = $callerNamespace;
+        $this->callerModuleName = $callerModuleName;
+        $this->cacheKey = $cacheKey;
+    }
+
+    public static function fromObject(object $callerObject, string $resolvableType = ''): self
     {
         $callerClass = get_class($callerObject);
 
@@ -24,7 +43,7 @@ final class ClassInfo
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $lastCallerClassPart = end($callerClassParts);
         $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
-        $filename = $this->normalizeFilename($filepath);
+        $filename = self::normalizeFilename($filepath);
 
         if (false !== strpos($filepath, 'anonymous')) {
             $callerClassParts = [
@@ -33,20 +52,31 @@ final class ClassInfo
             ];
         }
 
-        $this->callerNamespace = $this->normalizeCallerNamespace(...$callerClassParts);
-        $this->callerModuleName = $this->normalizeCallerModuleName(...$callerClassParts);
+        $callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
+        $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
+        $cacheKey = GlobalKey::fromClassName(sprintf(
+            '\\%s\\%s',
+            $callerNamespace,
+            $resolvableType
+        ));
+
+        return new self($callerNamespace, $callerModuleName, $cacheKey);
     }
 
-    public function getCacheKey(string $resolvableType): string
+    private static function normalizeFilename(string $filepath): string
     {
-        if (!$this->cacheKey) {
-            $this->cacheKey = GlobalKey::fromClassName(sprintf(
-                '\\%s\\%s',
-                $this->getFullNamespace(),
-                $resolvableType
-            ));
+        $filename = basename($filepath);
+        $filename = substr($filename, 0, (int)strpos($filename, ':'));
+
+        if (false === ($pos = strpos($filename, '.'))) {
+            return $filename;
         }
 
+        return substr($filename, 0, $pos);
+    }
+
+    public function getCacheKey(): string
+    {
         return $this->cacheKey;
     }
 
@@ -60,33 +90,11 @@ final class ClassInfo
         return $this->callerNamespace;
     }
 
-    private function normalizeFilename(string $filepath): string
-    {
-        $filename = basename($filepath);
-        $filename = substr($filename, 0, (int)strpos($filename, ':'));
-
-        if (false === ($pos = strpos($filename, '.'))) {
-            return $filename;
-        }
-
-        return substr($filename, 0, $pos);
-    }
-
-    private function normalizeCallerNamespace(string ...$callerClassParts): string
-    {
-        return implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
-    }
-
-    private function normalizeCallerModuleName(string ...$callerClassParts): string
-    {
-        return $callerClassParts[count($callerClassParts) - 2] ?? '';
-    }
-
     public function toString(): string
     {
         return sprintf(
             'ClassInfo{$cacheKey:%s, $callerModuleName:%s, $callerNamespace:%s}',
-            $this->cacheKey ?? 'null',
+            $this->cacheKey,
             $this->callerModuleName,
             $this->callerNamespace,
         );

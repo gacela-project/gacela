@@ -10,7 +10,7 @@ trait ClassResolverExceptionTrait
 {
     private function buildMessage(object $callerClass, string $resolvableType): string
     {
-        $callerClassInfo = new ClassInfo($callerClass);
+        $callerClassInfo = ClassInfo::fromObject($callerClass, $resolvableType);
 
         $message = 'ClassResolver Exception' . PHP_EOL;
         $message .= sprintf(

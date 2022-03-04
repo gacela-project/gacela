@@ -25,10 +25,8 @@ final class ResolvableType
     {
         foreach (self::DEFAULT_ALLOWED_TYPES as $resolvableType) {
             if (false !== strpos($className, $resolvableType)) {
-                return new self(
-                    $resolvableType,
-                    substr($className, 0, strlen($className) - strlen($resolvableType))
-                );
+                $moduleName = substr($className, 0, strlen($className) - strlen($resolvableType));
+                return new self($resolvableType, $moduleName);
             }
         }
 

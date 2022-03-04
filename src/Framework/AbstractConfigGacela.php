@@ -70,14 +70,24 @@ abstract class AbstractConfigGacela
      * <code>
      * return [
      *     'Factory' => 'Creator',
-     *     'Config' => 'Configuration',
+     *     'Config' => 'Conf',
      *     'DependencyProvider' => 'Binding',
+     * ];
+     * // OR
+     * return [
+     *     'Factory' => ['Creator', '...'],
+     *     'Config' => ['Conf', '...'],
+     *     'DependencyProvider' => ['Binding', '...'],
      * ];
      * </code>
      *
      * Allow overriding gacela resolvable types.
      *
-     * @return array{Factory?:string,Config?:string,DependencyProvider?:string}
+     * @return array{
+     *     Factory?:list<string>|string,
+     *     Config?:list<string>|string,
+     *     DependencyProvider?:list<string>|string
+     * }
      */
     public function overrideResolvableTypes(): array
     {

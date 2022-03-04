@@ -68,7 +68,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
          * @var array{
          *     config?: list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string},
          *     mapping-interfaces?: array<class-string,class-string|callable>,
-         *     override-resolvable-types?: array{Factory?:string,Config?:string,DependencyProvider?:string}
+         *     override-resolvable-types?: array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string}
          * } $configFromGlobalServices
          */
         $configFromGlobalServices = $this->globalServices;
@@ -82,7 +82,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
     /**
      * @param list<GacelaConfigItem> $configItems
      * @param array<class-string,class-string|callable> $mappingInterfaces
-     * @param array{Factory?:string,Config?:string,DependencyProvider?:string} $overrideResolvableTypes
+     * @param array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string} $overrideResolvableTypes
      */
     private function createWithDefaultIfEmpty(
         array $configItems,

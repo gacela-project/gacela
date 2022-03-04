@@ -12,7 +12,13 @@ final class GacelaConfigFile
     /** @var array<class-string,class-string|callable> */
     private array $mappingInterfaces = [];
 
-    /** @var array{Factory?:string,Config?:string,DependencyProvider?:string} */
+    /**
+     * @var array{
+     *     Factory?:list<string>|string,
+     *     Config?:list<string>|string,
+     *     DependencyProvider?:list<string>|string,
+     * }
+     */
     private array $overrideResolvableTypes = [];
 
     public static function withDefaults(): self
@@ -61,7 +67,7 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param array{Factory?:string,Config?:string,DependencyProvider?:string} $overrideResolvableTypes
+     * @param array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string} $overrideResolvableTypes
      */
     public function setOverrideResolvableTypes(array $overrideResolvableTypes): self
     {
@@ -71,7 +77,7 @@ final class GacelaConfigFile
     }
 
     /**
-     * @return array{Factory?:string,Config?:string,DependencyProvider?:string}
+     * @return array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string}
      */
     public function getOverrideResolvableTypes(): array
     {

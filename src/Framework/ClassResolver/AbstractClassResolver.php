@@ -6,23 +6,15 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\DependencyResolver\DependencyResolver;
+use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
-use RuntimeException;
-use function get_class;
-use function in_array;
 use function is_string;
-use function sprintf;
 
 abstract class AbstractClassResolver
 {
-    private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = ['Config', 'Factory', 'DependencyProvider'];
-
     /** @var array<string,null|object> */
     private static array $cachedInstances = [];
-
-    /** @var array<string,object> */
-    private static array $cachedGlobalInstances = [];
 
     private ?ClassNameFinderInterface $classNameFinder = null;
 
@@ -34,102 +26,12 @@ abstract class AbstractClassResolver
 
     abstract protected function getResolvableType(): string;
 
-    /**
-     * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
-     * bound to the context that it's pass as first argument. It can be the string-key
-     * (from a non-class/file context) or the class/object itself.
-     *
-     * @param object|string $context
-     */
-    public static function addAnonymousGlobal($context, object $resolvedClass): void
-    {
-        $contextName = self::extractContextNameFromContext($context);
-        $parentClass = get_parent_class($resolvedClass);
-
-        $type = is_string($parentClass)
-            ? ResolvableType::fromClassName($parentClass)->resolvableType()
-            : $contextName;
-
-        self::validateTypeForAnonymousGlobalRegistration($type);
-
-        $key = sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
-        self::addCachedGlobalInstance($key, $resolvedClass);
-    }
-
-    /**
-     * @param object|string $context
-     */
-    private static function extractContextNameFromContext($context): string
-    {
-        if (is_string($context)) {
-            return $context;
-        }
-
-        $callerClass = get_class($context);
-        /** @var list<string> $callerClassParts */
-        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-
-        $lastCallerClassParts = end($callerClassParts);
-
-        return is_string($lastCallerClassParts) ? $lastCallerClassParts : '';
-    }
-
-    public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
-    {
-        $key = self::getGlobalKeyFromClassName($className);
-
-        self::addCachedGlobalInstance($key, $resolvedClass);
-    }
-
-    /**
-     * @template T
-     *
-     * @param class-string<T> $className
-     *
-     * @return ?T
-     *
-     * @internal so the Locator can access to the global instances before creating a new instance
-     */
-    public static function getCachedGlobalInstance(string $className)
-    {
-        $key = self::getGlobalKeyFromClassName($className);
-
-        /** @var ?T $instance */
-        $instance = self::$cachedGlobalInstances[$key]
-            ?? self::$cachedGlobalInstances['\\' . $key]
-            ?? null;
-
-        return $instance;
-    }
-
-    private static function getGlobalKeyFromClassName(string $className): string
-    {
-        return GlobalKey::fromClassName($className);
-    }
-
-    private static function validateTypeForAnonymousGlobalRegistration(string $type): void
-    {
-        if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)) {
-            throw new RuntimeException(
-                "Type '$type' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)
-            );
-        }
-    }
-
-    private static function addCachedGlobalInstance(string $key, object $resolvedClass): void
-    {
-        self::$cachedGlobalInstances[$key] = $resolvedClass;
-    }
-
     public function doResolve(object $callerClass): ?object
     {
         $classInfo = ClassInfo::fromObject($callerClass, $this->getResolvableType());
         $cacheKey = $classInfo->getCacheKey();
-        if (isset(self::$cachedInstances[$cacheKey])) {
-            return self::$cachedInstances[$cacheKey];
-        }
 
-        $resolvedClass = $this->resolveGlobal($cacheKey);
+        $resolvedClass = $this->resolveCached($cacheKey);
         if (null !== $resolvedClass) {
             return $resolvedClass;
         }
@@ -144,17 +46,11 @@ abstract class AbstractClassResolver
         return self::$cachedInstances[$cacheKey];
     }
 
-    private function resolveGlobal(string $cacheKey): ?object
+    private function resolveCached(string $cacheKey): ?object
     {
-        $resolvedClass = self::$cachedGlobalInstances[$cacheKey] ?? null;
-
-        if (null === $resolvedClass) {
-            return null;
-        }
-
-        self::$cachedInstances[$cacheKey] = $resolvedClass;
-
-        return self::$cachedInstances[$cacheKey];
+        return AnonymousGlobal::getByKey($cacheKey)
+            ?? self::$cachedInstances[$cacheKey]
+            ?? null;
     }
 
     private function findClassName(ClassInfo $classInfo): ?string

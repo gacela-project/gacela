@@ -8,8 +8,10 @@ use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
+use PhpBench\Benchmark\Metadata\Annotations\Iterations;
+use PhpBench\Benchmark\Metadata\Annotations\Revs;
 
 /**
  * @BeforeMethods("setUp")
@@ -22,7 +24,7 @@ final class AnonymousGlobalsBench
 
     public function setUp(): void
     {
-        AbstractClassResolver::addAnonymousGlobal(
+        AnonymousGlobal::addGlobal(
             $this,
             new class () extends AbstractConfig {
                 public function getValues(): array
@@ -32,7 +34,7 @@ final class AnonymousGlobalsBench
             }
         );
 
-        AbstractClassResolver::addAnonymousGlobal(
+        AnonymousGlobal::addGlobal(
             $this,
             new class () extends AbstractDependencyProvider {
                 public function provideModuleDependencies(Container $container): void
@@ -42,7 +44,7 @@ final class AnonymousGlobalsBench
             }
         );
 
-        AbstractClassResolver::addAnonymousGlobal(
+        AnonymousGlobal::addGlobal(
             $this,
             new class () extends AbstractFactory {
                 public function createDomainClass(): object

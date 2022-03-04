@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\Framework\ClassResolver;
+namespace GacelaTest\Unit\Framework\ClassResolver\GlobalInstance;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use PHPUnit\Framework\TestCase;
 
-final class AbstractClassResolverTest extends TestCase
+final class AnonymousGlobalTest extends TestCase
 {
     /**
      * The anonymous class is not extending from Abstract[Factory,Config,DependencyProvider]
@@ -20,15 +20,15 @@ final class AbstractClassResolverTest extends TestCase
      */
     public function test_error_when_non_allowed_anon_global_type(): void
     {
-        $this->expectErrorMessage("Type 'AbstractClassResolverTest' not allowed");
+        $this->expectErrorMessage("Type 'AnonymousGlobalTest' not allowed");
 
-        AbstractClassResolver::addAnonymousGlobal($this, new class () {
+        AnonymousGlobal::addGlobal($this, new class () {
         });
     }
 
     public function test_allowed_factory_anon_global(): void
     {
-        AbstractClassResolver::addAnonymousGlobal($this, new class () extends AbstractFactory {
+        AnonymousGlobal::addGlobal($this, new class () extends AbstractFactory {
         });
 
         self::assertTrue(true); # Assert non error is thrown
@@ -36,7 +36,7 @@ final class AbstractClassResolverTest extends TestCase
 
     public function test_allowed_config_anon_global(): void
     {
-        AbstractClassResolver::addAnonymousGlobal($this, new class () extends AbstractConfig {
+        AnonymousGlobal::addGlobal($this, new class () extends AbstractConfig {
         });
 
         self::assertTrue(true); # Assert non error is thrown
@@ -44,7 +44,7 @@ final class AbstractClassResolverTest extends TestCase
 
     public function test_allowed_dependency_provider_anon_global(): void
     {
-        AbstractClassResolver::addAnonymousGlobal($this, new class () extends AbstractDependencyProvider {
+        AnonymousGlobal::addGlobal($this, new class () extends AbstractDependencyProvider {
             public function provideModuleDependencies(Container $container): void
             {
             }
@@ -60,9 +60,9 @@ final class AbstractClassResolverTest extends TestCase
     {
         $resolvedClass = new class () {
         };
-        AbstractClassResolver::overrideExistingResolvedClass($className, $resolvedClass);
+        AnonymousGlobal::overrideExistingResolvedClass($className, $resolvedClass);
 
-        self::assertSame($resolvedClass, AbstractClassResolver::getCachedGlobalInstance($className));
+        self::assertSame($resolvedClass, AnonymousGlobal::getByClassName($className));
     }
 
     public function providerOverrideExistingResolvedClass(): iterable

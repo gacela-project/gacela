@@ -5,25 +5,37 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use function array_slice;
+use function basename;
 use function count;
+use function end;
+use function explode;
 use function get_class;
+use function implode;
 use function is_string;
+use function ltrim;
+use function sprintf;
+use function strpos;
+use function substr;
 
 final class ClassInfo
 {
     public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
 
-    private ?string $cacheKey = null;
     private string $callerModuleName;
     private string $callerNamespace;
+    private string $cacheKey;
 
-    public function __construct(string $callerNamespace, string $callerModuleName)
-    {
+    public function __construct(
+        string $callerNamespace,
+        string $callerModuleName,
+        string $cacheKey
+    ) {
         $this->callerNamespace = $callerNamespace;
         $this->callerModuleName = $callerModuleName;
+        $this->cacheKey = $cacheKey;
     }
 
-    public static function fromObject(object $callerObject): self
+    public static function fromObject(object $callerObject, string $resolvableType = ''): self
     {
         $callerClass = get_class($callerObject);
 
@@ -42,8 +54,13 @@ final class ClassInfo
 
         $callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
         $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
+        $cacheKey = GlobalKey::fromClassName(sprintf(
+            '\\%s\\%s',
+            $callerNamespace,
+            $resolvableType
+        ));
 
-        return new self($callerNamespace, $callerModuleName);
+        return new self($callerNamespace, $callerModuleName, $cacheKey);
     }
 
     private static function normalizeFilename(string $filepath): string
@@ -58,16 +75,8 @@ final class ClassInfo
         return substr($filename, 0, $pos);
     }
 
-    public function getCacheKey(string $resolvableType): string
+    public function getCacheKey(): string
     {
-        if (!$this->cacheKey) {
-            $this->cacheKey = GlobalKey::fromClassName(sprintf(
-                '\\%s\\%s',
-                $this->getFullNamespace(),
-                $resolvableType
-            ));
-        }
-
         return $this->cacheKey;
     }
 
@@ -85,7 +94,7 @@ final class ClassInfo
     {
         return sprintf(
             'ClassInfo{$cacheKey:%s, $callerModuleName:%s, $callerNamespace:%s}',
-            $this->cacheKey ?? 'null',
+            $this->cacheKey,
             $this->callerModuleName,
             $this->callerNamespace,
         );

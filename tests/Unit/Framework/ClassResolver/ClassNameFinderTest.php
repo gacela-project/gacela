@@ -24,7 +24,7 @@ final class ClassNameFinderTest extends TestCase
             []
         );
 
-        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName');
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = ['A', 'B'];
         $actual = $classNameFinder->findClassName($classInfo, $resolvableTypes);
 
@@ -43,7 +43,7 @@ final class ClassNameFinderTest extends TestCase
 
         $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
 
-        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName');
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = [];
         $actual = $classNameFinder->findClassName($classInfo, $resolvableTypes);
 
@@ -62,7 +62,7 @@ final class ClassNameFinderTest extends TestCase
 
         $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
 
-        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName');
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = ['A', 'B'];
         $actual = $classNameFinder->findClassName($classInfo, $resolvableTypes);
 
@@ -81,7 +81,7 @@ final class ClassNameFinderTest extends TestCase
 
         $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
 
-        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName');
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = ['A', 'B'];
         $actual = $classNameFinder->findClassName($classInfo, $resolvableTypes);
 
@@ -100,7 +100,7 @@ final class ClassNameFinderTest extends TestCase
 
         $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
 
-        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName');
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = ['A', 'B'];
         $classNameFinder->findClassName($classInfo, $resolvableTypes);
         $classNameFinder->findClassName($classInfo, $resolvableTypes);

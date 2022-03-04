@@ -6,7 +6,6 @@ namespace Gacela\Framework\ClassResolver\ClassNameFinder;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
-use function implode;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
@@ -42,7 +41,8 @@ final class ClassNameFinder implements ClassNameFinderInterface
      */
     public function findClassName(ClassInfo $classInfo, array $resolvableTypes): ?string
     {
-        $cacheKey = $this->generateUniqueKey($classInfo, $resolvableTypes);
+        $cacheKey = $classInfo->getCacheKey();
+
         if (isset(self::$cachedClassNames[$cacheKey])) {
             return self::$cachedClassNames[$cacheKey];
         }
@@ -58,13 +58,5 @@ final class ClassNameFinder implements ClassNameFinderInterface
         }
 
         return null;
-    }
-
-    /**
-     * @param list<string> $resolvableTypes
-     */
-    private function generateUniqueKey(ClassInfo $classInfo, array $resolvableTypes): string
-    {
-        return $classInfo->toString() . implode('-', $resolvableTypes);
     }
 }

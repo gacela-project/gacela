@@ -8,7 +8,7 @@ use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use PHPUnit\Framework\TestCase;
 
@@ -45,7 +45,7 @@ final class AnonymousClassesTest extends TestCase
      */
     private function registerConfig(): void
     {
-        AbstractClassResolver::addAnonymousGlobal(
+        AnonymousGlobal::addGlobal(
             $this,
             new class () extends AbstractConfig {
                 /**
@@ -64,7 +64,7 @@ final class AnonymousClassesTest extends TestCase
      */
     private function registerFactory(): void
     {
-        AbstractClassResolver::addAnonymousGlobal(
+        AnonymousGlobal::addGlobal(
             'AnonymousClassesTest',
             new class () extends AbstractFactory {
                 public function createDomainClass(): object
@@ -105,7 +105,7 @@ final class AnonymousClassesTest extends TestCase
 
     private function registerDependencyProvider(): void
     {
-        AbstractClassResolver::addAnonymousGlobal(
+        AnonymousGlobal::addGlobal(
             $this,
             new class () extends AbstractDependencyProvider {
                 public function provideModuleDependencies(Container $container): void

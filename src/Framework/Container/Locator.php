@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
-use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 
 final class Locator
 {
@@ -59,7 +59,7 @@ final class Locator
             return $instance;
         }
 
-        $locatedInstance = AbstractClassResolver::getCachedGlobalInstance($concreteClass)
+        $locatedInstance = AnonymousGlobal::getByClassName($concreteClass)
             ?? $this->newInstance($concreteClass);
 
         /** @psalm-suppress MixedAssignment */

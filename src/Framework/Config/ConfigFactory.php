@@ -41,7 +41,6 @@ final class ConfigFactory
             $this->appRootDir,
             self::GACELA_PHP_CONFIG_FILENAME,
             $this->globalServices,
-            $this->createConfigGacelaMapper(),
             $this->createFileIo(),
         );
     }
@@ -49,11 +48,6 @@ final class ConfigFactory
     private function createPathFinder(): PathFinderInterface
     {
         return new PathFinder();
-    }
-
-    private function createConfigGacelaMapper(): ConfigGacelaMapperInterface
-    {
-        return new ConfigGacelaMapper();
     }
 
     private function createFileIo(): FileIoInterface

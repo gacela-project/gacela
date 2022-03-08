@@ -12,10 +12,8 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
 return static fn () => new class () extends AbstractConfigGacela {
-    public function mappingInterfaces(
-        MappingInterfacesResolver $interfacesResolver,
-        array $globalServices = []
-    ): void {
+    public function mappingInterfaces(MappingInterfacesResolver $interfacesResolver, array $globalServices): void
+    {
         // Resolve an abstract class from a concrete instance of a class
         $interfacesResolver->bind(AbstractClass::class, new ConcreteClass(true, 'string', 1, 1.2, ['array']));
 

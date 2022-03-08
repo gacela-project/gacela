@@ -76,7 +76,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $resolvableTypesConfig = new ResolvableTypesConfig();
         $configFromGlobalServicesFn = $configFromGlobalServices['override-resolvable-types'] ?? null;
         if ($configFromGlobalServicesFn !== null) {
-            $configFromGlobalServicesFn($resolvableTypesConfig);
+            $configFromGlobalServicesFn($resolvableTypesConfig, $this->globalServices);
         }
 
         return $this->createWithDefaultIfEmpty($configItems, $interfacesResolver, $resolvableTypesConfig);

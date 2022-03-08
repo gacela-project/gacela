@@ -12,6 +12,8 @@ use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
 use Gacela\Framework\Config\GacelaConfigFileFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
+use GacelaTest\Unit\Framework\Fixtures\CustomClass;
+use GacelaTest\Unit\Framework\Fixtures\CustomInterface;
 use PHPUnit\Framework\TestCase;
 
 final class GacelaConfigFileFactoryTest extends TestCase
@@ -58,9 +60,14 @@ final class GacelaConfigFileFactoryTest extends TestCase
                 'mapping-interfaces' => function (MappingInterfacesResolver $interfacesResolver): void {
                     $interfacesResolver->bind('interface', 'concrete');
                 },
-                'override-resolvable-types' => function (ResolvableTypesConfig $resolvableTypesConfig): void {
+                'override-resolvable-types' => function (
+                    ResolvableTypesConfig $resolvableTypesConfig,
+                    array $globalServices
+                ): void {
+                    assert($globalServices['globalServiceKey'] === 'globalServiceValue');
                     $resolvableTypesConfig->addDependencyProvider('DPCustom');
                 },
+                'globalServiceKey' => 'globalServiceValue',
             ],
             $configGacelaMapper,
             $fileIo
@@ -154,9 +161,12 @@ final class GacelaConfigFileFactoryTest extends TestCase
                 return ['anything'];
             }
 
-            public function mappingInterfaces(MappingInterfacesResolver $interfacesResolver, array $globalServices): void
-            {
-                $interfacesResolver->bind('interface', 'concrete');
+            public function mappingInterfaces(
+                MappingInterfacesResolver $interfacesResolver,
+                array $globalServices
+            ): void {
+                $interfacesResolver->bind(CustomInterface::class, new CustomClass());
+                $interfacesResolver->bind(CustomInterface::class, CustomClass::class);
             }
 
             public function overrideResolvableTypes(ResolvableTypesConfig $resolvableTypesConfig): void
@@ -175,7 +185,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
 
         $expected = (new GacelaConfigFile())
             ->setConfigItems([$gacelaConfigFile])
-            ->setMappingInterfaces(['interface' => 'concrete'])
+            ->setMappingInterfaces([CustomInterface::class => CustomClass::class])
             ->setOverrideResolvableTypes([
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],

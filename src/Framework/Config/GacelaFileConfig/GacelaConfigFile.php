@@ -24,7 +24,12 @@ final class GacelaConfigFile
     public static function withDefaults(): self
     {
         return (new self())
-            ->setConfigItems([GacelaConfigItem::withDefaults()]);
+            ->setConfigItems([GacelaConfigItem::withDefaults()])
+            ->setOverrideResolvableTypes([
+                'Factory' => ['Factory'],
+                'Config' => ['Config'],
+                'DependencyProvider' => ['DependencyProvider'],
+            ]);
     }
 
     /**

@@ -46,30 +46,13 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $gacelaPhpPath = $this->appRootDir . '/' . $this->gacelaPhpConfigFilename;
 
         if (!$this->fileIo->existsFile($gacelaPhpPath)) {
-            return $this->createDefaultGacelaPhpConfig();
+            return $this->createGacelaConfigFromBootstrap();
         }
 
-        $configGacela = $this->fileIo->include($gacelaPhpPath);
-        if (!is_callable($configGacela)) {
-            throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
-        }
-
-        /** @var AbstractConfigGacela $configGacelaClass */
-        $configGacelaClass = $configGacela();
-        if (!is_subclass_of($configGacelaClass, AbstractConfigGacela::class)) {
-            throw new RuntimeException('Your anonymous class must extends AbstractConfigGacela');
-        }
-
-        $configItems = $this->configGacelaMapper->mapConfigItems($configGacelaClass->config());
-        $mappingInterfaces = $configGacelaClass->mappingInterfaces($this->globalServices);
-
-        $resolvableTypesConfig = new ResolvableTypesConfig();
-        $configGacelaClass->overrideResolvableTypes($resolvableTypesConfig);
-
-        return $this->createWithDefaultIfEmpty($configItems, $mappingInterfaces, $resolvableTypesConfig);
+        return $this->createGacelaConfigUsingGacelaPhpFile($gacelaPhpPath);
     }
 
-    private function createDefaultGacelaPhpConfig(): GacelaConfigFile
+    private function createGacelaConfigFromBootstrap(): GacelaConfigFile
     {
         /**
          * @var array{
@@ -89,6 +72,28 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         if ($configFromGlobalServicesFn !== null) {
             $configFromGlobalServicesFn($resolvableTypesConfig);
         }
+
+        return $this->createWithDefaultIfEmpty($configItems, $mappingInterfaces, $resolvableTypesConfig);
+    }
+
+    public function createGacelaConfigUsingGacelaPhpFile(string $gacelaPhpPath): GacelaConfigFile
+    {
+        $configGacela = $this->fileIo->include($gacelaPhpPath);
+        if (!is_callable($configGacela)) {
+            throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
+        }
+
+        /** @var AbstractConfigGacela $configGacelaClass */
+        $configGacelaClass = $configGacela();
+        if (!is_subclass_of($configGacelaClass, AbstractConfigGacela::class)) {
+            throw new RuntimeException('Your anonymous class must extends AbstractConfigGacela');
+        }
+
+        $configItems = $this->configGacelaMapper->mapConfigItems($configGacelaClass->config());
+        $mappingInterfaces = $configGacelaClass->mappingInterfaces($this->globalServices);
+
+        $resolvableTypesConfig = new ResolvableTypesConfig();
+        $configGacelaClass->overrideResolvableTypes($resolvableTypesConfig);
 
         return $this->createWithDefaultIfEmpty($configItems, $mappingInterfaces, $resolvableTypesConfig);
     }

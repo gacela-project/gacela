@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
+use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
+
 final class GacelaConfigFile
 {
     /** @var list<GacelaConfigItem> */
@@ -26,9 +28,9 @@ final class GacelaConfigFile
         return (new self())
             ->setConfigItems([GacelaConfigItem::withDefaults()])
             ->setOverrideResolvableTypes([
-                'Factory' => ['Factory'],
-                'Config' => ['Config'],
-                'DependencyProvider' => ['DependencyProvider'],
+                'Factory' => ResolvableTypesConfig::DEFAULT_FACTORIES,
+                'Config' => ResolvableTypesConfig::DEFAULT_CONFIG,
+                'DependencyProvider' => ResolvableTypesConfig::DEFAULT_DEPENDENCY_PROVIDERS,
             ]);
     }
 

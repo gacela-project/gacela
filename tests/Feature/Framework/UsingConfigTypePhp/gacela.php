@@ -3,13 +3,12 @@
 declare(strict_types=1);
 
 use Gacela\Framework\AbstractConfigGacela;
+use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
+use Gacela\Framework\Config\GacelaConfigArgs\ConfigResolver;
 
 return static fn () => new class () extends AbstractConfigGacela {
-    public function config(): array
+    public function config(ConfigResolver $configResolver): void
     {
-        return [
-            'path' => 'config/*.php',
-            'path_local' => 'config/local.php',
-        ];
+        $configResolver->add(PhpConfigReader::class, 'config/*.php', 'config/local.php');
     }
 };

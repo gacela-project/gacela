@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Config;
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\ConfigGacelaMapperInterface;
+use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\FileIoInterface;
+use Gacela\Framework\Config\GacelaConfigArgs\ConfigResolver;
 use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
 use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
 use Gacela\Framework\Config\GacelaConfigFileFactory;
@@ -20,7 +21,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
 {
     public function test_gacela_file_does_not_exists_then_use_defaults(): void
     {
-        $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(false);
 
@@ -28,7 +28,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             ['globalServiceKey' => 'globalServiceValue'],
-            $configGacelaMapper,
             $fileIo
         );
 
@@ -37,18 +36,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
 
     public function test_gacela_file_does_not_exists_but_global_services(): void
     {
-        $suffixTypesResolver = [
-            'DependencyProvider' => ['DPCustom'],
-        ];
-
-        $gacelaConfigFile = (new GacelaConfigFile())
-            ->setConfigItems([new GacelaConfigItem('path.php', 'path_local.php')])
-            ->setMappingInterfaces(['interface' => 'concrete'])
-            ->setSuffixTypes($suffixTypesResolver);
-
-        $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
-        $configGacelaMapper->method('mapConfigItems')->willReturn([$gacelaConfigFile]);
-
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(false);
 
@@ -56,26 +43,27 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             [
-                'config' => ['anything'],
-                'mapping-interfaces' => function (MappingInterfacesResolver $interfacesResolver): void {
-                    $interfacesResolver->bind('interface', 'concrete');
+                'config' => function (ConfigResolver $configResolver): void {
+                    $configResolver->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
                 },
-                'override-resolvable-types' => function (
-                    SuffixTypesResolver $resolvableTypesConfig,
+                'mapping-interfaces' => function (
+                    MappingInterfacesResolver $interfacesResolver,
                     array $globalServices
                 ): void {
                     assert($globalServices['globalServiceKey'] === 'globalServiceValue');
-                    $resolvableTypesConfig->addDependencyProvider('DPCustom');
+                    $interfacesResolver->bind(CustomInterface::class, CustomClass::class);
+                },
+                'suffix-types' => function (SuffixTypesResolver $suffixTypesResolver): void {
+                    $suffixTypesResolver->addDependencyProvider('DPCustom');
                 },
                 'globalServiceKey' => 'globalServiceValue',
             ],
-            $configGacelaMapper,
             $fileIo
         );
 
         $expected = (new GacelaConfigFile())
-            ->setConfigItems([$gacelaConfigFile])
-            ->setMappingInterfaces(['interface' => 'concrete'])
+            ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())])
+            ->setMappingInterfaces([CustomInterface::class => CustomClass::class])
             ->setSuffixTypes([
                 'DependencyProvider' => ['DependencyProvider', 'DPCustom'],
                 'Factory' => ['Factory'],
@@ -87,7 +75,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
 
     public function test_exception_when_include_gacela_file_is_not_callable(): void
     {
-        $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
         $fileIo->method('include')->willReturn('anything-but-not-callable');
@@ -96,7 +83,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             ['globalServiceKey' => 'globalServiceValue'],
-            $configGacelaMapper,
             $fileIo
         );
 
@@ -106,7 +92,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
 
     public function test_exception_when_gacela_file_is_callable_but_does_not_extends_abstract_config_gacela(): void
     {
-        $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
         $fileIo->method('include')->willReturn(fn () => new class () {
@@ -116,7 +101,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             ['globalServiceKey' => 'globalServiceValue'],
-            $configGacelaMapper,
             $fileIo
         );
 
@@ -126,7 +110,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
 
     public function test_gacela_file_does_not_override_anything_then_use_defaults(): void
     {
-        $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
         $fileIo->method('include')->willReturn(fn () => new class () extends AbstractConfigGacela {
@@ -136,7 +119,6 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             ['globalServiceKey' => 'globalServiceValue'],
-            $configGacelaMapper,
             $fileIo
         );
 
@@ -145,20 +127,12 @@ final class GacelaConfigFileFactoryTest extends TestCase
 
     public function test_gacela_file_overrides_config_items(): void
     {
-        $gacelaConfigFile = (new GacelaConfigFile())
-            ->setConfigItems([new GacelaConfigItem('path.php', 'path_local.php')])
-            ->setMappingInterfaces(['interface' => 'concrete'])
-            ->setSuffixTypes(['DependencyProvider' => 'Binding']);
-
-        $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
-        $configGacelaMapper->method('mapConfigItems')->willReturn([$gacelaConfigFile]);
-
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
         $fileIo->method('include')->willReturn(fn () => new class () extends AbstractConfigGacela {
-            public function config(): array
+            public function config(ConfigResolver $configResolver): void
             {
-                return ['anything'];
+                $configResolver->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
             }
 
             public function mappingInterfaces(
@@ -179,12 +153,11 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             ['globalServiceKey' => 'globalServiceValue'],
-            $configGacelaMapper,
             $fileIo
         );
 
         $expected = (new GacelaConfigFile())
-            ->setConfigItems([$gacelaConfigFile])
+            ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())])
             ->setMappingInterfaces([CustomInterface::class => CustomClass::class])
             ->setSuffixTypes([
                 'Factory' => ['Factory'],

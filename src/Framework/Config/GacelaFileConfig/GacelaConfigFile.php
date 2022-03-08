@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
+use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
+
 final class GacelaConfigFile
 {
     /** @var list<GacelaConfigItem> */
@@ -14,9 +16,9 @@ final class GacelaConfigFile
 
     /**
      * @var array{
-     *     Factory?:list<string>|string,
-     *     Config?:list<string>|string,
-     *     DependencyProvider?:list<string>|string,
+     *     Factory?:list<string>,
+     *     Config?:list<string>,
+     *     DependencyProvider?:list<string>,
      * }
      */
     private array $overrideResolvableTypes = [];
@@ -24,7 +26,12 @@ final class GacelaConfigFile
     public static function withDefaults(): self
     {
         return (new self())
-            ->setConfigItems([GacelaConfigItem::withDefaults()]);
+            ->setConfigItems([GacelaConfigItem::withDefaults()])
+            ->setOverrideResolvableTypes([
+                'Factory' => ResolvableTypesConfig::DEFAULT_FACTORIES,
+                'Config' => ResolvableTypesConfig::DEFAULT_CONFIG,
+                'DependencyProvider' => ResolvableTypesConfig::DEFAULT_DEPENDENCY_PROVIDERS,
+            ]);
     }
 
     /**
@@ -67,7 +74,7 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string} $overrideResolvableTypes
+     * @param array{Factory?:list<string>, Config?:list<string>, DependencyProvider?:list<string>} $overrideResolvableTypes
      */
     public function setOverrideResolvableTypes(array $overrideResolvableTypes): self
     {
@@ -77,7 +84,7 @@ final class GacelaConfigFile
     }
 
     /**
-     * @return array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string}
+     * @return array{Factory?:list<string>, Config?:list<string>, DependencyProvider?:list<string>}
      */
     public function getOverrideResolvableTypes(): array
     {

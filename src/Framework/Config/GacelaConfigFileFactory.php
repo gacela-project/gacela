@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\AbstractConfigGacela;
+use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use RuntimeException;
@@ -45,9 +46,38 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $gacelaPhpPath = $this->appRootDir . '/' . $this->gacelaPhpConfigFilename;
 
         if (!$this->fileIo->existsFile($gacelaPhpPath)) {
-            return $this->createDefaultGacelaPhpConfig();
+            return $this->createGacelaConfigFromBootstrap();
         }
 
+        return $this->createGacelaConfigUsingGacelaPhpFile($gacelaPhpPath);
+    }
+
+    private function createGacelaConfigFromBootstrap(): GacelaConfigFile
+    {
+        /**
+         * @var array{
+         *     config?: list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string},
+         *     mapping-interfaces?: array<class-string,class-string|callable>,
+         *     override-resolvable-types?: callable
+         * } $configFromGlobalServices
+         */
+        $configFromGlobalServices = $this->globalServices;
+        $configItems = isset($configFromGlobalServices['config'])
+            ? $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'])
+            : [];
+        $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
+
+        $resolvableTypesConfig = new ResolvableTypesConfig();
+        $configFromGlobalServicesFn = $configFromGlobalServices['override-resolvable-types'] ?? null;
+        if ($configFromGlobalServicesFn !== null) {
+            $configFromGlobalServicesFn($resolvableTypesConfig);
+        }
+
+        return $this->createWithDefaultIfEmpty($configItems, $mappingInterfaces, $resolvableTypesConfig);
+    }
+
+    public function createGacelaConfigUsingGacelaPhpFile(string $gacelaPhpPath): GacelaConfigFile
+    {
         $configGacela = $this->fileIo->include($gacelaPhpPath);
         if (!is_callable($configGacela)) {
             throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
@@ -61,39 +91,22 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
 
         $configItems = $this->configGacelaMapper->mapConfigItems($configGacelaClass->config());
         $mappingInterfaces = $configGacelaClass->mappingInterfaces($this->globalServices);
-        $overrideResolvableTypes = $configGacelaClass->overrideResolvableTypes();
 
-        return $this->createWithDefaultIfEmpty($configItems, $mappingInterfaces, $overrideResolvableTypes);
-    }
+        $resolvableTypesConfig = new ResolvableTypesConfig();
+        $configGacelaClass->overrideResolvableTypes($resolvableTypesConfig);
 
-    private function createDefaultGacelaPhpConfig(): GacelaConfigFile
-    {
-        /**
-         * @var array{
-         *     config?: list<array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string}>|array{path?:string, path_local?:string, reader?:ConfigReaderInterface|class-string},
-         *     mapping-interfaces?: array<class-string,class-string|callable>,
-         *     override-resolvable-types?: array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string}
-         * } $configFromGlobalServices
-         */
-        $configFromGlobalServices = $this->globalServices;
-        $configItems = isset($configFromGlobalServices['config'])
-            ? $this->configGacelaMapper->mapConfigItems($configFromGlobalServices['config'])
-            : [];
-        $mappingInterfaces = $configFromGlobalServices['mapping-interfaces'] ?? [];
-        $overrideResolvableTypes = $configFromGlobalServices['override-resolvable-types'] ?? [];
-
-        return $this->createWithDefaultIfEmpty($configItems, $mappingInterfaces, $overrideResolvableTypes);
+        return $this->createWithDefaultIfEmpty($configItems, $mappingInterfaces, $resolvableTypesConfig);
     }
 
     /**
      * @param list<GacelaConfigItem> $configItems
      * @param array<class-string,class-string|callable> $mappingInterfaces
-     * @param array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string} $overrideResolvableTypes
+     * @param ResolvableTypesConfig $overrideResolvableTypes
      */
     private function createWithDefaultIfEmpty(
         array $configItems,
         array $mappingInterfaces,
-        array $overrideResolvableTypes
+        ResolvableTypesConfig $overrideResolvableTypes
     ): GacelaConfigFile {
         $gacelaConfigFile = GacelaConfigFile::withDefaults();
 
@@ -103,9 +116,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         if (!empty($mappingInterfaces)) {
             $gacelaConfigFile->setMappingInterfaces($mappingInterfaces);
         }
-        if (!empty($overrideResolvableTypes)) {
-            $gacelaConfigFile->setOverrideResolvableTypes($overrideResolvableTypes);
-        }
+        $gacelaConfigFile->setOverrideResolvableTypes($overrideResolvableTypes->resolve());
 
         return $gacelaConfigFile;
     }

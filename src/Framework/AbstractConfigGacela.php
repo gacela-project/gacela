@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigReaderInterface;
+use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
 
 abstract class AbstractConfigGacela
 {
@@ -66,31 +67,9 @@ abstract class AbstractConfigGacela
     }
 
     /**
-     * e.g:
-     * <code>
-     * return [
-     *     'Factory' => 'Creator',
-     *     'Config' => 'Conf',
-     *     'DependencyProvider' => 'Binding',
-     * ];
-     * // OR
-     * return [
-     *     'Factory' => ['Creator', '...'],
-     *     'Config' => ['Conf', '...'],
-     *     'DependencyProvider' => ['Binding', '...'],
-     * ];
-     * </code>
-     *
      * Allow overriding gacela resolvable types.
-     *
-     * @return array{
-     *     Factory?:list<string>|string,
-     *     Config?:list<string>|string,
-     *     DependencyProvider?:list<string>|string
-     * }
      */
-    public function overrideResolvableTypes(): array
+    public function overrideResolvableTypes(ResolvableTypesConfig $resolvableTypesConfig): void
     {
-        return [];
     }
 }

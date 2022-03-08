@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
+use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
 
 final class GacelaConfigFile
 {
@@ -21,16 +21,16 @@ final class GacelaConfigFile
      *     DependencyProvider?:list<string>,
      * }
      */
-    private array $overrideResolvableTypes = [];
+    private array $suffixTypes = [];
 
     public static function withDefaults(): self
     {
         return (new self())
             ->setConfigItems([GacelaConfigItem::withDefaults()])
-            ->setOverrideResolvableTypes([
-                'Factory' => ResolvableTypesConfig::DEFAULT_FACTORIES,
-                'Config' => ResolvableTypesConfig::DEFAULT_CONFIG,
-                'DependencyProvider' => ResolvableTypesConfig::DEFAULT_DEPENDENCY_PROVIDERS,
+            ->setSuffixTypes([
+                'Factory' => SuffixTypesResolver::DEFAULT_FACTORIES,
+                'Config' => SuffixTypesResolver::DEFAULT_CONFIGS,
+                'DependencyProvider' => SuffixTypesResolver::DEFAULT_DEPENDENCY_PROVIDERS,
             ]);
     }
 
@@ -74,20 +74,28 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param array{Factory?:list<string>, Config?:list<string>, DependencyProvider?:list<string>} $overrideResolvableTypes
+     * @param array{
+     *     Factory?:list<string>,
+     *     Config?:list<string>,
+     *     DependencyProvider?:list<string>
+     * } $suffixTypes
      */
-    public function setOverrideResolvableTypes(array $overrideResolvableTypes): self
+    public function setSuffixTypes(array $suffixTypes): self
     {
-        $this->overrideResolvableTypes = $overrideResolvableTypes;
+        $this->suffixTypes = $suffixTypes;
 
         return $this;
     }
 
     /**
-     * @return array{Factory?:list<string>, Config?:list<string>, DependencyProvider?:list<string>}
+     * @return array{
+     *     Factory?:list<string>,
+     *     Config?:list<string>,
+     *     DependencyProvider?:list<string>
+     * }
      */
-    public function getOverrideResolvableTypes(): array
+    public function getSuffixTypes(): array
     {
-        return $this->overrideResolvableTypes;
+        return $this->suffixTypes;
     }
 }

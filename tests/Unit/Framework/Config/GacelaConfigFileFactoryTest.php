@@ -8,7 +8,7 @@ use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\ConfigGacelaMapperInterface;
 use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
-use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
+use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
 use Gacela\Framework\Config\GacelaConfigFileFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
@@ -37,14 +37,14 @@ final class GacelaConfigFileFactoryTest extends TestCase
 
     public function test_gacela_file_does_not_exists_but_global_services(): void
     {
-        $overrideResolvableTypes = [
+        $suffixTypesResolver = [
             'DependencyProvider' => ['DPCustom'],
         ];
 
         $gacelaConfigFile = (new GacelaConfigFile())
             ->setConfigItems([new GacelaConfigItem('path.php', 'path_local.php')])
             ->setMappingInterfaces(['interface' => 'concrete'])
-            ->setOverrideResolvableTypes($overrideResolvableTypes);
+            ->setSuffixTypes($suffixTypesResolver);
 
         $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
         $configGacelaMapper->method('mapConfigItems')->willReturn([$gacelaConfigFile]);
@@ -61,7 +61,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
                     $interfacesResolver->bind('interface', 'concrete');
                 },
                 'override-resolvable-types' => function (
-                    ResolvableTypesConfig $resolvableTypesConfig,
+                    SuffixTypesResolver $resolvableTypesConfig,
                     array $globalServices
                 ): void {
                     assert($globalServices['globalServiceKey'] === 'globalServiceValue');
@@ -76,7 +76,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
         $expected = (new GacelaConfigFile())
             ->setConfigItems([$gacelaConfigFile])
             ->setMappingInterfaces(['interface' => 'concrete'])
-            ->setOverrideResolvableTypes([
+            ->setSuffixTypes([
                 'DependencyProvider' => ['DependencyProvider', 'DPCustom'],
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],
@@ -148,7 +148,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
         $gacelaConfigFile = (new GacelaConfigFile())
             ->setConfigItems([new GacelaConfigItem('path.php', 'path_local.php')])
             ->setMappingInterfaces(['interface' => 'concrete'])
-            ->setOverrideResolvableTypes(['DependencyProvider' => 'Binding']);
+            ->setSuffixTypes(['DependencyProvider' => 'Binding']);
 
         $configGacelaMapper = $this->createStub(ConfigGacelaMapperInterface::class);
         $configGacelaMapper->method('mapConfigItems')->willReturn([$gacelaConfigFile]);
@@ -169,9 +169,9 @@ final class GacelaConfigFileFactoryTest extends TestCase
                 $interfacesResolver->bind(CustomInterface::class, CustomClass::class);
             }
 
-            public function overrideResolvableTypes(ResolvableTypesConfig $resolvableTypesConfig): void
+            public function suffixTypes(SuffixTypesResolver $suffixTypesResolver): void
             {
-                $resolvableTypesConfig->addDependencyProvider('Binding');
+                $suffixTypesResolver->addDependencyProvider('Binding');
             }
         });
 
@@ -186,7 +186,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
         $expected = (new GacelaConfigFile())
             ->setConfigItems([$gacelaConfigFile])
             ->setMappingInterfaces([CustomInterface::class => CustomClass::class])
-            ->setOverrideResolvableTypes([
+            ->setSuffixTypes([
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],
                 'DependencyProvider' => ['DependencyProvider', 'Binding'],

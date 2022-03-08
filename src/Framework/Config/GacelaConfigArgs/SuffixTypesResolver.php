@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaConfigArgs;
 
-final class ResolvableTypesConfig
+final class SuffixTypesResolver
 {
     public const DEFAULT_FACTORIES = ['Factory'];
-    public const DEFAULT_CONFIG = ['Config'];
+    public const DEFAULT_CONFIGS = ['Config'];
     public const DEFAULT_DEPENDENCY_PROVIDERS = ['DependencyProvider'];
 
     /** @var list<string> */
     private array $factories = self::DEFAULT_FACTORIES;
 
     /** @var list<string> */
-    private array $configs = self::DEFAULT_CONFIG;
+    private array $configs = self::DEFAULT_CONFIGS;
 
     /** @var list<string> */
     private array $dependencyProviders = self::DEFAULT_DEPENDENCY_PROVIDERS;

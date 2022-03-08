@@ -10,7 +10,6 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use function class_exists;
-use function is_string;
 
 abstract class AbstractClassResolver
 {
@@ -58,7 +57,7 @@ abstract class AbstractClassResolver
     {
         return $this->getClassNameFinder()->findClassName(
             $classInfo,
-            $this->getFinalResolvableTypes()
+            $this->getPossibleResolvableTypes()
         );
     }
 
@@ -77,17 +76,13 @@ abstract class AbstractClassResolver
      *
      * @return list<string>
      */
-    private function getFinalResolvableTypes(): array
+    private function getPossibleResolvableTypes(): array
     {
-        $overrideResolvableTypes = $this->getGacelaConfigFile()->getOverrideResolvableTypes();
+        $suffixTypesResolver = $this->getGacelaConfigFile()->getSuffixTypes();
 
-        $overrideResolvable = $overrideResolvableTypes[$this->getResolvableType()] ?? $this->getResolvableType();
+        $resolvableTypes = $suffixTypesResolver[$this->getResolvableType()] ?? $this->getResolvableType();
 
-        if (is_string($overrideResolvable)) {
-            $overrideResolvable = [$overrideResolvable];
-        }
-
-        return $overrideResolvable;
+        return is_array($resolvableTypes) ? $resolvableTypes : [$resolvableTypes];
     }
 
     private function createInstance(string $resolvedClassName): ?object

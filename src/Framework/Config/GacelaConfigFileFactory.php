@@ -6,7 +6,7 @@ namespace Gacela\Framework\Config;
 
 use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
-use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
+use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use RuntimeException;
@@ -73,7 +73,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
             $configFromGlobalServicesFn($interfacesResolver);
         }
 
-        $resolvableTypesConfig = new ResolvableTypesConfig();
+        $resolvableTypesConfig = new SuffixTypesResolver();
         $configFromGlobalServicesFn = $configFromGlobalServices['override-resolvable-types'] ?? null;
         if ($configFromGlobalServicesFn !== null) {
             $configFromGlobalServicesFn($resolvableTypesConfig, $this->globalServices);
@@ -100,10 +100,10 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $interfacesResolver = new MappingInterfacesResolver();
         $configGacelaClass->mappingInterfaces($interfacesResolver, $this->globalServices);
 
-        $resolvableTypesConfig = new ResolvableTypesConfig();
-        $configGacelaClass->overrideResolvableTypes($resolvableTypesConfig);
+        $suffixTypesResolver = new SuffixTypesResolver();
+        $configGacelaClass->suffixTypes($suffixTypesResolver);
 
-        return $this->createWithDefaultIfEmpty($configItems, $interfacesResolver, $resolvableTypesConfig);
+        return $this->createWithDefaultIfEmpty($configItems, $interfacesResolver, $suffixTypesResolver);
     }
 
     /**
@@ -112,7 +112,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
     private function createWithDefaultIfEmpty(
         array $configItems,
         MappingInterfacesResolver $interfacesResolver,
-        ResolvableTypesConfig $overrideResolvableTypes
+        SuffixTypesResolver $suffixTypesResolver
     ): GacelaConfigFile {
         $gacelaConfigFile = GacelaConfigFile::withDefaults();
 
@@ -120,7 +120,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
             $gacelaConfigFile->setConfigItems($configItems);
         }
         $gacelaConfigFile->setMappingInterfaces($interfacesResolver->resolve());
-        $gacelaConfigFile->setOverrideResolvableTypes($overrideResolvableTypes->resolve());
+        $gacelaConfigFile->setSuffixTypes($suffixTypesResolver->resolve());
 
         return $gacelaConfigFile;
     }

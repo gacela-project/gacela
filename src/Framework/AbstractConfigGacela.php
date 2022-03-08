@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigReaderInterface;
+use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
 use Gacela\Framework\Config\GacelaConfigArgs\ResolvableTypesConfig;
 
 abstract class AbstractConfigGacela
@@ -44,26 +45,12 @@ abstract class AbstractConfigGacela
     }
 
     /**
-     * e.g:
-     * <code>
-     * return [
-     *     // It instantiates the specific class on runtime
-     *     AbstractClass::class => SpecificClass::class,
-     *
-     *     // It resolves the callable on runtime
-     *     InterfaceClass::class => fn() => new SpecificClass($dependencies),
-     * ];
-     * </code>
-     *
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
      * @param array<string,mixed> $globalServices
-     *
-     * @return array<class-string,class-string|callable>
      */
-    public function mappingInterfaces(array $globalServices): array
+    public function mappingInterfaces(MappingInterfacesResolver $interfacesResolver, array $globalServices): void
     {
-        return [];
     }
 
     /**

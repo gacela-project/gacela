@@ -11,7 +11,7 @@ final class GacelaConfigFile
     /** @var list<GacelaConfigItem> */
     private array $configItems = [];
 
-    /** @var array<class-string,class-string|callable> */
+    /** @var array<class-string,class-string|callable|object> */
     private array $mappingInterfaces = [];
 
     /**
@@ -53,7 +53,7 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param array<class-string,class-string|callable> $mappingInterfaces
+     * @param array<class-string,class-string|callable|object> $mappingInterfaces
      */
     public function setMappingInterfaces(array $mappingInterfaces): self
     {

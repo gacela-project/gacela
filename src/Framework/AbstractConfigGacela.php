@@ -26,7 +26,7 @@ abstract class AbstractConfigGacela
     /**
      * Allow overriding gacela resolvable types.
      */
-    public function suffixTypes(SuffixTypesBuilder $suffixTypesResolver): void
+    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
     {
     }
 }

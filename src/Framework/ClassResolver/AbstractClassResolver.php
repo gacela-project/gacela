@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use function class_exists;
+use function is_array;
 
 abstract class AbstractClassResolver
 {
@@ -72,15 +73,15 @@ abstract class AbstractClassResolver
     }
 
     /**
-     * Allow overriding gacela resolvable types.
+     * Allow overriding gacela suffixes resolvable types.
      *
      * @return list<string>
      */
     private function getPossibleResolvableTypes(): array
     {
-        $suffixTypesResolver = $this->getGacelaConfigFile()->getSuffixTypes();
+        $suffixTypes = $this->getGacelaConfigFile()->getSuffixTypes();
 
-        $resolvableTypes = $suffixTypesResolver[$this->getResolvableType()] ?? $this->getResolvableType();
+        $resolvableTypes = $suffixTypes[$this->getResolvableType()] ?? $this->getResolvableType();
 
         return is_array($resolvableTypes) ? $resolvableTypes : [$resolvableTypes];
     }

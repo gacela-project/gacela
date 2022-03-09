@@ -14,8 +14,8 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, [
-            'config' => function (ConfigBuilder $configResolver): void {
-                $configResolver->add(PhpConfigReader::class, 'custom-config.php', 'custom-config_local.php');
+            'config' => function (ConfigBuilder $configBuilder): void {
+                $configBuilder->add(PhpConfigReader::class, 'custom-config.php', 'custom-config_local.php');
             },
         ]);
     }

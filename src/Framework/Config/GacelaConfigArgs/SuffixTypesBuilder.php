@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaConfigArgs;
 
-final class SuffixTypesResolver
+final class SuffixTypesBuilder
 {
     public const DEFAULT_FACTORIES = ['Factory'];
     public const DEFAULT_CONFIGS = ['Config'];
@@ -47,7 +47,7 @@ final class SuffixTypesResolver
      *     DependencyProvider:list<string>,
      * }
      */
-    public function resolve(): array
+    public function build(): array
     {
         return [
             'Factory' => array_values(array_unique($this->factories)),

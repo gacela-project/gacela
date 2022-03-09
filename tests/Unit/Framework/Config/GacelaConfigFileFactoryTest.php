@@ -9,7 +9,7 @@ use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesBuilder;
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
+use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
@@ -43,18 +43,18 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             [
-                'config' => function (ConfigBuilder $configResolver): void {
-                    $configResolver->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
+                'config' => function (ConfigBuilder $configBuilder): void {
+                    $configBuilder->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
                 },
                 'mapping-interfaces' => function (
-                    MappingInterfacesBuilder $interfacesResolver,
+                    MappingInterfacesBuilder $interfacesBuilder,
                     array $globalServices
                 ): void {
                     assert($globalServices['globalServiceKey'] === 'globalServiceValue');
-                    $interfacesResolver->bind(CustomInterface::class, CustomClass::class);
+                    $interfacesBuilder->bind(CustomInterface::class, CustomClass::class);
                 },
-                'suffix-types' => function (SuffixTypesResolver $suffixTypesResolver): void {
-                    $suffixTypesResolver->addDependencyProvider('DPCustom');
+                'suffix-types' => function (SuffixTypesBuilder $suffixTypesBuilder): void {
+                    $suffixTypesBuilder->addDependencyProvider('DPCustom');
                 },
                 'globalServiceKey' => 'globalServiceValue',
             ],
@@ -143,9 +143,9 @@ final class GacelaConfigFileFactoryTest extends TestCase
                 $mappingInterfacesBuilder->bind(CustomInterface::class, CustomClass::class);
             }
 
-            public function suffixTypes(SuffixTypesResolver $suffixTypesResolver): void
+            public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
             {
-                $suffixTypesResolver->addDependencyProvider('Binding');
+                $suffixTypesBuilder->addDependencyProvider('Binding');
             }
         });
 

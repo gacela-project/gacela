@@ -6,7 +6,7 @@ namespace Gacela\Framework;
 
 use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesBuilder;
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
+use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesBuilder;
 
 abstract class AbstractConfigGacela
 {
@@ -26,7 +26,7 @@ abstract class AbstractConfigGacela
     /**
      * Allow overriding gacela resolvable types.
      */
-    public function suffixTypes(SuffixTypesResolver $suffixTypesResolver): void
+    public function suffixTypes(SuffixTypesBuilder $suffixTypesResolver): void
     {
     }
 }

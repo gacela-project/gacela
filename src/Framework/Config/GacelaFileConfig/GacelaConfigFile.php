@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
+use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesBuilder;
 
 final class GacelaConfigFile
 {
@@ -28,9 +28,9 @@ final class GacelaConfigFile
         return (new self())
             ->setConfigItems([GacelaConfigItem::withDefaults()])
             ->setSuffixTypes([
-                'Factory' => SuffixTypesResolver::DEFAULT_FACTORIES,
-                'Config' => SuffixTypesResolver::DEFAULT_CONFIGS,
-                'DependencyProvider' => SuffixTypesResolver::DEFAULT_DEPENDENCY_PROVIDERS,
+                'Factory' => SuffixTypesBuilder::DEFAULT_FACTORIES,
+                'Config' => SuffixTypesBuilder::DEFAULT_CONFIGS,
+                'DependencyProvider' => SuffixTypesBuilder::DEFAULT_DEPENDENCY_PROVIDERS,
             ]);
     }
 

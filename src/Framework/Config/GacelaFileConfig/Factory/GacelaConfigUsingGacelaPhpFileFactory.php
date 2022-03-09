@@ -49,15 +49,34 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
             throw new RuntimeException('Your anonymous class must extends AbstractConfigGacela');
         }
 
+        $configBuilder = $this->createConfigBuilder($configGacelaClass);
+        $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder($configGacelaClass);
+        $suffixTypesBuilder = $this->createSuffixTypesBuilder($configGacelaClass);
+
+        return GacelaConfigFile::usingBuilders($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
+    }
+
+    private function createConfigBuilder(AbstractConfigGacela $configGacelaClass): ConfigBuilder
+    {
         $configBuilder = new ConfigBuilder();
         $configGacelaClass->config($configBuilder);
 
+        return $configBuilder;
+    }
+
+    private function createMappingInterfacesBuilder(AbstractConfigGacela $configGacelaClass): MappingInterfacesBuilder
+    {
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
         $configGacelaClass->mappingInterfaces($mappingInterfacesBuilder, $this->globalServices);
 
+        return $mappingInterfacesBuilder;
+    }
+
+    private function createSuffixTypesBuilder(AbstractConfigGacela $configGacelaClass): SuffixTypesBuilder
+    {
         $suffixTypesBuilder = new SuffixTypesBuilder();
         $configGacelaClass->suffixTypes($suffixTypesBuilder);
 
-        return GacelaConfigFile::usingBuilders($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
+        return $suffixTypesBuilder;
     }
 }

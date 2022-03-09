@@ -24,7 +24,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
         self::assertEquals(GacelaConfigFile::withDefaults(), $factory->createGacelaFileConfig());
     }
 
-    public function test_no_especial_global_services_then_default(): void
+    public function test_no_special_global_services_then_default(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
             'randomKey' => 'randomValue',
@@ -39,7 +39,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
             'config' => function (ConfigBuilder $configBuilder): void {
                 $configBuilder->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
             },
-        ], );
+        ]);
 
         $expected = GacelaConfigFile::withDefaults()
             ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())]);
@@ -54,7 +54,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
                 MappingInterfacesBuilder $interfacesBuilder,
                 array $globalServices
             ): void {
-                assert($globalServices['globalServiceKey'] === 'globalServiceValue');
+                self::assertSame($globalServices['globalServiceKey'], 'globalServiceValue');
                 $interfacesBuilder->bind(CustomInterface::class, CustomClass::class);
             },
             'globalServiceKey' => 'globalServiceValue',
@@ -72,7 +72,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
             'suffix-types' => function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder->addDependencyProvider('DPCustom');
             },
-        ], );
+        ]);
 
         $expected = GacelaConfigFile::withDefaults()
             ->setSuffixTypes([

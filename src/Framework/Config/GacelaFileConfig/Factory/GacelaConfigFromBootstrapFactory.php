@@ -25,13 +25,16 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     public function createGacelaFileConfig(): GacelaConfigFile
     {
-        /**
-         * @var array{
-         *     config?: callable,
-         *     mapping-interfaces?: callable,
-         *     suffix-types?: callable,
-         * } $configFromGlobalServices
-         */
+        $configBuilder = $this->createConfigBuilder();
+        $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder();
+        $suffixTypesBuilder = $this->createSuffixTypesBuilder();
+
+        return GacelaConfigFile::usingBuilders($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
+    }
+
+    private function createConfigBuilder(): ConfigBuilder
+    {
+        /** @var array{config?: callable} $configFromGlobalServices */
         $configFromGlobalServices = $this->globalServices;
 
         $configBuilder = new ConfigBuilder();
@@ -40,18 +43,33 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
             $configFromGlobalServicesFn($configBuilder);
         }
 
+        return $configBuilder;
+    }
+
+    private function createMappingInterfacesBuilder(): MappingInterfacesBuilder
+    {
+        /** @var array{mapping-interfaces?: callable} $configFromGlobalServices */
+        $configFromGlobalServices = $this->globalServices;
+
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
         $mappingInterfacesFn = $configFromGlobalServices['mapping-interfaces'] ?? null;
         if ($mappingInterfacesFn !== null) {
             $mappingInterfacesFn($mappingInterfacesBuilder, $this->globalServices);
         }
 
+        return $mappingInterfacesBuilder;
+    }
+
+    private function createSuffixTypesBuilder(): SuffixTypesBuilder
+    {
+        /** @var array{suffix-types?: callable} $configFromGlobalServices */
+        $configFromGlobalServices = $this->globalServices;
         $suffixTypesBuilder = new SuffixTypesBuilder();
         $suffixTypesFn = $configFromGlobalServices['suffix-types'] ?? null;
         if ($suffixTypesFn !== null) {
             $suffixTypesFn($suffixTypesBuilder);
         }
 
-        return GacelaConfigFile::usingBuilders($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
+        return $suffixTypesBuilder;
     }
 }

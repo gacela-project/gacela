@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Gacela\Framework\Config\GacelaConfigArgs\ConfigResolver;
+use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
 use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
 
 abstract class AbstractConfigGacela
 {
-    public function config(ConfigResolver $configResolver): void
+    public function config(ConfigBuilder $configBuilder): void
     {
     }
 

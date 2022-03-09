@@ -7,7 +7,7 @@ namespace GacelaTest\Unit\Framework\Config;
 use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\FileIoInterface;
-use Gacela\Framework\Config\GacelaConfigArgs\ConfigResolver;
+use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
 use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
 use Gacela\Framework\Config\GacelaConfigFileFactory;
@@ -43,7 +43,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
             'appRootDir',
             'gacelaPhpConfigFilename',
             [
-                'config' => function (ConfigResolver $configResolver): void {
+                'config' => function (ConfigBuilder $configResolver): void {
                     $configResolver->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
                 },
                 'mapping-interfaces' => function (
@@ -130,9 +130,9 @@ final class GacelaConfigFileFactoryTest extends TestCase
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
         $fileIo->method('include')->willReturn(fn () => new class () extends AbstractConfigGacela {
-            public function config(ConfigResolver $configResolver): void
+            public function config(ConfigBuilder $configBuilder): void
             {
-                $configResolver->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
+                $configBuilder->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
             }
 
             public function mappingInterfaces(

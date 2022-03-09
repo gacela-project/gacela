@@ -61,7 +61,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $expected = (new GacelaConfigFile())
+        $expected = GacelaConfigFile::withDefaults()
             ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())])
             ->setMappingInterfaces([CustomInterface::class => CustomClass::class])
             ->setSuffixTypes([
@@ -156,7 +156,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $expected = (new GacelaConfigFile())
+        $expected = GacelaConfigFile::withDefaults()
             ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())])
             ->setMappingInterfaces([CustomInterface::class => CustomClass::class])
             ->setSuffixTypes([

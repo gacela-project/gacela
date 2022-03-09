@@ -78,11 +78,7 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
             $suffixTypesFn($suffixTypesBuilder);
         }
 
-        return $this->createGacelaConfigUsingBuilders(
-            $configBuilder,
-            $mappingInterfacesBuilder,
-            $suffixTypesBuilder
-        );
+        return GacelaConfigFile::usingBuilders($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
     }
 
     public function createGacelaConfigUsingGacelaPhpFile(string $gacelaPhpPath): GacelaConfigFile
@@ -107,21 +103,6 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $suffixTypesBuilder = new SuffixTypesBuilder();
         $configGacelaClass->suffixTypes($suffixTypesBuilder);
 
-        return $this->createGacelaConfigUsingBuilders(
-            $configBuilder,
-            $mappingInterfacesBuilder,
-            $suffixTypesBuilder
-        );
-    }
-
-    private function createGacelaConfigUsingBuilders(
-        ConfigBuilder $configBuilder,
-        MappingInterfacesBuilder $mappingInterfacesBuilder,
-        SuffixTypesBuilder $suffixTypesBuilder
-    ): GacelaConfigFile {
-        return (new GacelaConfigFile())
-            ->setConfigItems($configBuilder->build())
-            ->setMappingInterfaces($mappingInterfacesBuilder->build())
-            ->setSuffixTypes($suffixTypesBuilder->build());
+        return GacelaConfigFile::usingBuilders($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
     }
 }

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes;
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 return static fn () => new class () extends AbstractConfigGacela {
-    public function suffixTypes(SuffixTypesResolver $suffixTypesResolver): void
+    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
     {
-        $suffixTypesResolver
+        $suffixTypesBuilder
             ->addFactory('FactoryModuleA')
             ->addFactory('FactoryModuleB')
             ->addConfig('ConfModuleA')

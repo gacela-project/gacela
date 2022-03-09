@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config\GacelaConfigArgs;
+namespace Gacela\Framework\Config\GacelaConfigBuilder;
 
-final class MappingInterfacesResolver
+final class MappingInterfacesBuilder
 {
     /** @var array<class-string,class-string|object|callable> */
     private array $mapping = [];
@@ -23,7 +23,7 @@ final class MappingInterfacesResolver
     /**
      * @return array<class-string,class-string|object|callable>
      */
-    public function resolve(): array
+    public function build(): array
     {
         return $this->mapping;
     }

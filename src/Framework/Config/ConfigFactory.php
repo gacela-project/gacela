@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
+use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory;
 use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
 use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
 use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 
-final class ConfigFactory
+final class ConfigFactory extends AbstractFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
 
@@ -37,22 +40,24 @@ final class ConfigFactory
 
     public function createGacelaConfigFileFactory(): GacelaConfigFileFactoryInterface
     {
-        return new GacelaConfigFileFactory(
-            $this->appRootDir,
-            self::GACELA_PHP_CONFIG_FILENAME,
-            $this->globalServices,
-            $this->createFileIo(),
-        );
-    }
+        $gacelaPhpPath = $this->appRootDir . '/' . self::GACELA_PHP_CONFIG_FILENAME;
+        $fileIo = $this->createFileIo();
 
-    private function createPathFinder(): PathFinderInterface
-    {
-        return new PathFinder();
+        if (!$fileIo->existsFile($gacelaPhpPath)) {
+            return new GacelaConfigFromBootstrapFactory($this->globalServices);
+        }
+
+        return new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->globalServices, $fileIo);
     }
 
     private function createFileIo(): FileIoInterface
     {
         return new FileIo();
+    }
+
+    private function createPathFinder(): PathFinderInterface
+    {
+        return new PathFinder();
     }
 
     private function createPathNormalizer(): PathNormalizerInterface

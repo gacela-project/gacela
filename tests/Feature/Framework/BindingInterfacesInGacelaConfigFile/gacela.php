@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
+use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractClass;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromAnonymousClass;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromCallable;
@@ -12,16 +12,16 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
 return static fn () => new class () extends AbstractConfigGacela {
-    public function mappingInterfaces(MappingInterfacesResolver $interfacesResolver, array $globalServices): void
+    public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void
     {
         // Resolve an abstract class from a concrete instance of a class
-        $interfacesResolver->bind(AbstractClass::class, new ConcreteClass(true, 'string', 1, 1.2, ['array']));
+        $mappingInterfacesBuilder->bind(AbstractClass::class, new ConcreteClass(true, 'string', 1, 1.2, ['array']));
 
         // Resolve anonymous-classes/callables from abstract classes and interfaces
-        $interfacesResolver->bind(AbstractFromAnonymousClass::class, $this->usingAbstractFromAnonymousClass());
-        $interfacesResolver->bind(AbstractFromCallable::class, $this->usingAbstractFromCallable());
-        $interfacesResolver->bind(InterfaceFromAnonymousClass::class, $this->usingInterfaceFromAnonymousClass());
-        $interfacesResolver->bind(InterfaceFromCallable::class, $this->usingInterfaceFromCallable());
+        $mappingInterfacesBuilder->bind(AbstractFromAnonymousClass::class, $this->usingAbstractFromAnonymousClass());
+        $mappingInterfacesBuilder->bind(AbstractFromCallable::class, $this->usingAbstractFromCallable());
+        $mappingInterfacesBuilder->bind(InterfaceFromAnonymousClass::class, $this->usingInterfaceFromAnonymousClass());
+        $mappingInterfacesBuilder->bind(InterfaceFromCallable::class, $this->usingInterfaceFromCallable());
         // Is it also possible to bind classes like => AbstractClass::class => SpecificClass::class
         // Check the test _BindingInterfacesWithDependenciesAndGlobalServices_ BUT
         // be aware this way is not possible if the class has dependencies that cannot be resolved automatically!

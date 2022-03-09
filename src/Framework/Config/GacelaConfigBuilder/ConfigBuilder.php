@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config\GacelaConfigArgs;
+namespace Gacela\Framework\Config\GacelaConfigBuilder;
 
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
-final class ConfigResolver
+final class ConfigBuilder
 {
     /** @var list<GacelaConfigItem> */
     private array $configItems = [];
@@ -39,7 +39,7 @@ final class ConfigResolver
     /**
      * @return list<GacelaConfigItem>
      */
-    public function resolve(): array
+    public function build(): array
     {
         if (empty($this->configItems)) {
             return [GacelaConfigItem::withDefaults()];

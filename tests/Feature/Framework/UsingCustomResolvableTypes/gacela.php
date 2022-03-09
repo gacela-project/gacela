@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes;
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 return static fn () => new class () extends AbstractConfigGacela {
     public function suffixTypes(SuffixTypesBuilder $suffixTypesResolver): void

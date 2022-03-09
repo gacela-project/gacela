@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesBuilder;
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use RuntimeException;
 use function is_callable;
@@ -78,7 +78,11 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
             $suffixTypesFn($suffixTypesBuilder);
         }
 
-        return $this->createWithDefaultIfEmpty($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
+        return $this->createGacelaConfigUsingBuilders(
+            $configBuilder,
+            $mappingInterfacesBuilder,
+            $suffixTypesBuilder
+        );
     }
 
     public function createGacelaConfigUsingGacelaPhpFile(string $gacelaPhpPath): GacelaConfigFile
@@ -103,20 +107,21 @@ final class GacelaConfigFileFactory implements GacelaConfigFileFactoryInterface
         $suffixTypesBuilder = new SuffixTypesBuilder();
         $configGacelaClass->suffixTypes($suffixTypesBuilder);
 
-        return $this->createWithDefaultIfEmpty($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
+        return $this->createGacelaConfigUsingBuilders(
+            $configBuilder,
+            $mappingInterfacesBuilder,
+            $suffixTypesBuilder
+        );
     }
 
-    private function createWithDefaultIfEmpty(
+    private function createGacelaConfigUsingBuilders(
         ConfigBuilder $configBuilder,
         MappingInterfacesBuilder $mappingInterfacesBuilder,
         SuffixTypesBuilder $suffixTypesBuilder
     ): GacelaConfigFile {
-        $gacelaConfigFile = GacelaConfigFile::withDefaults();
-
-        $gacelaConfigFile->setConfigItems($configBuilder->build());
-        $gacelaConfigFile->setMappingInterfaces($mappingInterfacesBuilder->build());
-        $gacelaConfigFile->setSuffixTypes($suffixTypesBuilder->build());
-
-        return $gacelaConfigFile;
+        return (new GacelaConfigFile())
+            ->setConfigItems($configBuilder->build())
+            ->setMappingInterfaces($mappingInterfacesBuilder->build())
+            ->setSuffixTypes($suffixTypesBuilder->build());
     }
 }

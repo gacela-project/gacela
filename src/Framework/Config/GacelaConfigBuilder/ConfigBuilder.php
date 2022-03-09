@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config\GacelaConfigArgs;
+namespace Gacela\Framework\Config\GacelaConfigBuilder;
 
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;

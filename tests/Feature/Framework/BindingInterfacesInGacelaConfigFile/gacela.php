@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractClass;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromAnonymousClass;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromCallable;

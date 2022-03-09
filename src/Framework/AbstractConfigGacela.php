@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesBuilder;
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 abstract class AbstractConfigGacela
 {

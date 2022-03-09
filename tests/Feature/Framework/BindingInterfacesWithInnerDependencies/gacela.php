@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\Greeter\CorrectCompanyGenerator;
 use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\Greeter\IncorrectCompanyGenerator;
 use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterGeneratorInterface;

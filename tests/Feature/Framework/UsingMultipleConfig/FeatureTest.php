@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\UsingMultipleConfig;
 
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
-use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\UsingMultipleConfig\LocalConfig\Domain\SimpleEnvConfigReader;
 use PHPUnit\Framework\TestCase;

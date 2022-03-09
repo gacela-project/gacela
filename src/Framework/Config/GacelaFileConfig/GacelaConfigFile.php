@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 final class GacelaConfigFile
 {

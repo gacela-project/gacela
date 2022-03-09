@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Config\GacelaConfigArgs;
+namespace Gacela\Framework\Config\GacelaConfigBuilder;
 
 final class SuffixTypesBuilder
 {

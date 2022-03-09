@@ -8,7 +8,7 @@ use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaConfigArgs\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesResolver;
+use Gacela\Framework\Config\GacelaConfigArgs\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigArgs\SuffixTypesResolver;
 use Gacela\Framework\Config\GacelaConfigFileFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
@@ -47,7 +47,7 @@ final class GacelaConfigFileFactoryTest extends TestCase
                     $configResolver->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
                 },
                 'mapping-interfaces' => function (
-                    MappingInterfacesResolver $interfacesResolver,
+                    MappingInterfacesBuilder $interfacesResolver,
                     array $globalServices
                 ): void {
                     assert($globalServices['globalServiceKey'] === 'globalServiceValue');
@@ -136,11 +136,11 @@ final class GacelaConfigFileFactoryTest extends TestCase
             }
 
             public function mappingInterfaces(
-                MappingInterfacesResolver $interfacesResolver,
+                MappingInterfacesBuilder $mappingInterfacesBuilder,
                 array $globalServices
             ): void {
-                $interfacesResolver->bind(CustomInterface::class, new CustomClass());
-                $interfacesResolver->bind(CustomInterface::class, CustomClass::class);
+                $mappingInterfacesBuilder->bind(CustomInterface::class, new CustomClass());
+                $mappingInterfacesBuilder->bind(CustomInterface::class, CustomClass::class);
             }
 
             public function suffixTypes(SuffixTypesResolver $suffixTypesResolver): void

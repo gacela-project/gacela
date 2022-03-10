@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\UsingMultipleConfig;
 
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
+use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\UsingMultipleConfig\LocalConfig\Domain\SimpleEnvConfigReader;
 use PHPUnit\Framework\TestCase;
@@ -14,10 +15,10 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         $globalServices = [
-            'config' => [
-                ['reader' => SimpleEnvConfigReader::class, 'path' => 'config/.env*'],
-                ['reader' => new PhpConfigReader(), 'path' => 'config/*.php'],
-            ],
+            'config' => function (ConfigBuilder $configBuilder): void {
+                $configBuilder->add(SimpleEnvConfigReader::class, 'config/.env*');
+                $configBuilder->add(new PhpConfigReader(), 'config/*.php');
+            },
         ];
 
         Gacela::bootstrap(__DIR__, $globalServices);

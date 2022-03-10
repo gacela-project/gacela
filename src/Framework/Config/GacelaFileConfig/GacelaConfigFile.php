@@ -4,27 +4,47 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
+use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+
 final class GacelaConfigFile
 {
     /** @var list<GacelaConfigItem> */
     private array $configItems = [];
 
-    /** @var array<class-string,class-string|callable> */
+    /** @var array<class-string,class-string|callable|object> */
     private array $mappingInterfaces = [];
 
     /**
      * @var array{
-     *     Factory?:list<string>|string,
-     *     Config?:list<string>|string,
-     *     DependencyProvider?:list<string>|string,
+     *     Factory?:list<string>,
+     *     Config?:list<string>,
+     *     DependencyProvider?:list<string>,
      * }
      */
-    private array $overrideResolvableTypes = [];
+    private array $suffixTypes = [];
 
     public static function withDefaults(): self
     {
         return (new self())
-            ->setConfigItems([GacelaConfigItem::withDefaults()]);
+            ->setConfigItems([GacelaConfigItem::withDefaults()])
+            ->setSuffixTypes(SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES);
+    }
+
+    public static function usingBuilders(
+        ConfigBuilder $configBuilder,
+        MappingInterfacesBuilder $mappingInterfacesBuilder,
+        SuffixTypesBuilder $suffixTypesBuilder
+    ): self {
+        return (new self())
+            ->setConfigItems($configBuilder->build())
+            ->setMappingInterfaces($mappingInterfacesBuilder->build())
+            ->setSuffixTypes($suffixTypesBuilder->build());
+    }
+
+    private function __construct()
+    {
     }
 
     /**
@@ -46,7 +66,7 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param array<class-string,class-string|callable> $mappingInterfaces
+     * @param array<class-string,class-string|callable|object> $mappingInterfaces
      */
     public function setMappingInterfaces(array $mappingInterfaces): self
     {
@@ -67,20 +87,28 @@ final class GacelaConfigFile
     }
 
     /**
-     * @param array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string} $overrideResolvableTypes
+     * @param array{
+     *     Factory?:list<string>,
+     *     Config?:list<string>,
+     *     DependencyProvider?:list<string>
+     * } $suffixTypes
      */
-    public function setOverrideResolvableTypes(array $overrideResolvableTypes): self
+    public function setSuffixTypes(array $suffixTypes): self
     {
-        $this->overrideResolvableTypes = $overrideResolvableTypes;
+        $this->suffixTypes = $suffixTypes;
 
         return $this;
     }
 
     /**
-     * @return array{Factory?:list<string>|string, Config?:list<string>|string, DependencyProvider?:list<string>|string}
+     * @return array{
+     *     Factory?:list<string>,
+     *     Config?:list<string>,
+     *     DependencyProvider?:list<string>
+     * }
      */
-    public function getOverrideResolvableTypes(): array
+    public function getSuffixTypes(): array
     {
-        return $this->overrideResolvableTypes;
+        return $this->suffixTypes;
     }
 }

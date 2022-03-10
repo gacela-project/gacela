@@ -77,10 +77,9 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn((new GacelaConfigFile())
-                ->setConfigItems([
-                    new GacelaConfigItem('path', 'path_local', $reader),
-                ]));
+            ->willReturn(GacelaConfigFile::withDefaults()->setConfigItems([
+                new GacelaConfigItem('path', 'path_local', $reader),
+            ]));
 
         $configInit = new ConfigLoader(
             $gacelaJsonConfigCreator,
@@ -102,11 +101,10 @@ final class ConfigInitTest extends TestCase
         $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
         $gacelaJsonConfigCreator
             ->method('createGacelaFileConfig')
-            ->willReturn((new GacelaConfigFile())
-                ->setConfigItems([
-                    new GacelaConfigItem('path', 'path_local', $reader1),
-                    new GacelaConfigItem('path', 'path_local', $reader2),
-                ]));
+            ->willReturn(GacelaConfigFile::withDefaults()->setConfigItems([
+                new GacelaConfigItem('path', 'path_local', $reader1),
+                new GacelaConfigItem('path', 'path_local', $reader2),
+            ]));
 
         $configInit = new ConfigLoader(
             $gacelaJsonConfigCreator,

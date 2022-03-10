@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes;
 
 use Gacela\Framework\AbstractConfigGacela;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 return static fn () => new class () extends AbstractConfigGacela {
-    public function overrideResolvableTypes(): array
+    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
     {
-        return [
-            'Factory' => ['FactoryModuleA', 'FactoryModuleB', 'Factory'],
-            'Config' => ['ConfModuleA', 'ConfModuleB', 'Config'],
-            'DependencyProvider' => ['DepProModuleA', 'DepProModuleB', 'DependencyProvider'],
-        ];
+        $suffixTypesBuilder
+            ->addFactory('FactoryModuleA')
+            ->addFactory('FactoryModuleB')
+            ->addConfig('ConfModuleA')
+            ->addConfig('ConfModuleB')
+            ->addDependencyProvider('DepProModuleA')
+            ->addDependencyProvider('DepProModuleB');
     }
 };

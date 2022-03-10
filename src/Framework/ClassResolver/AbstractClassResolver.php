@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
-use Gacela\Framework\ClassResolver\DependencyResolver\DependencyResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
+use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config;
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
-use function class_exists;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use function is_array;
 
 abstract class AbstractClassResolver
@@ -19,9 +18,7 @@ abstract class AbstractClassResolver
 
     private ?ClassNameFinderInterface $classNameFinder = null;
 
-    private ?DependencyResolver $dependencyResolver = null;
-
-    private ?GacelaConfigFile $gacelaFileConfig = null;
+    private ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -88,29 +85,11 @@ abstract class AbstractClassResolver
 
     private function createInstance(string $resolvedClassName): ?object
     {
-        if (class_exists($resolvedClassName)) {
-            $dependencies = $this->getDependencyResolver()
-                ->resolveDependencies($resolvedClassName);
-
-            /** @psalm-suppress MixedMethodCall */
-            return new $resolvedClassName(...$dependencies);
-        }
-
-        return null;
+        return (new InstanceCreator($this->getGacelaConfigFile()))
+            ->createInstance($resolvedClassName);
     }
 
-    private function getDependencyResolver(): DependencyResolver
-    {
-        if (null === $this->dependencyResolver) {
-            $this->dependencyResolver = new DependencyResolver(
-                $this->getGacelaConfigFile()
-            );
-        }
-
-        return $this->dependencyResolver;
-    }
-
-    private function getGacelaConfigFile(): GacelaConfigFile
+    private function getGacelaConfigFile(): GacelaConfigFileInterface
     {
         if (null === $this->gacelaFileConfig) {
             $this->gacelaFileConfig = Config::getInstance()

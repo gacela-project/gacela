@@ -9,6 +9,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
@@ -23,7 +24,7 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         $this->globalServices = $globalServices;
     }
 
-    public function createGacelaFileConfig(): GacelaConfigFile
+    public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $configBuilder = $this->createConfigBuilder();
         $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder();

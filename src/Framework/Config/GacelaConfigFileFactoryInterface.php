@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 interface GacelaConfigFileFactoryInterface
 {
-    public function createGacelaFileConfig(): GacelaConfigFile;
+    public function createGacelaFileConfig(): GacelaConfigFileInterface;
 }

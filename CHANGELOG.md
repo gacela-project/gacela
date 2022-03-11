@@ -1,5 +1,10 @@
 # Changelog
 
+### Unreleased (current master)
+
+- Updated from protected to public the `getAppRootDir()` from `AbstractConfig`.
+- Updated `AbstractConfigGacela` to use builders instead of return arrays.
+
 ### 0.13.0
 #### 2022-03-01
 

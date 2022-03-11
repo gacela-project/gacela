@@ -20,6 +20,8 @@ abstract class AbstractClassResolver
 
     private ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
+    private ?InstanceCreator $instanceCreator = null;
+
     abstract public function resolve(object $callerClass): ?object;
 
     public function doResolve(object $callerClass): ?object
@@ -85,8 +87,11 @@ abstract class AbstractClassResolver
 
     private function createInstance(string $resolvedClassName): ?object
     {
-        return (new InstanceCreator($this->getGacelaConfigFile()))
-            ->createInstance($resolvedClassName);
+        if (null === $this->instanceCreator) {
+            $this->instanceCreator = new InstanceCreator($this->getGacelaConfigFile());
+        }
+
+        return $this->instanceCreator->createByClassName($resolvedClassName);
     }
 
     private function getGacelaConfigFile(): GacelaConfigFileInterface

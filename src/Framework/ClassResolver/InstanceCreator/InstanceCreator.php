@@ -18,14 +18,15 @@ final class InstanceCreator
         $this->gacelaConfigFile = $gacelaConfigFile;
     }
 
-    public function createInstance(string $resolvedClassName): ?object
+    public function createByClassName(string $className): ?object
     {
-        if (class_exists($resolvedClassName)) {
+        if (class_exists($className)) {
+            // TODO: Consider caching the dependencies(?)
             $dependencies = $this->getDependencyResolver()
-                ->resolveDependencies($resolvedClassName);
+                ->resolveDependencies($className);
 
             /** @psalm-suppress MixedMethodCall */
-            return new $resolvedClassName(...$dependencies);
+            return new $className(...$dependencies);
         }
 
         return null;

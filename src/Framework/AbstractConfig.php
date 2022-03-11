@@ -23,7 +23,6 @@ abstract class AbstractConfig
     /**
      * Allow easy access to the root dir of the project.
      */
-
     public function getAppRootDir(): string
     {
         return Config::getInstance()->getAppRootDir();

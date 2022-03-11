@@ -20,7 +20,10 @@ abstract class AbstractConfig
         return Config::getInstance()->get($key, $default);
     }
 
-    protected function getAppRootDir(): string
+    /**
+     * Allow easy access to the root dir of the project.
+     */
+    public function getAppRootDir(): string
     {
         return Config::getInstance()->getAppRootDir();
     }

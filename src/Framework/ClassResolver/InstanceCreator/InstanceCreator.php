@@ -13,6 +13,9 @@ final class InstanceCreator
 
     private ?DependencyResolver $dependencyResolver = null;
 
+    /** @var array<class-string,list<mixed>> */
+    private array $cachedDependencies = [];
+
     public function __construct(GacelaConfigFileInterface $gacelaConfigFile)
     {
         $this->gacelaConfigFile = $gacelaConfigFile;
@@ -21,12 +24,14 @@ final class InstanceCreator
     public function createByClassName(string $className): ?object
     {
         if (class_exists($className)) {
-            // TODO: Consider caching the dependencies(?)
-            $dependencies = $this->getDependencyResolver()
-                ->resolveDependencies($className);
+            if (!isset($this->cachedDependencies[$className])) {
+                $this->cachedDependencies[$className] = $this
+                    ->getDependencyResolver()
+                    ->resolveDependencies($className);
+            }
 
             /** @psalm-suppress MixedMethodCall */
-            return new $className(...$dependencies);
+            return new $className(...$this->cachedDependencies[$className]);
         }
 
         return null;

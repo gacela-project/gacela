@@ -35,7 +35,7 @@ final class InstanceCreatorTest extends TestCase
 
     public function test_create_class_with_dependencies(): void
     {
-        $gacelaConfigFile = $this->createMock(GacelaConfigFileInterface::class);
+        $gacelaConfigFile = $this->createStub(GacelaConfigFileInterface::class);
         $gacelaConfigFile->method('getMappingInterface')->willReturnMap([
             [StringValueInterface::class, new StringValue('custom-string')],
         ]);
@@ -46,5 +46,22 @@ final class InstanceCreatorTest extends TestCase
             new CustomClassWithDependencies(new StringValue('custom-string')),
             $instanceCreator->createByClassName(CustomClassWithDependencies::class)
         );
+    }
+
+    public function test_caching_dependencies(): void
+    {
+        $gacelaConfigFile = $this->createMock(GacelaConfigFileInterface::class);
+        $gacelaConfigFile
+            ->expects(self::once())
+            ->method('getMappingInterface')
+            ->with(StringValueInterface::class)
+            ->willReturn(new StringValue('custom-string'));
+
+        $instanceCreator = new InstanceCreator($gacelaConfigFile);
+        $actual1 = $instanceCreator->createByClassName(CustomClassWithDependencies::class);
+        $actual2 = $instanceCreator->createByClassName(CustomClassWithDependencies::class);
+
+        self::assertEquals($actual1, $actual2);
+        self::assertNotSame($actual1, $actual2);
     }
 }

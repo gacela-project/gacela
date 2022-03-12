@@ -7,7 +7,6 @@ namespace Gacela\Framework\Config\GacelaConfigBuilder;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
-use function assert;
 use function is_string;
 
 final class ConfigBuilder
@@ -22,8 +21,13 @@ final class ConfigBuilder
      */
     public function add(string $path, string $pathLocal = '', $reader = null): self
     {
-        $readerInstance = is_string($reader) ? new $reader() : new PhpConfigReader();
-        assert($readerInstance instanceof ConfigReaderInterface);
+        if ($reader instanceof ConfigReaderInterface) {
+            $readerInstance = $reader;
+        } elseif (is_string($reader)) {
+            $readerInstance = new $reader();
+        } else {
+            $readerInstance = new PhpConfigReader();
+        }
 
         $this->configItems[] = new GacelaConfigItem($path, $pathLocal, $readerInstance);
 

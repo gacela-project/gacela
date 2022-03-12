@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\UsingMultipleConfig;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\UsingMultipleConfig\LocalConfig\Domain\SimpleEnvConfigReader;
+use GacelaTest\Fixtures\SimpleEnvConfigReader;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase

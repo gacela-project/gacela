@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\Framework\Fixtures;
+namespace GacelaTest\Fixtures;
 
 interface CustomInterface
 {

@@ -11,8 +11,8 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
-use GacelaTest\Unit\Framework\Fixtures\CustomClass;
-use GacelaTest\Unit\Framework\Fixtures\CustomInterface;
+use GacelaTest\Fixtures\CustomClass;
+use GacelaTest\Fixtures\CustomInterface;
 use PHPUnit\Framework\TestCase;
 
 final class GacelaConfigFromBootstrapFactoryTest extends TestCase

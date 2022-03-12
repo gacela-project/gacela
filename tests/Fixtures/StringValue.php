@@ -6,7 +6,12 @@ namespace GacelaTest\Fixtures;
 
 final class StringValue implements StringValueInterface
 {
-    private string $value = '';
+    private string $value;
+
+    public function __construct(string $value = '')
+    {
+        $this->value = $value;
+    }
 
     public function setValue(string $value): void
     {

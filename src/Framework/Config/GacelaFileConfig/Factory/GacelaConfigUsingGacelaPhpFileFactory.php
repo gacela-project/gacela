@@ -43,7 +43,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
             throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
         }
 
-        /** @var AbstractConfigGacela $configGacelaClass */
+        /** @var object $configGacelaClass */
         $configGacelaClass = $configGacela();
         if (!is_subclass_of($configGacelaClass, AbstractConfigGacela::class)) {
             throw new RuntimeException('Your anonymous class must extends AbstractConfigGacela');

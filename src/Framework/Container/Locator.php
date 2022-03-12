@@ -45,7 +45,7 @@ final class Locator
      *
      * @param class-string<T> $className
      *
-     * @return ?T
+     * @return T|null
      */
     public function get(string $className)
     {
@@ -82,7 +82,7 @@ final class Locator
      *
      * @param class-string<T> $className
      *
-     * @return ?T
+     * @return T|null
      */
     private function newInstance(string $className)
     {

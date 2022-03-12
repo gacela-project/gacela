@@ -21,13 +21,7 @@ final class ConfigBuilder
      */
     public function add(string $path, string $pathLocal = '', $reader = null): self
     {
-        if ($reader instanceof ConfigReaderInterface) {
-            $readerInstance = $reader;
-        } elseif (is_string($reader)) {
-            $readerInstance = new $reader();
-        } else {
-            $readerInstance = new PhpConfigReader();
-        }
+        $readerInstance = $this->normalizeReader($reader);
 
         $this->configItems[] = new GacelaConfigItem($path, $pathLocal, $readerInstance);
 
@@ -44,5 +38,21 @@ final class ConfigBuilder
         }
 
         return $this->configItems;
+    }
+
+    /**
+     * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader
+     */
+    private function normalizeReader($reader): ConfigReaderInterface
+    {
+        if ($reader instanceof ConfigReaderInterface) {
+            return $reader;
+        }
+
+        if (is_string($reader)) {
+            return new $reader();
+        }
+
+        return new PhpConfigReader();
     }
 }

@@ -20,11 +20,8 @@ final class ConfigBuilder
      * @param string $pathLocal define the path where Gacela will read the local config file
      * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader Define the reader class which will read and parse the config files
      */
-    public function add(
-        string $path = GacelaConfigItem::DEFAULT_PATH,
-        string $pathLocal = GacelaConfigItem::DEFAULT_PATH_LOCAL,
-        $reader = null
-    ): self {
+    public function add(string $path, string $pathLocal = '', $reader = null): self
+    {
         $readerInstance = new PhpConfigReader();
 
         if (is_string($reader)) {

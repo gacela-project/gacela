@@ -16,14 +16,14 @@ final class ConfigBuilder
     private array $configItems = [];
 
     /**
-     * @param class-string<ConfigReaderInterface>|ConfigReaderInterface $reader Define the reader class which will read and parse the config files
      * @param string $path define the path where Gacela will read all the config files
      * @param string $pathLocal define the path where Gacela will read the local config file
+     * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader Define the reader class which will read and parse the config files
      */
     public function add(
-        $reader,
         string $path = GacelaConfigItem::DEFAULT_PATH,
-        string $pathLocal = GacelaConfigItem::DEFAULT_PATH_LOCAL
+        string $pathLocal = GacelaConfigItem::DEFAULT_PATH_LOCAL,
+        $reader = null
     ): self {
         $readerInstance = new PhpConfigReader();
 
@@ -44,7 +44,7 @@ final class ConfigBuilder
     public function build(): array
     {
         if (empty($this->configItems)) {
-            return [GacelaConfigItem::withDefaults()];
+            return [new GacelaConfigItem()];
         }
 
         return $this->configItems;

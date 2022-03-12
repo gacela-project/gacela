@@ -72,7 +72,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo->method('include')->willReturn(static fn () => new class() extends AbstractConfigGacela {
             public function config(ConfigBuilder $configBuilder): void
             {
-                $configBuilder->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
+                $configBuilder->add('custom-path.php', 'custom-path_local.php');
             }
         });
 

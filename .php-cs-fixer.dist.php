@@ -28,8 +28,13 @@ return (new Config())
         'no_empty_phpdoc' => true,
         'no_empty_statement' => true,
         'no_leading_namespace_whitespace' => true,
+        'no_multiline_whitespace_around_double_arrow' => true,
+        'no_singleline_whitespace_before_semicolons' => true,
         'no_trailing_comma_in_singleline_array' => true,
+        'no_trailing_whitespace' => true,
+        'no_trailing_whitespace_in_comment' => true,
         'no_whitespace_before_comma_in_array' => true,
+        'no_whitespace_in_blank_line' => true,
         'no_unused_imports' => true,
         'normalize_index_brace' => true,
         'ordered_imports' => [

@@ -13,7 +13,7 @@ final class DependencyProvider extends AbstractDependencyProvider
 
     public function provideModuleDependencies(Container $container): void
     {
-        $container->set(self::FACADE_NAME, fn () => null);
+        $container->set(self::FACADE_NAME, static fn () => null);
         $container->remove(self::FACADE_NAME);
     }
 }

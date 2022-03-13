@@ -9,11 +9,11 @@ use function count;
 
 final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {
-    /** @var array{autoload: array{psr-4: array<string,string>}} */
+    /** @var array{autoload: array{psr-4?:array<string,string>}} */
     private array $composerJson;
 
     /**
-     * @param array{autoload: array{psr-4: array<string,string>}} $composerJson
+     * @param array{autoload: array{psr-4?:array<string,string>}} $composerJson
      */
     public function __construct(array $composerJson)
     {
@@ -35,8 +35,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             throw CommandArgumentsException::noAutoloadPsr4Found();
         }
 
-        $composerAutoload = $this->composerJson['autoload'];
-        $psr4 = $composerAutoload['psr-4'];
+        $psr4 = $this->composerJson['autoload']['psr-4'];
         $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);
 
         foreach ($allPsr4Combinations as $psr4Combination) {
@@ -58,9 +57,9 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
      *   'App/TestModule/TestSubModule',
      *   'App/TestModule',
      *   'App',
-     * ].
+     * ]
      *
-     * @return string[]
+     * @return list<string>
      */
     private function allPossiblePsr4Combinations(string $desiredNamespace): array
     {

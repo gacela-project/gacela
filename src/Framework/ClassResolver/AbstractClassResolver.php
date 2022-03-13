@@ -25,8 +25,6 @@ abstract class AbstractClassResolver
 
     abstract public function resolve(object $callerClass): ?object;
 
-    abstract protected function getResolvableType(): string;
-
     public function doResolve(object $callerClass): ?object
     {
         $classInfo = ClassInfo::fromObject($callerClass, $this->getResolvableType());
@@ -46,6 +44,8 @@ abstract class AbstractClassResolver
 
         return self::$cachedInstances[$cacheKey];
     }
+
+    abstract protected function getResolvableType(): string;
 
     private function resolveCached(string $cacheKey): ?object
     {

@@ -7,9 +7,9 @@ namespace Gacela\Framework\Config\GacelaConfigBuilder;
 final class SuffixTypesBuilder
 {
     public const DEFAULT_SUFFIX_TYPES = [
-        'Factory' => SuffixTypesBuilder::DEFAULT_FACTORIES,
-        'Config' => SuffixTypesBuilder::DEFAULT_CONFIGS,
-        'DependencyProvider' => SuffixTypesBuilder::DEFAULT_DEPENDENCY_PROVIDERS,
+        'Factory' => self::DEFAULT_FACTORIES,
+        'Config' => self::DEFAULT_CONFIGS,
+        'DependencyProvider' => self::DEFAULT_DEPENDENCY_PROVIDERS,
     ];
 
     private const DEFAULT_FACTORIES = ['Factory'];

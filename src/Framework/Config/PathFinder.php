@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use function is_array;
+
 final class PathFinder implements PathFinderInterface
 {
     /**

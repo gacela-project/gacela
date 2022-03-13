@@ -8,15 +8,9 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableType;
 use RuntimeException;
-use function end;
-use function explode;
 use function get_class;
-use function get_parent_class;
-use function implode;
 use function in_array;
 use function is_string;
-use function ltrim;
-use function sprintf;
 
 final class AnonymousGlobal
 {
@@ -103,9 +97,9 @@ final class AnonymousGlobal
 
     private static function validateTypeForAnonymousGlobalRegistration(string $type): void
     {
-        if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)) {
+        if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
             throw new RuntimeException(
-                "Type '$type' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)
+                "Type '{$type}' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)
             );
         }
     }

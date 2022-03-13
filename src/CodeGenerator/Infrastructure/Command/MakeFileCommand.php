@@ -58,7 +58,7 @@ final class MakeFileCommand extends Command
                 $filename,
                 $shortName
             );
-            $output->writeln("> Path '$absolutePath' created successfully");
+            $output->writeln("> Path '{$absolutePath}' created successfully");
         }
 
         return self::SUCCESS;

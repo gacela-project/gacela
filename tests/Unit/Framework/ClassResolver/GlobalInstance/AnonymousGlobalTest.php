@@ -22,13 +22,13 @@ final class AnonymousGlobalTest extends TestCase
     {
         $this->expectErrorMessage("Type 'AnonymousGlobalTest' not allowed");
 
-        AnonymousGlobal::addGlobal($this, new class () {
+        AnonymousGlobal::addGlobal($this, new class() {
         });
     }
 
     public function test_allowed_factory_anon_global(): void
     {
-        AnonymousGlobal::addGlobal($this, new class () extends AbstractFactory {
+        AnonymousGlobal::addGlobal($this, new class() extends AbstractFactory {
         });
 
         self::assertTrue(true); # Assert non error is thrown
@@ -36,7 +36,7 @@ final class AnonymousGlobalTest extends TestCase
 
     public function test_allowed_config_anon_global(): void
     {
-        AnonymousGlobal::addGlobal($this, new class () extends AbstractConfig {
+        AnonymousGlobal::addGlobal($this, new class() extends AbstractConfig {
         });
 
         self::assertTrue(true); # Assert non error is thrown
@@ -44,7 +44,7 @@ final class AnonymousGlobalTest extends TestCase
 
     public function test_allowed_dependency_provider_anon_global(): void
     {
-        AnonymousGlobal::addGlobal($this, new class () extends AbstractDependencyProvider {
+        AnonymousGlobal::addGlobal($this, new class() extends AbstractDependencyProvider {
             public function provideModuleDependencies(Container $container): void
             {
             }
@@ -58,7 +58,7 @@ final class AnonymousGlobalTest extends TestCase
      */
     public function test_override_existing_resolved_class(string $className): void
     {
-        $resolvedClass = new class () {
+        $resolvedClass = new class() {
         };
         AnonymousGlobal::overrideExistingResolvedClass($className, $resolvedClass);
 

@@ -11,12 +11,12 @@ final class MakeModuleCommandTest extends TestCase
 {
     private const ENTRY_POINT = __DIR__ . '/../../../';
 
-    public function setUp(): void
+    public static function tearDownAfterClass(): void
     {
         DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
     }
 
-    public static function tearDownAfterClass(): void
+    public function setUp(): void
     {
         DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
     }

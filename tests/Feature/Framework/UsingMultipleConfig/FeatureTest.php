@@ -15,7 +15,7 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         $globalServices = [
-            'config' => function (ConfigBuilder $configBuilder): void {
+            'config' => static function (ConfigBuilder $configBuilder): void {
                 $configBuilder->add(SimpleEnvConfigReader::class, 'config/.env*');
                 $configBuilder->add(new PhpConfigReader(), 'config/*.php');
             },

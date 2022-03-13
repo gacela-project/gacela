@@ -5,17 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use function array_slice;
-use function basename;
 use function count;
-use function end;
-use function explode;
 use function get_class;
-use function implode;
 use function is_string;
-use function ltrim;
-use function sprintf;
-use function strpos;
-use function substr;
 
 final class ClassInfo
 {
@@ -63,18 +55,6 @@ final class ClassInfo
         return new self($callerNamespace, $callerModuleName, $cacheKey);
     }
 
-    private static function normalizeFilename(string $filepath): string
-    {
-        $filename = basename($filepath);
-        $filename = substr($filename, 0, (int)strpos($filename, ':'));
-
-        if (false === ($pos = strpos($filename, '.'))) {
-            return $filename;
-        }
-
-        return substr($filename, 0, $pos);
-    }
-
     public function getCacheKey(): string
     {
         return $this->cacheKey;
@@ -98,5 +78,17 @@ final class ClassInfo
             $this->callerModuleName,
             $this->callerNamespace,
         );
+    }
+
+    private static function normalizeFilename(string $filepath): string
+    {
+        $filename = basename($filepath);
+        $filename = substr($filename, 0, (int)strpos($filename, ':'));
+
+        if (false === ($pos = strpos($filename, '.'))) {
+            return $filename;
+        }
+
+        return substr($filename, 0, $pos);
     }
 }

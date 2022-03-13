@@ -31,11 +31,6 @@ final class CodeGeneratorConfig extends AbstractConfig
         return $this->getCommandTemplateContent('dependency-provider-maker.txt');
     }
 
-    private function getCommandTemplateContent(string $filename): string
-    {
-        return (string)file_get_contents(__DIR__ . '/Infrastructure/Template/Command/' . $filename);
-    }
-
     /**
      * @throws JsonException
      *
@@ -52,5 +47,10 @@ final class CodeGeneratorConfig extends AbstractConfig
         $json = (array)json_decode((string)file_get_contents($filename), true, 512, JSON_THROW_ON_ERROR);
 
         return $json;
+    }
+
+    private function getCommandTemplateContent(string $filename): string
+    {
+        return (string)file_get_contents(__DIR__ . '/Infrastructure/Template/Command/' . $filename);
     }
 }

@@ -50,12 +50,12 @@ final class MakeModuleCommand extends Command
                 $filename,
                 $shortName
             );
-            $output->writeln("> Path '$fullPath' created successfully");
+            $output->writeln("> Path '{$fullPath}' created successfully");
         }
 
         $pieces = explode('/', $commandArguments->directory());
         $moduleName = end($pieces);
-        $output->writeln("Module '$moduleName' created successfully");
+        $output->writeln("Module '{$moduleName}' created successfully");
 
         return self::SUCCESS;
     }

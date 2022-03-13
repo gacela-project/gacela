@@ -21,14 +21,14 @@ final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterf
     public function generateAbsolutePath(string $relativePath): string
     {
         $suffix = $this->configFileNameSuffix;
-        if ($suffix === '') {
+        if ('' === $suffix) {
             return '';
         }
 
         // place the file suffix right before the file extension
         $dotPos = strpos($relativePath, '.');
 
-        if ($dotPos !== false) {
+        if (false !== $dotPos) {
             $relativePathWithFileSuffix = substr($relativePath, 0, $dotPos)
                 . '-' . $suffix
                 . substr($relativePath, $dotPos);

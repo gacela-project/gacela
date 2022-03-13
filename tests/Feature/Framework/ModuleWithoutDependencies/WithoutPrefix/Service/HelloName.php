@@ -8,6 +8,6 @@ final class HelloName
 {
     public function greet(string $name): array
     {
-        return ["Hello, $name from WithoutPrefix."];
+        return ["Hello, {$name} from WithoutPrefix."];
     }
 }

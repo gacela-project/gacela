@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Container;
 
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
+use function is_object;
 
 final class Container implements ContainerInterface
 {

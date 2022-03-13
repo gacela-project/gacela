@@ -22,7 +22,7 @@ final class ContainerKeyNotFoundException extends RuntimeException
     protected function buildMessage(ClassInfo $callerClassInfo, string $key): string
     {
         $message = 'Container Exception' . PHP_EOL;
-        $message .= "Container does not contain the called '$key'" . PHP_EOL;
+        $message .= "Container does not contain the called '{$key}'" . PHP_EOL;
         $message .= sprintf(
             'You can fix this by adding the key "%s" to your "%sDependencyProvider"',
             $key,

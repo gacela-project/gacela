@@ -10,8 +10,6 @@ use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
-use PhpBench\Benchmark\Metadata\Annotations\Iterations;
-use PhpBench\Benchmark\Metadata\Annotations\Revs;
 
 /**
  * @BeforeMethods("setUp")
@@ -26,7 +24,7 @@ final class AnonymousGlobalsBench
     {
         AnonymousGlobal::addGlobal(
             $this,
-            new class () extends AbstractConfig {
+            new class() extends AbstractConfig {
                 public function getValues(): array
                 {
                     return ['1', 2, [3]];
@@ -36,7 +34,7 @@ final class AnonymousGlobalsBench
 
         AnonymousGlobal::addGlobal(
             $this,
-            new class () extends AbstractDependencyProvider {
+            new class() extends AbstractDependencyProvider {
                 public function provideModuleDependencies(Container $container): void
                 {
                     $container->set('key', 'value');
@@ -46,7 +44,7 @@ final class AnonymousGlobalsBench
 
         AnonymousGlobal::addGlobal(
             $this,
-            new class () extends AbstractFactory {
+            new class() extends AbstractFactory {
                 public function createDomainClass(): object
                 {
                     /** @var array $configValues */
@@ -55,7 +53,7 @@ final class AnonymousGlobalsBench
                     /** @var string $valueFromDependencyProvider */
                     $valueFromDependencyProvider = $this->getProvidedDependency('key');
 
-                    return new class ($configValues, $valueFromDependencyProvider) {
+                    return new class($configValues, $valueFromDependencyProvider) {
                         private array $configValues;
                         private string $valueFromDependencyProvider;
 
@@ -81,7 +79,7 @@ final class AnonymousGlobalsBench
             }
         );
 
-        $this->facade = new class () extends AbstractFacade {
+        $this->facade = new class() extends AbstractFacade {
             public function getConfigValues(): array
             {
                 return $this->getFactory()

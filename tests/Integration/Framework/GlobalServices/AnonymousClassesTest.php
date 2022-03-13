@@ -20,7 +20,7 @@ final class AnonymousClassesTest extends TestCase
         $this->registerFactory();
         $this->registerDependencyProvider();
 
-        $facade = new class () extends AbstractFacade {
+        $facade = new class() extends AbstractFacade {
             public function getSomething(): array
             {
                 return $this->getFactory()
@@ -47,7 +47,7 @@ final class AnonymousClassesTest extends TestCase
     {
         AnonymousGlobal::addGlobal(
             $this,
-            new class () extends AbstractConfig {
+            new class() extends AbstractConfig {
                 /**
                  * @return int[]
                  */
@@ -66,7 +66,7 @@ final class AnonymousClassesTest extends TestCase
     {
         AnonymousGlobal::addGlobal(
             'AnonymousClassesTest',
-            new class () extends AbstractFactory {
+            new class() extends AbstractFactory {
                 public function createDomainClass(): object
                 {
                     /** @var object $myService */
@@ -75,7 +75,7 @@ final class AnonymousClassesTest extends TestCase
                     /** @var int[] $configValues */
                     $configValues = $this->getConfig()->getValues();
 
-                    return new class ($myService, ...$configValues) {
+                    return new class($myService, ...$configValues) {
                         private object $myService;
                         /** @var int[] */
                         private array $configValues;
@@ -107,10 +107,10 @@ final class AnonymousClassesTest extends TestCase
     {
         AnonymousGlobal::addGlobal(
             $this,
-            new class () extends AbstractDependencyProvider {
+            new class() extends AbstractDependencyProvider {
                 public function provideModuleDependencies(Container $container): void
                 {
-                    $container->set('my-greeter', new class () {
+                    $container->set('my-greeter', new class() {
                         public function greet(string $name): string
                         {
                             return "Hello, $name!";

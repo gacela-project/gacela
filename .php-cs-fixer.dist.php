@@ -20,6 +20,7 @@ return (new Config())
             'allow_single_line_closure' => true,
             'allow_single_line_anonymous_class_with_empty_body' => true,
         ],
+        'class_definition' => ['single_line' => true],
         'concat_space' => ['spacing' => 'one'],
         'declare_strict_types' => true,
         'function_typehint_space' => true,

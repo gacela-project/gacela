@@ -16,7 +16,7 @@ use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalCon
  * - 2: Let Gacela resolve in the factory the mapping from `GreeterGeneratorInterface` to `CorrectCompanyGenerator`
  *      AND auto-resolve the class `CustomNameGenerator` from the `CorrectCompanyGenerator` constructor.
  */
-return static fn () => new class () extends AbstractConfigGacela {
+return static fn () => new class() extends AbstractConfigGacela {
     public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void
     {
         $mappingInterfacesBuilder->bind(GreeterGeneratorInterface::class, IncorrectCompanyGenerator::class);

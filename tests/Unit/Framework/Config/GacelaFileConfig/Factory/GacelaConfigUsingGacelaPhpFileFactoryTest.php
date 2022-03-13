@@ -37,7 +37,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_exception_when_is_callable_but_does_not_extends_abstract_config_gacela(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(fn () => new class () {
+        $fileIo->method('include')->willReturn(fn () => new class() {
         });
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
@@ -54,7 +54,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
-        $fileIo->method('include')->willReturn(fn () => new class () extends AbstractConfigGacela {
+        $fileIo->method('include')->willReturn(fn () => new class() extends AbstractConfigGacela {
         });
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
@@ -69,7 +69,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_gacela_file_set_config(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(fn () => new class () extends AbstractConfigGacela {
+        $fileIo->method('include')->willReturn(fn () => new class() extends AbstractConfigGacela {
             public function config(ConfigBuilder $configBuilder): void
             {
                 $configBuilder->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
@@ -91,7 +91,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_gacela_file_set_mapping_interfaces(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(fn () => new class () extends AbstractConfigGacela {
+        $fileIo->method('include')->willReturn(fn () => new class() extends AbstractConfigGacela {
             public function mappingInterfaces(
                 MappingInterfacesBuilder $mappingInterfacesBuilder,
                 array $globalServices
@@ -116,7 +116,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_gacela_file_set_suffix_types(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(fn () => new class () extends AbstractConfigGacela {
+        $fileIo->method('include')->willReturn(fn () => new class() extends AbstractConfigGacela {
             public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
             {
                 $suffixTypesBuilder->addDependencyProvider('Binding');

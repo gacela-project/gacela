@@ -43,7 +43,7 @@ final class ConfigBuilderTest extends TestCase
 
     public function test_custom_reader(): void
     {
-        $reader = new class () implements ConfigReaderInterface {
+        $reader = new class() implements ConfigReaderInterface {
             public function read(string $absolutePath): array
             {
                 return ['key' => 'value'];

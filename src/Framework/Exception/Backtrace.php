@@ -18,14 +18,6 @@ class Backtrace
     }
 
     /**
-     * @param array{file:string, line:int} $backtrace
-     */
-    private function getTraceLine(array $backtrace): string
-    {
-        return $backtrace['file'] . ':' . $backtrace['line'];
-    }
-
-    /**
      * @return list<array{
      *     args?: list<mixed>,
      *     class?: class-string,
@@ -41,5 +33,13 @@ class Backtrace
     public function getBacktraces(): array
     {
         return debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS); // @phpstan-ignore-line
+    }
+
+    /**
+     * @param array{file:string, line:int} $backtrace
+     */
+    private function getTraceLine(array $backtrace): string
+    {
+        return $backtrace['file'] . ':' . $backtrace['line'];
     }
 }

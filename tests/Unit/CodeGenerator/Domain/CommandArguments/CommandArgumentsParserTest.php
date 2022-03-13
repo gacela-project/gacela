@@ -57,20 +57,6 @@ final class CommandArgumentsParserTest extends TestCase
         self::assertSame('src/TestModule/TestSubModule', $args->directory());
     }
 
-    private function exampleOneLevelComposerJson(): array
-    {
-        $composerJson = <<<'JSON'
-{
-    "autoload": {
-        "psr-4": {
-            "App\\": "src/"
-        }
-    }
-}
-JSON;
-        return json_decode($composerJson, true);
-    }
-
     public function test_parse_multilevel_root_namespace(): void
     {
         $parser = new CommandArgumentsParser($this->exampleMultiLevelComposerJson());
@@ -85,6 +71,30 @@ JSON;
         $args = $parser->parse('App/TestModule/TestSubModule');
 
         self::assertSame('src/TestSubModule', $args->directory());
+    }
+
+    public function test_no_autoload_psr4_match_found(): void
+    {
+        $this->expectExceptionObject(
+            CommandArgumentsException::noAutoloadPsr4MatchFound('Unknown/Module')
+        );
+
+        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+        $parser->parse('Unknown/Module');
+    }
+
+    private function exampleOneLevelComposerJson(): array
+    {
+        $composerJson = <<<'JSON'
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}
+JSON;
+        return json_decode($composerJson, true);
     }
 
     /**
@@ -102,15 +112,5 @@ JSON;
 }
 JSON;
         return json_decode($composerJson, true);
-    }
-
-    public function test_no_autoload_psr4_match_found(): void
-    {
-        $this->expectExceptionObject(
-            CommandArgumentsException::noAutoloadPsr4MatchFound('Unknown/Module')
-        );
-
-        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
-        $parser->parse('Unknown/Module');
     }
 }

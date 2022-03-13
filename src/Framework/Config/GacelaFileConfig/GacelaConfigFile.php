@@ -25,6 +25,10 @@ final class GacelaConfigFile
      */
     private array $suffixTypes = [];
 
+    private function __construct()
+    {
+    }
+
     public static function withDefaults(): self
     {
         return (new self())
@@ -41,10 +45,6 @@ final class GacelaConfigFile
             ->setConfigItems($configBuilder->build())
             ->setMappingInterfaces($mappingInterfacesBuilder->build())
             ->setSuffixTypes($suffixTypesBuilder->build());
-    }
-
-    private function __construct()
-    {
     }
 
     /**

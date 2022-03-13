@@ -63,18 +63,6 @@ final class ClassInfo
         return new self($callerNamespace, $callerModuleName, $cacheKey);
     }
 
-    private static function normalizeFilename(string $filepath): string
-    {
-        $filename = basename($filepath);
-        $filename = substr($filename, 0, (int)strpos($filename, ':'));
-
-        if (false === ($pos = strpos($filename, '.'))) {
-            return $filename;
-        }
-
-        return substr($filename, 0, $pos);
-    }
-
     public function getCacheKey(): string
     {
         return $this->cacheKey;
@@ -98,5 +86,17 @@ final class ClassInfo
             $this->callerModuleName,
             $this->callerNamespace,
         );
+    }
+
+    private static function normalizeFilename(string $filepath): string
+    {
+        $filename = basename($filepath);
+        $filename = substr($filename, 0, (int)strpos($filename, ':'));
+
+        if (false === ($pos = strpos($filename, '.'))) {
+            return $filename;
+        }
+
+        return substr($filename, 0, $pos);
     }
 }

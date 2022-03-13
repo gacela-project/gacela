@@ -22,6 +22,12 @@ final class ResolvableType
     private string $resolvableType;
     private string $moduleName;
 
+    private function __construct(string $resolvableType, string $moduleName)
+    {
+        $this->resolvableType = $resolvableType;
+        $this->moduleName = $moduleName;
+    }
+
     /**
      * Split the moduleName and resolvableType from a className.
      */
@@ -39,12 +45,6 @@ final class ResolvableType
         $moduleName = str_replace($customResolvableType, '', $className);
 
         return new self(ltrim($customResolvableType, '\\'), $moduleName);
-    }
-
-    private function __construct(string $resolvableType, string $moduleName)
-    {
-        $this->resolvableType = $resolvableType;
-        $this->moduleName = $moduleName;
     }
 
     public function resolvableType(): string

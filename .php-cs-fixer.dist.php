@@ -65,6 +65,7 @@ return (new Config())
         ],
         'normalize_index_brace' => true,
         'object_operator_without_whitespace' => true,
+        'ordered_class_elements' => true,
         'ordered_imports' => [
             'imports_order' => [
                 'class',

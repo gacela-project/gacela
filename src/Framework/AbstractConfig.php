@@ -9,6 +9,13 @@ use Gacela\Framework\Exception\ConfigException;
 abstract class AbstractConfig
 {
     /**
+     * Allow easy access to the root dir of the project.
+     */
+    public function getAppRootDir(): string
+    {
+        return Config::getInstance()->getAppRootDir();
+    }
+    /**
      * @param null|mixed $default
      *
      * @throws ConfigException
@@ -18,13 +25,5 @@ abstract class AbstractConfig
     protected function get(string $key, $default = Config::DEFAULT_CONFIG_VALUE)
     {
         return Config::getInstance()->get($key, $default);
-    }
-
-    /**
-     * Allow easy access to the root dir of the project.
-     */
-    public function getAppRootDir(): string
-    {
-        return Config::getInstance()->getAppRootDir();
     }
 }

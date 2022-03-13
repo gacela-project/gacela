@@ -15,6 +15,17 @@ final class Locator
     /** @var array<string, mixed> */
     private array $instanceCache = [];
 
+    private function __construct()
+    {
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private function __clone()
+    {
+    }
+
     public static function getInstance(): self
     {
         if (null === self::$instance) {
@@ -27,17 +38,6 @@ final class Locator
     public static function resetInstance(): void
     {
         self::$instance = null;
-    }
-
-    private function __construct()
-    {
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
-    private function __clone()
-    {
     }
 
     /**

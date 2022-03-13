@@ -27,6 +27,16 @@ final class GacelaConfigItem
         $this->reader = $reader ?? new PhpConfigReader();
     }
 
+    public function __toString(): string
+    {
+        return sprintf(
+            'GacelaConfigItem{path:%s, pathLocal:%s, reader:%s}',
+            $this->path,
+            $this->pathLocal,
+            get_class($this->reader)
+        );
+    }
+
     public static function withDefaults(): self
     {
         return new self(self::DEFAULT_PATH, self::DEFAULT_PATH_LOCAL);
@@ -45,15 +55,5 @@ final class GacelaConfigItem
     public function reader(): ConfigReaderInterface
     {
         return $this->reader;
-    }
-
-    public function __toString(): string
-    {
-        return sprintf(
-            'GacelaConfigItem{path:%s, pathLocal:%s, reader:%s}',
-            $this->path,
-            $this->pathLocal,
-            get_class($this->reader)
-        );
     }
 }

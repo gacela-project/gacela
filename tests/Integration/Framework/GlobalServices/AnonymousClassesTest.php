@@ -113,7 +113,7 @@ final class AnonymousClassesTest extends TestCase
                     $container->set('my-greeter', new class() {
                         public function greet(string $name): string
                         {
-                            return "Hello, $name!";
+                            return "Hello, {$name}!";
                         }
                     });
                 }

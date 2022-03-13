@@ -65,7 +65,7 @@ final class DependencyResolver
 
             /** @var ReflectionClass $reflectionClass */
             $reflectionClass = $parameter->getDeclaringClass();
-            throw new RuntimeException("Unable to resolve [$parameter] from {$reflectionClass->getName()}");
+            throw new RuntimeException("Unable to resolve [{$parameter}] from {$reflectionClass->getName()}");
         }
 
         /** @var mixed $mappedClass */

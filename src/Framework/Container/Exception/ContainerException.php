@@ -11,6 +11,6 @@ final class ContainerException extends Exception implements ContainerExceptionIn
 {
     public static function notFound(string $id): self
     {
-        return new self("The requested service '$id' was not found in the container!");
+        return new self("The requested service '{$id}' was not found in the container!");
     }
 }

@@ -18,7 +18,7 @@ final class HelloName
     public function greet(string $name): array
     {
         return array_merge(
-            ["Hello, $name from Supplier."],
+            ["Hello, {$name} from Supplier."],
             $this->dependentFacade->greet($name),
         );
     }

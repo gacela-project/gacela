@@ -16,6 +16,7 @@ return (new Config())
     ->setRules([
         '@PSR12' => true,
         'array_syntax' => ['syntax' => 'short'],
+        'backtick_to_shell_exec' => true,
         'braces' => [
             'allow_single_line_closure' => true,
             'allow_single_line_anonymous_class_with_empty_body' => true,
@@ -23,6 +24,10 @@ return (new Config())
         'class_definition' => ['single_line' => true],
         'concat_space' => ['spacing' => 'one'],
         'declare_strict_types' => true,
+        'elseif' => true,
+        'encoding' => true,
+        'ereg_to_preg' => true,
+        'explicit_string_variable' => true,
         'function_typehint_space' => true,
         'list_syntax' => ['syntax' => 'short'],
         'no_empty_phpdoc' => true,
@@ -37,6 +42,7 @@ return (new Config())
         'no_whitespace_in_blank_line' => true,
         'no_unused_imports' => true,
         'normalize_index_brace' => true,
+        'object_operator_without_whitespace' => true,
         'ordered_imports' => [
             'imports_order' => [
                 'class',

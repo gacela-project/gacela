@@ -39,7 +39,7 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
         $configBuilder = new ConfigBuilder();
         $configFromGlobalServicesFn = $configFromGlobalServices['config'] ?? null;
-        if ($configFromGlobalServicesFn !== null) {
+        if (null !== $configFromGlobalServicesFn) {
             $configFromGlobalServicesFn($configBuilder);
         }
 
@@ -53,7 +53,7 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
         $mappingInterfacesFn = $configFromGlobalServices['mapping-interfaces'] ?? null;
-        if ($mappingInterfacesFn !== null) {
+        if (null !== $mappingInterfacesFn) {
             $mappingInterfacesFn($mappingInterfacesBuilder, $this->globalServices);
         }
 
@@ -66,7 +66,7 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         $configFromGlobalServices = $this->globalServices;
         $suffixTypesBuilder = new SuffixTypesBuilder();
         $suffixTypesFn = $configFromGlobalServices['suffix-types'] ?? null;
-        if ($suffixTypesFn !== null) {
+        if (null !== $suffixTypesFn) {
             $suffixTypesFn($suffixTypesBuilder);
         }
 

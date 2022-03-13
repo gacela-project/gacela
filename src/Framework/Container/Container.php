@@ -42,7 +42,7 @@ final class Container implements ContainerInterface
 
         if (
             isset($this->raw[$id])
-            || !is_object($this->services[$id])
+            || !\is_object($this->services[$id])
             || !method_exists($this->services[$id], '__invoke')
         ) {
             return $this->services[$id];

@@ -19,7 +19,7 @@ final class DependencyProvider extends AbstractDependencyProvider
 
     private function addFacadeCalculator(Container $container): void
     {
-        $container->set(self::FACADE_DEPENDENT, function (Container $container): Dependent\FacadeInterface {
+        $container->set(self::FACADE_DEPENDENT, static function (Container $container): Dependent\FacadeInterface {
             return $container->getLocator()->get(Dependent\Facade::class);
         });
     }

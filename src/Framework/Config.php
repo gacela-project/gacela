@@ -29,7 +29,7 @@ final class Config
 
     public static function getInstance(): self
     {
-        if (self::$instance === null) {
+        if (null === self::$instance) {
             self::$instance = new self();
         }
 
@@ -57,7 +57,7 @@ final class Config
             $this->init();
         }
 
-        if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasValue($key)) {
+        if (self::DEFAULT_CONFIG_VALUE !== $default && !$this->hasValue($key)) {
             return $default;
         }
 

@@ -36,7 +36,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_config(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
-            'config' => function (ConfigBuilder $configBuilder): void {
+            'config' => static function (ConfigBuilder $configBuilder): void {
                 $configBuilder->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
             },
         ]);
@@ -50,7 +50,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_mapping_interfaces_with_global_services(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
-            'mapping-interfaces' => function (
+            'mapping-interfaces' => static function (
                 MappingInterfacesBuilder $interfacesBuilder,
                 array $globalServices
             ): void {
@@ -69,7 +69,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_suffix_types(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
-            'suffix-types' => function (SuffixTypesBuilder $suffixTypesBuilder): void {
+            'suffix-types' => static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder->addDependencyProvider('DPCustom');
             },
         ]);

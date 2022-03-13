@@ -23,7 +23,7 @@ final class SimpleEnvConfigReader implements ConfigReaderInterface
         $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
         foreach ($lines as $line) {
-            if (strncmp(trim($line), '#', 1) === 0) {
+            if (0 === strncmp(trim($line), '#', 1)) {
                 continue;
             }
 

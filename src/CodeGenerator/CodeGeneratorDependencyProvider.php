@@ -24,7 +24,7 @@ final class CodeGeneratorDependencyProvider extends AbstractDependencyProvider
     {
         $codeTemplate = $this->getConfig();
 
-        $container->set(self::TEMPLATE_BY_FILENAME_MAP, fn () => [
+        $container->set(self::TEMPLATE_BY_FILENAME_MAP, static fn () => [
             FilenameSanitizer::FACADE => $codeTemplate->getFacadeMakerTemplate(),
             FilenameSanitizer::FACTORY => $codeTemplate->getFactoryMakerTemplate(),
             FilenameSanitizer::CONFIG => $codeTemplate->getConfigMakerTemplate(),

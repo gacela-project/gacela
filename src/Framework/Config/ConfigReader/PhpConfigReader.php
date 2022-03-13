@@ -7,7 +7,6 @@ namespace Gacela\Framework\Config\ConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use JsonSerializable;
 use RuntimeException;
-use function is_array;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {
@@ -37,7 +36,7 @@ final class PhpConfigReader implements ConfigReaderInterface
             return $jsonSerialized;
         }
 
-        if (!is_array($content)) {
+        if (!\is_array($content)) {
             throw new RuntimeException('The PHP config file must return an array or a JsonSerializable object!');
         }
 

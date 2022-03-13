@@ -13,6 +13,6 @@ final class PathFinder implements PathFinderInterface
     {
         $glob = glob($pattern, GLOB_BRACE);
 
-        return is_array($glob) ? $glob : [];
+        return \is_array($glob) ? $glob : [];
     }
 }

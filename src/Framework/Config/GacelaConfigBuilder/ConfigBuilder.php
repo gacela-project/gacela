@@ -25,10 +25,10 @@ final class ConfigBuilder
     ): self {
         $readerInstance = new PhpConfigReader();
 
-        if (is_string($reader)) {
+        if (\is_string($reader)) {
             /** @psalm-suppress MixedMethodCall */
             $readerInstance = new $reader();
-            assert($readerInstance instanceof ConfigReaderInterface);
+            \assert($readerInstance instanceof ConfigReaderInterface);
         }
 
         $this->configItems[] = new GacelaConfigItem($path, $pathLocal, $readerInstance);

@@ -9,7 +9,6 @@ use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use RuntimeException;
-use function is_callable;
 
 final class DependencyResolver
 {
@@ -70,11 +69,11 @@ final class DependencyResolver
 
         /** @var mixed $mappedClass */
         $mappedClass = $this->gacelaConfigFile->getMappingInterface($paramTypeName);
-        if (is_callable($mappedClass)) {
+        if (\is_callable($mappedClass)) {
             return $mappedClass();
         }
 
-        if (is_object($mappedClass)) {
+        if (\is_object($mappedClass)) {
             return $mappedClass;
         }
 

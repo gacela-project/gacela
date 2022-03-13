@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use function str_replace;
-use function strlen;
 use function strpos;
 use function strrpos;
 use function substr;
@@ -35,7 +34,7 @@ final class ResolvableType
     {
         foreach (self::DEFAULT_ALLOWED_TYPES as $resolvableType) {
             if (false !== strpos($className, $resolvableType)) {
-                $moduleName = substr($className, 0, strlen($className) - strlen($resolvableType));
+                $moduleName = substr($className, 0, \strlen($className) - \strlen($resolvableType));
                 return new self($resolvableType, $moduleName);
             }
         }

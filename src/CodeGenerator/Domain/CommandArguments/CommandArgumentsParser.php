@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator\Domain\CommandArguments;
 
 use InvalidArgumentException;
-use function count;
 
 final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {
@@ -70,7 +69,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             if (empty($result)) {
                 $result[] = $explodedArg;
             } else {
-                $prevValue = $result[count($result) - 1];
+                $prevValue = $result[\count($result) - 1];
                 $result[] = $prevValue . '\\' . $explodedArg;
             }
         }

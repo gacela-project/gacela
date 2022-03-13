@@ -6,7 +6,6 @@ namespace Gacela\Framework\Config\GacelaFileConfig;
 
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use function get_class;
 
 final class GacelaConfigItem
 {
@@ -33,7 +32,7 @@ final class GacelaConfigItem
             'GacelaConfigItem{path:%s, pathLocal:%s, reader:%s}',
             $this->path,
             $this->pathLocal,
-            get_class($this->reader)
+            \get_class($this->reader)
         );
     }
 

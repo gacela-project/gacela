@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-use function basename;
-use function end;
-use function explode;
-use function implode;
-use function ltrim;
-use function sprintf;
-use function strpos;
-use function substr;
+use function array_slice;
+use function count;
+use function get_class;
+use function is_string;
 
 final class ClassInfo
 {
@@ -33,12 +29,12 @@ final class ClassInfo
 
     public static function fromObject(object $callerObject, string $resolvableType = ''): self
     {
-        $callerClass = \get_class($callerObject);
+        $callerClass = get_class($callerObject);
 
         /** @var string[] $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $lastCallerClassPart = end($callerClassParts);
-        $filepath = \is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
+        $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
         $filename = self::normalizeFilename($filepath);
 
         if (false !== strpos($filepath, 'anonymous')) {
@@ -48,8 +44,8 @@ final class ClassInfo
             ];
         }
 
-        $callerNamespace = implode('\\', \array_slice($callerClassParts, 0, \count($callerClassParts) - 1));
-        $callerModuleName = $callerClassParts[\count($callerClassParts) - 2] ?? '';
+        $callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
+        $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
         $cacheKey = GlobalKey::fromClassName(sprintf(
             '\\%s\\%s',
             $callerNamespace,

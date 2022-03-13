@@ -1,9 +1,4 @@
 parameters:
-    level: 9
+    level: max
     checkGenericClassInNonGenericObjectType: false
     checkMissingIterableValueType: false
-    ignoreErrors:
-        -
-            message: '#Offset .psr-4. on array{psr-4: array<string, string>} in isset\(\) always exists and is not nullable.#'
-            paths:
-                - src/CodeGenerator/Domain/CommandArguments/CommandArgumentsParser.php

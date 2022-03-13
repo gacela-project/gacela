@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use function class_exists;
+use function is_array;
 
 abstract class AbstractClassResolver
 {
@@ -82,7 +83,7 @@ abstract class AbstractClassResolver
 
         $resolvableTypes = $suffixTypes[$this->getResolvableType()] ?? $this->getResolvableType();
 
-        return \is_array($resolvableTypes) ? $resolvableTypes : [$resolvableTypes];
+        return is_array($resolvableTypes) ? $resolvableTypes : [$resolvableTypes];
     }
 
     private function createInstance(string $resolvedClassName): ?object

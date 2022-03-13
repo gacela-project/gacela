@@ -8,12 +8,9 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableType;
 use RuntimeException;
-use function end;
-use function explode;
-use function get_parent_class;
-use function implode;
-use function ltrim;
-use function sprintf;
+use function get_class;
+use function in_array;
+use function is_string;
 
 final class AnonymousGlobal
 {
@@ -63,7 +60,7 @@ final class AnonymousGlobal
         $contextName = self::extractContextNameFromContext($context);
         $parentClass = get_parent_class($resolvedClass);
 
-        $type = \is_string($parentClass)
+        $type = is_string($parentClass)
             ? ResolvableType::fromClassName($parentClass)->resolvableType()
             : $contextName;
 
@@ -85,22 +82,22 @@ final class AnonymousGlobal
      */
     private static function extractContextNameFromContext($context): string
     {
-        if (\is_string($context)) {
+        if (is_string($context)) {
             return $context;
         }
 
-        $callerClass = \get_class($context);
+        $callerClass = get_class($context);
         /** @var list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
 
         $lastCallerClassParts = end($callerClassParts);
 
-        return \is_string($lastCallerClassParts) ? $lastCallerClassParts : '';
+        return is_string($lastCallerClassParts) ? $lastCallerClassParts : '';
     }
 
     private static function validateTypeForAnonymousGlobalRegistration(string $type): void
     {
-        if (!\in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
+        if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
             throw new RuntimeException(
                 "Type '{$type}' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)
             );

@@ -12,6 +12,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use RuntimeException;
+use function is_callable;
 
 final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFactoryInterface
 {
@@ -38,7 +39,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
     public function createGacelaFileConfig(): GacelaConfigFile
     {
         $configGacela = $this->fileIo->include($this->gacelaPhpPath);
-        if (!\is_callable($configGacela)) {
+        if (!is_callable($configGacela)) {
             throw new RuntimeException('Create a function that returns an anonymous class that extends AbstractConfigGacela');
         }
 

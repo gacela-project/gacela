@@ -7,7 +7,6 @@ namespace GacelaTest\Unit\CodeGenerator\Domain\CommandArguments;
 use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsException;
 use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsParser;
 use PHPUnit\Framework\TestCase;
-use function json_decode;
 
 final class CommandArgumentsParserTest extends TestCase
 {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Container;
 
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
+use function is_object;
 
 final class Container implements ContainerInterface
 {
@@ -42,7 +43,7 @@ final class Container implements ContainerInterface
 
         if (
             isset($this->raw[$id])
-            || !\is_object($this->services[$id])
+            || !is_object($this->services[$id])
             || !method_exists($this->services[$id], '__invoke')
         ) {
             return $this->services[$id];

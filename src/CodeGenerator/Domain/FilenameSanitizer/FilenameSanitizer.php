@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator\Domain\FilenameSanitizer;
 
 use RuntimeException;
+use function count;
 
 final class FilenameSanitizer implements FilenameSanitizerInterface
 {
@@ -39,7 +40,7 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
         $maxVal = max($percents);
         $maxValKeys = array_keys($percents, $maxVal, true);
 
-        if (\count($maxValKeys) > 1) {
+        if (count($maxValKeys) > 1) {
             throw new RuntimeException(sprintf(
                 'When using "%s", which filename do you mean [%s]?',
                 $filename,

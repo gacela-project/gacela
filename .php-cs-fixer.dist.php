@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
@@ -38,11 +38,16 @@ return (new Config())
                 'version',
             ],
         ],
-        'global_namespace_import' => true,
+        'global_namespace_import' => [
+            'import_functions' => true,
+        ],
         'include' => true,
         'increment_style' => true,
         'list_syntax' => ['syntax' => 'short'],
-        'native_function_invocation' => true,
+        'native_function_invocation' => [
+            'include' => ['@compiler_optimized'],
+        ],
+        'native_function_type_declaration_casing' => true,
         'new_with_braces' => true,
         'no_blank_lines_after_class_opening' => true,
         'no_empty_comment' => true,

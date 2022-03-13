@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use function is_array;
+
 final class PathFinder implements PathFinderInterface
 {
     /**
@@ -13,6 +15,6 @@ final class PathFinder implements PathFinderInterface
     {
         $glob = glob($pattern, GLOB_BRACE);
 
-        return \is_array($glob) ? $glob : [];
+        return is_array($glob) ? $glob : [];
     }
 }

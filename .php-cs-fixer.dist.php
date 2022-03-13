@@ -1,9 +1,9 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
-use PhpCsFixer\Finder;
 use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
 
 $finder = Finder::create()
     ->files()
@@ -29,18 +29,40 @@ return (new Config())
         'ereg_to_preg' => true,
         'explicit_string_variable' => true,
         'function_typehint_space' => true,
+        'general_phpdoc_annotation_remove' => [
+            'annotations' => [
+                'author',
+                'package',
+                'subpackage',
+                'version',
+            ],
+        ],
+        'include' => true,
+        'increment_style' => true,
         'list_syntax' => ['syntax' => 'short'],
+        'new_with_braces' => true,
+        'no_blank_lines_after_class_opening' => true,
+        'no_empty_comment' => true,
         'no_empty_phpdoc' => true,
         'no_empty_statement' => true,
+        'no_homoglyph_names' => true,
+        'no_leading_import_slash' => true,
         'no_leading_namespace_whitespace' => true,
+        'no_mixed_echo_print' => true,
         'no_multiline_whitespace_around_double_arrow' => true,
         'no_singleline_whitespace_before_semicolons' => true,
+        'no_short_bool_cast' => true,
         'no_trailing_comma_in_singleline_array' => true,
         'no_trailing_whitespace' => true,
         'no_trailing_whitespace_in_comment' => true,
+        'no_useless_else' => true,
+        'no_useless_return' => true,
         'no_whitespace_before_comma_in_array' => true,
         'no_whitespace_in_blank_line' => true,
         'no_unused_imports' => true,
+        'non_printable_character' => [
+            'use_escape_sequences_in_strings' => true,
+        ],
         'normalize_index_brace' => true,
         'object_operator_without_whitespace' => true,
         'ordered_imports' => [

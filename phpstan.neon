@@ -1,4 +1,6 @@
 parameters:
     level: max
+    paths:
+        - %currentWorkingDirectory%/src/
     checkGenericClassInNonGenericObjectType: false
     checkMissingIterableValueType: false

@@ -37,7 +37,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     {
         $factory = new GacelaConfigFromBootstrapFactory([
             'config' => static function (ConfigBuilder $configBuilder): void {
-                $configBuilder->add(PhpConfigReader::class, 'custom-path.php', 'custom-path_local.php');
+                $configBuilder->add('custom-path.php', 'custom-path_local.php');
             },
         ]);
 

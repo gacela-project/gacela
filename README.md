@@ -52,4 +52,4 @@ You can see an example of a module using gacela in [this repository](https://git
 
 ### Contribute
 
-You are more than welcome to contribute reporting issues, sharing ideas, or [contributing](.github/CODE_OF_CONDUCT.md) with your Pull Requests.
+You are more than welcome to contribute reporting issues, sharing ideas, or [contributing](.github/CONTRIBUTING.md) with your Pull Requests.

@@ -7,7 +7,6 @@ namespace Gacela\Framework\Config\GacelaConfigBuilder;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
-use function assert;
 use function is_string;
 
 final class ConfigBuilder
@@ -16,22 +15,13 @@ final class ConfigBuilder
     private array $configItems = [];
 
     /**
-     * @param class-string<ConfigReaderInterface>|ConfigReaderInterface $reader Define the reader class which will read and parse the config files
      * @param string $path define the path where Gacela will read all the config files
      * @param string $pathLocal define the path where Gacela will read the local config file
+     * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader Define the reader class which will read and parse the config files
      */
-    public function add(
-        $reader,
-        string $path = GacelaConfigItem::DEFAULT_PATH,
-        string $pathLocal = GacelaConfigItem::DEFAULT_PATH_LOCAL
-    ): self {
-        $readerInstance = new PhpConfigReader();
-
-        if (is_string($reader)) {
-            /** @psalm-suppress MixedMethodCall */
-            $readerInstance = new $reader();
-            assert($readerInstance instanceof ConfigReaderInterface);
-        }
+    public function add(string $path, string $pathLocal = '', $reader = null): self
+    {
+        $readerInstance = $this->normalizeReader($reader);
 
         $this->configItems[] = new GacelaConfigItem($path, $pathLocal, $readerInstance);
 
@@ -44,9 +34,25 @@ final class ConfigBuilder
     public function build(): array
     {
         if (empty($this->configItems)) {
-            return [GacelaConfigItem::withDefaults()];
+            return [new GacelaConfigItem()];
         }
 
         return $this->configItems;
+    }
+
+    /**
+     * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader
+     */
+    private function normalizeReader($reader): ConfigReaderInterface
+    {
+        if ($reader instanceof ConfigReaderInterface) {
+            return $reader;
+        }
+
+        if (is_string($reader)) {
+            return new $reader();
+        }
+
+        return new PhpConfigReader();
     }
 }

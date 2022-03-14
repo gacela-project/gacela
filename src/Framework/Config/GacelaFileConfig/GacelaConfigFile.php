@@ -32,7 +32,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     public static function withDefaults(): self
     {
         return (new self())
-            ->setConfigItems([GacelaConfigItem::withDefaults()])
+            ->setConfigItems([new GacelaConfigItem()])
             ->setSuffixTypes(SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES);
     }
 

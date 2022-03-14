@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingMultipleConfig\LocalConfig\Domain;
+namespace GacelaTest\Fixtures;
 
 use Gacela\Framework\Config\ConfigReaderInterface;
 

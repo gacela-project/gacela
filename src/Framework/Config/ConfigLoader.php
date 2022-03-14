@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 final class ConfigLoader
@@ -59,7 +59,7 @@ final class ConfigLoader
     /**
      * @return array<string,mixed>
      */
-    private function readLocalConfigFile(GacelaConfigFile $gacelaConfigFile): array
+    private function readLocalConfigFile(GacelaConfigFileInterface $gacelaConfigFile): array
     {
         $result = [];
         $configItems = $gacelaConfigFile->getConfigItems();

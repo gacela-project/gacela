@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DependencyResolver;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -14,9 +14,9 @@ use function is_object;
 
 final class DependencyResolver
 {
-    private GacelaConfigFile $gacelaConfigFile;
+    private GacelaConfigFileInterface $gacelaConfigFile;
 
-    public function __construct(GacelaConfigFile $gacelaConfigFile)
+    public function __construct(GacelaConfigFileInterface $gacelaConfigFile)
     {
         $this->gacelaConfigFile = $gacelaConfigFile;
     }

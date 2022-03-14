@@ -11,6 +11,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use RuntimeException;
 use function is_callable;
 
@@ -36,7 +37,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $this->fileIo = $fileIo;
     }
 
-    public function createGacelaFileConfig(): GacelaConfigFile
+    public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $configGacela = $this->fileIo->include($this->gacelaPhpPath);
         if (!is_callable($configGacela)) {

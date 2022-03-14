@@ -8,7 +8,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
-final class GacelaConfigFile
+final class GacelaConfigFile implements GacelaConfigFileInterface
 {
     /** @var list<GacelaConfigItem> */
     private array $configItems = [];

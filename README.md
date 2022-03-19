@@ -29,11 +29,10 @@ Gacela helps you to build modular applications.
 Splitting your project into different modules help in terms of maintainability and scalability.
 It encourages your modules to interact with each other in a unified way by following these rules:
 
-- Different modules can interact **only** via their `Facade`.
-- The [`Facade`](https://gacela-project.com/docs/facade/) has access to the `Factory`.
-- The [`Factory`](https://gacela-project.com/docs/factory/) creates the objects from the module and has access to the Module's `Config`.
-- The [`Config`](https://gacela-project.com/docs/config/) gets the values from your defined config files.
-- The [`DependencyProvider`](https://gacela-project.com/docs/dependency-provider/) uses the Locator to get the Facades from different modules.
+- The [`Facade`](https://gacela-project.com/docs/facade/) is the entry point of your module, and has direct access to the Factory.
+- The [`Factory`](https://gacela-project.com/docs/factory/) resolves the intra-dependencies of your module's classes, and has access to the Config.
+- The [`Config`](https://gacela-project.com/docs/config/) has access to the key-values from your config files.
+- The [`DependencyProvider`](https://gacela-project.com/docs/dependency-provider/) resolves the extra-dependencies of your module.
 
 ### Module structure
 
@@ -58,9 +57,9 @@ application-name
 │   │   │   └── YourLogicClass.php
 │   │   ├── Facade.php             # These are the 4 "gacela classes":
 │   │   └── Factory.php            # - You can prefix them with its module name.
-│   │   ├── Config.php             # - They have autowiring. Changeable in `gacela.php`.
-│   │   └── DependencyProvider.php # - You can customize the suffix naming. Changeable in `gacela.php`.
-│
+│   │   ├── Config.php             # - Autowiring customizable in `gacela.php`.
+│   │   └── DependencyProvider.php # - Suffix naming customizable in `gacela.php`.
+│   │
 │   └── ExampleModuleWithPrefix
 │       ├── Domain
 │       │   └── YourLogicClass.php

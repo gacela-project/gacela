@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes;
+namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes;
 
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;

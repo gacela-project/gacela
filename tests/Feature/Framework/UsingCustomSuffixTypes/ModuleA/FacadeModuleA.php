@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes\ModuleA;
+namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 
 use Gacela\Framework\AbstractFacade;
 

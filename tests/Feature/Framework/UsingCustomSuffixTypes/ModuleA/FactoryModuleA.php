@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes\ModuleC;
+namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 
 use Gacela\Framework\AbstractFactory;
 
 /**
- * @method Config getConfig()
+ * @method ConfModuleA getConfig()
  */
-final class Factory extends AbstractFactory
+final class FactoryModuleA extends AbstractFactory
 {
     public function getArrayConfigAndProvidedDependency(): array
     {

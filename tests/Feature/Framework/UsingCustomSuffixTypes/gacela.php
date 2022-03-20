@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes;
+namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes;
 
 use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;

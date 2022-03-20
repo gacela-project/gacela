@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes\ModuleB;
+namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleC;
 
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method FactoryModuleB getFactory()
+ * @method Factory getFactory()
  */
-final class FacadeModuleB extends AbstractFacade
+final class Facade extends AbstractFacade
 {
     public function doSomething(): array
     {

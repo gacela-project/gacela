@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes\ModuleC;
+namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 
 use Gacela\Framework\AbstractConfig;
 
-final class Config extends AbstractConfig
+final class ConfModuleA extends AbstractConfig
 {
     public function getConfigValue(): string
     {

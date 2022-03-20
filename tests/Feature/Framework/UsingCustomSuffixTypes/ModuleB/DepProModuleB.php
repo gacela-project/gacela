@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\UsingCustomResolvableTypes\ModuleA;
+namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleB;
 
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\Container\Container;
 
-final class DepProModuleA extends AbstractDependencyProvider
+final class DepProModuleB extends AbstractDependencyProvider
 {
     public function provideModuleDependencies(Container $container): void
     {

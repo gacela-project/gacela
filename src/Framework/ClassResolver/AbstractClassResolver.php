@@ -25,13 +25,13 @@ abstract class AbstractClassResolver
     /** @var array<string,null|object> */
     private static array $cachedInstances = [];
 
+    private ?FileCachedInterface $fileCached = null;
+
     private ?ClassNameFinderInterface $classNameFinder = null;
 
     private ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
     private ?InstanceCreator $instanceCreator = null;
-
-    private ?FileCachedInterface $fileCached = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -84,15 +84,15 @@ abstract class AbstractClassResolver
 
     private function getFileCached(): FileCachedInterface
     {
-        $isClassNamesCacheEnabled = $this->getGacelaConfigFile()->isResolvableClassNamesCacheEnabled();
-
-        if (null === $this->fileCached && $isClassNamesCacheEnabled) {
-            $this->fileCached = new FileCached(
-                sprintf('/%s/%s', Config::getInstance()->getAppRootDir(), self::GACELA_CACHE_JSON_FILE),
-                $this->createFileCachedIo()
-            );
-        } elseif (null === $this->fileCached) {
-            $this->fileCached = new FakeFileCached();
+        if (null === $this->fileCached) {
+            if ($this->getGacelaConfigFile()->isResolvableClassNamesCacheEnabled()) {
+                $this->fileCached = new FileCached(
+                    sprintf('/%s/%s', Config::getInstance()->getAppRootDir(), self::GACELA_CACHE_JSON_FILE),
+                    $this->createFileCachedIo()
+                );
+            } else {
+                $this->fileCached = new FakeFileCached();
+            }
         }
 
         return $this->fileCached;

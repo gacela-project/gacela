@@ -32,10 +32,6 @@ final class FileIo implements FileIoInterface
     public function writeFile(string $filename, $data = null): void
     {
         if (null !== $data) {
-            if (!is_file($filename)) {
-                $file = fopen($filename, 'wb');
-                fclose($file); // @phpstan-ignore-line
-            }
             file_put_contents($filename, $data);
         } else {
             touch($filename);

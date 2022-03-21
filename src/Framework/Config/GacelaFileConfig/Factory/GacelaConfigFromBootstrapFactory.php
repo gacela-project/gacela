@@ -26,11 +26,12 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        $configBuilder = $this->createConfigBuilder();
-        $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder();
-        $suffixTypesBuilder = $this->createSuffixTypesBuilder();
-
-        return GacelaConfigFile::usingBuilders($configBuilder, $mappingInterfacesBuilder, $suffixTypesBuilder);
+        return GacelaConfigFile::usingBuilders(
+            $this->createConfigBuilder(),
+            $this->createMappingInterfacesBuilder(),
+            $this->createSuffixTypesBuilder(),
+            $this->isResolvableClassNamesCacheEnabled()
+        );
     }
 
     private function createConfigBuilder(): ConfigBuilder
@@ -72,5 +73,13 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         }
 
         return $suffixTypesBuilder;
+    }
+
+    private function isResolvableClassNamesCacheEnabled(): bool
+    {
+        /** @var array{resolvable-class-names-cache-enabled?: bool} $globalServices */
+        $globalServices = $this->globalServices;
+
+        return $globalServices['resolvable-class-names-cache-enabled'] ?? true;
     }
 }

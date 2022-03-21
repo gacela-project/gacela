@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\ClassResolver\Cache\FakeFileCached;
 use Gacela\Framework\ClassResolver\Cache\FileCached;
+use Gacela\Framework\ClassResolver\Cache\FileCachedInterface;
 use Gacela\Framework\ClassResolver\Cache\FileCachedIo;
 use Gacela\Framework\ClassResolver\Cache\FileCachedIoInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
@@ -29,7 +31,7 @@ abstract class AbstractClassResolver
 
     private ?InstanceCreator $instanceCreator = null;
 
-    private ?FileCached $fileCached = null;
+    private ?FileCachedInterface $fileCached = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -80,13 +82,17 @@ abstract class AbstractClassResolver
         return $className;
     }
 
-    private function getFileCached(): FileCached
+    private function getFileCached(): FileCachedInterface
     {
-        if (null === $this->fileCached) {
+        $isClassNamesCacheEnabled = $this->getGacelaConfigFile()->isResolvableClassNamesCacheEnabled();
+
+        if (null === $this->fileCached && $isClassNamesCacheEnabled) {
             $this->fileCached = new FileCached(
                 sprintf('/%s/%s', Config::getInstance()->getAppRootDir(), self::GACELA_CACHE_JSON_FILE),
                 $this->createFileCachedIo()
             );
+        } elseif (null === $this->fileCached) {
+            $this->fileCached = new FakeFileCached();
         }
 
         return $this->fileCached;

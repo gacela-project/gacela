@@ -25,6 +25,8 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      */
     private array $suffixTypes = [];
 
+    private bool $resolvableClassNamesCacheEnabled = true;
+
     private function __construct()
     {
     }
@@ -39,12 +41,14 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     public static function usingBuilders(
         ConfigBuilder $configBuilder,
         MappingInterfacesBuilder $mappingInterfacesBuilder,
-        SuffixTypesBuilder $suffixTypesBuilder
+        SuffixTypesBuilder $suffixTypesBuilder,
+        bool $classNamesCacheEnabled
     ): self {
         return (new self())
             ->setConfigItems($configBuilder->build())
             ->setMappingInterfaces($mappingInterfacesBuilder->build())
-            ->setSuffixTypes($suffixTypesBuilder->build());
+            ->setSuffixTypes($suffixTypesBuilder->build())
+            ->setResolvableClassNamesCacheEnabled($classNamesCacheEnabled);
     }
 
     /**
@@ -110,5 +114,17 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     public function getSuffixTypes(): array
     {
         return $this->suffixTypes;
+    }
+
+    public function setResolvableClassNamesCacheEnabled(bool $isCacheEnabled): self
+    {
+        $this->resolvableClassNamesCacheEnabled = $isCacheEnabled;
+
+        return $this;
+    }
+
+    public function isResolvableClassNamesCacheEnabled(): bool
+    {
+        return $this->resolvableClassNamesCacheEnabled;
     }
 }

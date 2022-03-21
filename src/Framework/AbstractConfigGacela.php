@@ -29,4 +29,12 @@ abstract class AbstractConfigGacela
     public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
     {
     }
+
+    /**
+     * Set caching the gacela resolvable class names to improve the performance of the class finder.
+     */
+    public function isResolvableClassNamesCacheEnabled(): bool
+    {
+        return true;
+    }
 }

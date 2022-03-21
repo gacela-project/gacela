@@ -6,7 +6,7 @@ namespace Gacela\Framework\ClassResolver\Cache;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 
-final class FileCached
+final class FileCached implements FileCachedInterface
 {
     /** @var array<string,string> */
     private static array $gacelaFileNameCache = [];
@@ -24,6 +24,10 @@ final class FileCached
     public static function cleanCache(): void
     {
         self::$gacelaFileNameCache = [];
+    }
+
+    public static function dummy(): void
+    {
     }
 
     public function getCachedClassName(ClassInfo $classInfo): ?string

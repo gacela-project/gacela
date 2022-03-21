@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\ClassResolver\Cache\FileCached;
+use Gacela\Framework\ClassResolver\Cache\FileCachedIo;
+use Gacela\Framework\ClassResolver\Cache\FileCachedIoInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Shared\FileIo;
+use Gacela\Framework\Shared\FileIoInterface;
 use function is_array;
 
 abstract class AbstractClassResolver
 {
+    public const GACELA_CACHE_JSON_FILE = 'gacela-cache.json';
+
     /** @var array<string,null|object> */
     private static array $cachedInstances = [];
 
@@ -21,6 +28,8 @@ abstract class AbstractClassResolver
     private ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
     private ?InstanceCreator $instanceCreator = null;
+
+    private ?FileCached $fileCached = null;
 
     abstract public function resolve(object $callerClass): ?object;
 
@@ -55,10 +64,44 @@ abstract class AbstractClassResolver
 
     private function findClassName(ClassInfo $classInfo): ?string
     {
-        return $this->getClassNameFinder()->findClassName(
+        $cachedClassName = $this->getFileCached()->getCachedClassName($classInfo);
+
+        if (null !== $cachedClassName) {
+            return $cachedClassName;
+        }
+
+        $className = $this->getClassNameFinder()->findClassName(
             $classInfo,
             $this->getPossibleResolvableTypes()
         );
+
+        $this->getFileCached()->cacheClassName($classInfo, $className);
+
+        return $className;
+    }
+
+    private function getFileCached(): FileCached
+    {
+        if (null === $this->fileCached) {
+            $this->fileCached = new FileCached(
+                sprintf('/%s/%s', Config::getInstance()->getAppRootDir(), self::GACELA_CACHE_JSON_FILE),
+                $this->createFileCachedIo()
+            );
+        }
+
+        return $this->fileCached;
+    }
+
+    private function createFileCachedIo(): FileCachedIoInterface
+    {
+        return new FileCachedIo(
+            $this->createFileIo()
+        );
+    }
+
+    private function createFileIo(): FileIoInterface
+    {
+        return new FileIo();
     }
 
     private function getClassNameFinder(): ClassNameFinderInterface

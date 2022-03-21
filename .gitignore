@@ -1,8 +1,9 @@
-/coverage/
 /.idea/
 /.vscode/
+/.phpbench/
+/coverage/
 /vendor/
 /data/
-/.phpbench/
 .phpunit.*
 .php-cs-fixer.cache
+gacela-cache.json

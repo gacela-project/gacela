@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
 use Gacela\Framework\AbstractConfigGacela;
-use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Shared\FileIoInterface;
 use RuntimeException;
 use function is_callable;
 

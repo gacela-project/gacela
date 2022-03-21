@@ -6,13 +6,13 @@ namespace GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory;
 
 use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
-use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
+use Gacela\Framework\Shared\FileIoInterface;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
 use PHPUnit\Framework\TestCase;

@@ -10,6 +10,8 @@ use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpF
 use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
 use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
 use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
+use Gacela\Framework\Shared\FileIo;
+use Gacela\Framework\Shared\FileIoInterface;
 
 final class ConfigFactory extends AbstractFactory
 {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\CodeGenerator;
 
+use Gacela\Framework\Gacela;
 use GacelaTest\Feature\CodeGenerator\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
@@ -18,6 +19,7 @@ final class MakeModuleCommandTest extends TestCase
 
     public function setUp(): void
     {
+        Gacela::bootstrap(self::ENTRY_POINT);
         DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
     }
 

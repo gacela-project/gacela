@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\FileCached;
 
 final class Gacela
@@ -16,6 +17,7 @@ final class Gacela
     public static function bootstrap(string $appRootDir, array $globalServices = []): void
     {
         FileCached::cleanCache();
+        AbstractClassResolver::cleanCache();
 
         Config::getInstance()
             ->setAppRootDir($appRootDir)

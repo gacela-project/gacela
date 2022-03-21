@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Shared;
 
+use function file_exists;
+use function file_get_contents;
+use function touch;
+
 final class FileIo implements FileIoInterface
 {
     public function existsFile(string $filename): bool

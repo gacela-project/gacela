@@ -35,6 +35,11 @@ abstract class AbstractClassResolver
 
     abstract public function resolve(object $callerClass): ?object;
 
+    public static function cleanCache(): void
+    {
+        self::$cachedInstances = [];
+    }
+
     public function doResolve(object $callerClass): ?object
     {
         $classInfo = ClassInfo::fromObject($callerClass, $this->getResolvableType());
@@ -67,7 +72,6 @@ abstract class AbstractClassResolver
     private function findClassName(ClassInfo $classInfo): ?string
     {
         $cachedClassName = $this->getFileCached()->getCachedClassName($classInfo);
-
         if (null !== $cachedClassName) {
             return $cachedClassName;
         }

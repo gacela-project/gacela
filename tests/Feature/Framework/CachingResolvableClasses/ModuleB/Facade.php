@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\CachingResolvableClasses\ModuleB;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method Factory getFactory()
+ * @method FactoryB getFactory()
  */
 final class Facade extends AbstractFacade
 {

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CachingResolvableClasses\ModuleE;
+namespace GacelaTest\Feature\Framework\CachingResolvableClasses\ModuleB;
 
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\Container\Container;
 
-final class DependencyProvider extends AbstractDependencyProvider
+final class DepProvB extends AbstractDependencyProvider
 {
     public function provideModuleDependencies(Container $container): void
     {

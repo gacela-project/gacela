@@ -20,7 +20,7 @@ use function is_array;
 
 abstract class AbstractClassResolver
 {
-    public const GACELA_CACHE_JSON_FILE = 'gacela-cache.json';
+    public const GACELA_RESOLVABLE_CACHE_FILE = 'gacela-resolvable-cache.php';
 
     /** @var array<string,null|object> */
     private static array $cachedInstances = [];
@@ -91,7 +91,7 @@ abstract class AbstractClassResolver
         if (null === $this->fileCached) {
             if ($this->getGacelaConfigFile()->isResolvableClassNamesCacheEnabled()) {
                 $this->fileCached = new FileCached(
-                    sprintf('/%s/%s', Config::getInstance()->getAppRootDir(), self::GACELA_CACHE_JSON_FILE),
+                    sprintf('/%s/%s', Config::getInstance()->getAppRootDir(), self::GACELA_RESOLVABLE_CACHE_FILE),
                     $this->createFileCachedIo()
                 );
             } else {

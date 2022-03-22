@@ -25,12 +25,10 @@ final class FileCachedIo implements FileCachedIoInterface
      */
     public function readCacheFile(string $filename): array
     {
-        $fileContent = $this->io->fileGetContents($filename);
+        /** @var array<string,string> $array */
+        $array = $this->io->include($filename);
 
-        /** @var array<string,string> $decoded */
-        $decoded = json_decode($fileContent, true, 512, JSON_THROW_ON_ERROR);
-
-        return $decoded;
+        return $array;
     }
 
     /**
@@ -38,7 +36,7 @@ final class FileCachedIo implements FileCachedIoInterface
      */
     public function writeCachedData(string $filename, array $data): void
     {
-        $fileContent = json_encode($data, JSON_THROW_ON_ERROR);
+        $fileContent = sprintf('<?php return %s;', var_export($data, true));
 
         $this->io->writeFile($filename, $fileContent);
     }

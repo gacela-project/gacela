@@ -8,7 +8,8 @@ use PhpCsFixer\Finder;
 $finder = Finder::create()
     ->files()
     ->in(__DIR__ . '/src')
-    ->in(__DIR__ . '/tests');
+    ->in(__DIR__ . '/tests')
+    ->notName(['*gacela-resolvable-cache.php']);
 
 return (new Config())
     ->setFinder($finder)

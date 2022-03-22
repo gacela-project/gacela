@@ -11,8 +11,6 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 use PHPUnit\Framework\TestCase;
-use function file_get_contents;
-use function json_decode;
 
 final class CreateCacheFileTest extends TestCase
 {
@@ -45,17 +43,14 @@ final class CreateCacheFileTest extends TestCase
         (new ModuleB\Facade())->loadGacelaCacheFile();
         (new ModuleC\Facade())->loadGacelaCacheFile();
 
-        $expectedJson = file_get_contents(__DIR__ . '/gacela-cache-expected.json');
-        $expected = json_decode($expectedJson, true, 512, JSON_THROW_ON_ERROR);
-
-        $actualJson = file_get_contents(self::getGacelaCacheFileName());
-        $actual = json_decode($actualJson, true, 512, JSON_THROW_ON_ERROR);
+        $expected = include __DIR__ . '/gacela-resolvable-cache-expected.php';
+        $actual = include self::getGacelaCacheFileName();
 
         self::assertSame($expected, $actual);
     }
 
     private static function getGacelaCacheFileName(): string
     {
-        return __DIR__ . '/' . AbstractClassResolver::GACELA_CACHE_JSON_FILE;
+        return __DIR__ . '/' . AbstractClassResolver::GACELA_RESOLVABLE_CACHE_FILE;
     }
 }

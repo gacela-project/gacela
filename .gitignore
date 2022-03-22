@@ -6,4 +6,4 @@
 /data/
 .phpunit.*
 .php-cs-fixer.cache
-gacela-cache.json
+gacela-resolvable-cache.php

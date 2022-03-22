@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
+use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -25,7 +26,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      */
     private array $suffixTypes = [];
 
-    private bool $resolvableClassNamesCacheEnabled = true;
+    private bool $resolvableClassNamesCacheEnabled = AbstractConfigGacela::DEFAULT_RESOLVABLE_CLASS_NAMES_CACHE_ENABLED;
 
     private function __construct()
     {

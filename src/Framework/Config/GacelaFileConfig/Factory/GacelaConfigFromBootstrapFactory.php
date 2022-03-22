@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
+use Gacela\Framework\AbstractConfigGacela;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -80,6 +81,7 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         /** @var array{resolvable-class-names-cache-enabled?: bool} $globalServices */
         $globalServices = $this->globalServices;
 
-        return $globalServices['resolvable-class-names-cache-enabled'] ?? true;
+        return $globalServices['resolvable-class-names-cache-enabled']
+            ?? AbstractConfigGacela::DEFAULT_RESOLVABLE_CLASS_NAMES_CACHE_ENABLED;
     }
 }

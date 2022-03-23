@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Cache;
 
-use Gacela\Framework\ClassResolver\ClassInfo;
-
 final class FileCached implements FileCachedInterface
 {
     /** @var array<string,string> */
@@ -30,16 +28,16 @@ final class FileCached implements FileCachedInterface
     {
     }
 
-    public function getCachedClassName(ClassInfo $classInfo): ?string
+    public function getCachedClassName(string $cacheKey): ?string
     {
         if (empty(self::$gacelaFileNameCache) && $this->io->existsCacheFile($this->cacheFilename)) {
             self::$gacelaFileNameCache = $this->io->readCacheFile($this->cacheFilename);
         }
 
-        return self::$gacelaFileNameCache[$classInfo->getCacheKey()] ?? null;
+        return self::$gacelaFileNameCache[$cacheKey] ?? null;
     }
 
-    public function cacheClassName(ClassInfo $classInfo, ?string $className): void
+    public function cacheClassName(string $cacheKey, ?string $className): void
     {
         if (null === $className) {
             return;
@@ -48,11 +46,11 @@ final class FileCached implements FileCachedInterface
         if ($this->io->existsCacheFile($this->cacheFilename)) {
             $currentContent = $this->io->readCacheFile($this->cacheFilename);
             $updatedContent = array_merge($currentContent, [
-                $classInfo->getCacheKey() => $className,
+                $cacheKey => $className,
             ]);
         } else {
             $updatedContent = [
-                $classInfo->getCacheKey() => $className,
+                $cacheKey => $className,
             ];
         }
 

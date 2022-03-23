@@ -71,7 +71,9 @@ abstract class AbstractClassResolver
 
     private function findClassName(ClassInfo $classInfo): ?string
     {
-        $cachedClassName = $this->getFileCached()->getCachedClassName($classInfo);
+        $fileCached = $this->getFileCached();
+        $cachedClassName = $fileCached->getCachedClassName($classInfo->getCacheKey());
+
         if (null !== $cachedClassName) {
             return $cachedClassName;
         }
@@ -81,7 +83,7 @@ abstract class AbstractClassResolver
             $this->getPossibleResolvableTypes()
         );
 
-        $this->getFileCached()->cacheClassName($classInfo, $className);
+        $fileCached->cacheClassName($classInfo->getCacheKey(), $className);
 
         return $className;
     }
@@ -89,7 +91,7 @@ abstract class AbstractClassResolver
     private function getFileCached(): FileCachedInterface
     {
         if (null === $this->fileCached) {
-            if ($this->getGacelaConfigFile()->isResolvableClassNamesCacheEnabled()) {
+            if ($this->getGacelaConfigFile()->isResolvableNamesCacheEnabled()) {
                 $this->fileCached = new FileCached(
                     sprintf('/%s/%s', Config::getInstance()->getAppRootDir(), self::GACELA_RESOLVABLE_CACHE_FILE),
                     $this->createFileCachedIo()

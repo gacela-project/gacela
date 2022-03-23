@@ -13,8 +13,6 @@ interface FileIoInterface
      */
     public function include(string $filename);
 
-    public function fileGetContents(string $filename): string;
-
     /**
      * @param array<array-key,string>|resource|string|null $data The data to write.
      * Can be either a string, an array or a stream resource.

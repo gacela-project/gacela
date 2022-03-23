@@ -54,7 +54,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
             $this->createConfigBuilder($configGacelaClass),
             $this->createMappingInterfacesBuilder($configGacelaClass),
             $this->createSuffixTypesBuilder($configGacelaClass),
-            $configGacelaClass->isResolvableClassNamesCacheEnabled()
+            $configGacelaClass->isResolvableNamesCacheEnabled()
         );
     }
 

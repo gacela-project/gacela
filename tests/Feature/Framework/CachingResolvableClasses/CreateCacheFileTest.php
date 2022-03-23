@@ -21,7 +21,7 @@ final class CreateCacheFileTest extends TestCase
         }
 
         Gacela::bootstrap(__DIR__, [
-            'resolvable-class-names-cache-enabled' => true,
+            'resolvable-names-cache-enabled' => true,
             'mapping-interfaces' => static function (MappingInterfacesBuilder $interfacesBuilder): void {
                 $interfacesBuilder->bind(StringValueInterface::class, new StringValue('testing-string'));
             },

@@ -10,7 +10,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 abstract class AbstractConfigGacela
 {
-    public const DEFAULT_RESOLVABLE_CLASS_NAMES_CACHE_ENABLED = false;
+    public const DEFAULT_RESOLVABLE_NAMES_CACHE_ENABLED = false;
 
     public function config(ConfigBuilder $configBuilder): void
     {
@@ -35,8 +35,8 @@ abstract class AbstractConfigGacela
     /**
      * Set caching the gacela resolvable class names to improve the performance of the class finder.
      */
-    public function isResolvableClassNamesCacheEnabled(): bool
+    public function isResolvableNamesCacheEnabled(): bool
     {
-        return self::DEFAULT_RESOLVABLE_CLASS_NAMES_CACHE_ENABLED;
+        return self::DEFAULT_RESOLVABLE_NAMES_CACHE_ENABLED;
     }
 }

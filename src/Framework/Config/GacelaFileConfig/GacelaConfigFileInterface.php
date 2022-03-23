@@ -29,5 +29,5 @@ interface GacelaConfigFileInterface
      */
     public function getSuffixTypes(): array;
 
-    public function isResolvableClassNamesCacheEnabled(): bool;
+    public function isResolvableNamesCacheEnabled(): bool;
 }

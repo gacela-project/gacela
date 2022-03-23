@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Shared;
 
 use function file_exists;
-use function file_get_contents;
 use function touch;
 
 final class FileIo implements FileIoInterface
@@ -22,11 +21,6 @@ final class FileIo implements FileIoInterface
     {
         /** @psalm-suppress UnresolvableInclude */
         return include $filename;
-    }
-
-    public function fileGetContents(string $filename): string
-    {
-        return file_get_contents($filename); // @phpstan-ignore-line
     }
 
     /**

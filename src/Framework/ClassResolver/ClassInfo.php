@@ -13,6 +13,9 @@ final class ClassInfo
 {
     public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
 
+    /** @var array<string,array<string,self>> */
+    private static array $callerClassCache;
+
     private string $callerModuleName;
     private string $callerNamespace;
     private string $cacheKey;
@@ -31,6 +34,9 @@ final class ClassInfo
     {
         $callerClass = get_class($callerObject);
 
+        if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
+            return self::$callerClassCache[$callerClass][$resolvableType];
+        }
         /** @var string[] $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $lastCallerClassPart = end($callerClassParts);
@@ -52,7 +58,10 @@ final class ClassInfo
             $resolvableType
         ));
 
-        return new self($callerNamespace, $callerModuleName, $cacheKey);
+        $self = new self($callerNamespace, $callerModuleName, $cacheKey);
+        self::$callerClassCache[$callerClass][$resolvableType] = $self;
+
+        return $self;
     }
 
     public function getCacheKey(): string

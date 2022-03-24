@@ -11,7 +11,9 @@ final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, ['isWorking?' => 'yes!']);
+        Gacela::bootstrap(__DIR__, [
+            'global-services' => ['isWorking?' => 'yes!'],
+        ]);
     }
 
     public function test_mapping_interfaces_from_config(): void

@@ -49,13 +49,15 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     private function createMappingInterfacesBuilder(): MappingInterfacesBuilder
     {
-        /** @var array{mapping-interfaces?: callable} $setup */
+        /** @var array{mapping-interfaces?: callable, global-services?: array<string,mixed>} $setup */
         $setup = $this->setup;
 
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
         $mappingInterfacesFn = $setup['mapping-interfaces'] ?? null;
         if (null !== $mappingInterfacesFn) {
-            $mappingInterfacesFn($mappingInterfacesBuilder, $this->setup);
+            $globalServicesFallback = $setup; // @deprecated, the fallback will be an empty array in the next version
+            # $globalServicesFallback = []; // Replacement for the deprecated version
+            $mappingInterfacesFn($mappingInterfacesBuilder, $setup['global-services'] ?? $globalServicesFallback);
         }
 
         return $mappingInterfacesBuilder;

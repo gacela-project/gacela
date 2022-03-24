@@ -67,8 +67,13 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 
     private function createMappingInterfacesBuilder(AbstractConfigGacela $configGacelaClass): MappingInterfacesBuilder
     {
+        /** @var array{global-services?: array<string,mixed>} $setup */
+        $setup = $this->setup;
+
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $configGacelaClass->mappingInterfaces($mappingInterfacesBuilder, $this->setup);
+        $globalServicesFallback = $setup; // @deprecated, the fallback will be an empty array in the next version
+        # $globalServicesFallback = []; // Replacement for the deprecated version
+        $configGacelaClass->mappingInterfaces($mappingInterfacesBuilder, $setup['global-services'] ?? $globalServicesFallback);
 
         return $mappingInterfacesBuilder;
     }

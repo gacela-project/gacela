@@ -18,15 +18,15 @@ final class ConfigFactory extends AbstractFactory
     private string $appRootDir;
 
     /** @var array<string,mixed> */
-    private array $globalServices;
+    private array $setup;
 
     /**
-     * @param array<string,mixed> $globalServices
+     * @param array<string,mixed> $setup
      */
-    public function __construct(string $appRootDir, array $globalServices)
+    public function __construct(string $appRootDir, array $setup)
     {
         $this->appRootDir = $appRootDir;
-        $this->globalServices = $globalServices;
+        $this->setup = $setup;
     }
 
     public function createConfigLoader(): ConfigLoader
@@ -44,10 +44,10 @@ final class ConfigFactory extends AbstractFactory
         $fileIo = $this->createFileIo();
 
         if (!$fileIo->existsFile($gacelaPhpPath)) {
-            return new GacelaConfigFromBootstrapFactory($this->globalServices);
+            return new GacelaConfigFromBootstrapFactory($this->setup);
         }
 
-        return new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->globalServices, $fileIo);
+        return new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
     }
 
     private function createFileIo(): FileIoInterface

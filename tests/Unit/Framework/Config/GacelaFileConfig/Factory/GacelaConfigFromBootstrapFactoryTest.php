@@ -11,6 +11,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
+use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +37,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_config(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
-            'config' => static function (ConfigBuilder $configBuilder): void {
+            Gacela::CONFIG => static function (ConfigBuilder $configBuilder): void {
                 $configBuilder->add('custom-path.php', 'custom-path_local.php');
             },
         ]);
@@ -50,10 +51,10 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_mapping_interfaces_with_global_services(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
-            'global-services' => [
+            Gacela::GLOBAL_SERVICES => [
                 'globalServiceKey' => 'globalServiceValue',
             ],
-            'mapping-interfaces' => static function (
+            Gacela::MAPPING_INTERFACES => static function (
                 MappingInterfacesBuilder $interfacesBuilder,
                 array $globalServices
             ): void {
@@ -71,7 +72,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_suffix_types(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
-            'suffix-types' => static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+            Gacela::SUFFIX_TYPES => static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder->addDependencyProvider('DPCustom');
             },
         ]);

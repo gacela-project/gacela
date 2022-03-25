@@ -10,6 +10,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Gacela;
 
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
@@ -39,7 +40,7 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         $setup = $this->setup;
 
         $configBuilder = new ConfigBuilder();
-        $configFromSetupFn = $setup['config'] ?? null;
+        $configFromSetupFn = $setup[Gacela::CONFIG] ?? null;
         if (null !== $configFromSetupFn) {
             $configFromSetupFn($configBuilder);
         }
@@ -53,11 +54,11 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         $setup = $this->setup;
 
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $mappingInterfacesFn = $setup['mapping-interfaces'] ?? null;
+        $mappingInterfacesFn = $setup[Gacela::MAPPING_INTERFACES] ?? null;
         if (null !== $mappingInterfacesFn) {
             $globalServicesFallback = $setup; // @deprecated, the fallback will be an empty array in the next version
             # $globalServicesFallback = []; // Replacement for the deprecated version
-            $mappingInterfacesFn($mappingInterfacesBuilder, $setup['global-services'] ?? $globalServicesFallback);
+            $mappingInterfacesFn($mappingInterfacesBuilder, $setup[Gacela::GLOBAL_SERVICES] ?? $globalServicesFallback);
         }
 
         return $mappingInterfacesBuilder;
@@ -68,7 +69,7 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         /** @var array{suffix-types?: callable} $setup */
         $setup = $this->setup;
         $suffixTypesBuilder = new SuffixTypesBuilder();
-        $suffixTypesFn = $setup['suffix-types'] ?? null;
+        $suffixTypesFn = $setup[Gacela::SUFFIX_TYPES] ?? null;
         if (null !== $suffixTypesFn) {
             $suffixTypesFn($suffixTypesBuilder);
         }

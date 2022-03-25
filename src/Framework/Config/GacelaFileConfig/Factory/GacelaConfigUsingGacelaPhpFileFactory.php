@@ -12,6 +12,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Gacela;
 use RuntimeException;
 use function is_callable;
 
@@ -73,7 +74,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
         $globalServicesFallback = $setup; // @deprecated, the fallback will be an empty array in the next version
         # $globalServicesFallback = []; // Replacement for the deprecated version
-        $configGacelaClass->mappingInterfaces($mappingInterfacesBuilder, $setup['global-services'] ?? $globalServicesFallback);
+        $configGacelaClass->mappingInterfaces($mappingInterfacesBuilder, $setup[Gacela::GLOBAL_SERVICES] ?? $globalServicesFallback);
 
         return $mappingInterfacesBuilder;
     }

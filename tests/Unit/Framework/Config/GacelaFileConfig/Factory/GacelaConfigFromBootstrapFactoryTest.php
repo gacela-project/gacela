@@ -12,6 +12,9 @@ use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFa
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Setup\SetupGacela;
+use Gacela\Framework\Setup\SetupGacelaFactory;
+use Gacela\Framework\Setup\SetupGacelaInterface;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
 use PHPUnit\Framework\TestCase;
@@ -20,27 +23,32 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
 {
     public function test_no_global_services_then_default(): void
     {
-        $factory = new GacelaConfigFromBootstrapFactory([]);
+        $factory = new GacelaConfigFromBootstrapFactory(
+            $this->createStub(SetupGacelaInterface::class)
+        );
 
         self::assertEquals(GacelaConfigFile::withDefaults(), $factory->createGacelaFileConfig());
     }
 
     public function test_no_special_global_services_then_default(): void
     {
-        $factory = new GacelaConfigFromBootstrapFactory([
+        $setupGacela = $this->createStub(SetupGacelaInterface::class);
+        $setupGacela->method('globalServices')->willReturn([
             'randomKey' => 'randomValue',
         ]);
+
+        $factory = new GacelaConfigFromBootstrapFactory($setupGacela);
 
         self::assertEquals(GacelaConfigFile::withDefaults(), $factory->createGacelaFileConfig());
     }
 
     public function test_global_service_config(): void
     {
-        $factory = new GacelaConfigFromBootstrapFactory([
-            Gacela::CONFIG => static function (ConfigBuilder $configBuilder): void {
+        $factory = new GacelaConfigFromBootstrapFactory((new SetupGacela())->setConfig(
+            static function (ConfigBuilder $configBuilder): void {
                 $configBuilder->add('custom-path.php', 'custom-path_local.php');
-            },
-        ]);
+            }
+        ));
 
         $expected = GacelaConfigFile::withDefaults()
             ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())]);
@@ -50,18 +58,22 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
 
     public function test_global_service_mapping_interfaces_with_global_services(): void
     {
-        $factory = new GacelaConfigFromBootstrapFactory([
-            Gacela::GLOBAL_SERVICES => [
-                'globalServiceKey' => 'globalServiceValue',
-            ],
-            Gacela::MAPPING_INTERFACES => static function (
-                MappingInterfacesBuilder $interfacesBuilder,
-                array $globalServices
-            ): void {
-                self::assertSame($globalServices['globalServiceKey'], 'globalServiceValue');
-                $interfacesBuilder->bind(CustomInterface::class, CustomClass::class);
-            },
-        ]);
+        $factory = new GacelaConfigFromBootstrapFactory(
+            SetupGacelaFactory::fromArray(
+                [
+                    Gacela::GLOBAL_SERVICES => [
+                        'globalServiceKey' => 'globalServiceValue',
+                    ],
+                    Gacela::MAPPING_INTERFACES => static function (
+                        MappingInterfacesBuilder $interfacesBuilder,
+                        array $globalServices
+                    ): void {
+                        self::assertSame($globalServices['globalServiceKey'], 'globalServiceValue');
+                        $interfacesBuilder->bind(CustomInterface::class, CustomClass::class);
+                    },
+                ]
+            )
+        );
 
         $expected = GacelaConfigFile::withDefaults()
             ->setMappingInterfaces([CustomInterface::class => CustomClass::class]);
@@ -71,11 +83,12 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
 
     public function test_global_service_suffix_types(): void
     {
-        $factory = new GacelaConfigFromBootstrapFactory([
-            Gacela::SUFFIX_TYPES => static function (SuffixTypesBuilder $suffixTypesBuilder): void {
-                $suffixTypesBuilder->addDependencyProvider('DPCustom');
-            },
-        ]);
+        $factory = new GacelaConfigFromBootstrapFactory((new SetupGacela())
+            ->setSuffixTypes(
+                static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+                    $suffixTypesBuilder->addDependencyProvider('DPCustom');
+                },
+            ));
 
         $expected = GacelaConfigFile::withDefaults()
             ->setSuffixTypes([

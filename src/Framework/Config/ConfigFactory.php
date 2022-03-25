@@ -10,6 +10,7 @@ use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpF
 use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
 use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
 use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
+use Gacela\Framework\Setup\SetupGacelaInterface;
 
 final class ConfigFactory extends AbstractFactory
 {
@@ -17,13 +18,9 @@ final class ConfigFactory extends AbstractFactory
 
     private string $appRootDir;
 
-    /** @var array<string,mixed> */
-    private array $setup;
+    private SetupGacelaInterface $setup;
 
-    /**
-     * @param array<string,mixed> $setup
-     */
-    public function __construct(string $appRootDir, array $setup)
+    public function __construct(string $appRootDir, SetupGacelaInterface $setup)
     {
         $this->appRootDir = $appRootDir;
         $this->setup = $setup;

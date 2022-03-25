@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Setup\SetupGacela;
+use Gacela\Framework\Setup\SetupGacelaFactory;
+use Gacela\Framework\Setup\SetupGacelaInterface;
+use function is_array;
+
 final class Gacela
 {
     public const CONFIG = 'config';
@@ -14,13 +19,41 @@ final class Gacela
     /**
      * Define the entry point of Gacela.
      *
-     * @param array<string,mixed> $setup
+     * @psalm-suppress ArgumentTypeCoercion
+     *
+     * @param array|SetupGacelaInterface|null $setup array to allow BC. Use SetupGacelaInterface instead.
      */
-    public static function bootstrap(string $appRootDir, array $setup = []): void
+    public static function bootstrap(string $appRootDir, $setup = null): void
     {
+        $setup = self::normalizeSetup($setup);
+
         Config::getInstance()
             ->setAppRootDir($appRootDir)
             ->setSetup($setup)
             ->init();
+    }
+
+    /**
+     * @param array|SetupGacelaInterface|null $setup
+     */
+    private static function normalizeSetup($setup = null): SetupGacelaInterface
+    {
+        if (is_array($setup)) {
+            trigger_deprecation('Gacela', '0.14', 'Use SetupGacelaInterface instead');
+
+            /**
+             * @psalm-suppress InvalidArgument
+             *
+             * @var array{
+             *     config?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder):void,
+             *     mapping-interfaces?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder, array<string,mixed>):void,
+             *     suffix-types?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder):void,
+             *     global-services?: array<string,mixed>,
+             * } $setup
+             */
+            return SetupGacelaFactory::fromArray($setup);
+        }
+
+        return $setup ?? new SetupGacela();
     }
 }

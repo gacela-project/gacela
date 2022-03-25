@@ -6,6 +6,8 @@ namespace Gacela\Framework;
 
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Exception\ConfigException;
+use Gacela\Framework\Setup\SetupGacela;
+use Gacela\Framework\Setup\SetupGacelaInterface;
 
 final class Config
 {
@@ -18,8 +20,7 @@ final class Config
     /** @var array<string,mixed> */
     private array $config = [];
 
-    /** @var array<string,mixed> */
-    private array $setup = [];
+    private ?SetupGacelaInterface $setup = null;
 
     private ?ConfigFactory $configFactory = null;
 
@@ -95,10 +96,7 @@ final class Config
         return $this->appRootDir ?? getcwd() ?: '';
     }
 
-    /**
-     * @param array<string,mixed> $setup
-     */
-    public function setSetup(array $setup): self
+    public function setSetup(SetupGacelaInterface $setup): self
     {
         $this->setup = $setup;
 
@@ -113,7 +111,7 @@ final class Config
         if (null === $this->configFactory) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
-                $this->setup
+                $this->setup ?? new SetupGacela()
             );
         }
 

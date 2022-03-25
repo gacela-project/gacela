@@ -61,8 +61,6 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @psalm-suppress MixedPropertyTypeCoercion
-     *
      * @param callable(SuffixTypesBuilder):void $callable
      */
     public function setSuffixTypes(callable $callable): self

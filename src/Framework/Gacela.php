@@ -19,8 +19,6 @@ final class Gacela
     /**
      * Define the entry point of Gacela.
      *
-     * @psalm-suppress ArgumentTypeCoercion
-     *
      * @param array|SetupGacelaInterface|null $setup array to allow BC. Use SetupGacelaInterface instead.
      */
     public static function bootstrap(string $appRootDir, $setup = null): void
@@ -42,8 +40,6 @@ final class Gacela
             trigger_deprecation('Gacela', '0.14', 'Use SetupGacelaInterface instead');
 
             /**
-             * @psalm-suppress InvalidArgument
-             *
              * @var array{
              *     config?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder):void,
              *     mapping-interfaces?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder, array<string,mixed>):void,

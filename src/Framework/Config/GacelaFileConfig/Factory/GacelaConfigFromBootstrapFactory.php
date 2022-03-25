@@ -14,14 +14,14 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
     /** @var array<string,mixed> */
-    private array $globalServices;
+    private array $setup;
 
     /**
-     * @param array<string,mixed> $globalServices
+     * @param array<string,mixed> $setup
      */
-    public function __construct(array $globalServices)
+    public function __construct(array $setup)
     {
-        $this->globalServices = $globalServices;
+        $this->setup = $setup;
     }
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
@@ -35,13 +35,13 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     private function createConfigBuilder(): ConfigBuilder
     {
-        /** @var array{config?: callable} $configFromGlobalServices */
-        $configFromGlobalServices = $this->globalServices;
+        /** @var array{config?: callable} $setup */
+        $setup = $this->setup;
 
         $configBuilder = new ConfigBuilder();
-        $configFromGlobalServicesFn = $configFromGlobalServices['config'] ?? null;
-        if (null !== $configFromGlobalServicesFn) {
-            $configFromGlobalServicesFn($configBuilder);
+        $configFromSetupFn = $setup['config'] ?? null;
+        if (null !== $configFromSetupFn) {
+            $configFromSetupFn($configBuilder);
         }
 
         return $configBuilder;
@@ -49,13 +49,15 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     private function createMappingInterfacesBuilder(): MappingInterfacesBuilder
     {
-        /** @var array{mapping-interfaces?: callable} $configFromGlobalServices */
-        $configFromGlobalServices = $this->globalServices;
+        /** @var array{mapping-interfaces?: callable, global-services?: array<string,mixed>} $setup */
+        $setup = $this->setup;
 
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $mappingInterfacesFn = $configFromGlobalServices['mapping-interfaces'] ?? null;
+        $mappingInterfacesFn = $setup['mapping-interfaces'] ?? null;
         if (null !== $mappingInterfacesFn) {
-            $mappingInterfacesFn($mappingInterfacesBuilder, $this->globalServices);
+            $globalServicesFallback = $setup; // @deprecated, the fallback will be an empty array in the next version
+            # $globalServicesFallback = []; // Replacement for the deprecated version
+            $mappingInterfacesFn($mappingInterfacesBuilder, $setup['global-services'] ?? $globalServicesFallback);
         }
 
         return $mappingInterfacesBuilder;
@@ -63,10 +65,10 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     private function createSuffixTypesBuilder(): SuffixTypesBuilder
     {
-        /** @var array{suffix-types?: callable} $configFromGlobalServices */
-        $configFromGlobalServices = $this->globalServices;
+        /** @var array{suffix-types?: callable} $setup */
+        $setup = $this->setup;
         $suffixTypesBuilder = new SuffixTypesBuilder();
-        $suffixTypesFn = $configFromGlobalServices['suffix-types'] ?? null;
+        $suffixTypesFn = $setup['suffix-types'] ?? null;
         if (null !== $suffixTypesFn) {
             $suffixTypesFn($suffixTypesBuilder);
         }

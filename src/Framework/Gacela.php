@@ -9,13 +9,13 @@ final class Gacela
     /**
      * Define the entry point of Gacela.
      *
-     * @param array<string,mixed> $globalServices
+     * @param array<string,mixed> $setup
      */
-    public static function bootstrap(string $appRootDir, array $globalServices = []): void
+    public static function bootstrap(string $appRootDir, array $setup = []): void
     {
         Config::getInstance()
             ->setAppRootDir($appRootDir)
-            ->setGlobalServices($globalServices)
+            ->setSetup($setup)
             ->init();
     }
 }

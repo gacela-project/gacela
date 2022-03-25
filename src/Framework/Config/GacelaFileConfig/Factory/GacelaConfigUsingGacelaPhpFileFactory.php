@@ -20,20 +20,20 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
     private string $gacelaPhpPath;
 
     /** @var array<string,mixed> */
-    private array $globalServices;
+    private array $setup;
 
     private FileIoInterface $fileIo;
 
     /**
-     * @param array<string,mixed> $globalServices
+     * @param array<string,mixed> $setup
      */
     public function __construct(
         string $gacelaPhpPath,
-        array $globalServices,
+        array $setup,
         FileIoInterface $fileIo
     ) {
         $this->gacelaPhpPath = $gacelaPhpPath;
-        $this->globalServices = $globalServices;
+        $this->setup = $setup;
         $this->fileIo = $fileIo;
     }
 
@@ -67,8 +67,13 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 
     private function createMappingInterfacesBuilder(AbstractConfigGacela $configGacelaClass): MappingInterfacesBuilder
     {
+        /** @var array{global-services?: array<string,mixed>} $setup */
+        $setup = $this->setup;
+
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $configGacelaClass->mappingInterfaces($mappingInterfacesBuilder, $this->globalServices);
+        $globalServicesFallback = $setup; // @deprecated, the fallback will be an empty array in the next version
+        # $globalServicesFallback = []; // Replacement for the deprecated version
+        $configGacelaClass->mappingInterfaces($mappingInterfacesBuilder, $setup['global-services'] ?? $globalServicesFallback);
 
         return $mappingInterfacesBuilder;
     }

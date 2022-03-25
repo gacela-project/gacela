@@ -19,7 +19,7 @@ final class Config
     private array $config = [];
 
     /** @var array<string,mixed> */
-    private array $globalServices = [];
+    private array $setup = [];
 
     private ?ConfigFactory $configFactory = null;
 
@@ -96,11 +96,11 @@ final class Config
     }
 
     /**
-     * @param array<string,mixed> $globalServices
+     * @param array<string,mixed> $setup
      */
-    public function setGlobalServices(array $globalServices): self
+    public function setSetup(array $setup): self
     {
-        $this->globalServices = $globalServices;
+        $this->setup = $setup;
 
         return $this;
     }
@@ -113,7 +113,7 @@ final class Config
         if (null === $this->configFactory) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
-                $this->globalServices
+                $this->setup
             );
         }
 

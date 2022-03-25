@@ -50,6 +50,9 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_mapping_interfaces_with_global_services(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory([
+            'global-services' => [
+                'globalServiceKey' => 'globalServiceValue',
+            ],
             'mapping-interfaces' => static function (
                 MappingInterfacesBuilder $interfacesBuilder,
                 array $globalServices
@@ -57,7 +60,6 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
                 self::assertSame($globalServices['globalServiceKey'], 'globalServiceValue');
                 $interfacesBuilder->bind(CustomInterface::class, CustomClass::class);
             },
-            'globalServiceKey' => 'globalServiceValue',
         ]);
 
         $expected = GacelaConfigFile::withDefaults()

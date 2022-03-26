@@ -30,7 +30,7 @@ final class Config
 
     public static function getInstance(): self
     {
-        if (null === self::$instance) {
+        if (self::$instance === null) {
             self::$instance = new self();
         }
 
@@ -58,7 +58,7 @@ final class Config
             $this->init();
         }
 
-        if (self::DEFAULT_CONFIG_VALUE !== $default && !$this->hasValue($key)) {
+        if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasValue($key)) {
             return $default;
         }
 
@@ -108,7 +108,7 @@ final class Config
      */
     public function getFactory(): ConfigFactory
     {
-        if (null === $this->configFactory) {
+        if ($this->configFactory === null) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
                 $this->setup ?? new SetupGacela()

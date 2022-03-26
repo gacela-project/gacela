@@ -13,7 +13,7 @@ trait ConfigResolverAwareTrait
 
     protected function getConfig(): AbstractConfig
     {
-        if (null === $this->config) {
+        if ($this->config === null) {
             $this->config = $this->resolveConfig();
         }
 

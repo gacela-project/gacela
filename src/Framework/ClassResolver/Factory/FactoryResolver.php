@@ -17,7 +17,7 @@ final class FactoryResolver extends AbstractClassResolver
         /** @var ?AbstractFactory $resolved */
         $resolved = $this->doResolve($callerClass);
 
-        if (null === $resolved) {
+        if ($resolved === null) {
             throw new FactoryNotFoundException($callerClass);
         }
 

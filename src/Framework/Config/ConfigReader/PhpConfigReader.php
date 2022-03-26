@@ -27,7 +27,7 @@ final class PhpConfigReader implements ConfigReaderInterface
          */
         $content = include $absolutePath;
 
-        if (null === $content) {
+        if ($content === null) {
             return [];
         }
 
@@ -49,6 +49,6 @@ final class PhpConfigReader implements ConfigReaderInterface
     {
         $extension = pathinfo($absolutePath, PATHINFO_EXTENSION);
 
-        return 'php' === $extension && file_exists($absolutePath);
+        return $extension === 'php' && file_exists($absolutePath);
     }
 }

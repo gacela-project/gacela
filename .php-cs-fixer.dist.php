@@ -42,7 +42,7 @@ return (new Config())
             'import_functions' => true,
         ],
         'include' => true,
-        'increment_style' => true,
+        'increment_style' => ['style' => 'pre'],
         'list_syntax' => ['syntax' => 'short'],
         'native_function_invocation' => [
             'include' => ['@compiler_optimized'],
@@ -56,7 +56,7 @@ return (new Config())
         'no_homoglyph_names' => true,
         'no_leading_import_slash' => true,
         'no_leading_namespace_whitespace' => true,
-        'no_mixed_echo_print' => true,
+        'no_mixed_echo_print' => ['use' => 'echo'],
         'no_multiline_whitespace_around_double_arrow' => true,
         'no_singleline_whitespace_before_semicolons' => true,
         'no_short_bool_cast' => true,
@@ -104,8 +104,6 @@ return (new Config())
         'standardize_increment' => true,
         'standardize_not_equals' => true,
         'static_lambda' => true,
-        'strict_comparison' => true,
-        'strict_param' => true,
         'switch_case_semicolon_to_colon' => true,
         'switch_case_space' => true,
         'switch_continue_to_break' => true,
@@ -120,5 +118,9 @@ return (new Config())
         'types_spaces' => true,
         'visibility_required' => true,
         'void_return' => true,
-        'yoda_style' => true,
+        'yoda_style' => [
+            'equal' => false,
+            'identical' => false,
+            'less_and_greater' => null,
+        ],
     ]);

@@ -8,10 +8,6 @@ use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use GacelaTest\Fixtures\ClassInfoTestingFacade;
 
-/**
- * @Iterations(5)
- * @Revs(1000)
- */
 final class ClassInfoBench
 {
     public function bench_anonymous_class(): void

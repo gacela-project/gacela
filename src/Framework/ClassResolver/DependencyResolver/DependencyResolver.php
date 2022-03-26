@@ -113,7 +113,7 @@ final class DependencyResolver
         /** @var mixed $concreteClass */
         $concreteClass = $this->gacelaConfigFile->getMappingInterface($reflection->getName());
 
-        if (null !== $concreteClass) {
+        if ($concreteClass !== null) {
             /** @var class-string $concreteClass */
             return new ReflectionClass($concreteClass);
         }

@@ -13,8 +13,6 @@ use Gacela\Framework\Container\Container;
 
 /**
  * @BeforeMethods("setUp")
- * @Revs(100)
- * @Iterations(10)
  */
 final class AnonymousGlobalsBench
 {

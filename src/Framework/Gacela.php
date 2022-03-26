@@ -19,15 +19,14 @@ final class Gacela
     /**
      * Define the entry point of Gacela.
      *
-     * @param array|SetupGacelaInterface|null $setup array to allow BC. Use SetupGacelaInterface instead.
+     * @param array|SetupGacelaInterface|null $setup Use SetupGacelaInterface.
+     *      Array is deprecated and will be removed in the next version.
      */
     public static function bootstrap(string $appRootDir, $setup = null): void
     {
-        $setup = self::normalizeSetup($setup);
-
         Config::getInstance()
             ->setAppRootDir($appRootDir)
-            ->setSetup($setup)
+            ->setSetup(self::normalizeSetup($setup))
             ->init();
     }
 
@@ -37,7 +36,7 @@ final class Gacela
     private static function normalizeSetup($setup = null): SetupGacelaInterface
     {
         if (is_array($setup)) {
-            trigger_deprecation('Gacela', '0.14', 'Use SetupGacelaInterface instead');
+            trigger_deprecation('Gacela', '0.14', 'Use SetupGacelaInterface instead.');
 
             /**
              * @var array{

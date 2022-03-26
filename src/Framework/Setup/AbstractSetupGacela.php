@@ -10,6 +10,9 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 abstract class AbstractSetupGacela implements SetupGacelaInterface
 {
+    /**
+     * Define different config sources.
+     */
     public function config(ConfigBuilder $configBuilder): void
     {
     }
@@ -24,17 +27,17 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     }
 
     /**
+     * Allow overriding gacela resolvable types.
+     */
+    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
+    {
+    }
+
+    /**
      * @return array<string,mixed>
      */
     public function globalServices(): array
     {
         return [];
-    }
-
-    /**
-     * Allow overriding gacela resolvable types.
-     */
-    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
-    {
     }
 }

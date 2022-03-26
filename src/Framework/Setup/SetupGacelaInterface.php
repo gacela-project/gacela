@@ -10,6 +10,9 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 interface SetupGacelaInterface
 {
+    /**
+     * Define different config sources.
+     */
     public function config(ConfigBuilder $configBuilder): void;
 
     /**
@@ -20,14 +23,14 @@ interface SetupGacelaInterface
     public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void;
 
     /**
+     * Allow overriding gacela resolvable types.
+     */
+    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void;
+
+    /**
      * Define global services that can be accessible via the mapping interfaces.
      *
      * @return array<string,mixed>
      */
     public function globalServices(): array;
-
-    /**
-     * Allow overriding gacela resolvable types.
-     */
-    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void;
 }

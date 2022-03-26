@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.15.0
+#### 2022-03-26
+
+- Updated ClassInfo improve performance adding cache.
+- Renamed GlobalServices to Setup.
+- Added SetupGacela to replace AbstractConfigGacela.
+- Added support for dark mode logo.
+
 ### 0.14.0
 #### 2022-03-14
 

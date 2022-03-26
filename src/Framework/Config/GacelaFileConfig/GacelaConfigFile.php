@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 final class GacelaConfigFile implements GacelaConfigFileInterface
@@ -25,26 +23,11 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      */
     private array $suffixTypes = [];
 
-    private function __construct()
-    {
-    }
-
     public static function withDefaults(): self
     {
         return (new self())
             ->setConfigItems([new GacelaConfigItem()])
             ->setSuffixTypes(SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES);
-    }
-
-    public static function usingBuilders(
-        ConfigBuilder $configBuilder,
-        MappingInterfacesBuilder $mappingInterfacesBuilder,
-        SuffixTypesBuilder $suffixTypesBuilder
-    ): self {
-        return (new self())
-            ->setConfigItems($configBuilder->build())
-            ->setMappingInterfaces($mappingInterfacesBuilder->build())
-            ->setSuffixTypes($suffixTypesBuilder->build());
     }
 
     /**

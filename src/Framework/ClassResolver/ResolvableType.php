@@ -30,7 +30,7 @@ final class ResolvableType
     public static function fromClassName(string $className): self
     {
         foreach (self::DEFAULT_ALLOWED_TYPES as $resolvableType) {
-            if (false !== strpos($className, $resolvableType)) {
+            if (strpos($className, $resolvableType) !== false) {
                 $moduleName = substr($className, 0, strlen($className) - strlen($resolvableType));
                 return new self($resolvableType, $moduleName);
             }

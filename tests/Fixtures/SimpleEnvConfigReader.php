@@ -23,7 +23,7 @@ final class SimpleEnvConfigReader implements ConfigReaderInterface
         $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
         foreach ($lines as $line) {
-            if (0 === strncmp(trim($line), '#', 1)) {
+            if (strncmp(trim($line), '#', 1) === 0) {
                 continue;
             }
 
@@ -36,7 +36,7 @@ final class SimpleEnvConfigReader implements ConfigReaderInterface
 
     private function canRead(string $absolutePath): bool
     {
-        return false !== strpos($absolutePath, '.env')
+        return strpos($absolutePath, '.env') !== false
             && is_file($absolutePath);
     }
 }

@@ -30,12 +30,12 @@ abstract class AbstractClassResolver
         $cacheKey = $classInfo->getCacheKey();
 
         $resolvedClass = $this->resolveCached($cacheKey);
-        if (null !== $resolvedClass) {
+        if ($resolvedClass !== null) {
             return $resolvedClass;
         }
 
         $resolvedClassName = $this->findClassName($classInfo);
-        if (null === $resolvedClassName) {
+        if ($resolvedClassName === null) {
             return null;
         }
 
@@ -63,7 +63,7 @@ abstract class AbstractClassResolver
 
     private function getClassNameFinder(): ClassNameFinderInterface
     {
-        if (null === $this->classNameFinder) {
+        if ($this->classNameFinder === null) {
             $this->classNameFinder = (new ClassResolverFactory())
                 ->createClassNameFinder();
         }
@@ -87,7 +87,7 @@ abstract class AbstractClassResolver
 
     private function createInstance(string $resolvedClassName): ?object
     {
-        if (null === $this->instanceCreator) {
+        if ($this->instanceCreator === null) {
             $this->instanceCreator = new InstanceCreator($this->getGacelaConfigFile());
         }
 
@@ -96,7 +96,7 @@ abstract class AbstractClassResolver
 
     private function getGacelaConfigFile(): GacelaConfigFileInterface
     {
-        if (null === $this->gacelaFileConfig) {
+        if ($this->gacelaFileConfig === null) {
             $this->gacelaFileConfig = Config::getInstance()
                 ->getFactory()
                 ->createGacelaConfigFileFactory()

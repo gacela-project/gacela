@@ -12,7 +12,7 @@ trait FactoryResolverAwareTrait
 
     protected function getFactory(): AbstractFactory
     {
-        if (null === $this->factory) {
+        if ($this->factory === null) {
             $this->factory = (new FactoryResolver())->resolve($this);
         }
 

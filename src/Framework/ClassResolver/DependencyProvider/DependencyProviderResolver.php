@@ -17,7 +17,7 @@ final class DependencyProviderResolver extends AbstractClassResolver
         /** @var ?AbstractDependencyProvider $resolved */
         $resolved = $this->doResolve($callerClass);
 
-        if (null === $resolved) {
+        if ($resolved === null) {
             throw new DependencyProviderNotFoundException($callerClass);
         }
 

@@ -23,7 +23,7 @@ return static fn () => (new SetupGacela())
     ): void {
         $mappingInterfacesBuilder->bind(GreeterGeneratorInterface::class, IncorrectCompanyGenerator::class);
 
-        if ('yes!' === $globalServices['isWorking?']) {
+        if ($globalServices['isWorking?'] === 'yes!') {
             $mappingInterfacesBuilder->bind(GreeterGeneratorInterface::class, CorrectCompanyGenerator::class);
         }
     });

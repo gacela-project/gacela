@@ -43,7 +43,7 @@ final class ClassInfo
         $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
         $filename = self::normalizeFilename($filepath);
 
-        if (false !== strpos($filepath, 'anonymous')) {
+        if (strpos($filepath, 'anonymous') !== false) {
             $callerClassParts = [
                 self::MODULE_NAME_ANONYMOUS . '\\' . $filename,
                 $filepath,

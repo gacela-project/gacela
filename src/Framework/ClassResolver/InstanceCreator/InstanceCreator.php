@@ -39,7 +39,7 @@ final class InstanceCreator
 
     private function getDependencyResolver(): DependencyResolver
     {
-        if (null === $this->dependencyResolver) {
+        if ($this->dependencyResolver === null) {
             $this->dependencyResolver = new DependencyResolver(
                 $this->gacelaConfigFile
             );

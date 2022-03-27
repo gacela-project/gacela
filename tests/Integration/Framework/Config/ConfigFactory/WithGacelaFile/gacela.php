@@ -11,17 +11,17 @@ use GacelaTest\Fixtures\CustomInterface;
 
 return static fn () => (new SetupGacela())
     ->setConfig(static function (ConfigBuilder $builder): void {
-        $builder->add('config/from-gacela.php');
+        $builder->add('config/from-gacela-file.php');
     })
-    ->setGlobalServices(['CustomClass' => CustomClass::class])
+    ->setGlobalServices(['CustomClassFromGacelaFile' => CustomClass::class])
     ->setMappingInterfaces(
         static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void {
-            $mappingInterfacesBuilder->bind(CustomInterface::class, $globalServices['CustomClass']);
+            $mappingInterfacesBuilder->bind(CustomInterface::class, $globalServices['CustomClassFromGacelaFile']);
         },
     )
     ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
         $suffixTypesBuilder
-            ->addFactory('Fact')
-            ->addConfig('Conf')
-            ->addDependencyProvider('DepPro');
+            ->addFactory('FactoryFromGacelaFile')
+            ->addConfig('ConfigFromGacelaFile')
+            ->addDependencyProvider('DependencyProviderFromGacelaFile');
     });

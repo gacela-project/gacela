@@ -19,6 +19,10 @@ interface GacelaConfigFileInterface
      */
     public function getMappingInterface(string $key);
 
+    /**
+     * @return array<class-string,class-string|callable|object>
+     */
+    public function getMappingInterfaces(): array;
 
     /**
      * @return array{
@@ -28,4 +32,9 @@ interface GacelaConfigFileInterface
      * }
      */
     public function getSuffixTypes(): array;
+
+    /**
+     * Combine one GacelaConfigFile with another.
+     */
+    public function combine(self $other): self;
 }

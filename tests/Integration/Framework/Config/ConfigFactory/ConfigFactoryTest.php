@@ -23,7 +23,6 @@ final class ConfigFactoryTest extends TestCase
         $bootstrapSetup = new SetupGacela();
 
         $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $bootstrapSetup))
-            ->createGacelaConfigFileFactory()
             ->createGacelaFileConfig();
 
         $expected = GacelaConfigFile::withDefaults();
@@ -36,11 +35,11 @@ final class ConfigFactoryTest extends TestCase
         $bootstrapSetup = new SetupGacela();
 
         $actual = (new ConfigFactory(__DIR__ . '/WithGacelaFile', $bootstrapSetup))
-            ->createGacelaConfigFileFactory()
             ->createGacelaFileConfig();
 
         $expected = (new GacelaConfigFile())
             ->setConfigItems([
+                new GacelaConfigItem(),
                 new GacelaConfigItem('config/from-gacela-file.php', ''),
             ])
             ->setMappingInterfaces([
@@ -78,7 +77,6 @@ final class ConfigFactoryTest extends TestCase
             });
 
         $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $bootstrapSetup))
-            ->createGacelaConfigFileFactory()
             ->createGacelaFileConfig();
 
         $expected = (new GacelaConfigFile())
@@ -117,21 +115,28 @@ final class ConfigFactoryTest extends TestCase
             });
 
         $actual = (new ConfigFactory(__DIR__ . '/WithGacelaFile', $bootstrapSetup))
-            ->createGacelaConfigFileFactory()
             ->createGacelaFileConfig();
 
         $expected = (new GacelaConfigFile())
             ->setConfigItems([
                 new GacelaConfigItem('config/from-bootstrap.php', ''),
-                new GacelaConfigItem('config/from-gacela.php', ''),
+                new GacelaConfigItem('config/from-gacela-file.php', ''),
             ])
             ->setMappingInterfaces([
-                AbstractCustom::class => CustomClass::class,
                 CustomInterface::class => CustomClass::class,
+                AbstractCustom::class => CustomClass::class,
             ])
             ->setSuffixTypes([
-                'Factory' => ['Factory', 'FactoryFromBootstrap', 'FactoryFromGacelaFile'],
-                'Config' => ['Config', 'ConfigFromBootstrap', 'ConfigFromGacelaFile'],
+                'Factory' => [
+                    'Factory',
+                    'FactoryFromBootstrap',
+                    'FactoryFromGacelaFile',
+                ],
+                'Config' => [
+                    'Config',
+                    'ConfigFromBootstrap',
+                    'ConfigFromGacelaFile',
+                ],
                 'DependencyProvider' => [
                     'DependencyProvider',
                     'DependencyProviderFromBootstrap',

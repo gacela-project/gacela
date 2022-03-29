@@ -99,7 +99,6 @@ abstract class AbstractClassResolver
         if ($this->gacelaFileConfig === null) {
             $this->gacelaFileConfig = Config::getInstance()
                 ->getFactory()
-                ->createGacelaConfigFileFactory()
                 ->createGacelaFileConfig();
         }
 

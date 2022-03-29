@@ -26,7 +26,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     public static function withDefaults(): self
     {
         return (new self())
-            ->setConfigItems([new GacelaConfigItem()]);
+            ->setConfigItems([GacelaConfigItem::withDefaults()]);
     }
 
     /**

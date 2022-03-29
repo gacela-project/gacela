@@ -33,8 +33,8 @@ final class ConfigBuilder
      */
     public function build(): array
     {
-        if (empty($this->configItems)) {
-            return [new GacelaConfigItem()];
+        if ($this->configItems === []) {
+            return [GacelaConfigItem::withDefaults()];
         }
 
         return $this->configItems;

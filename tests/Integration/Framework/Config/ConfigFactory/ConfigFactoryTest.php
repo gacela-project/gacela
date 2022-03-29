@@ -39,7 +39,7 @@ final class ConfigFactoryTest extends TestCase
 
         $expected = (new GacelaConfigFile())
             ->setConfigItems([
-                new GacelaConfigItem(),
+                GacelaConfigItem::withDefaults(),
                 new GacelaConfigItem('config/from-gacela-file.php', ''),
             ])
             ->setMappingInterfaces([

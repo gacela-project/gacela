@@ -20,6 +20,20 @@ final class AnonymousGlobalsBench
 
     public function setUp(): void
     {
+        $this->abstractConfig();
+        $this->abstractDependencyProvider();
+        $this->abstractFactory();
+        $this->abstractFacade();
+    }
+
+    public function bench_class_resolving(): void
+    {
+        $this->facade->getConfigValues();
+        $this->facade->getValueFromDependencyProvider();
+    }
+
+    private function abstractConfig(): void
+    {
         AnonymousGlobal::addGlobal(
             $this,
             new class() extends AbstractConfig {
@@ -29,7 +43,10 @@ final class AnonymousGlobalsBench
                 }
             }
         );
+    }
 
+    private function abstractDependencyProvider(): void
+    {
         AnonymousGlobal::addGlobal(
             $this,
             new class() extends AbstractDependencyProvider {
@@ -39,7 +56,10 @@ final class AnonymousGlobalsBench
                 }
             }
         );
+    }
 
+    private function abstractFactory(): void
+    {
         AnonymousGlobal::addGlobal(
             $this,
             new class() extends AbstractFactory {
@@ -76,7 +96,10 @@ final class AnonymousGlobalsBench
                 }
             }
         );
+    }
 
+    private function abstractFacade(): void
+    {
         $this->facade = new class() extends AbstractFacade {
             public function getConfigValues(): array
             {
@@ -92,11 +115,5 @@ final class AnonymousGlobalsBench
                     ->getValueFromDependencyProvider();
             }
         };
-    }
-
-    public function bench_class_resolving(): void
-    {
-        $this->facade->getConfigValues();
-        $this->facade->getValueFromDependencyProvider();
     }
 }

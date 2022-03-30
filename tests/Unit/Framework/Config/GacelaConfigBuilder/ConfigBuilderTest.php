@@ -16,7 +16,7 @@ final class ConfigBuilderTest extends TestCase
     {
         $builder = new ConfigBuilder();
 
-        self::assertEquals([new GacelaConfigItem()], $builder->build());
+        self::assertEquals([GacelaConfigItem::withDefaults()], $builder->build());
     }
 
     public function test_custom_path(): void

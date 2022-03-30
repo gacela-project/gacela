@@ -6,7 +6,6 @@ namespace Gacela\Framework\Config\GacelaFileConfig;
 
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use function get_class;
 
 final class GacelaConfigItem
 {
@@ -18,7 +17,7 @@ final class GacelaConfigItem
     private ConfigReaderInterface $reader;
 
     public function __construct(
-        string $path = self::DEFAULT_PATH,
+        string $path,
         string $pathLocal = self::DEFAULT_PATH_LOCAL,
         ?ConfigReaderInterface $reader = null
     ) {
@@ -27,19 +26,14 @@ final class GacelaConfigItem
         $this->reader = $reader ?? new PhpConfigReader();
     }
 
-    public function __toString(): string
-    {
-        return sprintf(
-            'GacelaConfigItem{path:%s, pathLocal:%s, reader:%s}',
-            $this->path,
-            $this->pathLocal,
-            get_class($this->reader)
-        );
-    }
-
     public static function withDefaults(): self
     {
-        return new self(self::DEFAULT_PATH, self::DEFAULT_PATH_LOCAL);
+        return new self(self::DEFAULT_PATH);
+    }
+
+    public static function withPath(string $path): self
+    {
+        return new self($path);
     }
 
     public function path(): string

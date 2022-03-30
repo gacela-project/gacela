@@ -9,18 +9,18 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 final class ConfigLoader
 {
-    private GacelaConfigFileFactoryInterface $configFactory;
+    private GacelaConfigFileInterface $gacelaConfigFile;
 
     private PathFinderInterface $pathFinder;
 
     private PathNormalizerInterface $pathNormalizer;
 
     public function __construct(
-        GacelaConfigFileFactoryInterface $configFactory,
+        GacelaConfigFileInterface $gacelaConfigFile,
         PathFinderInterface $pathFinder,
         PathNormalizerInterface $configPathGenerator
     ) {
-        $this->configFactory = $configFactory;
+        $this->gacelaConfigFile = $gacelaConfigFile;
         $this->pathFinder = $pathFinder;
         $this->pathNormalizer = $configPathGenerator;
     }
@@ -30,25 +30,24 @@ final class ConfigLoader
      */
     public function loadAll(): array
     {
-        $gacelaFileConfig = $this->configFactory->createGacelaFileConfig();
         $configs = [];
         $cacheConfigFileContent = [];
 
         /** @var list<array<string,mixed>> $result */
         $result = [];
-        foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
+        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
             $absolutePatternPath = $this->pathNormalizer->normalizePathPattern($configItem);
             $result[] = $this->readAbsolutePatternPath($absolutePatternPath, $configItem, $cacheConfigFileContent);
         }
 
-        foreach ($gacelaFileConfig->getConfigItems() as $configItem) {
+        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
             $absolutePatternPath = $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem);
             $result[] = $this->readAbsolutePatternPath($absolutePatternPath, $configItem, $cacheConfigFileContent);
         }
 
         /** @psalm-suppress MixedArgument */
         $configs[] = array_merge(...array_merge(...$result)); // @phpstan-ignore-line
-        $configs[] = $this->readLocalConfigFile($gacelaFileConfig);
+        $configs[] = $this->readLocalConfigFile();
 
         /** @var array<string,mixed> $allConfigKeyValues */
         $allConfigKeyValues = array_merge(...$configs);
@@ -59,10 +58,10 @@ final class ConfigLoader
     /**
      * @return array<string,mixed>
      */
-    private function readLocalConfigFile(GacelaConfigFileInterface $gacelaConfigFile): array
+    private function readLocalConfigFile(): array
     {
         $result = [];
-        $configItems = $gacelaConfigFile->getConfigItems();
+        $configItems = $this->gacelaConfigFile->getConfigItems();
 
         foreach ($configItems as $configItem) {
             $absolutePath = $this->normalizePathLocal($configItem);

@@ -7,6 +7,7 @@ namespace Gacela\Framework\Config;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
 use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
 use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
@@ -29,22 +30,30 @@ final class ConfigFactory extends AbstractFactory
     public function createConfigLoader(): ConfigLoader
     {
         return new ConfigLoader(
-            $this->createGacelaConfigFileFactory(),
+            $this->createGacelaFileConfig(),
             $this->createPathFinder(),
             $this->createPathNormalizer(),
         );
     }
 
-    public function createGacelaConfigFileFactory(): GacelaConfigFileFactoryInterface
+    public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $gacelaPhpPath = $this->appRootDir . '/' . self::GACELA_PHP_CONFIG_FILENAME;
         $fileIo = $this->createFileIo();
 
-        if (!$fileIo->existsFile($gacelaPhpPath)) {
-            return new GacelaConfigFromBootstrapFactory($this->setup);
+        if ($fileIo->existsFile($gacelaPhpPath)) {
+            $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
+            $gacelaSetupFromGacelaPhp = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
-        return new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
+        $factoryFromBootstrap = new GacelaConfigFromBootstrapFactory($this->setup);
+        $gacelaSetupFromBootstrap = $factoryFromBootstrap->createGacelaFileConfig();
+
+        if (isset($gacelaSetupFromGacelaPhp) && $gacelaSetupFromGacelaPhp instanceof GacelaConfigFileInterface) {
+            return $gacelaSetupFromBootstrap->combine($gacelaSetupFromGacelaPhp);
+        }
+
+        return $gacelaSetupFromBootstrap;
     }
 
     private function createFileIo(): FileIoInterface

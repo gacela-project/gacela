@@ -16,18 +16,17 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @var array{
-     *     Factory?:list<string>,
-     *     Config?:list<string>,
-     *     DependencyProvider?:list<string>,
+     *     Factory:list<string>,
+     *     Config:list<string>,
+     *     DependencyProvider:list<string>,
      * }
      */
-    private array $suffixTypes = [];
+    private array $suffixTypes = SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES;
 
     public static function withDefaults(): self
     {
         return (new self())
-            ->setConfigItems([new GacelaConfigItem()])
-            ->setSuffixTypes(SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES);
+            ->setConfigItems([GacelaConfigItem::withDefaults()]);
     }
 
     /**
@@ -70,10 +69,18 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
+     * @return array<class-string,class-string|callable|object>
+     */
+    public function getMappingInterfaces(): array
+    {
+        return $this->mappingInterfaces;
+    }
+
+    /**
      * @param array{
-     *     Factory?:list<string>,
-     *     Config?:list<string>,
-     *     DependencyProvider?:list<string>
+     *     Factory:list<string>,
+     *     Config:list<string>,
+     *     DependencyProvider:list<string>
      * } $suffixTypes
      */
     public function setSuffixTypes(array $suffixTypes): self
@@ -85,13 +92,39 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @return array{
-     *     Factory?:list<string>,
-     *     Config?:list<string>,
-     *     DependencyProvider?:list<string>
+     *     Factory:list<string>,
+     *     Config:list<string>,
+     *     DependencyProvider:list<string>,
      * }
      */
     public function getSuffixTypes(): array
     {
         return $this->suffixTypes;
+    }
+
+    public function combine(GacelaConfigFileInterface $other): GacelaConfigFileInterface
+    {
+        $new = clone $this;
+        $new->configItems = array_merge($this->configItems, $other->getConfigItems());
+        $new->mappingInterfaces = array_merge($this->mappingInterfaces, $other->getMappingInterfaces());
+        $new->suffixTypes = [
+            'Factory' => $this->filterList($other, 'Factory'),
+            'Config' => $this->filterList($other, 'Config'),
+            'DependencyProvider' => $this->filterList($other, 'DependencyProvider'),
+        ];
+        return $new;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function filterList(GacelaConfigFileInterface $other, string $key): array
+    {
+        $merged = array_merge($this->suffixTypes[$key], $other->getSuffixTypes()[$key]); // @phpstan-ignore-line
+        $filtered = array_filter(array_unique($merged));
+        /** @var list<string> $values */
+        $values = array_values($filtered);
+
+        return $values;
     }
 }

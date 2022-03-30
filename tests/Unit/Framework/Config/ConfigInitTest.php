@@ -6,7 +6,6 @@ namespace GacelaTest\Unit\Framework\Config;
 
 use Gacela\Framework\Config\ConfigLoader;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use Gacela\Framework\Config\PathFinderInterface;
@@ -17,13 +16,8 @@ final class ConfigInitTest extends TestCase
 {
     public function test_no_config(): void
     {
-        $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
-        $gacelaJsonConfigCreator
-            ->method('createGacelaFileConfig')
-            ->willReturn(GacelaConfigFile::withDefaults());
-
         $configInit = new ConfigLoader(
-            $gacelaJsonConfigCreator,
+            GacelaConfigFile::withDefaults(),
             $this->createMock(PathFinderInterface::class),
             $this->createMock(PathNormalizerInterface::class)
         );
@@ -33,16 +27,11 @@ final class ConfigInitTest extends TestCase
 
     public function test_one_reader_linked_to_unsupported_type_is_ignored(): void
     {
-        $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
-        $gacelaJsonConfigCreator
-            ->method('createGacelaFileConfig')
-            ->willReturn(GacelaConfigFile::withDefaults());
-
         $pathFinder = $this->createMock(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
         $configInit = new ConfigLoader(
-            $gacelaJsonConfigCreator,
+            GacelaConfigFile::withDefaults(),
             $pathFinder,
             $this->createMock(PathNormalizerInterface::class)
         );
@@ -52,16 +41,11 @@ final class ConfigInitTest extends TestCase
 
     public function test_no_readers_returns_empty_array(): void
     {
-        $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
-        $gacelaJsonConfigCreator
-            ->method('createGacelaFileConfig')
-            ->willReturn(GacelaConfigFile::withDefaults());
-
         $pathFinder = $this->createMock(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
         $configInit = new ConfigLoader(
-            $gacelaJsonConfigCreator,
+            GacelaConfigFile::withDefaults(),
             $pathFinder,
             $this->createMock(PathNormalizerInterface::class),
         );
@@ -74,15 +58,12 @@ final class ConfigInitTest extends TestCase
         $reader = $this->createStub(ConfigReaderInterface::class);
         $reader->method('read')->willReturn(['key' => 'value']);
 
-        $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
-        $gacelaJsonConfigCreator
-            ->method('createGacelaFileConfig')
-            ->willReturn(GacelaConfigFile::withDefaults()->setConfigItems([
-                new GacelaConfigItem('path', 'path_local', $reader),
-            ]));
+        $gacelaConfigFile = GacelaConfigFile::withDefaults()->setConfigItems([
+            new GacelaConfigItem('path', 'path_local', $reader),
+        ]);
 
         $configInit = new ConfigLoader(
-            $gacelaJsonConfigCreator,
+            $gacelaConfigFile,
             $this->createMock(PathFinderInterface::class),
             $this->createMock(PathNormalizerInterface::class)
         );
@@ -98,16 +79,13 @@ final class ConfigInitTest extends TestCase
         $reader2 = $this->createStub(ConfigReaderInterface::class);
         $reader2->method('read')->willReturn(['key2' => 'value2']);
 
-        $gacelaJsonConfigCreator = $this->createStub(GacelaConfigFileFactoryInterface::class);
-        $gacelaJsonConfigCreator
-            ->method('createGacelaFileConfig')
-            ->willReturn(GacelaConfigFile::withDefaults()->setConfigItems([
-                new GacelaConfigItem('path', 'path_local', $reader1),
-                new GacelaConfigItem('path', 'path_local', $reader2),
-            ]));
+        $gacelaConfigFile = GacelaConfigFile::withDefaults()->setConfigItems([
+            new GacelaConfigItem('path', 'path_local', $reader1),
+            new GacelaConfigItem('path', 'path_local', $reader2),
+        ]);
 
         $configInit = new ConfigLoader(
-            $gacelaJsonConfigCreator,
+            $gacelaConfigFile,
             $this->createMock(PathFinderInterface::class),
             $this->createMock(PathNormalizerInterface::class),
         );

@@ -60,12 +60,12 @@ final class ConfigFactoryTest extends TestCase
             ->setConfig(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
-            ->setGlobalServices(['CustomClassFromBootstrap' => CustomClass::class])
+            ->setExternalServices(['CustomClassFromBootstrap' => CustomClass::class])
             ->setMappingInterfaces(
-                static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void {
+                static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
                     $mappingInterfacesBuilder->bind(
                         CustomInterface::class,
-                        $globalServices['CustomClassFromBootstrap']
+                        $externalServices['CustomClassFromBootstrap']
                     );
                 },
             )
@@ -101,10 +101,10 @@ final class ConfigFactoryTest extends TestCase
             ->setConfig(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
-            ->setGlobalServices(['CustomClassFromBootstrap' => CustomClass::class])
+            ->setExternalServices(['CustomClassFromBootstrap' => CustomClass::class])
             ->setMappingInterfaces(
-                static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void {
-                    $mappingInterfacesBuilder->bind(AbstractCustom::class, $globalServices['CustomClassFromBootstrap']);
+                static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
+                    $mappingInterfacesBuilder->bind(AbstractCustom::class, $externalServices['CustomClassFromBootstrap']);
                 },
             )
             ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {

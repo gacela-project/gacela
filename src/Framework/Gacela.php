@@ -14,7 +14,7 @@ final class Gacela
     public const CONFIG = 'config';
     public const MAPPING_INTERFACES = 'mapping-interfaces';
     public const SUFFIX_TYPES = 'suffix-types';
-    public const GLOBAL_SERVICES = 'global-services';
+    public const EXTERNAL_SERVICES = 'external-services';
 
     /**
      * Define the entry point of Gacela.
@@ -43,7 +43,7 @@ final class Gacela
              *     config?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder):void,
              *     mapping-interfaces?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder, array<string,mixed>):void,
              *     suffix-types?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder):void,
-             *     global-services?: array<string,mixed>,
+             *     external-services?: array<string,mixed>,
              * } $setup
              */
             return SetupGacelaFactory::fromArray($setup);

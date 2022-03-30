@@ -12,7 +12,7 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, [
-            Gacela::GLOBAL_SERVICES => ['isWorking?' => 'yes!'],
+            Gacela::EXTERNAL_SERVICES => ['isWorking?' => 'yes!'],
         ]);
     }
 

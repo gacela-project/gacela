@@ -42,7 +42,7 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     }
 
     /**
-     * @deprecated
+     * @deprecated in favor of `externalServices()`
      *
      * @return array<string,mixed>
      */

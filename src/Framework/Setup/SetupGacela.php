@@ -89,7 +89,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @deprecated Use `externalServices()` instead
+     * @deprecated in favor of `externalServices()`
      *
      * @return array<string,mixed>
      */

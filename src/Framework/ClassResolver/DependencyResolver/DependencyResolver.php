@@ -7,7 +7,6 @@ namespace Gacela\Framework\ClassResolver\DependencyResolver;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
-use RuntimeException;
 
 use function is_callable;
 use function is_object;
@@ -57,20 +56,22 @@ final class DependencyResolver
     private function resolveDependenciesRecursively(ReflectionParameter $parameter)
     {
         if (!$parameter->hasType()) {
-            throw new RuntimeException("No parameter type for '{$parameter->getName()}'");
+            throw DependencyException::noParameterTypeFor($parameter->getName());
         }
 
         /** @var ReflectionNamedType $paramType */
         $paramType = $parameter->getType();
+
+        /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
-        if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
+        if ($this->isScalar($paramTypeName)) {
             if ($parameter->isDefaultValueAvailable()) {
                 return $parameter->getDefaultValue();
             }
 
             /** @var ReflectionClass $reflectionClass */
             $reflectionClass = $parameter->getDeclaringClass();
-            throw new RuntimeException("Unable to resolve [{$parameter}] from {$reflectionClass->getName()}");
+            throw DependencyException::unableToResolve($paramTypeName, $reflectionClass->getName());
         }
 
         /** @var mixed $mappedClass */
@@ -103,6 +104,12 @@ final class DependencyResolver
         return $reflection->newInstanceArgs($innerDependencies);
     }
 
+    private function isScalar(string $paramTypeName): bool
+    {
+        return !class_exists($paramTypeName)
+            && !interface_exists($paramTypeName);
+    }
+
     /**
      * @param class-string $paramTypeName
      */
@@ -122,6 +129,6 @@ final class DependencyResolver
             return new ReflectionClass($concreteClass);
         }
 
-        throw DependencyResolverNotFoundException::forClassName($reflection->getName());
+        throw DependencyException::mapNotFoundForClassName($reflection->getName());
     }
 }

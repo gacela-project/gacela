@@ -36,8 +36,8 @@ final class InstanceCreatorTest extends TestCase
     public function test_create_class_with_dependencies(): void
     {
         $gacelaConfigFile = $this->createStub(GacelaConfigFileInterface::class);
-        $gacelaConfigFile->method('getMappingInterface')->willReturnMap([
-            [StringValueInterface::class, new StringValue('custom-string')],
+        $gacelaConfigFile->method('getMappingInterfaces')->willReturn([
+            StringValueInterface::class => new StringValue('custom-string'),
         ]);
 
         $instanceCreator = new InstanceCreator($gacelaConfigFile);
@@ -53,9 +53,8 @@ final class InstanceCreatorTest extends TestCase
         $gacelaConfigFile = $this->createMock(GacelaConfigFileInterface::class);
         $gacelaConfigFile
             ->expects(self::once())
-            ->method('getMappingInterface')
-            ->with(StringValueInterface::class)
-            ->willReturn(new StringValue('custom-string'));
+            ->method('getMappingInterfaces')
+            ->willReturn([StringValueInterface::class => new StringValue('custom-string')]);
 
         $instanceCreator = new InstanceCreator($gacelaConfigFile);
         $actual1 = $instanceCreator->createByClassName(CustomClassWithDependencies::class);

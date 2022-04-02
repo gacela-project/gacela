@@ -41,7 +41,7 @@ final class InstanceCreator
     {
         if ($this->dependencyResolver === null) {
             $this->dependencyResolver = new DependencyResolver(
-                $this->gacelaConfigFile
+                $this->gacelaConfigFile->getMappingInterfaces()
             );
         }
 

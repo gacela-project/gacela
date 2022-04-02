@@ -4,21 +4,25 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DependencyResolver;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use RuntimeException;
+
 use function is_callable;
 use function is_object;
 
 final class DependencyResolver
 {
-    private GacelaConfigFileInterface $gacelaConfigFile;
+    /** @var array<class-string,class-string|callable|object> */
+    private array $mappingInterfaces;
 
-    public function __construct(GacelaConfigFileInterface $gacelaConfigFile)
+    /**
+     * @param array<class-string,class-string|callable|object> $mappingInterfaces
+     */
+    public function __construct(array $mappingInterfaces)
     {
-        $this->gacelaConfigFile = $gacelaConfigFile;
+        $this->mappingInterfaces = $mappingInterfaces;
     }
 
     /**
@@ -70,7 +74,7 @@ final class DependencyResolver
         }
 
         /** @var mixed $mappedClass */
-        $mappedClass = $this->gacelaConfigFile->getMappingInterface($paramTypeName);
+        $mappedClass = $this->mappingInterfaces[$paramTypeName] ?? null;
         if (is_callable($mappedClass)) {
             return $mappedClass();
         }
@@ -111,7 +115,7 @@ final class DependencyResolver
         }
 
         /** @var mixed $concreteClass */
-        $concreteClass = $this->gacelaConfigFile->getMappingInterface($reflection->getName());
+        $concreteClass = $this->mappingInterfaces[$reflection->getName()];
 
         if ($concreteClass !== null) {
             /** @var class-string $concreteClass */

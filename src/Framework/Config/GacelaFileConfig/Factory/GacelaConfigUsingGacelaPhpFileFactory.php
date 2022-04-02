@@ -67,7 +67,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
     private function createMappingInterfacesBuilder(SetupGacelaInterface $setupGacela): MappingInterfacesBuilder
     {
         $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $setupGacela->mappingInterfaces($mappingInterfacesBuilder, $this->setup->globalServices());
+        $setupGacela->mappingInterfaces($mappingInterfacesBuilder, $this->setup->externalServices());
 
         return $mappingInterfacesBuilder;
     }

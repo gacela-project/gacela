@@ -1,5 +1,10 @@
 # Changelog
 
+### Unreleased
+
+- Rename the concept of `GlobalServices` by `ExternalServices`.
+  - Deprecated the `SetupGacelaInterface::setGlobalServices()` method.
+
 ### 0.15.0
 #### 2022-03-26
 

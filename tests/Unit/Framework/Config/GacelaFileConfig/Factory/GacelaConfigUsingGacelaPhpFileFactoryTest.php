@@ -94,10 +94,10 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
             static fn () => (new SetupGacela())
-                ->setGlobalServices(['globalServiceKey' => 'globalServiceValue'])
+                ->setExternalServices(['externalServiceKey' => 'externalServiceValue'])
                 ->setMappingInterfaces(
-                    static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void {
-                        self::assertSame('globalServiceValue', $globalServices['globalServiceKey']);
+                    static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
+                        self::assertSame('externalServiceValue', $externalServices['externalServiceKey']);
                         $mappingInterfacesBuilder->bind(CustomInterface::class, new CustomClass());
                         $mappingInterfacesBuilder->bind(CustomInterface::class, CustomClass::class);
                     },

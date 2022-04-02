@@ -12,7 +12,7 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
 return static fn () => (new SetupGacela())->setMappingInterfaces(
-    static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void {
+    static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
         // Resolve an abstract class from a concrete instance of a class
         $mappingInterfacesBuilder->bind(AbstractClass::class, new ConcreteClass(true, 'string', 1, 1.2, ['array']));
 
@@ -57,7 +57,7 @@ return static fn () => (new SetupGacela())->setMappingInterfaces(
             }
         );
         // Is it also possible to bind classes like => AbstractClass::class => SpecificClass::class
-        // Check the test _BindingInterfacesWithDependenciesAndGlobalServices_ BUT
-        // be aware this way is not possible if the class has dependencies that cannot be resolved automatically!
+        // Check the test _BindingInterfacesWithInnerDependencies_ BUT be aware this way is not possible
+        // if the class has dependencies that cannot be resolved automatically!
     }
 );

@@ -20,9 +20,9 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
-     * @param array<string,mixed> $globalServices
+     * @param array<string,mixed> $externalServices
      */
-    public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void
+    public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void
     {
     }
 
@@ -36,8 +36,18 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * @return array<string,mixed>
      */
-    public function globalServices(): array
+    public function externalServices(): array
     {
         return [];
+    }
+
+    /**
+     * @deprecated in favor of `externalServices()`
+     *
+     * @return array<string,mixed>
+     */
+    public function globalServices(): array
+    {
+        return $this->externalServices();
     }
 }

@@ -13,23 +13,23 @@ final class SetupGacelaFactory
      *     config?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder):void,
      *     mapping-interfaces?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder, array<string,mixed>):void,
      *     suffix-types?: callable(\Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder):void,
-     *     global-services?: array<string,mixed>,
-     * } $globalServices
+     *     external-services?: array<string,mixed>,
+     * } $externalServices
      */
-    public static function fromArray(array $globalServices): SetupGacelaInterface
+    public static function fromArray(array $externalServices): SetupGacelaInterface
     {
         $setup = new SetupGacela();
-        if (isset($globalServices[Gacela::CONFIG])) {
-            $setup->setConfig($globalServices[Gacela::CONFIG]);
+        if (isset($externalServices[Gacela::CONFIG])) {
+            $setup->setConfig($externalServices[Gacela::CONFIG]);
         }
-        if (isset($globalServices[Gacela::MAPPING_INTERFACES])) {
-            $setup->setMappingInterfaces($globalServices[Gacela::MAPPING_INTERFACES]);
+        if (isset($externalServices[Gacela::MAPPING_INTERFACES])) {
+            $setup->setMappingInterfaces($externalServices[Gacela::MAPPING_INTERFACES]);
         }
-        if (isset($globalServices[Gacela::SUFFIX_TYPES])) {
-            $setup->setSuffixTypes($globalServices[Gacela::SUFFIX_TYPES]);
+        if (isset($externalServices[Gacela::SUFFIX_TYPES])) {
+            $setup->setSuffixTypes($externalServices[Gacela::SUFFIX_TYPES]);
         }
-        if (isset($globalServices[Gacela::GLOBAL_SERVICES])) {
-            $setup->setGlobalServices($globalServices[Gacela::GLOBAL_SERVICES]);
+        if (isset($externalServices[Gacela::EXTERNAL_SERVICES])) {
+            $setup->setExternalServices($externalServices[Gacela::EXTERNAL_SERVICES]);
         }
 
         return $setup;

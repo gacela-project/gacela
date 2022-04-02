@@ -20,7 +20,7 @@ final class SetupGacela extends AbstractSetupGacela
     private $suffixTypesFn = null;
 
     /** @var array<string,mixed> */
-    private array $globalServices = [];
+    private array $externalServices = [];
 
     /**
      * @param callable(ConfigBuilder):void $callable
@@ -50,13 +50,13 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
-     * @param array<string,mixed> $globalServices
+     * @param array<string,mixed> $externalServices
      */
-    public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void
+    public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void
     {
         $this->mappingInterfacesFn && ($this->mappingInterfacesFn)(
             $mappingInterfacesBuilder,
-            array_merge($this->globalServices, $globalServices)
+            array_merge($this->externalServices, $externalServices)
         );
     }
 
@@ -81,18 +81,28 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param array<string,mixed> $array
      */
-    public function setGlobalServices(array $array): self
+    public function setExternalServices(array $array): self
     {
-        $this->globalServices = $array;
+        $this->externalServices = $array;
 
         return $this;
     }
 
     /**
+     * @deprecated in favor of `externalServices()`
+     *
      * @return array<string,mixed>
      */
     public function globalServices(): array
     {
-        return $this->globalServices;
+        return $this->externalServices();
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function externalServices(): array
+    {
+        return $this->externalServices;
     }
 }

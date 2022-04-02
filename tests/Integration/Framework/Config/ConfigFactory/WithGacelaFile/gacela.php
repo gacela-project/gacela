@@ -13,10 +13,10 @@ return static fn () => (new SetupGacela())
     ->setConfig(static function (ConfigBuilder $builder): void {
         $builder->add('config/from-gacela-file.php');
     })
-    ->setGlobalServices(['CustomClassFromGacelaFile' => CustomClass::class])
+    ->setExternalServices(['CustomClassFromGacelaFile' => CustomClass::class])
     ->setMappingInterfaces(
-        static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $globalServices): void {
-            $mappingInterfacesBuilder->bind(CustomInterface::class, $globalServices['CustomClassFromGacelaFile']);
+        static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
+            $mappingInterfacesBuilder->bind(CustomInterface::class, $externalServices['CustomClassFromGacelaFile']);
         },
     )
     ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {

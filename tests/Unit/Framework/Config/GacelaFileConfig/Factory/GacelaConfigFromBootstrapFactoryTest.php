@@ -33,7 +33,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_no_special_global_services_then_default(): void
     {
         $setupGacela = $this->createStub(SetupGacelaInterface::class);
-        $setupGacela->method('globalServices')->willReturn([
+        $setupGacela->method('externalServices')->willReturn([
             'randomKey' => 'randomValue',
         ]);
 
@@ -61,14 +61,14 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
         $factory = new GacelaConfigFromBootstrapFactory(
             SetupGacelaFactory::fromArray(
                 [
-                    Gacela::GLOBAL_SERVICES => [
-                        'globalServiceKey' => 'globalServiceValue',
+                    Gacela::EXTERNAL_SERVICES => [
+                        'externalServiceKey' => 'externalServiceValue',
                     ],
                     Gacela::MAPPING_INTERFACES => static function (
                         MappingInterfacesBuilder $interfacesBuilder,
-                        array $globalServices
+                        array $externalServices
                     ): void {
-                        self::assertSame($globalServices['globalServiceKey'], 'globalServiceValue');
+                        self::assertSame($externalServices['externalServiceKey'], 'externalServiceValue');
                         $interfacesBuilder->bind(CustomInterface::class, CustomClass::class);
                     },
                 ]

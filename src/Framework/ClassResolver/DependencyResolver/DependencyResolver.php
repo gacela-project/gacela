@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver\DependencyResolver;
 
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
 
@@ -56,7 +57,7 @@ final class DependencyResolver
     private function resolveDependenciesRecursively(ReflectionParameter $parameter)
     {
         if (!$parameter->hasType()) {
-            throw DependencyException::noParameterTypeFor($parameter->getName());
+            throw DependencyInvalidArgumentException::noParameterTypeFor($parameter->getName());
         }
 
         /** @var ReflectionNamedType $paramType */
@@ -71,7 +72,7 @@ final class DependencyResolver
 
             /** @var ReflectionClass $reflectionClass */
             $reflectionClass = $parameter->getDeclaringClass();
-            throw DependencyException::unableToResolve($paramTypeName, $reflectionClass->getName());
+            throw DependencyInvalidArgumentException::unableToResolve($paramTypeName, $reflectionClass->getName());
         }
 
         /** @var mixed $mappedClass */
@@ -90,18 +91,7 @@ final class DependencyResolver
             return $reflection->newInstance();
         }
 
-        /** @var list<mixed> $innerDependencies */
-        $innerDependencies = [];
-
-        foreach ($constructor->getParameters() as $constructorParameter) {
-            $paramType = $constructorParameter->getType();
-            if ($paramType) {
-                /** @psalm-suppress MixedAssignment */
-                $innerDependencies[] = $this->resolveDependenciesRecursively($constructorParameter);
-            }
-        }
-
-        return $reflection->newInstanceArgs($innerDependencies);
+        return $this->resolveInnerDependencies($constructor, $reflection);
     }
 
     private function isScalar(string $paramTypeName): bool
@@ -129,6 +119,22 @@ final class DependencyResolver
             return new ReflectionClass($concreteClass);
         }
 
-        throw DependencyException::mapNotFoundForClassName($reflection->getName());
+        throw DependencyNotFoundException::mapNotFoundForClassName($reflection->getName());
+    }
+
+    private function resolveInnerDependencies(ReflectionMethod $constructor, ReflectionClass $reflection): object
+    {
+        /** @var list<mixed> $innerDependencies */
+        $innerDependencies = [];
+
+        foreach ($constructor->getParameters() as $constructorParameter) {
+            $paramType = $constructorParameter->getType();
+            if ($paramType) {
+                /** @psalm-suppress MixedAssignment */
+                $innerDependencies[] = $this->resolveDependenciesRecursively($constructorParameter);
+            }
+        }
+
+        return $reflection->newInstanceArgs($innerDependencies);
     }
 }

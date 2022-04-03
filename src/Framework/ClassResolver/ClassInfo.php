@@ -68,14 +68,14 @@ final class ClassInfo
         );
     }
 
-    private static function fromObject(object $callerObject, string $resolvableType = ''): self
+    private static function fromObject(object $callerObject, string $resolvableType): self
     {
         $callerClass = get_class($callerObject);
 
         return self::fromString($callerClass, $resolvableType);
     }
 
-    private static function fromString(string $callerClass, string $resolvableType = ''): self
+    private static function fromString(string $callerClass, string $resolvableType): self
     {
         if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
             return self::$callerClassCache[$callerClass][$resolvableType];

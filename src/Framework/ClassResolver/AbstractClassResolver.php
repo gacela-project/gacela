@@ -24,16 +24,16 @@ abstract class AbstractClassResolver
     private ?InstanceCreator $instanceCreator = null;
 
     /**
-     * @param object|class-string $callerClass
+     * @param object|class-string $caller
      */
-    abstract public function resolve($callerClass): ?object;
+    abstract public function resolve($caller): ?object;
 
     /**
-     * @param object|class-string $callerClass
+     * @param object|class-string $caller
      */
-    public function doResolve($callerClass): ?object
+    public function doResolve($caller): ?object
     {
-        $classInfo = ClassInfo::from($callerClass, $this->getResolvableType());
+        $classInfo = ClassInfo::from($caller, $this->getResolvableType());
 
         $cacheKey = $classInfo->getCacheKey();
 

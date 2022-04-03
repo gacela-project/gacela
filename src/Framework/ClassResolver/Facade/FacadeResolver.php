@@ -10,17 +10,17 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 final class FacadeResolver extends AbstractClassResolver
 {
     /**
-     * @param object|class-string $callerClass
+     * @param object|class-string $caller
      *
      * @throws FacadeNotFoundException
      */
-    public function resolve($callerClass): AbstractFacade
+    public function resolve($caller): AbstractFacade
     {
         /** @var ?AbstractFacade $resolved */
-        $resolved = $this->doResolve($callerClass);
+        $resolved = $this->doResolve($caller);
 
         if ($resolved === null) {
-            throw new FacadeNotFoundException($callerClass);
+            throw new FacadeNotFoundException($caller);
         }
 
         return $resolved;

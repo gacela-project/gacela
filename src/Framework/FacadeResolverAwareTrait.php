@@ -14,12 +14,20 @@ trait FacadeResolverAwareTrait
     protected function getFacade(): AbstractFacade
     {
         if ($this->facade === null) {
-            $thisClass = get_class($this);
-            /** @var class-string $classLevelUpNamespace */
-            $classLevelUpNamespace = substr($thisClass, 0, (int)strrpos($thisClass, '\\'));
-            $this->facade = (new FacadeResolver())->resolve($classLevelUpNamespace);
+            $this->facade = (new FacadeResolver())
+                ->resolve($this->classLevelUpNamespace());
         }
 
         return $this->facade;
+    }
+
+    /**
+     * @return class-string
+     */
+    private function classLevelUpNamespace(): string
+    {
+        $thisClass = get_class($this);
+
+        return substr($thisClass, 0, (int)strrpos($thisClass, '\\'));
     }
 }

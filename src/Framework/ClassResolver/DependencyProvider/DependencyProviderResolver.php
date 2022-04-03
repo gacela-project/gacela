@@ -10,9 +10,11 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 final class DependencyProviderResolver extends AbstractClassResolver
 {
     /**
+     * @param object|class-string $callerClass
+     *
      * @throws DependencyProviderNotFoundException
      */
-    public function resolve(object $callerClass): AbstractDependencyProvider
+    public function resolve($callerClass): AbstractDependencyProvider
     {
         /** @var ?AbstractDependencyProvider $resolved */
         $resolved = $this->doResolve($callerClass);

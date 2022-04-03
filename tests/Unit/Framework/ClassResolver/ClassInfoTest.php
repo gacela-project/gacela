@@ -15,17 +15,26 @@ final class ClassInfoTest extends TestCase
     {
         $facade = new class() extends AbstractFacade {
         };
-        $actual = ClassInfo::fromObject($facade, 'Factory');
+        $actual = ClassInfo::from($facade, 'Factory');
 
         self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getModule());
         self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getFullNamespace());
         self::assertSame('\module-name@anonymous\ClassInfoTest\Factory', $actual->getCacheKey());
     }
 
-    public function test_real_class(): void
+    public function test_object_real_class(): void
     {
         $facade = new ClassInfoTestingFacade();
-        $actual = ClassInfo::fromObject($facade, 'Factory');
+        $actual = ClassInfo::from($facade, 'Factory');
+
+        self::assertSame('Fixtures', $actual->getModule());
+        self::assertSame('GacelaTest\Fixtures', $actual->getFullNamespace());
+        self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey());
+    }
+
+    public function test_string_real_class(): void
+    {
+        $actual = ClassInfo::from(ClassInfoTestingFacade::class, 'Factory');
 
         self::assertSame('Fixtures', $actual->getModule());
         self::assertSame('GacelaTest\Fixtures', $actual->getFullNamespace());

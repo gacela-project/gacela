@@ -56,25 +56,51 @@ final class DependencyResolver
      */
     private function resolveDependenciesRecursively(ReflectionParameter $parameter)
     {
-        if (!$parameter->hasType()) {
-            throw DependencyInvalidArgumentException::noParameterTypeFor($parameter->getName());
-        }
+        $this->invalidArgumentParam($parameter);
 
         /** @var ReflectionNamedType $paramType */
         $paramType = $parameter->getType();
 
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
-        if ($this->isScalar($paramTypeName)) {
-            if ($parameter->isDefaultValueAvailable()) {
-                return $parameter->getDefaultValue();
-            }
+        if ($this->isScalar($paramTypeName) && $parameter->isDefaultValueAvailable()) {
+            return $parameter->getDefaultValue();
+        }
 
+        return $this->resolveClass($paramTypeName);
+    }
+
+    private function invalidArgumentParam(ReflectionParameter $parameter): void
+    {
+        /** @var ReflectionNamedType $paramType */
+        $paramType = $parameter->getType();
+
+        $paramTypeName = $paramType->getName();
+
+        if (!$parameter->hasType()) {
+            throw DependencyInvalidArgumentException::noParameterTypeFor($parameter->getName());
+        }
+
+        if ($this->isScalar($paramTypeName) && !$parameter->isDefaultValueAvailable()) {
             /** @var ReflectionClass $reflectionClass */
             $reflectionClass = $parameter->getDeclaringClass();
             throw DependencyInvalidArgumentException::unableToResolve($paramTypeName, $reflectionClass->getName());
         }
+    }
 
+    private function isScalar(string $paramTypeName): bool
+    {
+        return !class_exists($paramTypeName)
+            && !interface_exists($paramTypeName);
+    }
+
+    /**
+     * @param class-string $paramTypeName
+     *
+     * @return mixed
+     */
+    private function resolveClass(string $paramTypeName)
+    {
         /** @var mixed $mappedClass */
         $mappedClass = $this->mappingInterfaces[$paramTypeName] ?? null;
         if (is_callable($mappedClass)) {
@@ -92,12 +118,6 @@ final class DependencyResolver
         }
 
         return $this->resolveInnerDependencies($constructor, $reflection);
-    }
-
-    private function isScalar(string $paramTypeName): bool
-    {
-        return !class_exists($paramTypeName)
-            && !interface_exists($paramTypeName);
     }
 
     /**

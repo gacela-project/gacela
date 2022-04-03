@@ -4,21 +4,25 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DependencyResolver;
 
-use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
-use RuntimeException;
+
 use function is_callable;
 use function is_object;
 
 final class DependencyResolver
 {
-    private GacelaConfigFileInterface $gacelaConfigFile;
+    /** @var array<class-string,class-string|callable|object> */
+    private array $mappingInterfaces;
 
-    public function __construct(GacelaConfigFileInterface $gacelaConfigFile)
+    /**
+     * @param array<class-string,class-string|callable|object> $mappingInterfaces
+     */
+    public function __construct(array $mappingInterfaces)
     {
-        $this->gacelaConfigFile = $gacelaConfigFile;
+        $this->mappingInterfaces = $mappingInterfaces;
     }
 
     /**
@@ -53,24 +57,26 @@ final class DependencyResolver
     private function resolveDependenciesRecursively(ReflectionParameter $parameter)
     {
         if (!$parameter->hasType()) {
-            throw new RuntimeException("No parameter type for '{$parameter->getName()}'");
+            throw DependencyInvalidArgumentException::noParameterTypeFor($parameter->getName());
         }
 
         /** @var ReflectionNamedType $paramType */
         $paramType = $parameter->getType();
+
+        /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
-        if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
+        if ($this->isScalar($paramTypeName)) {
             if ($parameter->isDefaultValueAvailable()) {
                 return $parameter->getDefaultValue();
             }
 
             /** @var ReflectionClass $reflectionClass */
             $reflectionClass = $parameter->getDeclaringClass();
-            throw new RuntimeException("Unable to resolve [{$parameter}] from {$reflectionClass->getName()}");
+            throw DependencyInvalidArgumentException::unableToResolve($paramTypeName, $reflectionClass->getName());
         }
 
         /** @var mixed $mappedClass */
-        $mappedClass = $this->gacelaConfigFile->getMappingInterface($paramTypeName);
+        $mappedClass = $this->mappingInterfaces[$paramTypeName] ?? null;
         if (is_callable($mappedClass)) {
             return $mappedClass();
         }
@@ -85,18 +91,13 @@ final class DependencyResolver
             return $reflection->newInstance();
         }
 
-        /** @var list<mixed> $innerDependencies */
-        $innerDependencies = [];
+        return $this->resolveInnerDependencies($constructor, $reflection);
+    }
 
-        foreach ($constructor->getParameters() as $constructorParameter) {
-            $paramType = $constructorParameter->getType();
-            if ($paramType) {
-                /** @psalm-suppress MixedAssignment */
-                $innerDependencies[] = $this->resolveDependenciesRecursively($constructorParameter);
-            }
-        }
-
-        return $reflection->newInstanceArgs($innerDependencies);
+    private function isScalar(string $paramTypeName): bool
+    {
+        return !class_exists($paramTypeName)
+            && !interface_exists($paramTypeName);
     }
 
     /**
@@ -111,13 +112,29 @@ final class DependencyResolver
         }
 
         /** @var mixed $concreteClass */
-        $concreteClass = $this->gacelaConfigFile->getMappingInterface($reflection->getName());
+        $concreteClass = $this->mappingInterfaces[$reflection->getName()];
 
         if ($concreteClass !== null) {
             /** @var class-string $concreteClass */
             return new ReflectionClass($concreteClass);
         }
 
-        throw DependencyResolverNotFoundException::forClassName($reflection->getName());
+        throw DependencyNotFoundException::mapNotFoundForClassName($reflection->getName());
+    }
+
+    private function resolveInnerDependencies(ReflectionMethod $constructor, ReflectionClass $reflection): object
+    {
+        /** @var list<mixed> $innerDependencies */
+        $innerDependencies = [];
+
+        foreach ($constructor->getParameters() as $constructorParameter) {
+            $paramType = $constructorParameter->getType();
+            if ($paramType) {
+                /** @psalm-suppress MixedAssignment */
+                $innerDependencies[] = $this->resolveDependenciesRecursively($constructorParameter);
+            }
+        }
+
+        return $reflection->newInstanceArgs($innerDependencies);
     }
 }

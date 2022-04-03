@@ -56,7 +56,7 @@ final class DependencyResolver
      */
     private function resolveDependenciesRecursively(ReflectionParameter $parameter)
     {
-        $this->invalidArgumentParam($parameter);
+        $this->checkInvalidArgumentParam($parameter);
 
         /** @var ReflectionNamedType $paramType */
         $paramType = $parameter->getType();
@@ -70,16 +70,15 @@ final class DependencyResolver
         return $this->resolveClass($paramTypeName);
     }
 
-    private function invalidArgumentParam(ReflectionParameter $parameter): void
+    private function checkInvalidArgumentParam(ReflectionParameter $parameter): void
     {
-        /** @var ReflectionNamedType $paramType */
-        $paramType = $parameter->getType();
-
-        $paramTypeName = $paramType->getName();
-
         if (!$parameter->hasType()) {
             throw DependencyInvalidArgumentException::noParameterTypeFor($parameter->getName());
         }
+
+        /** @var ReflectionNamedType $paramType */
+        $paramType = $parameter->getType();
+        $paramTypeName = $paramType->getName();
 
         if ($this->isScalar($paramTypeName) && !$parameter->isDefaultValueAvailable()) {
             /** @var ReflectionClass $reflectionClass */

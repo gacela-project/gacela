@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\FacadeAware\Module\Command;
+namespace GacelaTest\Feature\Framework\FacadeAware\Module\UserInput\Command;
 
 use Gacela\Framework\FacadeResolverAwareTrait;
 use GacelaTest\Feature\Framework\FacadeAware\Module\Facade;
@@ -22,5 +22,10 @@ final class TestHiCommand extends Command
         $output->write($this->getFacade()->sayHi());
 
         return self::SUCCESS;
+    }
+
+    protected function facadeClass(): string
+    {
+        return Facade::class;
     }
 }

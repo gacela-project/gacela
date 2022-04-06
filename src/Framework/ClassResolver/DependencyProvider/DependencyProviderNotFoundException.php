@@ -11,8 +11,11 @@ final class DependencyProviderNotFoundException extends Exception
 {
     use ClassResolverExceptionTrait;
 
-    public function __construct(object $callerClass)
+    /**
+     * @param object|class-string $caller
+     */
+    public function __construct($caller)
     {
-        parent::__construct($this->buildMessage($callerClass, 'DependencyProvider'));
+        parent::__construct($this->buildMessage($caller, 'DependencyProvider'));
     }
 }

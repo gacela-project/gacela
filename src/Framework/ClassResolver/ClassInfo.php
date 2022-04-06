@@ -7,6 +7,7 @@ namespace Gacela\Framework\ClassResolver;
 use function array_slice;
 use function count;
 use function get_class;
+use function is_object;
 use function is_string;
 
 final class ClassInfo
@@ -30,38 +31,16 @@ final class ClassInfo
         $this->cacheKey = $cacheKey;
     }
 
-    public static function fromObject(object $callerObject, string $resolvableType = ''): self
+    /**
+     * @param object|class-string $caller
+     */
+    public static function from($caller, string $resolvableType = ''): self
     {
-        $callerClass = get_class($callerObject);
-
-        if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
-            return self::$callerClassCache[$callerClass][$resolvableType];
-        }
-        /** @var string[] $callerClassParts */
-        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-        $lastCallerClassPart = end($callerClassParts);
-        $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
-        $filename = self::normalizeFilename($filepath);
-
-        if (strpos($filepath, 'anonymous') !== false) {
-            $callerClassParts = [
-                self::MODULE_NAME_ANONYMOUS . '\\' . $filename,
-                $filepath,
-            ];
+        if (is_object($caller)) {
+            return self::fromObject($caller, $resolvableType);
         }
 
-        $callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
-        $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
-        $cacheKey = GlobalKey::fromClassName(sprintf(
-            '\\%s\\%s',
-            $callerNamespace,
-            $resolvableType
-        ));
-
-        $self = new self($callerNamespace, $callerModuleName, $cacheKey);
-        self::$callerClassCache[$callerClass][$resolvableType] = $self;
-
-        return $self;
+        return self::fromString($caller, $resolvableType);
     }
 
     public function getCacheKey(): string
@@ -87,6 +66,43 @@ final class ClassInfo
             $this->callerModuleName,
             $this->callerNamespace,
         );
+    }
+
+    private static function fromObject(object $callerObject, string $resolvableType): self
+    {
+        $callerClass = get_class($callerObject);
+
+        return self::fromString($callerClass, $resolvableType);
+    }
+
+    private static function fromString(string $callerClass, string $resolvableType): self
+    {
+        if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
+            return self::$callerClassCache[$callerClass][$resolvableType];
+        }
+        /** @var string[] $callerClassParts */
+        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
+        $lastCallerClassPart = end($callerClassParts);
+        $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
+        $filename = self::normalizeFilename($filepath);
+
+        if (strpos($filepath, 'anonymous') !== false) {
+            $callerClassParts = [
+                self::MODULE_NAME_ANONYMOUS . '\\' . $filename,
+                $filepath,
+            ];
+        }
+
+        $callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
+        $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
+        $cacheKey = GlobalKey::fromClassName(
+            sprintf('\\%s\\%s', $callerNamespace, $resolvableType)
+        );
+
+        $self = new self($callerNamespace, $callerModuleName, $cacheKey);
+        self::$callerClassCache[$callerClass][$resolvableType] = $self;
+
+        return $self;
     }
 
     private static function normalizeFilename(string $filepath): string

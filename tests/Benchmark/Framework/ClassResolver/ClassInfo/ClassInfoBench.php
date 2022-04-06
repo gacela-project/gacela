@@ -14,12 +14,12 @@ final class ClassInfoBench
     {
         $facade = new class() extends AbstractFacade {
         };
-        ClassInfo::fromObject($facade, 'Factory');
+        ClassInfo::from($facade, 'Factory');
     }
 
     public function bench_real_class(): void
     {
         $facade = new ClassInfoTestingFacade();
-        ClassInfo::fromObject($facade, 'Factory');
+        ClassInfo::from($facade, 'Factory');
     }
 }

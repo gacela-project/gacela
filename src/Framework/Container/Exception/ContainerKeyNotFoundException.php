@@ -10,11 +10,11 @@ use RuntimeException;
 final class ContainerKeyNotFoundException extends RuntimeException
 {
     /**
-     * @param object $callerClass
+     * @param object $caller
      */
-    public function __construct($callerClass, string $key)
+    public function __construct($caller, string $key)
     {
-        $classInfo = ClassInfo::fromObject($callerClass);
+        $classInfo = ClassInfo::from($caller);
 
         parent::__construct($this->buildMessage($classInfo, $key));
     }

@@ -10,15 +10,17 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 final class ConfigResolver extends AbstractClassResolver
 {
     /**
+     * @param object|class-string $caller
+     *
      * @throws ConfigNotFoundException
      */
-    public function resolve(object $callerClass): AbstractConfig
+    public function resolve($caller): AbstractConfig
     {
         /** @var ?AbstractConfig $resolved */
-        $resolved = $this->doResolve($callerClass);
+        $resolved = $this->doResolve($caller);
 
         if ($resolved === null) {
-            throw new ConfigNotFoundException($callerClass);
+            throw new ConfigNotFoundException($caller);
         }
 
         return $resolved;

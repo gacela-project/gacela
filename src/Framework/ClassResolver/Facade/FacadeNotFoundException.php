@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver\Config;
+namespace Gacela\Framework\ClassResolver\Facade;
 
 use Exception;
 use Gacela\Framework\ClassResolver\ClassResolverExceptionTrait;
 
-final class ConfigNotFoundException extends Exception
+final class FacadeNotFoundException extends Exception
 {
     use ClassResolverExceptionTrait;
 
@@ -16,6 +16,6 @@ final class ConfigNotFoundException extends Exception
      */
     public function __construct($caller)
     {
-        parent::__construct($this->buildMessage($caller, 'Config'));
+        parent::__construct($this->buildMessage($caller, 'Facade'));
     }
 }

@@ -10,15 +10,17 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 final class FactoryResolver extends AbstractClassResolver
 {
     /**
+     * @param object|class-string $caller
+     *
      * @throws FactoryNotFoundException
      */
-    public function resolve(object $callerClass): AbstractFactory
+    public function resolve($caller): AbstractFactory
     {
         /** @var ?AbstractFactory $resolved */
-        $resolved = $this->doResolve($callerClass);
+        $resolved = $this->doResolve($caller);
 
         if ($resolved === null) {
-            throw new FactoryNotFoundException($callerClass);
+            throw new FactoryNotFoundException($caller);
         }
 
         return $resolved;

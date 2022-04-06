@@ -11,8 +11,11 @@ final class FactoryNotFoundException extends Exception
 {
     use ClassResolverExceptionTrait;
 
-    public function __construct(object $callerClass)
+    /**
+     * @param object|class-string $caller
+     */
+    public function __construct($caller)
     {
-        parent::__construct($this->buildMessage($callerClass, 'Factory'));
+        parent::__construct($this->buildMessage($caller, 'Factory'));
     }
 }

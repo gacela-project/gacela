@@ -9,6 +9,7 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+
 use function is_array;
 
 abstract class AbstractClassResolver
@@ -22,11 +23,18 @@ abstract class AbstractClassResolver
 
     private ?InstanceCreator $instanceCreator = null;
 
-    abstract public function resolve(object $callerClass): ?object;
+    /**
+     * @param object|class-string $caller
+     */
+    abstract public function resolve($caller): ?object;
 
-    public function doResolve(object $callerClass): ?object
+    /**
+     * @param object|class-string $caller
+     */
+    public function doResolve($caller): ?object
     {
-        $classInfo = ClassInfo::fromObject($callerClass, $this->getResolvableType());
+        $classInfo = ClassInfo::from($caller, $this->getResolvableType());
+
         $cacheKey = $classInfo->getCacheKey();
 
         $resolvedClass = $this->resolveCached($cacheKey);

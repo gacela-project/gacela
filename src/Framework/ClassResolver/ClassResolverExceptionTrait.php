@@ -8,9 +8,12 @@ use Gacela\Framework\Exception\Backtrace;
 
 trait ClassResolverExceptionTrait
 {
-    private function buildMessage(object $callerClass, string $resolvableType): string
+    /**
+     * @param object|class-string $caller
+     */
+    private function buildMessage($caller, string $resolvableType): string
     {
-        $callerClassInfo = ClassInfo::fromObject($callerClass, $resolvableType);
+        $callerClassInfo = ClassInfo::from($caller, $resolvableType);
 
         $message = 'ClassResolver Exception' . PHP_EOL;
         $message .= sprintf(

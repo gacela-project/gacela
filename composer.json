@@ -81,6 +81,7 @@
         "test-unit": "./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "./vendor/bin/phpunit --testsuite=integration",
         "test-feature": "./vendor/bin/phpunit --testsuite=feature",
+        "test-all-suites": "./vendor/bin/phpunit --testsuite=unit,integration,feature --log-junit=log-junit.xml",
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=coverage",
         "psalm": "./vendor/bin/psalm",
         "phpstan": "./vendor/bin/phpstan analyze -c phpstan.neon src",
@@ -89,6 +90,9 @@
         "phpbench": "vendor/bin/phpbench run --report=aggregate --ansi",
         "phpbench-base": "vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
-        "metrics-report": "./vendor/bin/phpmetrics --report-html=data/metrics-report --junit=phpunit.xml src tests"
+        "metrics-report": [
+            "@test-all-suites",
+            "./vendor/bin/phpmetrics --config=phpmetrics-config.json --junit=log-junit.xml"
+        ]
     }
 }

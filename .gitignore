@@ -6,3 +6,4 @@
 /.phpbench/
 .phpunit.*
 .php-cs-fixer.cache
+log-junit.xml

@@ -4,5 +4,4 @@
 /vendor/
 /data/
 /.phpbench/
-.phpunit.*
-.php-cs-fixer.cache
+*.cache

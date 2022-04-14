@@ -38,7 +38,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         /** @var SetupGacelaInterface|callable $setupGacelaFile */
         $setupGacelaFile = $this->fileIo->include($this->gacelaPhpPath);
         if (is_callable($setupGacelaFile)) {
-            trigger_deprecation('Gacela', '0.15', 'Return a SetupGacela object directly');
+            trigger_deprecation('Gacela', '0.15', 'Return a SetupGacelaInterface instance directly. The callable option will be removed in the next version.');
         }
 
         /** @var object $setupGacela */

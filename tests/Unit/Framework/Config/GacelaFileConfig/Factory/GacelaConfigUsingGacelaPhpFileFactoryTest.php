@@ -20,10 +20,10 @@ use PHPUnit\Framework\TestCase;
 
 final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
 {
-    public function test_exception_when_include_gacela_file_is_not_callable(): void
+    public function test_exception_when_the_class_does_not_implements_setup_gacela_interface(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn('anything-but-not-callable');
+        $fileIo->method('include')->willReturn(new class() {});
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
@@ -31,7 +31,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $this->expectErrorMessage('Create a function that returns an anonymous class that implements SetupGacelaInterface');
+        $this->expectErrorMessage('The gacela.php file should return an instance of SetupGacela');
         $factory->createGacelaFileConfig();
     }
 
@@ -47,7 +47,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $this->expectErrorMessage('Your anonymous class must implements SetupGacelaInterface');
+        $this->expectErrorMessage('The gacela.php file should return an instance of SetupGacela');
         $factory->createGacelaFileConfig();
     }
 
@@ -93,7 +93,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
-            static fn () => (new SetupGacela())
+            (new SetupGacela())
                 ->setExternalServices(['externalServiceKey' => 'externalServiceValue'])
                 ->setMappingInterfaces(
                     static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
@@ -119,12 +119,14 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_gacela_file_set_suffix_types(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(static fn () => (new SetupGacela())
-            ->setSuffixTypes(
-                static function (SuffixTypesBuilder $suffixTypesBuilder): void {
-                    $suffixTypesBuilder->addDependencyProvider('Binding');
-                }
-            ));
+        $fileIo->method('include')->willReturn(
+            (new SetupGacela())
+                ->setSuffixTypes(
+                    static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+                        $suffixTypesBuilder->addDependencyProvider('Binding');
+                    }
+                )
+        );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',

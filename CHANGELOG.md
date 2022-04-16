@@ -1,9 +1,12 @@
 # Changelog
 
-### Unreleased
+### 0.16.0
+#### 2022-04-14
 
-- Rename the concept of `GlobalServices` by `ExternalServices`.
-  - Deprecated the `SetupGacelaInterface::setGlobalServices()` method.
+- Combine gacela file and bootstrap setup.
+- Rename the concept of GlobalServices to ExternalServices.
+- Make the Facade accessible from module-internal sub-folders.
+- Allow to return an instance of SetupGacela on gacela.php.
 
 ### 0.15.0
 #### 2022-03-26

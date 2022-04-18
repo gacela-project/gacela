@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Framework\UsingMultipleConfig;
 
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Setup\SetupGacela;
 use GacelaTest\Fixtures\SimpleEnvConfigReader;
 use PHPUnit\Framework\TestCase;
 
@@ -13,14 +14,14 @@ final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        $setup = [
-            Gacela::CONFIG => static function (ConfigBuilder $configBuilder): void {
-                $configBuilder->add('config/.env*', '', SimpleEnvConfigReader::class);
-                $configBuilder->add('config/*.php');
-            },
-        ];
-
-        Gacela::bootstrap(__DIR__, $setup);
+        Gacela::bootstrap(
+            __DIR__,
+            (new SetupGacela())
+                ->setConfig(static function (ConfigBuilder $configBuilder): void {
+                    $configBuilder->add('config/.env*', '', SimpleEnvConfigReader::class);
+                    $configBuilder->add('config/*.php');
+                })
+        );
     }
 
     public function test_load_multiple_config_files(): void

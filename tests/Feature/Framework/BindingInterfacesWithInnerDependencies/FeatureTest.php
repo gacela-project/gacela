@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies;
 
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Setup\SetupGacela;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, [
-            Gacela::EXTERNAL_SERVICES => ['isWorking?' => 'yes!'],
-        ]);
+        $setup = (new SetupGacela())
+            ->setExternalServices(['isWorking?' => 'yes!']);
+
+        Gacela::bootstrap(__DIR__, $setup);
     }
 
     public function test_mapping_interfaces_from_config(): void

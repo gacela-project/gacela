@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Command;
 
 use Gacela\Framework\CustomServicesResolverAwareTrait;
-use GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Db\Repository;
+use GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Db\CustomHelloRepository;
 
 /**
- * @method Repository repository()
+ * @method CustomHelloRepository repository()
  */
 final class HelloCommand
 {
@@ -24,7 +24,7 @@ final class HelloCommand
     protected function servicesMapping(): array
     {
         return [
-            'repository' => Repository::class,
+            'repository' => CustomHelloRepository::class,
         ];
     }
 }

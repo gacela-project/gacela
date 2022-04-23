@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\CustomService\CustomServiceResolver;
+use function is_string;
 
 trait CustomServicesResolverAwareTrait
 {
@@ -13,20 +14,32 @@ trait CustomServicesResolverAwareTrait
 
     public function __call(string $name, array $arguments = []): ?object
     {
-        $resolvableType = lcfirst(ltrim($name, 'get'));
+        $method = lcfirst(ltrim($name, 'get'));
 
-        if (!isset($this->customServices[$resolvableType])) {
-            $className = $this->servicesMapping()[$resolvableType];
+        if (!isset($this->customServices[$method])) {
+            $className = $this->servicesMapping()[$method];
+            $resolvableType = $this->normalizeResolvableType($className);
 
-            $this->customServices[$resolvableType] = (new CustomServiceResolver($resolvableType))
+            $this->customServices[$method] = (new CustomServiceResolver($resolvableType))
                 ->resolve($className);
         }
 
-        return $this->customServices[$resolvableType];
+        return $this->customServices[$method];
     }
 
     /**
      * @return array<string,class-string>
      */
     abstract protected function servicesMapping(): array;
+
+    private function normalizeResolvableType(string $resolvableType): string
+    {
+        /** @var list<string> $resolvableTypeParts */
+        $resolvableTypeParts = explode('\\', ltrim($resolvableType, '\\'));
+        $normalizedResolvableType = end($resolvableTypeParts);
+
+        return is_string($normalizedResolvableType)
+            ? $normalizedResolvableType
+            : $resolvableType;
+    }
 }

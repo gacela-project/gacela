@@ -6,7 +6,7 @@ namespace GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\
 
 use GacelaTest\Feature\Framework\CustomServiceAware\Module\Facade;
 
-final class Repository
+final class CustomHelloRepository
 {
     private Facade $facade;
 

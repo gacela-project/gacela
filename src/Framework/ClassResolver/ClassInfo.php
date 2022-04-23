@@ -80,7 +80,7 @@ final class ClassInfo
         if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
             return self::$callerClassCache[$callerClass][$resolvableType];
         }
-        /** @var string[] $callerClassParts */
+        /** @var list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $lastCallerClassPart = end($callerClassParts);
         $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';

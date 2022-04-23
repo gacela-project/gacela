@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Db;
 
-use Gacela\Framework\AbstractCustomService;
 use GacelaTest\Feature\Framework\CustomServiceAware\Module\Facade;
 
-final class Repository extends AbstractCustomService
+final class Repository
 {
-    public function findNameById(int $id): string
+    private Facade $facade;
+
+    public function __construct(Facade $facade)
     {
-        return "fake-name(id:{$id})";
+        $this->facade = $facade;
     }
 
-    protected function facadeClass(): string
+    public function findNameById(int $id): string
     {
-        return Facade::class;
+        $bye = $this->facade->sayGoodbye();
+
+        return "fake-name(id:{$id}), and {$bye}";
     }
 }

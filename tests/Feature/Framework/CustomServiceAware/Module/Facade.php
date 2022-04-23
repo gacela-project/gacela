@@ -12,4 +12,9 @@ final class Facade extends AbstractFacade
     {
         return 'Hi';
     }
+
+    public function sayGoodbye(): string
+    {
+        return 'Goodbye';
+    }
 }

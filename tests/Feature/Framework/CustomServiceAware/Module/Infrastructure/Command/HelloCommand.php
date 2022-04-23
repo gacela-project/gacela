@@ -8,7 +8,7 @@ use Gacela\Framework\CustomServicesResolverAwareTrait;
 use GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Db\Repository;
 
 /**
- * @method Repository repository()
+ * @method Repository getRepository()
  */
 final class HelloCommand
 {
@@ -16,7 +16,7 @@ final class HelloCommand
 
     public function echoHello(int $id): void
     {
-        $name = $this->repository()->findNameById($id);
+        $name = $this->getRepository()->findNameById($id);
 
         echo "Hello, {$name}";
     }

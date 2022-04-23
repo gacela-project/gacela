@@ -8,15 +8,12 @@ use Gacela\Framework\ClassResolver\CustomService\CustomServiceResolver;
 
 trait CustomServicesResolverAwareTrait
 {
-    /** @var array<string,object> */
+    /** @var array<string,?object> */
     private array $customServices = [];
 
-    /**
-     * @return object
-     */
-    public function __call(string $name, array $arguments = [])
+    public function __call(string $name, array $arguments = []): ?object
     {
-        $resolvableType = ltrim($name, 'get');
+        $resolvableType = lcfirst(ltrim($name, 'get'));
 
         if (!isset($this->customServices[$resolvableType])) {
             $className = $this->servicesMapping()[$resolvableType];

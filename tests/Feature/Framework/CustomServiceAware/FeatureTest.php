@@ -15,9 +15,9 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(__DIR__);
     }
 
-    public function test_load_module_a(): void
+    public function test_custom_service(): void
     {
-        $this->expectOutputString('Hello, fake-name(id:123)');
+        $this->expectOutputString('Hello, fake-name(id:123), and Goodbye');
 
         $facade = new HelloCommand();
         $facade->echoHello(123);

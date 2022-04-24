@@ -17,7 +17,7 @@ final class TestHiCommand extends Command
 {
     use FacadeResolverAwareTrait;
 
-    public function run(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->write($this->getFacade()->sayHi());
 

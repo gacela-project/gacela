@@ -7,6 +7,8 @@ namespace GacelaTest\Feature\Framework\CustomServiceAware;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Command\HelloCommand;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 final class FeatureTest extends TestCase
 {
@@ -17,9 +19,13 @@ final class FeatureTest extends TestCase
 
     public function test_custom_service(): void
     {
-        $this->expectOutputString('Hello, fake-name(id:123), and Goodbye');
+        $output = new BufferedOutput();
 
-        $facade = new HelloCommand();
-        $facade->echoHello(123);
+        (new HelloCommand())->run(
+            $this->createStub(InputInterface::class),
+            $output
+        );
+
+        self::assertSame('fake-admin', $output->fetch());
     }
 }

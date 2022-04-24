@@ -5,20 +5,23 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Command;
 
 use Gacela\Framework\CustomServicesResolverAwareTrait;
-use GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Db\CustomHelloRepository;
+use GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Persistence\CustomHelloRepository;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @method CustomHelloRepository repository()
  */
-final class HelloCommand
+final class HelloCommand extends Command
 {
     use CustomServicesResolverAwareTrait;
 
-    public function echoHello(int $id): void
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $name = $this->repository()->findNameById($id);
+        $output->write($this->repository()->findNameName());
 
-        echo "Hello, {$name}";
+        return self::SUCCESS;
     }
 
     protected function servicesMapping(): array

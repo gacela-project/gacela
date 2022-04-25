@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\CustomService\CustomServiceResolver;
+use Gacela\Framework\ClassResolver\CustomService\DocBlockParser;
+use Gacela\Framework\ClassResolver\CustomService\MissingMethodException;
+use ReflectionClass;
+
 use function is_string;
 
 trait CustomServicesResolverAwareTrait
@@ -12,12 +16,10 @@ trait CustomServicesResolverAwareTrait
     /** @var array<string,?object> */
     private array $customServices = [];
 
-    public function __call(string $name, array $arguments = []): ?object
+    public function __call(string $method, array $arguments = []): ?object
     {
-        $method = lcfirst(ltrim($name, 'get'));
-
         if (!isset($this->customServices[$method])) {
-            $className = $this->servicesMapping()[$method];
+            $className = $this->getClassFromDocComment($method);
             $resolvableType = $this->normalizeResolvableType($className);
 
             $this->customServices[$method] = (new CustomServiceResolver($resolvableType))
@@ -28,9 +30,21 @@ trait CustomServicesResolverAwareTrait
     }
 
     /**
-     * @return array<string,class-string>
+     * @return class-string
      */
-    abstract protected function servicesMapping(): array;
+    private function getClassFromDocComment(string $method): string
+    {
+        $reflectionClass = new ReflectionClass(static::class);
+        $docBlock = (string)$reflectionClass->getDocComment();
+
+        $repositoryClass = (new DocBlockParser())->getClassFromMethod($docBlock, $method);
+
+        if (class_exists($repositoryClass)) {
+            return $repositoryClass;
+        }
+
+        throw MissingMethodException::missingOverriding($method, static::class);
+    }
 
     private function normalizeResolvableType(string $resolvableType): string
     {

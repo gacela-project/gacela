@@ -6,13 +6,17 @@ namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
-use Gacela\Framework\ClassResolver\DocBlockService\MissingMethodException;
+use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
+use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
 use ReflectionClass;
 
 use function is_string;
 
 trait DocBlockResolverAwareTrait
 {
+    /** @var array<string,string> */
+    protected static array $fileContentCache = [];
+
     /** @var array<string,?object> */
     private array $customServices = [];
 
@@ -34,14 +38,39 @@ trait DocBlockResolverAwareTrait
      */
     private function getClassFromDoc(string $method): string
     {
-        $docBlock = (string)(new ReflectionClass(static::class))->getDocComment();
-        $repositoryClass = (new DocBlockParser())->getClassFromMethod($docBlock, $method);
-
-        if (class_exists($repositoryClass)) {
-            return $repositoryClass;
+        $reflectionClass = new ReflectionClass(static::class);
+        $className = $this->searchClassOverDocBlock($reflectionClass, $method);
+        if (class_exists($className)) {
+            return $className;
         }
 
-        throw MissingMethodException::missingOverriding($method, static::class, $repositoryClass);
+        $className = $this->searchClassOverUseStatements($reflectionClass, $className);
+        if (class_exists($className)) {
+            return $className;
+        }
+
+        throw MissingClassDefinitionException::missingDefinition(static::class, $method, $className);
+    }
+
+    private function searchClassOverDocBlock(ReflectionClass $reflectionClass, string $method): string
+    {
+        $docBlock = (string)$reflectionClass->getDocComment();
+
+        return (new DocBlockParser())->getClassFromMethod($docBlock, $method);
+    }
+
+    /**
+     * Look the uses, to find the fully-qualified class name for the className.
+     */
+    private function searchClassOverUseStatements(ReflectionClass $reflectionClass, string $className): string
+    {
+        $fileName = $reflectionClass->getFileName();
+        if (!isset(static::$fileContentCache[$fileName])) {
+            static::$fileContentCache[$fileName] = file_get_contents($fileName);
+        }
+        $phpFile = static::$fileContentCache[$fileName];
+
+        return (new UseBlockParser())->getUseStatement($className, $phpFile);
     }
 
     private function normalizeResolvableType(string $resolvableType): string

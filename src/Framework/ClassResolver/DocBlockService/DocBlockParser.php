@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver\CustomService;
+namespace Gacela\Framework\ClassResolver\DocBlockService;
 
 final class DocBlockParser
 {
@@ -16,7 +16,7 @@ final class DocBlockParser
             explode(PHP_EOL, $docBlock),
             static fn (string $l) => str_contains($l, $method)
         );
-
+        /** @psalm-suppress RedundantCast */
         $lineSplit = (array)explode(' ', (string)reset($lines));
 
         return $lineSplit[3] ?? '';

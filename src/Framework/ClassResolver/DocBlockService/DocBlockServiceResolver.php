@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver\CustomService;
+namespace Gacela\Framework\ClassResolver\DocBlockService;
 
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
-final class CustomServiceResolver extends AbstractClassResolver
+final class DocBlockServiceResolver extends AbstractClassResolver
 {
     private string $resolvableType;
 
@@ -18,14 +18,14 @@ final class CustomServiceResolver extends AbstractClassResolver
     /**
      * @param object|class-string $caller
      *
-     * @throws CustomServiceNotFoundException
+     * @throws DocBlockServiceNotFoundException
      */
     public function resolve($caller): ?object
     {
         $resolved = $this->doResolve($caller);
 
         if ($resolved === null) {
-            throw new CustomServiceNotFoundException($caller, $this->resolvableType);
+            throw new DocBlockServiceNotFoundException($caller, $this->resolvableType);
         }
 
         return $resolved;

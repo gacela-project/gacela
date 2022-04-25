@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Command;
+namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Command;
 
-use Gacela\Framework\CustomServicesResolverAwareTrait;
+use Gacela\Framework\DocBlockResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @method \GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Persistence\CustomHelloRepository getRepository()
+ * @method \GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Persistence\CustomHelloRepository getRepository()
  */
 final class HelloCommand extends Command
 {
-    use CustomServicesResolverAwareTrait;
+    use DocBlockResolverAwareTrait;
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

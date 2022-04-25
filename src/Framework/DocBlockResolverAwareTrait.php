@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Gacela\Framework\ClassResolver\CustomService\CustomServiceResolver;
-use Gacela\Framework\ClassResolver\CustomService\DocBlockParser;
-use Gacela\Framework\ClassResolver\CustomService\MissingMethodException;
+use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
+use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
+use Gacela\Framework\ClassResolver\DocBlockService\MissingMethodException;
 use ReflectionClass;
 
 use function is_string;
 
-trait CustomServicesResolverAwareTrait
+trait DocBlockResolverAwareTrait
 {
     /** @var array<string,?object> */
     private array $customServices = [];
@@ -19,10 +19,10 @@ trait CustomServicesResolverAwareTrait
     public function __call(string $method, array $arguments = []): ?object
     {
         if (!isset($this->customServices[$method])) {
-            $className = $this->getClassFromDocComment($method);
+            $className = $this->getClassFromDoc($method);
             $resolvableType = $this->normalizeResolvableType($className);
 
-            $this->customServices[$method] = (new CustomServiceResolver($resolvableType))
+            $this->customServices[$method] = (new DocBlockServiceResolver($resolvableType))
                 ->resolve($className);
         }
 
@@ -32,18 +32,16 @@ trait CustomServicesResolverAwareTrait
     /**
      * @return class-string
      */
-    private function getClassFromDocComment(string $method): string
+    private function getClassFromDoc(string $method): string
     {
-        $reflectionClass = new ReflectionClass(static::class);
-        $docBlock = (string)$reflectionClass->getDocComment();
-
+        $docBlock = (string)(new ReflectionClass(static::class))->getDocComment();
         $repositoryClass = (new DocBlockParser())->getClassFromMethod($docBlock, $method);
 
         if (class_exists($repositoryClass)) {
             return $repositoryClass;
         }
 
-        throw MissingMethodException::missingOverriding($method, static::class);
+        throw MissingMethodException::missingOverriding($method, static::class, $repositoryClass);
     }
 
     private function normalizeResolvableType(string $resolvableType): string

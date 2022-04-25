@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceAware;
+namespace GacelaTest\Feature\Framework\DocBlockServiceAware;
 
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Command\HelloCommand;
+use GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Command\HelloCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;

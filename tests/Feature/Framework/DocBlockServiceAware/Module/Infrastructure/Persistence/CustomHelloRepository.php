@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceAware\Module\Infrastructure\Persistence;
+namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Persistence;
 
 final class CustomHelloRepository
 {

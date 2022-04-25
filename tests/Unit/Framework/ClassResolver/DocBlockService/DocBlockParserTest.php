@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\Framework\ClassResolver\CustomService;
+namespace GacelaTest\Unit\Framework\ClassResolver\DocBlockService;
 
-use Gacela\Framework\ClassResolver\CustomService\DocBlockParser;
+use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockParserTest extends TestCase

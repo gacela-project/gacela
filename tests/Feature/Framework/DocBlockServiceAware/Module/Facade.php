@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomServiceAware\Module;
+namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module;
 
 use Gacela\Framework\AbstractFacade;
 

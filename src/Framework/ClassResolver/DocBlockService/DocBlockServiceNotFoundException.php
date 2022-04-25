@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver\CustomService;
+namespace Gacela\Framework\ClassResolver\DocBlockService;
 
 use Gacela\Framework\ClassResolver\ClassResolverExceptionTrait;
 use RuntimeException;
 
-final class CustomServiceNotFoundException extends RuntimeException
+final class DocBlockServiceNotFoundException extends RuntimeException
 {
     use ClassResolverExceptionTrait;
 

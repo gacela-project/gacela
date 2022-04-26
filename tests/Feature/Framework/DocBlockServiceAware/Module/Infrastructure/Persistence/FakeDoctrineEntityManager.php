@@ -6,8 +6,8 @@ namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructur
 
 final class FakeDoctrineEntityManager
 {
-    public function findAdminName(): string
+    public function findAdminName(int $id): string
     {
-        return 'fake-admin';
+        return "fake-admin(id:{$id})";
     }
 }

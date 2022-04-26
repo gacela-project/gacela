@@ -12,6 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @method CustomHelloRepository getRepository()
+ * @method RepositoryInSameNamespace getRepositoryInSameNamespace()
  */
 final class HelloCommand extends Command
 {
@@ -19,7 +20,8 @@ final class HelloCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $output->write($this->getRepository()->findNameName());
+        $output->writeln($this->getRepository()->findNameById(1));
+        $output->write($this->getRepositoryInSameNamespace()->findNameById(2));
 
         return self::SUCCESS;
     }

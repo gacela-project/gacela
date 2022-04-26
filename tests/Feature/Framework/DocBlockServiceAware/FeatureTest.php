@@ -26,6 +26,10 @@ final class FeatureTest extends TestCase
             $output
         );
 
-        self::assertSame('fake-admin', $output->fetch());
+        $expected = <<<TXT
+fake-admin(id:1)
+fake-admin(id:2)
+TXT;
+        self::assertSame($expected, $output->fetch());
     }
 }

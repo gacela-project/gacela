@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\ClassResolver\DocBlockService;
 
@@ -19,14 +19,6 @@ final class UseBlockParserTest extends TestCase
     public function test_get_class_from_empty_php_code(): void
     {
         $actual = $this->parser->getUseStatement('TestClass', '');
-
-        self::assertSame('', $actual);
-    }
-
-
-    public function test_get_class_from_not_found(): void
-    {
-        $actual = $this->parser->getUseStatement('NonExistingClass', $this->phpCode());
 
         self::assertSame('', $actual);
     }

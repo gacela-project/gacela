@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Persistence;
+namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Command;
 
-final class CustomHelloRepository
+use GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Persistence\FakeDoctrineEntityManager;
+
+final class RepositoryInSameNamespace
 {
     private FakeDoctrineEntityManager $entityManager;
 

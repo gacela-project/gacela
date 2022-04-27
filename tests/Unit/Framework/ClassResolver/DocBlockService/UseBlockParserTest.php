@@ -37,6 +37,13 @@ final class UseBlockParserTest extends TestCase
         self::assertSame('Ns\Test\ExistingClassInSameNs', $actual);
     }
 
+    public function test_get_class_with_alias(): void
+    {
+        $actual = $this->parser->getUseStatement('AliasClass', $this->phpCode());
+
+        self::assertSame('Ns\Test\Other\WithAliasClassInOtherNs', $actual);
+    }
+
     public function test_get_commented_use_then_uses_current_namespace(): void
     {
         $actual = $this->parser->getUseStatement('CommentedClassInOtherNs', $this->phpCode());
@@ -52,6 +59,7 @@ final class UseBlockParserTest extends TestCase
 namespace Ns\Test;
 
 use Ns\Test\Other\ExistingClassInOtherNs;
+use Ns\Test\Other\WithAliasClassInOtherNs as AliasClass;
 // use Ns\Test\Other\CommentedClassInOtherNs;
 use Ns\Test\Duplicated\ExistingClassInOtherNs; // this will be ignored. The first match will win.
                                                // this is also illegal in real code. I place it here 

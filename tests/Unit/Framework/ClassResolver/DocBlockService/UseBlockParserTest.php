@@ -37,6 +37,13 @@ final class UseBlockParserTest extends TestCase
         self::assertSame('Ns\Test\ExistingClassInSameNs', $actual);
     }
 
+    public function test_get_commented_use_then_uses_current_namespace(): void
+    {
+        $actual = $this->parser->getUseStatement('CommentedClassInOtherNs', $this->phpCode());
+
+        self::assertSame('Ns\Test\CommentedClassInOtherNs', $actual);
+    }
+
     private function phpCode(): string
     {
         return <<<'PHP'
@@ -45,6 +52,7 @@ final class UseBlockParserTest extends TestCase
 namespace Ns\Test;
 
 use Ns\Test\Other\ExistingClassInOtherNs;
+// use Ns\Test\Other\CommentedClassInOtherNs;
 use Ns\Test\Duplicated\ExistingClassInOtherNs; // this will be ignored. The first match will win.
                                                // this is also illegal in real code. I place it here 
                                                // just to verify the actual logic.
@@ -53,9 +61,12 @@ final class TestClass
     public function foo(): void 
     {
         echo ExistingClassInOtherNamespace::class;
-        
+
         // This class is in the same namespace `Ns\Test`, that's why there is no use statement
         echo ExistingClassInSameNs::class;
+
+        // This will use the current ns, because its "use" is commented out
+        echo CommentedClassInOtherNs::class;
     }
 }
 PHP;

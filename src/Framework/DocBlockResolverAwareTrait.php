@@ -43,12 +43,10 @@ trait DocBlockResolverAwareTrait
         if (class_exists($className)) {
             return $className;
         }
-
         $className = $this->searchClassOverUseStatements($reflectionClass, $className);
         if (class_exists($className)) {
             return $className;
         }
-
         throw MissingClassDefinitionException::missingDefinition(static::class, $method, $className);
     }
 

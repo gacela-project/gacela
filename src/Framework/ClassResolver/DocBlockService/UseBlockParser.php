@@ -31,8 +31,12 @@ final class UseBlockParser
         );
         /** @psalm-suppress RedundantCast */
         $lineSplit = (array)explode(' ', (string)reset($lines));
+        $fullyQualified = rtrim($lineSplit[1] ?? '', ';');
+        if ($fullyQualified === 'use') {
+            return '';
+        }
 
-        return rtrim($lineSplit[1] ?? '', ';');
+        return $fullyQualified;
     }
 
     private function lookInCurrentNamespace(string $phpCode): string

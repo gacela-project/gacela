@@ -25,18 +25,16 @@ final class UseBlockParser
     private function searchInUsesStatements(string $className, string $phpCode): string
     {
         $needle = "{$className};";
+
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
-            static fn (string $l) => str_contains($l, $needle)
+            static fn (string $l) => strpos($l, 'use ') === 0 && str_contains($l, $needle)
         );
+
         /** @psalm-suppress RedundantCast */
         $lineSplit = (array)explode(' ', (string)reset($lines));
-        $fullyQualified = rtrim($lineSplit[1] ?? '', ';');
-        if ($fullyQualified === 'use') {
-            return '';
-        }
 
-        return $fullyQualified;
+        return rtrim($lineSplit[1] ?? '', ';');
     }
 
     private function lookInCurrentNamespace(string $phpCode): string

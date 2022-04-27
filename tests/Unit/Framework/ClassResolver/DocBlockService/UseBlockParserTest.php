@@ -60,7 +60,7 @@ namespace Ns\Test;
 
 use Ns\Test\Other\ExistingClassInOtherNs;
 use Ns\Test\Other\WithAliasClassInOtherNs as AliasClass;
-// use Ns\Test\Other\CommentedClassInOtherNs;
+//use Ns\Test\Other\CommentedClassInOtherNs;
 use Ns\Test\Duplicated\ExistingClassInOtherNs; // this will be ignored. The first match will win.
                                                // this is also illegal in real code. I place it here 
                                                // just to verify the actual logic.

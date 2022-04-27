@@ -41,7 +41,7 @@ final class UseBlockParser
     {
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
-            static fn (string $l) => str_contains($l, 'namespace')
+            static fn (string $l) => strpos($l, 'namespace ') === 0
         );
         /** @psalm-suppress RedundantCast */
         $lineSplit = (array)explode(' ', (string)reset($lines));

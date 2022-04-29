@@ -21,6 +21,7 @@ return static fn () => (new SetupGacela())
     )
     ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
         $suffixTypesBuilder
+            ->addFacade('FacadeFromGacelaFile')
             ->addFactory('FactoryFromGacelaFile')
             ->addConfig('ConfigFromGacelaFile')
             ->addDependencyProvider('DependencyProviderFromGacelaFile');

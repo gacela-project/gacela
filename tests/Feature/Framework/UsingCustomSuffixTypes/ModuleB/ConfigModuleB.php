@@ -6,7 +6,7 @@ namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleB;
 
 use Gacela\Framework\AbstractConfig;
 
-final class ConfModuleB extends AbstractConfig
+final class ConfigModuleB extends AbstractConfig
 {
     public function getConfigValue(): string
     {

@@ -7,9 +7,9 @@ namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method FactoryModuleA getFactory()
+ * @method FactModuleA getFactory()
  */
-final class FacadeModuleA extends AbstractFacade
+final class FaçModuleA extends AbstractFacade
 {
     public function doSomething(): array
     {

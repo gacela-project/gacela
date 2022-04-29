@@ -9,7 +9,7 @@ use Gacela\Framework\AbstractFactory;
 /**
  * @method ConfModuleA getConfig()
  */
-final class FactoryModuleA extends AbstractFactory
+final class FactModuleA extends AbstractFactory
 {
     public function getArrayConfigAndProvidedDependency(): array
     {

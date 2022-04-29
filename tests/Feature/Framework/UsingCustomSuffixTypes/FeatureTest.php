@@ -19,40 +19,40 @@ final class FeatureTest extends TestCase
 
     public function test_load_module_a(): void
     {
-        $facade = new ModuleA\FacadeModuleA();
+        $commandA = new ModuleA\CommandModuleA();
 
         self::assertSame(
             [
                 'config-key' => 'config-value',
                 'provided-dependency' => 'dependency-value',
             ],
-            $facade->doSomething()
+            $commandA->execute()
         );
     }
 
     public function test_load_module_b(): void
     {
-        $facade = new ModuleB\FacadeModuleB();
+        $commandB = new ModuleB\CommandModuleB();
 
         self::assertSame(
             [
                 'config-key' => 'config-value',
                 'provided-dependency' => 'dependency-value',
             ],
-            $facade->doSomething()
+            $commandB->execute()
         );
     }
 
     public function test_load_module_c(): void
     {
-        $facade = new ModuleC\Facade();
+        $commandC = new ModuleC\CommandModuleC();
 
         self::assertSame(
             [
                 'config-key' => 'config-value',
                 'provided-dependency' => 'dependency-value',
             ],
-            $facade->doSomething()
+            $commandC->execute()
         );
     }
 }

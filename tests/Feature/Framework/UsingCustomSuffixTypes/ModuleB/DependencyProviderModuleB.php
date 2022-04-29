@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleB;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\Container\Container;
 
-final class DepProModuleB extends AbstractDependencyProvider
+final class DependencyProviderModuleB extends AbstractDependencyProvider
 {
     public function provideModuleDependencies(Container $container): void
     {

@@ -23,7 +23,7 @@ trait ClassResolverExceptionTrait
         ) . PHP_EOL;
 
         $message .= sprintf(
-            'You can fix this by adding the missing %s to your module.',
+            'You can fix this by adding the missing "%s" to your module.',
             $resolvableType
         ) . PHP_EOL;
 

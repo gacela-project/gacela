@@ -139,6 +139,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],
                 'DependencyProvider' => ['DependencyProvider', 'Binding'],
+                'Facade' => ['Facade'],
             ]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());

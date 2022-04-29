@@ -46,6 +46,7 @@ final class ConfigFactoryTest extends TestCase
                 CustomInterface::class => CustomClass::class,
             ])
             ->setSuffixTypes([
+                'Facade' => ['Facade', 'FacadeFromGacelaFile'],
                 'Factory' => ['Factory', 'FactoryFromGacelaFile'],
                 'Config' => ['Config', 'ConfigFromGacelaFile'],
                 'DependencyProvider' => ['DependencyProvider', 'DependencyProviderFromGacelaFile'],
@@ -71,6 +72,7 @@ final class ConfigFactoryTest extends TestCase
             )
             ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder
+                    ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')
                     ->addConfig('ConfigFromBootstrap')
                     ->addDependencyProvider('DependencyProviderFromBootstrap');
@@ -87,6 +89,7 @@ final class ConfigFactoryTest extends TestCase
                 CustomInterface::class => CustomClass::class,
             ])
             ->setSuffixTypes([
+                'Facade' => ['Facade', 'FacadeFromBootstrap'],
                 'Factory' => ['Factory', 'FactoryFromBootstrap'],
                 'Config' => ['Config', 'ConfigFromBootstrap'],
                 'DependencyProvider' => ['DependencyProvider', 'DependencyProviderFromBootstrap'],
@@ -109,6 +112,7 @@ final class ConfigFactoryTest extends TestCase
             )
             ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder
+                    ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')
                     ->addConfig('ConfigFromBootstrap')
                     ->addDependencyProvider('DependencyProviderFromBootstrap');
@@ -127,6 +131,11 @@ final class ConfigFactoryTest extends TestCase
                 AbstractCustom::class => CustomClass::class,
             ])
             ->setSuffixTypes([
+                'Facade' => [
+                    'Facade',
+                    'FacadeFromBootstrap',
+                    'FacadeFromGacelaFile',
+                ],
                 'Factory' => [
                     'Factory',
                     'FactoryFromBootstrap',

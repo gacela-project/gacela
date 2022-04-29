@@ -90,6 +90,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
                 'DependencyProvider' => ['DependencyProvider', 'DPCustom'],
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],
+                'Facade' => ['Facade'],
             ]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());

@@ -93,12 +93,14 @@ final class GacelaConfigFileTest extends TestCase
     {
         $configFile1 = (new GacelaConfigFile())
             ->setSuffixTypes([
+                'Facade' => ['FA'],
                 'Factory' => ['F'],
                 'Config' => ['C'],
                 'DependencyProvider' => ['DP'],
             ]);
         $configFile2 = (new GacelaConfigFile())
             ->setSuffixTypes([
+                'Facade' => ['FA'],
                 'Factory' => ['F'],
                 'Config' => ['C'],
                 'DependencyProvider' => ['DP'],
@@ -108,6 +110,7 @@ final class GacelaConfigFileTest extends TestCase
 
         $expected = (new GacelaConfigFile())
             ->setSuffixTypes([
+                'Facade' => ['FA'],
                 'Factory' => ['F'],
                 'Config' => ['C'],
                 'DependencyProvider' => ['DP'],
@@ -120,12 +123,14 @@ final class GacelaConfigFileTest extends TestCase
     {
         $configFile1 = (new GacelaConfigFile())
             ->setSuffixTypes([
+                'Facade' => ['FA1'],
                 'Factory' => ['F1'],
                 'Config' => ['C1'],
                 'DependencyProvider' => ['DP1'],
             ]);
         $configFile2 = (new GacelaConfigFile())
             ->setSuffixTypes([
+                'Facade' => ['FA2'],
                 'Factory' => ['F2'],
                 'Config' => ['C2'],
                 'DependencyProvider' => ['DP2'],
@@ -135,6 +140,7 @@ final class GacelaConfigFileTest extends TestCase
 
         $expected = (new GacelaConfigFile())
             ->setSuffixTypes([
+                'Facade' => ['FA1', 'FA2'],
                 'Factory' => ['F1', 'F2'],
                 'Config' => ['C1', 'C2'],
                 'DependencyProvider' => ['DP1', 'DP2'],

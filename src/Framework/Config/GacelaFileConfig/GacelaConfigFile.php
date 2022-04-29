@@ -16,6 +16,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @var array{
+     *     Facade:list<string>,
      *     Factory:list<string>,
      *     Config:list<string>,
      *     DependencyProvider:list<string>,
@@ -70,9 +71,10 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @param array{
+     *     Facade:list<string>,
      *     Factory:list<string>,
      *     Config:list<string>,
-     *     DependencyProvider:list<string>
+     *     DependencyProvider:list<string>,
      * } $suffixTypes
      */
     public function setSuffixTypes(array $suffixTypes): self
@@ -84,6 +86,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @return array{
+     *     Facade:list<string>,
      *     Factory:list<string>,
      *     Config:list<string>,
      *     DependencyProvider:list<string>,
@@ -100,6 +103,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
         $new->configItems = array_merge($this->configItems, $other->getConfigItems());
         $new->mappingInterfaces = array_merge($this->mappingInterfaces, $other->getMappingInterfaces());
         $new->suffixTypes = [
+            'Facade' => $this->filterList($other, 'Facade'),
             'Factory' => $this->filterList($other, 'Factory'),
             'Config' => $this->filterList($other, 'Config'),
             'DependencyProvider' => $this->filterList($other, 'DependencyProvider'),

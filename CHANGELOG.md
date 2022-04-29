@@ -5,6 +5,7 @@
 - Added DocBlockResolverAwareTrait.
 - Deprecated FacadeResolverAwareTrait in favor of DocBlockResolverAwareTrait.
 - Removed deprecated setup as array in Gacela::bootstrap()
+- Allow overriding Gacela resolvable Facade type.
 
 ### 0.16.0
 #### 2022-04-14

@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 0.17.0
+#### 2022-04-29
 
 - Added DocBlockResolverAwareTrait.
 - Deprecated FacadeResolverAwareTrait in favor of DocBlockResolverAwareTrait.

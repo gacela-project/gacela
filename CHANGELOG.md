@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Remove default config path from config/*.php to empty.
+
 ### 0.17.0
 #### 2022-04-29
 

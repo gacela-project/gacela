@@ -12,11 +12,11 @@ use PHPUnit\Framework\TestCase;
 
 final class ConfigBuilderTest extends TestCase
 {
-    public function test_empty_then_default(): void
+    public function test_empty(): void
     {
         $builder = new ConfigBuilder();
 
-        self::assertEquals([GacelaConfigItem::withDefaults()], $builder->build());
+        self::assertEquals([], $builder->build());
     }
 
     public function test_custom_path(): void

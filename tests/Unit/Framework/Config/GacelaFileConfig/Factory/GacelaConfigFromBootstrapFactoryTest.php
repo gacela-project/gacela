@@ -25,7 +25,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
             $this->createStub(SetupGacelaInterface::class)
         );
 
-        self::assertEquals(GacelaConfigFile::withDefaults(), $factory->createGacelaFileConfig());
+        self::assertEquals(new GacelaConfigFile(), $factory->createGacelaFileConfig());
     }
 
     public function test_no_special_global_services_then_default(): void
@@ -37,7 +37,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
 
         $factory = new GacelaConfigFromBootstrapFactory($setupGacela);
 
-        self::assertEquals(GacelaConfigFile::withDefaults(), $factory->createGacelaFileConfig());
+        self::assertEquals(new GacelaConfigFile(), $factory->createGacelaFileConfig());
     }
 
     public function test_global_service_config(): void
@@ -48,7 +48,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
             }
         ));
 
-        $expected = GacelaConfigFile::withDefaults()
+        $expected = (new GacelaConfigFile())
             ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());
@@ -68,7 +68,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
                 })
         );
 
-        $expected = GacelaConfigFile::withDefaults()
+        $expected = (new GacelaConfigFile())
             ->setMappingInterfaces([CustomInterface::class => CustomClass::class]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());
@@ -85,7 +85,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
                 )
         );
 
-        $expected = GacelaConfigFile::withDefaults()
+        $expected = (new GacelaConfigFile())
             ->setSuffixTypes([
                 'DependencyProvider' => ['DependencyProvider', 'DPCustom'],
                 'Factory' => ['Factory'],

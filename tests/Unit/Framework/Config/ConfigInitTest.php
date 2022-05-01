@@ -17,7 +17,7 @@ final class ConfigInitTest extends TestCase
     public function test_no_config(): void
     {
         $configInit = new ConfigLoader(
-            GacelaConfigFile::withDefaults(),
+            new GacelaConfigFile(),
             $this->createMock(PathFinderInterface::class),
             $this->createMock(PathNormalizerInterface::class)
         );
@@ -31,7 +31,7 @@ final class ConfigInitTest extends TestCase
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
         $configInit = new ConfigLoader(
-            GacelaConfigFile::withDefaults(),
+            new GacelaConfigFile(),
             $pathFinder,
             $this->createMock(PathNormalizerInterface::class)
         );
@@ -45,7 +45,7 @@ final class ConfigInitTest extends TestCase
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
         $configInit = new ConfigLoader(
-            GacelaConfigFile::withDefaults(),
+            new GacelaConfigFile(),
             $pathFinder,
             $this->createMock(PathNormalizerInterface::class),
         );
@@ -58,7 +58,7 @@ final class ConfigInitTest extends TestCase
         $reader = $this->createStub(ConfigReaderInterface::class);
         $reader->method('read')->willReturn(['key' => 'value']);
 
-        $gacelaConfigFile = GacelaConfigFile::withDefaults()->setConfigItems([
+        $gacelaConfigFile = (new GacelaConfigFile())->setConfigItems([
             new GacelaConfigItem('path', 'path_local', $reader),
         ]);
 
@@ -79,7 +79,7 @@ final class ConfigInitTest extends TestCase
         $reader2 = $this->createStub(ConfigReaderInterface::class);
         $reader2->method('read')->willReturn(['key2' => 'value2']);
 
-        $gacelaConfigFile = GacelaConfigFile::withDefaults()->setConfigItems([
+        $gacelaConfigFile = (new GacelaConfigFile())->setConfigItems([
             new GacelaConfigItem('path', 'path_local', $reader1),
             new GacelaConfigItem('path', 'path_local', $reader2),
         ]);

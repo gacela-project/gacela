@@ -25,7 +25,7 @@ final class ConfigFactoryTest extends TestCase
         $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $bootstrapSetup))
             ->createGacelaFileConfig();
 
-        $expected = GacelaConfigFile::withDefaults();
+        $expected = new GacelaConfigFile();
 
         self::assertEquals($expected, $actual);
     }
@@ -39,7 +39,6 @@ final class ConfigFactoryTest extends TestCase
 
         $expected = (new GacelaConfigFile())
             ->setConfigItems([
-                GacelaConfigItem::withDefaults(),
                 new GacelaConfigItem('config/from-gacela-file.php', ''),
             ])
             ->setMappingInterfaces([

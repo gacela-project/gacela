@@ -13,13 +13,12 @@ final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(
-            __DIR__,
-            (new SetupGacela())
-                ->setConfig(static function (ConfigBuilder $configBuilder): void {
-                    $configBuilder->add('custom-config.php', 'custom-config_local.php');
-                })
-        );
+        $setup = (new SetupGacela())
+            ->setConfig(static function (ConfigBuilder $configBuilder): void {
+                $configBuilder->add('custom-config.php', 'custom-config_local.php');
+            });
+
+        Gacela::bootstrap(__DIR__, $setup);
     }
 
     public function test_load_default_config(): void

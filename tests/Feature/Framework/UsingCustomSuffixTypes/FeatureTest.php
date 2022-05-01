@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes;
 
+use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Setup\SetupGacela;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,9 +14,14 @@ use PHPUnit\Framework\TestCase;
  */
 final class FeatureTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        $setup = (new SetupGacela())
+            ->setConfig(static function (ConfigBuilder $configBuilder): void {
+                $configBuilder->add('config/*.php', 'config/local.php');
+            });
+
+        Gacela::bootstrap(__DIR__, $setup);
     }
 
     public function test_load_module_a(): void

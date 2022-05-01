@@ -63,7 +63,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        self::assertEquals(GacelaConfigFile::withDefaults(), $factory->createGacelaFileConfig());
+        self::assertEquals(new GacelaConfigFile(), $factory->createGacelaFileConfig());
     }
 
     public function test_gacela_file_set_config(): void
@@ -83,7 +83,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $expected = GacelaConfigFile::withDefaults()
+        $expected = (new GacelaConfigFile())
             ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());
@@ -110,7 +110,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $expected = GacelaConfigFile::withDefaults()
+        $expected = (new GacelaConfigFile())
             ->setMappingInterfaces([CustomInterface::class => CustomClass::class]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());
@@ -134,7 +134,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $expected = GacelaConfigFile::withDefaults()
+        $expected = (new GacelaConfigFile())
             ->setSuffixTypes([
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],

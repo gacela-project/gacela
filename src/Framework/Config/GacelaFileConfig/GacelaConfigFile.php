@@ -24,12 +24,6 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      */
     private array $suffixTypes = SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES;
 
-    public static function withDefaults(): self
-    {
-        return (new self())
-            ->setConfigItems([GacelaConfigItem::withDefaults()]);
-    }
-
     /**
      * @param list<GacelaConfigItem> $configItems
      */

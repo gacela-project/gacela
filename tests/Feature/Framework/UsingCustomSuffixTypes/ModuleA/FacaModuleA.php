@@ -9,7 +9,7 @@ use Gacela\Framework\AbstractFacade;
 /**
  * @method FactModuleA getFactory()
  */
-final class FaçModuleA extends AbstractFacade
+final class FacaModuleA extends AbstractFacade
 {
     public function doSomething(): array
     {

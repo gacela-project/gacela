@@ -11,7 +11,7 @@ return static fn () => (new SetupGacela())
     ->setSuffixTypes(
         static function (SuffixTypesBuilder $suffixTypesBuilder): void {
             $suffixTypesBuilder
-                ->addFacade('FaçModuleA')
+                ->addFacade('FacaModuleA')
                 ->addFactory('FactModuleA')
                 ->addConfig('ConfModuleA')
                 ->addDependencyProvider('DepProModuleA')

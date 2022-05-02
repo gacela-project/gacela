@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 use Gacela\Framework\DocBlockResolverAwareTrait;
 
 /**
- * @method FaçModuleA getFacade()
+ * @method FacaModuleA getFacade()
  */
 final class CommandModuleA
 {

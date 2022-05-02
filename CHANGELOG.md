@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.17.1
+#### 2022-05-02
+
+- Removing illegal c-char from filename.
+
 ### 0.17.0
 #### 2022-04-29
 

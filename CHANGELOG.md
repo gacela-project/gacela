@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.17.2
+#### 2022-05-02
+
+- Ensure GLOB_BRACE constant is defined for Alpine and Solaris OS.
+
 ### 0.17.1
 #### 2022-05-02
 

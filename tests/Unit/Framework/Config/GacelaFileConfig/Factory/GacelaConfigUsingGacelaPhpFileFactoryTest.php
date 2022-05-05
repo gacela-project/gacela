@@ -39,7 +39,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
-        $fileIo->method('include')->willReturn(static fn () => new SetupGacela());
+        $fileIo->method('include')->willReturn(new SetupGacela());
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',

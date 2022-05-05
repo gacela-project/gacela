@@ -42,7 +42,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $setupGacelaFile = $this->fileIo->include($this->gacelaPhpPath);
 
         if (is_callable($setupGacelaFile)) {
-            $gacelaConfig = new GacelaConfig();
+            $gacelaConfig = new GacelaConfig($this->setup->externalServices());
             $setupGacelaFile($gacelaConfig);
             $setupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
         } else {

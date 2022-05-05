@@ -33,7 +33,8 @@ final class SetupGacela extends AbstractSetupGacela
         return (new self())
             ->setConfigBuilder($gacelaConfig->getConfigBuilder())
             ->setSuffixTypesBuilder($gacelaConfig->getSuffixTypesBuilder())
-            ->setMappingInterfacesBuilder($gacelaConfig->getMappingInterfacesBuilder());
+            ->setMappingInterfacesBuilder($gacelaConfig->getMappingInterfacesBuilder())
+            ->setExternalServices($gacelaConfig->getExternalServices());
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self

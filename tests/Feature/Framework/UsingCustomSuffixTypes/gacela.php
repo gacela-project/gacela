@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Setup\SetupGacela;
 
-return static fn () => (new SetupGacela())
+return (new SetupGacela())
     ->setSuffixTypesFn(
         static function (SuffixTypesBuilder $suffixTypesBuilder): void {
             $suffixTypesBuilder

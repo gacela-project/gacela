@@ -12,11 +12,20 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 final class GacelaConfig
 {
     private ConfigBuilder $configBuilder;
+
     private SuffixTypesBuilder $suffixTypesBuilder;
+
     private MappingInterfacesBuilder $mappingInterfacesBuilder;
 
-    public function __construct()
+    /** @var array<string,mixed> */
+    private array $externalServices;
+
+    /**
+     * @param array<string,mixed> $externalServices
+     */
+    public function __construct(array $externalServices)
     {
+        $this->externalServices = $externalServices;
         $this->configBuilder = new ConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
         $this->mappingInterfacesBuilder = new MappingInterfacesBuilder();
@@ -86,5 +95,21 @@ final class GacelaConfig
         $this->mappingInterfacesBuilder->bind($key, $value);
 
         return $this;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getExternalServices(): array
+    {
+        return $this->externalServices;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getExternalService(string $key)
+    {
+        return $this->externalServices[$key];
     }
 }

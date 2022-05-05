@@ -17,6 +17,7 @@ final class PathFinder implements PathFinderInterface
     {
         $this->ensureGlobBraceIsDefined();
 
+        /** @psalm-suppress UndefinedConstant, MixedArgument */
         $glob = glob($pattern, GLOB_BRACE);
 
         return is_array($glob) ? $glob : [];

@@ -29,14 +29,32 @@ Do not post screenshots of code or output.
 
 ## Workflow for Pull Requests
 
-1. Fork/clone the repository.
+First, fork the repository. To run the project, you might want to do this from your local PHP. Another alternative is
+using a docker container already prepared with the minimum environment to run the tests.
+
+### Using docker
+
+1. `cd gacela`
+2. `docker build -t gacela .`
+3. `docker run -v $(pwd):/app -ti gacela sh`
+4. `composer test-all`
+
+### Using your local machine
+
+1. You must have PHP >=7.4
 2. Install the vendor dependencies with `composer install`.
-3. Create your branch from `master` if you plan to implement new functionality or change existing code significantly;
-   create your branch from the oldest branch that is affected by the bug if you plan to fix a bug.
-4. Implement your change and add tests for it.
-5. Ensure the test suite passes.
-6. Ensure the code complies with our coding guidelines (see below).
-7. Send that pull request!
+
+### Branch and PRs workflow
+
+1. Create your branch from `master` if you plan to implement new functionality or change existing code significantly;
+create your branch from the oldest branch that is affected by the bug if you plan to fix a bug. 
+   1. Use `feature/your-branch-name` for feature branches.
+   2. Use `bugfix/your-branch-name` for bug fixes.
+   3. In case you're not sure, you don't have to use a prefix for your branch. It's fine :)
+2. Implement your change. Do not forget adding tests for it.
+3. Ensure the test suite passes.
+4. Ensure the code complies with our coding guidelines (see below).
+5. Send that pull request!
 
 Please make sure you have [set up your username and email address](https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup) for use with Git. Strings such as `silly nick name <root@localhost>` look really stupid in the commit history of a project.
 

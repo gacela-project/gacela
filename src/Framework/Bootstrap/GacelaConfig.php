@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Setup;
+namespace Gacela\Framework\Bootstrap;
 
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
@@ -23,7 +23,7 @@ final class GacelaConfig
     /**
      * @param array<string,mixed> $externalServices
      */
-    public function __construct(array $externalServices)
+    public function __construct(array $externalServices = [])
     {
         $this->externalServices = $externalServices;
         $this->configBuilder = new ConfigBuilder();
@@ -111,5 +111,15 @@ final class GacelaConfig
     public function getExternalService(string $key)
     {
         return $this->externalServices[$key];
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public function addExternalService(string $key, $value): self
+    {
+        $this->externalServices[$key] = $value;
+
+        return $this;
     }
 }

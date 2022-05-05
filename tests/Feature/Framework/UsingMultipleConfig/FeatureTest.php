@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingMultipleConfig;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Gacela;
-use Gacela\Framework\Setup\SetupGacela;
 use GacelaTest\Fixtures\SimpleEnvConfigReader;
 use PHPUnit\Framework\TestCase;
 

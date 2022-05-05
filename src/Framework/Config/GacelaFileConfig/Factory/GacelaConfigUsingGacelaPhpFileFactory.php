@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -11,9 +14,6 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\Setup\GacelaConfig;
-use Gacela\Framework\Setup\SetupGacela;
-use Gacela\Framework\Setup\SetupGacelaInterface;
 use RuntimeException;
 
 use function is_callable;

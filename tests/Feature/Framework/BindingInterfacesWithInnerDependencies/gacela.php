@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
-use Gacela\Framework\Setup\SetupGacela;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\Greeter\CorrectCompanyGenerator;
 use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\Greeter\IncorrectCompanyGenerator;
 use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
@@ -16,14 +15,11 @@ use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalCon
  * - 2: Let Gacela resolve in the factory the mapping from `GreeterGeneratorInterface` to `CorrectCompanyGenerator`
  *      AND auto-resolve the class `CustomNameGenerator` from the `CorrectCompanyGenerator` constructor.
  */
-return (new SetupGacela())
-    ->setMappingInterfacesFn(static function (
-        MappingInterfacesBuilder $mappingInterfacesBuilder,
-        array $externalServices
-    ): void {
-        $mappingInterfacesBuilder->bind(GreeterGeneratorInterface::class, IncorrectCompanyGenerator::class);
 
-        if ($externalServices['isWorking?'] === 'yes!') {
-            $mappingInterfacesBuilder->bind(GreeterGeneratorInterface::class, CorrectCompanyGenerator::class);
-        }
-    });
+return static function (GacelaConfig $config): void {
+    $config->mapInterface(GreeterGeneratorInterface::class, IncorrectCompanyGenerator::class);
+
+    if ($config->getExternalService('isWorking?') === 'yes!') {
+        $config->mapInterface(GreeterGeneratorInterface::class, CorrectCompanyGenerator::class);
+    }
+};

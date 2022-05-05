@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingConfigFromCustomEnv;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Gacela;
-use Gacela\Framework\Setup\SetupGacela;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase

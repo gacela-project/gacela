@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Setup\SetupGacela;
 
 return (new SetupGacela())
     ->setSuffixTypesFn(

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\Config\ConfigFactory;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
-use Gacela\Framework\Setup\SetupGacela;
 use GacelaTest\Fixtures\AbstractCustom;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;

@@ -12,7 +12,6 @@ use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFa
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use Gacela\Framework\Setup\SetupGacela;
-use Gacela\Framework\Setup\SetupGacelaInterface;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
 use PHPUnit\Framework\TestCase;
@@ -21,17 +20,14 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
 {
     public function test_no_global_services_then_default(): void
     {
-        $factory = new GacelaConfigFromBootstrapFactory(
-            $this->createStub(SetupGacelaInterface::class)
-        );
+        $factory = new GacelaConfigFromBootstrapFactory(new SetupGacela());
 
         self::assertEquals(new GacelaConfigFile(), $factory->createGacelaFileConfig());
     }
 
     public function test_no_special_global_services_then_default(): void
     {
-        $setupGacela = $this->createStub(SetupGacelaInterface::class);
-        $setupGacela->method('externalServices')->willReturn([
+        $setupGacela = (new SetupGacela())->setExternalServices([
             'randomKey' => 'randomValue',
         ]);
 
@@ -42,11 +38,13 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
 
     public function test_global_service_config(): void
     {
-        $factory = new GacelaConfigFromBootstrapFactory((new SetupGacela())->setConfig(
-            static function (ConfigBuilder $configBuilder): void {
-                $configBuilder->add('custom-path.php', 'custom-path_local.php');
-            }
-        ));
+        $factory = new GacelaConfigFromBootstrapFactory(
+            (new SetupGacela())->setConfigFn(
+                static function (ConfigBuilder $configBuilder): void {
+                    $configBuilder->add('custom-path.php', 'custom-path_local.php');
+                }
+            )
+        );
 
         $expected = (new GacelaConfigFile())
             ->setConfigItems([new GacelaConfigItem('custom-path.php', 'custom-path_local.php', new PhpConfigReader())]);
@@ -59,7 +57,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
         $factory = new GacelaConfigFromBootstrapFactory(
             (new SetupGacela())
                 ->setExternalServices(['externalServiceKey' => 'externalServiceValue'])
-                ->setMappingInterfaces(static function (
+                ->setMappingInterfacesFn(static function (
                     MappingInterfacesBuilder $interfacesBuilder,
                     array $externalServices
                 ): void {
@@ -78,7 +76,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     {
         $factory = new GacelaConfigFromBootstrapFactory(
             (new SetupGacela())
-                ->setSuffixTypes(
+                ->setSuffixTypesFn(
                     static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                         $suffixTypesBuilder->addDependencyProvider('DPCustom');
                     },

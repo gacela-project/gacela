@@ -35,25 +35,16 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     private function createConfigBuilder(): ConfigBuilder
     {
-        $configBuilder = new ConfigBuilder();
-        $this->setup->config($configBuilder);
-
-        return $configBuilder;
+        return $this->setup->buildConfig(new ConfigBuilder());
     }
 
     private function createMappingInterfacesBuilder(): MappingInterfacesBuilder
     {
-        $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $this->setup->mappingInterfaces($mappingInterfacesBuilder, []);
-
-        return $mappingInterfacesBuilder;
+        return $this->setup->buildMappingInterfaces(new MappingInterfacesBuilder(), []);
     }
 
     private function createSuffixTypesBuilder(): SuffixTypesBuilder
     {
-        $suffixTypesBuilder = new SuffixTypesBuilder();
-        $this->setup->suffixTypes($suffixTypesBuilder);
-
-        return $suffixTypesBuilder;
+        return $this->setup->buildSuffixTypes(new SuffixTypesBuilder());
     }
 }

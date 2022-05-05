@@ -22,25 +22,66 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var array<string,mixed> */
     private array $externalServices = [];
 
+    private ?ConfigBuilder $configBuilder = null;
+
+    private ?SuffixTypesBuilder $suffixTypesBuilder = null;
+
+    private ?MappingInterfacesBuilder $mappingInterfacesBuilder = null;
+
+    public static function fromGacelaConfig(GacelaConfig $gacelaConfig): self
+    {
+        return (new self())
+            ->setConfigBuilder($gacelaConfig->getConfigBuilder())
+            ->setSuffixTypesBuilder($gacelaConfig->getSuffixTypesBuilder())
+            ->setMappingInterfacesBuilder($gacelaConfig->getMappingInterfacesBuilder());
+    }
+
+    public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
+    {
+        $this->mappingInterfacesBuilder = $builder;
+
+        return $this;
+    }
+
+    public function setSuffixTypesBuilder(SuffixTypesBuilder $builder): self
+    {
+        $this->suffixTypesBuilder = $builder;
+
+        return $this;
+    }
+
+    public function setConfigBuilder(ConfigBuilder $builder): self
+    {
+        $this->configBuilder = $builder;
+
+        return $this;
+    }
+
     /**
      * @param callable(ConfigBuilder):void $callable
      */
-    public function setConfig(callable $callable): self
+    public function setConfigFn(callable $callable): self
     {
         $this->configFn = $callable;
 
         return $this;
     }
 
-    public function config(ConfigBuilder $configBuilder): void
+    public function buildConfig(ConfigBuilder $configBuilder): ConfigBuilder
     {
+        if ($this->configBuilder) {
+            $configBuilder = $this->configBuilder;
+        }
+
         $this->configFn && ($this->configFn)($configBuilder);
+
+        return $configBuilder;
     }
 
     /**
      * @param callable(MappingInterfacesBuilder,array<string,mixed>):void $callable
      */
-    public function setMappingInterfaces(callable $callable): self
+    public function setMappingInterfacesFn(callable $callable): self
     {
         $this->mappingInterfacesFn = $callable;
 
@@ -52,18 +93,26 @@ final class SetupGacela extends AbstractSetupGacela
      *
      * @param array<string,mixed> $externalServices
      */
-    public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void
-    {
+    public function buildMappingInterfaces(
+        MappingInterfacesBuilder $mappingInterfacesBuilder,
+        array $externalServices
+    ): MappingInterfacesBuilder {
+        if ($this->mappingInterfacesBuilder) {
+            $mappingInterfacesBuilder = $this->mappingInterfacesBuilder;
+        }
+
         $this->mappingInterfacesFn && ($this->mappingInterfacesFn)(
             $mappingInterfacesBuilder,
             array_merge($this->externalServices, $externalServices)
         );
+
+        return $mappingInterfacesBuilder;
     }
 
     /**
      * @param callable(SuffixTypesBuilder):void $callable
      */
-    public function setSuffixTypes(callable $callable): self
+    public function setSuffixTypesFn(callable $callable): self
     {
         $this->suffixTypesFn = $callable;
 
@@ -73,9 +122,15 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * Allow overriding gacela resolvable types.
      */
-    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void
+    public function buildSuffixTypes(SuffixTypesBuilder $suffixTypesBuilder): SuffixTypesBuilder
     {
+        if ($this->suffixTypesBuilder) {
+            $suffixTypesBuilder = $this->suffixTypesBuilder;
+        }
+
         $this->suffixTypesFn && ($this->suffixTypesFn)($suffixTypesBuilder);
+
+        return $suffixTypesBuilder;
     }
 
     /**
@@ -89,9 +144,9 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @deprecated in favor of `externalServices()`
-     *
      * @return array<string,mixed>
+     *
+     * @deprecated in favor of `externalServices()`
      */
     public function globalServices(): array
     {

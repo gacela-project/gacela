@@ -17,7 +17,7 @@ use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalCon
  *      AND auto-resolve the class `CustomNameGenerator` from the `CorrectCompanyGenerator` constructor.
  */
 return static fn () => (new SetupGacela())
-    ->setMappingInterfaces(static function (
+    ->setMappingInterfacesFn(static function (
         MappingInterfacesBuilder $mappingInterfacesBuilder,
         array $externalServices
     ): void {

@@ -57,11 +57,11 @@ final class ConfigFactoryTest extends TestCase
     public function test_only_bootstrap_setup_gacela_exists(): void
     {
         $bootstrapSetup = (new SetupGacela())
-            ->setConfig(static function (ConfigBuilder $builder): void {
+            ->setConfigFn(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
             ->setExternalServices(['CustomClassFromBootstrap' => CustomClass::class])
-            ->setMappingInterfaces(
+            ->setMappingInterfacesFn(
                 static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
                     $mappingInterfacesBuilder->bind(
                         CustomInterface::class,
@@ -69,7 +69,7 @@ final class ConfigFactoryTest extends TestCase
                     );
                 },
             )
-            ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+            ->setSuffixTypesFn(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder
                     ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')
@@ -100,16 +100,16 @@ final class ConfigFactoryTest extends TestCase
     public function test_combine_bootstrap_setup_with_gacela_file(): void
     {
         $bootstrapSetup = (new SetupGacela())
-            ->setConfig(static function (ConfigBuilder $builder): void {
+            ->setConfigFn(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
             ->setExternalServices(['CustomClassFromBootstrap' => CustomClass::class])
-            ->setMappingInterfaces(
+            ->setMappingInterfacesFn(
                 static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
                     $mappingInterfacesBuilder->bind(AbstractCustom::class, $externalServices['CustomClassFromBootstrap']);
                 },
             )
-            ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+            ->setSuffixTypesFn(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder
                     ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')

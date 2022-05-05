@@ -13,19 +13,19 @@ interface SetupGacelaInterface
     /**
      * Define different config sources.
      */
-    public function config(ConfigBuilder $configBuilder): void;
+    public function buildConfig(ConfigBuilder $configBuilder): ConfigBuilder;
 
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
      * @param array<string,mixed> $externalServices
      */
-    public function mappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void;
+    public function buildMappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): MappingInterfacesBuilder;
 
     /**
      * Allow overriding gacela resolvable types.
      */
-    public function suffixTypes(SuffixTypesBuilder $suffixTypesBuilder): void;
+    public function buildSuffixTypes(SuffixTypesBuilder $suffixTypesBuilder): SuffixTypesBuilder;
 
     /**
      * Define global services that can be accessible via the mapping interfaces.

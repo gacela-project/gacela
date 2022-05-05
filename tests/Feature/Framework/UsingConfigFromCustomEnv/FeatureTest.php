@@ -16,7 +16,7 @@ final class FeatureTest extends TestCase
     protected function setUp(): void
     {
         $this->setup = (new SetupGacela())
-            ->setConfig(static function (ConfigBuilder $configBuilder): void {
+            ->setConfigFn(static function (ConfigBuilder $configBuilder): void {
                 $configBuilder->add('config/*.php', 'config/local.php');
             });
     }

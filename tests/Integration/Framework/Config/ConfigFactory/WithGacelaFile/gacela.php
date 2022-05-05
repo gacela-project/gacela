@@ -10,16 +10,16 @@ use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
 
 return static fn () => (new SetupGacela())
-    ->setConfig(static function (ConfigBuilder $builder): void {
+    ->setConfigFn(static function (ConfigBuilder $builder): void {
         $builder->add('config/from-gacela-file.php');
     })
     ->setExternalServices(['CustomClassFromGacelaFile' => CustomClass::class])
-    ->setMappingInterfaces(
+    ->setMappingInterfacesFn(
         static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
             $mappingInterfacesBuilder->bind(CustomInterface::class, $externalServices['CustomClassFromGacelaFile']);
         },
     )
-    ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+    ->setSuffixTypesFn(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
         $suffixTypesBuilder
             ->addFacade('FacadeFromGacelaFile')
             ->addFactory('FactoryFromGacelaFile')

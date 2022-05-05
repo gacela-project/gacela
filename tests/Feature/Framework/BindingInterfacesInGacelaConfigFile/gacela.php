@@ -11,7 +11,7 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromCallable;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
-return static fn () => (new SetupGacela())->setMappingInterfaces(
+return static fn () => (new SetupGacela())->setMappingInterfacesFn(
     static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
         // Resolve an abstract class from a concrete instance of a class
         $mappingInterfacesBuilder->bind(AbstractClass::class, new ConcreteClass(true, 'string', 1, 1.2, ['array']));

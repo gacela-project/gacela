@@ -17,7 +17,7 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(
             __DIR__,
             (new SetupGacela())
-                ->setConfig(static function (ConfigBuilder $configBuilder): void {
+                ->setConfigFn(static function (ConfigBuilder $configBuilder): void {
                     $configBuilder->add('config/.env*', '', SimpleEnvConfigReader::class);
                     $configBuilder->add('config/*.php');
                 })

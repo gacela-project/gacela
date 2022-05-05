@@ -8,7 +8,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Setup\SetupGacela;
 
 return static fn () => (new SetupGacela())
-    ->setSuffixTypes(
+    ->setSuffixTypesFn(
         static function (SuffixTypesBuilder $suffixTypesBuilder): void {
             $suffixTypesBuilder
                 ->addFacade('FacaModuleA')

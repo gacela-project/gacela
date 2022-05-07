@@ -17,9 +17,9 @@ use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalCon
  */
 
 return static function (GacelaConfig $config): void {
-    $config->mapInterface(GreeterGeneratorInterface::class, IncorrectCompanyGenerator::class);
+    $config->addMappingInterface(GreeterGeneratorInterface::class, IncorrectCompanyGenerator::class);
 
     if ($config->getExternalService('isWorking?') === 'yes!') {
-        $config->mapInterface(GreeterGeneratorInterface::class, CorrectCompanyGenerator::class);
+        $config->addMappingInterface(GreeterGeneratorInterface::class, CorrectCompanyGenerator::class);
     }
 };

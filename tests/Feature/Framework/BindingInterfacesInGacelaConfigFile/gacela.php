@@ -11,10 +11,13 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
 return static function (GacelaConfig $config): void {
-    $config->mapInterface(AbstractClass::class, new ConcreteClass(true, 'string', 1, 1.2, ['array']));
+    $config->addMappingInterface(
+        AbstractClass::class,
+        new ConcreteClass(true, 'string', 1, 1.2, ['array'])
+    );
 
     // Resolve anonymous-classes/callables from abstract classes and interfaces
-    $config->mapInterface(
+    $config->addMappingInterface(
         AbstractFromAnonymousClass::class,
         new class() extends AbstractFromAnonymousClass {
             public function getClassName(): string
@@ -24,7 +27,7 @@ return static function (GacelaConfig $config): void {
         }
     );
 
-    $config->mapInterface(
+    $config->addMappingInterface(
         AbstractFromCallable::class,
         new class() extends AbstractFromCallable {
             public function getClassName(): string
@@ -34,7 +37,7 @@ return static function (GacelaConfig $config): void {
         }
     );
 
-    $config->mapInterface(
+    $config->addMappingInterface(
         InterfaceFromAnonymousClass::class,
         new class() implements InterfaceFromAnonymousClass {
             public function getClassName(): string
@@ -44,7 +47,7 @@ return static function (GacelaConfig $config): void {
         }
     );
 
-    $config->mapInterface(
+    $config->addMappingInterface(
         InterfaceFromCallable::class,
         new class() implements InterfaceFromCallable {
             public function getClassName(): string

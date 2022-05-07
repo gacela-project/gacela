@@ -90,7 +90,7 @@ final class GacelaConfig
      * @param class-string $key
      * @param class-string|object|callable $value
      */
-    public function mapInterface(string $key, $value): self
+    public function addMappingInterface(string $key, $value): self
     {
         $this->mappingInterfacesBuilder->bind($key, $value);
 

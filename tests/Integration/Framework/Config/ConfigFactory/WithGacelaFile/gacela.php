@@ -8,7 +8,7 @@ use GacelaTest\Fixtures\CustomInterface;
 return static function (GacelaConfig $config): void {
     $config
         ->addAppConfig('config/from-gacela-file.php')
-        ->mapInterface(CustomInterface::class, $config->getExternalService('CustomClassFromExternalService'))
+        ->addMappingInterface(CustomInterface::class, $config->getExternalService('CustomClassFromExternalService'))
         ->addSuffixTypeFacade('FacadeFromGacelaFile')
         ->addSuffixTypeFactory('FactoryFromGacelaFile')
         ->addSuffixTypeConfig('ConfigFromGacelaFile')

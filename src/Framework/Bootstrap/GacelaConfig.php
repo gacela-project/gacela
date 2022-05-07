@@ -31,21 +31,6 @@ final class GacelaConfig
         $this->mappingInterfacesBuilder = new MappingInterfacesBuilder();
     }
 
-    public function getConfigBuilder(): ConfigBuilder
-    {
-        return $this->configBuilder;
-    }
-
-    public function getSuffixTypesBuilder(): SuffixTypesBuilder
-    {
-        return $this->suffixTypesBuilder;
-    }
-
-    public function getMappingInterfacesBuilder(): MappingInterfacesBuilder
-    {
-        return $this->mappingInterfacesBuilder;
-    }
-
     /**
      * @param string $path define the path where Gacela will read all the config files
      * @param string $pathLocal define the path where Gacela will read the local config file
@@ -98,14 +83,6 @@ final class GacelaConfig
     }
 
     /**
-     * @return array<string,mixed>
-     */
-    public function getExternalServices(): array
-    {
-        return $this->externalServices;
-    }
-
-    /**
      * @return mixed
      */
     public function getExternalService(string $key)
@@ -121,5 +98,39 @@ final class GacelaConfig
         $this->externalServices[$key] = $value;
 
         return $this;
+    }
+
+    /**
+     * @internal
+     *
+     * @return array<string,mixed>
+     */
+    public function getExternalServices(): array
+    {
+        return $this->externalServices;
+    }
+
+    /**
+     * @internal
+     */
+    public function getConfigBuilder(): ConfigBuilder
+    {
+        return $this->configBuilder;
+    }
+
+    /**
+     * @internal
+     */
+    public function getSuffixTypesBuilder(): SuffixTypesBuilder
+    {
+        return $this->suffixTypesBuilder;
+    }
+
+    /**
+     * @internal
+     */
+    public function getMappingInterfacesBuilder(): MappingInterfacesBuilder
+    {
+        return $this->mappingInterfacesBuilder;
     }
 }

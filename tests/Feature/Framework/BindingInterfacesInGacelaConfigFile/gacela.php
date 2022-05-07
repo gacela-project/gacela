@@ -10,14 +10,16 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromCallable;
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
 
-return static function (GacelaConfig $config): void {
-    $config->addMappingInterface(
+// Is it also possible to bind classes like => AbstractClass::class => SpecificClass::class
+// Check the test _BindingInterfacesWithInnerDependencies_ BUT be aware this way is not possible
+// if the class has dependencies that cannot be resolved automatically!
+return static fn (GacelaConfig $config) => $config
+    ->addMappingInterface(
         AbstractClass::class,
         new ConcreteClass(true, 'string', 1, 1.2, ['array'])
-    );
-
+    )
     // Resolve anonymous-classes/callables from abstract classes and interfaces
-    $config->addMappingInterface(
+    ->addMappingInterface(
         AbstractFromAnonymousClass::class,
         new class() extends AbstractFromAnonymousClass {
             public function getClassName(): string
@@ -25,9 +27,8 @@ return static function (GacelaConfig $config): void {
                 return AbstractFromAnonymousClass::class;
             }
         }
-    );
-
-    $config->addMappingInterface(
+    )
+    ->addMappingInterface(
         AbstractFromCallable::class,
         new class() extends AbstractFromCallable {
             public function getClassName(): string
@@ -35,9 +36,8 @@ return static function (GacelaConfig $config): void {
                 return AbstractFromCallable::class;
             }
         }
-    );
-
-    $config->addMappingInterface(
+    )
+    ->addMappingInterface(
         InterfaceFromAnonymousClass::class,
         new class() implements InterfaceFromAnonymousClass {
             public function getClassName(): string
@@ -45,9 +45,8 @@ return static function (GacelaConfig $config): void {
                 return InterfaceFromAnonymousClass::class;
             }
         }
-    );
-
-    $config->addMappingInterface(
+    )
+    ->addMappingInterface(
         InterfaceFromCallable::class,
         new class() implements InterfaceFromCallable {
             public function getClassName(): string
@@ -56,7 +55,3 @@ return static function (GacelaConfig $config): void {
             }
         }
     );
-    // Is it also possible to bind classes like => AbstractClass::class => SpecificClass::class
-    // Check the test _BindingInterfacesWithInnerDependencies_ BUT be aware this way is not possible
-    // if the class has dependencies that cannot be resolved automatically!
-};

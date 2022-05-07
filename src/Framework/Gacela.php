@@ -14,7 +14,7 @@ final class Gacela
     /**
      * Define the entry point of Gacela.
      *
-     * @param SetupGacelaInterface|callable(GacelaConfig):void|null $setup
+     * @param null|SetupGacelaInterface|callable(GacelaConfig):void $setup
      */
     public static function bootstrap(string $appRootDir, $setup = null): void
     {

@@ -55,8 +55,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
-        $fileIo->method('include')->willReturn(static function (GacelaConfig $config): void {
-        });
+        $fileIo->method('include')->willReturn(static fn (GacelaConfig $config) => $config);
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
@@ -70,9 +69,8 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_gacela_file_set_config(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(static function (GacelaConfig $config): void {
-            $config->addAppConfig('custom-path.php', 'custom-path_local.php');
-        });
+        $fileIo->method('include')->willReturn(static fn (GacelaConfig $config) => $config
+            ->addAppConfig('custom-path.php', 'custom-path_local.php'));
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
@@ -114,9 +112,8 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
-            static function (GacelaConfig $config): void {
-                $config->addSuffixTypeDependencyProvider('Binding');
-            }
+            static fn (GacelaConfig $config) => $config
+                ->addSuffixTypeDependencyProvider('Binding')
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(

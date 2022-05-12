@@ -2,12 +2,7 @@
 
 declare(strict_types=1);
 
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Setup\SetupGacela;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 
-return static fn () => (new SetupGacela())
-    ->setConfig(
-        static function (ConfigBuilder $configBuilder): void {
-            $configBuilder->add('config/*.php', 'config/local.php');
-        }
-    );
+return static fn (GacelaConfig $config) => $config
+    ->addAppConfig('config/*.php', 'config/local.php');

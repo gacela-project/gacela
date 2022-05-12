@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -11,8 +14,8 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\Setup\SetupGacelaInterface;
 use RuntimeException;
+
 use function is_callable;
 
 final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFactoryInterface
@@ -37,13 +40,16 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
     {
         /** @var SetupGacelaInterface|callable $setupGacelaFile */
         $setupGacelaFile = $this->fileIo->include($this->gacelaPhpPath);
+
         if (is_callable($setupGacelaFile)) {
-            trigger_deprecation('Gacela', '0.15', 'Return a SetupGacelaInterface instance directly. The callable option will be removed in the next version.');
+            $gacelaConfig = new GacelaConfig($this->setup->externalServices());
+            $setupGacelaFile($gacelaConfig);
+            $setupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
+        } else {
+            $setupGacela = $setupGacelaFile;
         }
 
         /** @var object $setupGacela */
-        $setupGacela = is_callable($setupGacelaFile) ? $setupGacelaFile() : $setupGacelaFile;
-
         if (!is_subclass_of($setupGacela, SetupGacelaInterface::class)) {
             throw new RuntimeException('The gacela.php file should return an instance of SetupGacela');
         }
@@ -60,25 +66,16 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 
     private function createConfigBuilder(SetupGacelaInterface $setupGacela): ConfigBuilder
     {
-        $configBuilder = new ConfigBuilder();
-        $setupGacela->config($configBuilder);
-
-        return $configBuilder;
+        return $setupGacela->buildConfig(new ConfigBuilder());
     }
 
     private function createMappingInterfacesBuilder(SetupGacelaInterface $setupGacela): MappingInterfacesBuilder
     {
-        $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $setupGacela->mappingInterfaces($mappingInterfacesBuilder, $this->setup->externalServices());
-
-        return $mappingInterfacesBuilder;
+        return $setupGacela->buildMappingInterfaces(new MappingInterfacesBuilder(), $this->setup->externalServices());
     }
 
     private function createSuffixTypesBuilder(SetupGacelaInterface $setupGacela): SuffixTypesBuilder
     {
-        $suffixTypesBuilder = new SuffixTypesBuilder();
-        $setupGacela->suffixTypes($suffixTypesBuilder);
-
-        return $suffixTypesBuilder;
+        return $setupGacela->buildSuffixTypes(new SuffixTypesBuilder());
     }
 }

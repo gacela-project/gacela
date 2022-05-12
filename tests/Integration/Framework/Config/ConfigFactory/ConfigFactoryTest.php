@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\Config\ConfigFactory;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
-use Gacela\Framework\Setup\SetupGacela;
 use GacelaTest\Fixtures\AbstractCustom;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
@@ -20,9 +20,9 @@ final class ConfigFactoryTest extends TestCase
 {
     public function test_empty_setup_then_default_gacela_config_file(): void
     {
-        $bootstrapSetup = new SetupGacela();
+        $setup = new SetupGacela();
 
-        $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $bootstrapSetup))
+        $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $setup))
             ->createGacelaFileConfig();
 
         $expected = new GacelaConfigFile();
@@ -32,9 +32,10 @@ final class ConfigFactoryTest extends TestCase
 
     public function test_only_gacela_file_exists(): void
     {
-        $bootstrapSetup = new SetupGacela();
+        $setup = (new SetupGacela())
+            ->setExternalServices(['CustomClassFromExternalService' => CustomClass::class]);
 
-        $actual = (new ConfigFactory(__DIR__ . '/WithGacelaFile', $bootstrapSetup))
+        $actual = (new ConfigFactory(__DIR__ . '/WithGacelaFile', $setup))
             ->createGacelaFileConfig();
 
         $expected = (new GacelaConfigFile())
@@ -57,19 +58,19 @@ final class ConfigFactoryTest extends TestCase
     public function test_only_bootstrap_setup_gacela_exists(): void
     {
         $bootstrapSetup = (new SetupGacela())
-            ->setConfig(static function (ConfigBuilder $builder): void {
+            ->setExternalServices(['CustomClassFromExternalService' => CustomClass::class])
+            ->setConfigFn(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
-            ->setExternalServices(['CustomClassFromBootstrap' => CustomClass::class])
-            ->setMappingInterfaces(
+            ->setMappingInterfacesFn(
                 static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
                     $mappingInterfacesBuilder->bind(
                         CustomInterface::class,
-                        $externalServices['CustomClassFromBootstrap']
+                        $externalServices['CustomClassFromExternalService']
                     );
                 },
             )
-            ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+            ->setSuffixTypesFn(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder
                     ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')
@@ -99,17 +100,20 @@ final class ConfigFactoryTest extends TestCase
 
     public function test_combine_bootstrap_setup_with_gacela_file(): void
     {
-        $bootstrapSetup = (new SetupGacela())
-            ->setConfig(static function (ConfigBuilder $builder): void {
+        $setup = (new SetupGacela())
+            ->setExternalServices(['CustomClassFromExternalService' => CustomClass::class])
+            ->setConfigFn(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
-            ->setExternalServices(['CustomClassFromBootstrap' => CustomClass::class])
-            ->setMappingInterfaces(
+            ->setMappingInterfacesFn(
                 static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
-                    $mappingInterfacesBuilder->bind(AbstractCustom::class, $externalServices['CustomClassFromBootstrap']);
+                    $mappingInterfacesBuilder->bind(
+                        AbstractCustom::class,
+                        $externalServices['CustomClassFromExternalService']
+                    );
                 },
             )
-            ->setSuffixTypes(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
+            ->setSuffixTypesFn(static function (SuffixTypesBuilder $suffixTypesBuilder): void {
                 $suffixTypesBuilder
                     ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')
@@ -117,7 +121,7 @@ final class ConfigFactoryTest extends TestCase
                     ->addDependencyProvider('DependencyProviderFromBootstrap');
             });
 
-        $actual = (new ConfigFactory(__DIR__ . '/WithGacelaFile', $bootstrapSetup))
+        $actual = (new ConfigFactory(__DIR__ . '/WithGacelaFile', $setup))
             ->createGacelaFileConfig();
 
         $expected = (new GacelaConfigFile())

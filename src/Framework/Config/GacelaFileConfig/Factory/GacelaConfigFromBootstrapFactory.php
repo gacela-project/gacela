@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
+use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\Setup\SetupGacelaInterface;
 
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
@@ -35,25 +35,16 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     private function createConfigBuilder(): ConfigBuilder
     {
-        $configBuilder = new ConfigBuilder();
-        $this->setup->config($configBuilder);
-
-        return $configBuilder;
+        return $this->setup->buildConfig(new ConfigBuilder());
     }
 
     private function createMappingInterfacesBuilder(): MappingInterfacesBuilder
     {
-        $mappingInterfacesBuilder = new MappingInterfacesBuilder();
-        $this->setup->mappingInterfaces($mappingInterfacesBuilder, []);
-
-        return $mappingInterfacesBuilder;
+        return $this->setup->buildMappingInterfaces(new MappingInterfacesBuilder(), []);
     }
 
     private function createSuffixTypesBuilder(): SuffixTypesBuilder
     {
-        $suffixTypesBuilder = new SuffixTypesBuilder();
-        $this->setup->suffixTypes($suffixTypesBuilder);
-
-        return $suffixTypesBuilder;
+        return $this->setup->buildSuffixTypes(new SuffixTypesBuilder());
     }
 }

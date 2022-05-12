@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Gacela\Framework\Setup\SetupGacela;
-use Gacela\Framework\Setup\SetupGacelaInterface;
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use function is_callable;
 
 final class Gacela
 {
-    public const CONFIG = 'config';
-    public const MAPPING_INTERFACES = 'mapping-interfaces';
-    public const SUFFIX_TYPES = 'suffix-types';
-    public const EXTERNAL_SERVICES = 'external-services';
-
     /**
      * Define the entry point of Gacela.
+     *
+     * @param null|SetupGacelaInterface|callable(GacelaConfig):void $setup
      */
-    public static function bootstrap(string $appRootDir, ?SetupGacelaInterface $setup = null): void
+    public static function bootstrap(string $appRootDir, $setup = null): void
     {
+        if (is_callable($setup)) {
+            $setup = SetupGacela::fromCallable($setup);
+        }
+
         Config::getInstance()
             ->setAppRootDir($appRootDir)
             ->setSetup($setup ?? new SetupGacela())

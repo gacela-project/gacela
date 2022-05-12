@@ -2,13 +2,16 @@
 
 ### Unreleased
 
-- Remove default config path from config/*.php to empty.
+- Removed default config path from config/*.php to empty.
+- Added allow gacela.php using a callable with GacelaConfig arg.
+- Moved namespace from Setup to Bootstrap (affecting SetupGacela).
+  - Deprecated Setup namespace in favor of Bootstrap.
 
 ### 0.17.2
 #### 2022-05-02
 
 - Ensure GLOB_BRACE constant is defined for Alpine and Solaris OS.
-- 
+
 ### 0.17.1
 #### 2022-05-02
 

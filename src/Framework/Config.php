@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Exception\ConfigException;
-use Gacela\Framework\Setup\SetupGacela;
-use Gacela\Framework\Setup\SetupGacelaInterface;
 
 final class Config
 {

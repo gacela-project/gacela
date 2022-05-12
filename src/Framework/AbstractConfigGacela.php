@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Gacela\Framework\Setup\AbstractSetupGacela;
+use Gacela\Framework\Bootstrap\AbstractSetupGacela;
 
 /**
  * @deprecated use AbstractSetupGacela instead

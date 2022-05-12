@@ -103,34 +103,20 @@ final class GacelaConfig
     /**
      * @internal
      *
-     * @return array<string,mixed>
+     * @return array{
+     *     external-services:array<string,mixed>,
+     *     config-builder:ConfigBuilder,
+     *     suffix-types-builder:SuffixTypesBuilder,
+     *     mapping-interfaces-builder:MappingInterfacesBuilder,
+     * }
      */
-    public function getExternalServices(): array
+    public function build(): array
     {
-        return $this->externalServices;
-    }
-
-    /**
-     * @internal
-     */
-    public function getConfigBuilder(): ConfigBuilder
-    {
-        return $this->configBuilder;
-    }
-
-    /**
-     * @internal
-     */
-    public function getSuffixTypesBuilder(): SuffixTypesBuilder
-    {
-        return $this->suffixTypesBuilder;
-    }
-
-    /**
-     * @internal
-     */
-    public function getMappingInterfacesBuilder(): MappingInterfacesBuilder
-    {
-        return $this->mappingInterfacesBuilder;
+        return [
+            'external-services' => $this->externalServices,
+            'config-builder' => $this->configBuilder,
+            'suffix-types-builder' => $this->suffixTypesBuilder,
+            'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
+        ];
     }
 }

@@ -1,13 +1,14 @@
 # Changelog
 
-### Unreleased
+### 0.18.0
+#### 2022-05-14
 
 - Removed default config path from config/*.php to empty.
 - Added allow gacela.php using a callable with GacelaConfig arg.
 - Moved namespace from Setup to Bootstrap (affecting SetupGacela).
   - Deprecated Setup namespace in favor of Bootstrap.
 - Remove deprecated globalServices() method.
-- Deprecate `SetupGacelaInterface` from `gacela.php` and `Gacela::bootstrap()`. Use `callable(GacelaConfig)` instead.
+- Deprecate SetupGacelaInterface from gacela.php and Gacela::bootstrap(). Use callable(GacelaConfig) instead.
 
 ### 0.17.2
 #### 2022-05-02

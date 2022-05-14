@@ -32,7 +32,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        $this->expectErrorMessage('The gacela.php file should return an instance of SetupGacela');
+        $this->expectErrorMessage('`gacela.php` file should return a `callable(GacelaConfig)`');
         $factory->createGacelaFileConfig();
     }
 

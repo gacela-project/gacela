@@ -49,7 +49,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
             trigger_deprecation(
                 'gacela-project/gacela',
                 '0.18',
-                '`SetupGacelaInterface` is deprecated and it will be removed in a future version. Use `callable(GacelaConfig)` instead.'
+                '`SetupGacelaInterface` is deprecated. Use `callable(GacelaConfig)` instead.'
             );
 
             $setupGacela = $configFn;

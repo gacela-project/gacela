@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.18.1
+#### 2022-05-15
+
+- Bugfix SetupGacela using proper method from parent class.
+
 ### 0.18.0
 #### 2022-05-14
 

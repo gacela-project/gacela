@@ -15,26 +15,32 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 final class SetupGacela extends BootstrapSetupGacela
 {
     /**
-     * @deprecated in favor of setConfigBuilder()
+     * @deprecated in favor of setConfigFn()
+     *
+     * @param callable(ConfigBuilder):void $callable
      */
-    public function setConfig(ConfigBuilder $builder): BootstrapSetupGacela
+    public function setConfig(callable $callable): BootstrapSetupGacela
     {
-        return $this->setConfigBuilder($builder);
+        return $this->setConfigFn($callable);
     }
 
     /**
-     * @deprecated in favor of setMappingInterfacesBuilder()
+     * @deprecated in favor of setMappingInterfacesFn()
+     *
+     * @param callable(MappingInterfacesBuilder,array<string,mixed>):void $callable
      */
-    public function setMappingInterfaces(MappingInterfacesBuilder $builder): BootstrapSetupGacela
+    public function setMappingInterfaces(callable $callable): BootstrapSetupGacela
     {
-        return $this->setMappingInterfacesBuilder($builder);
+        return $this->setMappingInterfacesFn($callable);
     }
 
     /**
-     * @deprecated in favor of setSuffixTypesBuilder()
+     * @deprecated in favor of setSuffixTypesFn()
+     *
+     * @param callable(SuffixTypesBuilder):void $callable
      */
-    public function setSuffixTypes(SuffixTypesBuilder $builder): BootstrapSetupGacela
+    public function setSuffixTypes(callable $callable): BootstrapSetupGacela
     {
-        return $this->setSuffixTypesBuilder($builder);
+        return $this->setSuffixTypesFn($callable);
     }
 }

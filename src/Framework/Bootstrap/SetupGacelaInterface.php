@@ -33,11 +33,4 @@ interface SetupGacelaInterface
      * @return array<string,mixed>
      */
     public function externalServices(): array;
-
-    /**
-     * @deprecated Use `externalServices()` instead
-     *
-     * @return array<string,mixed>
-     */
-    public function globalServices(): array;
 }

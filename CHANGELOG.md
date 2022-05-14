@@ -6,6 +6,7 @@
 - Added allow gacela.php using a callable with GacelaConfig arg.
 - Moved namespace from Setup to Bootstrap (affecting SetupGacela).
   - Deprecated Setup namespace in favor of Bootstrap.
+- Remove deprecated globalServices() method.
 
 ### 0.17.2
 #### 2022-05-02

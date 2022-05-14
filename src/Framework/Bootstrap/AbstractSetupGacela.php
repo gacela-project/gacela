@@ -43,14 +43,4 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     {
         return [];
     }
-
-    /**
-     * @deprecated in favor of `externalServices()`
-     *
-     * @return array<string,mixed>
-     */
-    public function globalServices(): array
-    {
-        return $this->externalServices();
-    }
 }

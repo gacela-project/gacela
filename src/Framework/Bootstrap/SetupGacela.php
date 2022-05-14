@@ -159,16 +159,6 @@ class SetupGacela extends AbstractSetupGacela
 
     /**
      * @return array<string,mixed>
-     *
-     * @deprecated in favor of `externalServices()`
-     */
-    public function globalServices(): array
-    {
-        return $this->externalServices();
-    }
-
-    /**
-     * @return array<string,mixed>
      */
     public function externalServices(): array
     {

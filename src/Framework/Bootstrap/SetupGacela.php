@@ -19,7 +19,7 @@ class SetupGacela extends AbstractSetupGacela
     /** @var ?callable(SuffixTypesBuilder):void */
     private $suffixTypesFn = null;
 
-    /** @var array<string,mixed> */
+    /** @var array<string,class-string|object|callable> */
     private array $externalServices = [];
 
     private ?ConfigBuilder $configBuilder = null;
@@ -105,7 +105,7 @@ class SetupGacela extends AbstractSetupGacela
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
-     * @param array<string,mixed> $externalServices
+     * @param array<string,class-string|object|callable> $externalServices
      */
     public function buildMappingInterfaces(
         MappingInterfacesBuilder $mappingInterfacesBuilder,
@@ -148,7 +148,7 @@ class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,mixed> $array
+     * @param array<string,class-string|object|callable> $array
      */
     public function setExternalServices(array $array): self
     {
@@ -158,7 +158,7 @@ class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,mixed>
+     * @return array<string,class-string|object|callable>
      */
     public function externalServices(): array
     {

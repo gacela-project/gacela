@@ -17,11 +17,11 @@ final class GacelaConfig
 
     private MappingInterfacesBuilder $mappingInterfacesBuilder;
 
-    /** @var array<string,mixed> */
+    /** @var array<string,class-string|object|callable> */
     private array $externalServices;
 
     /**
-     * @param array<string,mixed> $externalServices
+     * @param array<string,class-string|object|callable> $externalServices
      */
     public function __construct(array $externalServices = [])
     {
@@ -83,7 +83,7 @@ final class GacelaConfig
     }
 
     /**
-     * @return mixed
+     * @return class-string|object|callable
      */
     public function getExternalService(string $key)
     {
@@ -91,7 +91,7 @@ final class GacelaConfig
     }
 
     /**
-     * @param mixed $value
+     * @param class-string|object|callable $value
      */
     public function addExternalService(string $key, $value): self
     {
@@ -104,7 +104,7 @@ final class GacelaConfig
      * @internal
      *
      * @return array{
-     *     external-services:array<string,mixed>,
+     *     external-services:array<string,class-string|object|callable>,
      *     config-builder:ConfigBuilder,
      *     suffix-types-builder:SuffixTypesBuilder,
      *     mapping-interfaces-builder:MappingInterfacesBuilder,

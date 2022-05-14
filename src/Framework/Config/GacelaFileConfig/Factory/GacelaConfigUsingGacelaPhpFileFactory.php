@@ -38,20 +38,26 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        /** @var SetupGacelaInterface|callable $setupGacelaFile */
-        $setupGacelaFile = $this->fileIo->include($this->gacelaPhpPath);
+        /** @var SetupGacelaInterface|callable(GacelaConfig) $configFn */
+        $configFn = $this->fileIo->include($this->gacelaPhpPath);
 
-        if (is_callable($setupGacelaFile)) {
+        if (is_callable($configFn)) {
             $gacelaConfig = new GacelaConfig($this->setup->externalServices());
-            $setupGacelaFile($gacelaConfig);
+            $configFn($gacelaConfig);
             $setupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
         } else {
-            $setupGacela = $setupGacelaFile;
+            trigger_deprecation(
+                'gacela-project/gacela',
+                '0.18',
+                '`SetupGacelaInterface` is deprecated. Use `callable(GacelaConfig)` instead.'
+            );
+
+            $setupGacela = $configFn;
         }
 
         /** @var object $setupGacela */
         if (!is_subclass_of($setupGacela, SetupGacelaInterface::class)) {
-            throw new RuntimeException('The gacela.php file should return an instance of SetupGacela');
+            throw new RuntimeException('`gacela.php` file should return a `callable(GacelaConfig)`');
         }
 
         $configBuilder = $this->createConfigBuilder($setupGacela);

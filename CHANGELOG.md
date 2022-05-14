@@ -7,6 +7,7 @@
 - Moved namespace from Setup to Bootstrap (affecting SetupGacela).
   - Deprecated Setup namespace in favor of Bootstrap.
 - Remove deprecated globalServices() method.
+- Deprecate `SetupGacelaInterface` from `gacela.php` and `Gacela::bootstrap()`. Use `callable(GacelaConfig)` instead.
 
 ### 0.17.2
 #### 2022-05-02

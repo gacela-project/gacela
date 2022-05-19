@@ -1,5 +1,10 @@
 # Changelog
 
+### Unreleased
+
+- Removed bin/gacela util from this repo.
+  - CodeGenerator moved to its own repo: `gacela-project/gacela-cli`.
+
 ### 0.18.1
 #### 2022-05-15
 

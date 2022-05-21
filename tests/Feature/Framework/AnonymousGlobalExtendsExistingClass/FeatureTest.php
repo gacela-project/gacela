@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\AnonymousGlobalExtendsExistingClass;
 
@@ -20,11 +20,17 @@ final class FeatureTest extends TestCase
     public function test_override_existing_resolved_class_when_config_method_is_called(): void
     {
         AnonymousGlobal::overrideExistingResolvedClass(
+            '\module-name@anonymous\FeatureTest\Config',
+            new Module\Config()
+        );
+
+        AnonymousGlobal::overrideExistingResolvedClass(
             Module\Factory::class,
             new class() extends Module\Factory {
                 public function createDomainService(): StringValue
                 {
-                    return $this->getConfigValue();
+                    $this->getConfigValue();
+                    return new StringValue('other');
                 }
             }
         );

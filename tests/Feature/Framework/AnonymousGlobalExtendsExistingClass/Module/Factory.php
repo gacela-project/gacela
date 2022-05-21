@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\AnonymousGlobalExtendsExistingClass\Module;
 
@@ -14,7 +14,7 @@ class Factory extends AbstractFactory
 {
     public function createDomainService(): StringValue
     {
-        return new StringValue();
+        return new StringValue($this->getConfigValue());
     }
 
     public function getConfigValue(): string

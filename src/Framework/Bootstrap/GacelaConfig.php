@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
@@ -21,16 +21,6 @@ final class GacelaConfig
     private array $externalServices;
 
     /**
-     * @return callable(GacelaConfig):void
-     */
-    public static function withDefaults(): callable
-    {
-        return static function (GacelaConfig $config): void {
-            $config->addAppConfig('config/*.php');
-        };
-    }
-
-    /**
      * @param array<string,class-string|object|callable> $externalServices
      */
     public function __construct(array $externalServices = [])
@@ -39,6 +29,16 @@ final class GacelaConfig
         $this->configBuilder = new ConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
         $this->mappingInterfacesBuilder = new MappingInterfacesBuilder();
+    }
+
+    /**
+     * @return callable(GacelaConfig):void
+     */
+    public static function withDefaults(): callable
+    {
+        return static function (self $config): void {
+            $config->addAppConfig('config/*.php');
+        };
     }
 
     /**

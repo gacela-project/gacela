@@ -45,7 +45,7 @@ abstract class AbstractClassResolver
 
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName === null) {
-            // Try once more with its parent class
+            // Try again with its parent class
             if (is_object($caller)) {
                 $parentClass = get_parent_class($caller);
                 if ($parentClass !== false) {

@@ -34,7 +34,7 @@ final class GacelaConfig
     /**
      * @return callable(GacelaConfig):void
      */
-    public static function withDefaults(): callable
+    public static function withPhpConfigDefault(): callable
     {
         return static function (self $config): void {
             $config->addAppConfig('config/*.php');

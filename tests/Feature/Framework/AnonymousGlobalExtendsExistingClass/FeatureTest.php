@@ -14,7 +14,7 @@ final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, GacelaConfig::withDefaults());
+        Gacela::bootstrap(__DIR__, GacelaConfig::withPhpConfigDefault());
     }
 
     public function test_override_existing_resolved_class_when_config_method_is_called(): void

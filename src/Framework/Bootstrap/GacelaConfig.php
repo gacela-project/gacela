@@ -32,6 +32,16 @@ final class GacelaConfig
     }
 
     /**
+     * @return callable(GacelaConfig):void
+     */
+    public static function withPhpConfigDefault(): callable
+    {
+        return static function (self $config): void {
+            $config->addAppConfig('config/*.php');
+        };
+    }
+
+    /**
      * @param string $path define the path where Gacela will read all the config files
      * @param string $pathLocal define the path where Gacela will read the local config file
      * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader Define the reader class which will read and parse the config files

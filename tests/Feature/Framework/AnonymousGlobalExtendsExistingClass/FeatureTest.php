@@ -17,13 +17,8 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(__DIR__, GacelaConfig::withPhpConfigDefault());
     }
 
-    public function test_override_existing_resolved_class_when_config_method_is_called(): void
+    public function test_override_factory_as_anonymous_global_when_config_method_is_called(): void
     {
-        AnonymousGlobal::overrideExistingResolvedClass(
-            '\module-name@anonymous\FeatureTest\Config',
-            new Module\Config()
-        );
-
         AnonymousGlobal::overrideExistingResolvedClass(
             Module\Factory::class,
             new class() extends Module\Factory {

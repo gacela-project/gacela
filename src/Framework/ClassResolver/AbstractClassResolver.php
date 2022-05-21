@@ -7,10 +7,11 @@ namespace Gacela\Framework\ClassResolver;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
-use Gacela\Framework\Config;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 use function is_array;
+use function is_object;
 
 abstract class AbstractClassResolver
 {
@@ -44,6 +45,14 @@ abstract class AbstractClassResolver
 
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName === null) {
+            // Try once more with its parent class
+            if (is_object($caller)) {
+                $parentClass = get_parent_class($caller);
+                if ($parentClass !== false) {
+                    return $this->doResolve($parentClass);
+                }
+            }
+
             return null;
         }
 

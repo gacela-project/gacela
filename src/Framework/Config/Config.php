@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework;
+namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
-use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Exception\ConfigException;
 
 final class Config

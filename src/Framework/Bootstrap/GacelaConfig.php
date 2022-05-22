@@ -37,7 +37,7 @@ final class GacelaConfig
     public static function withPhpConfigDefault(): callable
     {
         return static function (self $config): void {
-            $config->addAppConfig('config/*.php');
+            $config->addAppConfig('config/*.php', 'config/local.php');
         };
     }
 
@@ -111,14 +111,14 @@ final class GacelaConfig
     }
 
     /**
-     * @internal
-     *
      * @return array{
      *     external-services:array<string,class-string|object|callable>,
      *     config-builder:ConfigBuilder,
      *     suffix-types-builder:SuffixTypesBuilder,
      *     mapping-interfaces-builder:MappingInterfacesBuilder,
      * }
+     *
+     * @internal
      */
     public function build(): array
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Exception\ConfigException;
 
 abstract class AbstractConfig

@@ -7,6 +7,7 @@ namespace Gacela\Framework;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Config\Config;
 
 use function is_callable;
 

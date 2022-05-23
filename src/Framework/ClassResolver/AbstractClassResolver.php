@@ -24,6 +24,11 @@ abstract class AbstractClassResolver
 
     private ?InstanceCreator $instanceCreator = null;
 
+    public static function resetCache(): void
+    {
+        self::$cachedInstances = [];
+    }
+
     /**
      * @param object|class-string $caller
      */

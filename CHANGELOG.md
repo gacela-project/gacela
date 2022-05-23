@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Add `resetCache()` to AbstractClassResolver
+
 ### 0.19.0
 #### 2022-05-19
 
@@ -18,8 +22,8 @@
 - Added allow gacela.php using a callable with GacelaConfig arg.
 - Moved namespace from Setup to Bootstrap (affecting SetupGacela).
   - Deprecated Setup namespace in favor of Bootstrap.
-- Remove deprecated globalServices() method.
-- Deprecate SetupGacelaInterface from gacela.php and Gacela::bootstrap(). Use callable(GacelaConfig) instead.
+- Remove deprecated `globalServices()` method.
+- Deprecate SetupGacelaInterface from gacela.php and `Gacela::bootstrap()`. Use callable(GacelaConfig) instead.
 
 ### 0.17.2
 #### 2022-05-02
@@ -36,7 +40,7 @@
 
 - Added DocBlockResolverAwareTrait.
 - Deprecated FacadeResolverAwareTrait in favor of DocBlockResolverAwareTrait.
-- Removed deprecated setup as array in Gacela::bootstrap()
+- Removed deprecated setup as array in `Gacela::bootstrap()`.
 - Allow overriding Gacela resolvable Facade type.
 
 ### 0.16.0

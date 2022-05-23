@@ -4,23 +4,12 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingConfigFromCustomEnv;
 
-use Gacela\Framework\Bootstrap\SetupGacela;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
-    private SetupGacela $setup;
-
-    protected function setUp(): void
-    {
-        $this->setup = (new SetupGacela())
-            ->setConfigFn(static function (ConfigBuilder $configBuilder): void {
-                $configBuilder->add('config/*.php', 'config/local.php');
-            });
-    }
-
     public function tearDown(): void
     {
         # Remove the APP_ENV
@@ -29,7 +18,8 @@ final class FeatureTest extends TestCase
 
     public function test_load_config_from_custom_env_default(): void
     {
-        Gacela::bootstrap(__DIR__, $this->setup);
+        Gacela::bootstrap(__DIR__, GacelaConfig::withPhpConfigDefault());
+
         $facade = new LocalConfig\Facade();
 
         self::assertSame(
@@ -45,7 +35,9 @@ final class FeatureTest extends TestCase
     public function test_load_config_from_custom_env_dev(): void
     {
         putenv('APP_ENV=dev');
-        Gacela::bootstrap(__DIR__, $this->setup);
+
+        Gacela::bootstrap(__DIR__, GacelaConfig::withPhpConfigDefault());
+
         $facade = new LocalConfig\Facade();
 
         self::assertSame(
@@ -61,7 +53,9 @@ final class FeatureTest extends TestCase
     public function test_load_config_from_custom_env_prod(): void
     {
         putenv('APP_ENV=prod');
-        Gacela::bootstrap(__DIR__, $this->setup);
+
+        Gacela::bootstrap(__DIR__, GacelaConfig::withPhpConfigDefault());
+
         $facade = new LocalConfig\Facade();
 
         self::assertSame(

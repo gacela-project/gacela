@@ -1,8 +1,12 @@
 # Changelog
 
-### Unreleased
+### 0.20.0
+#### 2022-05-27
 
-- Add `resetCache()` to AbstractClassResolver
+- Add `GacelaConfig::withPhpConfigDefault()`
+- Allow gacela anon-classes using parent methods
+- Define local pattern php config default
+- Add `AbstractClassResolver::resetCache()`
 
 ### 0.19.0
 #### 2022-05-19

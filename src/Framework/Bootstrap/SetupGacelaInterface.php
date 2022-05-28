@@ -33,4 +33,6 @@ interface SetupGacelaInterface
      * @return array<string,class-string|object|callable>
      */
     public function externalServices(): array;
+
+    public function isClassResolverCached(): bool;
 }

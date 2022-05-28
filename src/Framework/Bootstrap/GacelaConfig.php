@@ -20,6 +20,8 @@ final class GacelaConfig
     /** @var array<string,class-string|object|callable> */
     private array $externalServices;
 
+    private bool $classResolverCached = true;
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -110,12 +112,20 @@ final class GacelaConfig
         return $this;
     }
 
+    public function setClassResolverCached(bool $flag): self
+    {
+        $this->classResolverCached = $flag;
+
+        return $this;
+    }
+
     /**
      * @return array{
      *     external-services:array<string,class-string|object|callable>,
      *     config-builder:ConfigBuilder,
      *     suffix-types-builder:SuffixTypesBuilder,
      *     mapping-interfaces-builder:MappingInterfacesBuilder,
+     *     class-resolver-cached:bool,
      * }
      *
      * @internal
@@ -127,6 +137,7 @@ final class GacelaConfig
             'config-builder' => $this->configBuilder,
             'suffix-types-builder' => $this->suffixTypesBuilder,
             'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
+            'class-resolver-cached' => $this->classResolverCached,
         ];
     }
 }

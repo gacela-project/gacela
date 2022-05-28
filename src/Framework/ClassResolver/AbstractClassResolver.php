@@ -25,7 +25,7 @@ abstract class AbstractClassResolver
     private ?InstanceCreator $instanceCreator = null;
 
     /**
-     * @internal just for testing purposes
+     * @internal remove all cached instances: facade, factory, config, dependency-provider
      */
     public static function resetCache(): void
     {

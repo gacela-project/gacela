@@ -31,7 +31,9 @@ final class Gacela
 
         $setup = self::normalizeSetup($configFn);
 
-        AbstractClassResolver::resetCache();
+        if (!$setup->isClassResolverCached()) {
+            AbstractClassResolver::resetCache();
+        }
 
         Config::getInstance()
             ->setAppRootDir($appRootDir)

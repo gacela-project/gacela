@@ -20,7 +20,13 @@ trait DocBlockResolverAwareTrait
     /** @var array<string,?object> */
     private array $customServices = [];
 
-    public function __call(string $method, array $arguments = []): ?object
+    /**
+     * @param string $method
+     * @param array $parameters
+     *
+     * @return mixed
+     */
+    public function __call($method, $parameters = [])
     {
         if (!isset($this->customServices[$method])) {
             $className = $this->getClassFromDoc($method);
@@ -30,7 +36,17 @@ trait DocBlockResolverAwareTrait
                 ->resolve($className);
         }
 
-        return $this->customServices[$method];
+        $object = $this->customServices[$method];
+
+        if (isset($object)) {
+            return $object;
+        }
+
+        if (method_exists(parent::class, '__call')) {
+            return parent::__call($method, $parameters);
+        }
+
+        return null;
     }
 
     /**

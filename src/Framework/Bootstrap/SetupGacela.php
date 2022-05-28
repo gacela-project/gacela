@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
+use Closure;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -31,9 +32,9 @@ class SetupGacela extends AbstractSetupGacela
     private bool $classResolverCached = true;
 
     /**
-     * @param callable(GacelaConfig):void $setupGacelaFileFn
+     * @param Closure(GacelaConfig):void $setupGacelaFileFn
      */
-    public static function fromCallable(callable $setupGacelaFileFn): self
+    public static function fromCallable(Closure $setupGacelaFileFn): self
     {
         $gacelaConfig = new GacelaConfig();
         $setupGacelaFileFn($gacelaConfig);

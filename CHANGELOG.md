@@ -1,12 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Allow custom isClassResolverCached from GacelaConfig.
+- Reset cache from class resolver when boostrapping.
+- Change from `Gacela::bootstrap()` the type of `$configFn` from `callable` to `Closure`.
+
 ### 0.20.0
 #### 2022-05-27
 
-- Add `GacelaConfig::withPhpConfigDefault()`
-- Allow gacela anon-classes using parent methods
-- Define local pattern php config default
-- Add `AbstractClassResolver::resetCache()`
+- Add `GacelaConfig::withPhpConfigDefault()`.
+- Allow gacela anon-classes using parent methods.
+- Define local pattern php config default.
+- Add `AbstractClassResolver::resetCache()`.
 
 ### 0.19.0
 #### 2022-05-19

@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ConfigTest extends TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         Config::resetInstance();
     }

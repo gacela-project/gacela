@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ClassNameFinderTest extends TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         ClassNameFinder::resetCachedClassNames();
     }

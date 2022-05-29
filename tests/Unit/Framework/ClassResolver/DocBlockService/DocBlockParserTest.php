@@ -11,7 +11,7 @@ final class DocBlockParserTest extends TestCase
 {
     private DocBlockParser $parser;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         $this->parser = new DocBlockParser();
     }

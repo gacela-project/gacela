@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased
+### 0.21.0
+#### 2022-05-29
 
 - Allow custom isClassResolverCached from GacelaConfig.
 - Reset cache from class resolver when boostrapping.

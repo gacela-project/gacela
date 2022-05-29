@@ -8,6 +8,7 @@ use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\Config\Config;
 
 final class Gacela
@@ -23,8 +24,10 @@ final class Gacela
             ? SetupGacela::fromCallable($configFn)
             : new SetupGacela();
 
-        if (!$setup->isClassResolverCached()) {
+        if ($setup->isResetCache()) {
+            ClassNameFinder::resetCachedClassNames();
             AbstractClassResolver::resetCache();
+            Config::resetInstance();
         }
 
         Config::getInstance()

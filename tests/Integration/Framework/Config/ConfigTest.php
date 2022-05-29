@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\Config;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigTest extends TestCase
 {
     public function setUp(): void
     {
-        Config::resetInstance();
+        Gacela::bootstrap(__DIR__, static fn (GacelaConfig $config) => $config->setResetCache(true));
     }
 
     public function test_get_undefined_key(): void

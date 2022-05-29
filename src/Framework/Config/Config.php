@@ -37,7 +37,7 @@ final class Config
     }
 
     /**
-     * @internal for testing purposes
+     * @internal
      */
     public static function resetInstance(): void
     {

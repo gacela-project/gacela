@@ -29,7 +29,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
     }
 
     /**
-     * @internal for testing purposes
+     * @internal
      */
     public static function resetCachedClassNames(): void
     {

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\ClassResolver;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class ClassNameFinderTest extends TestCase
 {
     protected function setUp(): void
     {
-        ClassNameFinder::resetCachedClassNames();
+        Gacela::bootstrap(__DIR__, static fn (GacelaConfig $config) => $config->setResetCache(true));
     }
 
     public function test_no_rules(): void

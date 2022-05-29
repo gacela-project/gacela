@@ -34,5 +34,5 @@ interface SetupGacelaInterface
      */
     public function externalServices(): array;
 
-    public function isClassResolverCached(): bool;
+    public function isResetCache(): bool;
 }

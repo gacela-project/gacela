@@ -13,7 +13,9 @@ final class ConfigTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, static fn (GacelaConfig $config) => $config->setResetCache(true));
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->setResetCache(true);
+        });
     }
 
     public function test_get_undefined_key(): void

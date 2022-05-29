@@ -3,9 +3,8 @@
 ### 0.21.0
 #### 2022-05-29
 
-- Allow custom isClassResolverCached from GacelaConfig.
-- Reset cache from class resolver when boostrapping.
-- Change from `Gacela::bootstrap()` the type of `$configFn` from `callable` to `Closure`.
+- Allow only a `Closure(GacelaConfig):void` object to 2nd parameter type of `Gacela::bootstrap()`.
+- Add new key Gacela configuration key: `GacelaConfig->setResetCache(bool)`.
 
 ### 0.20.0
 #### 2022-05-27

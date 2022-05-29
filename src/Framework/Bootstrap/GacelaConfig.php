@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
+use Closure;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -34,7 +35,7 @@ final class GacelaConfig
     }
 
     /**
-     * @return callable(GacelaConfig):void
+     * @return Closure(GacelaConfig):void
      */
     public static function withPhpConfigDefault(): callable
     {

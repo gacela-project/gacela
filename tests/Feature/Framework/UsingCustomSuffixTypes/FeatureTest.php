@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class FeatureTest extends TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, GacelaConfig::withPhpConfigDefault());
     }

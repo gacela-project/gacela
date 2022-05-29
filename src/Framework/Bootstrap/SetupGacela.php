@@ -9,7 +9,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
-class SetupGacela extends AbstractSetupGacela
+final class SetupGacela extends AbstractSetupGacela
 {
     /** @var ?callable(ConfigBuilder):void */
     private $configFn = null;

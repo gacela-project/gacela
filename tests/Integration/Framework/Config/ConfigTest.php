@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ConfigTest extends TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static fn (GacelaConfig $config) => $config->setResetCache(true));
     }

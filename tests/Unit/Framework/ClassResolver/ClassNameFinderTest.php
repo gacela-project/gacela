@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ClassNameFinderTest extends TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static fn (GacelaConfig $config) => $config->setResetCache(true));
     }

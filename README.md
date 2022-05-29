@@ -44,7 +44,7 @@ An example of an application structure using gacela modules:
 application-name
 ├── gacela.php                     # You can customize some behaviours of gacela. 
 │
-├── config                         # Default config behaviour. Changeable in `gacela.php`.
+├── config
 │   ├── default.php
 │   └── local.php
 │

@@ -38,11 +38,12 @@ trait DocBlockResolverAwareTrait
         $resolved = (new DocBlockServiceResolver($resolvableType))
             ->resolve($className);
 
-        if (isset($resolved)) {
+        if ($resolved !== null) {
             return $resolved;
         }
 
-        if (method_exists(parent::class, '__call')) {
+        /** @psalm-suppress ParentNotFound,MixedArgument */
+        if (class_parents($this) && method_exists(parent::class, '__call')) {
             $parentReturn = parent::__call($method, $parameters);
             $this->customServices[$method] = $parentReturn;
 

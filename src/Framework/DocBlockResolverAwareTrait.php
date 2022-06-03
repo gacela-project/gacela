@@ -28,22 +28,26 @@ trait DocBlockResolverAwareTrait
      */
     public function __call($method, $parameters = [])
     {
-        if (!isset($this->customServices[$method])) {
-            $className = $this->getClassFromDoc($method);
-            $resolvableType = $this->normalizeResolvableType($className);
-
-            $this->customServices[$method] = (new DocBlockServiceResolver($resolvableType))
-                ->resolve($className);
+        if (isset($this->customServices[$method])) {
+            return $this->customServices[$method];
         }
 
-        $object = $this->customServices[$method];
+        $className = $this->getClassFromDoc($method);
+        $resolvableType = $this->normalizeResolvableType($className);
 
-        if (isset($object)) {
-            return $object;
+        $resolved = (new DocBlockServiceResolver($resolvableType))
+            ->resolve($className);
+
+        if ($resolved !== null) {
+            return $resolved;
         }
 
-        if (method_exists(parent::class, '__call')) {
-            return parent::__call($method, $parameters);
+        /** @psalm-suppress ParentNotFound,MixedArgument */
+        if (class_parents($this) && method_exists(parent::class, '__call')) {
+            $parentReturn = parent::__call($method, $parameters);
+            $this->customServices[$method] = $parentReturn;
+
+            return $parentReturn;
         }
 
         return null;

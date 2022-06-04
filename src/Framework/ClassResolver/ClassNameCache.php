@@ -6,7 +6,7 @@ namespace Gacela\Framework\ClassResolver;
 
 final class ClassNameCache implements ClassNameCacheInterface
 {
-    public const CACHED_CLASS_NAMES_FILE = '.gacela-class-names.cache';
+    private const CACHED_CLASS_NAMES_FILE = '.gacela-class-names.cache';
 
     /** @var array<string,string> */
     private static array $cachedClassNames = [];

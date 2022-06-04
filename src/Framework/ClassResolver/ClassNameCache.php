@@ -6,15 +6,18 @@ namespace Gacela\Framework\ClassResolver;
 
 final class ClassNameCache implements ClassNameCacheInterface
 {
+    public const CACHED_CLASS_NAMES_FILE = '.gacela-class-names.cache';
+
     /** @var array<string,string> */
     private static array $cachedClassNames = [];
 
-    /**
-     * @param array<string,string> $cachedClassNames
-     */
-    public function __construct(array $cachedClassNames = [])
+    private string $cachedClassNamesDir;
+
+    public function __construct(string $cachedClassNamesDir)
     {
-        self::$cachedClassNames = $cachedClassNames;
+        $this->cachedClassNamesDir = $cachedClassNamesDir;
+
+        self::$cachedClassNames = $this->getCachedClassNames();
     }
 
     /**
@@ -38,5 +41,34 @@ final class ClassNameCache implements ClassNameCacheInterface
     public function put(string $cacheKey, string $className): void
     {
         self::$cachedClassNames[$cacheKey] = $className;
+
+        $fileContent = sprintf(
+            '<?php return %s;',
+            var_export(self::$cachedClassNames, true)
+        );
+
+        file_put_contents($this->getCachedFilename(), $fileContent);
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    private function getCachedClassNames(): array
+    {
+        $filename = $this->getCachedFilename();
+
+        if (file_exists($filename)) {
+            /** @var array<string,string> $content */
+            $content = require $filename;
+
+            return $content;
+        }
+
+        return [];
+    }
+
+    private function getCachedFilename(): string
+    {
+        return $this->cachedClassNamesDir . self::CACHED_CLASS_NAMES_FILE;
     }
 }

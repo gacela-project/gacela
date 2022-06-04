@@ -15,8 +15,6 @@ use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
-    public const CACHED_CLASS_NAMES_FILE = 'gacela-cached-class-names.cache';
-
     public function createClassNameFinder(): ClassNameFinderInterface
     {
         return new ClassNameFinder(
@@ -29,7 +27,7 @@ final class ClassResolverFactory
     public function createClassNameCache(): ClassNameCacheInterface
     {
         return new ClassNameCache(
-            $this->getCachedClassNames(),
+            $this->getCachedClassNamesDir(),
         );
     }
 
@@ -49,25 +47,8 @@ final class ClassResolverFactory
         ];
     }
 
-    /**
-     * @return array<string,string>
-     */
-    private function getCachedClassNames(): array
-    {
-        $filename = $this->getCachedClassNamesDir() . self::CACHED_CLASS_NAMES_FILE;
-
-        if (file_exists($filename)) {
-            /** @var array<string,string> $content */
-            $content = require $filename;
-
-            return $content;
-        }
-
-        return [];
-    }
-
     private function getCachedClassNamesDir(): string
     {
-        return Config::getInstance()->getAppRootDir() . '/data/';
+        return Config::getInstance()->getAppRootDir() . '/';
     }
 }

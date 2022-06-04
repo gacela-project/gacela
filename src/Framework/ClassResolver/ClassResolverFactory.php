@@ -26,9 +26,9 @@ final class ClassResolverFactory
         );
     }
 
-    public function createClassNameCache(): InMemoryClassNameCache
+    public function createClassNameCache(): ClassNameCacheInterface
     {
-        return new InMemoryClassNameCache(
+        return new ClassNameCache(
             $this->getCachedClassNames(),
         );
     }

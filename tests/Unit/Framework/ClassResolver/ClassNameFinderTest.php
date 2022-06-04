@@ -10,7 +10,6 @@ use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
-use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 

@@ -19,13 +19,16 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
     /**
      * @param list<FinderRuleInterface> $finderRules
+     * @param array<string,string> $cachedClassNames
      */
     public function __construct(
         ClassValidatorInterface $classValidator,
-        array $finderRules
+        array $finderRules,
+        array $cachedClassNames = []
     ) {
         $this->classValidator = $classValidator;
         $this->finderRules = $finderRules;
+        self::$cachedClassNames = $cachedClassNames;
     }
 
     /**

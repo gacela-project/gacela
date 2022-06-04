@@ -11,14 +11,18 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
+use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
+    public const CACHED_CLASS_NAMES_FILE = 'gacela-cached-class-names.cache';
+
     public function createClassNameFinder(): ClassNameFinderInterface
     {
         return new ClassNameFinder(
             $this->createClassValidator(),
             $this->createFinderRules(),
+            $this->getCachedClassNames()
         );
     }
 
@@ -36,5 +40,22 @@ final class ClassResolverFactory
             new FinderRuleWithModulePrefix(),
             new FinderRuleWithoutModulePrefix(),
         ];
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    private function getCachedClassNames(): array
+    {
+        $filename = Config::getInstance()->getAppRootDir() . '/data/' . self::CACHED_CLASS_NAMES_FILE;
+
+        if (file_exists($filename)) {
+            /** @var array<string,string> $content */
+            $content = require $filename;
+
+            return $content;
+        }
+
+        return [];
     }
 }

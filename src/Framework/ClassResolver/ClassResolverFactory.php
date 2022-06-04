@@ -22,7 +22,14 @@ final class ClassResolverFactory
         return new ClassNameFinder(
             $this->createClassValidator(),
             $this->createFinderRules(),
-            $this->getCachedClassNames()
+            $this->createClassNameCache()
+        );
+    }
+
+    public function createClassNameCache(): InMemoryClassNameCache
+    {
+        return new InMemoryClassNameCache(
+            $this->getCachedClassNames(),
         );
     }
 
@@ -47,7 +54,7 @@ final class ClassResolverFactory
      */
     private function getCachedClassNames(): array
     {
-        $filename = Config::getInstance()->getAppRootDir() . '/data/' . self::CACHED_CLASS_NAMES_FILE;
+        $filename = $this->getCachedClassNamesDir() . self::CACHED_CLASS_NAMES_FILE;
 
         if (file_exists($filename)) {
             /** @var array<string,string> $content */
@@ -57,5 +64,10 @@ final class ClassResolverFactory
         }
 
         return [];
+    }
+
+    private function getCachedClassNamesDir(): string
+    {
+        return Config::getInstance()->getAppRootDir() . '/data/';
     }
 }

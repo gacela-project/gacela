@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Added a cache layer from class-names to their resolvable-type (in a file: `.gacela-class-names.cache`).
+
 ### 0.21.0
 #### 2022-05-29
 

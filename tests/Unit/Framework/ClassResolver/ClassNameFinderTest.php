@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Framework\ClassResolver;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
+use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
@@ -25,7 +26,8 @@ final class ClassNameFinderTest extends TestCase
     {
         $classNameFinder = new ClassNameFinder(
             $this->createMock(ClassValidatorInterface::class),
-            []
+            [],
+            $this->createMock(ClassNameCacheInterface::class)
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -45,7 +47,11 @@ final class ClassNameFinderTest extends TestCase
         $finderRule = $this->createStub(FinderRuleInterface::class);
         $finderRule->method('buildClassCandidate')->willReturn('\valid\class\name');
 
-        $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
+        $classNameFinder = new ClassNameFinder(
+            $classValidator,
+            [$finderRule],
+            $this->createMock(ClassNameCacheInterface::class)
+        );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = [];
@@ -64,7 +70,11 @@ final class ClassNameFinderTest extends TestCase
         $finderRule = $this->createStub(FinderRuleInterface::class);
         $finderRule->method('buildClassCandidate')->willReturn('\valid\class\name');
 
-        $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
+        $classNameFinder = new ClassNameFinder(
+            $classValidator,
+            [$finderRule],
+            $this->createMock(ClassNameCacheInterface::class)
+        );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = ['A', 'B'];
@@ -83,7 +93,11 @@ final class ClassNameFinderTest extends TestCase
         $finderRule = $this->createStub(FinderRuleInterface::class);
         $finderRule->method('buildClassCandidate')->willReturn('\valid\class\name');
 
-        $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
+        $classNameFinder = new ClassNameFinder(
+            $classValidator,
+            [$finderRule],
+            $this->createMock(ClassNameCacheInterface::class)
+        );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = ['A', 'B'];
@@ -102,7 +116,11 @@ final class ClassNameFinderTest extends TestCase
             ->method('buildClassCandidate')
             ->willReturn('\valid\class\name');
 
-        $classNameFinder = new ClassNameFinder($classValidator, [$finderRule]);
+        $classNameFinder = new ClassNameFinder(
+            $classValidator,
+            [$finderRule],
+            new InMemoryClassNameCache()
+        );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
         $resolvableTypes = ['A', 'B'];

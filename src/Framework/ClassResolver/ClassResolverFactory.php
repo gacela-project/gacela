@@ -11,6 +11,7 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
+use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
@@ -19,6 +20,14 @@ final class ClassResolverFactory
         return new ClassNameFinder(
             $this->createClassValidator(),
             $this->createFinderRules(),
+            $this->createClassNameCache()
+        );
+    }
+
+    public function createClassNameCache(): ClassNameCacheInterface
+    {
+        return new ClassNameCache(
+            $this->getCachedClassNamesDir(),
         );
     }
 
@@ -36,5 +45,10 @@ final class ClassResolverFactory
             new FinderRuleWithModulePrefix(),
             new FinderRuleWithoutModulePrefix(),
         ];
+    }
+
+    private function getCachedClassNamesDir(): string
+    {
+        return Config::getInstance()->getAppRootDir() . '/';
     }
 }

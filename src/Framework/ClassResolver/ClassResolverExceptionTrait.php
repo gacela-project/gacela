@@ -17,22 +17,27 @@ trait ClassResolverExceptionTrait
 
         $message = 'ClassResolver Exception' . PHP_EOL;
         $message .= sprintf(
-            'Cannot resolve the "%s" for your module "%s"',
+            'Cannot resolve the `%s` for your module `%s`',
             $resolvableType,
             $callerClassInfo->getModule(),
         ) . PHP_EOL;
 
         $message .= sprintf(
-            'You can fix this by adding the missing "%s" to your module.',
+            'You can fix this by adding the missing `%s` to your module.',
             $resolvableType
         ) . PHP_EOL;
 
         $message .= sprintf(
-            'E.g. %s',
+            'E.g. `%s`',
             $this->findClassNameExample($callerClassInfo, $resolvableType)
         ) . PHP_EOL;
 
-        return $message . (new Backtrace())->get();
+        $message .= sprintf(
+            'If you got this ↑ already, then try removing the cache file: `%s`',
+            ClassNameCache::CACHED_CLASS_NAMES_FILE
+        ) . PHP_EOL;
+
+        return $message . PHP_EOL . (new Backtrace())->get();
     }
 
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Benchmark\Framework\ClassResolver\NormalModule;
 
+use Gacela\Framework\Gacela;
+
 /**
  * @BeforeMethods("setUp")
  */
@@ -13,6 +15,8 @@ final class NormalModuleBench
 
     public function setUp(): void
     {
+        Gacela::bootstrap(__DIR__);
+
         $this->facade = new NormalModuleFacade();
     }
 

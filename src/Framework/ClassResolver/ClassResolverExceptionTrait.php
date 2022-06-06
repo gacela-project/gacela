@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-use Gacela\Framework\Exception\Backtrace;
-
 trait ClassResolverExceptionTrait
 {
     /**
@@ -37,7 +35,7 @@ trait ClassResolverExceptionTrait
             ClassNameCache::CACHED_CLASS_NAMES_FILE
         ) . PHP_EOL;
 
-        return $message . PHP_EOL . (new Backtrace())->get();
+        return $message;
     }
 
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string

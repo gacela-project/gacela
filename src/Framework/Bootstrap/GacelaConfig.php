@@ -21,7 +21,7 @@ final class GacelaConfig
     /** @var array<string,class-string|object|callable> */
     private array $externalServices;
 
-    private bool $resetCache = false;
+    private bool $cacheEnabled = true;
 
     /**
      * @param array<string,class-string|object|callable> $externalServices
@@ -113,9 +113,9 @@ final class GacelaConfig
         return $this;
     }
 
-    public function setResetCache(bool $flag): self
+    public function setCacheEnabled(bool $flag): self
     {
-        $this->resetCache = $flag;
+        $this->cacheEnabled = $flag;
 
         return $this;
     }
@@ -126,7 +126,7 @@ final class GacelaConfig
      *     config-builder:ConfigBuilder,
      *     suffix-types-builder:SuffixTypesBuilder,
      *     mapping-interfaces-builder:MappingInterfacesBuilder,
-     *     reset-cache:bool,
+     *     cache-enabled:bool,
      * }
      *
      * @internal
@@ -138,7 +138,7 @@ final class GacelaConfig
             'config-builder' => $this->configBuilder,
             'suffix-types-builder' => $this->suffixTypesBuilder,
             'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
-            'reset-cache' => $this->resetCache,
+            'cache-enabled' => $this->cacheEnabled,
         ];
     }
 }

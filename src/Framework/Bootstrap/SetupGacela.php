@@ -29,7 +29,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     private ?MappingInterfacesBuilder $mappingInterfacesBuilder = null;
 
-    private bool $resetCache = false;
+    private bool $cacheEnabled = true;
 
     /**
      * @param Closure(GacelaConfig):void $setupGacelaFileFn
@@ -51,7 +51,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setSuffixTypesBuilder($build['suffix-types-builder'])
             ->setMappingInterfacesBuilder($build['mapping-interfaces-builder'])
             ->setExternalServices($build['external-services'])
-            ->setResetCache($build['reset-cache']);
+            ->setCacheEnabled($build['cache-enabled']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -169,15 +169,15 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->externalServices;
     }
 
-    public function setResetCache(bool $flag): self
+    public function setCacheEnabled(bool $flag): self
     {
-        $this->resetCache = $flag;
+        $this->cacheEnabled = $flag;
 
         return $this;
     }
 
-    public function isResetCache(): bool
+    public function isCacheEnabled(): bool
     {
-        return $this->resetCache;
+        return $this->cacheEnabled;
     }
 }

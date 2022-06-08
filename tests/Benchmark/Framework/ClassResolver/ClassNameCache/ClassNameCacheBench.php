@@ -27,7 +27,7 @@ final class ClassNameCacheBench
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($withCache): void {
             $config->addAppConfig('config/*.php');
-            $config->setResetCache(!$withCache);
+            $config->setCacheEnabled($withCache);
 
             $config->addMappingInterface(StringValueInterface::class, new StringValue('testing-string'));
 

@@ -32,7 +32,7 @@ trait ClassResolverExceptionTrait
 
         $message .= sprintf(
             'If you got this ↑ already, then try removing the cache file: `%s`',
-            ClassNameCache::CACHED_CLASS_NAMES_FILE
+            ClassNameCache::CACHE_FILENAME
         ) . PHP_EOL;
 
         return $message;

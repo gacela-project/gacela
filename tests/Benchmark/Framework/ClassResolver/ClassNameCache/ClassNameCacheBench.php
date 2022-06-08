@@ -9,6 +9,10 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 
+/**
+ * @Revs(50)
+ * @Iterations(2)
+ */
 final class ClassNameCacheBench
 {
     public function bench_with_cache(): void

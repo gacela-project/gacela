@@ -58,6 +58,7 @@
     },
     "scripts": {
         "ctal": [
+            "@static-clear-cache",
             "@csfix",
             "@test-all"
         ],

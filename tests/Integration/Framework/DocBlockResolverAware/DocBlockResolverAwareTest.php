@@ -10,6 +10,11 @@ use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverAwareTest extends TestCase
 {
+    public static function setUpBeforeClass(): void
+    {
+        CustomServicesCache::resetCache();
+    }
+
     protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);

@@ -12,6 +12,9 @@ use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
 use Gacela\Framework\Config\Config;
 use ReflectionClass;
 
+use RuntimeException;
+use function gettype;
+use function is_object;
 use function is_string;
 
 trait DocBlockResolverAwareTrait
@@ -42,6 +45,7 @@ trait DocBlockResolverAwareTrait
             $cache->put($cacheKey, $className);
         }
 
+        /** @psalm-suppress ArgumentTypeCoercion */
         $className = $cache->get($cacheKey);
         $resolvableType = $this->normalizeResolvableType($className);
 
@@ -52,9 +56,16 @@ trait DocBlockResolverAwareTrait
             return $resolved;
         }
 
-        /** @psalm-suppress ParentNotFound,MixedArgument */
+        /**
+         * @psalm-suppress ParentNotFound
+         * @psalm-suppress MixedArgument
+         * @psalm-suppress MixedAssignment
+         */
         if (class_parents($this) && method_exists(parent::class, '__call')) {
             $parentReturn = parent::__call($method, $parameters);
+            if (!is_object($parentReturn)) {
+                throw new RuntimeException('Expected object. Found: ' . gettype($parentReturn));
+            }
             $this->customServices[$method] = $parentReturn;
 
             return $parentReturn;

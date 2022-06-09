@@ -13,7 +13,7 @@ use GacelaTest\Fixtures\StringValueInterface;
  * @Revs(50)
  * @Iterations(2)
  */
-final class ClassNameCacheBench
+final class FileCacheBench
 {
     public function bench_with_cache(): void
     {

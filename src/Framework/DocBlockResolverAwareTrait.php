@@ -54,7 +54,7 @@ trait DocBlockResolverAwareTrait
         }
 
         if ($this->hasParentClass()) {
-            /** @psalm-suppress ParentNotFound */
+            /** @var class-string $parentReturn */
             $parentReturn = parent::__call($method, $parameters);
             $this->customServices[$method] = $parentReturn;
 

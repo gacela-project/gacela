@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesCache;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
+use Gacela\Framework\Config\Config;
 use ReflectionClass;
 
 use function is_string;
@@ -17,7 +19,7 @@ trait DocBlockResolverAwareTrait
     /** @var array<string,string> */
     protected static array $fileContentCache = [];
 
-    /** @var array<string,?object> */
+    /** @var array<string,?mixed> */
     private array $customServices = [];
 
     /**
@@ -32,7 +34,16 @@ trait DocBlockResolverAwareTrait
             return $this->customServices[$method];
         }
 
-        $className = $this->getClassFromDoc($method);
+        $cacheKey = $this->generateCacheKey($method);
+        $cache = $this->createCustomServicesCache();
+
+        if (!$cache->has($cacheKey)) {
+            $className = $this->getClassFromDoc($method);
+            $cache->put($cacheKey, $className);
+        }
+
+        /** @psalm-suppress ArgumentTypeCoercion */
+        $className = $cache->get($cacheKey);
         $resolvableType = $this->normalizeResolvableType($className);
 
         $resolved = (new DocBlockServiceResolver($resolvableType))
@@ -42,8 +53,8 @@ trait DocBlockResolverAwareTrait
             return $resolved;
         }
 
-        /** @psalm-suppress ParentNotFound,MixedArgument */
-        if (class_parents($this) && method_exists(parent::class, '__call')) {
+        if ($this->hasParentClass()) {
+            /** @psalm-suppress ParentNotFound */
             $parentReturn = parent::__call($method, $parameters);
             $this->customServices[$method] = $parentReturn;
 
@@ -51,6 +62,13 @@ trait DocBlockResolverAwareTrait
         }
 
         return null;
+    }
+
+    private function hasParentClass(): bool
+    {
+        /** @psalm-suppress ParentNotFound,MixedArgument */
+        return class_parents($this)
+            && method_exists(parent::class, '__call');
     }
 
     /**
@@ -100,5 +118,20 @@ trait DocBlockResolverAwareTrait
         return is_string($normalizedResolvableType)
             ? $normalizedResolvableType
             : $resolvableType;
+    }
+
+    private function generateCacheKey(string $method): string
+    {
+        return self::class . '::' . $method;
+    }
+
+    private function createCustomServicesCache(): CustomServicesCache
+    {
+        return new CustomServicesCache($this->getCachedClassNamesDir());
+    }
+
+    private function getCachedClassNamesDir(): string
+    {
+        return Config::getInstance()->getAppRootDir() . '/';
     }
 }

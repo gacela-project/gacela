@@ -25,7 +25,7 @@ final class Gacela
             : new SetupGacela();
 
         if (!$setup->isCacheEnabled()) {
-            ClassNameCache::resetCachedClassNames();
+            ClassNameCache::resetCache();
             AbstractClassResolver::resetCache();
             Config::resetInstance();
         }

@@ -1,8 +1,13 @@
 # Changelog
 
-### Unreleased
+### 0.22.0
+#### 2022-06-10
 
-- Added a cache layer from class-names to their resolvable-type (in a file: `.gacela-class-names.cache`).
+- Added a (file) cache layer 
+  - for class-names to their resolvable-type (in a file: `.gacela-class-names.cache`).
+  - for custom-services to their resolvable-class (in a file: `.custom-services.cache`).
+- Delete unnecessary Backtrace for exceptions.
+- Rename resetCache() to setCacheEnabled() from `GacelaConfig`.
 
 ### 0.21.0
 #### 2022-05-29

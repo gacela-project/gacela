@@ -8,6 +8,6 @@ final class Repository
 {
     public function getAll(): array
     {
-        return ['a'];
+        return ['g'];
     }
 }

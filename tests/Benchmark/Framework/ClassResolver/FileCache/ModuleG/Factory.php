@@ -6,7 +6,6 @@ namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\DocBlockResolverAwareTrait;
-use GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleA\Repository;
 use GacelaTest\Fixtures\StringValueInterface;
 
 /**

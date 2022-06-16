@@ -11,14 +11,14 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 final class SetupGacela extends AbstractSetupGacela
 {
-    /** @var ?callable(ConfigBuilder):void */
-    private $configFn = null;
+    /** @var callable(ConfigBuilder):void */
+    private $configFn;
 
-    /** @var ?callable(MappingInterfacesBuilder,array<string,mixed>):void */
-    private $mappingInterfacesFn = null;
+    /** @var callable(MappingInterfacesBuilder,array<string,mixed>):void */
+    private $mappingInterfacesFn;
 
-    /** @var ?callable(SuffixTypesBuilder):void */
-    private $suffixTypesFn = null;
+    /** @var callable(SuffixTypesBuilder):void */
+    private $suffixTypesFn;
 
     /** @var array<string,class-string|object|callable> */
     private array $externalServices = [];
@@ -30,6 +30,16 @@ final class SetupGacela extends AbstractSetupGacela
     private ?MappingInterfacesBuilder $mappingInterfacesBuilder = null;
 
     private bool $cacheEnabled = true;
+
+    public function __construct()
+    {
+        $this->configFn = static function (): void {
+        };
+        $this->mappingInterfacesFn = static function (): void {
+        };
+        $this->suffixTypesFn = static function (): void {
+        };
+    }
 
     /**
      * @param Closure(GacelaConfig):void $setupGacelaFileFn
@@ -91,7 +101,7 @@ final class SetupGacela extends AbstractSetupGacela
             $configBuilder = $this->configBuilder;
         }
 
-        $this->configFn && ($this->configFn)($configBuilder);
+        ($this->configFn)($configBuilder);
 
         return $configBuilder;
     }
@@ -119,7 +129,7 @@ final class SetupGacela extends AbstractSetupGacela
             $mappingInterfacesBuilder = $this->mappingInterfacesBuilder;
         }
 
-        $this->mappingInterfacesFn && ($this->mappingInterfacesFn)(
+        ($this->mappingInterfacesFn)(
             $mappingInterfacesBuilder,
             array_merge($this->externalServices, $externalServices)
         );
@@ -146,7 +156,7 @@ final class SetupGacela extends AbstractSetupGacela
             $suffixTypesBuilder = $this->suffixTypesBuilder;
         }
 
-        $this->suffixTypesFn && ($this->suffixTypesFn)($suffixTypesBuilder);
+        ($this->suffixTypesFn)($suffixTypesBuilder);
 
         return $suffixTypesBuilder;
     }

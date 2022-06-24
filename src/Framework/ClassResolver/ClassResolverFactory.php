@@ -28,7 +28,7 @@ final class ClassResolverFactory
     public function createClassNameCache(): ClassNameCacheInterface
     {
         if (!$this->isCacheEnabled()) {
-            return new InMemoryFileCache(ClassNameCache::class);
+            return new InMemoryCache(ClassNameCache::class);
         }
 
         return new ClassNameCache(

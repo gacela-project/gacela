@@ -11,7 +11,7 @@ use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
-use Gacela\Framework\ClassResolver\InMemoryFileCache;
+use Gacela\Framework\ClassResolver\InMemoryCache;
 use Gacela\Framework\Config\Config;
 use ReflectionClass;
 
@@ -132,7 +132,7 @@ trait DocBlockResolverAwareTrait
     private function createCustomServicesCache(): ClassNameCacheInterface
     {
         if (!$this->isCacheEnabled()) {
-            return new InMemoryFileCache(CustomServicesCache::class);
+            return new InMemoryCache(CustomServicesCache::class);
         }
 
         return new CustomServicesCache(

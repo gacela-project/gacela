@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+
 return [
-    'cache-enabled' => true,
+    GacelaCache::ENABLED  => true,
 ];

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-final class InMemoryFileCache implements ClassNameCacheInterface
+final class InMemoryCache implements ClassNameCacheInterface
 {
     /** @var array<string,array<string,string>> */
     private static array $cache = [];

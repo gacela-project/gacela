@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\CodeGenerator;
 
-use GacelaTest\Feature\CodeGenerator\Util\DirectoryUtil;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
 final class MakeFileCommandTest extends TestCase

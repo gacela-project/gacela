@@ -23,6 +23,8 @@ final class GacelaConfig
 
     private bool $cacheEnabled = true;
 
+    private string $cacheDirectory = 'cache';
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -120,6 +122,13 @@ final class GacelaConfig
         return $this;
     }
 
+    public function setCacheDirectory(string $dir): self
+    {
+        $this->cacheDirectory = $dir;
+
+        return $this;
+    }
+
     /**
      * @return array{
      *     external-services:array<string,class-string|object|callable>,
@@ -127,6 +136,7 @@ final class GacelaConfig
      *     suffix-types-builder:SuffixTypesBuilder,
      *     mapping-interfaces-builder:MappingInterfacesBuilder,
      *     cache-enabled:bool,
+     *     cache-directory:string,
      * }
      *
      * @internal
@@ -139,6 +149,7 @@ final class GacelaConfig
             'suffix-types-builder' => $this->suffixTypesBuilder,
             'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
             'cache-enabled' => $this->cacheEnabled,
+            'cache-directory' => $this->cacheDirectory,
         ];
     }
 }

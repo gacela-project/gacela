@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.23.0
+#### 2022-06-24
+
+- Group gacela cache files inside a `cache/` directory.
+- Allow enabling/disabling cache files from the project config files. 
+
 ### 0.22.0
 #### 2022-06-10
 

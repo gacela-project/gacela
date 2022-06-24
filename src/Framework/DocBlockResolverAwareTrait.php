@@ -127,11 +127,8 @@ trait DocBlockResolverAwareTrait
 
     private function createCustomServicesCache(): CustomServicesCache
     {
-        return new CustomServicesCache($this->getCachedClassNamesDir());
-    }
-
-    private function getCachedClassNamesDir(): string
-    {
-        return Config::getInstance()->getAppRootDir() . '/';
+        return new CustomServicesCache(
+            Config::getInstance()->getCacheDir()
+        );
     }
 }

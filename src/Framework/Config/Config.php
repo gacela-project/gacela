@@ -95,6 +95,11 @@ final class Config
         return $this->appRootDir ?? getcwd() ?: '';
     }
 
+    public function getCacheDir(): string
+    {
+        return $this->getAppRootDir() . '/cache/';
+    }
+
     public function setSetup(SetupGacelaInterface $setup): self
     {
         $this->setup = $setup;

@@ -27,7 +27,7 @@ final class ClassResolverFactory
     public function createClassNameCache(): ClassNameCacheInterface
     {
         return new ClassNameCache(
-            $this->getCachedClassNamesDir(),
+            Config::getInstance()->getCacheDir(),
         );
     }
 
@@ -45,10 +45,5 @@ final class ClassResolverFactory
             new FinderRuleWithModulePrefix(),
             new FinderRuleWithoutModulePrefix(),
         ];
-    }
-
-    private function getCachedClassNamesDir(): string
-    {
-        return Config::getInstance()->getAppRootDir() . '/';
     }
 }

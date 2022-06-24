@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use RuntimeException;
+
 abstract class AbstractFileCache implements ClassNameCacheInterface
 {
     /** @var array<string,string> */
@@ -68,6 +70,12 @@ abstract class AbstractFileCache implements ClassNameCacheInterface
 
     private function getAbsoluteCacheFilename(): string
     {
-        return $this->cacheDir . $this->getCacheFilename();
+        if (!is_dir($this->cacheDir)
+            && !mkdir($concurrentDirectory = $this->cacheDir)
+            && !is_dir($concurrentDirectory)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+        }
+
+        return $this->cacheDir . '/' . $this->getCacheFilename();
     }
 }

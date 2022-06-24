@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace $NAMESPACE$;
+
+use Gacela\Framework\AbstractFactory;
+
+/**
+ * @method $MODULE_NAME$Config getConfig()
+ */
+final class $CLASS_NAME$ extends AbstractFactory
+{
+}

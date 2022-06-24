@@ -49,6 +49,9 @@
             "GacelaTest\\": "tests"
         }
     },
+    "bin": [
+        "gacela"
+    ],
     "config": {
         "platform": {
             "php": "7.4"

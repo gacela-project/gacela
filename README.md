@@ -34,6 +34,12 @@ It encourages your modules to interact with each other in a unified way by follo
 - The [`Config`](https://gacela-project.com/docs/config/) has access to the key-values from your config files.
 - The [`DependencyProvider`](https://gacela-project.com/docs/dependency-provider/) resolves the extra-dependencies of your module.
 
+### Installation
+
+```bash
+composer require gacela-project/gacela
+```
+
 ### Module structure
 
 You can prefix gacela classes with the module name to improve readability. See more [about gacela](https://gacela-project.com/about-gacela/).
@@ -72,12 +78,6 @@ application-name
 │   └── ...
 └── vendor
     └── ...
-```
-
-### Installation
-
-```bash
-composer require gacela-project/gacela
 ```
 
 ### Documentation

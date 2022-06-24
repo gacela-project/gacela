@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
@@ -26,8 +27,12 @@ final class ClassResolverFactory
 
     public function createClassNameCache(): ClassNameCacheInterface
     {
+        if (!$this->isCacheEnabled()) {
+            return new InMemoryCache(ClassNameCache::class);
+        }
+
         return new ClassNameCache(
-            $this->getCachedClassNamesDir(),
+            Config::getInstance()->getCacheDir(),
         );
     }
 
@@ -47,8 +52,9 @@ final class ClassResolverFactory
         ];
     }
 
-    private function getCachedClassNamesDir(): string
+    private function isCacheEnabled(): bool
     {
-        return Config::getInstance()->getAppRootDir() . '/';
+        return (bool)Config::getInstance()
+            ->get(GacelaCache::ENABLED, GacelaCache::DEFAULT_VALUE);
     }
 }

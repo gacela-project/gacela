@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\DocBlockResolverAware;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
-final class DocBlockResolverAwareTest extends TestCase
+final class DocBlockResolverCustomServicesAwareTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
@@ -17,7 +18,9 @@ final class DocBlockResolverAwareTest extends TestCase
 
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->addAppConfig('config/custom-services/*.php');
+        });
     }
 
     public function test_existing_service(): void
@@ -25,6 +28,7 @@ final class DocBlockResolverAwareTest extends TestCase
         $dummy = new DummyDocBlockResolverAware();
         $actual = $dummy->getRepository()->findName();
 
+        self::assertCount(1, CustomServicesCache::getAll());
         self::assertSame('name', $actual);
     }
 

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
 use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesCache;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
+use Gacela\Framework\ClassResolver\InMemoryFileCache;
 use Gacela\Framework\Config\Config;
 use ReflectionClass;
 
@@ -36,6 +39,7 @@ trait DocBlockResolverAwareTrait
 
         $cacheKey = $this->generateCacheKey($method);
         $cache = $this->createCustomServicesCache();
+
 
         if (!$cache->has($cacheKey)) {
             $className = $this->getClassFromDoc($method);
@@ -125,10 +129,20 @@ trait DocBlockResolverAwareTrait
         return self::class . '::' . $method;
     }
 
-    private function createCustomServicesCache(): CustomServicesCache
+    private function createCustomServicesCache(): ClassNameCacheInterface
     {
+        if (!$this->isCacheEnabled()) {
+            return new InMemoryFileCache(CustomServicesCache::class);
+        }
+
         return new CustomServicesCache(
             Config::getInstance()->getCacheDir()
         );
+    }
+
+    private function isCacheEnabled(): bool
+    {
+        return (bool)Config::getInstance()
+            ->get(GacelaCache::ENABLED, GacelaCache::DEFAULT_VALUE);
     }
 }

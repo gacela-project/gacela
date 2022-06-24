@@ -8,6 +8,8 @@ use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Exception\ConfigException;
 
+use function array_key_exists;
+
 final class Config
 {
     public const DEFAULT_CONFIG_VALUE = 'Gacela\Framework\Config::DEFAULT_CONFIG_VALUE';
@@ -95,6 +97,11 @@ final class Config
         return $this->appRootDir ?? getcwd() ?: '';
     }
 
+    public function getCacheDir(): string
+    {
+        return $this->getAppRootDir() . '/cache/';
+    }
+
     public function setSetup(SetupGacelaInterface $setup): self
     {
         $this->setup = $setup;
@@ -119,7 +126,7 @@ final class Config
 
     private function hasValue(string $key): bool
     {
-        return isset($this->config[$key]);
+        return array_key_exists($key, $this->config);
     }
 
     /**

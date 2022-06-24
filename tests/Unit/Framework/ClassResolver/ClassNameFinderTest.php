@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
+use Gacela\Framework\ClassResolver\InMemoryCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
@@ -119,7 +120,7 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            new InMemoryClassNameCache()
+            new InMemoryCache(ClassInfo::class)
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');

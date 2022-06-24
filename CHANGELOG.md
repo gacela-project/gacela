@@ -5,7 +5,9 @@
 
 - Group gacela cache files inside a `cache/` directory.
 - Allow enabling/disabling cache files from the project config files. 
-- Added vendor/bin/gacela script.
+- Added `vendor/bin/gacela` script.
+- Add `.editorconfig` & `.gitattributes` files.
+- Ignore `composer.lock`.
 
 ### 0.22.0
 #### 2022-06-10

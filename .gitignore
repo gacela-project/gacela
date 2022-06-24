@@ -5,3 +5,4 @@
 /data/
 /.phpbench/
 *.cache
+composer.lock

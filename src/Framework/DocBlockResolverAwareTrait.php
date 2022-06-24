@@ -132,7 +132,7 @@ trait DocBlockResolverAwareTrait
 
     private function createCustomServicesCache(): ClassNameCacheInterface
     {
-        if (!$this->isCacheEnabled()) {
+        if (!$this->isProjectCacheEnabled()) {
             return new InMemoryCache(CustomServicesCache::class);
         }
 
@@ -141,7 +141,7 @@ trait DocBlockResolverAwareTrait
         );
     }
 
-    private function isCacheEnabled(): bool
+    private function isProjectCacheEnabled(): bool
     {
         return (bool)Config::getInstance()
             ->get(GacelaCache::ENABLED, GacelaCache::DEFAULT_VALUE);

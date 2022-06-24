@@ -47,6 +47,7 @@ trait DocBlockResolverAwareTrait
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */
+        /** @var class-string $className */
         $className = $cache->get($cacheKey);
         $resolvableType = $this->normalizeResolvableType($className);
 
@@ -58,8 +59,8 @@ trait DocBlockResolverAwareTrait
         }
 
         if ($this->hasParentClass()) {
-            /** @psalm-suppress ParentNotFound */
-            $parentReturn = parent::__call($method, $parameters);
+            /** @psalm-suppress ParentNotFound, MixedAssignment, UndefinedMethod */
+            $parentReturn = parent::__call($method, $parameters); // @phpstan-ignore-line
             $this->customServices[$method] = $parentReturn;
 
             return $parentReturn;
@@ -104,9 +105,9 @@ trait DocBlockResolverAwareTrait
      */
     private function searchClassOverUseStatements(ReflectionClass $reflectionClass, string $className): string
     {
-        $fileName = $reflectionClass->getFileName();
+        $fileName = (string) $reflectionClass->getFileName();
         if (!isset(static::$fileContentCache[$fileName])) {
-            static::$fileContentCache[$fileName] = file_get_contents($fileName);
+            static::$fileContentCache[$fileName] = (string) file_get_contents($fileName);
         }
         $phpFile = static::$fileContentCache[$fileName];
 

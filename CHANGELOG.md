@@ -5,6 +5,7 @@
 
 - Group gacela cache files inside a `cache/` directory.
 - Allow enabling/disabling cache files from the project config files. 
+- Added vendor/bin/gacela script.
 
 ### 0.22.0
 #### 2022-06-10

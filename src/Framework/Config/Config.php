@@ -99,7 +99,7 @@ final class Config
 
     public function getCacheDir(): string
     {
-        return $this->getAppRootDir() . '/cache/';
+        return $this->getAppRootDir() . '/' . $this->getSetupGacela()->getCacheDirectory();
     }
 
     public function setSetup(SetupGacelaInterface $setup): self
@@ -117,11 +117,16 @@ final class Config
         if ($this->configFactory === null) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
-                $this->setup ?? new SetupGacela()
+                $this->getSetupGacela()
             );
         }
 
         return $this->configFactory;
+    }
+
+    private function getSetupGacela(): SetupGacelaInterface
+    {
+        return $this->setup ?? new SetupGacela();
     }
 
     private function hasValue(string $key): bool

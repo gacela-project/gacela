@@ -31,6 +31,8 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $cacheEnabled = true;
 
+    private string $cacheDirectory = 'cache';
+
     public function __construct()
     {
         $this->configFn = static function (): void {
@@ -61,7 +63,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setSuffixTypesBuilder($build['suffix-types-builder'])
             ->setMappingInterfacesBuilder($build['mapping-interfaces-builder'])
             ->setExternalServices($build['external-services'])
-            ->setCacheEnabled($build['cache-enabled']);
+            ->setCacheEnabled($build['cache-enabled'])
+            ->setCacheDirectory($build['cache-directory']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -189,5 +192,17 @@ final class SetupGacela extends AbstractSetupGacela
     public function isCacheEnabled(): bool
     {
         return $this->cacheEnabled;
+    }
+
+    public function setCacheDirectory(string $dir): self
+    {
+        $this->cacheDirectory = $dir;
+
+        return $this;
+    }
+
+    public function getCacheDirectory(): string
+    {
+        return $this->cacheDirectory;
     }
 }

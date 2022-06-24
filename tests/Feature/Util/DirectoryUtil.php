@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\CodeGenerator\Util;
+namespace GacelaTest\Feature\Util;
 
 use FilesystemIterator;
 use RecursiveDirectoryIterator;

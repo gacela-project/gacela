@@ -71,7 +71,7 @@ abstract class AbstractFileCache implements ClassNameCacheInterface
     private function getAbsoluteCacheFilename(): string
     {
         if (!is_dir($this->cacheDir)
-            && !mkdir($concurrentDirectory = $this->cacheDir)
+            && !mkdir($concurrentDirectory = $this->cacheDir, 0777, true)
             && !is_dir($concurrentDirectory)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
         }

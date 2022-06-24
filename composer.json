@@ -30,10 +30,11 @@
         "friendsofphp/php-cs-fixer": "^3.8",
         "phpbench/phpbench": "^1.2",
         "phpmetrics/phpmetrics": "^2.8",
+        "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4"
     },
     "suggest": {
-        "gacela-project/gacela-cli": "Gacela cli util",
+        "symfony/console": "Allows to use vendor/bin/gacela script",
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files"
     },

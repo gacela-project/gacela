@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.23.1
+#### 2022-06-25
+
+- Fix `setCacheDirectory()` with nested dir levels.
+
 ### 0.23.0
 #### 2022-06-24
 

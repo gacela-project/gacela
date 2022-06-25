@@ -17,13 +17,13 @@ final class FeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->addAppConfig('config/*.php');
-            $config->setCacheDirectory('custom-caching-dir');
+            $config->setCacheDirectory('custom/caching-dir');
         });
     }
 
     public function tearDown(): void
     {
-        DirectoryUtil::removeDir(__DIR__ . '/custom-caching-dir');
+        DirectoryUtil::removeDir(__DIR__ . '/custom/caching-dir');
     }
 
     public function test_custom_caching_dir(): void
@@ -31,7 +31,7 @@ final class FeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileExists(__DIR__ . '/custom-caching-dir/' . ClassNameCache::CACHE_FILENAME);
-        self::assertFileExists(__DIR__ . '/custom-caching-dir/' . CustomServicesCache::CACHE_FILENAME);
+        self::assertFileExists(__DIR__ . '/custom/caching-dir/' . ClassNameCache::CACHE_FILENAME);
+        self::assertFileExists(__DIR__ . '/custom/caching-dir/' . CustomServicesCache::CACHE_FILENAME);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -31,7 +32,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $cacheEnabled = true;
 
-    private string $cacheDirectory = 'cache';
+    private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
 
     public function __construct()
     {

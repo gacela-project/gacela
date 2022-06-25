@@ -55,6 +55,6 @@ final class ClassResolverFactory
     private function isProjectCacheEnabled(): bool
     {
         return (bool)Config::getInstance()
-            ->get(GacelaCache::ENABLED, GacelaCache::DEFAULT_VALUE);
+            ->get(GacelaCache::KEY_ENABLED, GacelaCache::DEFAULT_ENABLED_VALUE);
     }
 }

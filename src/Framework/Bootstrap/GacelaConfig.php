@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -23,7 +24,7 @@ final class GacelaConfig
 
     private bool $cacheEnabled = true;
 
-    private string $cacheDirectory = 'cache';
+    private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
 
     /**
      * @param array<string,class-string|object|callable> $externalServices

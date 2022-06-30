@@ -26,7 +26,7 @@ final class ContainerKeyNotFoundException extends RuntimeException
         $message .= sprintf(
             'You can fix this by adding the key "%s" to your "%sDependencyProvider"',
             $key,
-            $callerClassInfo->getModule()
+            $callerClassInfo->getModuleName()
         );
 
         return $message;

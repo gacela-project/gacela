@@ -17,17 +17,23 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
     private ClassNameCacheInterface $classNameCache;
 
+    /** @var list<string> */
+    private array $projectNamespaces;
+
     /**
      * @param list<FinderRuleInterface> $finderRules
+     * @param list<string> $projectNamespaces
      */
     public function __construct(
         ClassValidatorInterface $classValidator,
         array $finderRules,
-        ClassNameCacheInterface $classNameCache
+        ClassNameCacheInterface $classNameCache,
+        array $projectNamespaces
     ) {
         $this->classValidator = $classValidator;
         $this->finderRules = $finderRules;
         $this->classNameCache = $classNameCache;
+        $this->projectNamespaces = $projectNamespaces;
     }
 
     /**
@@ -41,13 +47,19 @@ final class ClassNameFinder implements ClassNameFinderInterface
             return $this->classNameCache->get($cacheKey);
         }
 
-        foreach ($this->finderRules as $finderRule) {
-            foreach ($resolvableTypes as $resolvableType) {
-                $className = $finderRule->buildClassCandidate($classInfo, $resolvableType);
-                if ($this->classValidator->isClassNameValid($className)) {
-                    $this->classNameCache->put($cacheKey, $className);
+        $projectNamespaces = $this->projectNamespaces;
+        $projectNamespaces[] = $classInfo->getModuleNamespace();
 
-                    return $className;
+        foreach ($projectNamespaces as $projectNamespace) {
+            foreach ($this->finderRules as $finderRule) {
+                foreach ($resolvableTypes as $resolvableType) {
+                    $className = $finderRule->buildClassCandidate($projectNamespace, $resolvableType, $classInfo);
+
+                    if ($this->classValidator->isClassNameValid($className)) {
+                        $this->classNameCache->put($cacheKey, $className);
+
+                        return $className;
+                    }
                 }
             }
         }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\ResolveDifferentLevel\vendor\Persona\ModuleA;
+namespace GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\Persona\ModuleA;
 
 interface FacadeInterface
 {

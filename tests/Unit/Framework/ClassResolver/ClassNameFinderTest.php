@@ -28,7 +28,8 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $this->createMock(ClassValidatorInterface::class),
             [],
-            $this->createMock(ClassNameCacheInterface::class)
+            $this->createMock(ClassNameCacheInterface::class),
+            []
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -51,7 +52,8 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            $this->createMock(ClassNameCacheInterface::class)
+            $this->createMock(ClassNameCacheInterface::class),
+            []
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -74,7 +76,8 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            $this->createMock(ClassNameCacheInterface::class)
+            $this->createMock(ClassNameCacheInterface::class),
+            []
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -97,7 +100,8 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            $this->createMock(ClassNameCacheInterface::class)
+            $this->createMock(ClassNameCacheInterface::class),
+            []
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -120,7 +124,8 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            new InMemoryCache(ClassInfo::class)
+            new InMemoryCache(ClassInfo::class),
+            []
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');

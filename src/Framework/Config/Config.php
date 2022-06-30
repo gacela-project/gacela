@@ -124,9 +124,13 @@ final class Config
         return $this->configFactory;
     }
 
-    private function getSetupGacela(): SetupGacelaInterface
+    public function getSetupGacela(): SetupGacelaInterface
     {
-        return $this->setup ?? new SetupGacela();
+        if ($this->setup === null) {
+            $this->setup = new SetupGacela();
+        }
+
+        return $this->setup;
     }
 
     private function hasValue(string $key): bool

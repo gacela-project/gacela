@@ -19,7 +19,7 @@ trait ClassResolverExceptionTrait
         $message .= sprintf(
             'Cannot resolve the `%s` for your module `%s`',
             $resolvableType,
-            $callerClassInfo->getModule(),
+            $callerClassInfo->getModuleName(),
         ) . PHP_EOL;
 
         $message .= sprintf(
@@ -45,7 +45,7 @@ trait ClassResolverExceptionTrait
     {
         return sprintf(
             '\\%s\\%s',
-            $classInfo->getFullNamespace(),
+            $classInfo->getModuleNamespace(),
             $resolvableType
         );
     }

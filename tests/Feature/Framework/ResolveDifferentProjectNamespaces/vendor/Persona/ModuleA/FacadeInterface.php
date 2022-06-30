@@ -6,5 +6,5 @@ namespace GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\
 
 interface FacadeInterface
 {
-    public function sayHi(): string;
+    public function sayHiA(): string;
 }

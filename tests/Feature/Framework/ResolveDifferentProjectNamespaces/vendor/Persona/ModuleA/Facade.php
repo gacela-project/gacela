@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\Persona\ModuleA;
 
@@ -11,10 +11,17 @@ use Gacela\Framework\AbstractFacade;
  */
 class Facade extends AbstractFacade implements FacadeInterface
 {
-    public function sayHi(): string
+    public function sayHiA(): string
     {
         return $this->getFactory()
-            ->createString()
+            ->createStringA()
+            ->value();
+    }
+
+    public function sayHiB(): string
+    {
+        return $this->getFactory()
+            ->createStringB()
             ->value();
     }
 }

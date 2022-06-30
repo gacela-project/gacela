@@ -25,15 +25,22 @@ final class FeatureTest extends TestCase
             $config->addAppConfig('config/default.php');
 
             $config->setProjectNamespaces([
-                'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces',
+                'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\src\CompanyA',
             ]);
         });
     }
 
-    public function test_override_factory_from_other_namespace(): void
+    public function test_override_factory_from_highest_prio_namespace(): void
     {
         $facade = new VendorPersonaFacade();
 
-        self::assertSame('Overridden string from ModuleA', $facade->sayHi());
+        self::assertSame('Overridden, from src\CompanyA\ModuleA::StringA', $facade->sayHiA());
+    }
+
+    public function test_non_overridden_factory_method_from_vendor(): void
+    {
+        $facade = new VendorPersonaFacade();
+
+        self::assertSame('Hi, from vendor\Persona\ModuleA::StringB', $facade->sayHiB());
     }
 }

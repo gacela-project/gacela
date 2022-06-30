@@ -10,8 +10,13 @@ use GacelaTest\Fixtures\StringValueInterface;
 
 class Factory extends AbstractFactory
 {
-    public function createString(): StringValueInterface
+    public function createStringA(): StringValueInterface
     {
-        return new StringValue('Hi, from vendor\Persona\ModuleA');
+        return new StringValue('Hi, from vendor\Persona\ModuleA::StringA');
+    }
+
+    public function createStringB(): StringValueInterface
+    {
+        return new StringValue('Hi, from vendor\Persona\ModuleA::StringB');
     }
 }

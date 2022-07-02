@@ -6,17 +6,16 @@ namespace GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\Persona\ModuleA\Facade as VendorModuleAFacade;
-use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\Persona\ModuleB\Facade as VendorModuleBFacade;
+use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdParty\ModuleA\Facade as ThirdPartyModuleAFacade;
+use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdParty\ModuleB\Facade as ThirdPartyModuleBFacade;
 use PHPUnit\Framework\TestCase;
 
 /**
  * ProjectNamespaces is a list of namespaces sort by prio to resolve the Facade, Factory, Config or DependencyProvider.
  *
- * In this example, we are using the Facade from a vendor's module (`vendor\Persona\ModuleA\Facade`), and that Facade
- * is using its Factory. However, we wanted to override that Factory to extend its functionality, when resolving the
- * Factory for that module, Gacela will find the overridden Factory from our ModuleA, and it will use this custom class
- * instead of the Factory from vendor.
+ * In this example, we are using the Facade from a third-party vendor's module (`vendor\ThirdParty\ModuleA\Facade`),
+ * and when that Facade uses its Factory, gacela will resolve it from our `src\Main` namespace, because we have the same
+ * module structure as that ThirdParty, and we have defined the `src\Main` as first thing in the GacelaConfig::setProjectNamespaces().
  */
 final class FeatureTest extends TestCase
 {
@@ -26,30 +25,30 @@ final class FeatureTest extends TestCase
             $config->addAppConfig('config/default.php');
 
             $config->setProjectNamespaces([
-                'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\src\CompanyA',
-                'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\src\CompanyB',
+                'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\src\Main',
+                'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\src\Secondary',
             ]);
         });
     }
 
     public function test_override_factory_from_highest_prio_namespace(): void
     {
-        $facade = new VendorModuleAFacade();
+        $facade = new ThirdPartyModuleAFacade();
 
-        self::assertSame('Overridden, from src\CompanyA\ModuleA::StringA', $facade->sayHiA());
+        self::assertSame('Overridden, from src\CompanyA\ModuleA::StringA', $facade->stringValueA1());
     }
 
     public function test_non_overridden_factory_method_from_vendor(): void
     {
-        $facade = new VendorModuleAFacade();
+        $facade = new ThirdPartyModuleAFacade();
 
-        self::assertSame('Hi, from vendor\Persona\ModuleA::StringB', $facade->sayHiB());
+        self::assertSame('Hi, from vendor\ThirdParty\ModuleA::StringA2', $facade->stringValueA2());
     }
 
     public function test_override_factory_from_second_highest_prio_namespace(): void
     {
-        $facade = new VendorModuleBFacade();
+        $facade = new ThirdPartyModuleBFacade();
 
-        self::assertSame('Overridden, from src\CompanyB\ModuleB', $facade->sayHi());
+        self::assertSame('Overridden, from src\CompanyB\ModuleB', $facade->stringValueB1());
     }
 }

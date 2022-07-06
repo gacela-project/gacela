@@ -17,9 +17,9 @@ final class ClassInfoTest extends TestCase
         };
         $actual = ClassInfo::from($facade, 'Factory');
 
-        self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getModule());
-        self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getFullNamespace());
-        self::assertSame('\module-name@anonymous\ClassInfoTest\Factory', $actual->getCacheKey());
+        self::assertSame('module-name@anonymous', $actual->getModuleNamespace(), 'full namespace');
+        self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getModuleName(), 'module');
+        self::assertSame('\module-name@anonymous\ClassInfoTest\Factory', $actual->getCacheKey(), 'cache key');
     }
 
     public function test_object_real_class(): void
@@ -27,17 +27,17 @@ final class ClassInfoTest extends TestCase
         $facade = new ClassInfoTestingFacade();
         $actual = ClassInfo::from($facade, 'Factory');
 
-        self::assertSame('Fixtures', $actual->getModule());
-        self::assertSame('GacelaTest\Fixtures', $actual->getFullNamespace());
-        self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey());
+        self::assertSame('GacelaTest', $actual->getModuleNamespace(), 'full namespace');
+        self::assertSame('Fixtures', $actual->getModuleName(), 'fixtures');
+        self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey(), 'cache key');
     }
 
     public function test_string_real_class(): void
     {
         $actual = ClassInfo::from(ClassInfoTestingFacade::class, 'Factory');
 
-        self::assertSame('Fixtures', $actual->getModule());
-        self::assertSame('GacelaTest\Fixtures', $actual->getFullNamespace());
-        self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey());
+        self::assertSame('GacelaTest', $actual->getModuleNamespace(), 'full namespace');
+        self::assertSame('Fixtures', $actual->getModuleName(), 'module');
+        self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey(), 'cache key');
     }
 }

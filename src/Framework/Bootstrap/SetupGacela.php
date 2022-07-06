@@ -34,6 +34,9 @@ final class SetupGacela extends AbstractSetupGacela
 
     private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
 
+    /** @var list<string> */
+    private array $projectNamespaces = [];
+
     public function __construct()
     {
         $this->configFn = static function (): void {
@@ -65,7 +68,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setMappingInterfacesBuilder($build['mapping-interfaces-builder'])
             ->setExternalServices($build['external-services'])
             ->setCacheEnabled($build['cache-enabled'])
-            ->setCacheDirectory($build['cache-directory']);
+            ->setCacheDirectory($build['cache-directory'])
+            ->setProjectNamespaces($build['project-namespaces']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -205,5 +209,23 @@ final class SetupGacela extends AbstractSetupGacela
     public function getCacheDirectory(): string
     {
         return $this->cacheDirectory;
+    }
+
+    /**
+     * @param list<string> $list
+     */
+    public function setProjectNamespaces(array $list): self
+    {
+        $this->projectNamespaces = $list;
+
+        return $this;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getProjectNamespaces(): array
+    {
+        return $this->projectNamespaces;
     }
 }

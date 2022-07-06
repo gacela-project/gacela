@@ -37,4 +37,9 @@ interface SetupGacelaInterface
     public function getCacheDirectory(): string;
 
     public function isCacheEnabled(): bool;
+
+    /**
+     * @return list<string>
+     */
+    public function getProjectNamespaces(): array;
 }

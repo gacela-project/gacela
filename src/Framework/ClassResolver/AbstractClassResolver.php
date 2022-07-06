@@ -89,8 +89,9 @@ abstract class AbstractClassResolver
     private function getClassNameFinder(): ClassNameFinderInterface
     {
         if ($this->classNameFinder === null) {
-            $this->classNameFinder = (new ClassResolverFactory())
-                ->createClassNameFinder();
+            $this->classNameFinder = (new ClassResolverFactory(
+                Config::getInstance()->getSetupGacela()
+            ))->createClassNameFinder();
         }
 
         return $this->classNameFinder;

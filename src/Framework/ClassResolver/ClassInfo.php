@@ -18,15 +18,15 @@ final class ClassInfo
     private static array $callerClassCache;
 
     private string $callerModuleName;
-    private string $callerNamespace;
+    private string $callerModuleNamespace;
     private string $cacheKey;
 
     public function __construct(
-        string $callerNamespace,
+        string $callerModuleNamespace,
         string $callerModuleName,
         string $cacheKey
     ) {
-        $this->callerNamespace = $callerNamespace;
+        $this->callerModuleNamespace = $callerModuleNamespace;
         $this->callerModuleName = $callerModuleName;
         $this->cacheKey = $cacheKey;
     }
@@ -48,23 +48,23 @@ final class ClassInfo
         return $this->cacheKey;
     }
 
-    public function getModule(): string
+    public function getModuleName(): string
     {
         return $this->callerModuleName;
     }
 
-    public function getFullNamespace(): string
+    public function getModuleNamespace(): string
     {
-        return $this->callerNamespace;
+        return $this->callerModuleNamespace;
     }
 
     public function toString(): string
     {
         return sprintf(
-            'ClassInfo{$cacheKey:%s, $callerModuleName:%s, $callerNamespace:%s}',
+            'ClassInfo{cacheKey:"%s", callerModuleName:"%s", callerNamespace:"%s"}',
             $this->cacheKey,
             $this->callerModuleName,
-            $this->callerNamespace,
+            $this->callerModuleNamespace,
         );
     }
 
@@ -93,13 +93,13 @@ final class ClassInfo
             ];
         }
 
-        $callerNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
-        $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
-        $cacheKey = GlobalKey::fromClassName(
-            sprintf('\\%s\\%s', $callerNamespace, $resolvableType)
-        );
+        $callerFullNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
 
-        $self = new self($callerNamespace, $callerModuleName, $cacheKey);
+        $callerModuleNamespace = substr($callerFullNamespace, 0, (int)strrpos($callerFullNamespace, '\\'));
+        $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
+        $cacheKey = GlobalKey::fromClassName(sprintf('\\%s\\%s', $callerFullNamespace, $resolvableType));
+
+        $self = new self($callerModuleNamespace, $callerModuleName, $cacheKey);
         self::$callerClassCache[$callerClass][$resolvableType] = $self;
 
         return $self;

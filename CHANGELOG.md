@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Added `GacelaConfig->setProjectNamespaces(array)` to be able to resolve different project namespaces.
+
 ### 0.23.1
 #### 2022-06-25
 

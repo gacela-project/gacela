@@ -8,5 +8,5 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 
 interface FinderRuleInterface
 {
-    public function buildClassCandidate(ClassInfo $classInfo, string $resolvableType): string;
+    public function buildClassCandidate(string $projectNamespace, string $resolvableType, ClassInfo $classInfo): string;
 }

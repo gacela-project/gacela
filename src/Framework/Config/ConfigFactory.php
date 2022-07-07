@@ -39,9 +39,15 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        $gacelaPhpPath = $this->getGacelaPhpPath();
         $fileIo = $this->createFileIo();
 
+        $gacelaPhpDefaultPath = $this->getGacelaPhpDefaultPath();
+        if ($fileIo->existsFile($gacelaPhpDefaultPath)) {
+            $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpDefaultPath, $this->setup, $fileIo);
+            $gacelaSetupFromDefaultGacelaPhp = $factoryFromGacelaPhp->createGacelaFileConfig();
+        }
+
+        $gacelaPhpPath = $this->getGacelaPhpPathFromEnv();
         if ($fileIo->existsFile($gacelaPhpPath)) {
             $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
             $gacelaSetupFromGacelaPhp = $factoryFromGacelaPhp->createGacelaFileConfig();
@@ -50,8 +56,12 @@ final class ConfigFactory extends AbstractFactory
         $factoryFromBootstrap = new GacelaConfigFromBootstrapFactory($this->setup);
         $gacelaSetupFromBootstrap = $factoryFromBootstrap->createGacelaFileConfig();
 
+        if (isset($gacelaSetupFromDefaultGacelaPhp) && $gacelaSetupFromDefaultGacelaPhp instanceof GacelaConfigFileInterface) {
+            $gacelaSetupFromBootstrap = $gacelaSetupFromBootstrap->combine($gacelaSetupFromDefaultGacelaPhp);
+        }
+
         if (isset($gacelaSetupFromGacelaPhp) && $gacelaSetupFromGacelaPhp instanceof GacelaConfigFileInterface) {
-            return $gacelaSetupFromBootstrap->combine($gacelaSetupFromGacelaPhp);
+            $gacelaSetupFromBootstrap = $gacelaSetupFromBootstrap->combine($gacelaSetupFromGacelaPhp);
         }
 
         return $gacelaSetupFromBootstrap;
@@ -70,19 +80,19 @@ final class ConfigFactory extends AbstractFactory
         ]);
     }
 
-    private function getGacelaPhpPath(): string
-    {
-        if ($this->env() === '') {
-            return $this->getGacelaPhpDefaultPath();
-        }
-
-        $gacelaPhpPathFromEnv = $this->getGacelaPhpPathFromEnv();
-        if ($this->createFileIo()->existsFile($gacelaPhpPathFromEnv)) {
-            return $gacelaPhpPathFromEnv;
-        }
-
-        return $this->getGacelaPhpDefaultPath();
-    }
+//    private function getGacelaPhpPath(): string
+//    {
+//        if ($this->env() ==! '') {
+//            return $this->getGacelaPhpDefaultPath();
+//        }
+//
+//        $gacelaPhpPathFromEnv = $this->getGacelaPhpPathFromEnv();
+//        if ($this->createFileIo()->existsFile($gacelaPhpPathFromEnv)) {
+//            return $gacelaPhpPathFromEnv;
+//        }
+//
+//        return $this->getGacelaPhpDefaultPath();
+//    }
 
     private function getGacelaPhpDefaultPath(): string
     {

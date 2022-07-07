@@ -57,11 +57,6 @@ final class ConfigFactory extends AbstractFactory
         return $gacelaSetupFromBootstrap;
     }
 
-    private function createFileIo(): FileIoInterface
-    {
-        return new FileIo();
-    }
-
     private function createPathFinder(): PathFinderInterface
     {
         return new PathFinder();
@@ -75,34 +70,18 @@ final class ConfigFactory extends AbstractFactory
         ]);
     }
 
-    private function env(): string
-    {
-        return getenv('APP_ENV') ?: '';
-    }
-
     private function getGacelaPhpPath(): string
     {
+        if ($this->env() === '') {
+            return $this->getGacelaPhpDefaultPath();
+        }
+
         $gacelaPhpPathFromEnv = $this->getGacelaPhpPathFromEnv();
         if ($this->createFileIo()->existsFile($gacelaPhpPathFromEnv)) {
             return $gacelaPhpPathFromEnv;
         }
 
         return $this->getGacelaPhpDefaultPath();
-    }
-
-    private function getGacelaPhpPathFromEnv(): string
-    {
-        if ($this->env() === '') {
-            return $this->getGacelaPhpDefaultPath();
-        }
-
-        return sprintf(
-            '%s/%s-%s%s',
-            $this->appRootDir,
-            self::GACELA_PHP_CONFIG_FILENAME,
-            $this->env(),
-            self::GACELA_PHP_CONFIG_EXTENSION
-        );
     }
 
     private function getGacelaPhpDefaultPath(): string
@@ -113,5 +92,26 @@ final class ConfigFactory extends AbstractFactory
             self::GACELA_PHP_CONFIG_FILENAME,
             self::GACELA_PHP_CONFIG_EXTENSION
         );
+    }
+
+    private function getGacelaPhpPathFromEnv(): string
+    {
+        return sprintf(
+            '%s/%s-%s%s',
+            $this->appRootDir,
+            self::GACELA_PHP_CONFIG_FILENAME,
+            $this->env(),
+            self::GACELA_PHP_CONFIG_EXTENSION
+        );
+    }
+
+    private function env(): string
+    {
+        return getenv('APP_ENV') ?: '';
+    }
+
+    private function createFileIo(): FileIoInterface
+    {
+        return new FileIo();
     }
 }

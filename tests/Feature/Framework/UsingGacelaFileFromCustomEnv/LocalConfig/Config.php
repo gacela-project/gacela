@@ -11,6 +11,7 @@ final class Config extends AbstractConfig
     public function getArrayConfig(): array
     {
         return [
+            'default_key' => (string)$this->get('default_key'),
             'key' => (string)$this->get('key'),
         ];
     }

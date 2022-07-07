@@ -23,6 +23,7 @@ final class FeatureTest extends TestCase
 
         self::assertSame(
             [
+                'default_key' => 'from:default',
                 'key' => 'from:default',
             ],
             $facade->doSomething()
@@ -39,6 +40,7 @@ final class FeatureTest extends TestCase
 
         self::assertSame(
             [
+                'default_key' => 'from:default',
                 'key' => 'from:dev',
             ],
             $facade->doSomething()
@@ -55,6 +57,7 @@ final class FeatureTest extends TestCase
 
         self::assertSame(
             [
+                'default_key' => 'from:default',
                 'key' => 'from:prod',
             ],
             $facade->doSomething()
@@ -71,6 +74,7 @@ final class FeatureTest extends TestCase
 
         self::assertSame(
             [
+                'default_key' => 'from:default',
                 'key' => 'from:default',
             ],
             $facade->doSomething()

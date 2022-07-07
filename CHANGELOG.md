@@ -2,7 +2,9 @@
 
 ### Unreleased
 
-- Added `GacelaConfig->setProjectNamespaces(array)` to be able to resolve different project namespaces.
+- Added project namespaces.
+  - `GacelaConfig->setProjectNamespaces(array)` to be able to resolve gacela classes with priorities.
+- Added gacela configuration for different environments.
 
 ### 0.23.1
 #### 2022-06-25

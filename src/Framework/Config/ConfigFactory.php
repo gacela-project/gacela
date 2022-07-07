@@ -15,7 +15,8 @@ use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 
 final class ConfigFactory extends AbstractFactory
 {
-    private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
+    private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
+    private const GACELA_PHP_CONFIG_EXTENSION = '.php';
 
     private string $appRootDir;
 
@@ -38,7 +39,7 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        $gacelaPhpPath = $this->appRootDir . '/' . self::GACELA_PHP_CONFIG_FILENAME;
+        $gacelaPhpPath = $this->getGacelaPhpPath();
         $fileIo = $this->createFileIo();
 
         if ($fileIo->existsFile($gacelaPhpPath)) {
@@ -77,5 +78,25 @@ final class ConfigFactory extends AbstractFactory
     private function env(): string
     {
         return getenv('APP_ENV') ?: '';
+    }
+
+    private function getGacelaPhpPath(): string
+    {
+        if ($this->env() === '') {
+            return sprintf(
+                '%s/%s%s',
+                $this->appRootDir,
+                self::GACELA_PHP_CONFIG_FILENAME,
+                self::GACELA_PHP_CONFIG_EXTENSION
+            );
+        }
+
+        return sprintf(
+            '%s/%s-%s%s',
+            $this->appRootDir,
+            self::GACELA_PHP_CONFIG_FILENAME,
+            $this->env(),
+            self::GACELA_PHP_CONFIG_EXTENSION
+        );
     }
 }

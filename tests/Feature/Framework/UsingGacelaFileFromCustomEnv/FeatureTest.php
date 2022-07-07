@@ -15,7 +15,7 @@ final class FeatureTest extends TestCase
         putenv('APP_ENV');
     }
 
-    public function test_load_config_from_custom_env_default(): void
+    public function test_load_gacela_default_file(): void
     {
         Gacela::bootstrap(__DIR__);
 
@@ -29,9 +29,8 @@ final class FeatureTest extends TestCase
         );
     }
 
-    public function test_load_config_from_custom_env_dev(): void
+    public function test_load_gacela_dev_file(): void
     {
-        self::markTestSkipped('TODO');
         putenv('APP_ENV=dev');
 
         Gacela::bootstrap(__DIR__);
@@ -46,9 +45,8 @@ final class FeatureTest extends TestCase
         );
     }
 
-    public function test_load_config_from_custom_env_prod(): void
+    public function test_load_gacela_prod_file(): void
     {
-        self::markTestSkipped('TODO');
         putenv('APP_ENV=prod');
 
         Gacela::bootstrap(__DIR__);

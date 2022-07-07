@@ -82,13 +82,18 @@ final class ConfigFactory extends AbstractFactory
 
     private function getGacelaPhpPath(): string
     {
+        $gacelaPhpPathFromEnv = $this->getGacelaPhpPathFromEnv();
+        if ($this->createFileIo()->existsFile($gacelaPhpPathFromEnv)) {
+            return $gacelaPhpPathFromEnv;
+        }
+
+        return $this->getGacelaPhpDefaultPath();
+    }
+
+    private function getGacelaPhpPathFromEnv(): string
+    {
         if ($this->env() === '') {
-            return sprintf(
-                '%s/%s%s',
-                $this->appRootDir,
-                self::GACELA_PHP_CONFIG_FILENAME,
-                self::GACELA_PHP_CONFIG_EXTENSION
-            );
+            return $this->getGacelaPhpDefaultPath();
         }
 
         return sprintf(
@@ -96,6 +101,16 @@ final class ConfigFactory extends AbstractFactory
             $this->appRootDir,
             self::GACELA_PHP_CONFIG_FILENAME,
             $this->env(),
+            self::GACELA_PHP_CONFIG_EXTENSION
+        );
+    }
+
+    private function getGacelaPhpDefaultPath(): string
+    {
+        return sprintf(
+            '%s/%s%s',
+            $this->appRootDir,
+            self::GACELA_PHP_CONFIG_FILENAME,
             self::GACELA_PHP_CONFIG_EXTENSION
         );
     }

@@ -60,4 +60,20 @@ final class FeatureTest extends TestCase
             $facade->doSomething()
         );
     }
+
+    public function test_load_gacela_default_file_if_custom_does_not_exists(): void
+    {
+        putenv('APP_ENV=custom');
+
+        Gacela::bootstrap(__DIR__);
+
+        $facade = new LocalConfig\Facade();
+
+        self::assertSame(
+            [
+                'key' => 'from:default',
+            ],
+            $facade->doSomething()
+        );
+    }
 }

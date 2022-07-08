@@ -56,7 +56,7 @@ final class ConfigFactory extends AbstractFactory
 
         return array_reduce(
             $gacelaConfigFiles,
-            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->combine($item),
+            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item) => $carry->combine($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig()
         );
     }

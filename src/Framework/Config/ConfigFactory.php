@@ -15,7 +15,8 @@ use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 
 final class ConfigFactory extends AbstractFactory
 {
-    private const GACELA_PHP_CONFIG_FILENAME = 'gacela.php';
+    private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
+    private const GACELA_PHP_CONFIG_EXTENSION = '.php';
 
     private string $appRootDir;
 
@@ -38,27 +39,57 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        $gacelaPhpPath = $this->appRootDir . '/' . self::GACELA_PHP_CONFIG_FILENAME;
+        $gacelaConfigFiles = [];
         $fileIo = $this->createFileIo();
 
+        $gacelaPhpDefaultPath = $this->getGacelaPhpDefaultPath();
+        if ($fileIo->existsFile($gacelaPhpDefaultPath)) {
+            $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpDefaultPath, $this->setup, $fileIo);
+            $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
+        }
+
+        $gacelaPhpPath = $this->getGacelaPhpPathFromEnv();
         if ($fileIo->existsFile($gacelaPhpPath)) {
             $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
-            $gacelaSetupFromGacelaPhp = $factoryFromGacelaPhp->createGacelaFileConfig();
+            $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
-        $factoryFromBootstrap = new GacelaConfigFromBootstrapFactory($this->setup);
-        $gacelaSetupFromBootstrap = $factoryFromBootstrap->createGacelaFileConfig();
-
-        if (isset($gacelaSetupFromGacelaPhp) && $gacelaSetupFromGacelaPhp instanceof GacelaConfigFileInterface) {
-            return $gacelaSetupFromBootstrap->combine($gacelaSetupFromGacelaPhp);
-        }
-
-        return $gacelaSetupFromBootstrap;
+        return array_reduce(
+            $gacelaConfigFiles,
+            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item) => $carry->combine($item),
+            (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig()
+        );
     }
 
     private function createFileIo(): FileIoInterface
     {
         return new FileIo();
+    }
+
+    private function getGacelaPhpDefaultPath(): string
+    {
+        return sprintf(
+            '%s/%s%s',
+            $this->appRootDir,
+            self::GACELA_PHP_CONFIG_FILENAME,
+            self::GACELA_PHP_CONFIG_EXTENSION
+        );
+    }
+
+    private function getGacelaPhpPathFromEnv(): string
+    {
+        return sprintf(
+            '%s/%s-%s%s',
+            $this->appRootDir,
+            self::GACELA_PHP_CONFIG_FILENAME,
+            $this->env(),
+            self::GACELA_PHP_CONFIG_EXTENSION
+        );
+    }
+
+    private function env(): string
+    {
+        return getenv('APP_ENV') ?: '';
     }
 
     private function createPathFinder(): PathFinderInterface
@@ -72,10 +103,5 @@ final class ConfigFactory extends AbstractFactory
             AbsolutePathNormalizer::WITHOUT_SUFFIX => new WithoutSuffixAbsolutePathStrategy($this->appRootDir),
             AbsolutePathNormalizer::WITH_SUFFIX => new WithSuffixAbsolutePathStrategy($this->appRootDir, $this->env()),
         ]);
-    }
-
-    private function env(): string
-    {
-        return getenv('APP_ENV') ?: '';
     }
 }

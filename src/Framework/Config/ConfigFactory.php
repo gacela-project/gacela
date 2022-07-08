@@ -39,23 +39,23 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        $gacelaSetups = [];
+        $gacelaConfigFiles = [];
         $fileIo = $this->createFileIo();
 
         $gacelaPhpDefaultPath = $this->getGacelaPhpDefaultPath();
         if ($fileIo->existsFile($gacelaPhpDefaultPath)) {
             $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpDefaultPath, $this->setup, $fileIo);
-            $gacelaSetups[] = $factoryFromGacelaPhp->createGacelaFileConfig();
+            $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
         $gacelaPhpPath = $this->getGacelaPhpPathFromEnv();
         if ($fileIo->existsFile($gacelaPhpPath)) {
             $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
-            $gacelaSetups[] = $factoryFromGacelaPhp->createGacelaFileConfig();
+            $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
         return array_reduce(
-            $gacelaSetups,
+            $gacelaConfigFiles,
             static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->combine($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig()
         );

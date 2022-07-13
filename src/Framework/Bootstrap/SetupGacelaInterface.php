@@ -42,4 +42,9 @@ interface SetupGacelaInterface
      * @return list<string>
      */
     public function getProjectNamespaces(): array;
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getConfigKeyValues(): array;
 }

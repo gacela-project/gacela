@@ -29,6 +29,9 @@ final class GacelaConfig
     /** @var list<string> */
     private array $projectNamespaces = [];
 
+    /** @var array<string,mixed> */
+    private array $configKeyValues = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -144,6 +147,16 @@ final class GacelaConfig
     }
 
     /**
+     * @param mixed $value
+     */
+    public function addAppConfigKeyValue(string $key, $value): self
+    {
+        $this->configKeyValues[$key] = $value;
+
+        return $this;
+    }
+
+    /**
      * @return array{
      *     external-services:array<string,class-string|object|callable>,
      *     config-builder:ConfigBuilder,
@@ -152,6 +165,7 @@ final class GacelaConfig
      *     cache-enabled:bool,
      *     cache-directory:string,
      *     project-namespaces:list<string>,
+     *     config-key-values:array<string,mixed>,
      * }
      *
      * @internal
@@ -166,6 +180,7 @@ final class GacelaConfig
             'cache-enabled' => $this->cacheEnabled,
             'cache-directory' => $this->cacheDirectory,
             'project-namespaces' => $this->projectNamespaces,
+            'config-key-values' => $this->configKeyValues,
         ];
     }
 }

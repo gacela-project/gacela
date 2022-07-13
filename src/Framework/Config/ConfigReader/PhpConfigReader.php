@@ -7,6 +7,7 @@ namespace Gacela\Framework\Config\ConfigReader;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use JsonSerializable;
 use RuntimeException;
+
 use function is_array;
 
 final class PhpConfigReader implements ConfigReaderInterface

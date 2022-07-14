@@ -37,6 +37,9 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var list<string> */
     private array $projectNamespaces = [];
 
+    /** @var array<string,mixed> */
+    private array $configKeyValues = [];
+
     public function __construct()
     {
         $this->configFn = static function (): void {
@@ -69,7 +72,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setExternalServices($build['external-services'])
             ->setCacheEnabled($build['cache-enabled'])
             ->setCacheDirectory($build['cache-directory'])
-            ->setProjectNamespaces($build['project-namespaces']);
+            ->setProjectNamespaces($build['project-namespaces'])
+            ->setConfigKeyValues($build['config-key-values']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -227,5 +231,23 @@ final class SetupGacela extends AbstractSetupGacela
     public function getProjectNamespaces(): array
     {
         return $this->projectNamespaces;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getConfigKeyValues(): array
+    {
+        return $this->configKeyValues;
+    }
+
+    /**
+     * @param array<string,mixed> $configKeyValues
+     */
+    private function setConfigKeyValues(array $configKeyValues): self
+    {
+        $this->configKeyValues = $configKeyValues;
+
+        return $this;
     }
 }

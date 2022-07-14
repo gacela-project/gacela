@@ -79,6 +79,7 @@ final class Config
     {
         $this->configFactory = null;
         $this->config = $this->loadAllConfigValues();
+        $this->config = array_merge($this->config, $this->getSetupGacela()->getConfigKeyValues());
     }
 
     public function setAppRootDir(string $dir): self

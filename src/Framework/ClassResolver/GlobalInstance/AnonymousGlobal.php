@@ -8,6 +8,7 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableType;
 use RuntimeException;
+
 use function get_class;
 use function in_array;
 use function is_string;

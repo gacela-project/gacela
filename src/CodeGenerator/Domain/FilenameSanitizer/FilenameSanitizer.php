@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\CodeGenerator\Domain\FilenameSanitizer;
 
 use RuntimeException;
+
 use function count;
 
 final class FilenameSanitizer implements FilenameSanitizerInterface

@@ -13,12 +13,11 @@ final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(
-            __DIR__,
-            static fn (GacelaConfig $config) => $config
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config
                 ->addAppConfig('config/.env*', '', SimpleEnvConfigReader::class)
-                ->addAppConfig('config/*.php')
-        );
+                ->addAppConfig('config/*.php');
+        });
     }
 
     public function test_load_multiple_config_files(): void

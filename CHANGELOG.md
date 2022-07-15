@@ -2,9 +2,13 @@
 
 ### Unreleased
 
+- Change cache default directory to `.gacela/cache`.
 - Added project namespaces.
   - `GacelaConfig->setProjectNamespaces(array)` to be able to resolve gacela classes with priorities.
 - Added gacela configuration for different environments.
+- Allow adding config key-values from GacelaConfig.
+  - `GacelaConfig->addAppConfigKeyValue(string, mixed)`
+  - `GacelaConfig->addAppConfigKeyValues( array<string, mixed> )`
 
 ### 0.23.1
 #### 2022-06-25

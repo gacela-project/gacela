@@ -157,6 +157,16 @@ final class GacelaConfig
     }
 
     /**
+     * @param array<string, mixed> $config
+     */
+    public function addAppConfigKeyValues(array $config): self
+    {
+        $this->configKeyValues = array_merge($this->configKeyValues, $config);
+
+        return $this;
+    }
+
+    /**
      * @return array{
      *     external-services:array<string,class-string|object|callable>,
      *     config-builder:ConfigBuilder,

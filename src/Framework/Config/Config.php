@@ -10,10 +10,8 @@ use Gacela\Framework\Exception\ConfigException;
 
 use function array_key_exists;
 
-final class Config
+final class Config implements ConfigInterface
 {
-    public const DEFAULT_CONFIG_VALUE = 'Gacela\Framework\Config::DEFAULT_CONFIG_VALUE';
-
     private static ?self $instance = null;
 
     private ?string $appRootDir = null;

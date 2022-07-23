@@ -16,7 +16,7 @@ final class FileCacheFeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addAppConfig('config/*.php');
+            $config->setCacheEnabled(true);
             $config->setCacheDirectory('custom/caching-dir');
         });
     }

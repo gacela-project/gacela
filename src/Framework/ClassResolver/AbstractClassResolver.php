@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
@@ -90,6 +91,7 @@ abstract class AbstractClassResolver
     {
         if ($this->classNameFinder === null) {
             $this->classNameFinder = (new ClassResolverFactory(
+                new GacelaCache(Config::getInstance()),
                 Config::getInstance()->getSetupGacela()
             ))->createClassNameFinder();
         }

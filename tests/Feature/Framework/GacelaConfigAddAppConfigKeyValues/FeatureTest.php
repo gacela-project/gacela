@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\AddAppConfigKeyValuesInGacelaBootstrap;
+namespace GacelaTest\Feature\Framework\GacelaConfigAddAppConfigKeyValues;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\AddAppConfigKeyValuesInGacelaBootstrap\Module\Facade;
+use GacelaTest\Feature\Framework\GacelaConfigAddAppConfigKeyValues\Module\Facade;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
@@ -26,7 +26,7 @@ final class FeatureTest extends TestCase
         });
     }
 
-    public function test_override_factory_from_highest_prio_namespace(): void
+    public function test_application_config_are_added_from_gacela_config(): void
     {
         $facade = new Facade();
 

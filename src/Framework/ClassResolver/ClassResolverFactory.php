@@ -17,10 +17,12 @@ use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
+    private GacelaCache $gacelaCache;
     private SetupGacelaInterface $setupGacela;
 
-    public function __construct(SetupGacelaInterface $setupGacela)
+    public function __construct(GacelaCache $gacelaCache, SetupGacelaInterface $setupGacela)
     {
+        $this->gacelaCache = $gacelaCache;
         $this->setupGacela = $setupGacela;
     }
 
@@ -36,7 +38,7 @@ final class ClassResolverFactory
 
     public function createClassNameCache(): ClassNameCacheInterface
     {
-        if (!$this->isProjectCacheEnabled()) {
+        if (!$this->gacelaCache->isProjectCacheEnabled()) {
             return new InMemoryCache(ClassNameCache::class);
         }
 
@@ -59,12 +61,6 @@ final class ClassResolverFactory
             new FinderRuleWithModulePrefix(),
             new FinderRuleWithoutModulePrefix(),
         ];
-    }
-
-    private function isProjectCacheEnabled(): bool
-    {
-        return (bool)Config::getInstance()
-            ->get(GacelaCache::KEY_ENABLED, GacelaCache::DEFAULT_ENABLED_VALUE);
     }
 
     /**

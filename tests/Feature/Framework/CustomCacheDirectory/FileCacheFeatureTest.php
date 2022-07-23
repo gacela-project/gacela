@@ -11,12 +11,12 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
-final class FeatureTest extends TestCase
+final class FileCacheFeatureTest extends TestCase
 {
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addAppConfig('config/*.php');
+            $config->setCacheEnabled(true);
             $config->setCacheDirectory('custom/caching-dir');
         });
     }

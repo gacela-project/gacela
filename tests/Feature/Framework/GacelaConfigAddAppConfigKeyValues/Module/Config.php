@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\AddAppConfigKeyValuesInGacelaBootstrap\Module;
+namespace GacelaTest\Feature\Framework\GacelaConfigAddAppConfigKeyValues\Module;
 
 use Gacela\Framework\AbstractConfig;
 

@@ -40,7 +40,6 @@ trait DocBlockResolverAwareTrait
         $cacheKey = $this->generateCacheKey($method);
         $cache = $this->createCustomServicesCache();
 
-
         if (!$cache->has($cacheKey)) {
             $className = $this->getClassFromDoc($method);
             $cache->put($cacheKey, $className);
@@ -105,9 +104,9 @@ trait DocBlockResolverAwareTrait
      */
     private function searchClassOverUseStatements(ReflectionClass $reflectionClass, string $className): string
     {
-        $fileName = (string) $reflectionClass->getFileName();
+        $fileName = (string)$reflectionClass->getFileName();
         if (!isset(static::$fileContentCache[$fileName])) {
-            static::$fileContentCache[$fileName] = (string) file_get_contents($fileName);
+            static::$fileContentCache[$fileName] = (string)file_get_contents($fileName);
         }
         $phpFile = static::$fileContentCache[$fileName];
 
@@ -143,7 +142,7 @@ trait DocBlockResolverAwareTrait
 
     private function isProjectCacheEnabled(): bool
     {
-        return (bool)Config::getInstance()
-            ->get(GacelaCache::KEY_ENABLED, GacelaCache::DEFAULT_ENABLED_VALUE);
+        return (new GacelaCache(Config::getInstance()))
+            ->isProjectCacheEnabled();
     }
 }

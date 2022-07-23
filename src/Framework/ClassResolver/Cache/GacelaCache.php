@@ -21,10 +21,20 @@ final class GacelaCache
 
     public function isProjectCacheEnabled(): bool
     {
-        if (!$this->config->getSetupGacela()->isCacheEnabled()) {
+        if ($this->isCacheFromSetupGacelaDisabled()) {
             return false;
         }
 
+        return $this->isCacheFromApplicationConfigEnabled();
+    }
+
+    private function isCacheFromSetupGacelaDisabled(): bool
+    {
+        return !$this->config->getSetupGacela()->isCacheEnabled();
+    }
+
+    private function isCacheFromApplicationConfigEnabled(): bool
+    {
         return (bool) $this->config->get(self::KEY_ENABLED, self::DEFAULT_ENABLED_VALUE);
     }
 }

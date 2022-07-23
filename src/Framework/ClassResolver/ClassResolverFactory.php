@@ -36,7 +36,7 @@ final class ClassResolverFactory
 
     public function createClassNameCache(): ClassNameCacheInterface
     {
-        if (!$this->isProjectCacheEnabled()) {
+        if (!$this->isProjectCacheEnabled() || !$this->setupGacela->isCacheEnabled()) {
             return new InMemoryCache(ClassNameCache::class);
         }
 

@@ -11,7 +11,7 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
-final class FeatureTest extends TestCase
+final class FileCacheFeatureTest extends TestCase
 {
     public function setUp(): void
     {

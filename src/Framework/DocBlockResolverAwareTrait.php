@@ -132,7 +132,7 @@ trait DocBlockResolverAwareTrait
 
     private function createCustomServicesCache(): ClassNameCacheInterface
     {
-        if (!$this->isProjectCacheEnabled()) {
+        if (!$this->isProjectCacheEnabled() || !Config::getInstance()->getSetupGacela()->isCacheEnabled()) {
             return new InMemoryCache(CustomServicesCache::class);
         }
 

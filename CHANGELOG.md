@@ -9,6 +9,7 @@
 - Allow adding config key-values from GacelaConfig.
   - `GacelaConfig->addAppConfigKeyValue(string, mixed)`
   - `GacelaConfig->addAppConfigKeyValues( array<string, mixed> )`
+- When cache is disabled on bootstrap, Gacela won't generate `*.cache` files
 
 ### 0.23.1
 #### 2022-06-25

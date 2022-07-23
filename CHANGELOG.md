@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 0.24.0
+#### 2022-07-23
 
 - Change cache default directory to `.gacela/cache`.
 - Added project namespaces.
@@ -9,7 +10,7 @@
 - Allow adding config key-values from GacelaConfig.
   - `GacelaConfig->addAppConfigKeyValue(string, mixed)`
   - `GacelaConfig->addAppConfigKeyValues( array<string, mixed> )`
-- When cache is disabled on bootstrap, Gacela won't generate `*.cache` files
+- When cache is disabled on bootstrap, Gacela won't generate `*.cache` files.
 
 ### 0.23.1
 #### 2022-06-25

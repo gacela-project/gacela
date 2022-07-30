@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
-use Gacela\Framework\DocBlockResolver\DocBlockResolvable;
+use Gacela\Framework\DocBlockResolver\DocBlockResolver;
 
 trait DocBlockResolverAwareTrait
 {
@@ -24,20 +24,17 @@ trait DocBlockResolverAwareTrait
             return $this->customServices[$method];
         }
 
-        $docBlockResolvable = DocBlockResolvable::fromCaller($this);
+        $docBlockResolver = DocBlockResolver::fromCaller($this);
+        $resolvable = $docBlockResolver->getDocBlockResolvable($method);
 
-        /** @var class-string $className */
-        $className = $docBlockResolvable->getClassName($method);
-        $resolvableType = $docBlockResolvable->normalizeResolvableType($className);
-
-        $resolved = (new DocBlockServiceResolver($resolvableType))
-            ->resolve($className);
+        $resolved = (new DocBlockServiceResolver($resolvable->resolvableType()))
+            ->resolve($resolvable->className());
 
         if ($resolved !== null) {
             return $resolved;
         }
 
-        if ($docBlockResolvable->hasParentClass()) {
+        if ($docBlockResolver->hasParentCallMethod()) {
             /** @psalm-suppress ParentNotFound, MixedAssignment, UndefinedMethod */
             $parentReturn = parent::__call($method, $parameters); // @phpstan-ignore-line
             $this->customServices[$method] = $parentReturn;

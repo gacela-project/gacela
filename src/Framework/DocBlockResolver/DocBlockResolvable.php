@@ -49,23 +49,14 @@ final class DocBlockResolvable
     public function getClassName(string $method): string
     {
         $cacheKey = $this->generateCacheKey($method);
-        $cache = $this->createCustomServicesCache();
+        $cache = $this->createClassNameCache();
 
         if (!$cache->has($cacheKey)) {
             $className = $this->getClassFromDoc($method);
             $cache->put($cacheKey, $className);
         }
 
-        /** @psalm-suppress ArgumentTypeCoercion */
         return $cache->get($cacheKey);
-    }
-
-
-    public function hasParentClass(): bool
-    {
-        /** @psalm-suppress ArgumentTypeCoercion */
-        return $this->callerParentClass !== ''
-            && method_exists($this->callerParentClass, '__call');
     }
 
     public function normalizeResolvableType(string $resolvableType): string
@@ -79,7 +70,19 @@ final class DocBlockResolvable
             : $resolvableType;
     }
 
-    public function createCustomServicesCache(): ClassNameCacheInterface
+    public function hasParentClass(): bool
+    {
+        /** @psalm-suppress ArgumentTypeCoercion */
+        return $this->callerParentClass !== ''
+            && method_exists($this->callerParentClass, '__call');
+    }
+
+    private function generateCacheKey(string $method): string
+    {
+        return $this->callerClass . '::' . $method;
+    }
+
+    private function createClassNameCache(): ClassNameCacheInterface
     {
         if (!$this->isProjectCacheEnabled()) {
             return new InMemoryCache(CustomServicesCache::class);
@@ -88,6 +91,12 @@ final class DocBlockResolvable
         return new CustomServicesCache(
             Config::getInstance()->getCacheDir()
         );
+    }
+
+    private function isProjectCacheEnabled(): bool
+    {
+        return (new GacelaCache(Config::getInstance()))
+            ->isProjectCacheEnabled();
     }
 
     /**
@@ -126,16 +135,5 @@ final class DocBlockResolvable
         $phpFile = self::$fileContentCache[$fileName];
 
         return (new UseBlockParser())->getUseStatement($className, $phpFile);
-    }
-
-    private function generateCacheKey(string $method): string
-    {
-        return $this->callerClass . '::' . $method;
-    }
-
-    private function isProjectCacheEnabled(): bool
-    {
-        return (new GacelaCache(Config::getInstance()))
-            ->isProjectCacheEnabled();
     }
 }

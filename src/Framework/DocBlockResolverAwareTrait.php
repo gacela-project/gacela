@@ -27,21 +27,7 @@ trait DocBlockResolverAwareTrait
         $docBlockResolver = DocBlockResolver::fromCaller($this);
         $resolvable = $docBlockResolver->getDocBlockResolvable($method);
 
-        $resolved = (new DocBlockServiceResolver($resolvable->resolvableType()))
+        return (new DocBlockServiceResolver($resolvable->resolvableType()))
             ->resolve($resolvable->className());
-
-        if ($resolved !== null) {
-            return $resolved;
-        }
-
-        if ($docBlockResolver->hasParentCallMethod()) {
-            /** @psalm-suppress ParentNotFound, MixedAssignment, UndefinedMethod */
-            $parentReturn = parent::__call($method, $parameters); // @phpstan-ignore-line
-            $this->customServices[$method] = $parentReturn;
-
-            return $parentReturn;
-        }
-
-        return null;
     }
 }

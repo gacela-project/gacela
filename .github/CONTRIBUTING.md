@@ -30,7 +30,7 @@ Do not post screenshots of code or output.
 ## Workflow for Pull Requests
 
 1. Fork/clone the repository.
-2. Install the vendor dependencies with `composer install`.
+2. Install the vendor dependencies with `composer update`.
 3. Create your branch from `master` if you plan to implement new functionality or change existing code significantly;
    create your branch from the oldest branch that is affected by the bug if you plan to fix a bug.
 4. Implement your change and add tests for it.

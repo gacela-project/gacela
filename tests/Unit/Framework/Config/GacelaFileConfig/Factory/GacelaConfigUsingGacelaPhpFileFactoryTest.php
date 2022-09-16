@@ -48,7 +48,8 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo
         );
 
-        self::assertEquals(new GacelaConfigFile(), $factory->createGacelaFileConfig());
+        $this->expectErrorMessage('`gacela.php` file should return a `callable(GacelaConfig)`');
+        $factory->createGacelaFileConfig();
     }
 
     public function test_gacela_file_using_callable_does_not_override_anything_then_use_defaults(): void

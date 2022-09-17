@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\FileIoInterface;
@@ -18,13 +17,10 @@ use PHPUnit\Framework\TestCase;
 
 final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
 {
-    public function test_exception_when_the_class_does_not_implements_setup_gacela_interface(): void
+    public function test_exception_when_the_class_does_not_return_a_callable(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(
-            new class() {
-            }
-        );
+        $fileIo->method('include')->willReturn(new class() {});
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
@@ -34,21 +30,6 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
 
         $this->expectErrorMessage('`gacela.php` file should return a `callable(GacelaConfig)`');
         $factory->createGacelaFileConfig();
-    }
-
-    public function test_gacela_file_using_setup_class_does_not_override_anything_then_use_defaults(): void
-    {
-        $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('existsFile')->willReturn(true);
-        $fileIo->method('include')->willReturn(new SetupGacela());
-
-        $factory = new GacelaConfigUsingGacelaPhpFileFactory(
-            'gacelaPhpPath',
-            $this->createStub(SetupGacelaInterface::class),
-            $fileIo
-        );
-
-        self::assertEquals(new GacelaConfigFile(), $factory->createGacelaFileConfig());
     }
 
     public function test_gacela_file_using_callable_does_not_override_anything_then_use_defaults(): void

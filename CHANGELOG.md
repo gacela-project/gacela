@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Removed deprecated `SetupGacelaInterface` from `gacela.php`
+
 ### 0.24.0
 #### 2022-07-23
 

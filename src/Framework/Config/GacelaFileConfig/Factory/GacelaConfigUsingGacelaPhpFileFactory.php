@@ -48,11 +48,6 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $configFn($gacelaConfig);
         $setupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
 
-        /** @var object $setupGacela */
-        if (!is_subclass_of($setupGacela, SetupGacelaInterface::class)) {
-            throw new RuntimeException('`gacela.php` file should return a `callable(GacelaConfig)`');
-        }
-
         $configBuilder = $this->createConfigBuilder($setupGacela);
         $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder($setupGacela);
         $suffixTypesBuilder = $this->createSuffixTypesBuilder($setupGacela);

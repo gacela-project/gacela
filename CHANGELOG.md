@@ -4,6 +4,7 @@
 
 - Removed deprecated `SetupGacelaInterface` from `gacela.php`.
 - Allow using abstracts Factory and Config by default.
+- Create `gacela cache:clear` command.
 
 ### 0.24.0
 #### 2022-07-23

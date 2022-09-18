@@ -37,13 +37,11 @@ final class ConsoleDependencyProvider extends AbstractDependencyProvider
 
     private function addTemplateByFilenameMap(Container $container): void
     {
-        $codeTemplate = $this->getConfig();
-
-        $container->set(self::TEMPLATE_BY_FILENAME_MAP, static fn () => [
-            FilenameSanitizer::FACADE => $codeTemplate->getFacadeMakerTemplate(),
-            FilenameSanitizer::FACTORY => $codeTemplate->getFactoryMakerTemplate(),
-            FilenameSanitizer::CONFIG => $codeTemplate->getConfigMakerTemplate(),
-            FilenameSanitizer::DEPENDENCY_PROVIDER => $codeTemplate->getDependencyProviderMakerTemplate(),
+        $container->set(self::TEMPLATE_BY_FILENAME_MAP, fn () => [
+            FilenameSanitizer::FACADE => $this->getConfig()->getFacadeMakerTemplate(),
+            FilenameSanitizer::FACTORY => $this->getConfig()->getFactoryMakerTemplate(),
+            FilenameSanitizer::CONFIG => $this->getConfig()->getConfigMakerTemplate(),
+            FilenameSanitizer::DEPENDENCY_PROVIDER => $this->getConfig()->getDependencyProviderMakerTemplate(),
         ]);
     }
 }

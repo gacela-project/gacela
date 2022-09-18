@@ -67,14 +67,13 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
+     * @psalm-suppress MixedReturnTypeCoercion
+     *
      * @return array<string,string>
      */
     private function getTemplateByFilenameMap(): array
     {
-        /** @var array<string,string> $map */
-        $map = $this->getProvidedDependency(ConsoleDependencyProvider::TEMPLATE_BY_FILENAME_MAP);
-
-        return $map;
+        return (array)$this->getProvidedDependency(ConsoleDependencyProvider::TEMPLATE_BY_FILENAME_MAP);
     }
 
     private function createDirectoryIo(): DirectoryIoInterface

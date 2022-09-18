@@ -21,6 +21,9 @@ final class InstanceCreator
         $this->gacelaConfigFile = $gacelaConfigFile;
     }
 
+    /**
+     * @param class-string $className
+     */
     public function createByClassName(string $className): ?object
     {
         if (class_exists($className)) {

@@ -79,6 +79,9 @@ abstract class AbstractClassResolver
             ?? null;
     }
 
+    /**
+     * @return class-string|null
+     */
     private function findClassName(ClassInfo $classInfo): ?string
     {
         return $this->getClassNameFinder()->findClassName(
@@ -113,6 +116,9 @@ abstract class AbstractClassResolver
         return is_array($resolvableTypes) ? $resolvableTypes : [$resolvableTypes];
     }
 
+    /**
+     * @param class-string $resolvedClassName
+     */
     private function createInstance(string $resolvedClassName): ?object
     {
         if ($this->instanceCreator === null) {

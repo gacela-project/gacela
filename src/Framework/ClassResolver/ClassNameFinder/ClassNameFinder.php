@@ -37,7 +37,11 @@ final class ClassNameFinder implements ClassNameFinderInterface
     }
 
     /**
+     * @psalm-suppress MoreSpecificReturnType,LessSpecificReturnStatement
+     *
      * @param list<string> $resolvableTypes
+     *
+     * @return class-string|null
      */
     public function findClassName(ClassInfo $classInfo, array $resolvableTypes): ?string
     {

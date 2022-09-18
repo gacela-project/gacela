@@ -10,6 +10,8 @@ interface ClassNameFinderInterface
 {
     /**
      * @param list<string> $resolvableTypes
+     *
+     * @return class-string|null
      */
     public function findClassName(ClassInfo $classInfo, array $resolvableTypes): ?string;
 }

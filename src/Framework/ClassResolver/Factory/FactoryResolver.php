@@ -9,6 +9,8 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
 final class FactoryResolver extends AbstractClassResolver
 {
+    public const TYPE = 'Factory';
+
     /**
      * @param object|class-string $caller
      *
@@ -28,6 +30,6 @@ final class FactoryResolver extends AbstractClassResolver
 
     protected function getResolvableType(): string
     {
-        return 'Factory';
+        return self::TYPE;
     }
 }

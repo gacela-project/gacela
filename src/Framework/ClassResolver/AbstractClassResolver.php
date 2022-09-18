@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
+use Gacela\Framework\ClassResolver\Config\ConfigResolver;
+use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config\Config;
@@ -62,7 +66,7 @@ abstract class AbstractClassResolver
                 }
             }
 
-            return null;
+            return $this->createDefaultGacelaClass();
         }
 
         self::$cachedInstances[$cacheKey] = $this->createInstance($resolvedClassName);
@@ -79,6 +83,9 @@ abstract class AbstractClassResolver
             ?? null;
     }
 
+    /**
+     * @return class-string|null
+     */
     private function findClassName(ClassInfo $classInfo): ?string
     {
         return $this->getClassNameFinder()->findClassName(
@@ -113,6 +120,9 @@ abstract class AbstractClassResolver
         return is_array($resolvableTypes) ? $resolvableTypes : [$resolvableTypes];
     }
 
+    /**
+     * @param class-string $resolvedClassName
+     */
     private function createInstance(string $resolvedClassName): ?object
     {
         if ($this->instanceCreator === null) {
@@ -131,5 +141,17 @@ abstract class AbstractClassResolver
         }
 
         return $this->gacelaFileConfig;
+    }
+
+    private function createDefaultGacelaClass(): ?object
+    {
+        switch ($this->getResolvableType()) {
+            case FactoryResolver::TYPE:
+                return new class() extends AbstractFactory {};
+            case ConfigResolver::TYPE:
+                return new class() extends AbstractConfig {};
+            default:
+                return null;
+        }
     }
 }

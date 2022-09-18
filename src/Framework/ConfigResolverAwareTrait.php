@@ -11,7 +11,7 @@ trait ConfigResolverAwareTrait
 {
     private ?AbstractConfig $config = null;
 
-    protected function getConfig(): AbstractConfig
+    public function getConfig(): AbstractConfig
     {
         if ($this->config === null) {
             $this->config = $this->resolveConfig();
@@ -25,8 +25,6 @@ trait ConfigResolverAwareTrait
      */
     private function resolveConfig(): AbstractConfig
     {
-        $resolver = new ConfigResolver();
-
-        return $resolver->resolve($this);
+        return (new ConfigResolver())->resolve($this);
     }
 }

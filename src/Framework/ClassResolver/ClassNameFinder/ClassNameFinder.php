@@ -37,14 +37,18 @@ final class ClassNameFinder implements ClassNameFinderInterface
     }
 
     /**
+     * @psalm-suppress MoreSpecificReturnType,LessSpecificReturnStatement
+     *
      * @param list<string> $resolvableTypes
+     *
+     * @return class-string|null
      */
     public function findClassName(ClassInfo $classInfo, array $resolvableTypes): ?string
     {
         $cacheKey = $classInfo->getCacheKey();
 
         if ($this->classNameCache->has($cacheKey)) {
-            return $this->classNameCache->get($cacheKey);
+            return $this->classNameCache->get($cacheKey); //@phpstan-ignore-line
         }
 
         $projectNamespaces = $this->projectNamespaces;
@@ -58,7 +62,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
                     if ($this->classValidator->isClassNameValid($className)) {
                         $this->classNameCache->put($cacheKey, $className);
 
-                        return $className;
+                        return $className; //@phpstan-ignore-line
                     }
                 }
             }

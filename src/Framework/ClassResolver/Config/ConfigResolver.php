@@ -9,6 +9,8 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
 final class ConfigResolver extends AbstractClassResolver
 {
+    public const TYPE = 'Config';
+
     /**
      * @param object|class-string $caller
      *
@@ -28,6 +30,6 @@ final class ConfigResolver extends AbstractClassResolver
 
     protected function getResolvableType(): string
     {
-        return 'Config';
+        return self::TYPE;
     }
 }

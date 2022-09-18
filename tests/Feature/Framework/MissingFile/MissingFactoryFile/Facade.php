@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\MissingFile\MissingFactoryFile;
 
 use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractFactory;
 
 final class Facade extends AbstractFacade
 {
-    public function error(): void
+    public function getFactory(): AbstractFactory
     {
-        $this->getFactory();
+        return parent::getFactory();
     }
 }

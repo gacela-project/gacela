@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Removed deprecated `SetupGacelaInterface` from `gacela.php`
+- Removed deprecated `SetupGacelaInterface` from `gacela.php`.
+- Allow using abstracts Factory and Config by default.
 
 ### 0.24.0
 #### 2022-07-23

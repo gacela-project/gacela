@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Console;
 
+use Gacela\Console\Domain\Cache\CacheClearer;
+use Gacela\Console\Domain\Cache\DirectoryIoInterface;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
@@ -11,6 +13,7 @@ use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Infrastructure\DirectoryIo;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
 use Symfony\Component\Console\Command\Command;
@@ -50,6 +53,14 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
+    public function createCacheClearer(): CacheClearer
+    {
+        return new CacheClearer(
+            $this->getConfig()->getCacheDir(),
+            $this->createDirectoryIo()
+        );
+    }
+
     private function createFileContentIo(): FileContentIoInterface
     {
         return new FileContentIo();
@@ -64,5 +75,10 @@ final class ConsoleFactory extends AbstractFactory
         $map = $this->getProvidedDependency(ConsoleDependencyProvider::TEMPLATE_BY_FILENAME_MAP);
 
         return $map;
+    }
+
+    private function createDirectoryIo(): DirectoryIoInterface
+    {
+        return new DirectoryIo();
     }
 }

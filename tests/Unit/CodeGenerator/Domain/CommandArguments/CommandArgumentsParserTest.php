@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\CodeGenerator\Domain\CommandArguments;
 
-use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsException;
-use Gacela\CodeGenerator\Domain\CommandArguments\CommandArgumentsParser;
+use Gacela\Console\Domain\CommandArguments\CommandArgumentsException;
+use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use PHPUnit\Framework\TestCase;
 
 final class CommandArgumentsParserTest extends TestCase

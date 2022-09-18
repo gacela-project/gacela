@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator;
+namespace Gacela\Console;
 
 use Gacela\Framework\AbstractConfig;
 use JsonException;
 use LogicException;
 
-final class CodeGeneratorConfig extends AbstractConfig
+final class ConsoleConfig extends AbstractConfig
 {
     public function getFacadeMakerTemplate(): string
     {

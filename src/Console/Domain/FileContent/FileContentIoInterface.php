@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\FileContent;
+namespace Gacela\Console\Domain\FileContent;
 
 interface FileContentIoInterface
 {

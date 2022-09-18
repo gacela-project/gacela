@@ -4,3 +4,6 @@ parameters:
         - %currentWorkingDirectory%/src/
     checkGenericClassInNonGenericObjectType: false
     checkMissingIterableValueType: false
+
+    ignoreErrors:
+        - '#Method Gacela\\.*::.* should return array<.*> but returns array#'

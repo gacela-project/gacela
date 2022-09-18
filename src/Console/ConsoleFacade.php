@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator;
+namespace Gacela\Console;
 
-use Gacela\CodeGenerator\Domain\CommandArguments\CommandArguments;
+use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method CodeGeneratorFactory getFactory()
+ * @method ConsoleFactory getFactory()
  */
-final class CodeGeneratorFacade extends AbstractFacade
+final class ConsoleFacade extends AbstractFacade
 {
     public function sanitizeFilename(string $filename): string
     {

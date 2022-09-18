@@ -48,7 +48,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
         $cacheKey = $classInfo->getCacheKey();
 
         if ($this->classNameCache->has($cacheKey)) {
-            return $this->classNameCache->get($cacheKey);
+            return $this->classNameCache->get($cacheKey); //@phpstan-ignore-line
         }
 
         $projectNamespaces = $this->projectNamespaces;
@@ -62,7 +62,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
                     if ($this->classValidator->isClassNameValid($className)) {
                         $this->classNameCache->put($cacheKey, $className);
 
-                        return $className;
+                        return $className; //@phpstan-ignore-line
                     }
                 }
             }

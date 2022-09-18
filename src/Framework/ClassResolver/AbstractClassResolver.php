@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
@@ -62,7 +64,7 @@ abstract class AbstractClassResolver
                 }
             }
 
-            return null;
+            return $this->createDefaultGacelaClass();
         }
 
         self::$cachedInstances[$cacheKey] = $this->createInstance($resolvedClassName);
@@ -137,5 +139,17 @@ abstract class AbstractClassResolver
         }
 
         return $this->gacelaFileConfig;
+    }
+
+    private function createDefaultGacelaClass(): ?object
+    {
+        switch ($this->getResolvableType()) {
+            case 'Factory':
+                return new class() extends AbstractFactory {};
+            case 'Config':
+                return new class() extends AbstractConfig {};
+            default:
+                return null;
+        }
     }
 }

@@ -8,6 +8,8 @@ use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
+use Gacela\Framework\ClassResolver\Config\ConfigResolver;
+use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config\Config;
@@ -144,9 +146,9 @@ abstract class AbstractClassResolver
     private function createDefaultGacelaClass(): ?object
     {
         switch ($this->getResolvableType()) {
-            case 'Factory':
+            case FactoryResolver::TYPE:
                 return new class() extends AbstractFactory {};
-            case 'Config':
+            case ConfigResolver::TYPE:
                 return new class() extends AbstractConfig {};
             default:
                 return null;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\CodeGenerator\Domain\FilenameSanitizer;
 
-use Gacela\CodeGenerator\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use PHPUnit\Framework\TestCase;
 
 final class FilenameSanitizerTest extends TestCase

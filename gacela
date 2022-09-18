@@ -3,8 +3,7 @@
 
 declare(strict_types=1);
 
-use Gacela\CodeGenerator\Infrastructure\Command\MakeFileCommand;
-use Gacela\CodeGenerator\Infrastructure\Command\MakeModuleCommand;
+use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Application;
 
@@ -22,8 +21,5 @@ if (!class_exists(Application::class)) {
 
 Gacela::bootstrap($cwd);
 
-$application = new Application();
-$application->add(new MakeFileCommand());
-$application->add(new MakeModuleCommand());
-$application->run();
-
+$bootstrap = new ConsoleBootstrap();
+$bootstrap->run();

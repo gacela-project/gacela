@@ -2,22 +2,35 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator;
+namespace Gacela\Console;
 
-use Gacela\CodeGenerator\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\Console\Infrastructure\Command\MakeFileCommand;
+use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\Container\Container;
 
 /**
- * @method CodeGeneratorConfig getConfig()
+ * @method ConsoleConfig getConfig()
  */
-final class CodeGeneratorDependencyProvider extends AbstractDependencyProvider
+final class ConsoleDependencyProvider extends AbstractDependencyProvider
 {
+    public const COMMANDS = 'COMMANDS';
+
     public const TEMPLATE_BY_FILENAME_MAP = 'TEMPLATE_FILENAME_MAP';
 
     public function provideModuleDependencies(Container $container): void
     {
+        $this->addCommands($container);
         $this->addTemplateByFilenameMap($container);
+    }
+
+    private function addCommands(Container $container): void
+    {
+        $container->set(self::COMMANDS, static fn () => [
+            new MakeFileCommand(),
+            new MakeModuleCommand(),
+        ]);
     }
 
     private function addTemplateByFilenameMap(Container $container): void

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Infrastructure;
+namespace Gacela\Console\Infrastructure;
 
-use Gacela\CodeGenerator\Domain\FileContent\FileContentIoInterface;
+use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use RuntimeException;
 
 /**

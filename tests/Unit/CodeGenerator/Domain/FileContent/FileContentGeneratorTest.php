@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\CodeGenerator\Domain\FileContent;
 
-use Gacela\CodeGenerator\Domain\CommandArguments\CommandArguments;
-use Gacela\CodeGenerator\Domain\FileContent\FileContentGenerator;
-use Gacela\CodeGenerator\Domain\FileContent\FileContentIoInterface;
-use Gacela\CodeGenerator\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\Console\Domain\CommandArguments\CommandArguments;
+use Gacela\Console\Domain\FileContent\FileContentGenerator;
+use Gacela\Console\Domain\FileContent\FileContentIoInterface;
+use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use PHPUnit\Framework\TestCase;
 
 final class FileContentGeneratorTest extends TestCase

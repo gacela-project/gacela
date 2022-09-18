@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\FilenameSanitizer;
+namespace Gacela\Console\Domain\FilenameSanitizer;
 
 interface FilenameSanitizerInterface
 {

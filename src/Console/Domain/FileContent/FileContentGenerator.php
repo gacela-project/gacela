@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\CodeGenerator\Domain\FileContent;
+namespace Gacela\Console\Domain\FileContent;
 
-use Gacela\CodeGenerator\Domain\CommandArguments\CommandArguments;
+use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use RuntimeException;
 
 final class FileContentGenerator implements FileContentGeneratorInterface

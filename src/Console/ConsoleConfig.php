@@ -31,6 +31,8 @@ final class ConsoleConfig extends AbstractConfig
     }
 
     /**
+     * @psalm-suppress MixedReturnTypeCoercion
+     *
      * @throws JsonException
      *
      * @return array{autoload: array{psr-4: array<string,string>}}
@@ -42,10 +44,7 @@ final class ConsoleConfig extends AbstractConfig
             throw new LogicException('composer.json file not found but it is required');
         }
 
-        /** @var array{autoload: array{psr-4: array<string,string>}} $json */
-        $json = (array)json_decode((string)file_get_contents($filename), true, 512, JSON_THROW_ON_ERROR);
-
-        return $json;
+        return (array)json_decode((string)file_get_contents($filename), true, 512, JSON_THROW_ON_ERROR);
     }
 
     private function getCommandTemplateContent(string $filename): string

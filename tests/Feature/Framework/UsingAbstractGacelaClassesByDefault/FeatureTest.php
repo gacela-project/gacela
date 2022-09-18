@@ -19,7 +19,7 @@ final class FeatureTest extends TestCase
         $facade = new Module\Facade();
 
         self::assertStringContainsString(
-            'gacela/tests/Feature/Framework/UsingAbstractGacelaClassesByDefault',
+            'tests/Feature/Framework/UsingAbstractGacelaClassesByDefault',
             $facade->getAppRootDir()
         );
     }

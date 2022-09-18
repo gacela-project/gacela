@@ -9,6 +9,7 @@ use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use RuntimeException;
 
 final class SetupGacela extends AbstractSetupGacela
 {
@@ -48,6 +49,18 @@ final class SetupGacela extends AbstractSetupGacela
         };
         $this->suffixTypesFn = static function (): void {
         };
+    }
+
+    public static function fromFile(string $gacelaFilePath): self
+    {
+        if (!is_file($gacelaFilePath)) {
+            throw new RuntimeException("Invalid file path: '{$gacelaFilePath}'");
+        }
+
+        /** @var Closure(GacelaConfig):void $setupGacelaFileFn */
+        $setupGacelaFileFn = include $gacelaFilePath;
+
+        return self::fromCallable($setupGacelaFileFn);
     }
 
     /**

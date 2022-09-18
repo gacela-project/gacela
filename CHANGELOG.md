@@ -6,6 +6,7 @@
 - Removed deprecated `SetupGacelaInterface` from `gacela.php`.
 - Allow using abstracts Factory and Config by default.
 - Create `gacela cache:clear` command.
+- Process configFn from appRootDir if exists, and it wasn't defined on bootstrap.
 
 ### 0.24.0
 #### 2022-07-23

@@ -24,7 +24,6 @@
         "ext-json": "*"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.9",
         "phpunit/phpunit": "^9.5",
         "phpbench/phpbench": "^1.2",
         "psalm/plugin-phpunit": "^0.17.0",
@@ -32,7 +31,8 @@
         "phpstan/phpstan": "^1.8",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^4.24"
+        "vimeo/psalm": "^4.24",
+        "symplify/easy-coding-standard": "^11.1"
     },
     "suggest": {
         "symfony/console": "Allows to use vendor/bin/gacela script",
@@ -93,8 +93,8 @@
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=data/coverage-html --coverage-xml=data/coverage-xml --log-junit=data/coverage-xml/junit.xml",
         "psalm": "./vendor/bin/psalm",
         "phpstan": "./vendor/bin/phpstan analyze",
-        "csfix": "./vendor/bin/php-cs-fixer fix",
-        "csrun": "./vendor/bin/php-cs-fixer fix --dry-run",
+        "csfix": "./vendor/bin/ecs check --fix",
+        "csrun": "./vendor/bin/ecs check",
         "phpbench": "vendor/bin/phpbench run --report=aggregate --ansi",
         "phpbench-base": "vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",

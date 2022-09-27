@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -26,7 +26,7 @@ final class GacelaConfig
 
     private bool $profilerEnabled = false;
 
-    private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
+    private string $profilerDirectory = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];
@@ -140,7 +140,7 @@ final class GacelaConfig
 
     public function setProfilerDirectory(string $dir): self
     {
-        $this->cacheDirectory = $dir;
+        $this->profilerDirectory = $dir;
 
         return $this;
     }
@@ -183,7 +183,7 @@ final class GacelaConfig
      *     mapping-interfaces-builder:MappingInterfacesBuilder,
      *     cache-enabled:bool,
      *     profiler-enabled:bool,
-     *     cache-directory:string,
+     *     profiler-directory:string,
      *     project-namespaces:list<string>,
      *     config-key-values:array<string,mixed>,
      * }
@@ -199,7 +199,7 @@ final class GacelaConfig
             'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
             'cache-enabled' => $this->cacheEnabled,
             'profiler-enabled' => $this->profilerEnabled,
-            'cache-directory' => $this->cacheDirectory,
+            'profiler-directory' => $this->profilerDirectory,
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
         ];

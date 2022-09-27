@@ -15,8 +15,8 @@ final class NoFileCacheFeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->setCacheEnabled(false);
-            $config->setProfilerDirectory('custom/no-caching-dir');
+            $config->setProfilerEnabled(false);
+            $config->setProfilerDirectory('custom/no-profiler-dir');
         });
     }
 
@@ -25,7 +25,7 @@ final class NoFileCacheFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileDoesNotExist(__DIR__ . '/custom/no-caching-dir/' . ClassNameProfiler::CACHE_FILENAME);
-        self::assertFileDoesNotExist(__DIR__ . '/custom/no-caching-dir/' . CustomServicesProfiler::CACHE_FILENAME);
+        self::assertFileDoesNotExist(__DIR__ . '/custom/no-profiler-dir/' . ClassNameProfiler::CACHE_FILENAME);
+        self::assertFileDoesNotExist(__DIR__ . '/custom/no-profiler-dir/' . CustomServicesProfiler::CACHE_FILENAME);
     }
 }

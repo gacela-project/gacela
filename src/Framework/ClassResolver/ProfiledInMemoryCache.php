@@ -6,35 +6,35 @@ namespace Gacela\Framework\ClassResolver;
 
 final class ProfiledInMemoryCache implements ClassNameCacheInterface
 {
-    private ClassNameCacheInterface $decoradedCache;
+    private ClassNameCacheInterface $decoratedCache;
     private FileProfilerInterface $fileProfiler;
 
     public function __construct(
         ClassNameCacheInterface $decoratedCache,
         FileProfilerInterface $fileProfiler
     ) {
-        $this->decoradedCache = $decoratedCache;
+        $this->decoratedCache = $decoratedCache;
         $this->fileProfiler = $fileProfiler;
     }
 
     public function has(string $cacheKey): bool
     {
-        return $this->decoradedCache->has($cacheKey);
+        return $this->decoratedCache->has($cacheKey);
     }
 
     public function get(string $cacheKey): string
     {
-        return $this->decoradedCache->get($cacheKey);
+        return $this->decoratedCache->get($cacheKey);
     }
 
     public function getAll(): array
     {
-        return $this->decoradedCache->getAll();
+        return $this->decoratedCache->getAll();
     }
 
     public function put(string $cacheKey, string $className): void
     {
-        $this->decoradedCache->put($cacheKey, $className);
-        $this->fileProfiler->updateFileCache($this->decoradedCache->getAll());
+        $this->decoratedCache->put($cacheKey, $className);
+        $this->fileProfiler->updateFileCache($this->decoratedCache->getAll());
     }
 }

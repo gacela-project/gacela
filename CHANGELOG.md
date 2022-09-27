@@ -1,5 +1,10 @@
 # Changelog
 
+### Unreleased
+
+- Remove gacela file cache. Instead, use in memory cache always.
+- Add (optional) gacela file profiler. By default disabled.
+
 ### 0.25.0
 #### 2022-09-18
 

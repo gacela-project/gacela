@@ -38,13 +38,18 @@ final class ClassResolverFactory
 
     public function createClassNameCache(): ClassNameCacheInterface
     {
+        $inMemoryCache = new InMemoryCache(ClassNameProfiler::class);
+
         if ($this->profiler->isEnabled()) {
-            return new ClassNameProfilerCache(
-                Config::getInstance()->getCacheDir(),
+            return new ProfiledInMemoryCache(
+                $inMemoryCache,
+                new ClassNameProfiler(
+                    Config::getInstance()->getProfilerDir(),
+                )
             );
         }
 
-        return new InMemoryCache(ClassNameProfilerCache::class);
+        return $inMemoryCache;
     }
 
     private function createClassValidator(): ClassValidatorInterface

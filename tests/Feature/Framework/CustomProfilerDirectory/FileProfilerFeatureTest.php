@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\CustomProfilerDirectory;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\ClassNameProfilerCache;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfilerCache;
+use Gacela\Framework\ClassResolver\ClassNameProfiler;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfiler;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +31,7 @@ final class FileProfilerFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . ClassNameProfilerCache::CACHE_FILENAME);
-        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . CustomServicesProfilerCache::CACHE_FILENAME);
+        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . ClassNameProfiler::CACHE_FILENAME);
+        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . CustomServicesProfiler::CACHE_FILENAME);
     }
 }

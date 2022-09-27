@@ -19,7 +19,7 @@ final class InMemoryCache implements ClassNameCacheInterface
     /**
      * @internal
      */
-    public static function getAll(string $key): array
+    public static function getAllFromKey(string $key): array
     {
         return self::$cache[$key] ?? [];
     }
@@ -30,6 +30,14 @@ final class InMemoryCache implements ClassNameCacheInterface
     public static function resetCache(): void
     {
         self::$cache = [];
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    public function getAll(): array
+    {
+        return self::$cache[$this->key] ?? [];
     }
 
     public function has(string $cacheKey): bool

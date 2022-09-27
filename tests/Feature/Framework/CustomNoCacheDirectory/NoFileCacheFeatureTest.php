@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\CustomNoCacheDirectory;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\ClassNameProfilerCache;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfilerCache;
+use Gacela\Framework\ClassResolver\ClassNameProfiler;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfiler;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +25,7 @@ final class NoFileCacheFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileDoesNotExist(__DIR__ . '/custom/no-caching-dir/' . ClassNameProfilerCache::CACHE_FILENAME);
-        self::assertFileDoesNotExist(__DIR__ . '/custom/no-caching-dir/' . CustomServicesProfilerCache::CACHE_FILENAME);
+        self::assertFileDoesNotExist(__DIR__ . '/custom/no-caching-dir/' . ClassNameProfiler::CACHE_FILENAME);
+        self::assertFileDoesNotExist(__DIR__ . '/custom/no-caching-dir/' . CustomServicesProfiler::CACHE_FILENAME);
     }
 }

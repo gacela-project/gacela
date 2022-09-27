@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Gacela\Framework\DocBlockResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfilerCache;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfiler;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
 use Gacela\Framework\ClassResolver\InMemoryCache;
+use Gacela\Framework\ClassResolver\ProfiledInMemoryCache;
 use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 use ReflectionClass;
@@ -99,13 +100,18 @@ final class DocBlockResolver
 
     private function createClassNameCache(): ClassNameCacheInterface
     {
+        $inMemoryCache = new InMemoryCache(CustomServicesProfiler::class);
+
         if ($this->isProjectProfilerEnabled()) {
-            return new CustomServicesProfilerCache(
-                Config::getInstance()->getCacheDir()
+            return new ProfiledInMemoryCache(
+                $inMemoryCache,
+                new CustomServicesProfiler(
+                    Config::getInstance()->getProfilerDir(),
+                )
             );
         }
 
-        return new InMemoryCache(CustomServicesProfilerCache::class);
+        return $inMemoryCache;
     }
 
     private function isProjectProfilerEnabled(): bool

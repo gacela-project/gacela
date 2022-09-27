@@ -22,7 +22,8 @@ abstract class AbstractConfig
      */
     public function getCacheDir(): string
     {
-        return Config::getInstance()->getCacheDir();
+        // TODO: double check this
+        return Config::getInstance()->getProfilerDir();
     }
 
     /**

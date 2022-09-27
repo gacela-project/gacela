@@ -34,7 +34,7 @@ interface SetupGacelaInterface
      */
     public function externalServices(): array;
 
-    public function getCacheDirectory(): string;
+    public function getProfilerDir(): string;
 
     public function isCacheEnabled(): bool;
 

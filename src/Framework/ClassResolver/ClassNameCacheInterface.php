@@ -10,5 +10,7 @@ interface ClassNameCacheInterface
 
     public function get(string $cacheKey): string;
 
+    public function getAll(): array;
+
     public function put(string $cacheKey, string $className): void;
 }

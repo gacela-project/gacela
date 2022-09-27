@@ -242,7 +242,7 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    public function getCacheDirectory(): string
+    public function getProfilerDir(): string
     {
         return $this->cacheDirectory;
     }

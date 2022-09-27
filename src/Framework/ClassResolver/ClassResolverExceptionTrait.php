@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesCache;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfilerCache;
 
 trait ClassResolverExceptionTrait
 {
@@ -34,8 +34,8 @@ trait ClassResolverExceptionTrait
 
         $message .= sprintf(
             'If you got this ↑ already, then try removing the cache files: `%s`, `%s`',
-            ClassNameCache::CACHE_FILENAME,
-            CustomServicesCache::CACHE_FILENAME,
+            ClassNameProfilerCache::CACHE_FILENAME,
+            CustomServicesProfilerCache::CACHE_FILENAME,
         ) . PHP_EOL;
 
         return $message;

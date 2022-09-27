@@ -38,6 +38,8 @@ interface SetupGacelaInterface
 
     public function isCacheEnabled(): bool;
 
+    public function isProfilerEnabled(): bool;
+
     /**
      * @return list<string>
      */

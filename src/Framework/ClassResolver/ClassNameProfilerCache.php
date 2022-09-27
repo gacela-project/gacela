@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-final class ClassNameCache extends AbstractFileCache
+final class ClassNameProfilerCache extends AbstractFileCache
 {
     public const CACHE_FILENAME = '.gacela-class-names.cache';
 

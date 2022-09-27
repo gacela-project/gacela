@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
@@ -13,16 +12,17 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
+use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
-    private GacelaCache $gacelaCache;
+    private GacelaProfiler $profiler;
     private SetupGacelaInterface $setupGacela;
 
-    public function __construct(GacelaCache $gacelaCache, SetupGacelaInterface $setupGacela)
+    public function __construct(GacelaProfiler $profiler, SetupGacelaInterface $setupGacela)
     {
-        $this->gacelaCache = $gacelaCache;
+        $this->profiler = $profiler;
         $this->setupGacela = $setupGacela;
     }
 
@@ -38,13 +38,13 @@ final class ClassResolverFactory
 
     public function createClassNameCache(): ClassNameCacheInterface
     {
-        if (!$this->gacelaCache->isProjectCacheEnabled()) {
-            return new InMemoryCache(ClassNameCache::class);
+        if ($this->profiler->isEnabled()) {
+            return new ClassNameProfilerCache(
+                Config::getInstance()->getCacheDir(),
+            );
         }
 
-        return new ClassNameCache(
-            Config::getInstance()->getCacheDir(),
-        );
+        return new InMemoryCache(ClassNameProfilerCache::class);
     }
 
     private function createClassValidator(): ClassValidatorInterface

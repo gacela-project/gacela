@@ -34,6 +34,8 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $cacheEnabled = true;
 
+    private bool $profilerEnabled = false;
+
     private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
@@ -88,6 +90,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setMappingInterfacesBuilder($build['mapping-interfaces-builder'])
             ->setExternalServices($build['external-services'])
             ->setCacheEnabled($build['cache-enabled'])
+            ->setProfilerEnabled($build['profiler-enabled'])
             ->setCacheDirectory($build['cache-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values']);
@@ -218,6 +221,18 @@ final class SetupGacela extends AbstractSetupGacela
     public function isCacheEnabled(): bool
     {
         return $this->cacheEnabled;
+    }
+
+    public function setProfilerEnabled(bool $flag): self
+    {
+        $this->profilerEnabled = $flag;
+
+        return $this;
+    }
+
+    public function isProfilerEnabled(): bool
+    {
+        return $this->profilerEnabled;
     }
 
     public function setCacheDirectory(string $dir): self

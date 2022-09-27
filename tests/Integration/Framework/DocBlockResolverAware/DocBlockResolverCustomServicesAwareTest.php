@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\DocBlockResolverAware;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesCache;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfilerCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +13,7 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
-        CustomServicesCache::resetCache();
+        CustomServicesProfilerCache::resetCache();
     }
 
     protected function setUp(): void
@@ -28,7 +28,7 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
         $dummy = new DummyDocBlockResolverAware();
         $actual = $dummy->getRepository()->findName();
 
-        self::assertCount(1, CustomServicesCache::getAll());
+        self::assertCount(1, CustomServicesProfilerCache::getAll());
         self::assertSame('name', $actual);
     }
 
@@ -37,13 +37,13 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
      */
     public function test_existing_service_cached(): void
     {
-        self::assertCount(1, CustomServicesCache::getAll());
+        self::assertCount(1, CustomServicesProfilerCache::getAll());
 
         $dummy = new DummyDocBlockResolverAware();
         $dummy->getRepository()->findName();
         $dummy->getRepository()->findName();
 
-        self::assertCount(1, CustomServicesCache::getAll());
+        self::assertCount(1, CustomServicesProfilerCache::getAll());
     }
 
     public function test_non_existing_service(): void

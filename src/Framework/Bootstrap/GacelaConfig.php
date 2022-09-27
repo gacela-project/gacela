@@ -24,6 +24,8 @@ final class GacelaConfig
 
     private bool $cacheEnabled = true;
 
+    private bool $profilerEnabled = false;
+
     private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
@@ -129,7 +131,14 @@ final class GacelaConfig
         return $this;
     }
 
-    public function setCacheDirectory(string $dir): self
+    public function setProfilerEnabled(bool $flag): self
+    {
+        $this->profilerEnabled = $flag;
+
+        return $this;
+    }
+
+    public function setProfilerDirectory(string $dir): self
     {
         $this->cacheDirectory = $dir;
 
@@ -173,6 +182,7 @@ final class GacelaConfig
      *     suffix-types-builder:SuffixTypesBuilder,
      *     mapping-interfaces-builder:MappingInterfacesBuilder,
      *     cache-enabled:bool,
+     *     profiler-enabled:bool,
      *     cache-directory:string,
      *     project-namespaces:list<string>,
      *     config-key-values:array<string,mixed>,
@@ -188,6 +198,7 @@ final class GacelaConfig
             'suffix-types-builder' => $this->suffixTypesBuilder,
             'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
             'cache-enabled' => $this->cacheEnabled,
+            'profiler-enabled' => $this->profilerEnabled,
             'cache-directory' => $this->cacheDirectory,
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,

@@ -6,7 +6,7 @@ namespace Gacela\Framework\ClassResolver\DocBlockService;
 
 use Gacela\Framework\ClassResolver\AbstractFileCache;
 
-final class CustomServicesCache extends AbstractFileCache
+final class CustomServicesProfilerCache extends AbstractFileCache
 {
     public const CACHE_FILENAME = '.gacela-custom-services.cache';
 

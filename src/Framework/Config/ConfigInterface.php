@@ -21,4 +21,6 @@ interface ConfigInterface
     public function get(string $key, $default = self::DEFAULT_CONFIG_VALUE);
 
     public function getSetupGacela(): SetupGacelaInterface;
+
+    public function hasKey(string $key): bool;
 }

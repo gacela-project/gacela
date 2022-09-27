@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomCacheDirectory\Module;
+namespace GacelaTest\Feature\Framework\CustomProfilerDirectory\Module;
 
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\DocBlockResolverAwareTrait;
-use GacelaTest\Feature\Framework\CustomCacheDirectory\Module\Persistence\FakeRepository;
+use GacelaTest\Feature\Framework\CustomProfilerDirectory\Module\Persistence\FakeRepository;
 
 /**
  * @method FakeRepository getRepository()

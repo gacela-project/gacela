@@ -38,7 +38,7 @@ final class ClassResolverFactory
 
     public function createClassNameCache(): ClassNameCacheInterface
     {
-        $inMemoryCache = new InMemoryCache(ClassNameProfiler::class);
+        $inMemoryCache = new InMemoryClassNameCache(ClassNameProfiler::class);
 
         if ($this->profiler->isEnabled()) {
             return new ProfiledInMemoryCache(

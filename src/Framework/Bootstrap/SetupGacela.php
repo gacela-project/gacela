@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -36,7 +36,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $profilerEnabled = false;
 
-    private string $profilerDir = GacelaCache::DEFAULT_DIRECTORY_VALUE;
+    private string $profilerDir = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];

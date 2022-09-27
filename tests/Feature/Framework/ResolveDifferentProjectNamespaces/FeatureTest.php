@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdParty\ModuleA\Facade as ThirdPartyModuleAFacade;
 use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdParty\ModuleB\Facade as ThirdPartyModuleBFacade;
@@ -23,7 +22,7 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addAppConfigKeyValue(GacelaCache::KEY_ENABLED, false);
+            $config->setCacheEnabled(false);
 
             $config->setProjectNamespaces([
                 'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\src\Main',

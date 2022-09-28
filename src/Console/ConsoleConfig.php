@@ -41,7 +41,7 @@ final class ConsoleConfig extends AbstractConfig
     {
         $filename = $this->getAppRootDir() . '/composer.json';
         if (!file_exists($filename)) {
-            throw new LogicException('composer.json file not found but it is required');
+            throw new LogicException("composer.json file not found but it is required. Not found in '{$filename}'");
         }
 
         return (array)json_decode((string)file_get_contents($filename), true, 512, JSON_THROW_ON_ERROR);

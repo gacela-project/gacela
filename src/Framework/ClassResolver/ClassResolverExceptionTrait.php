@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfiler;
-
 trait ClassResolverExceptionTrait
 {
     /**
@@ -30,12 +28,6 @@ trait ClassResolverExceptionTrait
         $message .= sprintf(
             'E.g. `%s`',
             $this->findClassNameExample($callerClassInfo, $resolvableType)
-        ) . PHP_EOL;
-
-        $message .= sprintf(
-            'If you got this ↑ already, then try removing the cache files: `%s`, `%s`',
-            ClassNameProfiler::CACHE_FILENAME,
-            CustomServicesProfiler::CACHE_FILENAME,
         ) . PHP_EOL;
 
         return $message;

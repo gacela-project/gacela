@@ -35,6 +35,6 @@ final class ProfiledInMemoryCache implements ClassNameCacheInterface
     public function put(string $cacheKey, string $className): void
     {
         $this->decoratedCache->put($cacheKey, $className);
-        $this->fileProfiler->updateFileCache($this->decoratedCache->getAll());
+        $this->fileProfiler->updateProfiler($this->decoratedCache->getAll());
     }
 }

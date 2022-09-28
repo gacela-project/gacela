@@ -6,7 +6,7 @@ namespace Gacela\Framework\ClassResolver;
 
 final class InMemoryClassNameCache implements ClassNameCacheInterface
 {
-    /** @var array<string,array<string,string>> */
+    /** @var array<string, array<string,string>> */
     private static array $cache = [];
 
     private string $key;
@@ -33,7 +33,7 @@ final class InMemoryClassNameCache implements ClassNameCacheInterface
     }
 
     /**
-     * @return array<string,string>
+     * @return array<string, string>
      */
     public function getAll(): array
     {

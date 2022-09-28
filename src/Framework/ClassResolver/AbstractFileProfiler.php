@@ -15,7 +15,7 @@ abstract class AbstractFileProfiler implements FileProfilerInterface
         $this->cacheDir = $cacheDir;
     }
 
-    public function updateFileCache(array $cache): void
+    public function updateProfiler(array $cache): void
     {
         $fileContent = sprintf(
             '<?php return %s;',

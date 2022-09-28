@@ -19,7 +19,7 @@ final class GacelaConfig
 
     private MappingInterfacesBuilder $mappingInterfacesBuilder;
 
-    /** @var array<string,class-string|object|callable> */
+    /** @var array<string, class-string|object|callable> */
     private array $externalServices;
 
     private bool $cacheEnabled = true;
@@ -177,15 +177,15 @@ final class GacelaConfig
 
     /**
      * @return array{
-     *     external-services:array<string,class-string|object|callable>,
-     *     config-builder:ConfigBuilder,
-     *     suffix-types-builder:SuffixTypesBuilder,
-     *     mapping-interfaces-builder:MappingInterfacesBuilder,
-     *     cache-enabled:bool,
-     *     profiler-enabled:bool,
-     *     profiler-directory:string,
-     *     project-namespaces:list<string>,
-     *     config-key-values:array<string,mixed>,
+     *     external-services: array<string,class-string|object|callable>,
+     *     config-builder: ConfigBuilder,
+     *     suffix-types-builder: SuffixTypesBuilder,
+     *     mapping-interfaces-builder: MappingInterfacesBuilder,
+     *     cache-enabled: bool,
+     *     profiler-enabled: bool,
+     *     profiler-directory: string,
+     *     project-namespaces: list<string>,
+     *     config-key-values: array<string,mixed>,
      * }
      *
      * @internal

@@ -27,8 +27,8 @@ final class FileProfilerBench
                 unlink($filename);
             }
         };
-        $removeFile(__DIR__ . '/.gacela/' . ClassNameProfiler::CACHE_FILENAME);
-        $removeFile(__DIR__ . '/.gacela/.' . CustomServicesProfiler::CACHE_FILENAME);
+        $removeFile(__DIR__ . '/.gacela/' . ClassNameProfiler::FILENAME);
+        $removeFile(__DIR__ . '/.gacela/.' . CustomServicesProfiler::FILENAME);
     }
 
     public function bench_with_profiler(): void

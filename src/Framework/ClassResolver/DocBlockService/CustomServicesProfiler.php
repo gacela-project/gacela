@@ -8,10 +8,10 @@ use Gacela\Framework\ClassResolver\AbstractFileProfiler;
 
 final class CustomServicesProfiler extends AbstractFileProfiler
 {
-    public const CACHE_FILENAME = '.gacela-custom-services.php';
+    public const FILENAME = 'gacela-custom-services.php';
 
     protected function getCacheFilename(): string
     {
-        return self::CACHE_FILENAME;
+        return self::FILENAME;
     }
 }

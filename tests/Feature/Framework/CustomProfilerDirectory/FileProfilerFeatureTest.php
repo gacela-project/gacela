@@ -31,7 +31,7 @@ final class FileProfilerFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . ClassNameProfiler::CACHE_FILENAME);
-        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . CustomServicesProfiler::CACHE_FILENAME);
+        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . ClassNameProfiler::FILENAME);
+        self::assertFileExists(__DIR__ . '/custom/profiler-dir/' . CustomServicesProfiler::FILENAME);
     }
 }

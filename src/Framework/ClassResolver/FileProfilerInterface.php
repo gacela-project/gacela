@@ -6,5 +6,5 @@ namespace Gacela\Framework\ClassResolver;
 
 interface FileProfilerInterface
 {
-    public function updateFileCache(array $cache): void;
+    public function updateProfiler(array $cache): void;
 }

@@ -25,7 +25,7 @@ final class NoFileCacheFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileDoesNotExist(__DIR__ . '/custom/no-profiler-dir/' . ClassNameProfiler::CACHE_FILENAME);
-        self::assertFileDoesNotExist(__DIR__ . '/custom/no-profiler-dir/' . CustomServicesProfiler::CACHE_FILENAME);
+        self::assertFileDoesNotExist(__DIR__ . '/custom/no-profiler-dir/' . ClassNameProfiler::FILENAME);
+        self::assertFileDoesNotExist(__DIR__ . '/custom/no-profiler-dir/' . CustomServicesProfiler::FILENAME);
     }
 }

@@ -12,44 +12,35 @@ use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 
 /**
- * @Revs(50)
+ * @Revs(10)
  * @Iterations(2)
  * @BeforeClassMethods("removeFiles")
  */
 final class FileProfilerBench
 {
-    private const TOTAL_LOADING_MODULES = 100;
-
     public static function removeFiles(): void
     {
         $removeFile = static function (string $filename): void {
-            $filename = __DIR__ . '/.gacela/profiler/' . $filename;
-            if (file_exists($filename)) {
-                unlink($filename);
+            $filenameFullPath = __DIR__ . '/.gacela/profiler/' . $filename;
+            if (file_exists($filenameFullPath)) {
+                unlink($filenameFullPath);
             }
         };
         $removeFile(ClassNameJsonProfiler::FILENAME);
         $removeFile(CustomServicesJsonProfiler::FILENAME);
     }
 
-    public function bench_with_profiler(): void
+    public function bench_profiler(): void
     {
-        $this->gacelaBootstrapWithProfiler(true);
+        $this->gacelaBootstrapWithProfiler();
         $this->loadAllModules();
     }
 
-    public function bench_without_profiler(): void
+    private function gacelaBootstrapWithProfiler(): void
     {
-        $this->gacelaBootstrapWithProfiler(false);
-        $this->loadAllModules();
-    }
-
-    private function gacelaBootstrapWithProfiler(bool $withProfiler): void
-    {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($withProfiler): void {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->addAppConfig('config/*.php');
-            $config->setProfilerEnabled($withProfiler);
-            $config->setProfilerDirectory('.gacela/profiler');
+            $config->setProfilerEnabled(true);
 
             $config->addMappingInterface(StringValueInterface::class, new StringValue('testing-string'));
 
@@ -75,7 +66,7 @@ final class FileProfilerBench
 
     private function loadAllModules(): void
     {
-        for ($i = 0; $i < self::TOTAL_LOADING_MODULES; ++$i) {
+        for ($i = 0; $i < 50; ++$i) {
             (new ModuleA\Facade())->loadGacelaCacheFile();
             (new ModuleB\Facade())->loadGacelaCacheFile();
             (new ModuleC\Facade())->loadGacelaCacheFile();

@@ -18,14 +18,6 @@ abstract class AbstractConfig
     }
 
     /**
-     * Allow easy access to the cache dir of the project.
-     */
-    public function getCacheDir(): string
-    {
-        return Config::getInstance()->getCacheDir();
-    }
-
-    /**
      * @param null|mixed $default
      *
      * @throws ConfigException

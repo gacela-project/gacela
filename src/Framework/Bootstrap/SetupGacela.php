@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -34,7 +34,9 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $cacheEnabled = true;
 
-    private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
+    private bool $profilerEnabled = false;
+
+    private string $profilerDirectory = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];
@@ -88,7 +90,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setMappingInterfacesBuilder($build['mapping-interfaces-builder'])
             ->setExternalServices($build['external-services'])
             ->setCacheEnabled($build['cache-enabled'])
-            ->setCacheDirectory($build['cache-directory'])
+            ->setProfilerEnabled($build['profiler-enabled'])
+            ->setProfilerDirectory($build['profiler-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values']);
     }
@@ -220,16 +223,28 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->cacheEnabled;
     }
 
-    public function setCacheDirectory(string $dir): self
+    public function setProfilerEnabled(bool $flag): self
     {
-        $this->cacheDirectory = $dir;
+        $this->profilerEnabled = $flag;
 
         return $this;
     }
 
-    public function getCacheDirectory(): string
+    public function isProfilerEnabled(): bool
     {
-        return $this->cacheDirectory;
+        return $this->profilerEnabled;
+    }
+
+    public function setProfilerDirectory(string $dir): self
+    {
+        $this->profilerDirectory = $dir;
+
+        return $this;
+    }
+
+    public function getProfilerDirectory(): string
+    {
+        return $this->profilerDirectory;
     }
 
     /**

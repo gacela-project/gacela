@@ -9,7 +9,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Gacela\Framework\ClassResolver\ClassNameCache;
+use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
 use Gacela\Framework\Config\Config;
 
 final class Gacela
@@ -24,7 +24,7 @@ final class Gacela
         $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
 
         if (!$setup->isCacheEnabled()) {
-            ClassNameCache::resetCache();
+            InMemoryClassNameCache::resetCache();
             AbstractClassResolver::resetCache();
             Config::resetInstance();
         }

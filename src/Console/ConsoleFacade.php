@@ -35,14 +35,4 @@ final class ConsoleFacade extends AbstractFacade
             ->createFileContentGenerator()
             ->generate($commandArguments, $filename, $withShortName);
     }
-
-    /**
-     * @return list<string> the removed file paths
-     */
-    public function clearCacheFile(): array
-    {
-        return $this->getFactory()
-            ->createCacheClearer()
-            ->clearCacheFiles();
-    }
 }

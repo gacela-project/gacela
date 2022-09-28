@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -19,12 +19,14 @@ final class GacelaConfig
 
     private MappingInterfacesBuilder $mappingInterfacesBuilder;
 
-    /** @var array<string,class-string|object|callable> */
+    /** @var array<string, class-string|object|callable> */
     private array $externalServices;
 
     private bool $cacheEnabled = true;
 
-    private string $cacheDirectory = GacelaCache::DEFAULT_DIRECTORY_VALUE;
+    private bool $profilerEnabled = false;
+
+    private string $profilerDirectory = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];
@@ -129,9 +131,16 @@ final class GacelaConfig
         return $this;
     }
 
-    public function setCacheDirectory(string $dir): self
+    public function setProfilerEnabled(bool $flag): self
     {
-        $this->cacheDirectory = $dir;
+        $this->profilerEnabled = $flag;
+
+        return $this;
+    }
+
+    public function setProfilerDirectory(string $dir): self
+    {
+        $this->profilerDirectory = $dir;
 
         return $this;
     }
@@ -168,14 +177,15 @@ final class GacelaConfig
 
     /**
      * @return array{
-     *     external-services:array<string,class-string|object|callable>,
-     *     config-builder:ConfigBuilder,
-     *     suffix-types-builder:SuffixTypesBuilder,
-     *     mapping-interfaces-builder:MappingInterfacesBuilder,
-     *     cache-enabled:bool,
-     *     cache-directory:string,
-     *     project-namespaces:list<string>,
-     *     config-key-values:array<string,mixed>,
+     *     external-services: array<string,class-string|object|callable>,
+     *     config-builder: ConfigBuilder,
+     *     suffix-types-builder: SuffixTypesBuilder,
+     *     mapping-interfaces-builder: MappingInterfacesBuilder,
+     *     cache-enabled: bool,
+     *     profiler-enabled: bool,
+     *     profiler-directory: string,
+     *     project-namespaces: list<string>,
+     *     config-key-values: array<string,mixed>,
      * }
      *
      * @internal
@@ -188,7 +198,8 @@ final class GacelaConfig
             'suffix-types-builder' => $this->suffixTypesBuilder,
             'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
             'cache-enabled' => $this->cacheEnabled,
-            'cache-directory' => $this->cacheDirectory,
+            'profiler-enabled' => $this->profilerEnabled,
+            'profiler-directory' => $this->profilerDirectory,
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
         ];

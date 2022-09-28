@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\DocBlockResolver;
 
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
 use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesCache;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
-use Gacela\Framework\ClassResolver\InMemoryCache;
+use Gacela\Framework\ClassResolver\FileProfilerInterface;
+use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
+use Gacela\Framework\ClassResolver\ProfiledInMemoryCache;
+use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 use ReflectionClass;
 
@@ -99,19 +101,21 @@ final class DocBlockResolver
 
     private function createClassNameCache(): ClassNameCacheInterface
     {
-        if (!$this->isProjectCacheEnabled()) {
-            return new InMemoryCache(CustomServicesCache::class);
+        $inMemoryCache = new InMemoryClassNameCache(CustomServicesJsonProfiler::class);
+
+        if ($this->isProjectProfilerEnabled()) {
+            return new ProfiledInMemoryCache(
+                $inMemoryCache,
+                $this->createProfiler()
+            );
         }
 
-        return new CustomServicesCache(
-            Config::getInstance()->getCacheDir()
-        );
+        return $inMemoryCache;
     }
 
-    private function isProjectCacheEnabled(): bool
+    private function isProjectProfilerEnabled(): bool
     {
-        return (new GacelaCache(Config::getInstance()))
-            ->isProjectCacheEnabled();
+        return (new GacelaProfiler(Config::getInstance()))->isEnabled();
     }
 
     /**
@@ -150,5 +154,12 @@ final class DocBlockResolver
         $phpFile = self::$fileContentCache[$fileName];
 
         return (new UseBlockParser())->getUseStatement($className, $phpFile);
+    }
+
+    private function createProfiler(): FileProfilerInterface
+    {
+        return new CustomServicesJsonProfiler(
+            Config::getInstance()->getProfilerDir(),
+        );
     }
 }

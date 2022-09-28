@@ -57,11 +57,11 @@ final class Config implements ConfigInterface
             $this->init();
         }
 
-        if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasValue($key)) {
+        if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasKey($key)) {
             return $default;
         }
 
-        if (!$this->hasValue($key)) {
+        if (!$this->hasKey($key)) {
             throw ConfigException::keyNotFound($key, self::class);
         }
 
@@ -96,9 +96,9 @@ final class Config implements ConfigInterface
         return $this->appRootDir ?? getcwd() ?: '';
     }
 
-    public function getCacheDir(): string
+    public function getProfilerDir(): string
     {
-        return $this->getAppRootDir() . '/' . $this->getSetupGacela()->getCacheDirectory();
+        return $this->getAppRootDir() . '/' . $this->getSetupGacela()->getProfilerDirectory();
     }
 
     public function setSetup(SetupGacelaInterface $setup): self
@@ -132,7 +132,7 @@ final class Config implements ConfigInterface
         return $this->setup;
     }
 
-    private function hasValue(string $key): bool
+    public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
     }

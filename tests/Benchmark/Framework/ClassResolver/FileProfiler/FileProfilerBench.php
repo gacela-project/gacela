@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\Framework\ClassResolver\FileProfiler;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\ClassNameProfiler;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfiler;
+use Gacela\Framework\ClassResolver\ClassNameJsonProfiler;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
 use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
@@ -23,12 +23,13 @@ final class FileProfilerBench
     public static function removeFiles(): void
     {
         $removeFile = static function (string $filename): void {
+            $filename = __DIR__ . '/.gacela/profiler/' . $filename;
             if (file_exists($filename)) {
                 unlink($filename);
             }
         };
-        $removeFile(__DIR__ . '/.gacela/' . ClassNameProfiler::FILENAME);
-        $removeFile(__DIR__ . '/.gacela/.' . CustomServicesProfiler::FILENAME);
+        $removeFile(ClassNameJsonProfiler::FILENAME);
+        $removeFile(CustomServicesJsonProfiler::FILENAME);
     }
 
     public function bench_with_profiler(): void
@@ -48,7 +49,7 @@ final class FileProfilerBench
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($withProfiler): void {
             $config->addAppConfig('config/*.php');
             $config->setProfilerEnabled($withProfiler);
-            $config->setProfilerDirectory('.gacela');
+            $config->setProfilerDirectory('.gacela/profiler');
 
             $config->addMappingInterface(StringValueInterface::class, new StringValue('testing-string'));
 

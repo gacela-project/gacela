@@ -98,7 +98,7 @@ final class Config implements ConfigInterface
 
     public function getProfilerDir(): string
     {
-        return $this->getAppRootDir() . '/' . $this->getSetupGacela()->getProfilerDir();
+        return $this->getAppRootDir() . '/' . $this->getSetupGacela()->getProfilerDirectory();
     }
 
     public function setSetup(SetupGacelaInterface $setup): self

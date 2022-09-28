@@ -38,14 +38,12 @@ final class ClassResolverFactory
 
     public function createClassNameCache(): ClassNameCacheInterface
     {
-        $inMemoryCache = new InMemoryClassNameCache(ClassNameProfiler::class);
+        $inMemoryCache = new InMemoryClassNameCache(ClassNameJsonProfiler::class);
 
         if ($this->profiler->isEnabled()) {
             return new ProfiledInMemoryCache(
                 $inMemoryCache,
-                new ClassNameProfiler(
-                    Config::getInstance()->getProfilerDir(),
-                )
+                $this->createProfiler()
             );
         }
 
@@ -74,5 +72,12 @@ final class ClassResolverFactory
     private function getProjectNamespaces(): array
     {
         return $this->setupGacela->getProjectNamespaces();
+    }
+
+    private function createProfiler(): FileProfilerInterface
+    {
+        return new ClassNameJsonProfiler(
+            Config::getInstance()->getProfilerDir(),
+        );
     }
 }

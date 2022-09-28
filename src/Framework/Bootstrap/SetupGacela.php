@@ -36,7 +36,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $profilerEnabled = false;
 
-    private string $profilerDir = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
+    private string $profilerDirectory = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];
@@ -91,7 +91,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setExternalServices($build['external-services'])
             ->setCacheEnabled($build['cache-enabled'])
             ->setProfilerEnabled($build['profiler-enabled'])
-            ->setProfilerDir($build['profiler-directory'])
+            ->setProfilerDirectory($build['profiler-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values']);
     }
@@ -235,16 +235,16 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->profilerEnabled;
     }
 
-    public function setProfilerDir(string $dir): self
+    public function setProfilerDirectory(string $dir): self
     {
-        $this->profilerDir = $dir;
+        $this->profilerDirectory = $dir;
 
         return $this;
     }
 
-    public function getProfilerDir(): string
+    public function getProfilerDirectory(): string
     {
-        return $this->profilerDir;
+        return $this->profilerDirectory;
     }
 
     /**

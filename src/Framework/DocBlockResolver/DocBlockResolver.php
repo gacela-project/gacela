@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Gacela\Framework\DocBlockResolver;
 
 use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesProfiler;
+use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
+use Gacela\Framework\ClassResolver\FileProfilerInterface;
 use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
 use Gacela\Framework\ClassResolver\ProfiledInMemoryCache;
 use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
@@ -100,14 +101,12 @@ final class DocBlockResolver
 
     private function createClassNameCache(): ClassNameCacheInterface
     {
-        $inMemoryCache = new InMemoryClassNameCache(CustomServicesProfiler::class);
+        $inMemoryCache = new InMemoryClassNameCache(CustomServicesJsonProfiler::class);
 
         if ($this->isProjectProfilerEnabled()) {
             return new ProfiledInMemoryCache(
                 $inMemoryCache,
-                new CustomServicesProfiler(
-                    Config::getInstance()->getProfilerDir(),
-                )
+                $this->createProfiler()
             );
         }
 
@@ -155,5 +154,12 @@ final class DocBlockResolver
         $phpFile = self::$fileContentCache[$fileName];
 
         return (new UseBlockParser())->getUseStatement($className, $phpFile);
+    }
+
+    private function createProfiler(): FileProfilerInterface
+    {
+        return new CustomServicesJsonProfiler(
+            Config::getInstance()->getProfilerDir(),
+        );
     }
 }

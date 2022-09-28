@@ -6,7 +6,9 @@ namespace Gacela\Framework\ClassResolver;
 
 use RuntimeException;
 
-abstract class AbstractFileProfiler implements FileProfilerInterface
+use function json_encode;
+
+abstract class AbstractJsonFileProfiler implements FileProfilerInterface
 {
     private string $cacheDir;
 
@@ -17,10 +19,7 @@ abstract class AbstractFileProfiler implements FileProfilerInterface
 
     public function updateProfiler(array $cache): void
     {
-        $fileContent = sprintf(
-            '<?php return %s;',
-            var_export($cache, true)
-        );
+        $fileContent = json_encode($cache, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
 
         file_put_contents($this->getAbsoluteCacheFilename(), $fileContent);
     }

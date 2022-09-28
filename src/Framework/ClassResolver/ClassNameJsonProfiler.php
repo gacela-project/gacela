@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-final class ClassNameProfiler extends AbstractFileProfiler
+final class ClassNameJsonProfiler extends AbstractJsonFileProfiler
 {
-    public const FILENAME = 'gacela-class-names.php';
+    public const FILENAME = 'gacela-class-names.json';
 
     protected function getCacheFilename(): string
     {

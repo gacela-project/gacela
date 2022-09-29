@@ -13,17 +13,15 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 final class MakeModuleCommandTest extends TestCase
 {
-    private const ENTRY_POINT = __DIR__ . '/../../../';
-
     public static function tearDownAfterClass(): void
     {
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+        DirectoryUtil::removeDir('./src/TestModule');
     }
 
     public function setUp(): void
     {
-        Gacela::bootstrap(self::ENTRY_POINT);
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+        Gacela::bootstrap(__DIR__);
+        DirectoryUtil::removeDir('./src/TestModule');
     }
 
     /**
@@ -31,7 +29,7 @@ final class MakeModuleCommandTest extends TestCase
      */
     public function test_make_module(string $fileName, string $shortName): void
     {
-        $input = new StringInput("Gacela/TestModule {$shortName}");
+        $input = new StringInput("Psr4CodeGenerator/TestModule {$shortName}");
         $output = new BufferedOutput();
 
         $command = new MakeModuleCommand();
@@ -44,13 +42,12 @@ final class MakeModuleCommandTest extends TestCase
 > Path 'src/TestModule/{$fileName}DependencyProvider.php' created successfully
 Module 'TestModule' created successfully
 OUT;
-
         self::assertSame($expectedOutput, trim($output->fetch()));
 
-        self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}Facade.php");
-        self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}Factory.php");
-        self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}Config.php");
-        self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}DependencyProvider.php");
+        self::assertFileExists("./src/TestModule/{$fileName}Facade.php");
+        self::assertFileExists("./src/TestModule/{$fileName}Factory.php");
+        self::assertFileExists("./src/TestModule/{$fileName}Config.php");
+        self::assertFileExists("./src/TestModule/{$fileName}DependencyProvider.php");
     }
 
     public function createModulesProvider(): iterable

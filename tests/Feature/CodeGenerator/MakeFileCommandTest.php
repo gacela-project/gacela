@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\CodeGenerator;
 
+use Gacela\Console\Infrastructure\Command\MakeFileCommand;
+use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 final class MakeFileCommandTest extends TestCase
 {
-    private const ENTRY_POINT = __DIR__ . '/../../../';
-
     public static function tearDownAfterClass(): void
     {
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+        DirectoryUtil::removeDir('./src/TestModule');
     }
 
     public function setUp(): void
     {
-        DirectoryUtil::removeDir(self::ENTRY_POINT . 'src/TestModule');
+        Gacela::bootstrap(__DIR__);
+        DirectoryUtil::removeDir('./src/TestModule');
     }
 
     /**
@@ -26,11 +29,14 @@ final class MakeFileCommandTest extends TestCase
      */
     public function test_make_file(string $action, string $fileName, string $shortName): void
     {
-        $command = sprintf('%sgacela make:file %s Gacela/TestModule %s', self::ENTRY_POINT, $shortName, $action);
-        exec($command, $output);
+        $input = new StringInput(sprintf('%s Psr4CodeGenerator/TestModule %s', $shortName, $action));
+        $output = new BufferedOutput();
 
-        self::assertSame("> Path 'src/TestModule/{$fileName}.php' created successfully", $output[0]);
-        self::assertFileExists(self::ENTRY_POINT . "src/TestModule/{$fileName}.php");
+        $command = new MakeFileCommand();
+        $command->run($input, $output);
+
+        self::assertSame("> Path 'src/TestModule/{$fileName}.php' created successfully", trim($output->fetch()));
+        self::assertFileExists("./src/TestModule/{$fileName}.php");
     }
 
     public function createFilesProvider(): iterable

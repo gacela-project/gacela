@@ -6,5 +6,6 @@ parameters:
     checkMissingIterableValueType: false
 
     ignoreErrors:
+        - '#Method Gacela\\.*::.* should return class-string.*but returns string#'
         - '#Method Gacela\\.*::.* should return array<.*> but returns array#'
         - '#Method Gacela\\.*::.* should return array{.*} but returns array#'

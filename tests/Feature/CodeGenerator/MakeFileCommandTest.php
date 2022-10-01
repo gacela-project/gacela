@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\CodeGenerator;
 
-use Gacela\Console\Infrastructure\Command\MakeFileCommand;
+use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -29,11 +29,12 @@ final class MakeFileCommandTest extends TestCase
      */
     public function test_make_file(string $action, string $fileName, string $shortName): void
     {
-        $input = new StringInput(sprintf('%s Psr4CodeGenerator/TestModule %s', $shortName, $action));
+        $input = new StringInput("make:file Psr4CodeGenerator/TestModule {$action} {$shortName}");
         $output = new BufferedOutput();
 
-        $command = new MakeFileCommand();
-        $command->run($input, $output);
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+        $bootstrap->run($input, $output);
 
         self::assertSame("> Path 'src/TestModule/{$fileName}.php' created successfully", trim($output->fetch()));
         self::assertFileExists("./src/TestModule/{$fileName}.php");

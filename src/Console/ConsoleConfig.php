@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Console;
 
+use Gacela\Console\Domain\ConsoleException;
 use Gacela\Framework\AbstractConfig;
 use JsonException;
-use LogicException;
 
 final class ConsoleConfig extends AbstractConfig
 {
@@ -33,7 +33,7 @@ final class ConsoleConfig extends AbstractConfig
     /**
      * @psalm-suppress MixedReturnTypeCoercion
      *
-     * @throws JsonException
+     * @throws ConsoleException|JsonException
      *
      * @return array{autoload: array{psr-4: array<string,string>}}
      */
@@ -41,7 +41,7 @@ final class ConsoleConfig extends AbstractConfig
     {
         $filename = $this->getAppRootDir() . '/composer.json';
         if (!file_exists($filename)) {
-            throw new LogicException("composer.json file not found but it is required. Not found in '{$filename}'");
+            throw ConsoleException::composerJsonNotFound();
         }
 
         return (array)json_decode((string)file_get_contents($filename), true, 512, JSON_THROW_ON_ERROR);

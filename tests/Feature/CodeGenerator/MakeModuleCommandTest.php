@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\CodeGenerator;
 
-use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
+use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -29,11 +29,12 @@ final class MakeModuleCommandTest extends TestCase
      */
     public function test_make_module(string $fileName, string $shortName): void
     {
-        $input = new StringInput("Psr4CodeGenerator/TestModule {$shortName}");
+        $input = new StringInput("make:module Psr4CodeGenerator/TestModule {$shortName}");
         $output = new BufferedOutput();
 
-        $command = new MakeModuleCommand();
-        $command->run($input, $output);
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+        $bootstrap->run($input, $output);
 
         $expectedOutput = <<<OUT
 > Path 'src/TestModule/{$fileName}Facade.php' created successfully

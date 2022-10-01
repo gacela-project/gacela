@@ -33,4 +33,14 @@ final class ConfigTest extends TestCase
     {
         self::assertNull(Config::getInstance()->get('undefined-key', null));
     }
+
+    public function test_normalize_app_root_dir(): void
+    {
+        $config = Config::getInstance();
+        $config->setAppRootDir('/directory1');
+        self::assertSame('/directory1', $config->getAppRootDir());
+
+        $config->setAppRootDir('/directory2/');
+        self::assertSame('/directory2', $config->getAppRootDir());
+    }
 }

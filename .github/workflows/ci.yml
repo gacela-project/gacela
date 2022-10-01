@@ -72,7 +72,7 @@ jobs:
         run: ./vendor/bin/phpstan analyze -c phpstan.neon src
 
   tests:
-    name: "PHP version ${{ matrix.php-version }}, deps. ${{ matrix.dependencies }}"
+    name: "PHP version ${{ matrix.php-version }}, deps. ${{ matrix.dependencies }} in ${{ matrix.operating-system }}"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false
@@ -81,6 +81,7 @@ jobs:
         php-version: [ "8.0" , "8.1", "8.2" ]
         operating-system:
           - "ubuntu-latest"
+          - "windows-latest"
     steps:
       - uses: actions/checkout@v3
 

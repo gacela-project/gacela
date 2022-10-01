@@ -82,7 +82,7 @@ final class Config implements ConfigInterface
 
     public function setAppRootDir(string $dir): self
     {
-        $this->appRootDir = $dir;
+        $this->appRootDir = rtrim($dir, '/');
 
         if (empty($this->appRootDir)) {
             $this->appRootDir = getcwd() ?: ''; // @codeCoverageIgnore

@@ -1,10 +1,11 @@
 # Changelog
 
-### Unreleased
+### 0.26.0
+#### 2022-10-01
 
-- Add (optional) gacela file profiler. By default disabled.
-- Remove gacela file cache. Instead, use in memory cache always.
-- Remove `gacela cache:clear` command.
+- Added new feature: gacela file profiler (disabled by default).
+- Removed gacela file cache. Instead, use InMemoryCache always.
+- Removed `gacela cache:clear` command.
 
 ### 0.25.0
 #### 2022-09-18

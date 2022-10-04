@@ -4,24 +4,14 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\DocBlockResolverAware;
 
-use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
-use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverCustomServicesAwareTest extends TestCase
 {
-    public static function setUpBeforeClass(): void
-    {
-        InMemoryClassNameCache::resetCache();
-    }
-
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addAppConfig('config/custom-services/*.php');
-        });
+        Gacela::bootstrap(__DIR__);
     }
 
     public function test_existing_service(): void
@@ -29,22 +19,15 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
         $dummy = new DummyDocBlockResolverAware();
         $actual = $dummy->getRepository()->findName();
 
-        self::assertCount(1, InMemoryClassNameCache::getAllFromKey(CustomServicesJsonProfiler::class));
         self::assertSame('name', $actual);
     }
 
-    /**
-     * @depends test_existing_service
-     */
-    public function test_existing_service_cached(): void
+    public function test_service_as_interface(): void
     {
-        self::assertCount(1, InMemoryClassNameCache::getAllFromKey(CustomServicesJsonProfiler::class));
-
         $dummy = new DummyDocBlockResolverAware();
-        $dummy->getRepository()->findName();
-        $dummy->getRepository()->findName();
+        $actual = $dummy->getService()->getName();
 
-        self::assertCount(1, InMemoryClassNameCache::getAllFromKey(CustomServicesJsonProfiler::class));
+        self::assertSame('fake-service.name', $actual);
     }
 
     public function test_non_existing_service(): void

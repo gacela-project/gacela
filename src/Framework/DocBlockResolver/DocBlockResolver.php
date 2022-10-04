@@ -21,6 +21,8 @@ use function is_string;
 
 final class DocBlockResolver
 {
+    private const INTERFACE_SUFFIX = 'Interface';
+
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];
 
@@ -124,14 +126,24 @@ final class DocBlockResolver
     private function getClassFromDoc(string $method): string
     {
         $reflectionClass = new ReflectionClass($this->callerClass);
+
         $className = $this->searchClassOverDocBlock($reflectionClass, $method);
         if (class_exists($className)) {
             return $className;
         }
+
         $className = $this->searchClassOverUseStatements($reflectionClass, $className);
         if (class_exists($className)) {
             return $className;
         }
+
+        if (($pos = strpos($className, self::INTERFACE_SUFFIX)) !== false) {
+            $className = substr($className, 0, $pos);
+            if (class_exists($className)) {
+                return $className;
+            }
+        }
+
         throw MissingClassDefinitionException::missingDefinition($this->callerClass, $method, $className);
     }
 

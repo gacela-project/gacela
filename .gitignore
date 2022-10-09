@@ -1,10 +1,10 @@
-coverage/
 .idea/
 .gacela/
 .vscode/
-vendor/
-data/
 .phpbench/
+coverage/
+data/
+vendor/
 
 *.cache
 composer.lock

@@ -10,11 +10,19 @@ use function count;
 
 final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {
-    /** @var array{autoload: array{psr-4?:array<string,string>}} */
+    /**
+     * @var array{
+     *     autoload:      array{psr-4?:array<string,string>},
+     *     autoload-dev?: array{psr-4?:array<string,string>},
+     * }
+     */
     private array $composerJson;
 
     /**
-     * @param array{autoload: array{psr-4?:array<string,string>}} $composerJson
+     * @param array{
+     *     autoload:      array{psr-4?:array<string,string>},
+     *     autoload-dev?: array{psr-4?:array<string,string>},
+     * } $composerJson
      */
     public function __construct(array $composerJson)
     {
@@ -37,6 +45,8 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
         }
 
         $psr4 = $this->composerJson['autoload']['psr-4'];
+        $psr4Dev = $this->composerJson['autoload-dev']['psr-4'] ?? [];
+
         $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);
 
         foreach ($allPsr4Combinations as $psr4Combination) {
@@ -44,6 +54,9 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
 
             if (isset($psr4[$psr4Key])) {
                 return $this->foundPsr4($psr4Key, $psr4[$psr4Key], $desiredNamespace);
+            }
+            if (isset($psr4Dev[$psr4Key])) {
+                return $this->foundPsr4($psr4Key, $psr4Dev[$psr4Key], $desiredNamespace);
             }
         }
 

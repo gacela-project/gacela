@@ -46,8 +46,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "GacelaData\\": "data",
-            "GacelaTest\\": "tests"
+            "GacelaData\\": "data/",
+            "GacelaTest\\": "tests/"
         }
     },
     "bin": [

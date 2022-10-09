@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Read autoload-dev psr-4 namespaces for gacela make commands.
+
 ### 0.26.0
 #### 2022-10-01
 

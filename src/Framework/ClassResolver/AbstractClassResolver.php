@@ -57,7 +57,9 @@ abstract class AbstractClassResolver
         }
 
         $resolvedClassName = $this->findClassName($classInfo);
-        if ($resolvedClassName === null) {
+        if ($resolvedClassName !== null) {
+            $instance = $this->createInstance($resolvedClassName);
+        } else {
             // Try again with its parent class
             if (is_object($caller)) {
                 $parentClass = get_parent_class($caller);
@@ -66,10 +68,10 @@ abstract class AbstractClassResolver
                 }
             }
 
-            return $this->createDefaultGacelaClass();
+            $instance = $this->createDefaultGacelaClass();
         }
 
-        self::$cachedInstances[$cacheKey] = $this->createInstance($resolvedClassName);
+        self::$cachedInstances[$cacheKey] = $instance;
 
         return self::$cachedInstances[$cacheKey];
     }

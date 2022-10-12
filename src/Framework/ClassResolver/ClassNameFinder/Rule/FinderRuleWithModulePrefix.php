@@ -10,9 +10,17 @@ final class FinderRuleWithModulePrefix implements FinderRuleInterface
 {
     public function buildClassCandidate(string $projectNamespace, string $resolvableType, ClassInfo $classInfo): string
     {
+        if ($projectNamespace !== '') {
+            return sprintf(
+                '\\%s\\%s\\%s',
+                trim($projectNamespace, '\\'),
+                $classInfo->getModuleName(),
+                $classInfo->getModuleName() . $resolvableType
+            );
+        }
+
         return sprintf(
-            '\\%s\\%s\\%s',
-            trim($projectNamespace, '\\'),
+            '\\%s\\%s',
             $classInfo->getModuleName(),
             $classInfo->getModuleName() . $resolvableType
         );

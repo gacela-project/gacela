@@ -5,6 +5,7 @@
 
 - Read autoload-dev psr-4 namespaces for gacela make commands.
 - Cache default resolved gacela class.
+- Allow optional project namespace on class name finder rules.
 
 ### 0.26.0
 #### 2022-10-01

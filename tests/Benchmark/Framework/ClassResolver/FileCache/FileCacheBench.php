@@ -12,9 +12,9 @@ use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 
 /**
- * @Revs(100)
- * @Iterations(5)
- * @BeforeClassMethods("removeFiles")
+ * @Revs(150)
+ * @Iterations(10)
+ * BeforeClassMethods("removeFiles")
  */
 final class FileCacheBench
 {
@@ -30,15 +30,15 @@ final class FileCacheBench
         $removeFile(CustomServicesPhpCache::FILENAME);
     }
 
-    public function bench_with_cache(): void
-    {
-        $this->gacelaBootstrapWithCache(true);
-        $this->loadAllModules();
-    }
-
     public function bench_without_cache(): void
     {
         $this->gacelaBootstrapWithCache(false);
+        $this->loadAllModules();
+    }
+
+    public function bench_with_cache(): void
+    {
+        $this->gacelaBootstrapWithCache(true);
         $this->loadAllModules();
     }
 

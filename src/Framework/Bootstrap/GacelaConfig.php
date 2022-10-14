@@ -23,9 +23,9 @@ final class GacelaConfig
     /** @var array<string, class-string|object|callable> */
     private array $externalServices;
 
-    private bool $shouldResetInMemoryCache = GacelaFileCache::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE_VALUE;
+    private bool $shouldResetInMemoryCache = false;
 
-    private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_FILE_CACHE_ENABLED_VALUE;
+    private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_ENABLED_VALUE;
 
     private string $fileCacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
 

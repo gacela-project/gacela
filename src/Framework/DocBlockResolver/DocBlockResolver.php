@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\DocBlockResolver;
 
-use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
+use Gacela\Framework\ClassResolver\Cache\ClassNameCacheInterface;
+use Gacela\Framework\ClassResolver\Cache\InMemoryClassNameCache;
+use Gacela\Framework\ClassResolver\Cache\ProfiledInMemoryCache;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
-use Gacela\Framework\ClassResolver\FileProfilerInterface;
-use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
-use Gacela\Framework\ClassResolver\ProfiledInMemoryCache;
+use Gacela\Framework\ClassResolver\Profiler\CustomServicesJsonProfiler;
+use Gacela\Framework\ClassResolver\Profiler\FileProfilerInterface;
 use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 use ReflectionClass;

@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver\DocBlockService;
-
-use Gacela\Framework\ClassResolver\AbstractJsonFileProfiler;
+namespace Gacela\Framework\ClassResolver\Profiler;
 
 final class CustomServicesJsonProfiler extends AbstractJsonFileProfiler
 {

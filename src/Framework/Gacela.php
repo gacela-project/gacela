@@ -9,7 +9,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
+use Gacela\Framework\ClassResolver\Cache\InMemoryClassNameCache;
 use Gacela\Framework\Config\Config;
 
 final class Gacela

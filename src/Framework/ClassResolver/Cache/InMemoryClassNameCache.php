@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver;
+namespace Gacela\Framework\ClassResolver\Cache;
 
 final class InMemoryClassNameCache implements ClassNameCacheInterface
 {

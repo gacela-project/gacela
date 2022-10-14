@@ -9,7 +9,7 @@ use Gacela\Framework\Config\ConfigInterface;
 final class GacelaFileCache
 {
     public const KEY_ENABLED = 'gacela-cache-enabled';
-    public const DEFAULT_DIRECTORY_VALUE = '.gacela/cache';
+    public const DEFAULT_DIRECTORY_VALUE = '/.gacela/cache';
     public const DEFAULT_FILE_CACHE_ENABLED_VALUE = false;
     public const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE_VALUE = false;
 

@@ -37,7 +37,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_FILE_CACHE_ENABLED_VALUE;
 
-    private string $cacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
+    private string $fileCacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
 
     private bool $profilerEnabled = GacelaProfiler::DEFAULT_ENABLED_VALUE;
 
@@ -95,7 +95,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setExternalServices($build['external-services'])
             ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
             ->setFileCacheEnabled($build['file-cache-enabled'])
-            ->setCacheDirectory($build['cache-directory'])
+            ->setFileCacheDirectory($build['file-cache-directory'])
             ->setProfilerEnabled($build['profiler-enabled'])
             ->setProfilerDirectory($build['profiler-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
@@ -241,14 +241,14 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->fileCacheEnabled;
     }
 
-    public function getCacheDirectory(): string
+    public function getFileCacheDirectory(): string
     {
-        return $this->cacheDirectory;
+        return $this->fileCacheDirectory;
     }
 
-    public function setCacheDirectory(string $dir): self
+    public function setFileCacheDirectory(string $dir): self
     {
-        $this->cacheDirectory = $dir;
+        $this->fileCacheDirectory = $dir;
 
         return $this;
     }

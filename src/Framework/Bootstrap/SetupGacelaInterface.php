@@ -40,7 +40,7 @@ interface SetupGacelaInterface
 
     public function isFileCacheEnabled(): bool;
 
-    public function getCacheDirectory(): string;
+    public function getFileCacheDirectory(): string;
 
     public function isProfilerEnabled(): bool;
 

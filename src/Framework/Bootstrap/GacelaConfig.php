@@ -22,7 +22,7 @@ final class GacelaConfig
     /** @var array<string, class-string|object|callable> */
     private array $externalServices;
 
-    private bool $cacheEnabled = true;
+    private bool $cacheEnabled = false;
 
     private bool $profilerEnabled = false;
 

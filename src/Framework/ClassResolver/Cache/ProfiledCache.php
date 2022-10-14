@@ -6,13 +6,13 @@ namespace Gacela\Framework\ClassResolver\Cache;
 
 use Gacela\Framework\ClassResolver\Profiler\FileProfilerInterface;
 
-final class ProfiledInMemoryCache implements ClassNameCacheInterface
+final class ProfiledCache implements CacheInterface
 {
-    private ClassNameCacheInterface $decoratedCache;
+    private CacheInterface $decoratedCache;
     private FileProfilerInterface $fileProfiler;
 
     public function __construct(
-        ClassNameCacheInterface $decoratedCache,
+        CacheInterface $decoratedCache,
         FileProfilerInterface $fileProfiler
     ) {
         $this->decoratedCache = $decoratedCache;

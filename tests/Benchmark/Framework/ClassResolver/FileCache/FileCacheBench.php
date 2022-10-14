@@ -2,45 +2,51 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Benchmark\Framework\ClassResolver\FileProfiler;
+namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\Profiler\ClassNameJsonProfiler;
-use Gacela\Framework\ClassResolver\Profiler\CustomServicesJsonProfiler;
+use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
+use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 
 /**
- * @Revs(10)
- * @Iterations(2)
+ * @Revs(100)
+ * @Iterations(5)
  * @BeforeClassMethods("removeFiles")
  */
-final class FileProfilerBench
+final class FileCacheBench
 {
     public static function removeFiles(): void
     {
         $removeFile = static function (string $filename): void {
-            $filenameFullPath = __DIR__ . '/.gacela/profiler/' . $filename;
+            $filenameFullPath = __DIR__ . '/.gacela/cache/' . $filename;
             if (file_exists($filenameFullPath)) {
                 unlink($filenameFullPath);
             }
         };
-        $removeFile(ClassNameJsonProfiler::FILENAME);
-        $removeFile(CustomServicesJsonProfiler::FILENAME);
+        $removeFile(ClassNamePhpCache::FILENAME);
+        $removeFile(CustomServicesPhpCache::FILENAME);
     }
 
-    public function bench_profiler(): void
+    public function bench_with_cache(): void
     {
-        $this->gacelaBootstrapWithProfiler();
+        $this->gacelaBootstrapWithCache(true);
         $this->loadAllModules();
     }
 
-    private function gacelaBootstrapWithProfiler(): void
+    public function bench_withput_cache(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+        $this->gacelaBootstrapWithCache(false);
+        $this->loadAllModules();
+    }
+
+    private function gacelaBootstrapWithCache(bool $cacheEnabled): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheEnabled): void {
             $config->addAppConfig('config/*.php');
-            $config->setProfilerEnabled(true);
+            $config->setCacheEnabled($cacheEnabled);
 
             $config->addMappingInterface(StringValueInterface::class, new StringValue('testing-string'));
 

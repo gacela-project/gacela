@@ -9,6 +9,7 @@ use Gacela\Framework\Config\ConfigInterface;
 final class GacelaProfiler
 {
     public const KEY_ENABLED = 'gacela-profiler-enabled';
+    public const DEFAULT_ENABLED_VALUE = false;
     public const DEFAULT_DIRECTORY_VALUE = '.gacela/profiler';
 
     private ConfigInterface $config;

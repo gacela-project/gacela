@@ -101,6 +101,12 @@ final class Config implements ConfigInterface
         return $this->getAppRootDir() . '/' . $this->getSetupGacela()->getProfilerDirectory();
     }
 
+    public function getCacheDir(): string
+    {
+        # TODO: allow custom cache dir: $this->getSetupGacela()->getCacheDirectory();
+        return $this->getAppRootDir() . '/.gacela/cache';
+    }
+
     public function setSetup(SetupGacelaInterface $setup): self
     {
         $this->setup = $setup;

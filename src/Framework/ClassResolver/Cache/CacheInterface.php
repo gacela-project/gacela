@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Cache;
 
-interface ClassNameCacheInterface
+interface CacheInterface
 {
     public function has(string $cacheKey): bool;
 

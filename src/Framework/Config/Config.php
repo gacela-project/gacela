@@ -82,7 +82,7 @@ final class Config implements ConfigInterface
 
     public function setAppRootDir(string $dir): self
     {
-        $this->appRootDir = rtrim($dir, '/');
+        $this->appRootDir = rtrim($dir, DIRECTORY_SEPARATOR);
 
         if (empty($this->appRootDir)) {
             $this->appRootDir = getcwd() ?: ''; // @codeCoverageIgnore
@@ -98,12 +98,16 @@ final class Config implements ConfigInterface
 
     public function getProfilerDir(): string
     {
-        return $this->getAppRootDir() . '/' . $this->getSetupGacela()->getProfilerDirectory();
+        return $this->getAppRootDir()
+            . DIRECTORY_SEPARATOR
+            . ltrim($this->getSetupGacela()->getProfilerDirectory(), DIRECTORY_SEPARATOR);
     }
 
     public function getCacheDir(): string
     {
-        return $this->getAppRootDir() . $this->getSetupGacela()->getFileCacheDirectory();
+        return $this->getAppRootDir()
+            . DIRECTORY_SEPARATOR
+            . ltrim($this->getSetupGacela()->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
     }
 
     public function setSetup(SetupGacelaInterface $setup): self

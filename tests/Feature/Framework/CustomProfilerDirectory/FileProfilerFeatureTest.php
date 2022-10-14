@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\CustomProfilerDirectory;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\ClassNameJsonProfiler;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
+use Gacela\Framework\ClassResolver\Profiler\ClassNameJsonProfiler;
+use Gacela\Framework\ClassResolver\Profiler\CustomServicesJsonProfiler;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;

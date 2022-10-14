@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\Framework\ClassResolver\FileProfiler;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\ClassNameJsonProfiler;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
+use Gacela\Framework\ClassResolver\Profiler\ClassNameJsonProfiler;
+use Gacela\Framework\ClassResolver\Profiler\CustomServicesJsonProfiler;
 use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\ClassNameFinder;
 
+use Gacela\Framework\ClassResolver\Cache\ClassNameCacheInterface;
 use Gacela\Framework\ClassResolver\ClassInfo;
-use Gacela\Framework\ClassResolver\ClassNameCacheInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 
 final class ClassNameFinder implements ClassNameFinderInterface

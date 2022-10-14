@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\DocBlockResolverAware;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\DocBlockService\CustomServicesJsonProfiler;
-use Gacela\Framework\ClassResolver\InMemoryClassNameCache;
+use Gacela\Framework\ClassResolver\Cache\InMemoryClassNameCache;
+use Gacela\Framework\ClassResolver\Profiler\CustomServicesJsonProfiler;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 

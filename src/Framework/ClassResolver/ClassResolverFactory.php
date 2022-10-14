@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\ClassResolver\Cache\ClassNameCacheInterface;
+use Gacela\Framework\ClassResolver\Cache\InMemoryClassNameCache;
+use Gacela\Framework\ClassResolver\Cache\ProfiledInMemoryCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
@@ -12,6 +15,8 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
+use Gacela\Framework\ClassResolver\Profiler\ClassNameJsonProfiler;
+use Gacela\Framework\ClassResolver\Profiler\FileProfilerInterface;
 use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 

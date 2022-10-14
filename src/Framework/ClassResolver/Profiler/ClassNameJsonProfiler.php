@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver;
+namespace Gacela\Framework\ClassResolver\Profiler;
 
 final class ClassNameJsonProfiler extends AbstractJsonFileProfiler
 {

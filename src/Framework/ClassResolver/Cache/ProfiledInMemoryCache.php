@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver;
+namespace Gacela\Framework\ClassResolver\Cache;
+
+use Gacela\Framework\ClassResolver\Profiler\FileProfilerInterface;
 
 final class ProfiledInMemoryCache implements ClassNameCacheInterface
 {

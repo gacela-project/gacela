@@ -6,11 +6,12 @@ namespace Gacela\Framework\ClassResolver\Cache;
 
 use Gacela\Framework\Config\ConfigInterface;
 
-final class GacelaCache
+final class GacelaFileCache
 {
     public const KEY_ENABLED = 'gacela-cache-enabled';
-    public const DEFAULT_ENABLED_VALUE = false;
     public const DEFAULT_DIRECTORY_VALUE = '.gacela/cache';
+    public const DEFAULT_FILE_CACHE_ENABLED_VALUE = false;
+    public const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE_VALUE = false;
 
     private ConfigInterface $config;
 
@@ -27,11 +28,11 @@ final class GacelaCache
 
     private function isCacheFromSetupEnabled(): bool
     {
-        return $this->config->getSetupGacela()->isCacheEnabled();
+        return $this->config->getSetupGacela()->isFileCacheEnabled();
     }
 
     private function isCacheFromApplicationConfigEnabled(): bool
     {
-        return (bool)$this->config->get(self::KEY_ENABLED, self::DEFAULT_ENABLED_VALUE);
+        return (bool)$this->config->get(self::KEY_ENABLED, self::DEFAULT_FILE_CACHE_ENABLED_VALUE);
     }
 }

@@ -36,7 +36,11 @@ interface SetupGacelaInterface
 
     public function getProfilerDirectory(): string;
 
-    public function isCacheEnabled(): bool;
+    public function shouldResetInMemoryCache(): bool;
+
+    public function isFileCacheEnabled(): bool;
+
+    public function getCacheDirectory(): string;
 
     public function isProfilerEnabled(): bool;
 

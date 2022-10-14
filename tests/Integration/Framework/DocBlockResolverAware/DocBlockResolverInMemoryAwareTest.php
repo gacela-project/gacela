@@ -22,6 +22,7 @@ final class DocBlockResolverInMemoryAwareTest extends TestCase
     protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
             $config->addAppConfig('config/in-memory/*.php');
         });
     }

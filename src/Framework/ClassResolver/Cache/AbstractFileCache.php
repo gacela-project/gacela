@@ -27,6 +27,16 @@ abstract class AbstractFileCache implements CacheInterface
         self::$cache = [];
     }
 
+    /**
+     * @internal
+     *
+     * @return array<string,string>
+     */
+    public static function all(): array
+    {
+        return self::$cache;
+    }
+
     public function has(string $cacheKey): bool
     {
         return isset(self::$cache[$cacheKey]);

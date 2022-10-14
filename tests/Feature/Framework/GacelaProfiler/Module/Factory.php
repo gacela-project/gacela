@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomProfilerDirectory\Module;
+namespace GacelaTest\Feature\Framework\GacelaProfiler\Module;
 
-use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\DocBlockResolverAwareTrait;
-use GacelaTest\Feature\Framework\CustomProfilerDirectory\Module\Persistence\FakeRepository;
+use GacelaTest\Feature\Framework\GacelaProfiler\Module\Persistence\FakeRepository;
 
 /**
  * @method FakeRepository getRepository()
  */
-final class Facade extends AbstractFacade
+final class Factory extends AbstractFactory
 {
     use DocBlockResolverAwareTrait;
 

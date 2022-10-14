@@ -6,7 +6,7 @@ namespace Gacela\Framework\ClassResolver\Cache;
 
 final class ClassNamePhpCache extends AbstractFileCache
 {
-    public const FILENAME = 'gacela-class-name.php';
+    public const FILENAME = 'gacela-class-names.php';
 
     protected function getCacheFilename(): string
     {

@@ -36,7 +36,7 @@ final class FileCacheBench
         $this->loadAllModules();
     }
 
-    public function bench_withput_cache(): void
+    public function bench_without_cache(): void
     {
         $this->gacelaBootstrapWithCache(false);
         $this->loadAllModules();
@@ -46,7 +46,7 @@ final class FileCacheBench
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheEnabled): void {
             $config->addAppConfig('config/*.php');
-            $config->setCacheEnabled($cacheEnabled);
+            $config->setFileCacheEnabled($cacheEnabled);
 
             $config->addMappingInterface(StringValueInterface::class, new StringValue('testing-string'));
 

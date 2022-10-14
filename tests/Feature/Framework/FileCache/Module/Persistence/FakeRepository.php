@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\CustomProfilerDirectory\Module\Persistence;
+namespace GacelaTest\Feature\Framework\FileCache\Module\Persistence;
 
 final class FakeRepository
 {

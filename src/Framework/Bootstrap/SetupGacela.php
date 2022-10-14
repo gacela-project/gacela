@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -33,7 +33,11 @@ final class SetupGacela extends AbstractSetupGacela
 
     private ?MappingInterfacesBuilder $mappingInterfacesBuilder = null;
 
-    private bool $cacheEnabled = GacelaCache::DEFAULT_ENABLED_VALUE;
+    private bool $shouldResetInMemoryCache = GacelaFileCache::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE_VALUE;
+
+    private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_FILE_CACHE_ENABLED_VALUE;
+
+    private string $cacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
 
     private bool $profilerEnabled = GacelaProfiler::DEFAULT_ENABLED_VALUE;
 
@@ -41,7 +45,6 @@ final class SetupGacela extends AbstractSetupGacela
 
     /** @var list<string> */
     private array $projectNamespaces = [];
-
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
@@ -90,7 +93,9 @@ final class SetupGacela extends AbstractSetupGacela
             ->setSuffixTypesBuilder($build['suffix-types-builder'])
             ->setMappingInterfacesBuilder($build['mapping-interfaces-builder'])
             ->setExternalServices($build['external-services'])
-            ->setCacheEnabled($build['cache-enabled'])
+            ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
+            ->setFileCacheEnabled($build['file-cache-enabled'])
+            ->setCacheDirectory($build['cache-directory'])
             ->setProfilerEnabled($build['profiler-enabled'])
             ->setProfilerDirectory($build['profiler-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
@@ -212,16 +217,40 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->externalServices;
     }
 
-    public function setCacheEnabled(bool $flag): self
+    public function setShouldResetInMemoryCache(bool $flag): self
     {
-        $this->cacheEnabled = $flag;
+        $this->shouldResetInMemoryCache = $flag;
 
         return $this;
     }
 
-    public function isCacheEnabled(): bool
+    public function shouldResetInMemoryCache(): bool
     {
-        return $this->cacheEnabled;
+        return $this->shouldResetInMemoryCache;
+    }
+
+    public function setFileCacheEnabled(bool $flag): self
+    {
+        $this->fileCacheEnabled = $flag;
+
+        return $this;
+    }
+
+    public function isFileCacheEnabled(): bool
+    {
+        return $this->fileCacheEnabled;
+    }
+
+    public function getCacheDirectory(): string
+    {
+        return $this->cacheDirectory;
+    }
+
+    public function setCacheDirectory(string $dir): self
+    {
+        $this->cacheDirectory = $dir;
+
+        return $this;
     }
 
     public function setProfilerEnabled(bool $flag): self

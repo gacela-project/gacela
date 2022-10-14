@@ -6,7 +6,7 @@ namespace Gacela\Framework\DocBlockResolver;
 
 use Gacela\Framework\ClassResolver\Cache\CacheInterface;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\Cache\ProfiledCache;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
@@ -106,7 +106,7 @@ final class DocBlockResolver
 
     private function isProjectCacheEnabled(): bool
     {
-        return (new GacelaCache(Config::getInstance()))->isEnabled();
+        return (new GacelaFileCache(Config::getInstance()))->isEnabled();
     }
 
     private function isProjectProfilerEnabled(): bool

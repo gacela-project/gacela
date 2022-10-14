@@ -7,7 +7,7 @@ namespace Gacela\Framework\ClassResolver;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\ClassResolver\Cache\CacheInterface;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
-use Gacela\Framework\ClassResolver\Cache\GacelaCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\Cache\ProfiledCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
@@ -24,12 +24,12 @@ use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
-    private GacelaCache $gacelaCache;
+    private GacelaFileCache $gacelaCache;
     private GacelaProfiler $gacelaProfiler;
     private SetupGacelaInterface $setupGacela;
 
     public function __construct(
-        GacelaCache $gacelaCache,
+        GacelaFileCache $gacelaCache,
         GacelaProfiler $gacelaProfiler,
         SetupGacelaInterface $setupGacela
     ) {

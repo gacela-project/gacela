@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Add file cache for resolved classes.
+
 ### 0.27.0
 #### 2022-10-12
 

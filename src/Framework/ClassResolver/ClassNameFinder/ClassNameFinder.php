@@ -47,12 +47,9 @@ final class ClassNameFinder implements ClassNameFinderInterface
     {
         $cacheKey = $classInfo->getCacheKey();
 
-//            dump(__FILE__.' - A - $cacheKey:'.$cacheKey);
         if ($this->classNameCache->has($cacheKey)) {
-//            dump(__FILE__.' - B - $cacheKey:'.$cacheKey);
             return $this->classNameCache->get($cacheKey);
         }
-//        dump(__FILE__.' - C - $cacheKey:'.$cacheKey);
         $projectNamespaces = $this->projectNamespaces;
         $projectNamespaces[] = $classInfo->getModuleNamespace();
 
@@ -61,7 +58,6 @@ final class ClassNameFinder implements ClassNameFinderInterface
                 foreach ($resolvableTypes as $resolvableType) {
                     $className = $finderRule->buildClassCandidate($projectNamespace, $resolvableType, $classInfo);
                     if ($this->classValidator->isClassNameValid($className)) {
-//        dump(__METHOD__.' - FOUND! $className:'.$className);
                         $this->classNameCache->put($cacheKey, $className);
 
                         return $className;
@@ -69,7 +65,6 @@ final class ClassNameFinder implements ClassNameFinderInterface
                 }
             }
         }
-//        dump(__METHOD__.' - $className:null');
 
         return null;
     }

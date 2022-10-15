@@ -27,32 +27,17 @@ final class DocBlockResolver
     /** @var class-string */
     private string $callerClass;
 
-    /** @var class-string|string */
-    private string $callerParentClass;
-
     /**
      * @param class-string $callerClass
-     * @param class-string|string $callerParentClass
      */
-    private function __construct(string $callerClass, string $callerParentClass)
+    private function __construct(string $callerClass)
     {
         $this->callerClass = $callerClass;
-        $this->callerParentClass = $callerParentClass;
     }
 
     public static function fromCaller(object $caller): self
     {
-        return new self(
-            get_class($caller),
-            get_parent_class($caller) ?: ''
-        );
-    }
-
-    public function hasParentCallMethod(): bool
-    {
-        /** @psalm-suppress ArgumentTypeCoercion */
-        return $this->callerParentClass !== ''
-            && method_exists($this->callerParentClass, '__call');
+        return new self(get_class($caller));
     }
 
     public function getDocBlockResolvable(string $method): DocBlockResolvable
@@ -76,17 +61,13 @@ final class DocBlockResolver
             $cache->put($cacheKey, $className);
         }
 
-        /** @psalm-suppress ArgumentTypeCoercion */
-        /** @var class-string $className */
-        $className = $cache->get($cacheKey);
-
-        return $className;
+        return $cache->get($cacheKey);
     }
 
     private function normalizeResolvableType(string $resolvableType): string
     {
         /** @var list<string> $resolvableTypeParts */
-        $resolvableTypeParts = explode('\\', ltrim($resolvableType, '\\'));
+        $resolvableTypeParts = explode('\\', $resolvableType);
         $normalizedResolvableType = end($resolvableTypeParts);
 
         return is_string($normalizedResolvableType)
@@ -96,7 +77,7 @@ final class DocBlockResolver
 
     private function generateCacheKey(string $method): string
     {
-        return $this->callerClass . '::' . $method;
+        return '\\' . ltrim($this->callerClass, '\\') . '::' . $method;
     }
 
     private function createClassNameCache(): ClassNameCacheInterface

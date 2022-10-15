@@ -27,35 +27,35 @@ final class UseBlockParserTest extends TestCase
     {
         $actual = $this->parser->getUseStatement('ExistingClassInOtherNs', $this->phpCode());
 
-        self::assertSame('Ns\Test\Other\ExistingClassInOtherNs', $actual);
+        self::assertSame('\Ns\Test\Other\ExistingClassInOtherNs', $actual);
     }
 
     public function test_get_class_in_same_namespace(): void
     {
         $actual = $this->parser->getUseStatement('ExistingClassInSameNs', $this->phpCode());
 
-        self::assertSame('Ns\Test\ExistingClassInSameNs', $actual);
+        self::assertSame('\Ns\Test\ExistingClassInSameNs', $actual);
     }
 
     public function test_get_class_with_alias(): void
     {
         $actual = $this->parser->getUseStatement('AliasClass', $this->phpCode());
 
-        self::assertSame('Ns\Test\Other\WithAliasClassInOtherNs', $actual);
+        self::assertSame('\Ns\Test\Other\WithAliasClassInOtherNs', $actual);
     }
 
     public function test_get_commented_use_with_double_slash_then_uses_current_namespace(): void
     {
         $actual = $this->parser->getUseStatement('CommentedClassInOtherNs', $this->phpCode());
 
-        self::assertSame('Ns\Test\CommentedClassInOtherNs', $actual);
+        self::assertSame('\Ns\Test\CommentedClassInOtherNs', $actual);
     }
 
     public function test_get_commented_use_with_hashtag_then_uses_current_namespace(): void
     {
         $actual = $this->parser->getUseStatement('CommentedClassInAnotherNs', $this->phpCode());
 
-        self::assertSame('Ns\Test\CommentedClassInAnotherNs', $actual);
+        self::assertSame('\Ns\Test\CommentedClassInAnotherNs', $actual);
     }
 
     private function phpCode(): string

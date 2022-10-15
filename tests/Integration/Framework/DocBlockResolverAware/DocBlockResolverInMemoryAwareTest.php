@@ -8,12 +8,14 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\InMemoryClassNameCache;
 use Gacela\Framework\ClassResolver\Profiler\CustomServicesJsonProfiler;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverInMemoryAwareTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
+        DirectoryUtil::removeDir(__DIR__ . '/.gacela');
         InMemoryClassNameCache::resetCache();
     }
 

@@ -6,10 +6,10 @@ namespace Gacela\Framework\ClassResolver\Cache;
 
 use RuntimeException;
 
-abstract class AbstractFileCache implements CacheInterface
+abstract class AbstractPhpFileCache implements CacheInterface
 {
     /** @var array<string,string> */
-    protected static array $cache = [];
+    private static array $cache = [];
 
     private string $cacheDir;
 

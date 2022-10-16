@@ -14,12 +14,12 @@ final class UseBlockParser
 
         $fullyQualifiedClassName = $this->searchInUsesStatements($className, $phpCode);
         if ($fullyQualifiedClassName !== '') {
-            return $fullyQualifiedClassName;
+            return '\\' . ltrim($fullyQualifiedClassName, '\\');
         }
 
         $namespace = $this->lookInCurrentNamespace($phpCode);
 
-        return sprintf('%s\\%s', $namespace, $className);
+        return sprintf('\\%s\\%s', $namespace, $className);
     }
 
     private function searchInUsesStatements(string $className, string $phpCode): string

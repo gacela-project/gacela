@@ -32,7 +32,8 @@ final class DocBlockResolver
      */
     private function __construct(string $callerClass)
     {
-        $this->callerClass = $callerClass;
+        /** @psalm-suppress PropertyTypeCoercion */
+        $this->callerClass = '\\' . ltrim($callerClass, '\\'); // @phpstan-ignore-line
     }
 
     public static function fromCaller(object $caller): self
@@ -77,7 +78,7 @@ final class DocBlockResolver
 
     private function generateCacheKey(string $method): string
     {
-        return '\\' . ltrim($this->callerClass, '\\') . '::' . $method;
+        return $this->callerClass . '::' . $method;
     }
 
     private function createClassNameCache(): ClassNameCacheInterface
@@ -109,10 +110,12 @@ final class DocBlockResolver
         if (class_exists($className)) {
             return $className;
         }
+
         $className = $this->searchClassOverUseStatements($reflectionClass, $className);
         if (class_exists($className)) {
             return $className;
         }
+
         throw MissingClassDefinitionException::missingDefinition($this->callerClass, $method, $className);
     }
 

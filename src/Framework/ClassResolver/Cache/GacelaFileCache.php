@@ -12,9 +12,9 @@ final class GacelaFileCache
     public const DEFAULT_ENABLED_VALUE = false;
     public const DEFAULT_DIRECTORY_VALUE = '/.gacela/cache';
 
-    private ConfigInterface $config;
-
     private static ?bool $isEnabled = null;
+
+    private ConfigInterface $config;
 
     public function __construct(ConfigInterface $config)
     {
@@ -33,7 +33,7 @@ final class GacelaFileCache
     {
         if (self::$isEnabled === null) {
             self::$isEnabled = $this->config->hasKey(self::KEY_ENABLED)
-                ? (bool) $this->config->get(self::KEY_ENABLED)
+                ? (bool)$this->config->get(self::KEY_ENABLED)
                 : $this->config->getSetupGacela()->isFileCacheEnabled();
         }
 

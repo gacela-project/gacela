@@ -11,6 +11,11 @@ use PHPUnit\Framework\TestCase;
 
 final class GacelaProfilerTest extends TestCase
 {
+    public function tearDown(): void
+    {
+        GacelaProfiler::resetCache();
+    }
+
     public function test_profiler_has_config_key_and_enabled(): void
     {
         $config = $this->createMock(ConfigInterface::class);

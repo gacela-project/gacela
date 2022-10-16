@@ -12,6 +12,8 @@ final class GacelaProfiler
     public const DEFAULT_ENABLED_VALUE = false;
     public const DEFAULT_DIRECTORY_VALUE = '/.gacela/profiler';
 
+    private static ?bool $isEnabled = null;
+
     private ConfigInterface $config;
 
     public function __construct(ConfigInterface $config)
@@ -19,12 +21,22 @@ final class GacelaProfiler
         $this->config = $config;
     }
 
+    /**
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$isEnabled = null;
+    }
+
     public function isEnabled(): bool
     {
-        if ($this->config->hasKey(self::KEY_ENABLED)) {
-            return (bool)$this->config->get(self::KEY_ENABLED);
+        if (self::$isEnabled === null) {
+            self::$isEnabled = $this->config->hasKey(self::KEY_ENABLED)
+                ? (bool)$this->config->get(self::KEY_ENABLED)
+                : $this->config->getSetupGacela()->isProfilerEnabled();
         }
 
-        return $this->config->getSetupGacela()->isProfilerEnabled();
+        return self::$isEnabled;
     }
 }

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
-use Gacela\Framework\ClassResolver\Cache\ClassNameCacheInterface;
-use Gacela\Framework\ClassResolver\Cache\InMemoryClassNameCache;
-use Gacela\Framework\ClassResolver\Cache\ProfiledInMemoryCache;
+use Gacela\Framework\ClassResolver\Cache\CacheInterface;
+use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
+use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
+use Gacela\Framework\ClassResolver\Cache\ProfiledCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
@@ -22,12 +24,17 @@ use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
-    private GacelaProfiler $profiler;
+    private GacelaFileCache $gacelaCache;
+    private GacelaProfiler $gacelaProfiler;
     private SetupGacelaInterface $setupGacela;
 
-    public function __construct(GacelaProfiler $profiler, SetupGacelaInterface $setupGacela)
-    {
-        $this->profiler = $profiler;
+    public function __construct(
+        GacelaFileCache $gacelaCache,
+        GacelaProfiler $gacelaProfiler,
+        SetupGacelaInterface $setupGacela
+    ) {
+        $this->gacelaCache = $gacelaCache;
+        $this->gacelaProfiler = $gacelaProfiler;
         $this->setupGacela = $setupGacela;
     }
 
@@ -39,20 +46,6 @@ final class ClassResolverFactory
             $this->createClassNameCache(),
             $this->getProjectNamespaces()
         );
-    }
-
-    public function createClassNameCache(): ClassNameCacheInterface
-    {
-        $inMemoryCache = new InMemoryClassNameCache(ClassNameJsonProfiler::class);
-
-        if ($this->profiler->isEnabled()) {
-            return new ProfiledInMemoryCache(
-                $inMemoryCache,
-                $this->createProfiler()
-            );
-        }
-
-        return $inMemoryCache;
     }
 
     private function createClassValidator(): ClassValidatorInterface
@@ -71,12 +64,29 @@ final class ClassResolverFactory
         ];
     }
 
-    /**
-     * @return list<string>
-     */
-    private function getProjectNamespaces(): array
+    private function createClassNameCache(): CacheInterface
     {
-        return $this->setupGacela->getProjectNamespaces();
+        $cache = $this->createCache();
+
+        if ($this->gacelaProfiler->isEnabled()) {
+            return new ProfiledCache(
+                $cache,
+                $this->createProfiler()
+            );
+        }
+
+        return $cache;
+    }
+
+    private function createCache(): CacheInterface
+    {
+        if ($this->gacelaCache->isEnabled()) {
+            return new ClassNamePhpCache(
+                Config::getInstance()->getCacheDir(),
+            );
+        }
+
+        return new InMemoryCache(ClassNamePhpCache::class);
     }
 
     private function createProfiler(): FileProfilerInterface
@@ -84,5 +94,13 @@ final class ClassResolverFactory
         return new ClassNameJsonProfiler(
             Config::getInstance()->getProfilerDir(),
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getProjectNamespaces(): array
+    {
+        return $this->setupGacela->getProjectNamespaces();
     }
 }

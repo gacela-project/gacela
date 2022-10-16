@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\ClassNameFinder;
 
-use Gacela\Framework\ClassResolver\Cache\ClassNameCacheInterface;
+use Gacela\Framework\ClassResolver\Cache\CacheInterface;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 
@@ -15,7 +15,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
     /** @var list<FinderRuleInterface> */
     private array $finderRules;
 
-    private ClassNameCacheInterface $classNameCache;
+    private CacheInterface $cache;
 
     /** @var list<string> */
     private array $projectNamespaces;
@@ -27,18 +27,16 @@ final class ClassNameFinder implements ClassNameFinderInterface
     public function __construct(
         ClassValidatorInterface $classValidator,
         array $finderRules,
-        ClassNameCacheInterface $classNameCache,
+        CacheInterface $cache,
         array $projectNamespaces
     ) {
         $this->classValidator = $classValidator;
         $this->finderRules = $finderRules;
-        $this->classNameCache = $classNameCache;
+        $this->cache = $cache;
         $this->projectNamespaces = $projectNamespaces;
     }
 
     /**
-     * @psalm-suppress MoreSpecificReturnType,LessSpecificReturnStatement
-     *
      * @param list<string> $resolvableTypes
      *
      * @return class-string|null
@@ -47,10 +45,9 @@ final class ClassNameFinder implements ClassNameFinderInterface
     {
         $cacheKey = $classInfo->getCacheKey();
 
-        if ($this->classNameCache->has($cacheKey)) {
-            return $this->classNameCache->get($cacheKey);
+        if ($this->cache->has($cacheKey)) {
+            return $this->cache->get($cacheKey);
         }
-
         $projectNamespaces = $this->projectNamespaces;
         $projectNamespaces[] = $classInfo->getModuleNamespace();
 
@@ -58,9 +55,8 @@ final class ClassNameFinder implements ClassNameFinderInterface
             foreach ($this->finderRules as $finderRule) {
                 foreach ($resolvableTypes as $resolvableType) {
                     $className = $finderRule->buildClassCandidate($projectNamespace, $resolvableType, $classInfo);
-
                     if ($this->classValidator->isClassNameValid($className)) {
-                        $this->classNameCache->put($cacheKey, $className);
+                        $this->cache->put($cacheKey, $className);
 
                         return $className;
                     }

@@ -66,14 +66,12 @@ final class FileProfilerBench
 
     private function loadAllModules(): void
     {
-        for ($i = 0; $i < 50; ++$i) {
-            (new ModuleA\Facade())->loadGacelaCacheFile();
-            (new ModuleB\Facade())->loadGacelaCacheFile();
-            (new ModuleC\Facade())->loadGacelaCacheFile();
-            (new ModuleD\Facade())->loadGacelaCacheFile();
-            (new ModuleE\Facade())->loadGacelaCacheFile();
-            (new ModuleF\Facade())->loadGacelaCacheFile();
-            (new ModuleG\Facade())->loadGacelaCacheFile();
-        }
+        (new ModuleA\Facade())->loadGacelaCacheFile();
+        (new ModuleB\Facade())->loadGacelaCacheFile();
+        (new ModuleC\Facade())->loadGacelaCacheFile();
+        (new ModuleD\Facade())->loadGacelaCacheFile();
+        (new ModuleE\Facade())->loadGacelaCacheFile();
+        (new ModuleF\Facade())->loadGacelaCacheFile();
+        (new ModuleG\Facade())->loadGacelaCacheFile();
     }
 }

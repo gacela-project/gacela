@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\DocBlockResolver;
 
-use Gacela\Framework\ClassResolver\Cache\ClassNameCacheInterface;
-use Gacela\Framework\ClassResolver\Cache\InMemoryClassNameCache;
-use Gacela\Framework\ClassResolver\Cache\ProfiledInMemoryCache;
+use Gacela\Framework\ClassResolver\Cache\CacheInterface;
+use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
+use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
+use Gacela\Framework\ClassResolver\Cache\ProfiledCache;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
@@ -65,39 +67,47 @@ final class DocBlockResolver
         return $cache->get($cacheKey);
     }
 
-    private function normalizeResolvableType(string $resolvableType): string
-    {
-        /** @var list<string> $resolvableTypeParts */
-        $resolvableTypeParts = explode('\\', $resolvableType);
-        $normalizedResolvableType = end($resolvableTypeParts);
-
-        return is_string($normalizedResolvableType)
-            ? $normalizedResolvableType
-            : $resolvableType;
-    }
-
     private function generateCacheKey(string $method): string
     {
         return $this->callerClass . '::' . $method;
     }
 
-    private function createClassNameCache(): ClassNameCacheInterface
+    private function createClassNameCache(): CacheInterface
     {
-        $inMemoryCache = new InMemoryClassNameCache(CustomServicesJsonProfiler::class);
-
+        $cache = $this->createCache();
         if ($this->isProjectProfilerEnabled()) {
-            return new ProfiledInMemoryCache(
-                $inMemoryCache,
-                $this->createProfiler()
+            return new ProfiledCache($cache, $this->createProfiler());
+        }
+
+        return $cache;
+    }
+
+    private function createCache(): CacheInterface
+    {
+        if ($this->isProjectCacheEnabled()) {
+            return new CustomServicesPhpCache(
+                Config::getInstance()->getCacheDir(),
             );
         }
 
-        return $inMemoryCache;
+        return new InMemoryCache(CustomServicesPhpCache::class);
+    }
+
+    private function isProjectCacheEnabled(): bool
+    {
+        return (new GacelaFileCache(Config::getInstance()))->isEnabled();
     }
 
     private function isProjectProfilerEnabled(): bool
     {
         return (new GacelaProfiler(Config::getInstance()))->isEnabled();
+    }
+
+    private function createProfiler(): FileProfilerInterface
+    {
+        return new CustomServicesJsonProfiler(
+            Config::getInstance()->getProfilerDir(),
+        );
     }
 
     /**
@@ -140,10 +150,14 @@ final class DocBlockResolver
         return (new UseBlockParser())->getUseStatement($className, $phpFile);
     }
 
-    private function createProfiler(): FileProfilerInterface
+    private function normalizeResolvableType(string $resolvableType): string
     {
-        return new CustomServicesJsonProfiler(
-            Config::getInstance()->getProfilerDir(),
-        );
+        /** @var list<string> $resolvableTypeParts */
+        $resolvableTypeParts = explode('\\', $resolvableType);
+        $normalizedResolvableType = end($resolvableTypeParts);
+
+        return is_string($normalizedResolvableType)
+            ? $normalizedResolvableType
+            : $resolvableType;
     }
 }

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 
 return [
-    GacelaProfiler::KEY_ENABLED => false,
+    GacelaFileCache::KEY_ENABLED => false,
 ];

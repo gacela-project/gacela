@@ -2,9 +2,12 @@
 .gacela/
 .vscode/
 .phpbench/
+.cache/
 coverage/
 data/
 vendor/
 
 *.cache
 composer.lock
+gacela-custom-services.php
+gacela-class-names.php

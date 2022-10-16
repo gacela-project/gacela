@@ -14,7 +14,7 @@ final class ConfigTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->setCacheEnabled(false);
+            $config->setFileCacheEnabled(false);
         });
     }
 

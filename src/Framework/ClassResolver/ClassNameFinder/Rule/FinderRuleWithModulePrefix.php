@@ -8,6 +8,9 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 
 final class FinderRuleWithModulePrefix implements FinderRuleInterface
 {
+    /**
+     * @return class-string
+     */
     public function buildClassCandidate(string $projectNamespace, string $resolvableType, ClassInfo $classInfo): string
     {
         if ($projectNamespace !== '') {

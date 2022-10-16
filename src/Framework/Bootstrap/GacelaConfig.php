@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
@@ -22,15 +23,18 @@ final class GacelaConfig
     /** @var array<string, class-string|object|callable> */
     private array $externalServices;
 
-    private bool $cacheEnabled = true;
+    private bool $shouldResetInMemoryCache = false;
 
-    private bool $profilerEnabled = false;
+    private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_ENABLED_VALUE;
+
+    private string $fileCacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
+
+    private bool $profilerEnabled = GacelaProfiler::DEFAULT_ENABLED_VALUE;
 
     private string $profilerDirectory = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];
-
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
@@ -124,9 +128,23 @@ final class GacelaConfig
         return $this;
     }
 
-    public function setCacheEnabled(bool $flag): self
+    public function resetInMemoryCache(): self
     {
-        $this->cacheEnabled = $flag;
+        $this->shouldResetInMemoryCache = true;
+
+        return $this;
+    }
+
+    public function setFileCacheEnabled(bool $flag): self
+    {
+        $this->fileCacheEnabled = $flag;
+
+        return $this;
+    }
+
+    public function setFileCacheDirectory(string $dir): self
+    {
+        $this->fileCacheDirectory = $dir;
 
         return $this;
     }
@@ -181,7 +199,9 @@ final class GacelaConfig
      *     config-builder: ConfigBuilder,
      *     suffix-types-builder: SuffixTypesBuilder,
      *     mapping-interfaces-builder: MappingInterfacesBuilder,
-     *     cache-enabled: bool,
+     *     should-reset-in-memory-cache: bool,
+     *     file-cache-enabled: bool,
+     *     file-cache-directory: string,
      *     profiler-enabled: bool,
      *     profiler-directory: string,
      *     project-namespaces: list<string>,
@@ -197,7 +217,9 @@ final class GacelaConfig
             'config-builder' => $this->configBuilder,
             'suffix-types-builder' => $this->suffixTypesBuilder,
             'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
-            'cache-enabled' => $this->cacheEnabled,
+            'should-reset-in-memory-cache' => $this->shouldResetInMemoryCache,
+            'file-cache-enabled' => $this->fileCacheEnabled,
+            'file-cache-directory' => $this->fileCacheDirectory,
             'profiler-enabled' => $this->profilerEnabled,
             'profiler-directory' => $this->profilerDirectory,
             'project-namespaces' => $this->projectNamespaces,

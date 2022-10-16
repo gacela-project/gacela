@@ -67,17 +67,6 @@ final class DocBlockResolver
         return $cache->get($cacheKey);
     }
 
-    private function normalizeResolvableType(string $resolvableType): string
-    {
-        /** @var list<string> $resolvableTypeParts */
-        $resolvableTypeParts = explode('\\', $resolvableType);
-        $normalizedResolvableType = end($resolvableTypeParts);
-
-        return is_string($normalizedResolvableType)
-            ? $normalizedResolvableType
-            : $resolvableType;
-    }
-
     private function generateCacheKey(string $method): string
     {
         return $this->callerClass . '::' . $method;
@@ -112,6 +101,13 @@ final class DocBlockResolver
     private function isProjectProfilerEnabled(): bool
     {
         return (new GacelaProfiler(Config::getInstance()))->isEnabled();
+    }
+
+    private function createProfiler(): FileProfilerInterface
+    {
+        return new CustomServicesJsonProfiler(
+            Config::getInstance()->getProfilerDir(),
+        );
     }
 
     /**
@@ -154,10 +150,14 @@ final class DocBlockResolver
         return (new UseBlockParser())->getUseStatement($className, $phpFile);
     }
 
-    private function createProfiler(): FileProfilerInterface
+    private function normalizeResolvableType(string $resolvableType): string
     {
-        return new CustomServicesJsonProfiler(
-            Config::getInstance()->getProfilerDir(),
-        );
+        /** @var list<string> $resolvableTypeParts */
+        $resolvableTypeParts = explode('\\', $resolvableType);
+        $normalizedResolvableType = end($resolvableTypeParts);
+
+        return is_string($normalizedResolvableType)
+            ? $normalizedResolvableType
+            : $resolvableType;
     }
 }

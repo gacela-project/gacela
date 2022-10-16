@@ -32,20 +32,11 @@ final class GacelaFileCache
     public function isEnabled(): bool
     {
         if (self::$isEnabled === null) {
-            self::$isEnabled = $this->isCacheFromSetupEnabled()
-                || $this->isCacheFromApplicationConfigEnabled();
+            self::$isEnabled = $this->config->hasKey(self::KEY_ENABLED)
+                ? (bool) $this->config->get(self::KEY_ENABLED)
+                : $this->config->getSetupGacela()->isFileCacheEnabled();
         }
 
         return self::$isEnabled;
-    }
-
-    private function isCacheFromSetupEnabled(): bool
-    {
-        return $this->config->getSetupGacela()->isFileCacheEnabled();
-    }
-
-    private function isCacheFromApplicationConfigEnabled(): bool
-    {
-        return (bool)$this->config->get(self::KEY_ENABLED, self::DEFAULT_ENABLED_VALUE);
     }
 }

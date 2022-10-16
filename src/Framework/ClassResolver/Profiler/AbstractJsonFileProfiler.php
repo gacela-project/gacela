@@ -10,31 +10,31 @@ use function json_encode;
 
 abstract class AbstractJsonFileProfiler implements FileProfilerInterface
 {
-    private string $cacheDir;
+    private string $profilerDir;
 
-    public function __construct(string $cacheDir)
+    public function __construct(string $profilerDir)
     {
-        $this->cacheDir = $cacheDir;
+        $this->profilerDir = $profilerDir;
     }
 
-    public function updateProfiler(array $cache): void
+    public function updateProfiler(array $data): void
     {
-        $fileContent = json_encode($cache, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+        $fileContent = json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
 
-        file_put_contents($this->getAbsoluteCacheFilename(), $fileContent);
+        file_put_contents($this->getAbsoluteProfilerFilename(), $fileContent);
     }
 
-    abstract protected function getCacheFilename(): string;
+    abstract protected function getProfilerFilename(): string;
 
-    private function getAbsoluteCacheFilename(): string
+    private function getAbsoluteProfilerFilename(): string
     {
-        if (!is_dir($this->cacheDir)
-            && !mkdir($concurrentDirectory = $this->cacheDir, 0777, true)
+        if (!is_dir($this->profilerDir)
+            && !mkdir($concurrentDirectory = $this->profilerDir, 0777, true)
             && !is_dir($concurrentDirectory)
         ) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
         }
 
-        return $this->cacheDir . DIRECTORY_SEPARATOR . $this->getCacheFilename();
+        return $this->profilerDir . DIRECTORY_SEPARATOR . $this->getProfilerFilename();
     }
 }

@@ -8,7 +8,7 @@ final class CustomServicesJsonProfiler extends AbstractJsonFileProfiler
 {
     public const FILENAME = 'gacela-custom-services.json';
 
-    protected function getCacheFilename(): string
+    protected function getProfilerFilename(): string
     {
         return self::FILENAME;
     }

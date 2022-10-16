@@ -6,7 +6,7 @@ namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG;
 
 use Gacela\Framework\AbstractConfig;
 
-final class Config extends AbstractConfig
+final class ModuleGConfig extends AbstractConfig
 {
     public function getConfigValue(): string
     {

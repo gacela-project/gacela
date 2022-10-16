@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleF;
+namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG;
 
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\DocBlockResolverAwareTrait;
-use GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleF\Infra\EntityManager;
-use GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleF\Infra\Repository;
+use GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG\Infra\EntityManager;
+use GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG\Infra\Repository;
 
 /**
- * @method Factory getFactory()
+ * @method ModuleGFactory getFactory()
  * @method Repository getRepository()
  * @method EntityManager getEntityManager()
  */
-final class Facade extends AbstractFacade
+final class ModuleGFacade extends AbstractFacade
 {
     use DocBlockResolverAwareTrait;
 

@@ -12,9 +12,9 @@ use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 
 /**
- * @Revs(150)
- * @Iterations(10)
- * BeforeClassMethods("removeFiles")
+ * @Revs(25)
+ * @Iterations(15)
+ * @BeforeClassMethods("removeFiles")
  */
 final class FileCacheBench
 {
@@ -45,6 +45,7 @@ final class FileCacheBench
     private function gacelaBootstrapWithCache(bool $cacheEnabled): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheEnabled): void {
+            $config->resetInMemoryCache();
             $config->addAppConfig('config/*.php');
             $config->setFileCacheEnabled($cacheEnabled);
 
@@ -78,6 +79,6 @@ final class FileCacheBench
         (new ModuleD\Facade())->loadGacelaCacheFile();
         (new ModuleE\Facade())->loadGacelaCacheFile();
         (new ModuleF\Facade())->loadGacelaCacheFile();
-        (new ModuleG\Facade())->loadGacelaCacheFile();
+        (new ModuleG\ModuleGFacade())->loadGacelaCacheFile();
     }
 }

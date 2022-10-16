@@ -6,13 +6,16 @@ namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\DocBlockResolverAwareTrait;
+use GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG\Infra\EntityManager;
+use GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG\Infra\Repository;
 use GacelaTest\Fixtures\StringValueInterface;
 
 /**
- * @method Config getConfig()
+ * @method ModuleGConfig getConfig()
  * @method Repository getRepository()
+ * @method EntityManager getEntityManager()
  */
-final class Factory extends AbstractFactory
+final class ModuleGFactory extends AbstractFactory
 {
     use DocBlockResolverAwareTrait;
 
@@ -30,6 +33,7 @@ final class Factory extends AbstractFactory
             'string-value' => $this->stringValue->value(),
             'provided-dependency' => $this->getProvidedDependency('provided-dependency'),
             'repository' => $this->getRepository()->getAll(),
+            'entity-manager' => $this->getEntityManager()->updateEntity(),
         ];
     }
 }

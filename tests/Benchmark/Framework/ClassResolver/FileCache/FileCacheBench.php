@@ -13,7 +13,7 @@ use GacelaTest\Fixtures\StringValueInterface;
 
 /**
  * @Revs(25)
- * @Iterations(15)
+ * @Iterations(10)
  * @BeforeClassMethods("removeFiles")
  */
 final class FileCacheBench

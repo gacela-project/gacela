@@ -35,6 +35,6 @@ abstract class AbstractJsonFileProfiler implements FileProfilerInterface
             throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
         }
 
-        return $this->cacheDir . '/' . $this->getCacheFilename();
+        return $this->cacheDir . DIRECTORY_SEPARATOR . $this->getCacheFilename();
     }
 }

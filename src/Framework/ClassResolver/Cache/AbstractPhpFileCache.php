@@ -87,10 +87,11 @@ abstract class AbstractPhpFileCache implements CacheInterface
     {
         if (!is_dir($this->cacheDir)
             && !mkdir($concurrentDirectory = $this->cacheDir, 0777, true)
-            && !is_dir($concurrentDirectory)) {
+            && !is_dir($concurrentDirectory)
+        ) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
         }
 
-        return $this->cacheDir . '/' . $this->getCacheFilename();
+        return $this->cacheDir . DIRECTORY_SEPARATOR . $this->getCacheFilename();
     }
 }

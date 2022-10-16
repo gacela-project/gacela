@@ -48,7 +48,23 @@ final class ClassResolverFactory
         );
     }
 
-    public function createClassNameCache(): CacheInterface
+    private function createClassValidator(): ClassValidatorInterface
+    {
+        return new ClassValidator();
+    }
+
+    /**
+     * @return list<FinderRuleInterface>
+     */
+    private function createFinderRules(): array
+    {
+        return [
+            new FinderRuleWithModulePrefix(),
+            new FinderRuleWithoutModulePrefix(),
+        ];
+    }
+
+    private function createClassNameCache(): CacheInterface
     {
         $cache = $this->createCache();
 
@@ -73,20 +89,11 @@ final class ClassResolverFactory
         return new InMemoryCache(ClassNamePhpCache::class);
     }
 
-    private function createClassValidator(): ClassValidatorInterface
+    private function createProfiler(): FileProfilerInterface
     {
-        return new ClassValidator();
-    }
-
-    /**
-     * @return list<FinderRuleInterface>
-     */
-    private function createFinderRules(): array
-    {
-        return [
-            new FinderRuleWithModulePrefix(),
-            new FinderRuleWithoutModulePrefix(),
-        ];
+        return new ClassNameJsonProfiler(
+            Config::getInstance()->getProfilerDir(),
+        );
     }
 
     /**
@@ -95,12 +102,5 @@ final class ClassResolverFactory
     private function getProjectNamespaces(): array
     {
         return $this->setupGacela->getProjectNamespaces();
-    }
-
-    private function createProfiler(): FileProfilerInterface
-    {
-        return new ClassNameJsonProfiler(
-            Config::getInstance()->getProfilerDir(),
-        );
     }
 }

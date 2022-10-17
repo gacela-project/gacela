@@ -34,22 +34,41 @@ interface SetupGacelaInterface
      */
     public function externalServices(): array;
 
+    /**
+     * Get the profiler directory.
+     */
     public function getProfilerDirectory(): string;
 
+    /**
+     * Enable resetting the memory cache on each setup. Useful for functional tests.
+     */
     public function shouldResetInMemoryCache(): bool;
 
+    /**
+     * Get whether the file cache flag is enabled.
+     */
     public function isFileCacheEnabled(): bool;
 
+    /**
+     * Get the file cache directory.
+     */
     public function getFileCacheDirectory(): string;
 
+    /**
+     * Get whether the profiler is enabled.
+     */
     public function isProfilerEnabled(): bool;
 
     /**
+     * Get a list of project namespaces.
+     *
      * @return list<string>
      */
     public function getProjectNamespaces(): array;
 
     /**
+     * Get a list of key:value configuration.
+     *
      * @return array<string,mixed>
      */
     public function getConfigKeyValues(): array;

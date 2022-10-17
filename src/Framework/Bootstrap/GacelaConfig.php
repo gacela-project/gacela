@@ -50,6 +50,8 @@ final class GacelaConfig
     }
 
     /**
+     * Define 'config/*.php' as path, and 'config/local.php' as local path for the configuration.
+     *
      * @return Closure(GacelaConfig):void
      */
     public static function withPhpConfigDefault(): callable
@@ -60,6 +62,8 @@ final class GacelaConfig
     }
 
     /**
+     * Define the path where the configuration will be stored.
+     *
      * @param string $path define the path where Gacela will read all the config files
      * @param string $pathLocal define the path where Gacela will read the local config file
      * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader Define the reader class which will read and parse the config files
@@ -71,6 +75,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Allow overriding gacela facade suffixes.
+     */
     public function addSuffixTypeFacade(string $suffix): self
     {
         $this->suffixTypesBuilder->addFacade($suffix);
@@ -78,6 +85,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Allow overriding gacela factory suffixes.
+     */
     public function addSuffixTypeFactory(string $suffix): self
     {
         $this->suffixTypesBuilder->addFactory($suffix);
@@ -85,6 +95,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Allow overriding gacela config suffixes.
+     */
     public function addSuffixTypeConfig(string $suffix): self
     {
         $this->suffixTypesBuilder->addConfig($suffix);
@@ -92,6 +105,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Allow overriding gacela dependency provider suffixes.
+     */
     public function addSuffixTypeDependencyProvider(string $suffix): self
     {
         $this->suffixTypesBuilder->addDependencyProvider($suffix);
@@ -100,6 +116,8 @@ final class GacelaConfig
     }
 
     /**
+     * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
+     *
      * @param class-string $key
      * @param class-string|object|callable $value
      */
@@ -111,6 +129,8 @@ final class GacelaConfig
     }
 
     /**
+     * Get an external service from its defined key.
+     *
      * @return class-string|object|callable
      */
     public function getExternalService(string $key)
@@ -119,6 +139,8 @@ final class GacelaConfig
     }
 
     /**
+     * Define which class [$value] will be auto-resolved when Gacela has to resolve a specific class [$key].
+     *
      * @param class-string|object|callable $value
      */
     public function addExternalService(string $key, $value): self
@@ -128,6 +150,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Enable resetting the memory cache on each setup. Useful for functional tests.
+     */
     public function resetInMemoryCache(): self
     {
         $this->shouldResetInMemoryCache = true;
@@ -135,6 +160,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Define whether the file cache flag is enabled.
+     */
     public function setFileCacheEnabled(bool $flag): self
     {
         $this->fileCacheEnabled = $flag;
@@ -142,6 +170,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Define the file cache directory.
+     */
     public function setFileCacheDirectory(string $dir): self
     {
         $this->fileCacheDirectory = $dir;
@@ -149,6 +180,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Define whether the profiler flag is enabled.
+     */
     public function setProfilerEnabled(bool $flag): self
     {
         $this->profilerEnabled = $flag;
@@ -156,6 +190,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Define the profiler directory.
+     */
     public function setProfilerDirectory(string $dir): self
     {
         $this->profilerDirectory = $dir;
@@ -164,6 +201,8 @@ final class GacelaConfig
     }
 
     /**
+     * Define a list of project namespaces.
+     *
      * @param list<string> $list
      */
     public function setProjectNamespaces(array $list): self
@@ -174,6 +213,8 @@ final class GacelaConfig
     }
 
     /**
+     * Add/replace an existent configuration key with a specific value.
+     *
      * @param mixed $value
      */
     public function addAppConfigKeyValue(string $key, $value): self
@@ -184,6 +225,8 @@ final class GacelaConfig
     }
 
     /**
+     * Add/replace a list of existent configuration keys with a specific value.
+     *
      * @param array<string, mixed> $config
      */
     public function addAppConfigKeyValues(array $config): self
@@ -194,6 +237,8 @@ final class GacelaConfig
     }
 
     /**
+     * @internal
+     *
      * @return array{
      *     external-services: array<string,class-string|object|callable>,
      *     config-builder: ConfigBuilder,
@@ -207,8 +252,6 @@ final class GacelaConfig
      *     project-namespaces: list<string>,
      *     config-key-values: array<string,mixed>,
      * }
-     *
-     * @internal
      */
     public function build(): array
     {

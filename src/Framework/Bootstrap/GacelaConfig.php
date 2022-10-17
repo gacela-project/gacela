@@ -129,17 +129,7 @@ final class GacelaConfig
     }
 
     /**
-     * Get an external service from its defined key.
-     *
-     * @return class-string|object|callable
-     */
-    public function getExternalService(string $key)
-    {
-        return $this->externalServices[$key];
-    }
-
-    /**
-     * Define which class [$value] will be auto-resolved when Gacela has to resolve a specific class [$key].
+     * Useful to pass services while bootstrapping Gacela to the gacela.php config file.
      *
      * @param class-string|object|callable $value
      */
@@ -148,6 +138,16 @@ final class GacelaConfig
         $this->externalServices[$key] = $value;
 
         return $this;
+    }
+
+    /**
+     * Get an external service from its defined key, previously added using `addExternalService()`.
+     *
+     * @return class-string|object|callable
+     */
+    public function getExternalService(string $key)
+    {
+        return $this->externalServices[$key];
     }
 
     /**

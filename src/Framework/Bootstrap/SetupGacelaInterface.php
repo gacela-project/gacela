@@ -13,19 +13,19 @@ interface SetupGacelaInterface
     /**
      * Define different config sources.
      */
-    public function buildConfig(ConfigBuilder $configBuilder): ConfigBuilder;
+    public function buildConfig(ConfigBuilder $builder): ConfigBuilder;
 
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
      * @param array<string,class-string|object|callable> $externalServices
      */
-    public function buildMappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): MappingInterfacesBuilder;
+    public function buildMappingInterfaces(MappingInterfacesBuilder $builder, array $externalServices): MappingInterfacesBuilder;
 
     /**
      * Allow overriding gacela resolvable types.
      */
-    public function buildSuffixTypes(SuffixTypesBuilder $suffixTypesBuilder): SuffixTypesBuilder;
+    public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder;
 
     /**
      * Define global services that can be accessible via the mapping interfaces.
@@ -60,14 +60,14 @@ interface SetupGacelaInterface
     public function isProfilerEnabled(): bool;
 
     /**
-     * Get a list of project namespaces.
+     * Get the list of project namespaces.
      *
      * @return list<string>
      */
     public function getProjectNamespaces(): array;
 
     /**
-     * Get a list of key:value configuration.
+     * Get the list of key:value configuration.
      *
      * @return array<string,mixed>
      */

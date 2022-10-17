@@ -45,6 +45,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     /** @var list<string> */
     private array $projectNamespaces = [];
+
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
@@ -133,15 +134,15 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    public function buildConfig(ConfigBuilder $configBuilder): ConfigBuilder
+    public function buildConfig(ConfigBuilder $builder): ConfigBuilder
     {
         if ($this->configBuilder) {
-            $configBuilder = $this->configBuilder;
+            $builder = $this->configBuilder;
         }
 
-        ($this->configFn)($configBuilder);
+        ($this->configFn)($builder);
 
-        return $configBuilder;
+        return $builder;
     }
 
     /**
@@ -160,19 +161,19 @@ final class SetupGacela extends AbstractSetupGacela
      * @param array<string,class-string|object|callable> $externalServices
      */
     public function buildMappingInterfaces(
-        MappingInterfacesBuilder $mappingInterfacesBuilder,
+        MappingInterfacesBuilder $builder,
         array $externalServices
     ): MappingInterfacesBuilder {
         if ($this->mappingInterfacesBuilder) {
-            $mappingInterfacesBuilder = $this->mappingInterfacesBuilder;
+            $builder = $this->mappingInterfacesBuilder;
         }
 
         ($this->mappingInterfacesFn)(
-            $mappingInterfacesBuilder,
+            $builder,
             array_merge($this->externalServices, $externalServices)
         );
 
-        return $mappingInterfacesBuilder;
+        return $builder;
     }
 
     /**
@@ -188,15 +189,15 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * Allow overriding gacela resolvable types.
      */
-    public function buildSuffixTypes(SuffixTypesBuilder $suffixTypesBuilder): SuffixTypesBuilder
+    public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder
     {
         if ($this->suffixTypesBuilder) {
-            $suffixTypesBuilder = $this->suffixTypesBuilder;
+            $builder = $this->suffixTypesBuilder;
         }
 
-        ($this->suffixTypesFn)($suffixTypesBuilder);
+        ($this->suffixTypesFn)($builder);
 
-        return $suffixTypesBuilder;
+        return $builder;
     }
 
     /**

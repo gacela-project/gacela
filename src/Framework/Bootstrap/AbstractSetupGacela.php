@@ -13,9 +13,9 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * Define different config sources.
      */
-    public function buildConfig(ConfigBuilder $configBuilder): ConfigBuilder
+    public function buildConfig(ConfigBuilder $builder): ConfigBuilder
     {
-        return $configBuilder;
+        return $builder;
     }
 
     /**
@@ -23,17 +23,17 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
      *
      * @param array<string,class-string|object|callable> $externalServices
      */
-    public function buildMappingInterfaces(MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): MappingInterfacesBuilder
+    public function buildMappingInterfaces(MappingInterfacesBuilder $builder, array $externalServices): MappingInterfacesBuilder
     {
-        return $mappingInterfacesBuilder;
+        return $builder;
     }
 
     /**
      * Allow overriding gacela resolvable types.
      */
-    public function buildSuffixTypes(SuffixTypesBuilder $suffixTypesBuilder): SuffixTypesBuilder
+    public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder
     {
-        return $suffixTypesBuilder;
+        return $builder;
     }
 
     /**

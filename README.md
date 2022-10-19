@@ -15,7 +15,7 @@
   <a href="https://shepherd.dev/github/gacela-project/gacela">
     <img src="https://shepherd.dev/github/gacela-project/gacela/coverage.svg" alt="Psalm Type-coverage Status">
   </a>
-  <a href="https://github.com/gacela-project/gacela/master/LICENSE">
+  <a href="https://github.com/gacela-project/gacela/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT Software License">
   </a>
 </p>

@@ -3,6 +3,7 @@
 ### Unreleased
 
 - Add file cache for resolved classes.
+- Remove profiler, because it does the same as the file cache system under the hood.
 
 ### 0.27.0
 #### 2022-10-12

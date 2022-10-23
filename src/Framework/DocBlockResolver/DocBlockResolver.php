@@ -8,13 +8,9 @@ use Gacela\Framework\ClassResolver\Cache\CacheInterface;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
-use Gacela\Framework\ClassResolver\Cache\ProfiledCache;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
-use Gacela\Framework\ClassResolver\Profiler\CustomServicesJsonProfiler;
-use Gacela\Framework\ClassResolver\Profiler\FileProfilerInterface;
-use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 use ReflectionClass;
 
@@ -57,7 +53,7 @@ final class DocBlockResolver
     private function getClassName(string $method): string
     {
         $cacheKey = $this->generateCacheKey($method);
-        $cache = $this->createClassNameCache();
+        $cache = $this->createCache();
 
         if (!$cache->has($cacheKey)) {
             $className = $this->getClassFromDoc($method);
@@ -70,16 +66,6 @@ final class DocBlockResolver
     private function generateCacheKey(string $method): string
     {
         return $this->callerClass . '::' . $method;
-    }
-
-    private function createClassNameCache(): CacheInterface
-    {
-        $cache = $this->createCache();
-        if ($this->isProjectProfilerEnabled()) {
-            return new ProfiledCache($cache, $this->createProfiler());
-        }
-
-        return $cache;
     }
 
     private function createCache(): CacheInterface
@@ -96,18 +82,6 @@ final class DocBlockResolver
     private function isProjectCacheEnabled(): bool
     {
         return (new GacelaFileCache(Config::getInstance()))->isEnabled();
-    }
-
-    private function isProjectProfilerEnabled(): bool
-    {
-        return (new GacelaProfiler(Config::getInstance()))->isEnabled();
-    }
-
-    private function createProfiler(): FileProfilerInterface
-    {
-        return new CustomServicesJsonProfiler(
-            Config::getInstance()->getProfilerDir(),
-        );
     }
 
     /**

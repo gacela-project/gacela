@@ -6,7 +6,6 @@ namespace Gacela\Framework\Bootstrap;
 
 use Closure;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
-use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -28,10 +27,6 @@ final class GacelaConfig
     private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_ENABLED_VALUE;
 
     private string $fileCacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
-
-    private bool $profilerEnabled = GacelaProfiler::DEFAULT_ENABLED_VALUE;
-
-    private string $profilerDirectory = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];
@@ -181,26 +176,6 @@ final class GacelaConfig
     }
 
     /**
-     * Define whether the profiler flag is enabled.
-     */
-    public function setProfilerEnabled(bool $flag): self
-    {
-        $this->profilerEnabled = $flag;
-
-        return $this;
-    }
-
-    /**
-     * Define the profiler directory.
-     */
-    public function setProfilerDirectory(string $dir): self
-    {
-        $this->profilerDirectory = $dir;
-
-        return $this;
-    }
-
-    /**
      * Define a list of project namespaces.
      *
      * @param list<string> $list
@@ -247,8 +222,6 @@ final class GacelaConfig
      *     should-reset-in-memory-cache: bool,
      *     file-cache-enabled: bool,
      *     file-cache-directory: string,
-     *     profiler-enabled: bool,
-     *     profiler-directory: string,
      *     project-namespaces: list<string>,
      *     config-key-values: array<string,mixed>,
      * }
@@ -263,8 +236,6 @@ final class GacelaConfig
             'should-reset-in-memory-cache' => $this->shouldResetInMemoryCache,
             'file-cache-enabled' => $this->fileCacheEnabled,
             'file-cache-directory' => $this->fileCacheDirectory,
-            'profiler-enabled' => $this->profilerEnabled,
-            'profiler-directory' => $this->profilerDirectory,
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
         ];

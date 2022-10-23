@@ -96,13 +96,6 @@ final class Config implements ConfigInterface
         return $this->appRootDir ?? getcwd() ?: '';
     }
 
-    public function getProfilerDir(): string
-    {
-        return $this->getAppRootDir()
-            . DIRECTORY_SEPARATOR
-            . ltrim($this->getSetupGacela()->getProfilerDirectory(), DIRECTORY_SEPARATOR);
-    }
-
     public function getCacheDir(): string
     {
         return $this->getAppRootDir()

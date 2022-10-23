@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
-use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -38,10 +37,6 @@ final class SetupGacela extends AbstractSetupGacela
     private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_ENABLED_VALUE;
 
     private string $fileCacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
-
-    private bool $profilerEnabled = GacelaProfiler::DEFAULT_ENABLED_VALUE;
-
-    private string $profilerDirectory = GacelaProfiler::DEFAULT_DIRECTORY_VALUE;
 
     /** @var list<string> */
     private array $projectNamespaces = [];
@@ -97,8 +92,6 @@ final class SetupGacela extends AbstractSetupGacela
             ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
             ->setFileCacheEnabled($build['file-cache-enabled'])
             ->setFileCacheDirectory($build['file-cache-directory'])
-            ->setProfilerEnabled($build['profiler-enabled'])
-            ->setProfilerDirectory($build['profiler-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values']);
     }
@@ -252,30 +245,6 @@ final class SetupGacela extends AbstractSetupGacela
         $this->fileCacheDirectory = $dir;
 
         return $this;
-    }
-
-    public function setProfilerEnabled(bool $flag): self
-    {
-        $this->profilerEnabled = $flag;
-
-        return $this;
-    }
-
-    public function isProfilerEnabled(): bool
-    {
-        return $this->profilerEnabled;
-    }
-
-    public function setProfilerDirectory(string $dir): self
-    {
-        $this->profilerDirectory = $dir;
-
-        return $this;
-    }
-
-    public function getProfilerDirectory(): string
-    {
-        return $this->profilerDirectory;
     }
 
     /**

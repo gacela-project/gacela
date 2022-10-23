@@ -9,7 +9,6 @@ use Gacela\Framework\ClassResolver\Cache\CacheInterface;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
-use Gacela\Framework\ClassResolver\Cache\ProfiledCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
@@ -17,24 +16,19 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
-use Gacela\Framework\ClassResolver\Profiler\ClassNameJsonProfiler;
-use Gacela\Framework\ClassResolver\Profiler\FileProfilerInterface;
-use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 
 final class ClassResolverFactory
 {
     private GacelaFileCache $gacelaCache;
-    private GacelaProfiler $gacelaProfiler;
+
     private SetupGacelaInterface $setupGacela;
 
     public function __construct(
         GacelaFileCache $gacelaCache,
-        GacelaProfiler $gacelaProfiler,
         SetupGacelaInterface $setupGacela
     ) {
         $this->gacelaCache = $gacelaCache;
-        $this->gacelaProfiler = $gacelaProfiler;
         $this->setupGacela = $setupGacela;
     }
 
@@ -43,7 +37,7 @@ final class ClassResolverFactory
         return new ClassNameFinder(
             $this->createClassValidator(),
             $this->createFinderRules(),
-            $this->createClassNameCache(),
+            $this->createCache(),
             $this->getProjectNamespaces()
         );
     }
@@ -64,20 +58,6 @@ final class ClassResolverFactory
         ];
     }
 
-    private function createClassNameCache(): CacheInterface
-    {
-        $cache = $this->createCache();
-
-        if ($this->gacelaProfiler->isEnabled()) {
-            return new ProfiledCache(
-                $cache,
-                $this->createProfiler()
-            );
-        }
-
-        return $cache;
-    }
-
     private function createCache(): CacheInterface
     {
         if ($this->gacelaCache->isEnabled()) {
@@ -87,13 +67,6 @@ final class ClassResolverFactory
         }
 
         return new InMemoryCache(ClassNamePhpCache::class);
-    }
-
-    private function createProfiler(): FileProfilerInterface
-    {
-        return new ClassNameJsonProfiler(
-            Config::getInstance()->getProfilerDir(),
-        );
     }
 
     /**

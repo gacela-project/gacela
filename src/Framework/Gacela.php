@@ -11,7 +11,6 @@ use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
-use Gacela\Framework\ClassResolver\Profiler\GacelaProfiler;
 use Gacela\Framework\Config\Config;
 
 final class Gacela
@@ -26,7 +25,6 @@ final class Gacela
         $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
 
         if ($setup->shouldResetInMemoryCache()) {
-            GacelaProfiler::resetCache();
             GacelaFileCache::resetCache();
             InMemoryCache::resetCache();
             AbstractClassResolver::resetCache();

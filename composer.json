@@ -24,7 +24,7 @@
         "ext-json": "*"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.9",
+        "friendsofphp/php-cs-fixer": "^3.12",
         "phpunit/phpunit": "^9.5",
         "phpbench/phpbench": "^1.2",
         "psalm/plugin-phpunit": "^0.17.0",
@@ -32,7 +32,7 @@
         "phpstan/phpstan": "^1.8",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^4.24"
+        "vimeo/psalm": "^4.29"
     },
     "suggest": {
         "symfony/console": "Allows to use vendor/bin/gacela script",

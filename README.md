@@ -20,11 +20,11 @@
   </a>
 </p>
 
-## Gacela Framework
+## Gacela helps you build modular applications
 
-Gacela helps you to build modular applications.
-
-> Inspired by Spryker Framework: https://github.com/spryker
+> **VISION**: Simplify the communication of your different modules in your web application.
+> 
+> **MISSION**: Normalize the entry point and main responsibilities of a module, without interfering with your domain-business logic.
 
 Splitting your project into different modules help in terms of maintainability and scalability.
 It encourages your modules to interact with each other in a unified way by following these rules:
@@ -94,3 +94,7 @@ You are more than welcome to contribute reporting
 [issues](https://github.com/gacela-project/gacela/issues), 
 sharing [ideas](https://github.com/gacela-project/gacela/discussions),
 or [contributing](.github/CONTRIBUTING.md) with your Pull Requests.
+
+---
+
+> Inspired by Spryker Framework: https://github.com/spryker

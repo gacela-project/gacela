@@ -68,5 +68,15 @@ final class FeatureTest extends TestCase
             new ResolvedClassTryFormParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
             new ResolvedDefaultClassEvent(ClassInfo::from(get_parent_class(Module\Factory::class), 'Config')),
         ], self::$inMemoryEvents);
+
+        // And again would simply load the cached event
+        self::$inMemoryEvents = [];
+        $factory = new Module\Factory();
+        $factory->getConfig();
+
+        self::assertEquals([
+            new ResolvedClassTryFormParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
+            new ResolvedClassCachedEvent(ClassInfo::from(get_parent_class(Module\Factory::class), 'Config')),
+        ], self::$inMemoryEvents);
     }
 }

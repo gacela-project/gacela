@@ -10,25 +10,28 @@ use function get_class;
 use function is_object;
 use function is_string;
 
-final class ClassInfo
+final class ClassInfo implements ClassInfoInterface
 {
     public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
 
     /** @var array<string,array<string,self>> */
     private static array $callerClassCache;
 
-    private string $callerModuleName;
     private string $callerModuleNamespace;
+    private string $callerModuleName;
     private string $cacheKey;
+    private string $resolvableType;
 
     public function __construct(
         string $callerModuleNamespace,
         string $callerModuleName,
-        string $cacheKey
+        string $cacheKey,
+        string $resolvableType = ''
     ) {
         $this->callerModuleNamespace = $callerModuleNamespace;
         $this->callerModuleName = $callerModuleName;
         $this->cacheKey = $cacheKey;
+        $this->resolvableType = $resolvableType;
     }
 
     /**
@@ -43,9 +46,9 @@ final class ClassInfo
         return self::fromString($caller, $resolvableType);
     }
 
-    public function getCacheKey(): string
+    public function getModuleNamespace(): string
     {
-        return $this->cacheKey;
+        return $this->callerModuleNamespace;
     }
 
     public function getModuleName(): string
@@ -53,18 +56,24 @@ final class ClassInfo
         return $this->callerModuleName;
     }
 
-    public function getModuleNamespace(): string
+    public function getCacheKey(): string
     {
-        return $this->callerModuleNamespace;
+        return $this->cacheKey;
+    }
+
+    public function getResolvableType(): string
+    {
+        return $this->resolvableType;
     }
 
     public function toString(): string
     {
         return sprintf(
-            'ClassInfo{cacheKey:"%s", callerModuleName:"%s", callerNamespace:"%s"}',
-            $this->cacheKey,
-            $this->callerModuleName,
+            'ClassInfo{callerModuleNamespace:"%s", callerModuleName:"%s", resolvableType:"%s", cacheKey:"%s"}',
             $this->callerModuleNamespace,
+            $this->callerModuleName,
+            $this->resolvableType,
+            $this->cacheKey,
         );
     }
 
@@ -99,7 +108,7 @@ final class ClassInfo
         $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
         $cacheKey = GlobalKey::fromClassName(sprintf('\\%s\\%s', $callerFullNamespace, $resolvableType));
 
-        $self = new self($callerModuleNamespace, $callerModuleName, $cacheKey);
+        $self = new self($callerModuleNamespace, $callerModuleName, $cacheKey, $resolvableType);
         self::$callerClassCache[$callerClass][$resolvableType] = $self;
 
         return $self;

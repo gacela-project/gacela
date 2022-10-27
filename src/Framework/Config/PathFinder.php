@@ -6,7 +6,6 @@ namespace Gacela\Framework\Config;
 
 use function define;
 use function defined;
-use function is_array;
 
 final class PathFinder implements PathFinderInterface
 {
@@ -17,9 +16,7 @@ final class PathFinder implements PathFinderInterface
     {
         $this->ensureGlobBraceIsDefined();
 
-        $glob = glob($pattern, GLOB_BRACE);
-
-        return is_array($glob) ? $glob : [];
+        return glob($pattern, GLOB_BRACE) ?: [];
     }
 
     /**

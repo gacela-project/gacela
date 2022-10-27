@@ -22,9 +22,9 @@
 
 ## Gacela helps you build modular applications
 
-> **VISION**: Simplify the communication of your different modules in your web application.
-> 
-> **MISSION**: Normalize the entry point and main responsibilities of a module, without interfering with your domain-business logic.
+**VISION**: Simplify the communication of your different modules in your web application.
+
+**MISSION**: Normalize the entry point of a module, without interfering with your domain-business logic.
 
 Splitting your project into different modules help in terms of maintainability and scalability.
 It encourages your modules to interact with each other in a unified way by following these rules:

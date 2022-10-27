@@ -34,7 +34,7 @@ final class GacelaConfig
     private array $configKeyValues = [];
 
     /** @var array<string,list<callable>> */
-    private array $listeners = [];
+    private array $eventListeners = [];
 
     /**
      * @param array<string,class-string|object|callable> $externalServices
@@ -216,7 +216,7 @@ final class GacelaConfig
 
     public function addEventListener(string $listener, callable $callable): self
     {
-        $this->listeners[$listener][] = $callable;
+        $this->eventListeners[$listener][] = $callable;
 
         return $this;
     }
@@ -234,7 +234,7 @@ final class GacelaConfig
      *     file-cache-directory: string,
      *     project-namespaces: list<string>,
      *     config-key-values: array<string,mixed>,
-     *     listeners: array<string,list<callable>>,
+     *     event-listeners: array<string,list<callable>>,
      * }
      */
     public function build(): array
@@ -249,7 +249,7 @@ final class GacelaConfig
             'file-cache-directory' => $this->fileCacheDirectory,
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
-            'listeners' => $this->listeners,
+            'event-listeners' => $this->eventListeners,
         ];
     }
 }

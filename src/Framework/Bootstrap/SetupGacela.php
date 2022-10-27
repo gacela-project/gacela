@@ -45,7 +45,7 @@ final class SetupGacela extends AbstractSetupGacela
     private array $configKeyValues = [];
 
     /** @var array<string,list<callable>> */
-    private array $listeners = [];
+    private array $eventListeners = [];
 
     public function __construct()
     {
@@ -97,7 +97,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setFileCacheDirectory($build['file-cache-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values'])
-            ->setListeners($build['listeners']);
+            ->setEventListeners($build['event-listeners']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -280,9 +280,9 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return array<string,list<callable>>
      */
-    public function getListeners(): array
+    public function getEventListeners(): array
     {
-        return $this->listeners;
+        return $this->eventListeners;
     }
 
     /**
@@ -296,11 +296,11 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,list<callable>> $listeners
+     * @param array<string,list<callable>> $eventListeners
      */
-    private function setListeners(array $listeners): self
+    private function setEventListeners(array $eventListeners): self
     {
-        $this->listeners = $listeners;
+        $this->eventListeners = $eventListeners;
 
         return $this;
     }

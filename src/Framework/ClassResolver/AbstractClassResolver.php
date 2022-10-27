@@ -176,7 +176,7 @@ abstract class AbstractClassResolver
     private function triggerEvent(GacelaEventInterface $event): void
     {
         if (self::$listeners === []) {
-            self::$listeners = Config::getInstance()->getSetupGacela()->getListeners();
+            self::$listeners = Config::getInstance()->getSetupGacela()->getEventListeners();
         }
 
         foreach (self::$listeners[GacelaClassResolverListener::class] ?? [] as $callable) {

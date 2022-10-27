@@ -66,5 +66,5 @@ interface SetupGacelaInterface
     /**
      * @return array<string,list<callable>>
      */
-    public function getListeners(): array;
+    public function getEventListeners(): array;
 }

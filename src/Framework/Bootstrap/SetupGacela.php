@@ -44,6 +44,9 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
+    /** @var array<string,list<callable>> */
+    private array $listeners = [];
+
     public function __construct()
     {
         $this->configFn = static function (): void {
@@ -93,7 +96,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setFileCacheEnabled($build['file-cache-enabled'])
             ->setFileCacheDirectory($build['file-cache-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
-            ->setConfigKeyValues($build['config-key-values']);
+            ->setConfigKeyValues($build['config-key-values'])
+            ->setListeners($build['listeners']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -274,11 +278,29 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @return array<string,list<callable>>
+     */
+    public function getListeners(): array
+    {
+        return $this->listeners;
+    }
+
+    /**
      * @param array<string,mixed> $configKeyValues
      */
     private function setConfigKeyValues(array $configKeyValues): self
     {
         $this->configKeyValues = $configKeyValues;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string,list<callable>> $listeners
+     */
+    private function setListeners(array $listeners): self
+    {
+        $this->listeners = $listeners;
 
         return $this;
     }

@@ -62,4 +62,9 @@ interface SetupGacelaInterface
      * @return array<string,mixed>
      */
     public function getConfigKeyValues(): array;
+
+    /**
+     * @return array<string,list<callable>>
+     */
+    public function getListeners(): array;
 }

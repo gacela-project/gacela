@@ -44,6 +44,8 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
+    private bool $areEventListenersEnabled = false;
+
     /** @var array<string,list<callable>> */
     private array $eventListeners = [];
 
@@ -97,6 +99,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setFileCacheDirectory($build['file-cache-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values'])
+            ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setEventListeners($build['event-listeners']);
     }
 
@@ -282,7 +285,18 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function getEventListeners(): array
     {
+        if (!$this->areEventListenersEnabled) {
+            return [];
+        }
+
         return $this->eventListeners;
+    }
+
+    public function setAreEventListenersEnabled(bool $flag): self
+    {
+        $this->areEventListenersEnabled = $flag;
+
+        return $this;
     }
 
     /**

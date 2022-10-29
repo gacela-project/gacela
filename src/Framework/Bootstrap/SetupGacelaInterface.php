@@ -20,7 +20,10 @@ interface SetupGacelaInterface
      *
      * @param array<string,class-string|object|callable> $externalServices
      */
-    public function buildMappingInterfaces(MappingInterfacesBuilder $builder, array $externalServices): MappingInterfacesBuilder;
+    public function buildMappingInterfaces(
+        MappingInterfacesBuilder $builder,
+        array $externalServices
+    ): MappingInterfacesBuilder;
 
     /**
      * Allow overriding gacela resolvable types.

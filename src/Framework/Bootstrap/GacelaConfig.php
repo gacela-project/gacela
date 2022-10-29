@@ -33,6 +33,8 @@ final class GacelaConfig
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
+    private bool $areEventListenersEnabled = true;
+
     /** @var array<string,list<callable>> */
     private array $eventListeners = [];
 
@@ -214,6 +216,13 @@ final class GacelaConfig
         return $this;
     }
 
+    public function disableEventListeners(): self
+    {
+        $this->areEventListenersEnabled = false;
+
+        return $this;
+    }
+
     public function addEventListener(string $listener, callable $callable): self
     {
         $this->eventListeners[$listener][] = $callable;
@@ -234,6 +243,7 @@ final class GacelaConfig
      *     file-cache-directory: string,
      *     project-namespaces: list<string>,
      *     config-key-values: array<string,mixed>,
+     *     are-event-listeners-enabled: bool,
      *     event-listeners: array<string,list<callable>>,
      * }
      */
@@ -249,6 +259,7 @@ final class GacelaConfig
             'file-cache-directory' => $this->fileCacheDirectory,
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
+            'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'event-listeners' => $this->eventListeners,
         ];
     }

@@ -76,8 +76,7 @@ final class GacelaClassResolverListenerTest extends TestCase
         $factory->getConfig();
 
         self::assertEquals([
-            new ResolvedClassTryFormParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
-            new ResolvedClassCachedEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
+            new ResolvedClassCachedEvent(ClassInfo::from(Module\Factory::class, 'Config')),
         ], self::$inMemoryEvents);
     }
 }

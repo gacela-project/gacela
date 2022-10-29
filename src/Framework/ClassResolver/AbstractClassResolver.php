@@ -55,11 +55,10 @@ abstract class AbstractClassResolver
     /**
      * @param object|class-string $caller
      */
-    public function doResolve($caller): ?object
+    public function doResolve($caller, ?string $previousCacheKey = null): ?object
     {
         $classInfo = ClassInfo::from($caller, $this->getResolvableType());
-
-        $cacheKey = $classInfo->getCacheKey();
+        $cacheKey = $previousCacheKey ?? $classInfo->getCacheKey();
 
         $resolvedClass = $this->resolveCached($cacheKey);
         if ($resolvedClass !== null) {
@@ -79,7 +78,7 @@ abstract class AbstractClassResolver
                 if ($parentClass !== false) {
                     $this->triggerEvent(new ResolvedClassTryFormParentEvent($classInfo));
 
-                    return $this->doResolve($parentClass);
+                    return $this->doResolve($parentClass, $cacheKey);
                 }
             }
 

@@ -14,12 +14,12 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\EventListener\Event\GacelaEventInterface;
-use Gacela\Framework\EventListener\Event\ResolvedClassCachedEvent;
-use Gacela\Framework\EventListener\Event\ResolvedClassCreatedEvent;
-use Gacela\Framework\EventListener\Event\ResolvedClassTryFormParentEvent;
-use Gacela\Framework\EventListener\Event\ResolvedDefaultClassEvent;
-use Gacela\Framework\EventListener\GacelaClassResolverListener;
+use Gacela\Framework\EventListener\ClassResolver\GacelaClassResolverListener;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTryFormParentEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedDefaultClassEvent;
+use Gacela\Framework\EventListener\GacelaEventInterface;
 
 use function is_array;
 use function is_object;
@@ -176,7 +176,9 @@ abstract class AbstractClassResolver
     private function triggerEvent(GacelaEventInterface $event): void
     {
         if (self::$listeners === []) {
-            self::$listeners = Config::getInstance()->getSetupGacela()->getEventListeners();
+            self::$listeners = Config::getInstance()
+                ->getSetupGacela()
+                ->getEventListeners();
         }
 
         foreach (self::$listeners[GacelaClassResolverListener::class] ?? [] as $callable) {

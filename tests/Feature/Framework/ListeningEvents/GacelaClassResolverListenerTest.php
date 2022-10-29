@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\ListeningEvents;
 
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
-use Gacela\Framework\EventListener\Event\GacelaEventInterface;
-use Gacela\Framework\EventListener\Event\ResolvedClassCachedEvent;
-use Gacela\Framework\EventListener\Event\ResolvedClassCreatedEvent;
-use Gacela\Framework\EventListener\Event\ResolvedClassTryFormParentEvent;
-use Gacela\Framework\EventListener\Event\ResolvedDefaultClassEvent;
-use Gacela\Framework\EventListener\GacelaClassResolverListener;
+use Gacela\Framework\EventListener\ClassResolver\GacelaClassResolverListener;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTryFormParentEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedDefaultClassEvent;
+use Gacela\Framework\EventListener\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
-final class FeatureTest extends TestCase
+final class GacelaClassResolverListenerTest extends TestCase
 {
     /** @var list<GacelaEventInterface> */
     private static array $inMemoryEvents = [];
@@ -66,7 +67,7 @@ final class FeatureTest extends TestCase
 
         self::assertEquals([
             new ResolvedClassTryFormParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
-            new ResolvedDefaultClassEvent(ClassInfo::from(get_parent_class(Module\Factory::class), 'Config')),
+            new ResolvedDefaultClassEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
         ], self::$inMemoryEvents);
 
         // And again would simply load the cached event
@@ -76,7 +77,7 @@ final class FeatureTest extends TestCase
 
         self::assertEquals([
             new ResolvedClassTryFormParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
-            new ResolvedClassCachedEvent(ClassInfo::from(get_parent_class(Module\Factory::class), 'Config')),
+            new ResolvedClassCachedEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
         ], self::$inMemoryEvents);
     }
 }

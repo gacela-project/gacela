@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\EventListener\Event;
+namespace Gacela\Framework\EventListener;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\EventListener;
+namespace Gacela\Framework\EventListener\ClassResolver;
 
-use Gacela\Framework\EventListener\Event\GacelaEventInterface;
+use Gacela\Framework\EventListener\GacelaEventInterface;
 
 final class GacelaClassResolverListener
 {

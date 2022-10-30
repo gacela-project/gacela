@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\ListeningEvents;
+namespace GacelaTest\Feature\Framework\ListeningEvents\ConfigReader;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\EventListener\ConfigReader\ReadPhpConfigEvent;

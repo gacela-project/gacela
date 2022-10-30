@@ -6,6 +6,6 @@ namespace Gacela\Framework\EventListener\ClassResolver;
 
 use Gacela\Framework\EventListener\AbstractGacelaEvent;
 
-final class ResolvedDefaultClassEvent extends AbstractGacelaEvent
+final class ResolvedCreatedDefaultClassEvent extends AbstractGacelaEvent
 {
 }

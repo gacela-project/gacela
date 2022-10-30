@@ -9,8 +9,8 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTryFormParentEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedDefaultClassEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTriedFromParentEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedCreatedDefaultClassEvent;
 use Gacela\Framework\EventListener\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -29,8 +29,8 @@ final class GacelaClassResolverListenerTest extends TestCase
 
             $config->registerListener(ResolvedClassCachedEvent::class, [$this, 'saveInMemoryEvent']);
             $config->registerListener(ResolvedClassCreatedEvent::class, [$this, 'saveInMemoryEvent']);
-            $config->registerListener(ResolvedClassTryFormParentEvent::class, [$this, 'saveInMemoryEvent']);
-            $config->registerListener(ResolvedDefaultClassEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerListener(ResolvedClassTriedFromParentEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerListener(ResolvedCreatedDefaultClassEvent::class, [$this, 'saveInMemoryEvent']);
         });
     }
 
@@ -69,8 +69,8 @@ final class GacelaClassResolverListenerTest extends TestCase
         $factory->getConfig();
 
         self::assertEquals([
-            new ResolvedClassTryFormParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
-            new ResolvedDefaultClassEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
+            new ResolvedClassTriedFromParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
+            new ResolvedCreatedDefaultClassEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
         ], self::$inMemoryEvents);
 
         // And again would simply load the cached event

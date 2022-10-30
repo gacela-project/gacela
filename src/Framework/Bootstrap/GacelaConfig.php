@@ -30,6 +30,7 @@ final class GacelaConfig
 
     /** @var list<string> */
     private array $projectNamespaces = [];
+
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
@@ -217,7 +218,7 @@ final class GacelaConfig
     }
 
     /**
-     * Disable the Gacela's "Event/Listeners" mechanism.
+     * Do not dispatch any event in the application.
      */
     public function disableEventListeners(): self
     {
@@ -227,7 +228,13 @@ final class GacelaConfig
     }
 
     /**
-     * Add a new listener to a Gacela's internal event.
+     * Register a listener when some event happens.
+     *
+     * Available events:
+     * - ResolvedClassCachedEvent::class
+     * - ResolvedClassCreatedEvent::class
+     * - ResolvedClassTriedFromParentEvent::class
+     * - ResolvedCreatedDefaultClassEvent::class
      *
      * @param class-string $event
      */

@@ -16,8 +16,8 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTryFormParentEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedDefaultClassEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTriedFromParentEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedCreatedDefaultClassEvent;
 use Gacela\Framework\EventListener\GacelaEventInterface;
 
 use function is_array;
@@ -71,13 +71,13 @@ abstract class AbstractClassResolver
             if (is_object($caller)) {
                 $parentClass = get_parent_class($caller);
                 if ($parentClass !== false) {
-                    $this->dispatchEvent(new ResolvedClassTryFormParentEvent($classInfo));
+                    $this->dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
 
                     return $this->doResolve($parentClass, $cacheKey);
                 }
             }
 
-            $this->dispatchEvent(new ResolvedDefaultClassEvent($classInfo));
+            $this->dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
             $instance = $this->createDefaultGacelaClass();
         }
 

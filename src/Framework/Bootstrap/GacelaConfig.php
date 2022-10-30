@@ -10,6 +10,7 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\EventListener\GacelaEventInterface;
 
 final class GacelaConfig
 {
@@ -230,14 +231,8 @@ final class GacelaConfig
     /**
      * Register a listener when some event happens.
      *
-     * Available events:
-     * - ResolvedClassCachedEvent::class
-     * - ResolvedClassCreatedEvent::class
-     * - ResolvedClassTriedFromParentEvent::class
-     * - ResolvedCreatedDefaultClassEvent::class
-     * - ReadPhpConfigEvent::class
-     *
      * @param class-string $event
+     * @param callable(GacelaEventInterface):void $listener
      */
     public function registerListener(string $event, callable $listener): void
     {

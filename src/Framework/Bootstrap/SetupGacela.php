@@ -53,7 +53,7 @@ final class SetupGacela extends AbstractSetupGacela
     private array $genericListeners = [];
 
     /** @var array<class-string,list<callable>> */
-    private array $listenersPerEvent = [];
+    private array $specificListeners = [];
 
     private ?EventDispatcherInterface $eventDispatcher = null;
 
@@ -109,7 +109,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setConfigKeyValues($build['config-key-values'])
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
-            ->setListenersPerEvent($build['listeners-per-event']);
+            ->setSpecificListeners($build['specific-listeners']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -299,7 +299,7 @@ final class SetupGacela extends AbstractSetupGacela
             $this->eventDispatcher = new EventDispatcher();
             $this->eventDispatcher->registerGenericListeners($this->genericListeners);
 
-            foreach ($this->listenersPerEvent as $event => $listeners) {
+            foreach ($this->specificListeners as $event => $listeners) {
                 foreach ($listeners as $callable) {
                     $this->eventDispatcher->registerSpecificListener($event, $callable);
                 }
@@ -341,9 +341,9 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param array<class-string,list<callable>> $listeners
      */
-    private function setListenersPerEvent(array $listeners): self
+    private function setSpecificListeners(array $listeners): self
     {
-        $this->listenersPerEvent = $listeners;
+        $this->specificListeners = $listeners;
 
         return $this;
     }

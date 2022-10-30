@@ -235,6 +235,7 @@ final class GacelaConfig
      * - ResolvedClassCreatedEvent::class
      * - ResolvedClassTriedFromParentEvent::class
      * - ResolvedCreatedDefaultClassEvent::class
+     * - ReadPhpConfigEvent::class
      *
      * @param class-string $event
      */

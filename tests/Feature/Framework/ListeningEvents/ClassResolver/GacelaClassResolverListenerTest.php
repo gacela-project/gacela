@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\ListeningEvents;
+namespace GacelaTest\Feature\Framework\ListeningEvents\ClassResolver;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;

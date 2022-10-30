@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+namespace GacelaTest\Feature\Framework\ListeningEvents;
+
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\EventListener\ConfigReader\ReadPhpConfigEvent;
+use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Gacela;
+use PHPUnit\Framework\TestCase;
+
+final class GacelaConfigReaderListenerTest extends TestCase
+{
+    /** @var list<GacelaEventInterface> */
+    private static array $inMemoryEvents = [];
+
+    protected function setUp(): void
+    {
+        self::$inMemoryEvents = [];
+    }
+
+    public function test_two_php_config_files(): void
+    {
+        Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
+            $config->addAppConfig('config/*.php');
+            $config->resetInMemoryCache();
+            $config->registerListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
+        });
+
+        self::assertEquals([
+            new ReadPhpConfigEvent(__DIR__ . '/config/default.php'),
+            new ReadPhpConfigEvent(__DIR__ . '/config/local.php'),
+        ], self::$inMemoryEvents);
+    }
+
+    public function test_no_yaml_config_files(): void
+    {
+        Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
+            $config->addAppConfig('config/*.yaml');
+            $config->resetInMemoryCache();
+            $config->registerListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
+        });
+
+        self::assertEmpty(self::$inMemoryEvents);
+    }
+
+    public function saveInMemoryEvent(GacelaEventInterface $event): void
+    {
+        self::$inMemoryEvents[] = $event;
+    }
+}

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\ConfigReader;
 
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigReaderInterface;
+use Gacela\Framework\EventListener\ConfigReader\ReadPhpConfigEvent;
+use Gacela\Framework\EventListener\GacelaEventInterface;
 use JsonSerializable;
 use RuntimeException;
 
@@ -20,6 +23,8 @@ final class PhpConfigReader implements ConfigReaderInterface
         if (!$this->canRead($absolutePath)) {
             return [];
         }
+
+        $this->dispatchEvent(new ReadPhpConfigEvent($absolutePath));
 
         /**
          * @psalm-suppress UnresolvableInclude
@@ -51,5 +56,10 @@ final class PhpConfigReader implements ConfigReaderInterface
         $extension = pathinfo($absolutePath, PATHINFO_EXTENSION);
 
         return $extension === 'php' && file_exists($absolutePath);
+    }
+
+    private function dispatchEvent(GacelaEventInterface $event): void
+    {
+        Config::getEventDispatcher()->dispatch($event);
     }
 }

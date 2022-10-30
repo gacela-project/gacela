@@ -24,7 +24,7 @@ final class PhpConfigReader implements ConfigReaderInterface
             return [];
         }
 
-        $this->triggerEvent(new ReadPhpConfigEvent($absolutePath));
+        $this->dispatchEvent(new ReadPhpConfigEvent($absolutePath));
 
         /**
          * @psalm-suppress UnresolvableInclude
@@ -58,7 +58,7 @@ final class PhpConfigReader implements ConfigReaderInterface
         return $extension === 'php' && file_exists($absolutePath);
     }
 
-    private function triggerEvent(GacelaEventInterface $event): void
+    private function dispatchEvent(GacelaEventInterface $event): void
     {
         Config::getEventDispatcher()->dispatch($event);
     }

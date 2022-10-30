@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\ConfigReader;
 
-use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\EventListener\ConfigReader\GacelaConfigReaderListener;
 use Gacela\Framework\EventListener\ConfigReader\ReadPhpConfigEvent;
 use Gacela\Framework\EventListener\GacelaEventInterface;
 use JsonSerializable;
@@ -17,9 +15,6 @@ use function is_array;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {
-    /** @var array<string,list<callable>>*/
-    private static array $listeners = [];
-
     /**
      * @return array<string,mixed>
      */
@@ -28,6 +23,8 @@ final class PhpConfigReader implements ConfigReaderInterface
         if (!$this->canRead($absolutePath)) {
             return [];
         }
+
+        $this->triggerEvent(new ReadPhpConfigEvent($absolutePath));
 
         /**
          * @psalm-suppress UnresolvableInclude
@@ -58,26 +55,11 @@ final class PhpConfigReader implements ConfigReaderInterface
     {
         $extension = pathinfo($absolutePath, PATHINFO_EXTENSION);
 
-        $isReadable = $extension === 'php' && file_exists($absolutePath);
-
-        if ($isReadable) {
-            /** @psalm-suppress ArgumentTypeCoercion */
-            $this->triggerEvent(new ReadPhpConfigEvent(ClassInfo::from($absolutePath))); /** @phpstan-ignore-line */
-        }
-
-        return $isReadable;
+        return $extension === 'php' && file_exists($absolutePath);
     }
 
     private function triggerEvent(GacelaEventInterface $event): void
     {
-        if (self::$listeners === []) {
-            self::$listeners = Config::getInstance()
-                ->getSetupGacela()
-                ->getEventListeners();
-        }
-
-        foreach (self::$listeners[GacelaConfigReaderListener::class] ?? [] as $callable) {
-            $callable($event);
-        }
+        Config::getEventDispatcher()->dispatch($event);
     }
 }

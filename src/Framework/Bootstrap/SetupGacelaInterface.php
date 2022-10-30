@@ -7,6 +7,7 @@ namespace Gacela\Framework\Bootstrap;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\EventListener\EventDispatcherInterface;
 
 interface SetupGacelaInterface
 {
@@ -20,7 +21,10 @@ interface SetupGacelaInterface
      *
      * @param array<string,class-string|object|callable> $externalServices
      */
-    public function buildMappingInterfaces(MappingInterfacesBuilder $builder, array $externalServices): MappingInterfacesBuilder;
+    public function buildMappingInterfaces(
+        MappingInterfacesBuilder $builder,
+        array $externalServices
+    ): MappingInterfacesBuilder;
 
     /**
      * Allow overriding gacela resolvable types.
@@ -62,4 +66,6 @@ interface SetupGacelaInterface
      * @return array<string,mixed>
      */
     public function getConfigKeyValues(): array;
+
+    public function getEventDispatcher(): EventDispatcherInterface;
 }

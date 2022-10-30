@@ -30,8 +30,14 @@ final class GacelaConfig
 
     /** @var list<string> */
     private array $projectNamespaces = [];
+
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
+
+    private bool $areEventListenersEnabled = true;
+
+    /** @var array<class-string,list<callable>> */
+    private array $listenersPerEvent = [];
 
     /**
      * @param array<string,class-string|object|callable> $externalServices
@@ -212,6 +218,32 @@ final class GacelaConfig
     }
 
     /**
+     * Do not dispatch any event in the application.
+     */
+    public function disableEventListeners(): self
+    {
+        $this->areEventListenersEnabled = false;
+
+        return $this;
+    }
+
+    /**
+     * Register a listener when some event happens.
+     *
+     * Available events:
+     * - ResolvedClassCachedEvent::class
+     * - ResolvedClassCreatedEvent::class
+     * - ResolvedClassTriedFromParentEvent::class
+     * - ResolvedCreatedDefaultClassEvent::class
+     *
+     * @param class-string $event
+     */
+    public function registerListener(string $event, callable $listener): void
+    {
+        $this->listenersPerEvent[$event][] = $listener;
+    }
+
+    /**
      * @internal
      *
      * @return array{
@@ -224,6 +256,8 @@ final class GacelaConfig
      *     file-cache-directory: string,
      *     project-namespaces: list<string>,
      *     config-key-values: array<string,mixed>,
+     *     are-event-listeners-enabled: bool,
+     *     listeners-per-event: array<class-string,list<callable>>,
      * }
      */
     public function build(): array
@@ -238,6 +272,8 @@ final class GacelaConfig
             'file-cache-directory' => $this->fileCacheDirectory,
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
+            'are-event-listeners-enabled' => $this->areEventListenersEnabled,
+            'listeners-per-event' => $this->listenersPerEvent,
         ];
     }
 }

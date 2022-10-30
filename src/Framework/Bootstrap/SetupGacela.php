@@ -8,6 +8,9 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\EventListener\EventDispatcher;
+use Gacela\Framework\EventListener\EventDispatcherInterface;
+use Gacela\Framework\EventListener\NullEventDispatcher;
 use RuntimeException;
 
 use function is_callable;
@@ -43,6 +46,13 @@ final class SetupGacela extends AbstractSetupGacela
 
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
+
+    private bool $areEventListenersEnabled = false;
+
+    /** @var array<class-string,list<callable>> */
+    private array $listenersPerEvent = [];
+
+    private ?EventDispatcherInterface $eventDispatcher = null;
 
     public function __construct()
     {
@@ -93,7 +103,9 @@ final class SetupGacela extends AbstractSetupGacela
             ->setFileCacheEnabled($build['file-cache-enabled'])
             ->setFileCacheDirectory($build['file-cache-directory'])
             ->setProjectNamespaces($build['project-namespaces'])
-            ->setConfigKeyValues($build['config-key-values']);
+            ->setConfigKeyValues($build['config-key-values'])
+            ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
+            ->setListenersPerEvent($build['listeners-per-event']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -273,12 +285,49 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->configKeyValues;
     }
 
+    public function getEventDispatcher(): EventDispatcherInterface
+    {
+        if ($this->eventDispatcher !== null) {
+            return $this->eventDispatcher;
+        }
+
+        if ($this->areEventListenersEnabled) {
+            $this->eventDispatcher = new EventDispatcher();
+            foreach ($this->listenersPerEvent as $event => $listeners) {
+                foreach ($listeners as $callable) {
+                    $this->eventDispatcher->registerSpecificListener($event, $callable);
+                }
+            }
+        } else {
+            $this->eventDispatcher = new NullEventDispatcher();
+        }
+
+        return $this->eventDispatcher;
+    }
+
+    public function setAreEventListenersEnabled(bool $flag): self
+    {
+        $this->areEventListenersEnabled = $flag;
+
+        return $this;
+    }
+
     /**
      * @param array<string,mixed> $configKeyValues
      */
     private function setConfigKeyValues(array $configKeyValues): self
     {
         $this->configKeyValues = $configKeyValues;
+
+        return $this;
+    }
+
+    /**
+     * @param array<class-string,list<callable>> $listenersPerEvent
+     */
+    private function setListenersPerEvent(array $listenersPerEvent): self
+    {
+        $this->listenersPerEvent = $listenersPerEvent;
 
         return $this;
     }

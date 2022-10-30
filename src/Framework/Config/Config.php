@@ -6,6 +6,7 @@ namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\EventListener\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
 
 use function array_key_exists;
@@ -13,6 +14,8 @@ use function array_key_exists;
 final class Config implements ConfigInterface
 {
     private static ?self $instance = null;
+
+    private static ?EventDispatcherInterface $eventDispatcher = null;
 
     private ?string $appRootDir = null;
 
@@ -42,6 +45,18 @@ final class Config implements ConfigInterface
     public static function resetInstance(): void
     {
         self::$instance = null;
+        self::$eventDispatcher = null;
+    }
+
+    public static function getEventDispatcher(): EventDispatcherInterface
+    {
+        if (self::$eventDispatcher === null) {
+            self::$eventDispatcher = self::getInstance()
+                ->getSetupGacela()
+                ->getEventDispatcher();
+        }
+
+        return self::$eventDispatcher;
     }
 
     /**

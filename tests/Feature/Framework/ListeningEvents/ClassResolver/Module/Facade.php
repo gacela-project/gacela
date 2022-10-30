@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\ListeningEvents\Module;
+namespace GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module;
 
 use Gacela\Framework\AbstractFacade;
 

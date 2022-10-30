@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\ListeningEvents;
+namespace GacelaTest\Feature\Framework\ListeningEvents\ClassResolver;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
@@ -69,7 +69,12 @@ final class GacelaClassResolverListenerTest extends TestCase
         $factory->getConfig();
 
         self::assertEquals([
-            new ResolvedClassTryFormParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
+            new ResolvedClassTryFormParentEvent(
+                ClassInfo::from(
+                    Module\Factory::class,
+                    'Config'
+                )
+            ),
             new ResolvedDefaultClassEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
         ], self::$inMemoryEvents);
 

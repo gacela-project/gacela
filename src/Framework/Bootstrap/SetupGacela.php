@@ -49,6 +49,9 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $areEventListenersEnabled = false;
 
+    /** @var list<callable> */
+    private array $genericListeners = [];
+
     /** @var array<class-string,list<callable>> */
     private array $listenersPerEvent = [];
 
@@ -105,6 +108,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values'])
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
+            ->setGenericListeners($build['generic-listeners'])
             ->setListenersPerEvent($build['listeners-per-event']);
     }
 
@@ -293,6 +297,8 @@ final class SetupGacela extends AbstractSetupGacela
 
         if ($this->areEventListenersEnabled) {
             $this->eventDispatcher = new EventDispatcher();
+            $this->eventDispatcher->registerGenericListeners($this->genericListeners);
+
             foreach ($this->listenersPerEvent as $event => $listeners) {
                 foreach ($listeners as $callable) {
                     $this->eventDispatcher->registerSpecificListener($event, $callable);
@@ -323,11 +329,21 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<class-string,list<callable>> $listenersPerEvent
+     * @param list<callable> $listeners
      */
-    private function setListenersPerEvent(array $listenersPerEvent): self
+    private function setGenericListeners(array $listeners): self
     {
-        $this->listenersPerEvent = $listenersPerEvent;
+        $this->genericListeners = $listeners;
+
+        return $this;
+    }
+
+    /**
+     * @param array<class-string,list<callable>> $listeners
+     */
+    private function setListenersPerEvent(array $listeners): self
+    {
+        $this->listenersPerEvent = $listeners;
 
         return $this;
     }

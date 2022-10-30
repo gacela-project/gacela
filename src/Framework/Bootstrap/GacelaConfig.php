@@ -37,6 +37,9 @@ final class GacelaConfig
 
     private bool $areEventListenersEnabled = true;
 
+    /** @var list<callable> */
+    private array $genericListeners = [];
+
     /** @var array<class-string,list<callable>> */
     private array $listenersPerEvent = [];
 
@@ -229,12 +232,20 @@ final class GacelaConfig
     }
 
     /**
+     * Register a generic listener when any event happens.
+     */
+    public function registerGenericListener(callable $listener): void
+    {
+        $this->genericListeners[] = $listener;
+    }
+
+    /**
      * Register a listener when some event happens.
      *
      * @param class-string $event
      * @param callable(GacelaEventInterface):void $listener
      */
-    public function registerListener(string $event, callable $listener): void
+    public function registerSpecificListener(string $event, callable $listener): void
     {
         $this->listenersPerEvent[$event][] = $listener;
     }
@@ -253,6 +264,7 @@ final class GacelaConfig
      *     project-namespaces: list<string>,
      *     config-key-values: array<string,mixed>,
      *     are-event-listeners-enabled: bool,
+     *     generic-listeners: list<callable>,
      *     listeners-per-event: array<class-string,list<callable>>,
      * }
      */
@@ -269,6 +281,7 @@ final class GacelaConfig
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
+            'generic-listeners' => $this->genericListeners,
             'listeners-per-event' => $this->listenersPerEvent,
         ];
     }

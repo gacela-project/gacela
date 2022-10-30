@@ -9,6 +9,9 @@ use function is_callable;
 
 final class EventDispatcher implements EventDispatcherInterface
 {
+    /** @var array<callable> */
+    private array $genericListeners = [];
+
     /** @var array<class-string,list<callable>> */
     private array $listenersPerEvent = [];
 
@@ -16,6 +19,13 @@ final class EventDispatcher implements EventDispatcherInterface
     {
     }
 
+    /**
+     * @param list<callable> $genericListeners
+     */
+    public function registerGenericListeners(array $genericListeners): void
+    {
+        $this->genericListeners = $genericListeners;
+    }
     /**
      * @param class-string $event
      */
@@ -33,6 +43,10 @@ final class EventDispatcher implements EventDispatcherInterface
 
     public function dispatch(object $event): void
     {
+        foreach ($this->genericListeners as $listener) {
+            $this->notifyListener($listener, $event);
+        }
+
         foreach ($this->listenersPerEvent[get_class($event)] ?? [] as $listener) {
             $this->notifyListener($listener, $event);
         }

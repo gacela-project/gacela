@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\ListeningEvents;
+namespace GacelaTest\Feature\Framework\ListeningEvents\ClassResolver;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
@@ -10,6 +10,7 @@ use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTriedFromParentEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedCreatedDefaultClassEvent;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Facade;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -26,10 +27,10 @@ final class DisableListenersTest extends TestCase
             $config->registerListener(ResolvedCreatedDefaultClassEvent::class, [$this, 'throwExceptionListener']);
         });
 
-        $facade = new Module\Facade();
+        $facade = new Facade();
         $facade->doString();
 
-        $facade = new Module\Facade();
+        $facade = new Facade();
         $facade->doString();
 
         $this->expectNotToPerformAssertions();

@@ -8,6 +8,9 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\EventListener\EventDispatcher;
+use Gacela\Framework\EventListener\EventDispatcherInterface;
+use Gacela\Framework\EventListener\NullEventDispatcher;
 use RuntimeException;
 
 use function is_callable;
@@ -46,8 +49,10 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $areEventListenersEnabled = false;
 
-    /** @var array<string,list<callable>> */
-    private array $eventListeners = [];
+    /** @var array<class-string,list<callable>> */
+    private array $listenersPerEvent = [];
+
+    private ?EventDispatcherInterface $eventDispatcher = null;
 
     public function __construct()
     {
@@ -100,7 +105,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values'])
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
-            ->setEventListeners($build['event-listeners']);
+            ->setListenersPerEvent($build['listeners-per-event']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -280,16 +285,24 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->configKeyValues;
     }
 
-    /**
-     * @return array<string,list<callable>>
-     */
-    public function getEventListeners(): array
+    public function getEventDispatcher(): EventDispatcherInterface
     {
-        if (!$this->areEventListenersEnabled) {
-            return [];
+        if ($this->eventDispatcher !== null) {
+            return $this->eventDispatcher;
         }
 
-        return $this->eventListeners;
+        if ($this->areEventListenersEnabled) {
+            $this->eventDispatcher = new EventDispatcher();
+            foreach ($this->listenersPerEvent as $event => $listeners) {
+                foreach ($listeners as $callable) {
+                    $this->eventDispatcher->registerSpecificListener($event, $callable);
+                }
+            }
+        } else {
+            $this->eventDispatcher = new NullEventDispatcher();
+        }
+
+        return $this->eventDispatcher;
     }
 
     public function setAreEventListenersEnabled(bool $flag): self
@@ -310,11 +323,11 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,list<callable>> $eventListeners
+     * @param array<class-string,list<callable>> $listenersPerEvent
      */
-    private function setEventListeners(array $eventListeners): self
+    private function setListenersPerEvent(array $listenersPerEvent): self
     {
-        $this->eventListeners = $eventListeners;
+        $this->listenersPerEvent = $listenersPerEvent;
 
         return $this;
     }

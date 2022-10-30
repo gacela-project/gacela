@@ -7,7 +7,6 @@ namespace GacelaTest\Feature\Framework\ListeningEvents;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
-use Gacela\Framework\EventListener\ClassResolver\GacelaClassResolverListener;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTryFormParentEvent;
@@ -25,15 +24,19 @@ final class GacelaClassResolverListenerTest extends TestCase
     {
         self::$inMemoryEvents = [];
 
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+        Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->addEventListener(
-                GacelaClassResolverListener::class,
-                static function (GacelaEventInterface $event): void {
-                    self::$inMemoryEvents[] = $event;
-                }
-            );
+
+            $config->registerListener(ResolvedClassCachedEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerListener(ResolvedClassCreatedEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerListener(ResolvedClassTryFormParentEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerListener(ResolvedDefaultClassEvent::class, [$this, 'saveInMemoryEvent']);
         });
+    }
+
+    public function saveInMemoryEvent(GacelaEventInterface $event): void
+    {
+        self::$inMemoryEvents[] = $event;
     }
 
     public function test_resolved_class_created(): void

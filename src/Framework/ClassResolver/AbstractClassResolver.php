@@ -14,7 +14,6 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\EventListener\ClassResolver\GacelaClassResolverListener;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTryFormParentEvent;
@@ -29,9 +28,6 @@ abstract class AbstractClassResolver
     /** @var array<string,null|object> */
     private static array $cachedInstances = [];
 
-    /** @var array<string,list<callable>>*/
-    private static array $listeners = [];
-
     private ?ClassNameFinderInterface $classNameFinder = null;
 
     private ?GacelaConfigFileInterface $gacelaFileConfig = null;
@@ -44,7 +40,6 @@ abstract class AbstractClassResolver
     public static function resetCache(): void
     {
         self::$cachedInstances = [];
-        self::$listeners = [];
     }
 
     /**
@@ -62,7 +57,7 @@ abstract class AbstractClassResolver
 
         $resolvedClass = $this->resolveCached($cacheKey);
         if ($resolvedClass !== null) {
-            $this->triggerEvent(new ResolvedClassCachedEvent($classInfo));
+            $this->dispatchEvent(new ResolvedClassCachedEvent($classInfo));
 
             return $resolvedClass;
         }
@@ -70,19 +65,19 @@ abstract class AbstractClassResolver
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName !== null) {
             $instance = $this->createInstance($resolvedClassName);
-            $this->triggerEvent(new ResolvedClassCreatedEvent($classInfo));
+            $this->dispatchEvent(new ResolvedClassCreatedEvent($classInfo));
         } else {
             // Try again with its parent class
             if (is_object($caller)) {
                 $parentClass = get_parent_class($caller);
                 if ($parentClass !== false) {
-                    $this->triggerEvent(new ResolvedClassTryFormParentEvent($classInfo));
+                    $this->dispatchEvent(new ResolvedClassTryFormParentEvent($classInfo));
 
                     return $this->doResolve($parentClass, $cacheKey);
                 }
             }
 
-            $this->triggerEvent(new ResolvedDefaultClassEvent($classInfo));
+            $this->dispatchEvent(new ResolvedDefaultClassEvent($classInfo));
             $instance = $this->createDefaultGacelaClass();
         }
 
@@ -164,24 +159,18 @@ abstract class AbstractClassResolver
     {
         switch ($this->getResolvableType()) {
             case FactoryResolver::TYPE:
-                return new class() extends AbstractFactory {};
+                return new class() extends AbstractFactory {
+                };
             case ConfigResolver::TYPE:
-                return new class() extends AbstractConfig {};
+                return new class() extends AbstractConfig {
+                };
             default:
                 return null;
         }
     }
 
-    private function triggerEvent(GacelaEventInterface $event): void
+    private function dispatchEvent(GacelaEventInterface $event): void
     {
-        if (self::$listeners === []) {
-            self::$listeners = Config::getInstance()
-                ->getSetupGacela()
-                ->getEventListeners();
-        }
-
-        foreach (self::$listeners[GacelaClassResolverListener::class] ?? [] as $callable) {
-            $callable($event);
-        }
+        Config::getEventDispatcher()->dispatch($event);
     }
 }

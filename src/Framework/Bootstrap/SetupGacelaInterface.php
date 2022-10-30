@@ -7,6 +7,7 @@ namespace Gacela\Framework\Bootstrap;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\EventListener\EventDispatcherInterface;
 
 interface SetupGacelaInterface
 {
@@ -66,8 +67,5 @@ interface SetupGacelaInterface
      */
     public function getConfigKeyValues(): array;
 
-    /**
-     * @return array<string,list<callable>>
-     */
-    public function getEventListeners(): array;
+    public function getEventDispatcher(): EventDispatcherInterface;
 }

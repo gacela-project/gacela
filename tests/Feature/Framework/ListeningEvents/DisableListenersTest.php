@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ListeningEvents;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\EventListener\ClassResolver\GacelaClassResolverListener;
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTryFormParentEvent;
+use Gacela\Framework\EventListener\ClassResolver\ResolvedDefaultClassEvent;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -15,19 +17,13 @@ final class DisableListenersTest extends TestCase
 {
     public function test_disable_class_resolver_listener(): void
     {
-        /** @var list<GacelaEventInterface> $inMemoryEvents */
-        $inMemoryEvents = [];
-
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$inMemoryEvents): void {
+        Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->disableEventListeners();
 
-            $config->addEventListener(
-                GacelaClassResolverListener::class,
-                static function (GacelaEventInterface $event) use (&$inMemoryEvents): void {
-                    $inMemoryEvents[] = $event;
-                    throw new RuntimeException('This code should never be called');
-                }
-            );
+            $config->registerListener(ResolvedClassCachedEvent::class, [$this, 'throwExceptionListener']);
+            $config->registerListener(ResolvedClassCreatedEvent::class, [$this, 'throwExceptionListener']);
+            $config->registerListener(ResolvedClassTryFormParentEvent::class, [$this, 'throwExceptionListener']);
+            $config->registerListener(ResolvedDefaultClassEvent::class, [$this, 'throwExceptionListener']);
         });
 
         $facade = new Module\Facade();
@@ -36,6 +32,11 @@ final class DisableListenersTest extends TestCase
         $facade = new Module\Facade();
         $facade->doString();
 
-        self::assertEmpty($inMemoryEvents);
+        $this->expectNotToPerformAssertions();
+    }
+
+    public function throwExceptionListener(): void
+    {
+        throw new RuntimeException('This should never be called');
     }
 }

@@ -35,8 +35,8 @@ final class GacelaConfig
 
     private bool $areEventListenersEnabled = true;
 
-    /** @var array<string,list<callable>> */
-    private array $eventListeners = [];
+    /** @var array<class-string,list<callable>> */
+    private array $listenersPerEvent = [];
 
     /**
      * @param array<string,class-string|object|callable> $externalServices
@@ -216,6 +216,9 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Disable the Gacela's "Event/Listeners" mechanism.
+     */
     public function disableEventListeners(): self
     {
         $this->areEventListenersEnabled = false;
@@ -223,11 +226,14 @@ final class GacelaConfig
         return $this;
     }
 
-    public function addEventListener(string $listener, callable $callable): self
+    /**
+     * Add a new listener to a Gacela's internal event.
+     *
+     * @param class-string $event
+     */
+    public function registerListener(string $event, callable $listener): void
     {
-        $this->eventListeners[$listener][] = $callable;
-
-        return $this;
+        $this->listenersPerEvent[$event][] = $listener;
     }
 
     /**
@@ -244,7 +250,7 @@ final class GacelaConfig
      *     project-namespaces: list<string>,
      *     config-key-values: array<string,mixed>,
      *     are-event-listeners-enabled: bool,
-     *     event-listeners: array<string,list<callable>>,
+     *     listeners-per-event: array<class-string,list<callable>>,
      * }
      */
     public function build(): array
@@ -260,7 +266,7 @@ final class GacelaConfig
             'project-namespaces' => $this->projectNamespaces,
             'config-key-values' => $this->configKeyValues,
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
-            'event-listeners' => $this->eventListeners,
+            'listeners-per-event' => $this->listenersPerEvent,
         ];
     }
 }

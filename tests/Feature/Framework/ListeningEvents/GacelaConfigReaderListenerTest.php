@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ListeningEvents;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\ClassInfo;
-use Gacela\Framework\EventListener\ConfigReader\GacelaConfigReaderListener;
 use Gacela\Framework\EventListener\ConfigReader\ReadPhpConfigEvent;
 use Gacela\Framework\EventListener\GacelaEventInterface;
 use Gacela\Framework\Gacela;
@@ -17,23 +15,38 @@ final class GacelaConfigReaderListenerTest extends TestCase
     /** @var list<GacelaEventInterface> */
     private static array $inMemoryEvents = [];
 
-    public function test_resolved_class_created(): void
+    protected function setUp(): void
     {
         self::$inMemoryEvents = [];
+    }
 
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+    public function test_two_php_config_files(): void
+    {
+        Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->addAppConfig('config/*.php');
             $config->resetInMemoryCache();
-            $config->addEventListener(
-                GacelaConfigReaderListener::class,
-                static function (GacelaEventInterface $event): void {
-                    self::$inMemoryEvents[] = $event;
-                }
-            );
+            $config->registerListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
         });
 
         self::assertEquals([
-            new ReadPhpConfigEvent(ClassInfo::from('')),
+            new ReadPhpConfigEvent(__DIR__ . '/config/default.php'),
+            new ReadPhpConfigEvent(__DIR__ . '/config/local.php'),
         ], self::$inMemoryEvents);
+    }
+
+    public function test_no_yaml_config_files(): void
+    {
+        Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
+            $config->addAppConfig('config/*.yaml');
+            $config->resetInMemoryCache();
+            $config->registerListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
+        });
+
+        self::assertEmpty(self::$inMemoryEvents);
+    }
+
+    public function saveInMemoryEvent(GacelaEventInterface $event): void
+    {
+        self::$inMemoryEvents[] = $event;
     }
 }

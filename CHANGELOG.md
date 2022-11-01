@@ -1,7 +1,9 @@
 # Changelog
 
 ## Unreleased
-- Adding event listener system.
+
+- Added `GacelaConfig::registerSpecificListener(string $event, callable $listener): void`
+- Added `GacelaConfig::registerGenericListener(callable $listener): void`
 
 ### 0.28.0
 #### 2022-10-27

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
-use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\EventListener\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
@@ -19,23 +18,23 @@ final class Config implements ConfigInterface
 
     private static ?EventDispatcherInterface $eventDispatcher = null;
 
+    private SetupGacelaInterface $setup;
+
+    private ?ConfigFactory $configFactory = null;
+
     private ?string $appRootDir = null;
 
     /** @var array<string,mixed> */
     private array $config = [];
 
-    private ?SetupGacelaInterface $setup = null;
-
-    private ?ConfigFactory $configFactory = null;
-
-    private function __construct()
+    private function __construct(SetupGacelaInterface $setup)
     {
+        $this->setup = $setup;
     }
 
     public static function createWithSetup(SetupGacelaInterface $setup): self
     {
-        self::$instance = new self();
-        self::$instance->setup = $setup;
+        self::$instance = new self($setup);
 
         return self::$instance;
     }
@@ -128,13 +127,6 @@ final class Config implements ConfigInterface
             . ltrim($this->getSetupGacela()->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
     }
 
-    public function setSetup(SetupGacelaInterface $setup): self
-    {
-        $this->setup = $setup;
-
-        return $this;
-    }
-
     /**
      * @internal
      */
@@ -152,10 +144,6 @@ final class Config implements ConfigInterface
 
     public function getSetupGacela(): SetupGacelaInterface
     {
-        if ($this->setup === null) {
-            $this->setup = new SetupGacela();
-        }
-
         return $this->setup;
     }
 

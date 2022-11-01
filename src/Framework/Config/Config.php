@@ -9,6 +9,8 @@ use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\EventListener\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
 
+use RuntimeException;
+
 use function array_key_exists;
 
 final class Config implements ConfigInterface
@@ -30,10 +32,18 @@ final class Config implements ConfigInterface
     {
     }
 
+    public static function createWithSetup(SetupGacelaInterface $setup): self
+    {
+        self::$instance = new self();
+        self::$instance->setup = $setup;
+
+        return self::$instance;
+    }
+
     public static function getInstance(): self
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            throw new RuntimeException('You have to call createWithSetup() first.');
         }
 
         return self::$instance;

@@ -25,7 +25,7 @@ final class GacelaConfigReaderListenerTest extends TestCase
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->addAppConfig('config/*.php');
             $config->resetInMemoryCache();
-            $config->registerListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerSpecificListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
         });
 
         self::assertEquals([
@@ -39,7 +39,7 @@ final class GacelaConfigReaderListenerTest extends TestCase
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->addAppConfig('config/*.yaml');
             $config->resetInMemoryCache();
-            $config->registerListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerSpecificListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
         });
 
         self::assertEmpty(self::$inMemoryEvents);

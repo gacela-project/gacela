@@ -15,7 +15,7 @@ use Gacela\Framework\EventListener\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
-final class GacelaClassResolverListenerTest extends TestCase
+final class GacelaClassResolverSpecificListenerTest extends TestCase
 {
     /** @var list<GacelaEventInterface> */
     private static array $inMemoryEvents = [];
@@ -27,10 +27,10 @@ final class GacelaClassResolverListenerTest extends TestCase
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
 
-            $config->registerListener(ResolvedClassCachedEvent::class, [$this, 'saveInMemoryEvent']);
-            $config->registerListener(ResolvedClassCreatedEvent::class, [$this, 'saveInMemoryEvent']);
-            $config->registerListener(ResolvedClassTriedFromParentEvent::class, [$this, 'saveInMemoryEvent']);
-            $config->registerListener(ResolvedCreatedDefaultClassEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerSpecificListener(ResolvedClassCachedEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerSpecificListener(ResolvedClassCreatedEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerSpecificListener(ResolvedClassTriedFromParentEvent::class, [$this, 'saveInMemoryEvent']);
+            $config->registerSpecificListener(ResolvedCreatedDefaultClassEvent::class, [$this, 'saveInMemoryEvent']);
         });
     }
 

@@ -9,19 +9,29 @@ use function is_callable;
 
 final class EventDispatcher implements EventDispatcherInterface
 {
+    /** @var array<callable> */
+    private array $genericListeners = [];
+
     /** @var array<class-string,list<callable>> */
-    private array $listenersPerEvent = [];
+    private array $specificListeners = [];
 
     public function __construct()
     {
     }
 
     /**
+     * @param list<callable> $genericListeners
+     */
+    public function registerGenericListeners(array $genericListeners): void
+    {
+        $this->genericListeners = $genericListeners;
+    }
+    /**
      * @param class-string $event
      */
     public function registerSpecificListener(string $event, callable $listener): void
     {
-        $this->listenersPerEvent[$event][] = $listener;
+        $this->specificListeners[$event][] = $listener;
     }
 
     public function dispatchAll(array $events): void
@@ -33,7 +43,11 @@ final class EventDispatcher implements EventDispatcherInterface
 
     public function dispatch(object $event): void
     {
-        foreach ($this->listenersPerEvent[get_class($event)] ?? [] as $listener) {
+        foreach ($this->genericListeners as $listener) {
+            $this->notifyListener($listener, $event);
+        }
+
+        foreach ($this->specificListeners[get_class($event)] ?? [] as $listener) {
             $this->notifyListener($listener, $event);
         }
     }

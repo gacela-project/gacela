@@ -49,8 +49,11 @@ final class SetupGacela extends AbstractSetupGacela
 
     private bool $areEventListenersEnabled = false;
 
+    /** @var list<callable> */
+    private array $genericListeners = [];
+
     /** @var array<class-string,list<callable>> */
-    private array $listenersPerEvent = [];
+    private array $specificListeners = [];
 
     private ?EventDispatcherInterface $eventDispatcher = null;
 
@@ -105,7 +108,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setProjectNamespaces($build['project-namespaces'])
             ->setConfigKeyValues($build['config-key-values'])
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
-            ->setListenersPerEvent($build['listeners-per-event']);
+            ->setGenericListeners($build['generic-listeners'])
+            ->setSpecificListeners($build['specific-listeners']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -293,7 +297,9 @@ final class SetupGacela extends AbstractSetupGacela
 
         if ($this->areEventListenersEnabled) {
             $this->eventDispatcher = new EventDispatcher();
-            foreach ($this->listenersPerEvent as $event => $listeners) {
+            $this->eventDispatcher->registerGenericListeners($this->genericListeners);
+
+            foreach ($this->specificListeners as $event => $listeners) {
                 foreach ($listeners as $callable) {
                     $this->eventDispatcher->registerSpecificListener($event, $callable);
                 }
@@ -323,11 +329,21 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<class-string,list<callable>> $listenersPerEvent
+     * @param list<callable> $listeners
      */
-    private function setListenersPerEvent(array $listenersPerEvent): self
+    private function setGenericListeners(array $listeners): self
     {
-        $this->listenersPerEvent = $listenersPerEvent;
+        $this->genericListeners = $listeners;
+
+        return $this;
+    }
+
+    /**
+     * @param array<class-string,list<callable>> $listeners
+     */
+    private function setSpecificListeners(array $listeners): self
+    {
+        $this->specificListeners = $listeners;
 
         return $this;
     }

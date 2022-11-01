@@ -17,6 +17,9 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\EventListener\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent;
+use Gacela\Framework\EventListener\ClassResolver\Cache\InMemoryCacheCreatedEvent;
+use Gacela\Framework\EventListener\GacelaEventInterface;
 
 final class ClassResolverFactory
 {
@@ -61,10 +64,14 @@ final class ClassResolverFactory
     private function createCache(): CacheInterface
     {
         if ($this->gacelaCache->isEnabled()) {
+            $this->dispatchEvent(new ClassNamePhpCacheCreatedEvent());
+
             return new ClassNamePhpCache(
                 Config::getInstance()->getCacheDir(),
             );
         }
+
+        $this->dispatchEvent(new InMemoryCacheCreatedEvent());
 
         return new InMemoryCache(ClassNamePhpCache::class);
     }
@@ -75,5 +82,10 @@ final class ClassResolverFactory
     private function getProjectNamespaces(): array
     {
         return $this->setupGacela->getProjectNamespaces();
+    }
+
+    private function dispatchEvent(GacelaEventInterface $event): void
+    {
+        Config::getEventDispatcher()->dispatch($event);
     }
 }

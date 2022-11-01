@@ -10,10 +10,16 @@ use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 final class AnonymousClassesTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Gacela::bootstrap(__DIR__);
+    }
+
     public function test_class_resolver_using_anonymous_classes(): void
     {
         $this->registerConfig();

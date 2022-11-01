@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ListeningEvents\ConfigReader;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\EventListener\ConfigReader\ReadPhpConfigEvent;
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\ConfigReader\ReadPhpConfigEvent;
+use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 

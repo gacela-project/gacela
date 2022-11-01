@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\EventListener\ClassResolver\Cache;
+namespace Gacela\Framework\Event\ClassResolver\Cache;
 
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\GacelaEventInterface;
 
 final class ClassNamePhpCacheCreatedEvent implements GacelaEventInterface
 {

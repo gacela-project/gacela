@@ -6,8 +6,8 @@ namespace Gacela\Framework\Config\ConfigReader;
 
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\EventListener\ConfigReader\ReadPhpConfigEvent;
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\ConfigReader\ReadPhpConfigEvent;
+use Gacela\Framework\Event\GacelaEventInterface;
 use JsonSerializable;
 use RuntimeException;
 

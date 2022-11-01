@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\EventListener;
+namespace Gacela\Framework\Event;
 
 use function get_class;
 use function is_callable;

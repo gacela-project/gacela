@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
-use Gacela\Framework\EventListener\EventDispatcherInterface;
+use Gacela\Framework\Event\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
 
 use RuntimeException;

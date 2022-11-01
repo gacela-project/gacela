@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\EventListener\ClassResolver;
+namespace Gacela\Framework\Event\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassInfoInterface;
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\GacelaEventInterface;
 
 use function get_class;
 

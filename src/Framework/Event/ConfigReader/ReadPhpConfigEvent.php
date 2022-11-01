@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\EventListener\ConfigReader;
+namespace Gacela\Framework\Event\ConfigReader;
 
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\GacelaEventInterface;
 
 use function get_class;
 

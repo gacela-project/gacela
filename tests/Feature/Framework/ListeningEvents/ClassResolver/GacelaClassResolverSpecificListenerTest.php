@@ -7,11 +7,11 @@ namespace GacelaTest\Feature\Framework\ListeningEvents\ClassResolver;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTriedFromParentEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedCreatedDefaultClassEvent;
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
+use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
+use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
+use Gacela\Framework\Event\ClassResolver\ResolvedCreatedDefaultClassEvent;
+use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 

@@ -10,7 +10,7 @@ use Gacela\Framework\Exception\ConfigException;
 abstract class AbstractConfig
 {
     /**
-     * Allow easy access to the root dir of the project.
+     * Allow easy access to the root directory of the project.
      */
     public function getAppRootDir(): string
     {

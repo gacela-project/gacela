@@ -10,7 +10,7 @@ use Gacela\Framework\EventListener\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
-final class GacelaConfigReaderListenerTest extends TestCase
+final class ReadPhpConfigEventTest extends TestCase
 {
     /** @var list<GacelaEventInterface> */
     private static array $inMemoryEvents = [];
@@ -34,10 +34,10 @@ final class GacelaConfigReaderListenerTest extends TestCase
         ], self::$inMemoryEvents);
     }
 
-    public function test_no_yaml_config_files(): void
+    public function test_no_yaml_config_files_found(): void
     {
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
-            $config->addAppConfig('config/*.yaml');
+            $config->addAppConfig('config/*.{yaml,yml}');
             $config->resetInMemoryCache();
             $config->registerSpecificListener(ReadPhpConfigEvent::class, [$this, 'saveInMemoryEvent']);
         });

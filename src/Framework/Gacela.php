@@ -31,9 +31,8 @@ final class Gacela
             Config::resetInstance();
         }
 
-        Config::getInstance()
+        Config::createWithSetup($setup)
             ->setAppRootDir($appRootDir)
-            ->setSetup($setup)
             ->init();
     }
 

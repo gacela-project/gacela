@@ -10,6 +10,7 @@ use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Gacela;
 
 /**
  * @BeforeMethods("setUp")
@@ -20,6 +21,8 @@ final class AnonymousGlobalsBench
 
     public function setUp(): void
     {
+        Gacela::bootstrap(__DIR__);
+
         $this->setupAbstractConfig();
         $this->setupAbstractDependencyProvider();
         $this->setupAbstractFactory();

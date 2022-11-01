@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
-use Gacela\Framework\Event\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
-
 use RuntimeException;
 
 use function array_key_exists;

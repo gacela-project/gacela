@@ -8,9 +8,9 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Event\ConfigurableEventDispatcher;
-use Gacela\Framework\Event\EventDispatcherInterface;
-use Gacela\Framework\Event\NullEventDispatcher;
+use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use RuntimeException;
 
 use function is_callable;

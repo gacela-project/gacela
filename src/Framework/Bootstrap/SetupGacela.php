@@ -8,7 +8,7 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Event\EventDispatcher;
+use Gacela\Framework\Event\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\EventDispatcherInterface;
 use Gacela\Framework\Event\NullEventDispatcher;
 use RuntimeException;
@@ -296,7 +296,7 @@ final class SetupGacela extends AbstractSetupGacela
         }
 
         if ($this->areEventListenersEnabled) {
-            $this->eventDispatcher = new EventDispatcher();
+            $this->eventDispatcher = new ConfigurableEventDispatcher();
             $this->eventDispatcher->registerGenericListeners($this->genericListeners);
 
             foreach ($this->specificListeners as $event => $listeners) {

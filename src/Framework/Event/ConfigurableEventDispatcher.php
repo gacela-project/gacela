@@ -7,7 +7,7 @@ namespace Gacela\Framework\Event;
 use function get_class;
 use function is_callable;
 
-final class EventDispatcher implements EventDispatcherInterface
+final class ConfigurableEventDispatcher implements EventDispatcherInterface
 {
     /** @var array<callable> */
     private array $genericListeners = [];

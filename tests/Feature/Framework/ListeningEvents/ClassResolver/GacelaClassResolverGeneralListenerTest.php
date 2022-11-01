@@ -7,6 +7,7 @@ namespace GacelaTest\Feature\Framework\ListeningEvents\ClassResolver;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
+use Gacela\Framework\EventListener\ClassResolver\Cache\InMemoryCacheCreatedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTriedFromParentEvent;
@@ -42,6 +43,7 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
         $facade->doString();
 
         self::assertEquals([
+            new InMemoryCacheCreatedEvent(),
             new ResolvedClassCreatedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
         ], self::$inMemoryEvents);
     }
@@ -55,6 +57,7 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
         $facade->doString();
 
         self::assertEquals([
+            new InMemoryCacheCreatedEvent(),
             new ResolvedClassCreatedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
             new ResolvedClassCachedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
         ], self::$inMemoryEvents);
@@ -66,6 +69,7 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
         $factory->getConfig();
 
         self::assertEquals([
+            new InMemoryCacheCreatedEvent(),
             new ResolvedClassTriedFromParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
             new ResolvedCreatedDefaultClassEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
         ], self::$inMemoryEvents);

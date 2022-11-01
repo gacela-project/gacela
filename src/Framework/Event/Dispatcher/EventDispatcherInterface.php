@@ -6,10 +6,5 @@ namespace Gacela\Framework\Event\Dispatcher;
 
 interface EventDispatcherInterface
 {
-    /**
-     * @param list<object> $events
-     */
-    public function dispatchAll(array $events): void;
-
     public function dispatch(object $event): void;
 }

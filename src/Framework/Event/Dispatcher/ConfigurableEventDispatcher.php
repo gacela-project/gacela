@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Event\Dispatcher;
 
 use function get_class;
-use function is_callable;
 
 final class ConfigurableEventDispatcher implements EventDispatcherInterface
 {
@@ -34,13 +33,6 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
         $this->specificListeners[$event][] = $listener;
     }
 
-    public function dispatchAll(array $events): void
-    {
-        foreach ($events as $event) {
-            $this->dispatch($event);
-        }
-    }
-
     public function dispatch(object $event): void
     {
         foreach ($this->genericListeners as $listener) {
@@ -54,10 +46,6 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
 
     private function notifyListener(callable $listener, object $event): void
     {
-        /** @psalm-suppress MixedAssignment */
-        $result = $listener($event);
-        if (is_callable($result)) {
-            $result($event);
-        }
+        $listener($event);
     }
 }

@@ -20,24 +20,23 @@
         }
     ],
     "require": {
-        "php": ">=7.4",
-        "ext-json": "*"
+        "php": ">=7.4"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.12",
-        "phpunit/phpunit": "^9.5",
+        "friendsofphp/php-cs-fixer": "^3.13",
         "phpbench/phpbench": "^1.2",
-        "psalm/plugin-phpunit": "^0.17.0",
         "phpmetrics/phpmetrics": "^2.8",
+        "phpunit/phpunit": "^9.5",
         "phpstan/phpstan": "^1.8",
+        "psalm/plugin-phpunit": "^0.17",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
         "vimeo/psalm": "^4.29"
     },
     "suggest": {
-        "symfony/console": "Allows to use vendor/bin/gacela script",
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
-        "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files"
+        "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files",
+        "symfony/console": "Allows to use vendor/bin/gacela script"
     },
     "autoload": {
         "psr-4": {

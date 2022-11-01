@@ -2,5 +2,5 @@
 
 set -e
 
-composer test-all
-
+composer quality
+composer phpunit

@@ -14,11 +14,11 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCachedEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassCreatedEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedClassTriedFromParentEvent;
-use Gacela\Framework\EventListener\ClassResolver\ResolvedCreatedDefaultClassEvent;
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
+use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
+use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
+use Gacela\Framework\Event\ClassResolver\ResolvedCreatedDefaultClassEvent;
+use Gacela\Framework\Event\GacelaEventInterface;
 
 use function is_array;
 use function is_object;

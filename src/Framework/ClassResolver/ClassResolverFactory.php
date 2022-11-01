@@ -17,9 +17,9 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
 use Gacela\Framework\Config\Config;
-use Gacela\Framework\EventListener\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent;
-use Gacela\Framework\EventListener\ClassResolver\Cache\InMemoryCacheCreatedEvent;
-use Gacela\Framework\EventListener\GacelaEventInterface;
+use Gacela\Framework\Event\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent;
+use Gacela\Framework\Event\ClassResolver\Cache\InMemoryCacheCreatedEvent;
+use Gacela\Framework\Event\GacelaEventInterface;
 
 final class ClassResolverFactory
 {

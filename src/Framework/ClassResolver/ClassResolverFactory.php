@@ -19,10 +19,12 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModuleP
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\Cache\InMemoryCacheCreatedEvent;
-use Gacela\Framework\Event\GacelaEventInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 final class ClassResolverFactory
 {
+    use EventDispatchingCapabilities;
+
     private GacelaFileCache $gacelaCache;
 
     private SetupGacelaInterface $setupGacela;
@@ -82,10 +84,5 @@ final class ClassResolverFactory
     private function getProjectNamespaces(): array
     {
         return $this->setupGacela->getProjectNamespaces();
-    }
-
-    private function dispatchEvent(GacelaEventInterface $event): void
-    {
-        Config::getEventDispatcher()->dispatch($event);
     }
 }

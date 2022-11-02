@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\ConfigReader;
 
-use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Event\ConfigReader\ReadPhpConfigEvent;
-use Gacela\Framework\Event\GacelaEventInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use JsonSerializable;
 use RuntimeException;
 
@@ -15,6 +14,8 @@ use function is_array;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {
+    use EventDispatchingCapabilities;
+
     /**
      * @return array<string,mixed>
      */
@@ -56,10 +57,5 @@ final class PhpConfigReader implements ConfigReaderInterface
         $extension = pathinfo($absolutePath, PATHINFO_EXTENSION);
 
         return $extension === 'php' && file_exists($absolutePath);
-    }
-
-    private function dispatchEvent(GacelaEventInterface $event): void
-    {
-        Config::getEventDispatcher()->dispatch($event);
     }
 }

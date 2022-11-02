@@ -18,13 +18,15 @@ use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedCreatedDefaultClassEvent;
-use Gacela\Framework\Event\GacelaEventInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 use function is_array;
 use function is_object;
 
 abstract class AbstractClassResolver
 {
+    use EventDispatchingCapabilities;
+
     /** @var array<string,null|object> */
     private static array $cachedInstances = [];
 
@@ -167,10 +169,5 @@ abstract class AbstractClassResolver
             default:
                 return null;
         }
-    }
-
-    private function dispatchEvent(GacelaEventInterface $event): void
-    {
-        Config::getEventDispatcher()->dispatch($event);
     }
 }

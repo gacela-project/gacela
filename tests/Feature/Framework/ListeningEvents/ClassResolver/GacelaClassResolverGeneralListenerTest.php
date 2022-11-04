@@ -8,9 +8,9 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\Event\ClassResolver\Cache\InMemoryCacheCreatedEvent;
-use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameInvalidCandidateFound;
-use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameNotFound;
-use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameValidCandidateFound;
+use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameInvalidCandidateFoundEvent;
+use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameNotFoundEvent;
+use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameValidCandidateFoundEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
@@ -47,8 +47,8 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
 
         self::assertEquals([
             new InMemoryCacheCreatedEvent(),
-            new ClassNameInvalidCandidateFound('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\ModuleFactory'),
-            new ClassNameValidCandidateFound('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Factory'),
+            new ClassNameInvalidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\ModuleFactory'),
+            new ClassNameValidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Factory'),
             new ResolvedClassCreatedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
         ], self::$inMemoryEvents);
     }
@@ -63,8 +63,8 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
 
         self::assertEquals([
             new InMemoryCacheCreatedEvent(),
-            new ClassNameInvalidCandidateFound('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\ModuleFactory'),
-            new ClassNameValidCandidateFound('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Factory'),
+            new ClassNameInvalidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\ModuleFactory'),
+            new ClassNameValidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Factory'),
             new ResolvedClassCreatedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
             new ResolvedClassCachedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
         ], self::$inMemoryEvents);
@@ -77,13 +77,13 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
 
         self::assertEquals([
             new InMemoryCacheCreatedEvent(),
-            new ClassNameInvalidCandidateFound('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\ModuleConfig'),
-            new ClassNameInvalidCandidateFound('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Config'),
-            new ClassNameNotFound(ClassInfo::from(Module\Factory::class, 'Config'), ['Config']),
+            new ClassNameInvalidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\ModuleConfig'),
+            new ClassNameInvalidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Config'),
+            new ClassNameNotFoundEvent(ClassInfo::from(Module\Factory::class, 'Config'), ['Config']),
             new ResolvedClassTriedFromParentEvent(ClassInfo::from(Module\Factory::class, 'Config')),
-            new ClassNameInvalidCandidateFound('\Gacela\Framework\FrameworkConfig'),
-            new ClassNameInvalidCandidateFound('\Gacela\Framework\Config'),
-            new ClassNameNotFound(ClassInfo::from(AbstractFactory::class, 'Config'), ['Config']),
+            new ClassNameInvalidCandidateFoundEvent('\Gacela\Framework\FrameworkConfig'),
+            new ClassNameInvalidCandidateFoundEvent('\Gacela\Framework\Config'),
+            new ClassNameNotFoundEvent(ClassInfo::from(AbstractFactory::class, 'Config'), ['Config']),
             new ResolvedCreatedDefaultClassEvent(ClassInfo::from(AbstractFactory::class, 'Config')),
         ], self::$inMemoryEvents);
 

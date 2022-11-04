@@ -6,7 +6,7 @@ namespace Gacela\Framework\Event\ClassResolver\ClassNameFinder;
 
 use Gacela\Framework\Event\GacelaEventInterface;
 
-final class ClassNameValidCandidateFound implements GacelaEventInterface
+final class ClassNameValidCandidateFoundEvent implements GacelaEventInterface
 {
     private string $className;
 

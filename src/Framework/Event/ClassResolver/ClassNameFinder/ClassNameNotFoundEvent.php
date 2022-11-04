@@ -7,7 +7,7 @@ namespace Gacela\Framework\Event\ClassResolver\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\Event\GacelaEventInterface;
 
-final class ClassNameNotFound implements GacelaEventInterface
+final class ClassNameNotFoundEvent implements GacelaEventInterface
 {
     private ClassInfo $classInfo;
 

@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
 use Gacela\Framework\Config\FileIoInterface;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
+use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
+use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
+use Gacela\Framework\Event\GacelaEventInterface;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +24,10 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_exception_when_the_class_does_not_return_a_callable(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(new class() {});
+        $fileIo->method('include')->willReturn(
+            new class() {
+            }
+        );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
@@ -112,5 +119,63 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             ]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());
+    }
+
+    public function test_gacela_file_override_setup_event_dispatcher_generic_listener(): void
+    {
+        $listenerDispatched = false;
+
+        $listener = static function (GacelaEventInterface $event) use (&$listenerDispatched): void {
+            self::assertInstanceOf(FakeEvent::class, $event);
+            $listenerDispatched = true;
+        };
+
+        $fileIo = $this->createStub(FileIoInterface::class);
+        $fileIo->method('include')->willReturn(
+            static function (GacelaConfig $config) use ($listener): void {
+                $config->registerGenericListener($listener);
+            }
+        );
+
+        $setup = new SetupGacela();
+        $factory = new GacelaConfigUsingGacelaPhpFileFactory('gacelaPhpPath', $setup, $fileIo);
+
+        self::assertInstanceOf(NullEventDispatcher::class, $setup->getEventDispatcher());
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+
+        $factory->createGacelaFileConfig();
+        self::assertInstanceOf(ConfigurableEventDispatcher::class, $setup->getEventDispatcher());
+
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+        self::assertTrue($listenerDispatched);
+    }
+
+    public function test_gacela_file_override_setup_event_dispatcher_specific_listener(): void
+    {
+        $listenerDispatched = false;
+
+        $listener = static function (GacelaEventInterface $event) use (&$listenerDispatched): void {
+            self::assertInstanceOf(FakeEvent::class, $event);
+            $listenerDispatched = true;
+        };
+
+        $fileIo = $this->createStub(FileIoInterface::class);
+        $fileIo->method('include')->willReturn(
+            static function (GacelaConfig $config) use ($listener): void {
+                $config->registerSpecificListener(FakeEvent::class, $listener);
+            }
+        );
+
+        $setup = new SetupGacela();
+        $factory = new GacelaConfigUsingGacelaPhpFileFactory('gacelaPhpPath', $setup, $fileIo);
+
+        self::assertInstanceOf(NullEventDispatcher::class, $setup->getEventDispatcher());
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+
+        $factory->createGacelaFileConfig();
+        self::assertInstanceOf(ConfigurableEventDispatcher::class, $setup->getEventDispatcher());
+
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+        self::assertTrue($listenerDispatched);
     }
 }

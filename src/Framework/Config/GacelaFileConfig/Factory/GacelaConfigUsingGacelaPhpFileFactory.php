@@ -41,6 +41,8 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $gacelaConfig = $this->createGacelaConfig();
         $setupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
 
+        $this->setup->overrideEventDispatcher($setupGacela);
+
         $configBuilder = $this->createConfigBuilder($setupGacela);
         $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder($setupGacela);
         $suffixTypesBuilder = $this->createSuffixTypesBuilder($setupGacela);

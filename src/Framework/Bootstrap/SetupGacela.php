@@ -13,6 +13,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use RuntimeException;
 
+use function count;
 use function is_callable;
 
 final class SetupGacela extends AbstractSetupGacela
@@ -47,7 +48,7 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var array<string,mixed> */
     private array $configKeyValues = [];
 
-    private bool $areEventListenersEnabled = false;
+    private bool $areEventListenersEnabled = true;
 
     /** @var list<callable> */
     private array $genericListeners = [];
@@ -295,7 +296,7 @@ final class SetupGacela extends AbstractSetupGacela
             return $this->eventDispatcher;
         }
 
-        if ($this->areEventListenersEnabled) {
+        if ($this->canCreateEventDispatcher()) {
             $this->eventDispatcher = new ConfigurableEventDispatcher();
             $this->eventDispatcher->registerGenericListeners($this->genericListeners);
 
@@ -316,6 +317,36 @@ final class SetupGacela extends AbstractSetupGacela
         $this->areEventListenersEnabled = $flag;
 
         return $this;
+    }
+
+    public function overrideEventDispatcher(self $other): self
+    {
+        if ($other->canCreateEventDispatcher()) {
+            $this->eventDispatcher = new ConfigurableEventDispatcher();
+            $this->eventDispatcher->registerGenericListeners($other->genericListeners);
+
+            foreach ($other->specificListeners as $event => $listeners) {
+                foreach ($listeners as $callable) {
+                    $this->eventDispatcher->registerSpecificListener($event, $callable);
+                }
+            }
+        } else {
+            $this->eventDispatcher = new NullEventDispatcher();
+        }
+
+        return $this;
+    }
+
+    private function canCreateEventDispatcher(): bool
+    {
+        return $this->areEventListenersEnabled
+            && $this->hasEventListeners();
+    }
+
+    private function hasEventListeners(): bool
+    {
+        return count($this->genericListeners) > 0
+            || count($this->specificListeners) > 0;
     }
 
     /**

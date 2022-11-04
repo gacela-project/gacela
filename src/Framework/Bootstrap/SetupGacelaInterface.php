@@ -68,4 +68,6 @@ interface SetupGacelaInterface
     public function getConfigKeyValues(): array;
 
     public function getEventDispatcher(): EventDispatcherInterface;
+
+    public function overrideEventDispatcher(SetupGacela $other): self;
 }

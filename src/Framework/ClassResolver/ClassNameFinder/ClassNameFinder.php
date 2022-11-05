@@ -7,9 +7,16 @@ namespace Gacela\Framework\ClassResolver\ClassNameFinder;
 use Gacela\Framework\ClassResolver\Cache\CacheInterface;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
+use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameCachedFoundEvent;
+use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameInvalidCandidateFoundEvent;
+use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameNotFoundEvent;
+use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameValidCandidateFoundEvent;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
+    use EventDispatchingCapabilities;
+
     private ClassValidatorInterface $classValidator;
 
     /** @var list<FinderRuleInterface> */
@@ -46,7 +53,10 @@ final class ClassNameFinder implements ClassNameFinderInterface
         $cacheKey = $classInfo->getCacheKey();
 
         if ($this->cache->has($cacheKey)) {
-            return $this->cache->get($cacheKey);
+            $cached = $this->cache->get($cacheKey);
+            $this->dispatchEvent(new ClassNameCachedFoundEvent($cached));
+
+            return $cached;
         }
         $projectNamespaces = $this->projectNamespaces;
         $projectNamespaces[] = $classInfo->getModuleNamespace();
@@ -55,14 +65,20 @@ final class ClassNameFinder implements ClassNameFinderInterface
             foreach ($this->finderRules as $finderRule) {
                 foreach ($resolvableTypes as $resolvableType) {
                     $className = $finderRule->buildClassCandidate($projectNamespace, $resolvableType, $classInfo);
+
                     if ($this->classValidator->isClassNameValid($className)) {
                         $this->cache->put($cacheKey, $className);
+                        $this->dispatchEvent(new ClassNameValidCandidateFoundEvent($className));
 
                         return $className;
                     }
+
+                    $this->dispatchEvent(new ClassNameInvalidCandidateFoundEvent($className));
                 }
             }
         }
+
+        $this->dispatchEvent(new ClassNameNotFoundEvent($classInfo, $resolvableTypes));
 
         return null;
     }

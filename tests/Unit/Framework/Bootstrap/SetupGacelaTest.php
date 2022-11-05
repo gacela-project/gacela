@@ -109,4 +109,27 @@ final class SetupGacelaTest extends TestCase
 
         self::assertSame(['App1', 'App2'], $setup->getProjectNamespaces());
     }
+
+    public function test_override_file_cache_settings(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->setFileCacheEnabled(false)
+                ->setFileCacheDirectory('original/dir')
+        );
+
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->setFileCacheEnabled(true)
+                ->setFileCacheDirectory('override/dir')
+        );
+
+        self::assertFalse($setup->isFileCacheEnabled());
+        self::assertSame('original/dir', $setup->getFileCacheDirectory());
+
+        $setup->combine($setup2);
+
+        self::assertTrue($setup->isFileCacheEnabled());
+        self::assertSame('override/dir', $setup->getFileCacheDirectory());
+    }
 }

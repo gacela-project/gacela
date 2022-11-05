@@ -321,11 +321,18 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function combine(self $other): self
     {
+        $this->overrideFileCacheSettings($other);
         $this->combineProjectNamespaces($other);
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
 
         return $this;
+    }
+
+    private function overrideFileCacheSettings(self $other): void
+    {
+        $this->fileCacheEnabled = $other->isFileCacheEnabled();
+        $this->fileCacheDirectory = $other->getFileCacheDirectory();
     }
 
     private function combineProjectNamespaces(self $other): void

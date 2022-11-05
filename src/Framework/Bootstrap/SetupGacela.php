@@ -321,10 +321,16 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function combine(self $other): self
     {
+        $this->combineProjectNamespaces($other);
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
 
         return $this;
+    }
+
+    private function combineProjectNamespaces(self $other): void
+    {
+        $this->projectNamespaces = array_merge($this->projectNamespaces, $other->getProjectNamespaces());
     }
 
     private function combineConfigKeyValues(self $other): void

@@ -94,4 +94,19 @@ final class SetupGacelaTest extends TestCase
             'key2' => 'value2',
         ], $setup->getConfigKeyValues());
     }
+
+    public function test_combine_project_namespaces(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setProjectNamespaces(['App1'])
+        );
+
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setProjectNamespaces(['App2'])
+        );
+
+        $setup->combine($setup2);
+
+        self::assertSame(['App1', 'App2'], $setup->getProjectNamespaces());
+    }
 }

@@ -14,11 +14,11 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
-    private SetupGacelaInterface $setup;
+    private SetupGacelaInterface $bootstrapSetup;
 
-    public function __construct(SetupGacelaInterface $setup)
+    public function __construct(SetupGacelaInterface $bootstrapSetup)
     {
-        $this->setup = $setup;
+        $this->bootstrapSetup = $bootstrapSetup;
     }
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
@@ -35,16 +35,16 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
 
     private function createConfigBuilder(): ConfigBuilder
     {
-        return $this->setup->buildConfig(new ConfigBuilder());
+        return $this->bootstrapSetup->buildConfig(new ConfigBuilder());
     }
 
     private function createMappingInterfacesBuilder(): MappingInterfacesBuilder
     {
-        return $this->setup->buildMappingInterfaces(new MappingInterfacesBuilder(), []);
+        return $this->bootstrapSetup->buildMappingInterfaces(new MappingInterfacesBuilder(), []);
     }
 
     private function createSuffixTypesBuilder(): SuffixTypesBuilder
     {
-        return $this->setup->buildSuffixTypes(new SuffixTypesBuilder());
+        return $this->bootstrapSetup->buildSuffixTypes(new SuffixTypesBuilder());
     }
 }

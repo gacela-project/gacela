@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
-use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -23,25 +22,25 @@ final class GacelaConfig
     /** @var array<string, class-string|object|callable> */
     private array $externalServices;
 
-    private bool $shouldResetInMemoryCache = false;
+    private ?bool $shouldResetInMemoryCache = null;
 
-    private bool $fileCacheEnabled = GacelaFileCache::DEFAULT_ENABLED_VALUE;
+    private ?bool $fileCacheEnabled = null;
 
-    private string $fileCacheDirectory = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
+    private ?string $fileCacheDirectory = null;
 
     /** @var list<string> */
-    private array $projectNamespaces = [];
+    private ?array $projectNamespaces = null;
 
     /** @var array<string,mixed> */
-    private array $configKeyValues = [];
+    private ?array $configKeyValues = null;
 
-    private bool $areEventListenersEnabled = true;
+    private ?bool $areEventListenersEnabled = null;
 
     /** @var list<callable> */
-    private array $genericListeners = [];
+    private ?array $genericListeners = null;
 
     /** @var array<class-string,list<callable>> */
-    private array $specificListeners = [];
+    private ?array $specificListeners = null;
 
     /**
      * @param array<string,class-string|object|callable> $externalServices
@@ -216,7 +215,7 @@ final class GacelaConfig
      */
     public function addAppConfigKeyValues(array $config): self
     {
-        $this->configKeyValues = array_merge($this->configKeyValues, $config);
+        $this->configKeyValues = array_merge($this->configKeyValues ?? [], $config);
 
         return $this;
     }
@@ -237,9 +236,14 @@ final class GacelaConfig
      *
      * @param callable(GacelaEventInterface):void $listener
      */
-    public function registerGenericListener(callable $listener): void
+    public function registerGenericListener(callable $listener): self
     {
+        if ($this->genericListeners === null) {
+            $this->genericListeners = [];
+        }
         $this->genericListeners[] = $listener;
+
+        return $this;
     }
 
     /**
@@ -248,28 +252,33 @@ final class GacelaConfig
      * @param class-string $event
      * @param callable(GacelaEventInterface):void $listener
      */
-    public function registerSpecificListener(string $event, callable $listener): void
+    public function registerSpecificListener(string $event, callable $listener): self
     {
+        if ($this->specificListeners === null) {
+            $this->specificListeners = [];
+        }
         $this->specificListeners[$event][] = $listener;
+
+        return $this;
     }
 
     /**
-     * @internal
-     *
      * @return array{
-     *     external-services: array<string,class-string|object|callable>,
+     *     external-services: ?array<string,class-string|object|callable>,
      *     config-builder: ConfigBuilder,
      *     suffix-types-builder: SuffixTypesBuilder,
      *     mapping-interfaces-builder: MappingInterfacesBuilder,
-     *     should-reset-in-memory-cache: bool,
-     *     file-cache-enabled: bool,
-     *     file-cache-directory: string,
-     *     project-namespaces: list<string>,
-     *     config-key-values: array<string,mixed>,
-     *     are-event-listeners-enabled: bool,
-     *     generic-listeners: list<callable>,
-     *     specific-listeners: array<class-string,list<callable>>,
+     *     should-reset-in-memory-cache: ?bool,
+     *     file-cache-enabled: ?bool,
+     *     file-cache-directory: ?string,
+     *     project-namespaces: ?list<string>,
+     *     config-key-values: ?array<string,mixed>,
+     *     are-event-listeners-enabled: ?bool,
+     *     generic-listeners: ?list<callable>,
+     *     specific-listeners: ?array<class-string,list<callable>>,
      * }
+     *
+     * @internal
      */
     public function build(): array
     {

@@ -196,7 +196,7 @@ final class SetupGacela extends AbstractSetupGacela
 
         ($this->mappingInterfacesFn)(
             $builder,
-            array_merge($this->externalServices??[], $externalServices)
+            array_merge($this->externalServices ?? [], $externalServices)
         );
 
         return $builder;
@@ -228,7 +228,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,class-string|object|callable> $array
+     * @param ?array<string,class-string|object|callable> $array
      */
     public function setExternalServices(?array $array): self
     {
@@ -424,7 +424,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,mixed> $configKeyValues
+     * @param ?array<string,mixed> $configKeyValues
      */
     private function setConfigKeyValues(?array $configKeyValues): self
     {
@@ -435,7 +435,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param list<callable> $listeners
+     * @param ?list<callable> $listeners
      */
     private function setGenericListeners(?array $listeners): self
     {
@@ -446,7 +446,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<class-string,list<callable>> $listeners
+     * @param ?array<class-string,list<callable>> $listeners
      */
     private function setSpecificListeners(?array $listeners): self
     {

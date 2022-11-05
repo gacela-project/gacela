@@ -132,4 +132,17 @@ final class SetupGacelaTest extends TestCase
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('original/dir', $setup->getFileCacheDirectory());
     }
+
+    public function test_override_reset_in_memory_cache(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(new GacelaConfig());
+
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->resetInMemoryCache()
+        );
+
+        self::assertFalse($setup->shouldResetInMemoryCache());
+        $setup->combine($setup2);
+        self::assertTrue($setup->shouldResetInMemoryCache());
+    }
 }

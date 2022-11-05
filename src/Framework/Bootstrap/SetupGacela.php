@@ -344,12 +344,20 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function combine(self $other): self
     {
+        $this->overrideResetInMemoryCache($other);
         $this->overrideFileCacheSettings($other);
         $this->combineProjectNamespaces($other);
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
 
         return $this;
+    }
+
+    private function overrideResetInMemoryCache(self $other): void
+    {
+        if ($other->isPropertyChanged('shouldResetInMemoryCache')) {
+            $this->shouldResetInMemoryCache = $other->shouldResetInMemoryCache();
+        }
     }
 
     private function overrideFileCacheSettings(self $other): void

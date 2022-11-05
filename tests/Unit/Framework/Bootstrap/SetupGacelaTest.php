@@ -23,25 +23,6 @@ final class SetupGacelaTest extends TestCase
         $setup->getEventDispatcher()->dispatch(new FakeEvent());
     }
 
-    public function test_configurable_event_dispatcher(): void
-    {
-        $listenerDispatched = false;
-        $listener = static function (GacelaEventInterface $event) use (&$listenerDispatched): void {
-            self::assertInstanceOf(FakeEvent::class, $event);
-            $listenerDispatched = true;
-        };
-
-        $config = (new GacelaConfig())->registerGenericListener($listener);
-
-        $setup = SetupGacela::fromGacelaConfig($config);
-
-        self::assertInstanceOf(ConfigurableEventDispatcher::class, $setup->getEventDispatcher());
-
-        self::assertFalse($listenerDispatched);
-        $setup->getEventDispatcher()->dispatch(new FakeEvent());
-        self::assertTrue($listenerDispatched);
-    }
-
     public function test_combine_event_dispatcher(): void
     {
         $listenerDispatched1 = false;
@@ -131,5 +112,24 @@ final class SetupGacelaTest extends TestCase
 
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('override/dir', $setup->getFileCacheDirectory());
+    }
+
+    public function test_not_override_file_cache_settings_when_using_default(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->setFileCacheEnabled(true)
+                ->setFileCacheDirectory('original/dir')
+        );
+
+        $setup2 = SetupGacela::fromGacelaConfig(new GacelaConfig());
+
+        self::assertTrue($setup->isFileCacheEnabled());
+        self::assertSame('original/dir', $setup->getFileCacheDirectory());
+
+        $setup->combine($setup2);
+
+        self::assertTrue($setup->isFileCacheEnabled());
+        self::assertSame('original/dir', $setup->getFileCacheDirectory());
     }
 }

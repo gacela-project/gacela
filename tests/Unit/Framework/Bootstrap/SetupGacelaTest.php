@@ -76,4 +76,22 @@ final class SetupGacelaTest extends TestCase
         self::assertTrue($listenerDispatched1);
         self::assertTrue($listenerDispatched2);
     }
+
+    public function test_combine_config_key_values(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->addAppConfigKeyValue('key1', 1)
+        );
+
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->addAppConfigKeyValues(['key2' => 'value2'])
+        );
+
+        $setup->combine($setup2);
+
+        self::assertSame([
+            'key1' => 1,
+            'key2' => 'value2',
+        ], $setup->getConfigKeyValues());
+    }
 }

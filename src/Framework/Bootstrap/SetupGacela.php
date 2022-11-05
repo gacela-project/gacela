@@ -319,7 +319,14 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    public function overrideEventDispatcher(self $other): self
+    public function combine(self $other): self
+    {
+        $this->combineEventDispatcher($other);
+
+        return $this;
+    }
+
+    private function combineEventDispatcher(self $other): void
     {
         if ($other->canCreateEventDispatcher()) {
             if (!($this->eventDispatcher instanceof ConfigurableEventDispatcher)) {
@@ -335,8 +342,6 @@ final class SetupGacela extends AbstractSetupGacela
         } else {
             $this->eventDispatcher = new NullEventDispatcher();
         }
-
-        return $this;
     }
 
     private function canCreateEventDispatcher(): bool

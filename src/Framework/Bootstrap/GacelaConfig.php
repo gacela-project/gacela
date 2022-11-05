@@ -237,9 +237,11 @@ final class GacelaConfig
      *
      * @param callable(GacelaEventInterface):void $listener
      */
-    public function registerGenericListener(callable $listener): void
+    public function registerGenericListener(callable $listener): self
     {
         $this->genericListeners[] = $listener;
+
+        return $this;
     }
 
     /**
@@ -248,9 +250,11 @@ final class GacelaConfig
      * @param class-string $event
      * @param callable(GacelaEventInterface):void $listener
      */
-    public function registerSpecificListener(string $event, callable $listener): void
+    public function registerSpecificListener(string $event, callable $listener): self
     {
         $this->specificListeners[$event][] = $listener;
+
+        return $this;
     }
 
     /**

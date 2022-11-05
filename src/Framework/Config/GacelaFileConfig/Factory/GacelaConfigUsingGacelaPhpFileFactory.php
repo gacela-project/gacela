@@ -22,7 +22,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 {
     private string $gacelaPhpPath;
 
-    private SetupGacelaInterface $setup;
+    private SetupGacelaInterface $bootstrapSetup;
 
     private FileIoInterface $fileIo;
 
@@ -32,20 +32,20 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         FileIoInterface $fileIo
     ) {
         $this->gacelaPhpPath = $gacelaPhpPath;
-        $this->setup = $setup;
+        $this->bootstrapSetup = $setup;
         $this->fileIo = $fileIo;
     }
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $gacelaConfig = $this->createGacelaConfig();
-        $setupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
+        $projectSetupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
 
-        $this->setup->overrideEventDispatcher($setupGacela);
+        $this->bootstrapSetup->combine($projectSetupGacela);
 
-        $configBuilder = $this->createConfigBuilder($setupGacela);
-        $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder($setupGacela);
-        $suffixTypesBuilder = $this->createSuffixTypesBuilder($setupGacela);
+        $configBuilder = $this->createConfigBuilder($projectSetupGacela);
+        $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder($projectSetupGacela);
+        $suffixTypesBuilder = $this->createSuffixTypesBuilder($projectSetupGacela);
 
         return (new GacelaConfigFile())
             ->setConfigItems($configBuilder->build())
@@ -55,7 +55,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 
     private function createGacelaConfig(): GacelaConfig
     {
-        $gacelaConfig = new GacelaConfig($this->setup->externalServices());
+        $gacelaConfig = new GacelaConfig($this->bootstrapSetup->externalServices());
 
         /** @var callable(GacelaConfig):void|null $configFn */
         $configFn = $this->fileIo->include($this->gacelaPhpPath);
@@ -76,7 +76,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 
     private function createMappingInterfacesBuilder(SetupGacelaInterface $setupGacela): MappingInterfacesBuilder
     {
-        return $setupGacela->buildMappingInterfaces(new MappingInterfacesBuilder(), $this->setup->externalServices());
+        return $setupGacela->buildMappingInterfaces(new MappingInterfacesBuilder(), $this->bootstrapSetup->externalServices());
     }
 
     private function createSuffixTypesBuilder(SetupGacelaInterface $setupGacela): SuffixTypesBuilder

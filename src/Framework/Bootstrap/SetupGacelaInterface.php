@@ -69,5 +69,5 @@ interface SetupGacelaInterface
 
     public function getEventDispatcher(): EventDispatcherInterface;
 
-    public function overrideEventDispatcher(SetupGacela $other): self;
+    public function combine(SetupGacela $other): self;
 }

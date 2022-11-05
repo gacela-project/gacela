@@ -42,7 +42,7 @@ final class SetupGacelaTest extends TestCase
         self::assertTrue($listenerDispatched);
     }
 
-    public function test_override_event_dispatcher(): void
+    public function test_combine_event_dispatcher(): void
     {
         $listenerDispatched1 = false;
         $listenerDispatched2 = false;

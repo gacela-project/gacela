@@ -28,18 +28,18 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
 
     public function __construct(
         string $gacelaPhpPath,
-        SetupGacelaInterface $setup,
+        SetupGacelaInterface $bootstrapSetup,
         FileIoInterface $fileIo
     ) {
         $this->gacelaPhpPath = $gacelaPhpPath;
-        $this->bootstrapSetup = $setup;
+        $this->bootstrapSetup = $bootstrapSetup;
         $this->fileIo = $fileIo;
     }
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        $gacelaConfig = $this->createGacelaConfig();
-        $projectSetupGacela = SetupGacela::fromGacelaConfig($gacelaConfig);
+        $projectGacelaConfig = $this->createGacelaConfig();
+        $projectSetupGacela = SetupGacela::fromGacelaConfig($projectGacelaConfig);
 
         $this->bootstrapSetup->combine($projectSetupGacela);
 

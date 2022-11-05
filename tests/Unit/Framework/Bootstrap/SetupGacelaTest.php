@@ -11,6 +11,7 @@ use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use Gacela\Framework\Event\GacelaEventInterface;
 use GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory\FakeEvent;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class SetupGacelaTest extends TestCase
 {
@@ -53,7 +54,9 @@ final class SetupGacelaTest extends TestCase
 
         self::assertFalse($listenerDispatched1);
         self::assertFalse($listenerDispatched2);
+
         $setup->getEventDispatcher()->dispatch(new FakeEvent());
+
         self::assertTrue($listenerDispatched1);
         self::assertTrue($listenerDispatched2);
     }
@@ -144,5 +147,31 @@ final class SetupGacelaTest extends TestCase
         self::assertFalse($setup->shouldResetInMemoryCache());
         $setup->combine($setup2);
         self::assertTrue($setup->shouldResetInMemoryCache());
+    }
+
+    public function test_combine_external_services(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->addExternalService('service1', static fn () => 1)
+        );
+
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->addExternalService('service2', static fn () => 2)
+                ->addExternalService('service3', new stdClass())
+        );
+
+        self::assertEquals([
+            'service1' => static fn () => 1,
+        ], $setup->externalServices());
+
+        $setup->combine($setup2);
+
+        self::assertEquals([
+            'service1' => static fn () => 1,
+            'service2' => static fn () => 2,
+            'service3' => new stdClass(),
+        ], $setup->externalServices());
     }
 }

@@ -346,11 +346,20 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $this->overrideResetInMemoryCache($other);
         $this->overrideFileCacheSettings($other);
+
+        $this->combineExternalServices($other);
         $this->combineProjectNamespaces($other);
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
 
         return $this;
+    }
+
+    private function combineExternalServices(self $other): void
+    {
+        if ($other->isPropertyChanged('externalServices')) {
+            $this->externalServices = array_merge($this->externalServices ?? [], $other->externalServices());
+        }
     }
 
     private function overrideResetInMemoryCache(self $other): void

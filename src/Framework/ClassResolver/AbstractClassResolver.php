@@ -30,7 +30,7 @@ abstract class AbstractClassResolver
     /** @var array<string,null|object> */
     private static array $cachedInstances = [];
 
-    private ?ClassNameFinderInterface $classNameFinder = null;
+    private static ?ClassNameFinderInterface $classNameFinder = null;
 
     private ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
@@ -42,6 +42,7 @@ abstract class AbstractClassResolver
     public static function resetCache(): void
     {
         self::$cachedInstances = [];
+        self::$classNameFinder = null;
     }
 
     /**
@@ -110,14 +111,14 @@ abstract class AbstractClassResolver
 
     private function getClassNameFinder(): ClassNameFinderInterface
     {
-        if ($this->classNameFinder === null) {
-            $this->classNameFinder = (new ClassResolverFactory(
+        if (self::$classNameFinder === null) {
+            self::$classNameFinder = (new ClassResolverFactory(
                 new GacelaFileCache(Config::getInstance()),
                 Config::getInstance()->getSetupGacela()
             ))->createClassNameFinder();
         }
 
-        return $this->classNameFinder;
+        return self::$classNameFinder;
     }
 
     /**

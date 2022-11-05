@@ -322,7 +322,9 @@ final class SetupGacela extends AbstractSetupGacela
     public function overrideEventDispatcher(self $other): self
     {
         if ($other->canCreateEventDispatcher()) {
-            $this->eventDispatcher = new ConfigurableEventDispatcher();
+            if (!($this->eventDispatcher instanceof ConfigurableEventDispatcher)) {
+                $this->eventDispatcher = new ConfigurableEventDispatcher();
+            }
             $this->eventDispatcher->registerGenericListeners($other->genericListeners);
 
             foreach ($other->specificListeners as $event => $listeners) {

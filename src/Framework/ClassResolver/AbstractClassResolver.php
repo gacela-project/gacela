@@ -6,7 +6,6 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
@@ -113,7 +112,6 @@ abstract class AbstractClassResolver
     {
         if (self::$classNameFinder === null) {
             self::$classNameFinder = (new ClassResolverFactory(
-                new GacelaFileCache(Config::getInstance()),
                 Config::getInstance()->getSetupGacela()
             ))->createClassNameFinder();
         }

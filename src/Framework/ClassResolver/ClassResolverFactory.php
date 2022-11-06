@@ -6,9 +6,6 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\ClassResolver\Cache\CacheInterface;
-use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
-use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
-use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinder;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
@@ -16,36 +13,14 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidatorInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
-use Gacela\Framework\Config\Config;
-use Gacela\Framework\Event\ClassResolver\Cache\ClassNameCacheCachedEvent;
-use Gacela\Framework\Event\ClassResolver\Cache\ClassNameInMemoryCacheCreatedEvent;
-use Gacela\Framework\Event\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent;
-use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 final class ClassResolverFactory
 {
-    use EventDispatchingCapabilities;
-
-    private static ?CacheInterface $cache = null;
-
-    private GacelaFileCache $gacelaCache;
-
     private SetupGacelaInterface $setupGacela;
 
-    public function __construct(
-        GacelaFileCache $gacelaCache,
-        SetupGacelaInterface $setupGacela
-    ) {
-        $this->gacelaCache = $gacelaCache;
-        $this->setupGacela = $setupGacela;
-    }
-
-    /**
-     * @internal
-     */
-    public static function resetCache(): void
+    public function __construct(SetupGacelaInterface $setupGacela)
     {
-        self::$cache = null;
+        $this->setupGacela = $setupGacela;
     }
 
     public function createClassNameFinder(): ClassNameFinderInterface
@@ -76,21 +51,7 @@ final class ClassResolverFactory
 
     private function getCache(): CacheInterface
     {
-        if (self::$cache !== null) {
-            $this->dispatchEvent(new ClassNameCacheCachedEvent());
-            return self::$cache;
-        }
-
-        if ($this->gacelaCache->isEnabled()) {
-            $this->dispatchEvent(new ClassNamePhpCacheCreatedEvent());
-
-            self::$cache = new ClassNamePhpCache(Config::getInstance()->getCacheDir());
-        } else {
-            $this->dispatchEvent(new ClassNameInMemoryCacheCreatedEvent());
-            self::$cache = new InMemoryCache(ClassNamePhpCache::class);
-        }
-
-        return self::$cache;
+        return ClassResolverCache::getCache();
     }
 
     /**

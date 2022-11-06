@@ -11,7 +11,7 @@ use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
-use Gacela\Framework\ClassResolver\ClassResolverFactory;
+use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 
@@ -29,7 +29,7 @@ final class Gacela
         if ($setup->shouldResetInMemoryCache()) {
             GacelaFileCache::resetCache();
             DocBlockResolverCache::resetCache();
-            ClassResolverFactory::resetCache(); // TODO: extract cache to its own class, similar as `DocBlockResolverCache`
+            ClassResolverCache::resetCache();
             InMemoryCache::resetCache();
             AbstractClassResolver::resetCache();
             Config::resetInstance();

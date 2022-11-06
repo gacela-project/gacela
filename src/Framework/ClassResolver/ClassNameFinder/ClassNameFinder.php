@@ -54,7 +54,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
         if ($this->cache->has($cacheKey)) {
             $cached = $this->cache->get($cacheKey);
-            $this->dispatchEvent(new ClassNameCachedFoundEvent($cached));
+            self::dispatchEvent(new ClassNameCachedFoundEvent($cached));
 
             return $cached;
         }
@@ -68,17 +68,17 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
                     if ($this->classValidator->isClassNameValid($className)) {
                         $this->cache->put($cacheKey, $className);
-                        $this->dispatchEvent(new ClassNameValidCandidateFoundEvent($className));
+                        self::dispatchEvent(new ClassNameValidCandidateFoundEvent($className));
 
                         return $className;
                     }
 
-                    $this->dispatchEvent(new ClassNameInvalidCandidateFoundEvent($className));
+                    self::dispatchEvent(new ClassNameInvalidCandidateFoundEvent($className));
                 }
             }
         }
 
-        $this->dispatchEvent(new ClassNameNotFoundEvent($classInfo, $resolvableTypes));
+        self::dispatchEvent(new ClassNameNotFoundEvent($classInfo, $resolvableTypes));
 
         return null;
     }

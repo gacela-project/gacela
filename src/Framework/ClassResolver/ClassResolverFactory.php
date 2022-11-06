@@ -17,13 +17,16 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithModulePrefix;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModulePrefix;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Event\ClassResolver\Cache\ClassNameCacheCachedEvent;
+use Gacela\Framework\Event\ClassResolver\Cache\ClassNameInMemoryCacheCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent;
-use Gacela\Framework\Event\ClassResolver\Cache\InMemoryCacheCreatedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 final class ClassResolverFactory
 {
     use EventDispatchingCapabilities;
+
+    private static ?CacheInterface $cache = null;
 
     private GacelaFileCache $gacelaCache;
 
@@ -37,12 +40,20 @@ final class ClassResolverFactory
         $this->setupGacela = $setupGacela;
     }
 
+    /**
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$cache = null;
+    }
+
     public function createClassNameFinder(): ClassNameFinderInterface
     {
         return new ClassNameFinder(
             $this->createClassValidator(),
             $this->createFinderRules(),
-            $this->createCache(),
+            $this->getCache(),
             $this->getProjectNamespaces()
         );
     }
@@ -63,19 +74,23 @@ final class ClassResolverFactory
         ];
     }
 
-    private function createCache(): CacheInterface
+    private function getCache(): CacheInterface
     {
+        if (self::$cache !== null) {
+            $this->dispatchEvent(new ClassNameCacheCachedEvent());
+            return self::$cache;
+        }
+
         if ($this->gacelaCache->isEnabled()) {
             $this->dispatchEvent(new ClassNamePhpCacheCreatedEvent());
 
-            return new ClassNamePhpCache(
-                Config::getInstance()->getCacheDir(),
-            );
+            self::$cache = new ClassNamePhpCache(Config::getInstance()->getCacheDir());
+        } else {
+            $this->dispatchEvent(new ClassNameInMemoryCacheCreatedEvent());
+            self::$cache = new InMemoryCache(ClassNamePhpCache::class);
         }
 
-        $this->dispatchEvent(new InMemoryCacheCreatedEvent());
-
-        return new InMemoryCache(ClassNamePhpCache::class);
+        return self::$cache;
     }
 
     /**

@@ -6,6 +6,7 @@ namespace GacelaTest\Integration\Framework\DocBlockResolverAware;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -15,7 +16,6 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         DirectoryUtil::removeDir(__DIR__ . '/.gacela');
-        CustomServicesPhpCache::resetCache();
     }
 
     protected function setUp(): void
@@ -23,6 +23,9 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
             $config->addAppConfig('config/custom-services/*.php');
+            $config->registerGenericListener(static function (GacelaEventInterface $event): void {
+                // dump('Triggered -> ' . \get_class($event)); # useful for debugging
+            });
         });
     }
 

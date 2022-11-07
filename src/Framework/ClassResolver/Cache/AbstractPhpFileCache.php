@@ -8,7 +8,7 @@ use RuntimeException;
 
 abstract class AbstractPhpFileCache implements CacheInterface
 {
-    /** @var array<string,string> */
+    /** @var array<class-string,array<string,string>> */
     private static array $cache = [];
 
     private string $cacheDir;
@@ -16,15 +16,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
     public function __construct(string $cacheDir)
     {
         $this->cacheDir = $cacheDir;
-        self::$cache = $this->getExistingCache();
-    }
-
-    /**
-     * @internal
-     */
-    public static function resetCache(): void
-    {
-        self::$cache = [];
+        self::$cache[static::class] = $this->getExistingCache();
     }
 
     /**
@@ -34,31 +26,31 @@ abstract class AbstractPhpFileCache implements CacheInterface
      */
     public static function all(): array
     {
-        return self::$cache;
+        return self::$cache[static::class];
     }
 
     public function has(string $cacheKey): bool
     {
-        return isset(self::$cache[$cacheKey]);
+        return isset(self::$cache[static::class][$cacheKey]);
     }
 
     public function get(string $cacheKey): string
     {
-        return self::$cache[$cacheKey];
+        return self::$cache[static::class][$cacheKey];
     }
 
     public function getAll(): array
     {
-        return self::$cache;
+        return self::$cache[static::class];
     }
 
     public function put(string $cacheKey, string $className): void
     {
-        self::$cache[$cacheKey] = $className;
+        self::$cache[static::class][$cacheKey] = $className;
 
         $fileContent = sprintf(
             '<?php return %s;',
-            var_export(self::$cache, true)
+            var_export(self::$cache[static::class], true)
         );
 
         file_put_contents($this->getAbsoluteCacheFilename(), $fileContent);

@@ -16,7 +16,6 @@ final class DocBlockResolverInMemoryAwareTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         DirectoryUtil::removeDir(__DIR__ . '/.gacela');
-        InMemoryCache::resetCache();
     }
 
     protected function setUp(): void

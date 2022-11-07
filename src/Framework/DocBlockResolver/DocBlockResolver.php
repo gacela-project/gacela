@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\DocBlockResolver;
 
-use Gacela\Framework\ClassResolver\Cache\CacheInterface;
-use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
-use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
-use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
-use Gacela\Framework\Config\Config;
 use ReflectionClass;
 
 use function get_class;
@@ -53,7 +48,7 @@ final class DocBlockResolver
     private function getClassName(string $method): string
     {
         $cacheKey = $this->generateCacheKey($method);
-        $cache = $this->createCache();
+        $cache = DocBlockResolverCache::getCacheInstance();
 
         if (!$cache->has($cacheKey)) {
             $className = $this->getClassFromDoc($method);
@@ -66,22 +61,6 @@ final class DocBlockResolver
     private function generateCacheKey(string $method): string
     {
         return $this->callerClass . '::' . $method;
-    }
-
-    private function createCache(): CacheInterface
-    {
-        if ($this->isProjectCacheEnabled()) {
-            return new CustomServicesPhpCache(
-                Config::getInstance()->getCacheDir(),
-            );
-        }
-
-        return new InMemoryCache(CustomServicesPhpCache::class);
-    }
-
-    private function isProjectCacheEnabled(): bool
-    {
-        return (new GacelaFileCache(Config::getInstance()))->isEnabled();
     }
 
     /**

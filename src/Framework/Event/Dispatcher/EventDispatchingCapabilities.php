@@ -9,7 +9,7 @@ use Gacela\Framework\Event\GacelaEventInterface;
 
 trait EventDispatchingCapabilities
 {
-    private function dispatchEvent(GacelaEventInterface $event): void
+    private static function dispatchEvent(GacelaEventInterface $event): void
     {
         Config::getEventDispatcher()->dispatch($event);
     }

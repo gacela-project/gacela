@@ -6,7 +6,6 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
@@ -60,7 +59,7 @@ abstract class AbstractClassResolver
 
         $resolvedClass = $this->resolveCached($cacheKey);
         if ($resolvedClass !== null) {
-            $this->dispatchEvent(new ResolvedClassCachedEvent($classInfo));
+            self::dispatchEvent(new ResolvedClassCachedEvent($classInfo));
 
             return $resolvedClass;
         }
@@ -68,19 +67,19 @@ abstract class AbstractClassResolver
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName !== null) {
             $instance = $this->createInstance($resolvedClassName);
-            $this->dispatchEvent(new ResolvedClassCreatedEvent($classInfo));
+            self::dispatchEvent(new ResolvedClassCreatedEvent($classInfo));
         } else {
             // Try again with its parent class
             if (is_object($caller)) {
                 $parentClass = get_parent_class($caller);
                 if ($parentClass !== false) {
-                    $this->dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
+                    self::dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
 
                     return $this->doResolve($parentClass, $cacheKey);
                 }
             }
 
-            $this->dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
+            self::dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
             $instance = $this->createDefaultGacelaClass();
         }
 
@@ -113,7 +112,6 @@ abstract class AbstractClassResolver
     {
         if (self::$classNameFinder === null) {
             self::$classNameFinder = (new ClassResolverFactory(
-                new GacelaFileCache(Config::getInstance()),
                 Config::getInstance()->getSetupGacela()
             ))->createClassNameFinder();
         }

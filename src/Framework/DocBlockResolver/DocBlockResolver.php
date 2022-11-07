@@ -116,6 +116,8 @@ final class DocBlockResolver
         $result2 = $result;
         if (strpos($result, 'Config') !== false) {
             $result2 = 'Config';
+        } elseif (strpos($result, 'Facade') !== false) {
+            $result2 = 'Facade';
         }
 
         return $result2;

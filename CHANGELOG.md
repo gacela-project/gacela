@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 0.30.0
+#### 2022-11-07
 
 - Allow combine and override different `GacelaConfig` from project level
 - Added internal events for the `ClassResolver\Cache` scope

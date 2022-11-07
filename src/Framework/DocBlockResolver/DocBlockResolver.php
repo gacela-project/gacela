@@ -113,15 +113,16 @@ final class DocBlockResolver
             ? $normalizedResolvableType
             : $resolvableType;
 
-        $result2 = $result;
         if (strpos($result, 'Config') !== false) {
-            $result2 = 'Config';
-        } elseif (strpos($result, 'Facade') !== false) {
-            $result2 = 'Facade';
-        } elseif (strpos($result, 'Factory') !== false) {
-            $result2 = 'Factory';
+            return 'Config';
+        }
+        if (strpos($result, 'Facade') !== false) {
+            return 'Facade';
+        }
+        if (strpos($result, 'Factory') !== false) {
+            return 'Factory';
         }
 
-        return $result2;
+        return $result;
     }
 }

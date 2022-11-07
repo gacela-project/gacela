@@ -13,7 +13,6 @@ final class FakeFacade extends AbstractFacade
 {
     public function doString(): string
     {
-        return $this->getFactory()
-            ->createString();
+        return $this->getFactory()->createString();
     }
 }

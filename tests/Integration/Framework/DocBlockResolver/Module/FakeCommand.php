@@ -8,6 +8,7 @@ use Gacela\Framework\DocBlockResolverAwareTrait;
 
 /**
  * @method FakeFacade getFacade()
+ * @method FakeRandomService getRandom()
  */
 final class FakeCommand
 {

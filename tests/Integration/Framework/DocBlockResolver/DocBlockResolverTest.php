@@ -12,6 +12,7 @@ use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeCommand;
 use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeConfig;
 use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeFacade;
 use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeFactory;
+use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeRandomService;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverTest extends TestCase
@@ -46,6 +47,15 @@ final class DocBlockResolverTest extends TestCase
         $resolver = DocBlockResolver::fromCaller(new FakeFactory());
         $actual = $resolver->getDocBlockResolvable('getConfig');
         $expected = new DocBlockResolvable(FakeConfig::class, 'Config');
+
+        self::assertEquals($expected, $actual);
+    }
+
+    public function test_normalize_random(): void
+    {
+        $resolver = DocBlockResolver::fromCaller(new FakeCommand());
+        $actual = $resolver->getDocBlockResolvable('getRandom');
+        $expected = new DocBlockResolvable(FakeRandomService::class, 'FakeRandomService');
 
         self::assertEquals($expected, $actual);
     }

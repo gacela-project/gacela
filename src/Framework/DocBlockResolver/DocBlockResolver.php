@@ -109,8 +109,15 @@ final class DocBlockResolver
         $resolvableTypeParts = explode('\\', $resolvableType);
         $normalizedResolvableType = end($resolvableTypeParts);
 
-        return is_string($normalizedResolvableType)
+        $result = is_string($normalizedResolvableType)
             ? $normalizedResolvableType
             : $resolvableType;
+
+        $result2 = $result;
+        if (strpos($result, 'Config') !== false) {
+            $result2 = 'Config';
+        }
+
+        return $result2;
     }
 }

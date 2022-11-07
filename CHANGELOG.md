@@ -1,5 +1,11 @@
 # Changelog
 
+### Unreleased
+
+- Allow combine and override different `GacelaConfig` from project level
+- Added internal events for the `ClassResolver\Cache` scope
+- Fixed `PhpFileCache` bug
+
 ### 0.29.0
 #### 2022-11-02
 

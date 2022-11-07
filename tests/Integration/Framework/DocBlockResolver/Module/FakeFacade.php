@@ -11,8 +11,4 @@ use Gacela\Framework\AbstractFacade;
  */
 final class FakeFacade extends AbstractFacade
 {
-    public function doString(): string
-    {
-        return $this->getFactory()->createString();
-    }
 }

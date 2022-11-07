@@ -11,8 +11,4 @@ use Gacela\Framework\AbstractFactory;
  */
 final class FakeFactory extends AbstractFactory
 {
-    public function createString(): string
-    {
-        return $this->getConfig()->getString();
-    }
 }

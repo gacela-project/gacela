@@ -8,8 +8,4 @@ use Gacela\Framework\AbstractConfig;
 
 final class FakeConfig extends AbstractConfig
 {
-    public function getString(): string
-    {
-        return 'config';
-    }
 }

@@ -118,6 +118,8 @@ final class DocBlockResolver
             $result2 = 'Config';
         } elseif (strpos($result, 'Facade') !== false) {
             $result2 = 'Facade';
+        } elseif (strpos($result, 'Factory') !== false) {
+            $result2 = 'Factory';
         }
 
         return $result2;

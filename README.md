@@ -48,23 +48,24 @@ An example of an application structure using gacela modules:
 
 ```bash
 application-name
-├── gacela.php                     # You can customize some behaviours of gacela.
+├── gacela.php                     # You can customize some behaviours of gacela
 │
 ├── config
 │   ├── default.php
 │   └── local.php
 │
 ├── public
-│   └── index.php                  # An example of your application entry point.
+│   └── index.php                  # An example of your application entry point
 │
 ├── src
 │   ├── ExampleModuleWithoutPrefix
-│   │   ├── Domain                 # The directory structure/naming here is up to you.
+│   │   ├── Domain                 # The directory structure & naming is up to you
 │   │   │   └── YourLogicClass.php
 │   │   ├── Facade.php             # These are the 4 "gacela classes":
-│   │   └── Factory.php            # - You can prefix them with its module name.
-│   │   ├── Config.php             # - Autowiring customizable in `gacela.php`.
-│   │   └── DependencyProvider.php # - Suffix naming customizable in `gacela.php`.
+│   │   ├── Factory.php            # - Facade, Factory, Config, DependencyProvider
+│   │   ├── Config.php             # - Prefix with its module name optional
+│   │   └── DependencyProvider.php # - Autowiring customizable, and more!
+│   │                              # - Customizations in `gacela.php`
 │   │
 │   └── ExampleModuleWithPrefix
 │       ├── Domain

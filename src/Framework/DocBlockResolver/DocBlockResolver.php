@@ -14,6 +14,8 @@ use function is_string;
 
 final class DocBlockResolver
 {
+    private const SPECIAL_RESOLVABLE_TYPES = ['Facade', 'Factory', 'Config'];
+
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];
 
@@ -109,8 +111,16 @@ final class DocBlockResolver
         $resolvableTypeParts = explode('\\', $resolvableType);
         $normalizedResolvableType = end($resolvableTypeParts);
 
-        return is_string($normalizedResolvableType)
+        $result = is_string($normalizedResolvableType)
             ? $normalizedResolvableType
             : $resolvableType;
+
+        foreach (self::SPECIAL_RESOLVABLE_TYPES as $specialName) {
+            if (strpos($result, $specialName) !== false) {
+                return $specialName;
+            }
+        }
+
+        return $result;
     }
 }

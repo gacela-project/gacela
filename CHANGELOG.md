@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.30.1
+#### 2022-11-09
+
+- Fixed `DocBlockResolver` resolvableType
+- Fixed `DocBlockResolverAwareTrait` cache
+
 ### 0.30.0
 #### 2022-11-07
 

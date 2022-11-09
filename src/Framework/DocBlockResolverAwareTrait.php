@@ -27,7 +27,9 @@ trait DocBlockResolverAwareTrait
         $docBlockResolver = DocBlockResolver::fromCaller($this);
         $resolvable = $docBlockResolver->getDocBlockResolvable($method);
 
-        return (new DocBlockServiceResolver($resolvable->resolvableType()))
+        $this->customServices[$method] = (new DocBlockServiceResolver($resolvable->resolvableType()))
             ->resolve($resolvable->className());
+
+        return $this->customServices[$method];
     }
 }

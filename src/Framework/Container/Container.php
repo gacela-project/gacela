@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
-use Closure;
 use Gacela\Framework\Container\Exception\ContainerException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use SplObjectStorage;
@@ -76,11 +75,6 @@ final class Container implements ContainerInterface
         return $resolvedService;
     }
 
-    /**
-     * @param Closure|object $service
-     *
-     * @return Closure|object
-     */
     public function factory(object $service): object
     {
         if (!method_exists($service, '__invoke')) {

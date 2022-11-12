@@ -12,8 +12,18 @@ use GacelaTest\Fixtures\StringValue;
  */
 final class Facade extends AbstractFacade
 {
+    public function getCachedSeed(): string
+    {
+        return $this->getFactory()->getCachedSeed();
+    }
+
+    public function getRandomSeed(): string
+    {
+        return $this->getFactory()->getRandomSeed();
+    }
+
     public function getRandomStringValue(): StringValue
     {
-        return $this->getFactory()->createRandomStringValue();
+        return $this->getFactory()->getRandomStringValue();
     }
 }

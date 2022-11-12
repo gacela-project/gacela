@@ -16,6 +16,6 @@ final class ContainerException extends Exception implements ContainerExceptionIn
 
     public static function serviceNotInvokable(): self
     {
-        return new self('The passed service is not a closure and is not invokable.');
+        return new self('The passed service is not invokable.');
     }
 }

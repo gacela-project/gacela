@@ -13,4 +13,9 @@ final class ContainerException extends Exception implements ContainerExceptionIn
     {
         return new self("The requested service '{$id}' was not found in the container!");
     }
+
+    public static function serviceNotInvokable(): self
+    {
+        return new self('The passed service is not a closure and is not invokable.');
+    }
 }

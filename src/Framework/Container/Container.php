@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
+use Closure;
+use Gacela\Framework\Container\Exception\ContainerException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
+use SplObjectStorage;
 
 use function is_object;
 
@@ -15,6 +18,13 @@ final class Container implements ContainerInterface
 
     /** @var array<string,mixed> */
     private array $services = [];
+
+    private SplObjectStorage $factoryServices;
+
+    public function __construct()
+    {
+        $this->factoryServices = new SplObjectStorage();
+    }
 
     public function getLocator(): Locator
     {
@@ -50,6 +60,10 @@ final class Container implements ContainerInterface
             return $this->services[$id];
         }
 
+        if (isset($this->factoryServices[$this->services[$id]])) {
+            return $this->services[$id]($this);
+        }
+
         $rawService = $this->services[$id];
 
         /** @psalm-suppress InvalidFunctionCall */
@@ -60,6 +74,22 @@ final class Container implements ContainerInterface
         $this->raw[$id] = $rawService;
 
         return $resolvedService;
+    }
+
+    /**
+     * @param Closure|object $service
+     *
+     * @return Closure|object
+     */
+    public function factory(object $service): object
+    {
+        if (!method_exists($service, '__invoke')) {
+            throw ContainerException::serviceNotInvokable();
+        }
+
+        $this->factoryServices->attach($service);
+
+        return $service;
     }
 
     public function remove(string $id): void

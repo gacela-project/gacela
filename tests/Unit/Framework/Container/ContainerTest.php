@@ -87,12 +87,7 @@ final class ContainerTest extends TestCase
     {
         $this->container->set(
             'service_name',
-            new class() {
-                public function __invoke(): string
-                {
-                    return 'value_' . random_int(0, PHP_INT_MAX);
-                }
-            }
+            static fn () => 'value_' . random_int(0, PHP_INT_MAX)
         );
 
         self::assertSame(
@@ -106,12 +101,7 @@ final class ContainerTest extends TestCase
         $this->container->set(
             'service_name',
             $this->container->factory(
-                new class() {
-                    public function __invoke(): string
-                    {
-                        return 'value_' . random_int(0, PHP_INT_MAX);
-                    }
-                }
+                static fn () => 'value_' . random_int(0, PHP_INT_MAX)
             )
         );
 

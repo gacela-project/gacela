@@ -9,6 +9,7 @@ use Gacela\Framework\Container\Exception\ContainerException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use SplObjectStorage;
 
+use function is_callable;
 use function is_object;
 
 final class Container implements ContainerInterface
@@ -95,6 +96,9 @@ final class Container implements ContainerInterface
         );
     }
 
+    /**
+     * @psalm-suppress MissingClosureReturnType
+     */
     public function extend(string $id, Closure $service): object
     {
         if (!$this->has($id)) {
@@ -103,11 +107,13 @@ final class Container implements ContainerInterface
 
         $factory = $this->services[$id];
 
-        if (!is_object($factory) || !method_exists($factory, '__invoke')) {
+        if (!is_callable($factory) && is_object($factory)) {
+            $extended = static fn (Container $container) => $service($factory, $container);
+        } elseif (is_callable($factory)) {
+            $extended = static fn (Container $container) => $service($factory($container), $container);
+        } else {
             throw ContainerException::serviceNotInvokable();
         }
-
-        $extended = static fn (Container $container) => $service($factory($container), $container);
 
         $this->set($id, $extended);
 

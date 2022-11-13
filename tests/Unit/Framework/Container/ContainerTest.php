@@ -170,6 +170,14 @@ final class ContainerTest extends TestCase
         self::assertEquals(new ArrayObject([1, 2, 3, 4]), $actual);
     }
 
+    public function test_extend_non_existing_service(): void
+    {
+        $this->container->extend('service_name', static fn () => '');
+
+        $this->expectException(ContainerKeyNotFoundException::class);
+        $this->container->get('service_name');
+    }
+
     public function test_service_not_extendable(): void
     {
         $this->container->set('service_name', 'raw string');

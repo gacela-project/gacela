@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
+use Closure;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -70,4 +71,9 @@ interface SetupGacelaInterface
     public function getEventDispatcher(): EventDispatcherInterface;
 
     public function combine(SetupGacela $other): self;
+
+    /**
+     * @return array<string,list<Closure>>
+     */
+    public function getServicesToExtend(): array;
 }

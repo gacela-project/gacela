@@ -42,6 +42,9 @@ final class GacelaConfig
     /** @var array<class-string,list<callable>> */
     private ?array $specificListeners = null;
 
+    /** @var array<string,list<Closure>> */
+    private array $servicesToExtend = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -262,9 +265,17 @@ final class GacelaConfig
         return $this;
     }
 
+    public function extendService(string $id, Closure $service): self
+    {
+        $this->servicesToExtend[$id] ??= [];
+        $this->servicesToExtend[$id][] = $service;
+
+        return $this;
+    }
+
     /**
      * @return array{
-     *     external-services: ?array<string,class-string|object|callable>,
+     *     external-services: array<string,class-string|object|callable>,
      *     config-builder: ConfigBuilder,
      *     suffix-types-builder: SuffixTypesBuilder,
      *     mapping-interfaces-builder: MappingInterfacesBuilder,
@@ -276,6 +287,7 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
+     *     services-to-extend: array<string,list<Closure>>,
      * }
      *
      * @internal
@@ -295,6 +307,7 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
+            'services-to-extend' => $this->servicesToExtend,
         ];
     }
 }

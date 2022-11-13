@@ -9,6 +9,7 @@ use Gacela\Framework\Container\Exception\ContainerException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use SplObjectStorage;
 
+use function count;
 use function is_callable;
 use function is_object;
 
@@ -22,8 +23,17 @@ final class Container implements ContainerInterface
 
     private SplObjectStorage $factoryServices;
 
-    public function __construct()
+    /** @var array<string,list<Closure>> */
+    private array $servicesToExtend;
+
+    private ?string $currentlyExtending = null;
+
+    /**
+     * @param array<string,list<Closure>> $servicesToExtend
+     */
+    public function __construct(array $servicesToExtend = [])
     {
+        $this->servicesToExtend = $servicesToExtend;
         $this->factoryServices = new SplObjectStorage();
     }
 
@@ -35,6 +45,12 @@ final class Container implements ContainerInterface
     public function set(string $id, $service): void
     {
         $this->services[$id] = $service;
+
+        if ($this->currentlyExtending === $id) {
+            return;
+        }
+
+        $this->extendService($id);
     }
 
     public function has(string $id): bool
@@ -99,9 +115,11 @@ final class Container implements ContainerInterface
     /**
      * @psalm-suppress MixedAssignment
      */
-    public function extend(string $id, Closure $service): object
+    public function extend(string $id, Closure $service): Closure
     {
         if (!$this->has($id)) {
+            $this->extendLater($id, $service);
+
             return $service;
         }
 
@@ -110,6 +128,15 @@ final class Container implements ContainerInterface
         $this->set($id, $extended);
 
         return $extended;
+    }
+
+    private function extendLater(string $id, Closure $service): void
+    {
+        if (!isset($this->servicesToExtend[$id])) {
+            $this->servicesToExtend[$id] = [];
+        }
+
+        $this->servicesToExtend[$id][] = $service;
     }
 
     /**
@@ -137,5 +164,22 @@ final class Container implements ContainerInterface
         }
 
         throw ContainerException::serviceNotExtendable();
+    }
+
+    private function extendService(string $id): void
+    {
+        if (!isset($this->servicesToExtend[$id]) || count($this->servicesToExtend[$id]) === 0) {
+            return;
+        }
+        $this->currentlyExtending = $id;
+
+        foreach ($this->servicesToExtend[$id] as $service) {
+            $extended = $this->extend($id, $service);
+        }
+
+        unset($this->servicesToExtend[$id]);
+        $this->currentlyExtending = null;
+
+        $this->set($id, $extended);
     }
 }

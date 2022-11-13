@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
+use Closure;
 use Gacela\Framework\Container\Exception\ContainerException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use SplObjectStorage;
@@ -92,5 +93,24 @@ final class Container implements ContainerInterface
             $this->raw[$id],
             $this->services[$id]
         );
+    }
+
+    public function extend(string $id, Closure $service): object
+    {
+        if (!$this->has($id)) {
+            return $service;
+        }
+
+        $factory = $this->services[$id];
+
+        if (!is_object($factory) || !method_exists($factory, '__invoke')) {
+            throw ContainerException::serviceNotInvokable();
+        }
+
+        $extended = static fn (Container $container) => $service($factory($container), $container);
+
+        $this->set($id, $extended);
+
+        return $extended;
     }
 }

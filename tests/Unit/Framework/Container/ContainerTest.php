@@ -124,15 +124,21 @@ final class ContainerTest extends TestCase
 
     public function test_extend_existing_service(): void
     {
-        $this->container->set('service_name', new ArrayObject([1, 2]));
-        $this->container->extend('service_name', static function (ArrayObject $arrayObject): void {
-            $arrayObject->append(3);
-            $arrayObject->append(4);
-        });
+        $this->container->set('n3', 3);
+        $this->container->set('service_name', static fn () => new ArrayObject([1, 2]));
 
-        self::assertSame(
-            [1, 2, 3, 4],
-            $this->container->get('service_name')
+        $this->container->extend(
+            'service_name',
+            static function (ArrayObject $arrayObject, Container $container) {
+                $arrayObject->append($container->get('n3'));
+                $arrayObject->append(4);
+                return $arrayObject;
+            }
         );
+
+        /** @var ArrayObject $actual */
+        $actual = $this->container->get('service_name');
+
+        self::assertEquals(new ArrayObject([1, 2, 3, 4]), $actual);
     }
 }

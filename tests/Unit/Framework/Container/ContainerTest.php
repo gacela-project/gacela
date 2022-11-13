@@ -161,7 +161,9 @@ final class ContainerTest extends TestCase
 
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
+            static function (ArrayObject $arrayObject): void {
+                $arrayObject->append(4);
+            }
         );
 
         /** @var ArrayObject $actual */

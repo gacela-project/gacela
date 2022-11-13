@@ -119,20 +119,20 @@ final class Container implements ContainerInterface
      */
     private function generateExtendedService(Closure $service, $factory): Closure
     {
-        if (!is_callable($factory) && is_object($factory)) {
-            return static function (self $container) use ($service, $factory) {
-                $r = $service($factory, $container);
-
-                return $r ?? $factory;
-            };
-        }
-
         if (is_callable($factory)) {
             return static function (self $container) use ($service, $factory) {
                 $r1 = $factory($container);
                 $r2 = $service($r1, $container);
 
                 return $r2 ?? $r1;
+            };
+        }
+
+        if (is_object($factory)) {
+            return static function (self $container) use ($service, $factory) {
+                $r = $service($factory, $container);
+
+                return $r ?? $factory;
             };
         }
 

@@ -131,9 +131,13 @@ final class ContainerTest extends TestCase
             'service_name',
             static function (ArrayObject $arrayObject, Container $container) {
                 $arrayObject->append($container->get('n3'));
-                $arrayObject->append(4);
                 return $arrayObject;
             }
+        );
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
         );
 
         /** @var ArrayObject $actual */
@@ -151,9 +155,13 @@ final class ContainerTest extends TestCase
             'service_name',
             static function (ArrayObject $arrayObject, Container $container) {
                 $arrayObject->append($container->get('n3'));
-                $arrayObject->append(4);
                 return $arrayObject;
             }
+        );
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
         );
 
         /** @var ArrayObject $actual */

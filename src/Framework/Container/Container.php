@@ -113,18 +113,27 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * @psalm-suppress MissingClosureReturnType
+     * @psalm-suppress MissingClosureReturnType,MixedAssignment
      *
      * @param mixed $factory
      */
     private function generateExtendedService(Closure $service, $factory): Closure
     {
         if (!is_callable($factory) && is_object($factory)) {
-            return static fn (Container $container) => $service($factory, $container);
+            return static function (self $container) use ($service, $factory) {
+                $r = $service($factory, $container);
+
+                return $r ?? $factory;
+            };
         }
 
         if (is_callable($factory)) {
-            return static fn (Container $container) => $service($factory($container), $container);
+            return static function (self $container) use ($service, $factory) {
+                $r1 = $factory($container);
+                $r2 = $service($r1, $container);
+
+                return $r2 ?? $r1;
+            };
         }
 
         throw ContainerException::serviceNotExtendable();

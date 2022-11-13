@@ -161,4 +161,12 @@ final class ContainerTest extends TestCase
 
         self::assertEquals(new ArrayObject([1, 2, 3, 4]), $actual);
     }
+
+    public function test_service_not_extendable(): void
+    {
+        $this->container->set('service_name', 'raw string');
+
+        $this->expectExceptionObject(ContainerException::serviceNotExtendable());
+        $this->container->extend('service_name', static fn (string $str) => $str);
+    }
 }

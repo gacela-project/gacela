@@ -97,7 +97,7 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * @psalm-suppress MissingClosureReturnType
+     * @psalm-suppress MixedAssignment
      */
     public function extend(string $id, Closure $service): object
     {
@@ -106,17 +106,27 @@ final class Container implements ContainerInterface
         }
 
         $factory = $this->services[$id];
-
-        if (!is_callable($factory) && is_object($factory)) {
-            $extended = static fn (Container $container) => $service($factory, $container);
-        } elseif (is_callable($factory)) {
-            $extended = static fn (Container $container) => $service($factory($container), $container);
-        } else {
-            throw ContainerException::serviceNotInvokable();
-        }
-
+        $extended = $this->generateExtendedService($service, $factory);
         $this->set($id, $extended);
 
         return $extended;
+    }
+
+    /**
+     * @psalm-suppress MissingClosureReturnType
+     *
+     * @param mixed $factory
+     */
+    private function generateExtendedService(Closure $service, $factory): Closure
+    {
+        if (!is_callable($factory) && is_object($factory)) {
+            return static fn (Container $container) => $service($factory, $container);
+        }
+
+        if (is_callable($factory)) {
+            return static fn (Container $container) => $service($factory($container), $container);
+        }
+
+        throw ContainerException::serviceNotExtendable();
     }
 }

@@ -341,6 +341,7 @@ final class SetupGacela extends AbstractSetupGacela
         $this->combineProjectNamespaces($other);
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
+        $this->combineServicesToExtend($other);
 
         return $this;
     }
@@ -425,6 +426,19 @@ final class SetupGacela extends AbstractSetupGacela
         }
     }
 
+    private function combineServicesToExtend(self $other): void
+    {
+        if ($other->isPropertyChanged('servicesToExtend')) {
+            foreach ($other->getServicesToExtend() as $serviceId => $otherServiceToExtend) {
+                $this->servicesToExtend[$serviceId] ??= [];
+                $this->servicesToExtend[$serviceId] = array_merge(
+                    $this->servicesToExtend[$serviceId],
+                    $otherServiceToExtend
+                );
+            }
+        }
+    }
+
     private function canCreateEventDispatcher(): bool
     {
         return $this->areEventListenersEnabled
@@ -460,23 +474,23 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @param ?array<string,list<Closure>> $list
+     */
+    private function setServicesToExtend(?array $list): self
+    {
+        $this->markPropertyChanged('servicesToExtend', $list);
+        $this->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
+
+        return $this;
+    }
+
+    /**
      * @param ?array<class-string,list<callable>> $listeners
      */
     private function setSpecificListeners(?array $listeners): self
     {
         $this->markPropertyChanged('specificListeners', $listeners);
         $this->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
-
-        return $this;
-    }
-
-    /**
-     * @param ?array<string,list<Closure>> $list
-     */
-    private function setServicesToExtend(?array $list): self
-    {
-        $this->markPropertyChanged('extendGlobalServices', $list);
-        $this->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
 
         return $this;
     }

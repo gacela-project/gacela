@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Bootstrap;
 
+use ArrayObject;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
@@ -173,5 +174,31 @@ final class SetupGacelaTest extends TestCase
             'service2' => static fn () => 2,
             'service3' => new stdClass(),
         ], $setup->externalServices());
+    }
+
+    public function test_combine_extend_service(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->extendService('service', static fn (ArrayObject $ao) => $ao->append(1))
+        );
+
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->extendService('service', static fn (ArrayObject $ao) => $ao->append(2))
+                ->extendService('service-2', static fn (ArrayObject $ao) => $ao->append(3))
+        );
+
+        $setup->combine($setup2);
+
+        self::assertEquals([
+            'service' => [
+                static fn (ArrayObject $ao) => $ao->append(1),
+                static fn (ArrayObject $ao) => $ao->append(2),
+            ],
+            'service-2' => [
+                static fn (ArrayObject $ao) => $ao->append(3),
+            ],
+        ], $setup->getServicesToExtend());
     }
 }

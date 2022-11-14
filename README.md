@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="gacela-logo.svg" width="350" alt="Gacela logo"/>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="gacela-logo-dark.svg">
+      <img alt="Gacela logo" src="gacela-logo.svg" width="400">
+    </picture>
 </p>
 
 <p align="center">
@@ -29,10 +32,11 @@
 Splitting your project into different modules help in terms of maintainability and scalability.
 It encourages your modules to interact with each other in a unified way by following these rules:
 
-- The [`Facade`](https://gacela-project.com/docs/facade/) is the entry point of your module, and has direct access to the Factory.
-- The [`Factory`](https://gacela-project.com/docs/factory/) resolves the intra-dependencies of your module's classes, and has access to the Config.
-- The [`Config`](https://gacela-project.com/docs/config/) has access to the key-values from your config files.
-- The [`DependencyProvider`](https://gacela-project.com/docs/dependency-provider/) resolves the extra-dependencies of your module.
+- Modules interact with each other **only** via their **Facade**
+- The [**Facade**](https://gacela-project.com/docs/facade/) is the *entry point* of a module
+- The [**Factory**](https://gacela-project.com/docs/factory/) manage the *intra-dependencies* the module
+- The [**DependencyProvider**](https://gacela-project.com/docs/dependency-provider/) resolves the *extra-dependencies* of the module
+- The [**Config**](https://gacela-project.com/docs/config/) has access to the project's *config files*
 
 ### Installation
 
@@ -63,8 +67,8 @@ application-name
 │   │   │ # These are the 4 "gacela classes":
 │   │   ├── Facade.php
 │   │   ├── Factory.php
-│   │   ├── Config.php
-│   │   └── DependencyProvider.php
+│   │   ├── DependencyProvider.php
+│   │   └── Config.php
 │   │
 │   └── ModuleB
 │       └── ...

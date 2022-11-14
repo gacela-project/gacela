@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 0.31.0
+#### 2022-11-15
 
 - Added `Container::factory(service)`
 - Added `Container::extend(id, service)`

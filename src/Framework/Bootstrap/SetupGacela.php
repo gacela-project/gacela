@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
+use Closure;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
@@ -25,6 +26,7 @@ final class SetupGacela extends AbstractSetupGacela
     private const DEFAULT_CONFIG_KEY_VALUES = [];
     private const DEFAULT_GENERIC_LISTENERS = [];
     private const DEFAULT_SPECIFIC_LISTENERS = [];
+    private const DEFAULT_SERVICES_TO_EXTEND = [];
 
     /** @var callable(ConfigBuilder):void */
     private $configFn;
@@ -68,6 +70,9 @@ final class SetupGacela extends AbstractSetupGacela
 
     /** @var ?array<string,bool> */
     private ?array $changedProperties = null;
+
+    /** @var ?array<string,list<Closure>> */
+    private ?array $servicesToExtend = null;
 
     public function __construct()
     {
@@ -121,7 +126,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setConfigKeyValues($build['config-key-values'])
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
-            ->setSpecificListeners($build['specific-listeners']);
+            ->setSpecificListeners($build['specific-listeners'])
+            ->setServicesToExtend($build['services-to-extend']);
     }
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
@@ -228,11 +234,11 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param ?array<string,class-string|object|callable> $array
+     * @param array<string,class-string|object|callable> $array
      */
-    public function setExternalServices(?array $array): self
+    public function setExternalServices(array $array): self
     {
-        $this->markPropertyChanged('externalServices', $array);
+        $this->markPropertyChanged('externalServices', true);
         $this->externalServices = $array;
 
         return $this;
@@ -257,14 +263,6 @@ final class SetupGacela extends AbstractSetupGacela
     public function shouldResetInMemoryCache(): bool
     {
         return (bool)$this->shouldResetInMemoryCache;
-    }
-
-    public function setFileCacheEnabled(?bool $flag): self
-    {
-        $this->markPropertyChanged('fileCacheEnabled', $flag);
-        $this->fileCacheEnabled = $flag ?? self::DEFAULT_FILE_CACHE_ENABLED;
-
-        return $this;
     }
 
     public function isFileCacheEnabled(): bool
@@ -334,14 +332,6 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->eventDispatcher;
     }
 
-    public function setAreEventListenersEnabled(?bool $flag): self
-    {
-        $this->markPropertyChanged('areEventListenersEnabled', $flag);
-        $this->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
-
-        return $this;
-    }
-
     public function combine(self $other): self
     {
         $this->overrideResetInMemoryCache($other);
@@ -351,6 +341,30 @@ final class SetupGacela extends AbstractSetupGacela
         $this->combineProjectNamespaces($other);
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
+
+        return $this;
+    }
+
+    /**
+     * @return array<string,list<Closure>>
+     */
+    public function getServicesToExtend(): array
+    {
+        return (array)$this->servicesToExtend;
+    }
+
+    private function setFileCacheEnabled(?bool $flag): self
+    {
+        $this->markPropertyChanged('fileCacheEnabled', $flag);
+        $this->fileCacheEnabled = $flag ?? self::DEFAULT_FILE_CACHE_ENABLED;
+
+        return $this;
+    }
+
+    private function setAreEventListenersEnabled(?bool $flag): self
+    {
+        $this->markPropertyChanged('areEventListenersEnabled', $flag);
+        $this->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
 
         return $this;
     }
@@ -452,6 +466,17 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $this->markPropertyChanged('specificListeners', $listeners);
         $this->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
+
+        return $this;
+    }
+
+    /**
+     * @param ?array<string,list<Closure>> $list
+     */
+    private function setServicesToExtend(?array $list): self
+    {
+        $this->markPropertyChanged('extendGlobalServices', $list);
+        $this->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
 
         return $this;
     }

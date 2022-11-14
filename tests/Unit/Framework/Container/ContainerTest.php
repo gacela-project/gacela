@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Container;
 
+use ArrayObject;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Exception\ContainerException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
@@ -119,5 +120,71 @@ final class ContainerTest extends TestCase
             'service_name',
             $this->container->factory(new stdClass())
         );
+    }
+
+    public function test_extend_existing_callable_service(): void
+    {
+        $this->container->set('n3', 3);
+        $this->container->set('service_name', static fn () => new ArrayObject([1, 2]));
+
+        $this->container->extend(
+            'service_name',
+            static function (ArrayObject $arrayObject, Container $container) {
+                $arrayObject->append($container->get('n3'));
+                return $arrayObject;
+            }
+        );
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
+        );
+
+        /** @var ArrayObject $actual */
+        $actual = $this->container->get('service_name');
+
+        self::assertEquals(new ArrayObject([1, 2, 3, 4]), $actual);
+    }
+
+    public function test_extend_existing_object_service(): void
+    {
+        $this->container->set('n3', 3);
+        $this->container->set('service_name', new ArrayObject([1, 2]));
+
+        $this->container->extend(
+            'service_name',
+            static function (ArrayObject $arrayObject, Container $container) {
+                $arrayObject->append($container->get('n3'));
+                return $arrayObject;
+            }
+        );
+
+        $this->container->extend(
+            'service_name',
+            static function (ArrayObject $arrayObject): void {
+                $arrayObject->append(4);
+            }
+        );
+
+        /** @var ArrayObject $actual */
+        $actual = $this->container->get('service_name');
+
+        self::assertEquals(new ArrayObject([1, 2, 3, 4]), $actual);
+    }
+
+    public function test_extend_non_existing_service(): void
+    {
+        $this->container->extend('service_name', static fn () => '');
+
+        $this->expectException(ContainerKeyNotFoundException::class);
+        $this->container->get('service_name');
+    }
+
+    public function test_service_not_extendable(): void
+    {
+        $this->container->set('service_name', 'raw string');
+
+        $this->expectExceptionObject(ContainerException::serviceNotExtendable());
+        $this->container->extend('service_name', static fn (string $str) => $str);
     }
 }

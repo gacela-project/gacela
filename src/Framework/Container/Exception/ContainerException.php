@@ -13,4 +13,9 @@ final class ContainerException extends Exception implements ContainerExceptionIn
     {
         return new self('The passed service is not invokable.');
     }
+
+    public static function serviceNotExtendable(): self
+    {
+        return new self('The passed service is not extendable.');
+    }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+### Unreleased
+
+- Added `Container::factory(service)`
+- Added `Container::extend(id, service)`
+- Added `GacelaConfig::extendService(id, service)`
+
 ### 0.30.1
 #### 2022-11-09
 

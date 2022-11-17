@@ -187,4 +187,78 @@ final class ContainerTest extends TestCase
         $this->expectExceptionObject(ContainerException::serviceNotExtendable());
         $this->container->extend('service_name', static fn (string $str) => $str);
     }
+
+    public function test_extend_existing_used_object_service_is_allowed(): void
+    {
+        $this->container->set('service_name', new ArrayObject([1, 2]));
+        $this->container->get('service_name'); // not frozen because it's an object
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+        );
+
+        /** @var ArrayObject $actual */
+        $actual = $this->container->get('service_name');
+
+        self::assertEquals(new ArrayObject([1, 2, 3]), $actual);
+    }
+
+    public function test_extend_existing_used_callable_service_then_error(): void
+    {
+        $this->container->set('service_name', static fn () => new ArrayObject([1, 2]));
+        $this->container->get('service_name'); // and get frozen
+
+        $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+        );
+    }
+
+    public function test_extend_later_existing_frozen_object_service_then_error(): void
+    {
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+        );
+
+        $this->container->set('service_name', new ArrayObject([1, 2]));
+        $this->container->get('service_name'); // and get frozen
+
+        $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
+        );
+    }
+
+    public function test_extend_later_existing_frozen_callable_service_then_error(): void
+    {
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+        );
+
+        $this->container->set('service_name', static fn () => new ArrayObject([1, 2]));
+        $this->container->get('service_name'); // and get frozen
+
+        $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
+        );
+    }
+
+    public function test_set_existing_frozen_service(): void
+    {
+        $this->container->set('service_name', static fn () => new ArrayObject([1, 2]));
+        $this->container->get('service_name'); // and get frozen
+
+        $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
+        $this->container->set('service_name', static fn () => new ArrayObject([3]));
+    }
 }

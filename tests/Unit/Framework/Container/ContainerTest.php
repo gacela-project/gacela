@@ -56,7 +56,7 @@ final class ContainerTest extends TestCase
 
     public function test_resolve_service_as_function(): void
     {
-        $this->container->set('service_name', static fn (): string => 'value');
+        $this->container->set('service_name', static fn () => 'value');
 
         $resolvedService = $this->container->get('service_name');
         self::assertSame('value', $resolvedService);
@@ -191,17 +191,14 @@ final class ContainerTest extends TestCase
     public function test_extend_existing_used_object_service_is_allowed(): void
     {
         $this->container->set('service_name', new ArrayObject([1, 2]));
-        $this->container->get('service_name'); // not frozen because it's an object
+        $this->container->get('service_name'); // and get frozen
+
+        $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
 
         $this->container->extend(
             'service_name',
             static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
         );
-
-        /** @var ArrayObject $actual */
-        $actual = $this->container->get('service_name');
-
-        self::assertEquals(new ArrayObject([1, 2, 3]), $actual);
     }
 
     public function test_extend_existing_used_callable_service_then_error(): void

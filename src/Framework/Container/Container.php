@@ -76,6 +76,8 @@ final class Container implements ContainerInterface
             throw new ContainerKeyNotFoundException($this, $id);
         }
 
+        $this->frozenServices[$id] = true;
+
         if (
             isset($this->raw[$id])
             || !is_object($this->services[$id])
@@ -96,7 +98,6 @@ final class Container implements ContainerInterface
         /** @var mixed $resolvedService */
         $resolvedService = $this->services[$id];
         $this->raw[$id] = $rawService;
-        $this->frozenServices[$id] = true;
 
         return $resolvedService;
     }

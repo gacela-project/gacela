@@ -16,9 +16,6 @@ use function is_object;
 final class Container implements ContainerInterface
 {
     /** @var array<string,mixed> */
-    private array $raw = [];
-
-    /** @var array<string,mixed> */
     private array $services = [];
 
     private SplObjectStorage $factoryServices;
@@ -78,9 +75,7 @@ final class Container implements ContainerInterface
 
         $this->frozenServices[$id] = true;
 
-        if (
-            isset($this->raw[$id])
-            || !is_object($this->services[$id])
+        if (!is_object($this->services[$id])
             || !method_exists($this->services[$id], '__invoke')
         ) {
             return $this->services[$id];
@@ -97,7 +92,6 @@ final class Container implements ContainerInterface
 
         /** @var mixed $resolvedService */
         $resolvedService = $this->services[$id];
-        $this->raw[$id] = $rawService;
 
         return $resolvedService;
     }
@@ -116,7 +110,6 @@ final class Container implements ContainerInterface
     public function remove(string $id): void
     {
         unset(
-            $this->raw[$id],
             $this->services[$id],
             $this->frozenServices[$id],
         );

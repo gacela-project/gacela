@@ -26,6 +26,9 @@ final class Container implements ContainerInterface
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend;
 
+    /** @var array<string,bool> */
+    private array $frozenServices = [];
+
     private ?string $currentlyExtending = null;
 
     /**
@@ -44,6 +47,10 @@ final class Container implements ContainerInterface
 
     public function set(string $id, $service): void
     {
+        if (isset($this->frozenServices[$id])) {
+            throw ContainerException::serviceFrozen($id);
+        }
+
         $this->services[$id] = $service;
 
         if ($this->currentlyExtending === $id) {
@@ -68,6 +75,8 @@ final class Container implements ContainerInterface
         if (!$this->has($id)) {
             throw new ContainerKeyNotFoundException($this, $id);
         }
+
+        $this->frozenServices[$id] = true;
 
         if (
             isset($this->raw[$id])
@@ -108,7 +117,8 @@ final class Container implements ContainerInterface
     {
         unset(
             $this->raw[$id],
-            $this->services[$id]
+            $this->services[$id],
+            $this->frozenServices[$id],
         );
     }
 
@@ -121,6 +131,10 @@ final class Container implements ContainerInterface
             $this->extendLater($id, $service);
 
             return $service;
+        }
+
+        if (isset($this->frozenServices[$id])) {
+            throw ContainerException::serviceFrozen($id);
         }
 
         $factory = $this->services[$id];

@@ -258,4 +258,12 @@ final class ContainerTest extends TestCase
         $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
         $this->container->set('service_name', static fn () => new ArrayObject([3]));
     }
+
+    public function test_protect_service_is_not_resolved(): void
+    {
+        $service = static fn () => 'value';
+        $this->container->set('service_name', $this->container->protect($service));
+
+        self::assertSame($service, $this->container->get('service_name'));
+    }
 }

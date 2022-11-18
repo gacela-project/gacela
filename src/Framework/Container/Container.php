@@ -141,7 +141,7 @@ final class Container implements ContainerInterface
         return $extended;
     }
 
-    public function protect(Closure $service): Closure
+    public function protect($service)
     {
         $this->protectedServices->attach($service);
 

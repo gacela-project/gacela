@@ -266,4 +266,19 @@ final class ContainerTest extends TestCase
 
         self::assertSame($service, $this->container->get('service_name'));
     }
+
+    public function test_protect_service_cannot_be_extended(): void
+    {
+        $this->container->set(
+            'service_name',
+            $this->container->protect(new ArrayObject([1, 2]))
+        );
+
+        $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
+
+        $this->container->extend(
+            'service_name',
+            static fn (ArrayObject $arrayObject) => $arrayObject
+        );
+    }
 }

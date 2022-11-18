@@ -23,4 +23,9 @@ final class ContainerException extends Exception implements ContainerExceptionIn
     {
         return new self("The service '{$id}' is frozen and cannot be extendable.");
     }
+
+    public static function serviceProtected(string $id): self
+    {
+        return new self("The service '{$id}' is protected and cannot be extendable.");
+    }
 }

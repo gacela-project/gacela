@@ -134,6 +134,10 @@ final class Container implements ContainerInterface
             throw ContainerException::serviceFrozen($id);
         }
 
+        if (is_object($this->services[$id]) && isset($this->protectedServices[$this->services[$id]])) {
+            throw ContainerException::serviceProtected($id);
+        }
+
         $factory = $this->services[$id];
         $extended = $this->generateExtendedService($service, $factory);
         $this->set($id, $extended);
@@ -141,7 +145,7 @@ final class Container implements ContainerInterface
         return $extended;
     }
 
-    public function protect($service)
+    public function protect(object $service): object
     {
         $this->protectedServices->attach($service);
 

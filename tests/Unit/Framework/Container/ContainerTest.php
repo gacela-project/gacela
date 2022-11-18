@@ -274,7 +274,7 @@ final class ContainerTest extends TestCase
             $this->container->protect(new ArrayObject([1, 2]))
         );
 
-        $this->expectExceptionObject(ContainerException::serviceFrozen('service_name'));
+        $this->expectExceptionObject(ContainerException::serviceProtected('service_name'));
 
         $this->container->extend(
             'service_name',

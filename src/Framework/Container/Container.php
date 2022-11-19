@@ -20,6 +20,8 @@ final class Container implements ContainerInterface
 
     private SplObjectStorage $factoryServices;
 
+    private SplObjectStorage $protectedServices;
+
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend;
 
@@ -35,6 +37,7 @@ final class Container implements ContainerInterface
     {
         $this->servicesToExtend = $servicesToExtend;
         $this->factoryServices = new SplObjectStorage();
+        $this->protectedServices = new SplObjectStorage();
     }
 
     public function getLocator(): Locator
@@ -76,6 +79,7 @@ final class Container implements ContainerInterface
         $this->frozenServices[$id] = true;
 
         if (!is_object($this->services[$id])
+            || isset($this->protectedServices[$this->services[$id]])
             || !method_exists($this->services[$id], '__invoke')
         ) {
             return $this->services[$id];
@@ -130,11 +134,22 @@ final class Container implements ContainerInterface
             throw ContainerException::serviceFrozen($id);
         }
 
+        if (is_object($this->services[$id]) && isset($this->protectedServices[$this->services[$id]])) {
+            throw ContainerException::serviceProtected($id);
+        }
+
         $factory = $this->services[$id];
         $extended = $this->generateExtendedService($service, $factory);
         $this->set($id, $extended);
 
         return $extended;
+    }
+
+    public function protect(object $service): object
+    {
+        $this->protectedServices->attach($service);
+
+        return $service;
     }
 
     private function extendLater(string $id, Closure $service): void

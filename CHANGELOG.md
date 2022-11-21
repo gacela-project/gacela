@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 0.32.0
+#### 2022-11-24
 
 - Froze a "Container service" after its first usage with `get()`
 - Added `Container::protect(service)`

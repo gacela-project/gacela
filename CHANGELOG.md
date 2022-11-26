@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Allow extending raw arrays as services
+
 ### 0.32.0
 #### 2022-11-24
 

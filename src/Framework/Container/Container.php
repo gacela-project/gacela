@@ -178,15 +178,7 @@ final class Container implements ContainerInterface
             };
         }
 
-        if (is_object($factory)) {
-            return static function (self $container) use ($service, $factory) {
-                $r = $service($factory, $container);
-
-                return $r ?? $factory;
-            };
-        }
-
-        if (is_array($factory)) {
+        if (is_object($factory) || is_array($factory)) {
             return static function (self $container) use ($service, $factory) {
                 $r = $service($factory, $container);
 

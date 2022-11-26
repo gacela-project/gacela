@@ -178,7 +178,7 @@ final class ContainerTest extends TestCase
 
         $this->container->extend(
             'service_name',
-            static function (array $arrayObject) {
+            static function (array $arrayObject): array {
                 $arrayObject[] = 3;
                 return $arrayObject;
             }

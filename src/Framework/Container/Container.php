@@ -10,6 +10,7 @@ use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use SplObjectStorage;
 
 use function count;
+use function is_array;
 use function is_callable;
 use function is_object;
 
@@ -177,7 +178,7 @@ final class Container implements ContainerInterface
             };
         }
 
-        if (is_object($factory)) {
+        if (is_object($factory) || is_array($factory)) {
             return static function (self $container) use ($service, $factory) {
                 $r = $service($factory, $container);
 

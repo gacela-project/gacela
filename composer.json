@@ -1,24 +1,32 @@
 {
     "name": "gacela-project/gacela",
-    "homepage": "https://gacela-project.com/",
+    "description": "Gacela helps you separate your project into modules.",
     "type": "library",
-    "description": "Gacela Framework",
+    "homepage": "https://gacela-project.com/",
     "keywords": [
         "php",
         "modular",
+        "framework",
         "kernel"
     ],
     "license": "MIT",
     "authors": [
         {
             "name": "Jose Maria Valera Reales",
-            "email": "chemaclass@outlook.es"
+            "email": "chemaclass@outlook.es",
+            "role": "lead"
         },
         {
             "name": "Jesus Valera Reales",
-            "email": "jesus1902@outlook.com"
+            "email": "jesus1902@outlook.com",
+            "role": "developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/gacela-project/gacela/issues"
+    },
+    "prefer-stable": true,
+    "minimum-stability": "dev",
     "require": {
         "php": ">=7.4"
     },
@@ -34,10 +42,14 @@
         "vimeo/psalm": "^4.30"
     },
     "suggest": {
+        "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files",
         "symfony/console": "Allows to use vendor/bin/gacela script"
     },
+    "bin": [
+        "gacela"
+    ],
     "autoload": {
         "psr-4": {
             "Gacela\\": "src/"
@@ -49,9 +61,6 @@
             "GacelaTest\\": "tests/"
         }
     },
-    "bin": [
-        "gacela"
-    ],
     "config": {
         "platform": {
             "php": "7.4"

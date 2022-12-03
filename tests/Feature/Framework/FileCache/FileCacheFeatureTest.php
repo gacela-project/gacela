@@ -15,6 +15,11 @@ final class FileCacheFeatureTest extends TestCase
 {
     public static function tearDownAfterClass(): void
     {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCacheEnabled(false);
+        });
+
         DirectoryUtil::removeDir(__DIR__ . '/custom/cache-dir');
     }
 

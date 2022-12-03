@@ -49,7 +49,7 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
             ));
         }
 
-        /** @psalm-suppress RedundantCastGivenDocblockType */
+        /** @psalm-suppress RedundantCast */
         return (string)reset($maxValKeys);
     }
 }

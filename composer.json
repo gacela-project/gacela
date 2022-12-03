@@ -36,10 +36,10 @@
         "phpmetrics/phpmetrics": "^2.8",
         "phpunit/phpunit": "^9.5",
         "phpstan/phpstan": "^1.9",
-        "psalm/plugin-phpunit": "^0.17",
+        "psalm/plugin-phpunit": "^0.18",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^4.30"
+        "vimeo/psalm": "^5.1"
     },
     "suggest": {
         "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",

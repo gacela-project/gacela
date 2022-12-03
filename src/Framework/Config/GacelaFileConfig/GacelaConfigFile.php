@@ -79,6 +79,8 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
+     * @psalm-suppress ImplementedReturnTypeMismatch
+     *
      * @return array{
      *     Facade:list<string>,
      *     Factory:list<string>,

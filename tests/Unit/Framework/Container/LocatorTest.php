@@ -6,7 +6,6 @@ namespace GacelaTest\Unit\Framework\Container;
 
 use Gacela\Framework\Container\Locator;
 use GacelaTest\Fixtures\StringValue;
-use GacelaTest\Fixtures\StringValueInterface;
 use PHPUnit\Framework\TestCase;
 
 final class LocatorTest extends TestCase
@@ -24,7 +23,7 @@ final class LocatorTest extends TestCase
         Locator::resetInstance();
     }
 
-    public function test_get_singleton_from_concrete_class(): void
+    public function test_get_concrete_class(): void
     {
         /** @var StringValue $stringValue */
         $stringValue = $this->locator->get(StringValue::class);
@@ -37,20 +36,7 @@ final class LocatorTest extends TestCase
         self::assertSame('updated value', $stringValue2->value());
     }
 
-    public function test_get_singleton_from_interface(): void
-    {
-        /** @var StringValue $stringValue */
-        $stringValue = $this->locator->get(StringValueInterface::class);
-        self::assertInstanceOf(StringValue::class, $stringValue);
-        self::assertSame('', $stringValue->value());
-        $stringValue->setValue('updated value');
-
-        /** @var StringValue $stringValue2 */
-        $stringValue2 = $this->locator->get(StringValueInterface::class);
-        self::assertSame('updated value', $stringValue2->value());
-    }
-
-    public function test_get_singleton_from_string(): void
+    public function test_get_null_from_non_existing_class(): void
     {
         /** @var null $nullValue */
         $nullValue = $this->locator->get('NonExistingClass');

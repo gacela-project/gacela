@@ -8,8 +8,6 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 
 final class Locator
 {
-    private const INTERFACE_SUFFIX = 'Interface';
-
     private static ?Locator $instance = null;
 
     /** @var array<string, mixed> */
@@ -49,32 +47,20 @@ final class Locator
      */
     public function get(string $className)
     {
-        /** @var class-string<T> $concreteClass */
-        $concreteClass = $this->getConcreteClass($className);
-
-        if (isset($this->instanceCache[$concreteClass])) {
+        if (isset($this->instanceCache[$className])) {
             /** @var T $instance */
-            $instance = $this->instanceCache[$concreteClass];
+            $instance = $this->instanceCache[$className];
 
             return $instance;
         }
 
-        $locatedInstance = AnonymousGlobal::getByClassName($concreteClass)
-            ?? $this->newInstance($concreteClass);
+        $locatedInstance = AnonymousGlobal::getByClassName($className)
+            ?? $this->newInstance($className);
 
         /** @psalm-suppress MixedAssignment */
-        $this->instanceCache[$concreteClass] = $locatedInstance;
+        $this->instanceCache[$className] = $locatedInstance;
 
         return $locatedInstance;
-    }
-
-    private function getConcreteClass(string $className): string
-    {
-        if ($this->isInterface($className)) {
-            return $this->getConcreteClassFromInterface($className);
-        }
-
-        return $className;
     }
 
     /**
@@ -92,15 +78,5 @@ final class Locator
         }
 
         return null;
-    }
-
-    private function isInterface(string $className): bool
-    {
-        return mb_strpos($className, self::INTERFACE_SUFFIX) !== false;
-    }
-
-    private function getConcreteClassFromInterface(string $interface): string
-    {
-        return str_replace(self::INTERFACE_SUFFIX, '', $interface);
     }
 }

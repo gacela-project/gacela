@@ -9,7 +9,6 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Exception\ContainerException;
 use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 final class ContainerTest extends TestCase
 {
@@ -109,16 +108,6 @@ final class ContainerTest extends TestCase
         self::assertNotSame(
             $this->container->get('service_name'),
             $this->container->get('service_name')
-        );
-    }
-
-    public function test_resolve_factory_service_not_invokable(): void
-    {
-        $this->expectExceptionObject(ContainerException::serviceNotInvokable());
-
-        $this->container->set(
-            'service_name',
-            $this->container->factory(new stdClass())
         );
     }
 
@@ -296,7 +285,7 @@ final class ContainerTest extends TestCase
     {
         $this->container->set(
             'service_name',
-            $this->container->protect(new ArrayObject([1, 2]))
+            $this->container->protect(static fn () => new ArrayObject([1, 2]))
         );
 
         $this->expectExceptionObject(ContainerException::serviceProtected('service_name'));

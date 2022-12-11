@@ -101,12 +101,8 @@ final class Container implements ContainerInterface
         return $resolvedService;
     }
 
-    public function factory(object $service): object
+    public function factory(Closure $service): Closure
     {
-        if (!method_exists($service, '__invoke')) {
-            throw ContainerException::serviceNotInvokable();
-        }
-
         $this->factoryServices->attach($service);
 
         return $service;
@@ -146,7 +142,7 @@ final class Container implements ContainerInterface
         return $extended;
     }
 
-    public function protect(object $service): object
+    public function protect(Closure $service): Closure
     {
         $this->protectedServices->attach($service);
 

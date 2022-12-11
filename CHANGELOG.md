@@ -4,6 +4,7 @@
 
 - Allow extending raw arrays as services
 - The Locator cannot resolve any more interface classes only because of the `Interface` suffix in their name
+- Drop support for PHP 7.4
 
 ### 0.32.0
 #### 2022-11-24

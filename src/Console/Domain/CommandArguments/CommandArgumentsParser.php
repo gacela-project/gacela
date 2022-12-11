@@ -11,22 +11,14 @@ use function count;
 final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {
     /**
-     * @var array{
-     *     autoload:      array{psr-4?:array<string,string>},
-     *     autoload-dev?: array{psr-4?:array<string,string>},
-     * }
-     */
-    private array $composerJson;
-
-    /**
      * @param array{
-     *     autoload:      array{psr-4?:array<string,string>},
+     *     autoload: array{psr-4?:array<string,string>},
      *     autoload-dev?: array{psr-4?:array<string,string>},
      * } $composerJson
      */
-    public function __construct(array $composerJson)
-    {
-        $this->composerJson = $composerJson;
+    public function __construct(
+        private array $composerJson,
+    ) {
     }
 
     /**

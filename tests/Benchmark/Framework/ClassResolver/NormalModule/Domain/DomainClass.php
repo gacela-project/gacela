@@ -11,7 +11,7 @@ final class DomainClass
 
     public function __construct(
         array $configValues,
-        string $valueFromDependencyProvider
+        string $valueFromDependencyProvider,
     ) {
         $this->configValues = $configValues;
         $this->valueFromDependencyProvider = $valueFromDependencyProvider;

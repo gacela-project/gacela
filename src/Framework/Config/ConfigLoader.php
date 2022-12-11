@@ -9,20 +9,11 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 final class ConfigLoader
 {
-    private GacelaConfigFileInterface $gacelaConfigFile;
-
-    private PathFinderInterface $pathFinder;
-
-    private PathNormalizerInterface $pathNormalizer;
-
     public function __construct(
-        GacelaConfigFileInterface $gacelaConfigFile,
-        PathFinderInterface $pathFinder,
-        PathNormalizerInterface $configPathGenerator
+        private GacelaConfigFileInterface $gacelaConfigFile,
+        private PathFinderInterface $pathFinder,
+        private PathNormalizerInterface $pathNormalizer,
     ) {
-        $this->gacelaConfigFile = $gacelaConfigFile;
-        $this->pathFinder = $pathFinder;
-        $this->pathNormalizer = $configPathGenerator;
     }
 
     /**
@@ -84,7 +75,7 @@ final class ConfigLoader
     private function readAbsolutePatternPath(
         string $pattern,
         GacelaConfigItem $configItem,
-        array &$cacheConfigFileContent
+        array &$cacheConfigFileContent,
     ): array {
         $matchingPattern = $this->pathFinder->matchingPattern($pattern);
         $excludePattern = [$this->normalizePathLocal($configItem)];

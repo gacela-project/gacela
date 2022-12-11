@@ -25,7 +25,7 @@ final class FeatureTest extends TestCase
 
         $hiCommand->run(
             $this->createStub(InputInterface::class),
-            $output
+            $output,
         );
 
         self::assertSame('Hi', $output->fetch());

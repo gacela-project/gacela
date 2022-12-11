@@ -12,15 +12,12 @@ final class AbsolutePathNormalizer implements PathNormalizerInterface
     public const WITHOUT_SUFFIX = 'WITHOUT_SUFFIX';
     public const WITH_SUFFIX = 'WITH_SUFFIX';
 
-    /** @var array<string,AbsolutePathStrategyInterface> */
-    private array $absolutePathStrategies;
-
     /**
      * @param array<string,AbsolutePathStrategyInterface> $absolutePathStrategies
      */
-    public function __construct(array $absolutePathStrategies)
-    {
-        $this->absolutePathStrategies = $absolutePathStrategies;
+    public function __construct(
+        private array $absolutePathStrategies,
+    ) {
     }
 
     public function normalizePathPattern(GacelaConfigItem $configItem): string

@@ -17,27 +17,18 @@ final class ClassInfo implements ClassInfoInterface
     /** @var array<string,array<string,self>> */
     private static array $callerClassCache;
 
-    private string $callerModuleNamespace;
-    private string $callerModuleName;
-    private string $cacheKey;
-    private string $resolvableType;
-
     public function __construct(
-        string $callerModuleNamespace,
-        string $callerModuleName,
-        string $cacheKey,
-        string $resolvableType = ''
+        private string $callerModuleNamespace,
+        private string $callerModuleName,
+        private string $cacheKey,
+        private string $resolvableType = '',
     ) {
-        $this->callerModuleNamespace = $callerModuleNamespace;
-        $this->callerModuleName = $callerModuleName;
-        $this->cacheKey = $cacheKey;
-        $this->resolvableType = $resolvableType;
     }
 
     /**
      * @param object|class-string $caller
      */
-    public static function from($caller, string $resolvableType = ''): self
+    public static function from(object|string $caller, string $resolvableType = ''): self
     {
         if (is_object($caller)) {
             return self::fromObject($caller, $resolvableType);
@@ -95,7 +86,7 @@ final class ClassInfo implements ClassInfoInterface
         $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
         $filename = self::normalizeFilename($filepath);
 
-        if (strpos($filepath, 'anonymous') !== false) {
+        if (str_contains($filepath, 'anonymous')) {
             $callerClassParts = [
                 self::MODULE_NAME_ANONYMOUS . '\\' . $filename,
                 $filepath,

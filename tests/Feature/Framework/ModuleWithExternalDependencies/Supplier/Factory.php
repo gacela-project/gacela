@@ -13,7 +13,7 @@ final class Factory extends AbstractFactory
     public function createGreeter(): HelloName
     {
         return new HelloName(
-            $this->getDependentFacade()
+            $this->getDependentFacade(),
         );
     }
 

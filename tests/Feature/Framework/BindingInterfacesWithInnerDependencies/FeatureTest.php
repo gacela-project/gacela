@@ -14,14 +14,14 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static fn (GacelaConfig $config) => $config
-            ->addExternalService('greeterGenerator', CorrectCompanyGenerator::class));
+            ->addExternalService('greeterGenerator', CorrectCompanyGenerator::class), );
     }
 
     public function test_mapping_interfaces_from_config(): void
     {
         self::assertSame(
             'Hello Gacela! Name: Chemaclass & Jesus',
-            (new LocalConfig\Facade())->generateCompanyAndName()
+            (new LocalConfig\Facade())->generateCompanyAndName(),
         );
     }
 }

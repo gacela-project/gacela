@@ -31,7 +31,7 @@ final class FeatureTest extends TestCase
                 'float' => 1.2,
                 'array' => ['array'],
             ],
-            $this->facade->generateResolvedClass()
+            $this->facade->generateResolvedClass(),
         );
     }
 
@@ -39,7 +39,7 @@ final class FeatureTest extends TestCase
     {
         self::assertSame(
             AbstractFromAnonymousClass::class,
-            $this->facade->generateResolveAbstractFromAnonymousClass()
+            $this->facade->generateResolveAbstractFromAnonymousClass(),
         );
     }
 
@@ -47,7 +47,7 @@ final class FeatureTest extends TestCase
     {
         self::assertSame(
             AbstractFromCallable::class,
-            $this->facade->generateResolveAbstractFromCallable()
+            $this->facade->generateResolveAbstractFromCallable(),
         );
     }
 
@@ -55,7 +55,7 @@ final class FeatureTest extends TestCase
     {
         self::assertSame(
             InterfaceFromAnonymousClass::class,
-            $this->facade->generateResolveInterfaceFromAnonymousClass()
+            $this->facade->generateResolveInterfaceFromAnonymousClass(),
         );
     }
 
@@ -63,7 +63,7 @@ final class FeatureTest extends TestCase
     {
         self::assertSame(
             InterfaceFromCallable::class,
-            $this->facade->generateResolveInterfaceFromCallable()
+            $this->facade->generateResolveInterfaceFromCallable(),
         );
     }
 }

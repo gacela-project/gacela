@@ -39,7 +39,7 @@ final class MakeModuleCommand extends Command
             $fullPath = $this->getFacade()->generateFileContent(
                 $commandArguments,
                 $filename,
-                $shortName
+                $shortName,
             );
             $output->writeln("> Path '{$fullPath}' created successfully");
         }

@@ -10,11 +10,9 @@ use function get_class;
 
 final class ReadPhpConfigEvent implements GacelaEventInterface
 {
-    private string $absolutePath;
-
-    public function __construct(string $absolutePath)
-    {
-        $this->absolutePath = $absolutePath;
+    public function __construct(
+        private string $absolutePath,
+    ) {
     }
 
     public function absolutePath(): string
@@ -27,7 +25,7 @@ final class ReadPhpConfigEvent implements GacelaEventInterface
         return sprintf(
             '%s - %s',
             get_class($this),
-            $this->absolutePath
+            $this->absolutePath,
         );
     }
 }

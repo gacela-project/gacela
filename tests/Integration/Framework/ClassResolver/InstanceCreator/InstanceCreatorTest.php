@@ -29,7 +29,7 @@ final class InstanceCreatorTest extends TestCase
 
         self::assertEquals(
             new CustomClass(),
-            $instanceCreator->createByClassName(CustomClass::class)
+            $instanceCreator->createByClassName(CustomClass::class),
         );
     }
 
@@ -44,7 +44,7 @@ final class InstanceCreatorTest extends TestCase
 
         self::assertEquals(
             new CustomClassWithDependencies(new StringValue('custom-string')),
-            $instanceCreator->createByClassName(CustomClassWithDependencies::class)
+            $instanceCreator->createByClassName(CustomClassWithDependencies::class),
         );
     }
 

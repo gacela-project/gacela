@@ -9,20 +9,13 @@ use RuntimeException;
 
 final class FileContentGenerator implements FileContentGeneratorInterface
 {
-    private FileContentIoInterface $fileContentIo;
-
-    /** @var array<string,string> */
-    private array $templateByFilenameMap;
-
     /**
      * @param array<string,string> $templateByFilenameMap
      */
     public function __construct(
-        FileContentIoInterface $fileContentIo,
-        array $templateByFilenameMap
+        private FileContentIoInterface $fileContentIo,
+        private array $templateByFilenameMap,
     ) {
-        $this->fileContentIo = $fileContentIo;
-        $this->templateByFilenameMap = $templateByFilenameMap;
     }
 
     /**

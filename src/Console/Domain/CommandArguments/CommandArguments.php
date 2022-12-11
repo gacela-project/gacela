@@ -6,13 +6,10 @@ namespace Gacela\Console\Domain\CommandArguments;
 
 final class CommandArguments
 {
-    private string $namespace;
-    private string $directory;
-
-    public function __construct(string $namespace, string $directory)
-    {
-        $this->namespace = $namespace;
-        $this->directory = $directory;
+    public function __construct(
+        private string $namespace,
+        private string $directory,
+    ) {
     }
 
     public function namespace(): string

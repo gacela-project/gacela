@@ -26,13 +26,13 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
             new class() {
-            }
+            },
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
             $this->createStub(SetupGacelaInterface::class),
-            $fileIo
+            $fileIo,
         );
 
         $this->expectErrorMessage('`gacela.php` file should return a `callable(GacelaConfig)`');
@@ -48,7 +48,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
             $this->createStub(SetupGacelaInterface::class),
-            $fileIo
+            $fileIo,
         );
 
         self::assertEquals(new GacelaConfigFile(), $factory->createGacelaFileConfig());
@@ -57,13 +57,14 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     public function test_gacela_file_set_config(): void
     {
         $fileIo = $this->createStub(FileIoInterface::class);
-        $fileIo->method('include')->willReturn(static fn (GacelaConfig $config) => $config
-            ->addAppConfig('custom-path.php', 'custom-path_local.php'));
+        $fileIo->method('include')->willReturn(
+            static fn (GacelaConfig $config) => $config->addAppConfig('custom-path.php', 'custom-path_local.php'),
+        );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
             $this->createStub(SetupGacelaInterface::class),
-            $fileIo
+            $fileIo,
         );
 
         $expected = (new GacelaConfigFile())
@@ -81,13 +82,13 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
                 self::assertSame('externalServiceValue', $config->getExternalService('externalServiceKey')->__invoke());
                 $config->addMappingInterface(CustomInterface::class, new CustomClass());
                 $config->addMappingInterface(CustomInterface::class, CustomClass::class);
-            }
+            },
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
             $this->createStub(SetupGacelaInterface::class),
-            $fileIo
+            $fileIo,
         );
 
         $expected = (new GacelaConfigFile())
@@ -101,13 +102,13 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
             static fn (GacelaConfig $config) => $config
-                ->addSuffixTypeDependencyProvider('Binding')
+                ->addSuffixTypeDependencyProvider('Binding'),
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
             $this->createStub(SetupGacelaInterface::class),
-            $fileIo
+            $fileIo,
         );
 
         $expected = (new GacelaConfigFile())
@@ -134,7 +135,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo->method('include')->willReturn(
             static function (GacelaConfig $config) use ($listener): void {
                 $config->registerGenericListener($listener);
-            }
+            },
         );
 
         $setup = new SetupGacela();
@@ -163,7 +164,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo->method('include')->willReturn(
             static function (GacelaConfig $config) use ($listener): void {
                 $config->registerSpecificListener(FakeEvent::class, $listener);
-            }
+            },
         );
 
         $setup = new SetupGacela();

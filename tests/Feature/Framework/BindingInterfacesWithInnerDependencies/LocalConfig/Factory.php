@@ -10,11 +10,9 @@ use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalCon
 
 final class Factory extends AbstractFactory
 {
-    private GreeterGeneratorInterface $greeterGenerator;
-
-    public function __construct(GreeterGeneratorInterface $greeterGenerator)
-    {
-        $this->greeterGenerator = $greeterGenerator;
+    public function __construct(
+        private GreeterGeneratorInterface $greeterGenerator,
+    ) {
     }
 
     public function createGreeterService(): GreeterService

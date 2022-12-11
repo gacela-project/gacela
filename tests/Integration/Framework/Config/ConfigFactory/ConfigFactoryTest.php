@@ -66,7 +66,7 @@ final class ConfigFactoryTest extends TestCase
                 static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
                     $mappingInterfacesBuilder->bind(
                         CustomInterface::class,
-                        $externalServices['CustomClassFromExternalService']
+                        $externalServices['CustomClassFromExternalService'],
                     );
                 },
             )
@@ -109,7 +109,7 @@ final class ConfigFactoryTest extends TestCase
                 static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
                     $mappingInterfacesBuilder->bind(
                         AbstractCustom::class,
-                        $externalServices['CustomClassFromExternalService']
+                        $externalServices['CustomClassFromExternalService'],
                     );
                 },
             )

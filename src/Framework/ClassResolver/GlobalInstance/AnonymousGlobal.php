@@ -41,10 +41,7 @@ final class AnonymousGlobal
         return $instance;
     }
 
-    /**
-     * @return ?object
-     */
-    public static function getByKey(string $key)
+    public static function getByKey(string $key): ?object
     {
         return self::$cachedGlobalInstances[$key] ?? null;
     }
@@ -53,10 +50,8 @@ final class AnonymousGlobal
      * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
      * bound to the context that it's pass as first argument. It can be the string-key
      * (from a non-class/file context) or the class/object itself.
-     *
-     * @param object|string $context
      */
-    public static function addGlobal($context, object $resolvedClass): void
+    public static function addGlobal(object|string $context, object $resolvedClass): void
     {
         $contextName = self::extractContextNameFromContext($context);
         $parentClass = get_parent_class($resolvedClass);
@@ -78,10 +73,7 @@ final class AnonymousGlobal
         self::addCachedGlobalInstance($key, $resolvedClass);
     }
 
-    /**
-     * @param object|string $context
-     */
-    private static function extractContextNameFromContext($context): string
+    private static function extractContextNameFromContext(object|string $context): string
     {
         if (is_string($context)) {
             return $context;
@@ -100,7 +92,7 @@ final class AnonymousGlobal
     {
         if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
             throw new RuntimeException(
-                "Type '{$type}' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL)
+                "Type '{$type}' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL),
             );
         }
     }

@@ -8,8 +8,5 @@ interface FileIoInterface
 {
     public function existsFile(string $filePath): bool;
 
-    /**
-     * @return mixed
-     */
-    public function include(string $filePath);
+    public function include(string $filePath): mixed;
 }

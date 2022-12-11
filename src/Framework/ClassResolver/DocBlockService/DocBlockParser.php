@@ -14,7 +14,7 @@ final class DocBlockParser
 
         $lines = array_filter(
             explode(PHP_EOL, $docBlock),
-            static fn (string $l) => str_contains($l, $method)
+            static fn (string $l) => str_contains($l, $method),
         );
         /** @psalm-suppress RedundantCast */
         $lineSplit = (array)explode(' ', (string)reset($lines));

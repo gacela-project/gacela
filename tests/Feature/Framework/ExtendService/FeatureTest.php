@@ -23,14 +23,14 @@ final class FeatureTest extends TestCase
                 DependencyProvider::ARRAY_AS_OBJECT,
                 static function (ArrayObject $arrayObject): void {
                     $arrayObject->append(3);
-                }
+                },
             );
 
             $config->extendService(
                 DependencyProvider::ARRAY_FROM_FUNCTION,
                 static function (ArrayObject $arrayObject): void {
                     $arrayObject->append(4);
-                }
+                },
             );
         });
 
@@ -41,7 +41,7 @@ final class FeatureTest extends TestCase
     {
         self::assertEquals(
             new ArrayObject([1, 2, 3]),
-            $this->facade->getArrayAsObject()
+            $this->facade->getArrayAsObject(),
         );
     }
 
@@ -49,7 +49,7 @@ final class FeatureTest extends TestCase
     {
         self::assertEquals(
             new ArrayObject([1, 2, 4]),
-            $this->facade->getArrayFromFunction()
+            $this->facade->getArrayFromFunction(),
         );
     }
 }

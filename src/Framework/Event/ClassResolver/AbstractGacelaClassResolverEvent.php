@@ -12,11 +12,9 @@ use function get_class;
 
 abstract class AbstractGacelaClassResolverEvent implements GacelaEventInterface
 {
-    private ClassInfo $classInfo;
-
-    public function __construct(ClassInfo $classInfo)
-    {
-        $this->classInfo = $classInfo;
+    public function __construct(
+        private ClassInfo $classInfo,
+    ) {
     }
 
     public function classInfo(): ClassInfoInterface
@@ -29,7 +27,7 @@ abstract class AbstractGacelaClassResolverEvent implements GacelaEventInterface
         return sprintf(
             '%s - %s',
             get_class($this),
-            $this->classInfo->toString()
+            $this->classInfo->toString(),
         );
     }
 }

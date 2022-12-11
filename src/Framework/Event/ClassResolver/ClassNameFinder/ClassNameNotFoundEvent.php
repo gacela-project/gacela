@@ -9,18 +9,13 @@ use Gacela\Framework\Event\GacelaEventInterface;
 
 final class ClassNameNotFoundEvent implements GacelaEventInterface
 {
-    private ClassInfo $classInfo;
-
-    /** @var list<string> */
-    private array $resolvableTypes;
-
     /**
      * @param list<string> $resolvableTypes
      */
-    public function __construct(ClassInfo $classInfo, array $resolvableTypes)
-    {
-        $this->classInfo = $classInfo;
-        $this->resolvableTypes = $resolvableTypes;
+    public function __construct(
+        private ClassInfo $classInfo,
+        private array $resolvableTypes,
+    ) {
     }
 
     public function toString(): string
@@ -29,7 +24,7 @@ final class ClassNameNotFoundEvent implements GacelaEventInterface
             '%s - %s - %s',
             self::class,
             $this->classInfo->toString(),
-            implode(',', $this->resolvableTypes)
+            implode(',', $this->resolvableTypes),
         );
     }
 }

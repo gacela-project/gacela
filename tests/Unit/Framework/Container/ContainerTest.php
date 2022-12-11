@@ -73,7 +73,7 @@ final class ContainerTest extends TestCase
                 {
                     return 'value';
                 }
-            }
+            },
         );
 
         $resolvedService = $this->container->get('service_name');
@@ -87,12 +87,12 @@ final class ContainerTest extends TestCase
     {
         $this->container->set(
             'service_name',
-            static fn () => 'value_' . random_int(0, PHP_INT_MAX)
+            static fn () => 'value_' . random_int(0, PHP_INT_MAX),
         );
 
         self::assertSame(
             $this->container->get('service_name'),
-            $this->container->get('service_name')
+            $this->container->get('service_name'),
         );
     }
 
@@ -101,13 +101,13 @@ final class ContainerTest extends TestCase
         $this->container->set(
             'service_name',
             $this->container->factory(
-                static fn () => 'value_' . random_int(0, PHP_INT_MAX)
-            )
+                static fn () => 'value_' . random_int(0, PHP_INT_MAX),
+            ),
         );
 
         self::assertNotSame(
             $this->container->get('service_name'),
-            $this->container->get('service_name')
+            $this->container->get('service_name'),
         );
     }
 
@@ -121,12 +121,12 @@ final class ContainerTest extends TestCase
             static function (ArrayObject $arrayObject, Container $container) {
                 $arrayObject->append($container->get('n3'));
                 return $arrayObject;
-            }
+            },
         );
 
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4),
         );
 
         /** @var ArrayObject $actual */
@@ -145,14 +145,14 @@ final class ContainerTest extends TestCase
             static function (ArrayObject $arrayObject, Container $container) {
                 $arrayObject->append($container->get('n3'));
                 return $arrayObject;
-            }
+            },
         );
 
         $this->container->extend(
             'service_name',
             static function (ArrayObject $arrayObject): void {
                 $arrayObject->append(4);
-            }
+            },
         );
 
         /** @var ArrayObject $actual */
@@ -170,14 +170,14 @@ final class ContainerTest extends TestCase
             static function (array $arrayObject): array {
                 $arrayObject[] = 3;
                 return $arrayObject;
-            }
+            },
         );
 
         $this->container->extend(
             'service_name',
             static function (array &$arrayObject): void {
                 $arrayObject[] = 4;
-            }
+            },
         );
 
         /** @var ArrayObject $actual */
@@ -211,7 +211,7 @@ final class ContainerTest extends TestCase
 
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3),
         );
     }
 
@@ -224,7 +224,7 @@ final class ContainerTest extends TestCase
 
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3),
         );
     }
 
@@ -232,7 +232,7 @@ final class ContainerTest extends TestCase
     {
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3),
         );
 
         $this->container->set('service_name', new ArrayObject([1, 2]));
@@ -242,7 +242,7 @@ final class ContainerTest extends TestCase
 
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4),
         );
     }
 
@@ -250,7 +250,7 @@ final class ContainerTest extends TestCase
     {
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(3)
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(3),
         );
 
         $this->container->set('service_name', static fn () => new ArrayObject([1, 2]));
@@ -260,7 +260,7 @@ final class ContainerTest extends TestCase
 
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject->append(4)
+            static fn (ArrayObject $arrayObject) => $arrayObject->append(4),
         );
     }
 
@@ -285,14 +285,14 @@ final class ContainerTest extends TestCase
     {
         $this->container->set(
             'service_name',
-            $this->container->protect(static fn () => new ArrayObject([1, 2]))
+            $this->container->protect(static fn () => new ArrayObject([1, 2])),
         );
 
         $this->expectExceptionObject(ContainerException::serviceProtected('service_name'));
 
         $this->container->extend(
             'service_name',
-            static fn (ArrayObject $arrayObject) => $arrayObject
+            static fn (ArrayObject $arrayObject) => $arrayObject,
         );
     }
 }

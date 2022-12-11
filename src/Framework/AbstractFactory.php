@@ -19,10 +19,8 @@ abstract class AbstractFactory
 
     /**
      * @throws ContainerKeyNotFoundException
-     *
-     * @return mixed
      */
-    protected function getProvidedDependency(string $key)
+    protected function getProvidedDependency(string $key): mixed
     {
         return $this->getContainer()->get($key);
     }

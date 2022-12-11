@@ -75,7 +75,7 @@ final class CommandArgumentsParserTest extends TestCase
     public function test_no_autoload_psr4_match_found(): void
     {
         $this->expectExceptionObject(
-            CommandArgumentsException::noAutoloadPsr4MatchFound('Unknown/Module', ['App'])
+            CommandArgumentsException::noAutoloadPsr4MatchFound('Unknown/Module', ['App']),
         );
 
         $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());

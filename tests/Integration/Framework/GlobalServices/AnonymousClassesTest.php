@@ -61,7 +61,7 @@ final class AnonymousClassesTest extends TestCase
                 {
                     return [1, 2, 3, 4, 5];
                 }
-            }
+            },
         );
     }
 
@@ -88,7 +88,7 @@ final class AnonymousClassesTest extends TestCase
 
                         public function __construct(
                             object $myService,
-                            int ...$configValues
+                            int ...$configValues,
                         ) {
                             $this->myService = $myService;
                             $this->configValues = $configValues;
@@ -105,7 +105,7 @@ final class AnonymousClassesTest extends TestCase
                         }
                     };
                 }
-            }
+            },
         );
     }
 
@@ -123,7 +123,7 @@ final class AnonymousClassesTest extends TestCase
                         }
                     });
                 }
-            }
+            },
         );
     }
 }

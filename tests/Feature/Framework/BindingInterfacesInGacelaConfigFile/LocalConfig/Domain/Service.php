@@ -6,24 +6,13 @@ namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Local
 
 final class Service
 {
-    private AbstractClass $resolvedClass;
-    private AbstractFromAnonymousClass $resolveAbstractFromAnonymousClass;
-    private AbstractFromCallable $resolveAbstractFromCallable;
-    private InterfaceFromAnonymousClass $resolveInterfaceFromAnonymousClass;
-    private InterfaceFromCallable $resolveInterfaceFromCallable;
-
     public function __construct(
-        AbstractClass $resolvedClass,
-        AbstractFromAnonymousClass $resolveAbstractFromAnonymousClass,
-        AbstractFromCallable $resolvingAbstractAnonClassCallable,
-        InterfaceFromAnonymousClass $resolveInterfaceFromAnonymousClass,
-        InterfaceFromCallable $resolveInterfaceFromCallable
+        private AbstractClass $resolvedClass,
+        private AbstractFromAnonymousClass $resolveAbstractFromAnonymousClass,
+        private AbstractFromCallable $resolveAbstractFromCallable,
+        private InterfaceFromAnonymousClass $resolveInterfaceFromAnonymousClass,
+        private InterfaceFromCallable $resolveInterfaceFromCallable,
     ) {
-        $this->resolvedClass = $resolvedClass;
-        $this->resolveAbstractFromAnonymousClass = $resolveAbstractFromAnonymousClass;
-        $this->resolveAbstractFromCallable = $resolvingAbstractAnonClassCallable;
-        $this->resolveInterfaceFromAnonymousClass = $resolveInterfaceFromAnonymousClass;
-        $this->resolveInterfaceFromCallable = $resolveInterfaceFromCallable;
     }
 
     public function generateResolvedClass(): array

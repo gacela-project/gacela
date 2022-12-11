@@ -33,7 +33,7 @@ final class ConsoleFactory extends AbstractFactory
     public function createCommandArgumentsParser(): CommandArgumentsParserInterface
     {
         return new CommandArgumentsParser(
-            $this->getConfig()->getComposerJsonContentAsArray()
+            $this->getConfig()->getComposerJsonContentAsArray(),
         );
     }
 
@@ -46,7 +46,7 @@ final class ConsoleFactory extends AbstractFactory
     {
         return new FileContentGenerator(
             $this->createFileContentIo(),
-            $this->getTemplateByFilenameMap()
+            $this->getTemplateByFilenameMap(),
         );
     }
 

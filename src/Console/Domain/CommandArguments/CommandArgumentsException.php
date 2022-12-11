@@ -29,8 +29,8 @@ final class CommandArgumentsException extends RuntimeException
             sprintf(
                 'No autoload psr-4 match found for %s. Known PSR-4: %s',
                 $desiredNamespace,
-                implode(', ', $parsedKnownPsr4)
-            )
+                implode(', ', $parsedKnownPsr4),
+            ),
         );
     }
 }

@@ -24,7 +24,7 @@ interface SetupGacelaInterface
      */
     public function buildMappingInterfaces(
         MappingInterfacesBuilder $builder,
-        array $externalServices
+        array $externalServices,
     ): MappingInterfacesBuilder;
 
     /**

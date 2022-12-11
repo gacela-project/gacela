@@ -19,7 +19,7 @@ final class ConfigInitTest extends TestCase
         $configInit = new ConfigLoader(
             new GacelaConfigFile(),
             $this->createMock(PathFinderInterface::class),
-            $this->createMock(PathNormalizerInterface::class)
+            $this->createMock(PathNormalizerInterface::class),
         );
 
         self::assertSame([], $configInit->loadAll());
@@ -33,7 +33,7 @@ final class ConfigInitTest extends TestCase
         $configInit = new ConfigLoader(
             new GacelaConfigFile(),
             $pathFinder,
-            $this->createMock(PathNormalizerInterface::class)
+            $this->createMock(PathNormalizerInterface::class),
         );
 
         self::assertSame([], $configInit->loadAll());
@@ -65,7 +65,7 @@ final class ConfigInitTest extends TestCase
         $configInit = new ConfigLoader(
             $gacelaConfigFile,
             $this->createMock(PathFinderInterface::class),
-            $this->createMock(PathNormalizerInterface::class)
+            $this->createMock(PathNormalizerInterface::class),
         );
 
         self::assertSame(['key' => 'value'], $configInit->loadAll());

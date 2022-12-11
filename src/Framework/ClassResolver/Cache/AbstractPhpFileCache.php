@@ -11,11 +11,9 @@ abstract class AbstractPhpFileCache implements CacheInterface
     /** @var array<class-string,array<string,string>> */
     private static array $cache = [];
 
-    private string $cacheDir;
-
-    public function __construct(string $cacheDir)
-    {
-        $this->cacheDir = $cacheDir;
+    public function __construct(
+        private string $cacheDir,
+    ) {
         self::$cache[static::class] = $this->getExistingCache();
     }
 
@@ -50,7 +48,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
         $fileContent = sprintf(
             '<?php return %s;',
-            var_export(self::$cache[static::class], true)
+            var_export(self::$cache[static::class], true),
         );
 
         file_put_contents($this->getAbsoluteCacheFilename(), $fileContent);

@@ -6,11 +6,9 @@ namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Lo
 
 final class GreeterService
 {
-    private GreeterGeneratorInterface $greeter;
-
-    public function __construct(GreeterGeneratorInterface $greeter)
-    {
-        $this->greeter = $greeter;
+    public function __construct(
+        private GreeterGeneratorInterface $greeter,
+    ) {
     }
 
     public function generateCompanyAndName(): string

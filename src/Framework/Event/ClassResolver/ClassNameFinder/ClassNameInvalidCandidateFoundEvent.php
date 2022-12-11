@@ -8,11 +8,9 @@ use Gacela\Framework\Event\GacelaEventInterface;
 
 final class ClassNameInvalidCandidateFoundEvent implements GacelaEventInterface
 {
-    private string $className;
-
-    public function __construct(string $className)
-    {
-        $this->className = $className;
+    public function __construct(
+        private string $className,
+    ) {
     }
 
     public function toString(): string

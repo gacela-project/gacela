@@ -14,24 +14,13 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 
 final class Factory extends AbstractFactory
 {
-    private AbstractClass $resolvedClass;
-    private AbstractFromAnonymousClass $resolvingAbstractAnonClassFunction;
-    private AbstractFromCallable $resolvingAbstractAnonClassCallable;
-    private InterfaceFromAnonymousClass $resolvingAnonClassFunction;
-    private InterfaceFromCallable $resolvingAnonClassCallable;
-
     public function __construct(
-        AbstractClass $resolvedClass,
-        AbstractFromAnonymousClass $resolvingAbstractAnonClassFunction,
-        AbstractFromCallable $resolvingAbstractAnonClassCallable,
-        InterfaceFromAnonymousClass $resolvingAnonClassFunction,
-        InterfaceFromCallable $resolvingAnonClassCallable
+        private AbstractClass $resolvedClass,
+        private AbstractFromAnonymousClass $resolvingAbstractAnonClassFunction,
+        private AbstractFromCallable $resolvingAbstractAnonClassCallable,
+        private InterfaceFromAnonymousClass $resolvingAnonClassFunction,
+        private InterfaceFromCallable $resolvingAnonClassCallable,
     ) {
-        $this->resolvedClass = $resolvedClass;
-        $this->resolvingAbstractAnonClassFunction = $resolvingAbstractAnonClassFunction;
-        $this->resolvingAbstractAnonClassCallable = $resolvingAbstractAnonClassCallable;
-        $this->resolvingAnonClassFunction = $resolvingAnonClassFunction;
-        $this->resolvingAnonClassCallable = $resolvingAnonClassCallable;
     }
 
     public function createCompanyService(): Service
@@ -41,7 +30,7 @@ final class Factory extends AbstractFactory
             $this->resolvingAbstractAnonClassFunction,
             $this->resolvingAbstractAnonClassCallable,
             $this->resolvingAnonClassFunction,
-            $this->resolvingAnonClassCallable
+            $this->resolvingAnonClassCallable,
         );
     }
 }

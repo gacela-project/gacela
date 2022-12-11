@@ -17,8 +17,6 @@ final class Config implements ConfigInterface
 
     private static ?EventDispatcherInterface $eventDispatcher = null;
 
-    private SetupGacelaInterface $setup;
-
     private ?ConfigFactory $configFactory = null;
 
     private ?string $appRootDir = null;
@@ -26,9 +24,9 @@ final class Config implements ConfigInterface
     /** @var array<string,mixed> */
     private array $config = [];
 
-    private function __construct(SetupGacelaInterface $setup)
-    {
-        $this->setup = $setup;
+    private function __construct(
+        private SetupGacelaInterface $setup,
+    ) {
     }
 
     public static function createWithSetup(SetupGacelaInterface $setup): self
@@ -68,13 +66,9 @@ final class Config implements ConfigInterface
     }
 
     /**
-     * @param null|mixed $default
-     *
      * @throws ConfigException
-     *
-     * @return mixed
      */
-    public function get(string $key, $default = self::DEFAULT_CONFIG_VALUE)
+    public function get(string $key, mixed $default = self::DEFAULT_CONFIG_VALUE): mixed
     {
         if (empty($this->config)) {
             $this->init();
@@ -134,7 +128,7 @@ final class Config implements ConfigInterface
         if ($this->configFactory === null) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
-                $this->getSetupGacela()
+                $this->getSetupGacela(),
             );
         }
 

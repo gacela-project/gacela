@@ -16,11 +16,9 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModuleP
 
 final class ClassResolverFactory
 {
-    private SetupGacelaInterface $setupGacela;
-
-    public function __construct(SetupGacelaInterface $setupGacela)
-    {
-        $this->setupGacela = $setupGacela;
+    public function __construct(
+        private SetupGacelaInterface $setupGacela,
+    ) {
     }
 
     public function createClassNameFinder(): ClassNameFinderInterface
@@ -29,7 +27,7 @@ final class ClassResolverFactory
             $this->createClassValidator(),
             $this->createFinderRules(),
             $this->getCache(),
-            $this->getProjectNamespaces()
+            $this->getProjectNamespaces(),
         );
     }
 

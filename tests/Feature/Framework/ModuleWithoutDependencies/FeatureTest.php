@@ -20,7 +20,7 @@ final class FeatureTest extends TestCase
 
         self::assertEquals(
             ['Hello, Gacela from WithPrefix.'],
-            $facade->greet('Gacela')
+            $facade->greet('Gacela'),
         );
     }
 
@@ -30,7 +30,7 @@ final class FeatureTest extends TestCase
 
         self::assertEquals(
             ['Hello, Gacela from WithoutPrefix.'],
-            $facade->greet('Gacela')
+            $facade->greet('Gacela'),
         );
     }
 }

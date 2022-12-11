@@ -29,7 +29,7 @@ final class FeatureTest extends TestCase
                 'config_local' => 2,
                 'override' => 5,
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 }

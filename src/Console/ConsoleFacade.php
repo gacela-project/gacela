@@ -29,7 +29,7 @@ final class ConsoleFacade extends AbstractFacade
     public function generateFileContent(
         CommandArguments $commandArguments,
         string $filename,
-        bool $withShortName = false
+        bool $withShortName = false,
     ): string {
         return $this->getFactory()
             ->createFileContentGenerator()

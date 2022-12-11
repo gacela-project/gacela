@@ -20,7 +20,7 @@ final class ConfigBuilder
      * @param string $pathLocal define the path where Gacela will read the local config file
      * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader Define the reader class which will read and parse the config files
      */
-    public function add(string $path, string $pathLocal = '', $reader = null): self
+    public function add(string $path, string $pathLocal = '', string|ConfigReaderInterface $reader = null): self
     {
         $readerInstance = $this->normalizeReader($reader);
 
@@ -40,7 +40,7 @@ final class ConfigBuilder
     /**
      * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader
      */
-    private function normalizeReader($reader): ConfigReaderInterface
+    private function normalizeReader(string|ConfigReaderInterface|null $reader): ConfigReaderInterface
     {
         if ($reader instanceof ConfigReaderInterface) {
             return $reader;

@@ -6,11 +6,9 @@ namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructur
 
 final class CustomHelloRepository
 {
-    private FakeDoctrineEntityManager $entityManager;
-
-    public function __construct(FakeDoctrineEntityManager $entityManager)
-    {
-        $this->entityManager = $entityManager;
+    public function __construct(
+        private FakeDoctrineEntityManager $entityManager,
+    ) {
     }
 
     public function findNameById(int $id): string

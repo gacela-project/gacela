@@ -35,7 +35,7 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
         $percents = [];
 
         foreach (self::EXPECTED_FILENAMES as $expected) {
-            $percents[$expected] = similar_text($expected, $filename, $percent);
+            $percents[$expected] = similar_text($expected, $filename);
         }
 
         $maxVal = max($percents);
@@ -45,7 +45,7 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
             throw new RuntimeException(sprintf(
                 'When using "%s", which filename do you mean [%s]?',
                 $filename,
-                implode(' or ', $maxValKeys)
+                implode(' or ', $maxValKeys),
             ));
         }
 

@@ -36,7 +36,7 @@ final class MakeFileCommand extends Command
 
         $filenames = array_map(
             fn (string $raw): string => $this->getFacade()->sanitizeFilename($raw),
-            $inputFileNames
+            $inputFileNames,
         );
 
         /** @var string $path */
@@ -48,7 +48,7 @@ final class MakeFileCommand extends Command
             $absolutePath = $this->getFacade()->generateFileContent(
                 $commandArguments,
                 $filename,
-                $shortName
+                $shortName,
             );
             $output->writeln("> Path '{$absolutePath}' created successfully");
         }

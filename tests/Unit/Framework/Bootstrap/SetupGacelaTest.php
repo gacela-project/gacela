@@ -36,8 +36,8 @@ final class SetupGacelaTest extends TestCase
                 static function (GacelaEventInterface $event) use (&$listenerDispatched1): void {
                     self::assertInstanceOf(FakeEvent::class, $event);
                     $listenerDispatched1 = true;
-                }
-            )
+                },
+            ),
         );
 
         self::assertInstanceOf(ConfigurableEventDispatcher::class, $setup->getEventDispatcher());
@@ -48,8 +48,8 @@ final class SetupGacelaTest extends TestCase
                 static function (GacelaEventInterface $event) use (&$listenerDispatched2): void {
                     self::assertInstanceOf(FakeEvent::class, $event);
                     $listenerDispatched2 = true;
-                }
-            )
+                },
+            ),
         );
         $setup->combine($setup2);
 
@@ -65,11 +65,11 @@ final class SetupGacelaTest extends TestCase
     public function test_combine_config_key_values(): void
     {
         $setup = SetupGacela::fromGacelaConfig(
-            (new GacelaConfig())->addAppConfigKeyValue('key1', 1)
+            (new GacelaConfig())->addAppConfigKeyValue('key1', 1),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
-            (new GacelaConfig())->addAppConfigKeyValues(['key2' => 'value2'])
+            (new GacelaConfig())->addAppConfigKeyValues(['key2' => 'value2']),
         );
 
         $setup->combine($setup2);
@@ -83,11 +83,11 @@ final class SetupGacelaTest extends TestCase
     public function test_combine_project_namespaces(): void
     {
         $setup = SetupGacela::fromGacelaConfig(
-            (new GacelaConfig())->setProjectNamespaces(['App1'])
+            (new GacelaConfig())->setProjectNamespaces(['App1']),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
-            (new GacelaConfig())->setProjectNamespaces(['App2'])
+            (new GacelaConfig())->setProjectNamespaces(['App2']),
         );
 
         $setup->combine($setup2);
@@ -100,13 +100,13 @@ final class SetupGacelaTest extends TestCase
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
                 ->setFileCacheEnabled(false)
-                ->setFileCacheDirectory('original/dir')
+                ->setFileCacheDirectory('original/dir'),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
                 ->setFileCacheEnabled(true)
-                ->setFileCacheDirectory('override/dir')
+                ->setFileCacheDirectory('override/dir'),
         );
 
         self::assertFalse($setup->isFileCacheEnabled());
@@ -123,7 +123,7 @@ final class SetupGacelaTest extends TestCase
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
                 ->setFileCacheEnabled(true)
-                ->setFileCacheDirectory('original/dir')
+                ->setFileCacheDirectory('original/dir'),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(new GacelaConfig());
@@ -142,7 +142,7 @@ final class SetupGacelaTest extends TestCase
         $setup = SetupGacela::fromGacelaConfig(new GacelaConfig());
 
         $setup2 = SetupGacela::fromGacelaConfig(
-            (new GacelaConfig())->resetInMemoryCache()
+            (new GacelaConfig())->resetInMemoryCache(),
         );
 
         self::assertFalse($setup->shouldResetInMemoryCache());
@@ -154,13 +154,13 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->addExternalService('service1', static fn () => 1)
+                ->addExternalService('service1', static fn () => 1),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
                 ->addExternalService('service2', static fn () => 2)
-                ->addExternalService('service3', new stdClass())
+                ->addExternalService('service3', new stdClass()),
         );
 
         self::assertEquals([
@@ -180,13 +180,13 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->extendService('service', static fn (ArrayObject $ao) => $ao->append(1))
+                ->extendService('service', static fn (ArrayObject $ao) => $ao->append(1)),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
                 ->extendService('service', static fn (ArrayObject $ao) => $ao->append(2))
-                ->extendService('service-2', static fn (ArrayObject $ao) => $ao->append(3))
+                ->extendService('service-2', static fn (ArrayObject $ao) => $ao->append(3)),
         );
 
         $setup->combine($setup2);

@@ -20,20 +20,11 @@ use function is_callable;
 
 final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFactoryInterface
 {
-    private string $gacelaPhpPath;
-
-    private SetupGacelaInterface $bootstrapSetup;
-
-    private FileIoInterface $fileIo;
-
     public function __construct(
-        string $gacelaPhpPath,
-        SetupGacelaInterface $bootstrapSetup,
-        FileIoInterface $fileIo
+        private string $gacelaPhpPath,
+        private SetupGacelaInterface $bootstrapSetup,
+        private FileIoInterface $fileIo,
     ) {
-        $this->gacelaPhpPath = $gacelaPhpPath;
-        $this->bootstrapSetup = $bootstrapSetup;
-        $this->fileIo = $fileIo;
     }
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface

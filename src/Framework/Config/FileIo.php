@@ -11,10 +11,7 @@ final class FileIo implements FileIoInterface
         return file_exists($filePath);
     }
 
-    /**
-     * @return mixed
-     */
-    public function include(string $filePath)
+    public function include(string $filePath): mixed
     {
         /** @psalm-suppress UnresolvableInclude */
         return include $filePath;

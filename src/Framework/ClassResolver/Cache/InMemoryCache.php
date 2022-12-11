@@ -9,11 +9,9 @@ final class InMemoryCache implements CacheInterface
     /** @var array<string, array<string,string>> */
     private static array $cache = [];
 
-    private string $key;
-
-    public function __construct(string $key)
-    {
-        $this->key = $key;
+    public function __construct(
+        private string $key,
+    ) {
     }
 
     /**

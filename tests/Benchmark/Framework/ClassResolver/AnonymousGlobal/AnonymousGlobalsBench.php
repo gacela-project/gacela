@@ -44,7 +44,7 @@ final class AnonymousGlobalsBench
                 {
                     return ['1', 2, [3]];
                 }
-            }
+            },
         );
     }
 
@@ -57,7 +57,7 @@ final class AnonymousGlobalsBench
                 {
                     $container->set('key', 'value');
                 }
-            }
+            },
         );
     }
 
@@ -80,7 +80,7 @@ final class AnonymousGlobalsBench
 
                         public function __construct(
                             array $configValues,
-                            string $valueFromDependencyProvider
+                            string $valueFromDependencyProvider,
                         ) {
                             $this->configValues = $configValues;
                             $this->valueFromDependencyProvider = $valueFromDependencyProvider;
@@ -97,7 +97,7 @@ final class AnonymousGlobalsBench
                         }
                     };
                 }
-            }
+            },
         );
     }
 

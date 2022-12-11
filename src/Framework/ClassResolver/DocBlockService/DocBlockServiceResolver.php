@@ -8,11 +8,9 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
 final class DocBlockServiceResolver extends AbstractClassResolver
 {
-    private string $resolvableType;
-
-    public function __construct(string $resolvableType)
-    {
-        $this->resolvableType = $resolvableType;
+    public function __construct(
+        private string $resolvableType,
+    ) {
     }
 
     /**
@@ -20,7 +18,7 @@ final class DocBlockServiceResolver extends AbstractClassResolver
      *
      * @throws DocBlockServiceNotFoundException
      */
-    public function resolve($caller): ?object
+    public function resolve(object|string $caller): ?object
     {
         $resolved = $this->doResolve($caller);
 

@@ -18,13 +18,9 @@ abstract class AbstractConfig
     }
 
     /**
-     * @param null|mixed $default
-     *
      * @throws ConfigException
-     *
-     * @return mixed
      */
-    protected function get(string $key, $default = Config::DEFAULT_CONFIG_VALUE)
+    protected function get(string $key, mixed $default = Config::DEFAULT_CONFIG_VALUE): mixed
     {
         return Config::getInstance()->get($key, $default);
     }

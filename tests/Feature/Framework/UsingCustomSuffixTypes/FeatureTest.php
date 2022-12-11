@@ -30,7 +30,7 @@ final class FeatureTest extends TestCase
                 'config-key' => 'config-value',
                 'provided-dependency' => 'dependency-value',
             ],
-            $commandA->execute()
+            $commandA->execute(),
         );
     }
 
@@ -43,7 +43,7 @@ final class FeatureTest extends TestCase
                 'config-key' => 'config-value',
                 'provided-dependency' => 'dependency-value',
             ],
-            $commandB->execute()
+            $commandB->execute(),
         );
     }
 
@@ -56,7 +56,7 @@ final class FeatureTest extends TestCase
                 'config-key' => 'config-value',
                 'provided-dependency' => 'dependency-value',
             ],
-            $commandC->execute()
+            $commandC->execute(),
         );
     }
 }

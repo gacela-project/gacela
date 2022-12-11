@@ -16,7 +16,7 @@ final class ConfigResolver extends AbstractClassResolver
      *
      * @throws ConfigNotFoundException
      */
-    public function resolve($caller): AbstractConfig
+    public function resolve(object|string $caller): AbstractConfig
     {
         /** @var ?AbstractConfig $resolved */
         $resolved = $this->doResolve($caller);

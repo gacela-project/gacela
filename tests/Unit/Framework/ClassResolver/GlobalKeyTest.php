@@ -23,7 +23,7 @@ final class GlobalKeyTest extends TestCase
     {
         self::assertSame(
             '\App\ModuleExample\Facade',
-            GlobalKey::fromClassName('App\ModuleExample\ModuleFacade')
+            GlobalKey::fromClassName('App\ModuleExample\ModuleFacade'),
         );
     }
 
@@ -31,7 +31,7 @@ final class GlobalKeyTest extends TestCase
     {
         self::assertSame(
             '\App\ModuleExample\Facade',
-            GlobalKey::fromClassName('\App\ModuleExample\ModuleFacade')
+            GlobalKey::fromClassName('\App\ModuleExample\ModuleFacade'),
         );
     }
 
@@ -39,7 +39,7 @@ final class GlobalKeyTest extends TestCase
     {
         self::assertSame(
             '\App\ModuleExample\Facade',
-            GlobalKey::fromClassName('App\ModuleExample\Facade')
+            GlobalKey::fromClassName('App\ModuleExample\Facade'),
         );
     }
 
@@ -47,7 +47,7 @@ final class GlobalKeyTest extends TestCase
     {
         self::assertSame(
             '\App\ModuleExample\Facade',
-            GlobalKey::fromClassName('\App\ModuleExample\Facade')
+            GlobalKey::fromClassName('\App\ModuleExample\Facade'),
         );
     }
 
@@ -55,7 +55,7 @@ final class GlobalKeyTest extends TestCase
     {
         self::assertSame(
             '\App\ModuleExample\DependencyProvider',
-            GlobalKey::fromClassName('\App\ModuleExample\ModuleDependencyProvider')
+            GlobalKey::fromClassName('\App\ModuleExample\ModuleDependencyProvider'),
         );
     }
 
@@ -63,7 +63,7 @@ final class GlobalKeyTest extends TestCase
     {
         self::assertSame(
             '\App\ModuleExample\DependencyProvider',
-            GlobalKey::fromClassName('\App\ModuleExample\DependencyProvider')
+            GlobalKey::fromClassName('\App\ModuleExample\DependencyProvider'),
         );
     }
 }

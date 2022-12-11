@@ -20,7 +20,7 @@ final class FileContentGeneratorTest extends TestCase
         $this->expectExceptionMessage("Unknown template for 'unknown_template'?");
         $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            'unknown_template'
+            'unknown_template',
         );
     }
 
@@ -41,7 +41,7 @@ final class FileContentGeneratorTest extends TestCase
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            FilenameSanitizer::FACADE
+            FilenameSanitizer::FACADE,
         );
 
         self::assertSame('Dir/DirFacade.php', $actualPath);
@@ -64,7 +64,7 @@ final class FileContentGeneratorTest extends TestCase
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            FilenameSanitizer::FACTORY
+            FilenameSanitizer::FACTORY,
         );
 
         self::assertSame('Dir/DirFactory.php', $actualPath);
@@ -87,7 +87,7 @@ final class FileContentGeneratorTest extends TestCase
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            FilenameSanitizer::CONFIG
+            FilenameSanitizer::CONFIG,
         );
 
         self::assertSame('Dir/DirConfig.php', $actualPath);
@@ -110,7 +110,7 @@ final class FileContentGeneratorTest extends TestCase
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            FilenameSanitizer::DEPENDENCY_PROVIDER
+            FilenameSanitizer::DEPENDENCY_PROVIDER,
         );
 
         self::assertSame('Dir/DirDependencyProvider.php', $actualPath);

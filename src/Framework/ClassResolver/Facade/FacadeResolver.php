@@ -14,7 +14,7 @@ final class FacadeResolver extends AbstractClassResolver
      *
      * @throws FacadeNotFoundException
      */
-    public function resolve($caller): AbstractFacade
+    public function resolve(object|string $caller): AbstractFacade
     {
         /** @var ?AbstractFacade $resolved */
         $resolved = $this->doResolve($caller);

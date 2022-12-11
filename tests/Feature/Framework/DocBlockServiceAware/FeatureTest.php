@@ -23,7 +23,7 @@ final class FeatureTest extends TestCase
 
         (new HelloCommand())->run(
             $this->createStub(InputInterface::class),
-            $output
+            $output,
         );
 
         $expected = <<<TXT

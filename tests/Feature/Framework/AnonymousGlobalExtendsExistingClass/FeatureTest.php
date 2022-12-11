@@ -27,7 +27,7 @@ final class FeatureTest extends TestCase
                     $this->getConfigValue();
                     return new StringValue('other');
                 }
-            }
+            },
         );
 
         $facade = new Module\Facade();

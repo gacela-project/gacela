@@ -15,14 +15,14 @@ final class FinderRuleWithoutModulePrefix implements FinderRuleInterface
                 '\\%s\\%s\\%s',
                 trim($projectNamespace, '\\'),
                 $classInfo->getModuleName(),
-                $resolvableType
+                $resolvableType,
             );
         }
 
         return sprintf(
             '\\%s\\%s',
             $classInfo->getModuleName(),
-            $resolvableType
+            $resolvableType,
         );
     }
 }

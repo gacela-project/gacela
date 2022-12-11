@@ -16,7 +16,7 @@ final class GacelaConfigItem
     public function __construct(
         string $path,
         string $pathLocal = '',
-        ?ConfigReaderInterface $reader = null
+        ?ConfigReaderInterface $reader = null,
     ) {
         $this->path = $path;
         $this->pathLocal = $pathLocal;

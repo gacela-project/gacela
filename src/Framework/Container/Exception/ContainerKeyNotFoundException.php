@@ -9,10 +9,7 @@ use RuntimeException;
 
 final class ContainerKeyNotFoundException extends RuntimeException
 {
-    /**
-     * @param object $caller
-     */
-    public function __construct($caller, string $key)
+    public function __construct(object $caller, string $key)
     {
         $classInfo = ClassInfo::from($caller);
 
@@ -26,7 +23,7 @@ final class ContainerKeyNotFoundException extends RuntimeException
         $message .= sprintf(
             'You can fix this by adding the key "%s" to your "%sDependencyProvider"',
             $key,
-            $callerClassInfo->getModuleName()
+            $callerClassInfo->getModuleName(),
         );
 
         return $message;

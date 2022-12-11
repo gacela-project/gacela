@@ -16,9 +16,9 @@ final class DocBlockResolvable
      */
     public function __construct(string $className, string $resolvableType)
     {
-        $this->resolvableType = $resolvableType;
         /** @psalm-suppress PropertyTypeCoercion */
         $this->className = '\\' . ltrim($className, '\\'); // @phpstan-ignore-line
+        $this->resolvableType = $resolvableType;
     }
 
     /**

@@ -18,14 +18,10 @@ final class ConfigFactory extends AbstractFactory
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
     private const GACELA_PHP_CONFIG_EXTENSION = '.php';
 
-    private string $appRootDir;
-
-    private SetupGacelaInterface $setup;
-
-    public function __construct(string $appRootDir, SetupGacelaInterface $setup)
-    {
-        $this->appRootDir = $appRootDir;
-        $this->setup = $setup;
+    public function __construct(
+        private string $appRootDir,
+        private SetupGacelaInterface $setup,
+    ) {
     }
 
     public function createConfigLoader(): ConfigLoader
@@ -57,7 +53,7 @@ final class ConfigFactory extends AbstractFactory
         return array_reduce(
             $gacelaConfigFiles,
             static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item) => $carry->combine($item),
-            (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig()
+            (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
         );
     }
 
@@ -72,7 +68,7 @@ final class ConfigFactory extends AbstractFactory
             '%s/%s%s',
             $this->appRootDir,
             self::GACELA_PHP_CONFIG_FILENAME,
-            self::GACELA_PHP_CONFIG_EXTENSION
+            self::GACELA_PHP_CONFIG_EXTENSION,
         );
     }
 
@@ -83,7 +79,7 @@ final class ConfigFactory extends AbstractFactory
             $this->appRootDir,
             self::GACELA_PHP_CONFIG_FILENAME,
             $this->env(),
-            self::GACELA_PHP_CONFIG_EXTENSION
+            self::GACELA_PHP_CONFIG_EXTENSION,
         );
     }
 

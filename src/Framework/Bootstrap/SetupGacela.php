@@ -194,7 +194,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function buildMappingInterfaces(
         MappingInterfacesBuilder $builder,
-        array $externalServices
+        array $externalServices,
     ): MappingInterfacesBuilder {
         if ($this->mappingInterfacesBuilder) {
             $builder = $this->mappingInterfacesBuilder;
@@ -433,7 +433,7 @@ final class SetupGacela extends AbstractSetupGacela
                 $this->servicesToExtend[$serviceId] ??= [];
                 $this->servicesToExtend[$serviceId] = array_merge(
                     $this->servicesToExtend[$serviceId],
-                    $otherServiceToExtend
+                    $otherServiceToExtend,
                 );
             }
         }
@@ -495,10 +495,7 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    /**
-     * @param mixed $value
-     */
-    private function markPropertyChanged(string $name, $value): void
+    private function markPropertyChanged(string $name, mixed $value): void
     {
         $this->changedProperties[$name] = ($value !== null);
     }

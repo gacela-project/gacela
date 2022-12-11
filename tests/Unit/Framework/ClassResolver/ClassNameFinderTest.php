@@ -29,7 +29,7 @@ final class ClassNameFinderTest extends TestCase
             $this->createMock(ClassValidatorInterface::class),
             [],
             $this->createMock(CacheInterface::class),
-            []
+            [],
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -53,7 +53,7 @@ final class ClassNameFinderTest extends TestCase
             $classValidator,
             [$finderRule],
             $this->createMock(CacheInterface::class),
-            []
+            [],
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -77,7 +77,7 @@ final class ClassNameFinderTest extends TestCase
             $classValidator,
             [$finderRule],
             $this->createMock(CacheInterface::class),
-            []
+            [],
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -101,7 +101,7 @@ final class ClassNameFinderTest extends TestCase
             $classValidator,
             [$finderRule],
             $this->createMock(CacheInterface::class),
-            []
+            [],
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
@@ -125,7 +125,7 @@ final class ClassNameFinderTest extends TestCase
             $classValidator,
             [$finderRule],
             new InMemoryCache(ClassInfo::class),
-            []
+            [],
         );
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');

@@ -26,7 +26,7 @@ final class FeatureTest extends TestCase
                 'Hello, Gacela from Supplier.',
                 'Hello, Gacela from Dependent.',
             ],
-            $facade->greet('Gacela')
+            $facade->greet('Gacela'),
         );
     }
 }

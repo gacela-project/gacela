@@ -14,15 +14,12 @@ use function is_object;
 
 final class DependencyResolver
 {
-    /** @var array<class-string,class-string|callable|object> */
-    private array $mappingInterfaces;
-
     /**
      * @param array<class-string,class-string|callable|object> $mappingInterfaces
      */
-    public function __construct(array $mappingInterfaces)
-    {
-        $this->mappingInterfaces = $mappingInterfaces;
+    public function __construct(
+        private array $mappingInterfaces,
+    ) {
     }
 
     /**
@@ -51,10 +48,7 @@ final class DependencyResolver
         return $dependencies;
     }
 
-    /**
-     * @return mixed
-     */
-    private function resolveDependenciesRecursively(ReflectionParameter $parameter)
+    private function resolveDependenciesRecursively(ReflectionParameter $parameter): mixed
     {
         $this->checkInvalidArgumentParam($parameter);
 
@@ -95,10 +89,8 @@ final class DependencyResolver
 
     /**
      * @param class-string $paramTypeName
-     *
-     * @return mixed
      */
-    private function resolveClass(string $paramTypeName)
+    private function resolveClass(string $paramTypeName): mixed
     {
         /** @var mixed $mappedClass */
         $mappedClass = $this->mappingInterfaces[$paramTypeName] ?? null;

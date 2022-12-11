@@ -22,7 +22,7 @@ final class GlobalKey
         return sprintf(
             '\\%s\\%s',
             ltrim($matches['pre_namespace'], '\\'),
-            $resolvableType->resolvableType()
+            $resolvableType->resolvableType(),
         );
     }
 }

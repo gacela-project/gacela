@@ -8,19 +8,13 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 
 final class ConcreteClass extends AbstractClass
 {
-    private bool $bool;
-    private string $string;
-    private int $int;
-    private float $float;
-    private array $array;
-
-    public function __construct(bool $bool, string $string, int $int, float $float, array $array)
-    {
-        $this->bool = $bool;
-        $this->string = $string;
-        $this->int = $int;
-        $this->float = $float;
-        $this->array = $array;
+    public function __construct(
+        private bool $bool,
+        private string $string,
+        private int $int,
+        private float $float,
+        private array $array,
+    ) {
     }
 
     public function getTypes(): array

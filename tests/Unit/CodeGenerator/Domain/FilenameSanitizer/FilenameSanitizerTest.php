@@ -36,7 +36,7 @@ final class FilenameSanitizerTest extends TestCase
     {
         self::assertSame(
             FilenameSanitizer::FACADE,
-            $this->filenameSanitizer->sanitize($filename)
+            $this->filenameSanitizer->sanitize($filename),
         );
     }
 
@@ -56,7 +56,7 @@ final class FilenameSanitizerTest extends TestCase
     {
         self::assertSame(
             FilenameSanitizer::FACTORY,
-            $this->filenameSanitizer->sanitize($filename)
+            $this->filenameSanitizer->sanitize($filename),
         );
     }
 
@@ -77,7 +77,7 @@ final class FilenameSanitizerTest extends TestCase
     {
         self::assertSame(
             FilenameSanitizer::CONFIG,
-            $this->filenameSanitizer->sanitize($filename)
+            $this->filenameSanitizer->sanitize($filename),
         );
     }
 
@@ -97,7 +97,7 @@ final class FilenameSanitizerTest extends TestCase
     {
         self::assertSame(
             FilenameSanitizer::DEPENDENCY_PROVIDER,
-            $this->filenameSanitizer->sanitize($filename)
+            $this->filenameSanitizer->sanitize($filename),
         );
     }
 

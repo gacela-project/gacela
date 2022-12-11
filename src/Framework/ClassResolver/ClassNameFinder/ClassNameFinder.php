@@ -17,30 +17,16 @@ final class ClassNameFinder implements ClassNameFinderInterface
 {
     use EventDispatchingCapabilities;
 
-    private ClassValidatorInterface $classValidator;
-
-    /** @var list<FinderRuleInterface> */
-    private array $finderRules;
-
-    private CacheInterface $cache;
-
-    /** @var list<string> */
-    private array $projectNamespaces;
-
     /**
      * @param list<FinderRuleInterface> $finderRules
      * @param list<string> $projectNamespaces
      */
     public function __construct(
-        ClassValidatorInterface $classValidator,
-        array $finderRules,
-        CacheInterface $cache,
-        array $projectNamespaces
+        private ClassValidatorInterface $classValidator,
+        private array $finderRules,
+        private CacheInterface $cache,
+        private array $projectNamespaces,
     ) {
-        $this->classValidator = $classValidator;
-        $this->finderRules = $finderRules;
-        $this->cache = $cache;
-        $this->projectNamespaces = $projectNamespaces;
     }
 
     /**

@@ -9,16 +9,14 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 final class InstanceCreator
 {
-    private GacelaConfigFileInterface $gacelaConfigFile;
-
     private ?DependencyResolver $dependencyResolver = null;
 
     /** @var array<class-string,list<mixed>> */
     private array $cachedDependencies = [];
 
-    public function __construct(GacelaConfigFileInterface $gacelaConfigFile)
-    {
-        $this->gacelaConfigFile = $gacelaConfigFile;
+    public function __construct(
+        private GacelaConfigFileInterface $gacelaConfigFile,
+    ) {
     }
 
     /**
@@ -44,7 +42,7 @@ final class InstanceCreator
     {
         if ($this->dependencyResolver === null) {
             $this->dependencyResolver = new DependencyResolver(
-                $this->gacelaConfigFile->getMappingInterfaces()
+                $this->gacelaConfigFile->getMappingInterfaces(),
             );
         }
 

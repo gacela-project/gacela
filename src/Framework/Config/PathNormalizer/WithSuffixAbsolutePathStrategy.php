@@ -6,16 +6,10 @@ namespace Gacela\Framework\Config\PathNormalizer;
 
 final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
-    private string $appRootDir;
-
-    private string $configFileNameSuffix;
-
     public function __construct(
-        string $appRootDir,
-        string $configFileNameSuffix = ''
+        private string $appRootDir,
+        private string $configFileNameSuffix = '',
     ) {
-        $this->appRootDir = $appRootDir;
-        $this->configFileNameSuffix = $configFileNameSuffix;
     }
 
     public function generateAbsolutePath(string $relativePath): string
@@ -39,7 +33,7 @@ final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterf
         return sprintf(
             '%s/%s',
             rtrim($this->appRootDir, '/'),
-            ltrim($relativePathWithFileSuffix, '/')
+            ltrim($relativePathWithFileSuffix, '/'),
         );
     }
 }

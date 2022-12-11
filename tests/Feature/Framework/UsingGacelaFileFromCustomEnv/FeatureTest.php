@@ -26,7 +26,7 @@ final class FeatureTest extends TestCase
                 'default_key' => 'from:default',
                 'key' => 'from:default',
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 
@@ -43,7 +43,7 @@ final class FeatureTest extends TestCase
                 'default_key' => 'from:default',
                 'key' => 'from:dev',
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 
@@ -60,7 +60,7 @@ final class FeatureTest extends TestCase
                 'default_key' => 'from:default',
                 'key' => 'from:prod',
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 
@@ -77,7 +77,7 @@ final class FeatureTest extends TestCase
                 'default_key' => 'from:default',
                 'key' => 'from:default',
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 }

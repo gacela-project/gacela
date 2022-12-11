@@ -28,7 +28,7 @@ final class FeatureTest extends TestCase
                 'from-default-env-override' => 1,
                 'from-local-override' => 4,
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 
@@ -46,7 +46,7 @@ final class FeatureTest extends TestCase
                 'from-default-env-override' => 2,
                 'from-local-override' => 4,
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 
@@ -64,7 +64,7 @@ final class FeatureTest extends TestCase
                 'from-default-env-override' => 3,
                 'from-local-override' => 4,
             ],
-            $facade->doSomething()
+            $facade->doSomething(),
         );
     }
 }

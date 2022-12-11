@@ -11,9 +11,9 @@ final class MappingInterfacesBuilder
 
     /**
      * @param class-string $key
-     * @param class-string|object|callable $value
+     * @param callable|object|class-string $value
      */
-    public function bind(string $key, $value): self
+    public function bind(string $key, callable|object|string $value): self
     {
         $this->mapping[$key] = $value;
 

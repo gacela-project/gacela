@@ -47,14 +47,14 @@ abstract class AbstractClassResolver
     /**
      * @param object|class-string $caller
      */
-    abstract public function resolve($caller): ?object;
+    abstract public function resolve(object|string $caller): ?object;
 
     abstract protected function getResolvableType(): string;
 
     /**
      * @param object|class-string $caller
      */
-    protected function doResolve($caller, ?string $previousCacheKey = null): ?object
+    protected function doResolve(object|string $caller, ?string $previousCacheKey = null): ?object
     {
         $classInfo = ClassInfo::from($caller, $this->getResolvableType());
         $cacheKey = $previousCacheKey ?? $classInfo->getCacheKey();
@@ -104,7 +104,7 @@ abstract class AbstractClassResolver
     {
         return $this->getClassNameFinder()->findClassName(
             $classInfo,
-            $this->getPossibleResolvableTypes()
+            $this->getPossibleResolvableTypes(),
         );
     }
 
@@ -112,7 +112,7 @@ abstract class AbstractClassResolver
     {
         if (self::$classNameFinder === null) {
             self::$classNameFinder = (new ClassResolverFactory(
-                Config::getInstance()->getSetupGacela()
+                Config::getInstance()->getSetupGacela(),
             ))->createClassNameFinder();
         }
 

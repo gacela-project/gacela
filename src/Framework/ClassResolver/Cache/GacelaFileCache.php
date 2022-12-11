@@ -14,11 +14,9 @@ final class GacelaFileCache
 
     private static ?bool $isEnabled = null;
 
-    private ConfigInterface $config;
-
-    public function __construct(ConfigInterface $config)
-    {
-        $this->config = $config;
+    public function __construct(
+        private ConfigInterface $config,
+    ) {
     }
 
     /**

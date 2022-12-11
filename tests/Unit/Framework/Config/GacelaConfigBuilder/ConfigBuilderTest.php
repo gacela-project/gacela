@@ -26,7 +26,7 @@ final class ConfigBuilderTest extends TestCase
 
         self::assertEquals(
             [new GacelaConfigItem('custom/*.php', '')],
-            $builder->build()
+            $builder->build(),
         );
     }
 
@@ -37,7 +37,7 @@ final class ConfigBuilderTest extends TestCase
 
         self::assertEquals(
             [new GacelaConfigItem('', 'custom/local.php')],
-            $builder->build()
+            $builder->build(),
         );
     }
 
@@ -55,7 +55,7 @@ final class ConfigBuilderTest extends TestCase
 
         self::assertEquals(
             [new GacelaConfigItem('custom/*.php', 'custom/local.php', $reader)],
-            $builder->build()
+            $builder->build(),
         );
     }
 
@@ -66,7 +66,7 @@ final class ConfigBuilderTest extends TestCase
 
         self::assertEquals(
             [new GacelaConfigItem('custom/*.php', 'custom/local.php', new SimpleEnvConfigReader())],
-            $builder->build()
+            $builder->build(),
         );
     }
 }

@@ -46,7 +46,7 @@ final class Container implements ContainerInterface
         return Locator::getInstance();
     }
 
-    public function set(string $id, $service): void
+    public function set(string $id, mixed $service): void
     {
         if (isset($this->frozenServices[$id])) {
             throw ContainerException::serviceFrozen($id);
@@ -68,10 +68,8 @@ final class Container implements ContainerInterface
 
     /**
      * @throws ContainerKeyNotFoundException
-     *
-     * @return mixed
      */
-    public function get(string $id)
+    public function get(string $id): mixed
     {
         if (!$this->has($id)) {
             throw new ContainerKeyNotFoundException($this, $id);
@@ -160,10 +158,8 @@ final class Container implements ContainerInterface
 
     /**
      * @psalm-suppress MissingClosureReturnType,MixedAssignment
-     *
-     * @param mixed $factory
      */
-    private function generateExtendedService(Closure $service, $factory): Closure
+    private function generateExtendedService(Closure $service, mixed $factory): Closure
     {
         if (is_callable($factory)) {
             return static function (self $container) use ($service, $factory) {

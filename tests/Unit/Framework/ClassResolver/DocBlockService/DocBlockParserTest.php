@@ -31,7 +31,7 @@ final class DocBlockParserTest extends TestCase
 TXT;
         self::assertSame(
             '\App\Module\ClassName',
-            $this->parser->getClassFromMethod($input, 'getClass()')
+            $this->parser->getClassFromMethod($input, 'getClass()'),
         );
     }
 }

@@ -10,10 +10,6 @@ final class ConfigException extends RuntimeException
 {
     public static function keyNotFound(string $key, string $class): self
     {
-        return new self(sprintf(
-            'Could not find config key "%s" in "%s"',
-            $key,
-            $class
-        ));
+        return new self(sprintf('Could not find config key "%s" in "%s"', $key, $class));
     }
 }

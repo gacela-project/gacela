@@ -16,7 +16,7 @@ final class WithoutSuffixAbsolutePathStrategyTest extends TestCase
 
         self::assertSame(
             '/app/root/file-name',
-            $strategy->generateAbsolutePath($relativePath)
+            $strategy->generateAbsolutePath($relativePath),
         );
     }
 
@@ -27,7 +27,7 @@ final class WithoutSuffixAbsolutePathStrategyTest extends TestCase
 
         self::assertSame(
             '/app/root/file-name.ext',
-            $strategy->generateAbsolutePath($relativePath)
+            $strategy->generateAbsolutePath($relativePath),
         );
     }
 }

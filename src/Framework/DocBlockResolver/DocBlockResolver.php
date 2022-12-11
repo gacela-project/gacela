@@ -116,7 +116,7 @@ final class DocBlockResolver
             : $resolvableType;
 
         foreach (self::SPECIAL_RESOLVABLE_TYPES as $specialName) {
-            if (strpos($result, $specialName) !== false) {
+            if (str_contains($result, $specialName)) {
                 return $specialName;
             }
         }

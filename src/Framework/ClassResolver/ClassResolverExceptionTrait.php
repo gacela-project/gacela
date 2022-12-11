@@ -9,7 +9,7 @@ trait ClassResolverExceptionTrait
     /**
      * @param object|class-string $caller
      */
-    private function buildMessage($caller, string $resolvableType): string
+    private function buildMessage(object|string $caller, string $resolvableType): string
     {
         $callerClassInfo = ClassInfo::from($caller, $resolvableType);
 
@@ -22,12 +22,12 @@ trait ClassResolverExceptionTrait
 
         $message .= sprintf(
             'You can fix this by adding the missing `%s` to your module.',
-            $resolvableType
+            $resolvableType,
         ) . PHP_EOL;
 
         $message .= sprintf(
             'E.g. `%s`',
-            $this->findClassNameExample($callerClassInfo, $resolvableType)
+            $this->findClassNameExample($callerClassInfo, $resolvableType),
         ) . PHP_EOL;
 
         return $message;
@@ -38,7 +38,7 @@ trait ClassResolverExceptionTrait
         return sprintf(
             '\\%s\\%s',
             $classInfo->getModuleNamespace(),
-            $resolvableType
+            $resolvableType,
         );
     }
 }

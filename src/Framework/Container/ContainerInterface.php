@@ -15,10 +15,8 @@ interface ContainerInterface
      * Unless it is protected, in such a case it will get the raw service as it was set.
      *
      * @throws ContainerKeyNotFoundException
-     *
-     * @return mixed
      */
-    public function get(string $id);
+    public function get(string $id): mixed;
 
     /**
      * Check if a service exists.
@@ -28,11 +26,9 @@ interface ContainerInterface
     /**
      * Set a new service. You cannot override an existing service, but you can extend it.
      *
-     * @param mixed $service
-     *
      * @throws ContainerException
      */
-    public function set(string $id, $service): void;
+    public function set(string $id, mixed $service): void;
 
     /**
      * Remove a known service.

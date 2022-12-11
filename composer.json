@@ -1,8 +1,8 @@
 {
     "name": "gacela-project/gacela",
-    "description": "Gacela helps you separate your project into modules.",
+    "description": "Gacela helps you separate your project into modules",
     "type": "library",
-    "homepage": "https://gacela-project.com/",
+    "homepage": "https://gacela-project.com",
     "keywords": [
         "php",
         "modular",
@@ -14,12 +14,11 @@
         {
             "name": "Jose Maria Valera Reales",
             "email": "chemaclass@outlook.es",
-            "role": "lead"
+            "homepage": "https://chemaclass.com"
         },
         {
             "name": "Jesus Valera Reales",
-            "email": "jesus1902@outlook.com",
-            "role": "developer"
+            "email": "jesus1902@outlook.com"
         }
     ],
     "support": {
@@ -91,24 +90,24 @@
             "@test-feature"
         ],
         "static-clear-cache": [
-            "vendor/bin/psalm --clear-cache",
-            "vendor/bin/phpstan clear-result-cache"
+            "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
+            "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache"
         ],
-        "test-unit": "./vendor/bin/phpunit --testsuite=unit",
-        "test-integration": "./vendor/bin/phpunit --testsuite=integration",
-        "test-feature": "./vendor/bin/phpunit --testsuite=feature",
-        "test-all-suites": "./vendor/bin/phpunit --testsuite=unit,integration,feature --log-junit=data/log-junit.xml",
+        "test-unit": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit",
+        "test-integration": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=integration",
+        "test-feature": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=feature",
+        "test-all-suites": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit,integration,feature --log-junit=data/log-junit.xml",
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=data/coverage-html --coverage-xml=data/coverage-xml --log-junit=data/coverage-xml/junit.xml",
-        "psalm": "./vendor/bin/psalm",
-        "phpstan": "./vendor/bin/phpstan analyze",
-        "csfix": "./vendor/bin/php-cs-fixer fix",
-        "csrun": "./vendor/bin/php-cs-fixer fix --dry-run",
-        "phpbench": "vendor/bin/phpbench run --report=aggregate --ansi",
-        "phpbench-base": "vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
-        "phpbench-ref": "vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
+        "psalm": "XDEBUG_MODE=off ./vendor/bin/psalm",
+        "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze",
+        "csfix": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix",
+        "csrun": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix --dry-run",
+        "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
+        "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
+        "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
         "metrics-report": [
             "@test-all-suites",
-            "./vendor/bin/phpmetrics --config=phpmetrics-config.json --junit=data/log-junit.xml"
+            "XDEBUG_MODE=off ./vendor/bin/phpmetrics --config=phpmetrics-config.json --junit=data/log-junit.xml"
         ]
     }
 }

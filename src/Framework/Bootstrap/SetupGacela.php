@@ -406,7 +406,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function combine(self $other): self
     {
-        return (new SetupCombiner($this))->combine($other);
+        return (new SetupCombinator($this))->combine($other);
     }
 
     /**

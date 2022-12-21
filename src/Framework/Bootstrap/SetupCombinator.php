@@ -10,7 +10,7 @@ use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 /**
  * @psalm-suppress MixedArgumentTypeCoercion
  */
-final class SetupCombiner
+final class SetupCombinator
 {
     public function __construct(private SetupGacela $original)
     {

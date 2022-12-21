@@ -6,6 +6,7 @@ namespace GacelaTest\Integration\Framework\DocBlockResolverAware;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
@@ -22,7 +23,7 @@ final class DocBlockResolverInMemoryAwareTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->addAppConfig('config/in-memory/*.php');
+            $config->addAppConfigKeyValue(GacelaFileCache::KEY_ENABLED, false);
         });
     }
 

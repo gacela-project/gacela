@@ -65,10 +65,10 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-ansi --no-progress
 
-      - name: Run vimeo/psalm on internal code
-        run: ./vendor/bin/psalm --config=psalm.xml --no-progress --shepherd --show-info=false --stats --output-format=github
+      - name: Run psalm
+        run: ./vendor/bin/psalm --config=psalm.xml --no-progress --shepherd --show-info=false --stats --shepherd --output-format=github
 
-      - name: Run phpstan on internal code
+      - name: Run phpstan
         run: ./vendor/bin/phpstan analyze -c phpstan.neon src
 
   tests:

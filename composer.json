@@ -38,7 +38,7 @@
         "psalm/plugin-phpunit": "^0.18",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^5.1"
+        "vimeo/psalm": "^5.4"
     },
     "suggest": {
         "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",

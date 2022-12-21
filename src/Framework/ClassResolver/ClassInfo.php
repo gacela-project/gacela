@@ -96,6 +96,11 @@ final class ClassInfo implements ClassInfoInterface
         $callerFullNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
 
         $callerModuleNamespace = substr($callerFullNamespace, 0, (int)strrpos($callerFullNamespace, '\\'));
+        /**
+         * @psalm-suppress InvalidArrayOffset
+         *
+         * @var string $callerModuleName
+         */
         $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
         $cacheKey = GlobalKey::fromClassName(sprintf('\\%s\\%s', $callerFullNamespace, $resolvableType));
 

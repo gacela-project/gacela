@@ -36,14 +36,11 @@ final class ConfigLoader
             $result[] = $this->readAbsolutePatternPath($absolutePatternPath, $configItem, $cacheConfigFileContent);
         }
 
-        /** @psalm-suppress MixedArgument */
+        /** @psalm-suppress MixedArgument,NamedArgumentNotAllowed */
         $configs[] = array_merge(...array_merge(...$result)); // @phpstan-ignore-line
         $configs[] = $this->readLocalConfigFile();
 
-        /** @var array<string,mixed> $allConfigKeyValues */
-        $allConfigKeyValues = array_merge(...$configs);
-
-        return $allConfigKeyValues;
+        return array_merge(...$configs);
     }
 
     /**

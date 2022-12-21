@@ -146,7 +146,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setExternalServices(array $array): self
     {
-        $this->markPropertyChanged('externalServices', true);
+        $this->markPropertyChanged(self::externalServices, true);
         $this->externalServices = $array;
 
         return $this;
@@ -154,7 +154,6 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setConfigBuilder(ConfigBuilder $builder): self
     {
-        $this->markPropertyChanged('configBuilder', true);
         $this->configBuilder = $builder;
 
         return $this;
@@ -162,7 +161,6 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setSuffixTypesBuilder(SuffixTypesBuilder $builder): self
     {
-        $this->markPropertyChanged('suffixTypesBuilder', true);
         $this->suffixTypesBuilder = $builder;
 
         return $this;
@@ -170,7 +168,6 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
     {
-        $this->markPropertyChanged('mappingInterfacesBuilder', true);
         $this->mappingInterfacesBuilder = $builder;
 
         return $this;
@@ -181,7 +178,6 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setConfigFn(callable $callable): self
     {
-        $this->markPropertyChanged('configFn', true);
         $this->configFn = $callable;
 
         return $this;
@@ -203,7 +199,6 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setMappingInterfacesFn(callable $callable): self
     {
-        $this->markPropertyChanged('mappingInterfacesFn', true);
         $this->mappingInterfacesFn = $callable;
 
         return $this;
@@ -235,7 +230,6 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setSuffixTypesFn(callable $callable): self
     {
-        $this->markPropertyChanged('suffixTypesFn', true);
         $this->suffixTypesFn = $callable;
 
         return $this;
@@ -288,7 +282,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setFileCacheDirectory(?string $dir): self
     {
-        $this->markPropertyChanged('fileCacheDirectory', $dir);
+        $this->markPropertyChanged(self::fileCacheDirectory, $dir);
         $this->fileCacheDirectory = $dir ?? self::DEFAULT_FILE_CACHE_DIRECTORY;
 
         return $this;
@@ -299,7 +293,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setProjectNamespaces(?array $list): self
     {
-        $this->markPropertyChanged('projectNamespaces', $list);
+        $this->markPropertyChanged(self::projectNamespaces, $list);
         $this->projectNamespaces = $list ?? self::DEFAULT_PROJECT_NAMESPACES;
 
         return $this;
@@ -353,7 +347,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setFileCacheEnabled(?bool $flag): self
     {
-        $this->markPropertyChanged('fileCacheEnabled', $flag);
+        $this->markPropertyChanged(self::fileCacheEnabled, $flag);
         $this->fileCacheEnabled = $flag ?? self::DEFAULT_FILE_CACHE_ENABLED;
 
         return $this;
@@ -370,7 +364,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setConfigKeyValues(?array $configKeyValues): self
     {
-        $this->markPropertyChanged('configKeyValues', $configKeyValues);
+        $this->markPropertyChanged(self::configKeyValues, $configKeyValues);
         $this->configKeyValues = $configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
 
         return $this;
@@ -440,7 +434,6 @@ final class SetupGacela extends AbstractSetupGacela
 
     private function setAreEventListenersEnabled(?bool $flag): self
     {
-        $this->markPropertyChanged('areEventListenersEnabled', $flag);
         $this->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
 
         return $this;
@@ -457,7 +450,6 @@ final class SetupGacela extends AbstractSetupGacela
      */
     private function setGenericListeners(?array $listeners): self
     {
-        $this->markPropertyChanged('genericListeners', $listeners);
         $this->genericListeners = $listeners ?? self::DEFAULT_GENERIC_LISTENERS;
 
         return $this;
@@ -468,7 +460,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     private function setServicesToExtend(?array $list): self
     {
-        $this->markPropertyChanged('servicesToExtend', $list);
+        $this->markPropertyChanged(self::servicesToExtend, $list);
         $this->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
 
         return $this;
@@ -479,7 +471,6 @@ final class SetupGacela extends AbstractSetupGacela
      */
     private function setSpecificListeners(?array $listeners): self
     {
-        $this->markPropertyChanged('specificListeners', $listeners);
         $this->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
 
         return $this;

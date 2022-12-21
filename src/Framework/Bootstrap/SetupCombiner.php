@@ -32,38 +32,38 @@ final class SetupCombiner
 
     private function overrideResetInMemoryCache(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged('shouldResetInMemoryCache')) {
+        if ($other->isPropertyChanged(SetupGacela::shouldResetInMemoryCache)) {
             $this->original->setShouldResetInMemoryCache($other->shouldResetInMemoryCache());
         }
     }
 
     private function overrideFileCacheSettings(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged('fileCacheEnabled')) {
+        if ($other->isPropertyChanged(SetupGacela::fileCacheEnabled)) {
             $this->original->setFileCacheEnabled($other->isFileCacheEnabled());
         }
-        if ($other->isPropertyChanged('fileCacheDirectory')) {
+        if ($other->isPropertyChanged(SetupGacela::fileCacheDirectory)) {
             $this->original->setFileCacheDirectory($other->getFileCacheDirectory());
         }
     }
 
     private function combineExternalServices(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged('externalServices')) {
+        if ($other->isPropertyChanged(SetupGacela::externalServices)) {
             $this->original->combineExternalServices($other->externalServices());
         }
     }
 
     private function combineProjectNamespaces(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged('projectNamespaces')) {
+        if ($other->isPropertyChanged(SetupGacela::projectNamespaces)) {
             $this->original->combineProjectNamespaces($other->getProjectNamespaces());
         }
     }
 
     private function combineConfigKeyValues(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged('configKeyValues')) {
+        if ($other->isPropertyChanged(SetupGacela::configKeyValues)) {
             $this->original->combineConfigKeyValues($other->getConfigKeyValues());
         }
     }
@@ -92,7 +92,7 @@ final class SetupCombiner
 
     private function combineServicesToExtend(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged('servicesToExtend')) {
+        if ($other->isPropertyChanged(SetupGacela::servicesToExtend)) {
             foreach ($other->getServicesToExtend() as $serviceId => $otherServiceToExtend) {
                 $this->original->addServicesToExtend($serviceId, $otherServiceToExtend);
             }

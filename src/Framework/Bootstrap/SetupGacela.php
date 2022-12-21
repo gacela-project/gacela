@@ -21,6 +21,14 @@ use function is_callable;
  */
 final class SetupGacela extends AbstractSetupGacela
 {
+    public const shouldResetInMemoryCache = 'shouldResetInMemoryCache';
+    public const fileCacheEnabled = 'fileCacheEnabled';
+    public const fileCacheDirectory = 'fileCacheDirectory';
+    public const externalServices = 'externalServices';
+    public const projectNamespaces = 'projectNamespaces';
+    public const configKeyValues = 'configKeyValues';
+    public const servicesToExtend = 'servicesToExtend';
+
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
     private const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
     private const DEFAULT_FILE_CACHE_ENABLED = GacelaFileCache::DEFAULT_ENABLED_VALUE;
@@ -257,7 +265,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setShouldResetInMemoryCache(?bool $flag): self
     {
-        $this->markPropertyChanged('shouldResetInMemoryCache', $flag);
+        $this->markPropertyChanged(self::shouldResetInMemoryCache, $flag);
         $this->shouldResetInMemoryCache = $flag ?? self::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE;
 
         return $this;

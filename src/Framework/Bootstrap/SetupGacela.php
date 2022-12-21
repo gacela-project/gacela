@@ -16,6 +16,9 @@ use RuntimeException;
 
 use function is_callable;
 
+/**
+ * @psalm-suppress ArgumentTypeCoercion,MixedArgumentTypeCoercion
+ */
 final class SetupGacela extends AbstractSetupGacela
 {
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
@@ -76,12 +79,12 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function __construct()
     {
-        $this->configFn = static function (): void {
+        $emptyFn = static function (): void {
         };
-        $this->mappingInterfacesFn = static function (): void {
-        };
-        $this->suffixTypesFn = static function (): void {
-        };
+
+        $this->configFn = $emptyFn;
+        $this->mappingInterfacesFn = $emptyFn;
+        $this->suffixTypesFn = $emptyFn;
     }
 
     public static function fromFile(string $gacelaFilePath): self
@@ -130,10 +133,21 @@ final class SetupGacela extends AbstractSetupGacela
             ->setServicesToExtend($build['services-to-extend']);
     }
 
-    public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
+    /**
+     * @param array<string,class-string|object|callable> $array
+     */
+    public function setExternalServices(array $array): self
     {
-        $this->markPropertyChanged('mappingInterfacesBuilder', true);
-        $this->mappingInterfacesBuilder = $builder;
+        $this->markPropertyChanged('externalServices', true);
+        $this->externalServices = $array;
+
+        return $this;
+    }
+
+    public function setConfigBuilder(ConfigBuilder $builder): self
+    {
+        $this->markPropertyChanged('configBuilder', true);
+        $this->configBuilder = $builder;
 
         return $this;
     }
@@ -146,10 +160,10 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    public function setConfigBuilder(ConfigBuilder $builder): self
+    public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
     {
-        $this->markPropertyChanged('configBuilder', true);
-        $this->configBuilder = $builder;
+        $this->markPropertyChanged('mappingInterfacesBuilder', true);
+        $this->mappingInterfacesBuilder = $builder;
 
         return $this;
     }
@@ -231,17 +245,6 @@ final class SetupGacela extends AbstractSetupGacela
         ($this->suffixTypesFn)($builder);
 
         return $builder;
-    }
-
-    /**
-     * @param array<string,class-string|object|callable> $array
-     */
-    public function setExternalServices(array $array): self
-    {
-        $this->markPropertyChanged('externalServices', true);
-        $this->externalServices = $array;
-
-        return $this;
     }
 
     /**
@@ -332,20 +335,6 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->eventDispatcher;
     }
 
-    public function combine(self $other): self
-    {
-        $this->overrideResetInMemoryCache($other);
-        $this->overrideFileCacheSettings($other);
-
-        $this->combineExternalServices($other);
-        $this->combineProjectNamespaces($other);
-        $this->combineConfigKeyValues($other);
-        $this->combineEventDispatcher($other);
-        $this->combineServicesToExtend($other);
-
-        return $this;
-    }
-
     /**
      * @return array<string,list<Closure>>
      */
@@ -354,12 +343,91 @@ final class SetupGacela extends AbstractSetupGacela
         return (array)$this->servicesToExtend;
     }
 
-    private function setFileCacheEnabled(?bool $flag): self
+    public function setFileCacheEnabled(?bool $flag): self
     {
         $this->markPropertyChanged('fileCacheEnabled', $flag);
         $this->fileCacheEnabled = $flag ?? self::DEFAULT_FILE_CACHE_ENABLED;
 
         return $this;
+    }
+
+    public function canCreateEventDispatcher(): bool
+    {
+        return $this->areEventListenersEnabled
+            && $this->hasEventListeners();
+    }
+
+    /**
+     * @param ?array<string,mixed> $configKeyValues
+     */
+    public function setConfigKeyValues(?array $configKeyValues): self
+    {
+        $this->markPropertyChanged('configKeyValues', $configKeyValues);
+        $this->configKeyValues = $configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
+
+        return $this;
+    }
+
+    /**
+     * @return array<class-string,list<callable>>|null
+     */
+    public function getSpecificListeners(): ?array
+    {
+        return $this->specificListeners;
+    }
+
+    /**
+     * @return list<callable>|null
+     */
+    public function getGenericListeners(): ?array
+    {
+        return $this->genericListeners;
+    }
+
+    public function isPropertyChanged(string $name): bool
+    {
+        return $this->changedProperties[$name] ?? false;
+    }
+
+    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
+    {
+        $this->eventDispatcher = $eventDispatcher;
+
+        return $this;
+    }
+
+    public function combine(self $other): self
+    {
+        return (new SetupCombiner($this))->combine($other);
+    }
+
+    /**
+     * @param list<Closure> $servicesToExtend
+     */
+    public function addServicesToExtend(string $serviceId, array $servicesToExtend): self
+    {
+        $this->servicesToExtend[$serviceId] ??= [];
+        $this->servicesToExtend[$serviceId] = array_merge(
+            $this->servicesToExtend[$serviceId],
+            $servicesToExtend,
+        );
+
+        return $this;
+    }
+
+    public function combineExternalServices(array $list): void
+    {
+        $this->setExternalServices(array_merge($this->externalServices ?? [], $list));
+    }
+
+    public function combineProjectNamespaces(array $list): void
+    {
+        $this->setProjectNamespaces(array_merge($this->projectNamespaces ?? [], $list));
+    }
+
+    public function combineConfigKeyValues(array $list): void
+    {
+        $this->setConfigKeyValues(array_merge($this->configKeyValues ?? [], $list));
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self
@@ -370,96 +438,10 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    private function combineExternalServices(self $other): void
-    {
-        if ($other->isPropertyChanged('externalServices')) {
-            $this->externalServices = array_merge($this->externalServices ?? [], $other->externalServices());
-        }
-    }
-
-    private function overrideResetInMemoryCache(self $other): void
-    {
-        if ($other->isPropertyChanged('shouldResetInMemoryCache')) {
-            $this->shouldResetInMemoryCache = $other->shouldResetInMemoryCache();
-        }
-    }
-
-    private function overrideFileCacheSettings(self $other): void
-    {
-        if ($other->isPropertyChanged('fileCacheEnabled')) {
-            $this->fileCacheEnabled = $other->isFileCacheEnabled();
-        }
-        if ($other->isPropertyChanged('fileCacheDirectory')) {
-            $this->fileCacheDirectory = $other->getFileCacheDirectory();
-        }
-    }
-
-    private function combineProjectNamespaces(self $other): void
-    {
-        if ($other->isPropertyChanged('projectNamespaces')) {
-            $this->projectNamespaces = array_merge($this->projectNamespaces ?? [], $other->getProjectNamespaces());
-        }
-    }
-
-    private function combineConfigKeyValues(self $other): void
-    {
-        if ($other->isPropertyChanged('configKeyValues')) {
-            $this->configKeyValues = array_merge($this->configKeyValues ?? [], $other->getConfigKeyValues());
-        }
-    }
-
-    private function combineEventDispatcher(self $other): void
-    {
-        if ($other->canCreateEventDispatcher()) {
-            if (!($this->eventDispatcher instanceof ConfigurableEventDispatcher)) {
-                $this->eventDispatcher = new ConfigurableEventDispatcher();
-            }
-            $this->eventDispatcher->registerGenericListeners((array)$other->genericListeners);
-
-            foreach ($other->specificListeners ?? [] as $event => $listeners) {
-                foreach ($listeners as $callable) {
-                    $this->eventDispatcher->registerSpecificListener($event, $callable);
-                }
-            }
-        } else {
-            $this->eventDispatcher = new NullEventDispatcher();
-        }
-    }
-
-    private function combineServicesToExtend(self $other): void
-    {
-        if ($other->isPropertyChanged('servicesToExtend')) {
-            foreach ($other->getServicesToExtend() as $serviceId => $otherServiceToExtend) {
-                $this->servicesToExtend[$serviceId] ??= [];
-                $this->servicesToExtend[$serviceId] = array_merge(
-                    $this->servicesToExtend[$serviceId],
-                    $otherServiceToExtend,
-                );
-            }
-        }
-    }
-
-    private function canCreateEventDispatcher(): bool
-    {
-        return $this->areEventListenersEnabled
-            && $this->hasEventListeners();
-    }
-
     private function hasEventListeners(): bool
     {
         return !empty($this->genericListeners)
             || !empty($this->specificListeners);
-    }
-
-    /**
-     * @param ?array<string,mixed> $configKeyValues
-     */
-    private function setConfigKeyValues(?array $configKeyValues): self
-    {
-        $this->markPropertyChanged('configKeyValues', $configKeyValues);
-        $this->configKeyValues = $configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
-
-        return $this;
     }
 
     /**
@@ -498,10 +480,5 @@ final class SetupGacela extends AbstractSetupGacela
     private function markPropertyChanged(string $name, mixed $value): void
     {
         $this->changedProperties[$name] = ($value !== null);
-    }
-
-    private function isPropertyChanged(string $name): bool
-    {
-        return $this->changedProperties[$name] ?? false;
     }
 }

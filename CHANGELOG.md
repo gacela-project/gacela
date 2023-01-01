@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 1.0.0
+### 2023-01-01
 
 - Allow extending raw arrays as services
 - The Locator cannot resolve any more interface classes only because of the `Interface` suffix in their name

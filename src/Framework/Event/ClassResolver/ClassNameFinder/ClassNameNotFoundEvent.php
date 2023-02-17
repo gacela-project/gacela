@@ -21,7 +21,7 @@ final class ClassNameNotFoundEvent implements GacelaEventInterface
     public function toString(): string
     {
         return sprintf(
-            '%s - %s - %s',
+            '%s {classInfo:"%s", resolvableTypes:"%s"}',
             self::class,
             $this->classInfo->toString(),
             implode(',', $this->resolvableTypes),

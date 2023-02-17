@@ -25,7 +25,7 @@ abstract class AbstractGacelaClassResolverEvent implements GacelaEventInterface
     public function toString(): string
     {
         return sprintf(
-            '%s - %s',
+            '%s {classInfo:"%s"}',
             get_class($this),
             $this->classInfo->toString(),
         );

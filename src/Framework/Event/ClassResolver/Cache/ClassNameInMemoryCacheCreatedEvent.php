@@ -10,6 +10,6 @@ final class ClassNameInMemoryCacheCreatedEvent implements GacelaEventInterface
 {
     public function toString(): string
     {
-        return self::class;
+        return sprintf('%s {}', self::class);
     }
 }

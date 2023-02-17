@@ -60,7 +60,7 @@ final class ClassInfo implements ClassInfoInterface
     public function toString(): string
     {
         return sprintf(
-            'ClassInfo{callerModuleNamespace:"%s", callerModuleName:"%s", resolvableType:"%s", cacheKey:"%s"}',
+            '{callerModuleNamespace:"%s", callerModuleName:"%s", resolvableType:"%s", cacheKey:"%s"}',
             $this->callerModuleNamespace,
             $this->callerModuleName,
             $this->resolvableType,

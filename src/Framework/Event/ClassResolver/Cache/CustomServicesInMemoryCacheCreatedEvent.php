@@ -10,6 +10,6 @@ final class CustomServicesInMemoryCacheCreatedEvent implements GacelaEventInterf
 {
     public function toString(): string
     {
-        return self::class;
+        return sprintf('%s {}', self::class);
     }
 }

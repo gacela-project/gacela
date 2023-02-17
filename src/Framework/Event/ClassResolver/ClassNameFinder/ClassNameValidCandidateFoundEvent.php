@@ -15,6 +15,6 @@ final class ClassNameValidCandidateFoundEvent implements GacelaEventInterface
 
     public function toString(): string
     {
-        return sprintf('%s - %s', self::class, $this->className);
+        return sprintf('%s {className:"%s"}', self::class, $this->className);
     }
 }

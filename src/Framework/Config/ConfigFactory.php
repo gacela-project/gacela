@@ -18,10 +18,17 @@ final class ConfigFactory extends AbstractFactory
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
     private const GACELA_PHP_CONFIG_EXTENSION = '.php';
 
+    private static ?GacelaConfigFileInterface $gacelaFileConfig = null;
+
     public function __construct(
         private string $appRootDir,
         private SetupGacelaInterface $setup,
     ) {
+    }
+
+    public static function resetCache(): void
+    {
+        self::$gacelaFileConfig = null;
     }
 
     public function createConfigLoader(): ConfigLoader
@@ -35,12 +42,20 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
+        if (self::$gacelaFileConfig !== null) {
+            return self::$gacelaFileConfig;
+        }
+
         $gacelaConfigFiles = [];
         $fileIo = $this->createFileIo();
 
         $gacelaPhpDefaultPath = $this->getGacelaPhpDefaultPath();
         if ($fileIo->existsFile($gacelaPhpDefaultPath)) {
-            $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpDefaultPath, $this->setup, $fileIo);
+            $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory(
+                $gacelaPhpDefaultPath,
+                $this->setup,
+                $fileIo,
+            );
             $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
@@ -50,11 +65,13 @@ final class ConfigFactory extends AbstractFactory
             $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
-        return array_reduce(
+        self::$gacelaFileConfig = array_reduce(
             $gacelaConfigFiles,
             static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item) => $carry->combine($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
         );
+
+        return self::$gacelaFileConfig;
     }
 
     private function createFileIo(): FileIoInterface

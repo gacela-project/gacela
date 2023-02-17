@@ -13,8 +13,10 @@ final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, static fn (GacelaConfig $config) => $config
-            ->addExternalService('greeterGenerator', CorrectCompanyGenerator::class), );
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addExternalService('greeterGenerator', CorrectCompanyGenerator::class);
+        });
     }
 
     public function test_mapping_interfaces_from_config(): void

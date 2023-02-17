@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingGacelaFileFromCustomEnv;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +18,7 @@ final class FeatureTest extends TestCase
 
     public function test_load_gacela_default_file(): void
     {
-        Gacela::bootstrap(__DIR__);
+        $this->bootstrapGacela();
 
         $facade = new LocalConfig\Facade();
 
@@ -34,7 +35,7 @@ final class FeatureTest extends TestCase
     {
         putenv('APP_ENV=dev');
 
-        Gacela::bootstrap(__DIR__);
+        $this->bootstrapGacela();
 
         $facade = new LocalConfig\Facade();
 
@@ -51,7 +52,7 @@ final class FeatureTest extends TestCase
     {
         putenv('APP_ENV=prod');
 
-        Gacela::bootstrap(__DIR__);
+        $this->bootstrapGacela();
 
         $facade = new LocalConfig\Facade();
 
@@ -68,7 +69,7 @@ final class FeatureTest extends TestCase
     {
         putenv('APP_ENV=custom');
 
-        Gacela::bootstrap(__DIR__);
+        $this->bootstrapGacela();
 
         $facade = new LocalConfig\Facade();
 
@@ -79,5 +80,12 @@ final class FeatureTest extends TestCase
             ],
             $facade->doSomething(),
         );
+    }
+
+    private function bootstrapGacela(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
     }
 }

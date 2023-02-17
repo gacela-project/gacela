@@ -13,6 +13,7 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 
 final class Gacela
@@ -32,6 +33,7 @@ final class Gacela
             ClassResolverCache::resetCache();
             InMemoryCache::resetCache();
             AbstractClassResolver::resetCache();
+            ConfigFactory::resetCache();
             Config::resetInstance();
         }
 

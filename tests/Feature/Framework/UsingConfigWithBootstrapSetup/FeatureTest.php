@@ -13,6 +13,7 @@ final class FeatureTest extends TestCase
     public function setUp(): void
     {
         $configFn = static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
             $config->addAppConfig('custom-config.php', 'custom-config_local.php');
         };
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\Config\ConfigFactory;
 
-use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
@@ -12,8 +11,6 @@ use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
-use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
-use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\AbstractCustom;
 use GacelaTest\Fixtures\CustomClass;
 use GacelaTest\Fixtures\CustomInterface;
@@ -21,6 +18,11 @@ use PHPUnit\Framework\TestCase;
 
 final class ConfigFactoryTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        ConfigFactory::resetCache();
+    }
+
     public function test_empty_setup_then_default_gacela_config_file(): void
     {
         $setup = new SetupGacela();
@@ -33,7 +35,6 @@ final class ConfigFactoryTest extends TestCase
         self::assertEquals($expected, $actual);
     }
 
-
     public function test_cache_gacela_file_config(): void
     {
         $setup = new SetupGacela();
@@ -43,7 +44,6 @@ final class ConfigFactoryTest extends TestCase
 
         $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $setup))
             ->createGacelaFileConfig();
-
 
         self::assertSame($expected, $actual);
     }

@@ -14,8 +14,23 @@ final class ClassNameCachedFoundEvent implements GacelaEventInterface
     ) {
     }
 
+    public function cacheKey(): string
+    {
+        return $this->cacheKey;
+    }
+
+    public function className(): string
+    {
+        return $this->className;
+    }
+
     public function toString(): string
     {
-        return sprintf('%s {cacheKey:"%s", className:"%s"}', self::class, $this->cacheKey, $this->className);
+        return sprintf(
+            '%s {cacheKey:"%s", className:"%s"}',
+            self::class,
+            $this->cacheKey,
+            $this->className,
+        );
     }
 }

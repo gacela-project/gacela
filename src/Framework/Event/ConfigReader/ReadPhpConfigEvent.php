@@ -23,7 +23,7 @@ final class ReadPhpConfigEvent implements GacelaEventInterface
     public function toString(): string
     {
         return sprintf(
-            '%s - %s',
+            '%s {absolutePath:"%s"}',
             get_class($this),
             $this->absolutePath,
         );

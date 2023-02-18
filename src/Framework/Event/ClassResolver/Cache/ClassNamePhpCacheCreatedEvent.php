@@ -13,8 +13,17 @@ final class ClassNamePhpCacheCreatedEvent implements GacelaEventInterface
     ) {
     }
 
+    public function cacheDir(): string
+    {
+        return $this->cacheDir;
+    }
+
     public function toString(): string
     {
-        return sprintf('%s {cacheDir:"%s"}', self::class, $this->cacheDir);
+        return sprintf(
+            '%s {cacheDir:"%s"}',
+            self::class,
+            $this->cacheDir,
+        );
     }
 }

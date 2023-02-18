@@ -18,10 +18,23 @@ final class ClassNameNotFoundEvent implements GacelaEventInterface
     ) {
     }
 
+    public function classInfo(): ClassInfo
+    {
+        return $this->classInfo;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function resolvableTypes(): array
+    {
+        return $this->resolvableTypes;
+    }
+
     public function toString(): string
     {
         return sprintf(
-            '%s - %s - %s',
+            '%s {classInfo:"%s", resolvableTypes:"%s"}',
             self::class,
             $this->classInfo->toString(),
             implode(',', $this->resolvableTypes),

@@ -8,8 +8,22 @@ use Gacela\Framework\Event\GacelaEventInterface;
 
 final class ClassNamePhpCacheCreatedEvent implements GacelaEventInterface
 {
+    public function __construct(
+        private string $cacheDir,
+    ) {
+    }
+
+    public function cacheDir(): string
+    {
+        return $this->cacheDir;
+    }
+
     public function toString(): string
     {
-        return self::class;
+        return sprintf(
+            '%s {cacheDir:"%s"}',
+            self::class,
+            $this->cacheDir,
+        );
     }
 }

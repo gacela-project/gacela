@@ -36,9 +36,9 @@ final class ClassResolverCache
         }
 
         if (self::isEnabled()) {
-            self::dispatchEvent(new ClassNamePhpCacheCreatedEvent());
-
-            self::$cache = new ClassNamePhpCache(Config::getInstance()->getCacheDir());
+            $cacheDir = Config::getInstance()->getCacheDir();
+            self::dispatchEvent(new ClassNamePhpCacheCreatedEvent($cacheDir));
+            self::$cache = new ClassNamePhpCache($cacheDir);
         } else {
             self::dispatchEvent(new ClassNameInMemoryCacheCreatedEvent());
             self::$cache = new InMemoryCache(ClassNamePhpCache::class);

@@ -13,8 +13,17 @@ final class ClassNameInvalidCandidateFoundEvent implements GacelaEventInterface
     ) {
     }
 
+    public function className(): string
+    {
+        return $this->className;
+    }
+
     public function toString(): string
     {
-        return sprintf('%s - %s', self::class, $this->className);
+        return sprintf(
+            '%s {className:"%s"}',
+            self::class,
+            $this->className,
+        );
     }
 }

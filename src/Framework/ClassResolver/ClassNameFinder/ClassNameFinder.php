@@ -40,7 +40,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
         if ($this->cache->has($cacheKey)) {
             $cached = $this->cache->get($cacheKey);
-            self::dispatchEvent(new ClassNameCachedFoundEvent($cached));
+            self::dispatchEvent(new ClassNameCachedFoundEvent($cacheKey, $cached));
 
             return $cached;
         }

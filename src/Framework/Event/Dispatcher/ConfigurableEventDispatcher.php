@@ -25,6 +25,7 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
     {
         $this->genericListeners = $genericListeners;
     }
+
     /**
      * @param class-string $event
      */

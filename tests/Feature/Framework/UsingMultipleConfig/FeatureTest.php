@@ -15,6 +15,7 @@ final class FeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config
+                ->resetInMemoryCache()
                 ->addAppConfig('config/.env*', '', SimpleEnvConfigReader::class)
                 ->addAppConfig('config/*.php');
         });

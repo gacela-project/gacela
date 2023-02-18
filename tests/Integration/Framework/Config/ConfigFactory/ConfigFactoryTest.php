@@ -18,6 +18,11 @@ use PHPUnit\Framework\TestCase;
 
 final class ConfigFactoryTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        ConfigFactory::resetCache();
+    }
+
     public function test_empty_setup_then_default_gacela_config_file(): void
     {
         $setup = new SetupGacela();
@@ -28,6 +33,19 @@ final class ConfigFactoryTest extends TestCase
         $expected = new GacelaConfigFile();
 
         self::assertEquals($expected, $actual);
+    }
+
+    public function test_cache_gacela_file_config(): void
+    {
+        $setup = new SetupGacela();
+
+        $expected = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $setup))
+            ->createGacelaFileConfig();
+
+        $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $setup))
+            ->createGacelaFileConfig();
+
+        self::assertSame($expected, $actual);
     }
 
     public function test_only_gacela_file_exists(): void

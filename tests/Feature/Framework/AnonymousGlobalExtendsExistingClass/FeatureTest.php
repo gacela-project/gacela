@@ -14,7 +14,10 @@ final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, GacelaConfig::withPhpConfigDefault());
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addAppConfig('config/*.php', 'config/local.php');
+        });
     }
 
     public function test_override_factory_as_anonymous_global_when_config_method_is_called(): void

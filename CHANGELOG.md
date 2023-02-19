@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+- Normalise events
+- Bugfix Register only once specific events on bootstrap
+
 ### 1.0.0
 ### 2023-01-01
 

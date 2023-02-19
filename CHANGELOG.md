@@ -1,7 +1,8 @@
 # Changelog
 
 ### Unreleased
-- Normalise events
+
+- Normalise internal events' `toString()`
 - Bugfix Register only once specific events on bootstrap
 
 ### 1.0.0

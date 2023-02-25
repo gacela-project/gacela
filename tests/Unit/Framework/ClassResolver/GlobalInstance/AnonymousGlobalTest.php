@@ -20,7 +20,7 @@ final class AnonymousGlobalTest extends TestCase
      */
     public function test_error_when_non_allowed_anon_global_type(): void
     {
-        $this->expectErrorMessage("Type 'AnonymousGlobalTest' not allowed");
+        $this->expectExceptionMessage("Type 'AnonymousGlobalTest' not allowed");
 
         AnonymousGlobal::addGlobal($this, new class() {
         });

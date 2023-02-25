@@ -76,19 +76,12 @@
             "@csfix",
             "@test-all"
         ],
-        "test-all": [
-            "@parallel quality phpunit"
-        ],
-        "quality": [
-            "@parallel csrun psalm phpstan"
-        ],
-        "phpunit": [
-            "@parallel test-unit test-integration test-feature"
-        ],
-        "static-clear-cache": [
-            "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
-            "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache"
-        ],
+        "static-clear-cache": "@parallel clear-cache-psalm clear-cache-phpstan",
+        "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
+        "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
+        "test-all": "@parallel quality phpunit",
+        "quality": "@parallel csrun psalm phpstan",
+        "phpunit": "@parallel test-unit test-integration test-feature",
         "test-unit": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=integration",
         "test-feature": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=feature",

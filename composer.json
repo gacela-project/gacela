@@ -38,6 +38,7 @@
         "psalm/plugin-phpunit": "^0.18",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
+        "veewee/composer-run-parallel": "^1.2",
         "vimeo/psalm": "^5.7"
     },
     "suggest": {
@@ -65,7 +66,8 @@
             "php": "8.0"
         },
         "allow-plugins": {
-            "composer/package-versions-deprecated": true
+            "composer/package-versions-deprecated": true,
+            "veewee/composer-run-parallel": true
         }
     },
     "scripts": {
@@ -75,18 +77,13 @@
             "@test-all"
         ],
         "test-all": [
-            "@quality",
-            "@phpunit"
+            "@parallel quality phpunit"
         ],
         "quality": [
-            "@csrun",
-            "@psalm",
-            "@phpstan"
+            "@parallel csrun psalm phpstan"
         ],
         "phpunit": [
-            "@test-unit",
-            "@test-integration",
-            "@test-feature"
+            "@parallel test-unit test-integration test-feature"
         ],
         "static-clear-cache": [
             "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",

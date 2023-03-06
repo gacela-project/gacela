@@ -110,7 +110,7 @@ final class Container implements ContainerInterface
     {
         unset(
             $this->services[$id],
-            $this->frozenServices[$id],
+            $this->frozenServices[$id]
         );
     }
 

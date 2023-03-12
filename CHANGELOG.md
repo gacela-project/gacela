@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 1.0.1
+### 2023-03-12
 
 - Normalise internal events' `toString()`
 - Bugfix Register only once specific events on bootstrap

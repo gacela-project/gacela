@@ -20,5 +20,6 @@
     <issueHandlers>
         <MoreSpecificReturnType errorLevel="suppress" />
         <LessSpecificReturnStatement errorLevel="suppress" />
+        <UnsafeInstantiation errorLevel="suppress" />
     </issueHandlers>
 </psalm>

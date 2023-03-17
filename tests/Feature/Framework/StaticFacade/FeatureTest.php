@@ -15,6 +15,13 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(__DIR__);
     }
 
+    public function test_object_facade(): void
+    {
+        $greet = (new TestStaticFacade())->formalGreet('Jesus');
+
+        self::assertSame('Hello, Jesus.', $greet);
+    }
+
     public function test_non_existing_facade_method(): void
     {
         $this->expectExceptionMessage('Unknown method: unknownGreet');
@@ -29,10 +36,12 @@ final class FeatureTest extends TestCase
         self::assertSame('Hi, Chema!', $greet);
     }
 
-    public function test_object_facade(): void
+    public function test_static_factory_from_facade(): void
     {
-        $greet = (new TestStaticFacade())->formalGreet('Jesus');
+        $value = TestStaticFacade::factory()
+            ->getConfig()
+            ->getConfigValue();
 
-        self::assertSame('Hello, Jesus.', $greet);
+        self::assertSame('config-value', $value);
     }
 }

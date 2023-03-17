@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\StaticFacade\Module;
 
-use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractConfig;
 
-final class Config extends AbstractFacade
+final class Config extends AbstractConfig
 {
     public function getConfigValue(): string
     {

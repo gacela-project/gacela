@@ -15,6 +15,13 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(__DIR__);
     }
 
+    public function test_non_existing_facade_method(): void
+    {
+        $this->expectExceptionMessage('Unknown method: unknownGreet');
+
+        TestStaticFacade::unknownGreet('anything');
+    }
+
     public function test_static_facade(): void
     {
         $greet = TestStaticFacade::informalGreet('Chema');

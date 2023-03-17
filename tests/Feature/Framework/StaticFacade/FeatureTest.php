@@ -36,6 +36,14 @@ final class FeatureTest extends TestCase
         self::assertSame('Hi, Chema!', $greet);
     }
 
+    public function test_static_facade_shares_factory(): void
+    {
+        $f1 = TestStaticFacade::factory();
+        $f2 = TestStaticFacade::factory();
+
+        self::assertSame($f1, $f2);
+    }
+
     public function test_static_factory_from_facade(): void
     {
         $value = TestStaticFacade::factory()

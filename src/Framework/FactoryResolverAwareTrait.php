@@ -13,7 +13,7 @@ trait FactoryResolverAwareTrait
     /**
      * Syntax sugar to access the factory from static methods.
      */
-    public static function factory(): AbstractFactory
+    protected static function factory(): AbstractFactory
     {
         return (new static())->getFactory();
     }

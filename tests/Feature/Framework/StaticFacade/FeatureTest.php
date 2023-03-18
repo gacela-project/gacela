@@ -6,7 +6,7 @@ namespace GacelaTest\Feature\Framework\StaticFacade;
 
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\StaticFacade\Module\Facade as TestStaticFacade;
-use GacelaTest\Feature\Framework\StaticFacade\Module\Factory as TestStaticFactory;
+use GacelaTest\Feature\Framework\StaticFacade\Module\Factory;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
@@ -18,40 +18,15 @@ final class FeatureTest extends TestCase
 
     public function test_object_facade(): void
     {
-        $actual = (new TestStaticFacade())->formalGreet('Jesus');
+        $actual = (new TestStaticFacade())->createStringFromNonStaticFactory();
 
-        self::assertSame('Hello, Jesus.', $actual);
+        self::assertSame(Factory::STR, $actual);
     }
 
     public function test_static_facade(): void
     {
-        $actual = TestStaticFacade::informalGreet('Chema');
+        $actual = TestStaticFacade::createStringFromStaticFactory();
 
-        self::assertSame('Hi, Chema!', $actual);
-    }
-
-    public function test_static_facade_shares_factory(): void
-    {
-        $f1 = TestStaticFacade::factory();
-        $f2 = TestStaticFacade::factory();
-
-        self::assertSame($f1, $f2);
-    }
-
-    public function test_static_factory_from_facade(): void
-    {
-        $actual = TestStaticFacade::factory()
-            ->getConfig()
-            ->getConfigValue();
-
-        self::assertSame('config-value', $actual);
-    }
-
-    public function test_static_config_from_factory(): void
-    {
-        $actual = TestStaticFactory::config()
-            ->getConfigValue();
-
-        self::assertSame('config-value', $actual);
+        self::assertSame(Factory::STR, $actual);
     }
 }

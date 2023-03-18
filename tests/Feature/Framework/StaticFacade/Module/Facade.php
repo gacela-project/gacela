@@ -7,22 +7,18 @@ namespace GacelaTest\Feature\Framework\StaticFacade\Module;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method Factory getFactory()
  * @method static Factory factory()
+ * @method Factory getFactory()
  */
 final class Facade extends AbstractFacade
 {
-    public static function informalGreet(string $name): string
+    public static function createStringFromStaticFactory(): string
     {
-        return self::factory()
-            ->createInformalGreeter()
-            ->greet($name);
+        return self::factory()->createString();
     }
 
-    public function formalGreet(string $name): string
+    public function createStringFromNonStaticFactory(): string
     {
-        return $this->getFactory()
-            ->createFormatGreeter()
-            ->greet($name);
+        return $this->getFactory()->createString();
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\StaticFacade\Module;
+namespace GacelaTest\Feature\Framework\StaticFacade\ModuleA;
 
 use Gacela\Framework\AbstractFactory;
 

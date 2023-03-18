@@ -21,6 +21,14 @@ final class AnonymousGlobal
     private static array $cachedGlobalInstances = [];
 
     /**
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$cachedGlobalInstances = [];
+    }
+
+    /**
      * @template T
      *
      * @param class-string<T> $className

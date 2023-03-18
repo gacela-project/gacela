@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
-use RuntimeException;
 
 /**
+ * @psalm-suppress MethodSignatureMismatch
+ *
  * @method AbstractFactory factory()
  * @method AbstractFactory getFactory()
  */
@@ -18,22 +19,24 @@ trait FactoryResolverAwareTrait
     /**
      * Syntax sugar to access the factory from static methods.
      */
-    public static function __callStatic(string $name, array $arguments): AbstractFactory
+    public static function __callStatic(string $name = '', array $arguments = [])
     {
         if ($name === 'factory' || $name === 'getFactory') {
             return (new static())->doGetFactory();
         }
 
-        throw new RuntimeException("Method unknown: {$name}");
+        /** @psalm-suppress ParentNotFound */
+        return parent::__callStatic($name, $arguments);
     }
 
-    public function __call(string $name, array $arguments): AbstractFactory
+    public function __call(string $name = '', array $arguments = [])
     {
         if ($name === 'factory' || $name === 'getFactory') {
             return $this->doGetFactory();
         }
 
-        throw new RuntimeException("Method unknown: {$name}");
+        /** @psalm-suppress ParentNotFound */
+        return parent::__call($name, $arguments);
     }
 
     private function doGetFactory(): AbstractFactory

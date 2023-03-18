@@ -15,7 +15,7 @@ final class Facade extends AbstractFacade
     public static function informalGreet(string $name): string
     {
         return self::factory()
-            ->createInformatGreeter()
+            ->createInformalGreeter()
             ->greet($name);
     }
 

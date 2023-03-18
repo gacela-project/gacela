@@ -15,7 +15,7 @@ use GacelaTest\Feature\Framework\StaticFacade\Module\Domain\InformalGreeter;
  */
 final class Factory extends AbstractFactory
 {
-    public function createInformatGreeter(): GreeterInterface
+    public function createInformalGreeter(): GreeterInterface
     {
         return new InformalGreeter();
     }

@@ -11,6 +11,14 @@ trait ConfigResolverAwareTrait
 {
     private ?AbstractConfig $config = null;
 
+    /**
+     * Syntax sugar to access the config from static methods.
+     */
+    public static function config(): AbstractConfig
+    {
+        return (new static())->getConfig();
+    }
+
     public function getConfig(): AbstractConfig
     {
         if ($this->config === null) {

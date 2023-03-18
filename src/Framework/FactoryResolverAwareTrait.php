@@ -5,22 +5,17 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
-use RuntimeException;
 
-/**
- * @method static AbstractFactory factory()
- */
 trait FactoryResolverAwareTrait
 {
     private ?AbstractFactory $factory = null;
 
-    public static function __callStatic(string $name, array $arguments): AbstractFactory
+    /**
+     * Syntax sugar to access the factory from static methods.
+     */
+    public static function factory(): AbstractFactory
     {
-        if ($name === 'factory') {
-            return (new static())->getFactory();
-        }
-
-        throw new RuntimeException('Unknown method: ' . $name);
+        return (new static())->getFactory();
     }
 
     protected function getFactory(): AbstractFactory

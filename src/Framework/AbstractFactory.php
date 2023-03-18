@@ -18,6 +18,14 @@ abstract class AbstractFactory
     private static array $containers = [];
 
     /**
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$containers = [];
+    }
+
+    /**
      * @throws ContainerKeyNotFoundException
      */
     protected function getProvidedDependency(string $key): mixed

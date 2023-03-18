@@ -12,6 +12,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
+use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
@@ -28,6 +29,8 @@ final class Gacela
         $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
 
         if ($setup->shouldResetInMemoryCache()) {
+            AnonymousGlobal::resetCache();
+            AbstractFactory::resetCache();
             GacelaFileCache::resetCache();
             DocBlockResolverCache::resetCache();
             ClassResolverCache::resetCache();

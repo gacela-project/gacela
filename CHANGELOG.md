@@ -3,6 +3,7 @@
 ### Unreleased
 
 - Allow using static facade methods
+- ResetInMemoryCache also from anonymous globals and factory containers
 
 ### 1.0.1
 ### 2023-03-12

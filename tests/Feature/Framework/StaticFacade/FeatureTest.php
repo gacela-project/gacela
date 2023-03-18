@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Framework\StaticFacade;
 
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\StaticFacade\Module\Facade as TestStaticFacade;
+use GacelaTest\Feature\Framework\StaticFacade\Module\Factory as TestStaticFactory;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
@@ -41,6 +42,14 @@ final class FeatureTest extends TestCase
     {
         $actual = TestStaticFacade::factory()
             ->getConfig()
+            ->getConfigValue();
+
+        self::assertSame('config-value', $actual);
+    }
+
+    public function test_static_config_from_factory(): void
+    {
+        $actual = TestStaticFactory::config()
             ->getConfigValue();
 
         self::assertSame('config-value', $actual);

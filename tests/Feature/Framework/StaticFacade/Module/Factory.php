@@ -11,6 +11,7 @@ use GacelaTest\Feature\Framework\StaticFacade\Module\Domain\InformalGreeter;
 
 /**
  * @method Config getConfig()
+ * @method static Config config()
  */
 final class Factory extends AbstractFactory
 {

@@ -59,7 +59,6 @@ final class GacelaClassResolverSpecificListenerTest extends TestCase
 
         self::assertEquals([
             new ResolvedClassCreatedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
-            new ResolvedClassCachedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
         ], self::$inMemoryEvents);
     }
 

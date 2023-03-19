@@ -66,7 +66,6 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
             new ClassNameInvalidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\ModuleFactory'),
             new ClassNameValidCandidateFoundEvent('\GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Factory'),
             new ResolvedClassCreatedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
-            new ResolvedClassCachedEvent(ClassInfo::from(Module\Facade::class, 'Factory')),
         ], self::$inMemoryEvents);
     }
 

@@ -76,5 +76,5 @@ seconds.
 You can add the git hook running the following bash script:
 
 ```bash
-$ ./tools/git-hooks/init.sh
+$ ./.github/git-hooks/init.sh
 ```

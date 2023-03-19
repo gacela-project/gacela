@@ -10,7 +10,7 @@ use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
  * @psalm-suppress MethodSignatureMismatch
  *
  * @method AbstractFactory getFactory()
- * @method AbstractFactory factory() Alias to `getFactory()`
+ * @method static AbstractFactory factory() Alias to `getFactory()`
  */
 trait FactoryResolverAwareTrait
 {

@@ -71,6 +71,8 @@
         }
     },
     "scripts": {
+        "post-install-cmd": ".github/git-hooks/init.sh",
+
         "ctal": [
             "@static-clear-cache",
             "@csfix",

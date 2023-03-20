@@ -3,7 +3,7 @@
 ### Unreleased
 
 - Allow using static facade methods
-  - Allow using static `::factory()` from any Facade
+  - Allow using `::getFactory()` from a static or non-static context from any Facade 
   - Allow using static `::config()` from any Factory
 - ResetInMemoryCache also from anonymous globals and factory containers
 

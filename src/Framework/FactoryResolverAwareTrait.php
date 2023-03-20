@@ -43,8 +43,7 @@ trait FactoryResolverAwareTrait
 
     private static function doGetFactory(): AbstractFactory
     {
-        self::$factories[static::class] ??= (new FactoryResolver())->resolve(static::class);
-
-        return self::$factories[static::class];
+        return self::$factories[static::class]
+            ??= (new FactoryResolver())->resolve(static::class);
     }
 }

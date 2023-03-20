@@ -11,13 +11,8 @@ use Gacela\Framework\AbstractFacade;
  */
 final class Facade extends AbstractFacade
 {
-    public static function createStringFromStaticFactory(): string
+    public static function createString(): string
     {
         return self::getFactory()->createString();
-    }
-
-    public function createStringFromNonStaticFactory(): string
-    {
-        return $this->getFactory()->createString();
     }
 }

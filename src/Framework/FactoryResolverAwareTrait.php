@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
+use RuntimeException;
 
 /**
  * @psalm-suppress MethodSignatureMismatch
@@ -22,8 +23,12 @@ trait FactoryResolverAwareTrait
             return self::doGetFactory();
         }
 
-        /** @psalm-suppress ParentNotFound */
-        return parent::__callStatic($name, $arguments);
+        if (method_exists(static::class, $name)) {
+            /** @psalm-suppress ParentNotFound */
+            return parent::__callStatic($name, $arguments);
+        }
+
+        throw new RuntimeException("Method unknown: '{$name}'");
     }
 
     public function __call(string $name = '', array $arguments = [])
@@ -32,8 +37,12 @@ trait FactoryResolverAwareTrait
             return self::doGetFactory();
         }
 
-        /** @psalm-suppress ParentNotFound */
-        return parent::__call($name, $arguments);
+        if (method_exists(static::class, $name)) {
+            /** @psalm-suppress ParentNotFound */
+            return parent::__call($name, $arguments);
+        }
+
+        throw new RuntimeException("Method unknown: '{$name}'");
     }
 
     public static function resetCache(): void

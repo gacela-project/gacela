@@ -18,6 +18,13 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(__DIR__);
     }
 
+    public function test_unknown_static_facade_method(): void
+    {
+        $this->expectExceptionMessage("Method unknown: 'unknown'");
+
+        TestStaticFacade::unknown();
+    }
+
     public function test_module_a_static_facade(): void
     {
         $actual = TestStaticFacade::createString();
@@ -30,5 +37,12 @@ final class FeatureTest extends TestCase
         $actual = (new TestObjectFacade())->createString();
 
         self::assertSame(ObjectFactory::STR, $actual);
+    }
+
+    public function test_factory_static_facade_method(): void
+    {
+        $actual = TestStaticFacade::getFactory()->createString();
+
+        self::assertSame(StaticFactory::STR, $actual);
     }
 }

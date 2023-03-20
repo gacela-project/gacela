@@ -12,9 +12,9 @@ use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 
 /**
- * @Revs(25)
+ * @Revs(50)
  *
- * @Iterations(10)
+ * @Iterations(15)
  *
  * @BeforeClassMethods("removeFiles")
  */

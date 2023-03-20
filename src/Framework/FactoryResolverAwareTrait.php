@@ -6,24 +6,44 @@ namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 
+/**
+ * @psalm-suppress MethodSignatureMismatch
+ *
+ * @method AbstractFactory getFactory()
+ */
 trait FactoryResolverAwareTrait
 {
-    private ?AbstractFactory $factory = null;
+    /** @var array<string,AbstractFactory> */
+    private static array $factories = [];
 
-    /**
-     * Syntax sugar to access the factory from static methods.
-     */
-    protected static function factory(): AbstractFactory
+    public static function __callStatic(string $name = '', array $arguments = [])
     {
-        return (new static())->getFactory();
-    }
-
-    protected function getFactory(): AbstractFactory
-    {
-        if ($this->factory === null) {
-            $this->factory = (new FactoryResolver())->resolve($this);
+        if ($name === 'getFactory') {
+            return self::doGetFactory();
         }
 
-        return $this->factory;
+        /** @psalm-suppress ParentNotFound */
+        return parent::__callStatic($name, $arguments);
+    }
+
+    public function __call(string $name = '', array $arguments = [])
+    {
+        if ($name === 'getFactory') {
+            return self::doGetFactory();
+        }
+
+        /** @psalm-suppress ParentNotFound */
+        return parent::__call($name, $arguments);
+    }
+
+    public static function resetCache(): void
+    {
+        self::$factories = [];
+    }
+
+    private static function doGetFactory(): AbstractFactory
+    {
+        return self::$factories[static::class]
+            ??= (new FactoryResolver())->resolve(static::class);
     }
 }

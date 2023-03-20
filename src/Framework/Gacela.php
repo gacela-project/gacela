@@ -29,6 +29,7 @@ final class Gacela
         $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
 
         if ($setup->shouldResetInMemoryCache()) {
+            AbstractFacade::resetCache();
             AnonymousGlobal::resetCache();
             AbstractFactory::resetCache();
             GacelaFileCache::resetCache();

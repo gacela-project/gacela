@@ -10,3 +10,6 @@ parameters:
         - '#Method Gacela\\.*::.* should return array<.*> but returns array#'
         - '#Method Gacela\\.*::.* should return array{.*} but returns array#'
         - '#Unsafe usage of new static.*#'
+        - '#Method .*::__callStatic\(\) has no return type specified.*#'
+        - '#Method .*::__call\(\) has no return type specified.*#'
+        - '#.* calls parent::__call.*\(\) but .* does not extend any class.#'

@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Deprecate `withPhpConfigDefault()` in favor of `defaultPhpConfig()`
+
 ### 1.1.0
 ### 2023-03-21
 

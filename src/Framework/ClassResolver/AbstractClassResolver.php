@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\DependencyResolver\InstanceCreator;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
-use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
@@ -139,7 +139,9 @@ abstract class AbstractClassResolver
     private function createInstance(string $resolvedClassName): ?object
     {
         if ($this->instanceCreator === null) {
-            $this->instanceCreator = new InstanceCreator($this->getGacelaConfigFile());
+            $this->instanceCreator = new InstanceCreator(
+                $this->getGacelaConfigFile()->getMappingInterfaces(),
+            );
         }
 
         return $this->instanceCreator->createByClassName($resolvedClassName);

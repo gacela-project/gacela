@@ -10,7 +10,6 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
-use Gacela\Framework\ClassResolver\InstanceCreator\InstanceCreator;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
@@ -18,6 +17,7 @@ use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedCreatedDefaultClassEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+use Gacela\Resolver\InstanceCreator;
 
 use function is_array;
 use function is_object;
@@ -139,7 +139,9 @@ abstract class AbstractClassResolver
     private function createInstance(string $resolvedClassName): ?object
     {
         if ($this->instanceCreator === null) {
-            $this->instanceCreator = new InstanceCreator($this->getGacelaConfigFile());
+            $this->instanceCreator = new InstanceCreator(
+                $this->getGacelaConfigFile()->getMappingInterfaces(),
+            );
         }
 
         return $this->instanceCreator->createByClassName($resolvedClassName);

@@ -28,7 +28,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^8.0, <8.3",
-        "gacela-project/dependency-resolver": "^0.1"
+        "gacela-project/resolver": "^0.1"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.14",

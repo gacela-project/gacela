@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-use Gacela\DependencyResolver\InstanceCreator;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
@@ -18,6 +17,7 @@ use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedCreatedDefaultClassEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+use Gacela\Resolver\InstanceCreator;
 
 use function is_array;
 use function is_object;

@@ -31,7 +31,7 @@
         "gacela-project/resolver": "^0.1"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.14",
+        "friendsofphp/php-cs-fixer": "^3.16",
         "phpbench/phpbench": "^1.2",
         "phpmetrics/phpmetrics": "^2.8",
         "phpunit/phpunit": "^9.6",
@@ -39,8 +39,7 @@
         "psalm/plugin-phpunit": "^0.18",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "veewee/composer-run-parallel": "^1.2",
-        "vimeo/psalm": "^5.7"
+        "vimeo/psalm": "^5.9"
     },
     "suggest": {
         "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",
@@ -73,25 +72,13 @@
     },
     "scripts": {
         "post-install-cmd": ".github/git-hooks/init.sh",
-
-        "ctal": [
-            "@static-clear-cache",
-            "@csfix",
-            "@test-all"
-        ],
-        "static-clear-cache": "@parallel clear-cache-psalm clear-cache-phpstan",
+        "ctal": ["@static-clear-cache", "@csfix", "@test-all"],
+        "static-clear-cache": ["@clear-cache-psalm", "@clear-cache-phpstan"],
         "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
-        "test-all": [
-            "@quality",
-            "@phpunit"
-        ],
-        "quality": [
-            "@csrun",
-            "@psalm",
-            "@phpstan"
-        ],
-        "phpunit": "@parallel test-unit test-integration test-feature",
+        "test-all": ["@quality", "@phpunit"],
+        "quality": ["@csrun", "@psalm", "@phpstan"],
+        "phpunit": ["@test-unit", "@test-integration", "@test-feature"],
         "test-unit": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit",
         "test-integration": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=integration",
         "test-feature": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=feature",

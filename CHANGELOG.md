@@ -1,8 +1,10 @@
 # Changelog
 
-### Unreleased
+### 1.1.1
+### 2023-04-19
 
 - Deprecate `withPhpConfigDefault()` in favor of `defaultPhpConfig()`
+- Extract the dependency resolver logic into a different repo `gacela-project/resolver`
 
 ### 1.1.0
 ### 2023-03-21

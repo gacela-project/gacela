@@ -99,14 +99,12 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->setFileCacheEnabled(false)
-                ->setFileCacheDirectory('original/dir'),
+                ->setFileCache(false, 'original/dir'),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->setFileCacheEnabled(true)
-                ->setFileCacheDirectory('override/dir'),
+                ->setFileCache(true, 'override/dir'),
         );
 
         self::assertFalse($setup->isFileCacheEnabled());
@@ -122,8 +120,7 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->setFileCacheEnabled(true)
-                ->setFileCacheDirectory('original/dir'),
+                ->setFileCache(true, 'original/dir'),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(new GacelaConfig());

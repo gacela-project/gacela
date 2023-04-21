@@ -178,7 +178,22 @@ final class GacelaConfig
     }
 
     /**
+     * Define whether the file cache flag is enabled,
+     * and the file cache directory.
+     */
+    public function setFileCache(bool $enabled, string $dir = null): self
+    {
+        $this->fileCacheEnabled = $enabled;
+        $this->fileCacheDirectory = $dir;
+
+        return $this;
+    }
+
+    /**
      * Define whether the file cache flag is enabled.
+     *
+     * @deprecated in favor of setFileCache()
+     * It will be removed in the next release
      */
     public function setFileCacheEnabled(bool $flag): self
     {
@@ -189,6 +204,9 @@ final class GacelaConfig
 
     /**
      * Define the file cache directory.
+     *
+     * @deprecated in favor of setFileCache()
+     * It will be removed in the next release
      */
     public function setFileCacheDirectory(string $dir): self
     {

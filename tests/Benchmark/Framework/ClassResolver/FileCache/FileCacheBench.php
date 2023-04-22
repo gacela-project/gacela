@@ -49,7 +49,7 @@ final class FileCacheBench
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheEnabled): void {
             $config->resetInMemoryCache();
             $config->addAppConfig('config/*.php');
-            $config->setFileCacheEnabled($cacheEnabled);
+            $config->setFileCache($cacheEnabled);
 
             $config->addMappingInterface(StringValueInterface::class, new StringValue('testing-string'));
 

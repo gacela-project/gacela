@@ -19,7 +19,7 @@ final class ClassNameFinderTest extends TestCase
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->setFileCacheEnabled(false);
+            $config->setFileCache(false);
         });
     }
 

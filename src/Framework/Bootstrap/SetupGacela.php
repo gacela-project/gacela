@@ -185,6 +185,8 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function buildConfig(ConfigBuilder $builder): ConfigBuilder
     {
+        $builder = parent::buildConfig($builder);
+
         if ($this->configBuilder) {
             $builder = $this->configBuilder;
         }
@@ -213,6 +215,8 @@ final class SetupGacela extends AbstractSetupGacela
         MappingInterfacesBuilder $builder,
         array $externalServices,
     ): MappingInterfacesBuilder {
+        $builder = parent::buildMappingInterfaces($builder, $externalServices);
+
         if ($this->mappingInterfacesBuilder) {
             $builder = $this->mappingInterfacesBuilder;
         }
@@ -240,6 +244,8 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder
     {
+        $builder = parent::buildSuffixTypes($builder);
+
         if ($this->suffixTypesBuilder) {
             $builder = $this->suffixTypesBuilder;
         }
@@ -250,11 +256,14 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,class-string|object|callable>
+     * @return array<string, class-string|object|callable>
      */
     public function externalServices(): array
     {
-        return (array)$this->externalServices;
+        return array_merge(
+            parent::externalServices(),
+            $this->externalServices ?? [],
+        );
     }
 
     public function setShouldResetInMemoryCache(?bool $flag): self

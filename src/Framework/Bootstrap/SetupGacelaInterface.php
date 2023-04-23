@@ -20,7 +20,7 @@ interface SetupGacelaInterface
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
-     * @param array<string,class-string|object|callable> $externalServices
+     * @param array<string, class-string|object|callable> $externalServices
      */
     public function buildMappingInterfaces(
         MappingInterfacesBuilder $builder,
@@ -35,7 +35,7 @@ interface SetupGacelaInterface
     /**
      * Define global services that can be accessible via the mapping interfaces.
      *
-     * @return array<string,class-string|object|callable>
+     * @return array<string, class-string|object|callable>
      */
     public function externalServices(): array;
 

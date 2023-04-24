@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
+use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 
 final class Locator
@@ -54,29 +55,13 @@ final class Locator
             return $instance;
         }
 
+        /** @var T|null $locatedInstance */
         $locatedInstance = AnonymousGlobal::getByClassName($className)
-            ?? $this->newInstance($className);
+            ?? GacelaContainer::create($className);
 
         /** @psalm-suppress MixedAssignment */
         $this->instanceCache[$className] = $locatedInstance;
 
         return $locatedInstance;
-    }
-
-    /**
-     * @template T
-     *
-     * @param class-string<T> $className
-     *
-     * @return T|null
-     */
-    private function newInstance(string $className)
-    {
-        if (class_exists($className)) {
-            /** @psalm-suppress MixedMethodCall */
-            return new $className();
-        }
-
-        return null;
     }
 }

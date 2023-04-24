@@ -4,197 +4,24 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
-use Closure;
-use Gacela\Framework\Container\Exception\ContainerException;
-use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
-use SplObjectStorage;
+use Gacela\Container\Container as GacelaContainer;
+use Gacela\Framework\Config\Config;
 
-use function count;
-use function is_array;
-use function is_callable;
-use function is_object;
-
-final class Container implements ContainerInterface
+/**
+ * This is a decorator class to simplify the usage of the decoupled Container
+ */
+final class Container extends GacelaContainer
 {
-    /** @var array<string,mixed> */
-    private array $services = [];
-
-    private SplObjectStorage $factoryServices;
-
-    private SplObjectStorage $protectedServices;
-
-    /** @var array<string,list<Closure>> */
-    private array $servicesToExtend;
-
-    /** @var array<string,bool> */
-    private array $frozenServices = [];
-
-    private ?string $currentlyExtending = null;
-
-    /**
-     * @param array<string,list<Closure>> $servicesToExtend
-     */
-    public function __construct(array $servicesToExtend = [])
+    public static function withConfig(Config $config): self
     {
-        $this->servicesToExtend = $servicesToExtend;
-        $this->factoryServices = new SplObjectStorage();
-        $this->protectedServices = new SplObjectStorage();
+        return new self(
+            $config->getFactory()->createGacelaFileConfig()->getMappingInterfaces(),
+            $config->getSetupGacela()->getServicesToExtend(),
+        );
     }
 
     public function getLocator(): Locator
     {
         return Locator::getInstance();
-    }
-
-    public function set(string $id, mixed $service): void
-    {
-        if (isset($this->frozenServices[$id])) {
-            throw ContainerException::serviceFrozen($id);
-        }
-
-        $this->services[$id] = $service;
-
-        if ($this->currentlyExtending === $id) {
-            return;
-        }
-
-        $this->extendService($id);
-    }
-
-    public function has(string $id): bool
-    {
-        return isset($this->services[$id]);
-    }
-
-    /**
-     * @throws ContainerKeyNotFoundException
-     */
-    public function get(string $id): mixed
-    {
-        if (!$this->has($id)) {
-            throw new ContainerKeyNotFoundException($this, $id);
-        }
-
-        $this->frozenServices[$id] = true;
-
-        if (!is_object($this->services[$id])
-            || isset($this->protectedServices[$this->services[$id]])
-            || !method_exists($this->services[$id], '__invoke')
-        ) {
-            return $this->services[$id];
-        }
-
-        if (isset($this->factoryServices[$this->services[$id]])) {
-            return $this->services[$id]($this);
-        }
-
-        $rawService = $this->services[$id];
-
-        /** @psalm-suppress InvalidFunctionCall */
-        $this->services[$id] = $rawService($this);
-
-        /** @var mixed $resolvedService */
-        $resolvedService = $this->services[$id];
-
-        return $resolvedService;
-    }
-
-    public function factory(Closure $service): Closure
-    {
-        $this->factoryServices->attach($service);
-
-        return $service;
-    }
-
-    public function remove(string $id): void
-    {
-        unset(
-            $this->services[$id],
-            $this->frozenServices[$id]
-        );
-    }
-
-    /**
-     * @psalm-suppress MixedAssignment
-     */
-    public function extend(string $id, Closure $service): Closure
-    {
-        if (!$this->has($id)) {
-            $this->extendLater($id, $service);
-
-            return $service;
-        }
-
-        if (isset($this->frozenServices[$id])) {
-            throw ContainerException::serviceFrozen($id);
-        }
-
-        if (is_object($this->services[$id]) && isset($this->protectedServices[$this->services[$id]])) {
-            throw ContainerException::serviceProtected($id);
-        }
-
-        $factory = $this->services[$id];
-        $extended = $this->generateExtendedService($service, $factory);
-        $this->set($id, $extended);
-
-        return $extended;
-    }
-
-    public function protect(Closure $service): Closure
-    {
-        $this->protectedServices->attach($service);
-
-        return $service;
-    }
-
-    private function extendLater(string $id, Closure $service): void
-    {
-        if (!isset($this->servicesToExtend[$id])) {
-            $this->servicesToExtend[$id] = [];
-        }
-
-        $this->servicesToExtend[$id][] = $service;
-    }
-
-    /**
-     * @psalm-suppress MissingClosureReturnType,MixedAssignment
-     */
-    private function generateExtendedService(Closure $service, mixed $factory): Closure
-    {
-        if (is_callable($factory)) {
-            return static function (self $container) use ($service, $factory) {
-                $r1 = $factory($container);
-                $r2 = $service($r1, $container);
-
-                return $r2 ?? $r1;
-            };
-        }
-
-        if (is_object($factory) || is_array($factory)) {
-            return static function (self $container) use ($service, $factory) {
-                $r = $service($factory, $container);
-
-                return $r ?? $factory;
-            };
-        }
-
-        throw ContainerException::serviceNotExtendable();
-    }
-
-    private function extendService(string $id): void
-    {
-        if (!isset($this->servicesToExtend[$id]) || count($this->servicesToExtend[$id]) === 0) {
-            return;
-        }
-        $this->currentlyExtending = $id;
-
-        foreach ($this->servicesToExtend[$id] as $service) {
-            $extended = $this->extend($id, $service);
-        }
-
-        unset($this->servicesToExtend[$id]);
-        $this->currentlyExtending = null;
-
-        $this->set($id, $extended);
     }
 }

@@ -136,7 +136,7 @@ abstract class AbstractClassResolver
     /**
      * @param class-string $resolvedClassName
      */
-    private function createInstance(string $resolvedClassName): ?object
+    private function createInstance(string $resolvedClassName): object
     {
         if ($this->container === null) {
             $this->container = new Container(
@@ -144,7 +144,10 @@ abstract class AbstractClassResolver
             );
         }
 
-        return $this->container->get($resolvedClassName);
+        /** @var object $instance */
+        $instance = $this->container->get($resolvedClassName);
+
+        return $instance;
     }
 
     private function getGacelaConfigFile(): GacelaConfigFileInterface

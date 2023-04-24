@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ExtendService\Module;
 
 use ArrayObject;
-use Gacela\Container\Container;
 use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\Container\Container;
 
 final class DependencyProvider extends AbstractDependencyProvider
 {

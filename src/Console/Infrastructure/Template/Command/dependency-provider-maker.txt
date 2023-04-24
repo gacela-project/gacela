@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace $NAMESPACE$;
 
 use Gacela\Framework\AbstractDependencyProvider;
-use Gacela\Container\Container;
+use Gacela\Framework\Container\Container;
 
 final class $CLASS_NAME$ extends AbstractDependencyProvider
 {

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\ClassResolver\GlobalInstance;
 
-use Gacela\Container\Container;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
+use Gacela\Framework\Container\Container;
 use PHPUnit\Framework\TestCase;
 
 final class AnonymousGlobalTest extends TestCase

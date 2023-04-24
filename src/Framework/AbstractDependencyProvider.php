@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Gacela\Container\Container;
+use Gacela\Framework\Container\Container;
 
 abstract class AbstractDependencyProvider
 {

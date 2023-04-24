@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace GacelaTest\Benchmark\Framework\ClassResolver\AnonymousGlobal;
 
+use Gacela\Container\Container;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
-use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 
 /**

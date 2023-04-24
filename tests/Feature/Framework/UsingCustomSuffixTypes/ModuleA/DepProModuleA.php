@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 
+use Gacela\Container\Container;
 use Gacela\Framework\AbstractDependencyProvider;
-use Gacela\Framework\Container\Container;
 
 final class DepProModuleA extends AbstractDependencyProvider
 {

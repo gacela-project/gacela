@@ -7,8 +7,8 @@ namespace Gacela\Console;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
+use Gacela\Container\Container;
 use Gacela\Framework\AbstractDependencyProvider;
-use Gacela\Framework\Container\Container;
 
 /**
  * @method ConsoleConfig getConfig()

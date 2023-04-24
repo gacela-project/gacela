@@ -3,6 +3,7 @@
 ### Unreleased
 
 - Unify `setFileCacheEnabled` and `setFileCacheDirectory` into one single method: `setFileCache(bool $enabled, string $dir)`. Deprecated the former methods.
+- Rename dependency; from `resolver` to `container`.
 
 ### 1.1.1
 ### 2023-04-19

@@ -17,8 +17,7 @@ final class ExamplePlugin implements PluginInterface
 
     public function run(): void
     {
-        /** @var StringValue $string */
-        $string = $this->container->getLocator()->get('singleton');
+        $string = $this->container->getLocator()->get(StringValue::class);
 
         $string->setValue('updated from plugin');
     }

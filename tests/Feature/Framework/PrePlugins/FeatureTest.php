@@ -15,7 +15,7 @@ final class FeatureTest extends TestCase
 {
     public function test_singleton_altered_via_pre_plugin(): void
     {
-        Locator::getInstance()->add('singleton', new StringValue('original'));
+        Locator::addSingleton(StringValue::class, new StringValue('original'));
 
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->prePlugins([
@@ -23,8 +23,7 @@ final class FeatureTest extends TestCase
             ]);
         });
 
-        /** @var StringValue $singleton */
-        $singleton = Locator::getInstance()->get('singleton');
+        $singleton = Locator::getSingleton(StringValue::class);
 
         self::assertSame('updated from plugin', $singleton->value());
     }

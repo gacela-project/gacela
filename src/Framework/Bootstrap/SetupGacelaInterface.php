@@ -9,6 +9,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Plugin\PluginInterface;
 
 interface SetupGacelaInterface
 {
@@ -76,4 +77,9 @@ interface SetupGacelaInterface
      * @return array<string,list<Closure>>
      */
     public function getServicesToExtend(): array;
+
+    /**
+     * @return list<class-string<PluginInterface>>
+     */
+    public function getPrePlugins(): array;
 }

@@ -16,6 +16,7 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Plugin\PluginInterface;
 
@@ -48,6 +49,18 @@ final class Gacela
             ->init();
 
         self::runPrePlugins($config);
+    }
+
+    /**
+     * @template T
+     *
+     * @param class-string<T> $className
+     *
+     * @return T|null
+     */
+    public static function get(string $className): mixed
+    {
+        return Locator::getSingleton($className);
     }
 
     /**

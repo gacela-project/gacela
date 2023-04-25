@@ -7,6 +7,9 @@ namespace Gacela\Framework\Container;
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 
+/**
+ * @internal
+ */
 final class Locator
 {
     private static ?Locator $instance = null;
@@ -30,6 +33,12 @@ final class Locator
         self::$instance = null;
     }
 
+    /**
+     * @template T
+     *
+     * @param class-string<T> $key
+     * @param T $value
+     */
     public static function addSingleton(string $key, mixed $value): void
     {
         self::getInstance()->add($key, $value);
@@ -61,7 +70,7 @@ final class Locator
      *
      * @param class-string<T> $className
      *
-     * @return T|null
+     * @return T
      */
     public function get(string $className)
     {
@@ -72,16 +81,21 @@ final class Locator
             return $instance;
         }
 
-        /** @var T|null $locatedInstance */
+        /** @var T $locatedInstance */
         $locatedInstance = AnonymousGlobal::getByClassName($className)
             ?? GacelaContainer::create($className);
 
-        /** @psalm-suppress MixedAssignment */
-        $this->instanceCache[$className] = $locatedInstance;
+        $this->add($className, $locatedInstance);
 
         return $locatedInstance;
     }
 
+    /**
+     * @template T
+     *
+     * @param class-string<T> $key
+     * @param T $value
+     */
     private function add(string $key, mixed $value): self
     {
         $this->instanceCache[$key] = $value;

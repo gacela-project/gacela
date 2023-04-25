@@ -49,7 +49,7 @@ final class Locator
      *
      * @param class-string<T> $className
      *
-     * @return T|null
+     * @return T
      */
     public static function getSingleton(string $className)
     {

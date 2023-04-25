@@ -4,7 +4,8 @@
 
 - Unify `setFileCacheEnabled` and `setFileCacheDirectory` into one single method: `setFileCache(bool $enabled, string $dir)`. Deprecated the former methods.
 - Rename dependency; from `resolver` to `container`.
-- Moved the current `Container` logic to the decoupled `container` dependency. 
+- Moved the current `Container` logic to the decoupled `container` dependency.
+- Add "prePlugins" to run right after the `Gacela::bootstrap()`
 
 ### 1.1.1
 ### 2023-04-19

@@ -56,7 +56,7 @@ final class Gacela
      *
      * @param class-string<T> $className
      *
-     * @return T
+     * @return T|null
      */
     public static function get(string $className): mixed
     {

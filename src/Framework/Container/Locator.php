@@ -49,7 +49,7 @@ final class Locator
      *
      * @param class-string<T> $className
      *
-     * @return T
+     * @return T|null
      */
     public static function getSingleton(string $className)
     {
@@ -70,7 +70,7 @@ final class Locator
      *
      * @param class-string<T> $className
      *
-     * @return T
+     * @return T|null
      */
     public function get(string $className)
     {
@@ -81,7 +81,7 @@ final class Locator
             return $instance;
         }
 
-        /** @var T $locatedInstance */
+        /** @var T|null $locatedInstance */
         $locatedInstance = AnonymousGlobal::getByClassName($className)
             ?? GacelaContainer::create($className);
 
@@ -94,9 +94,9 @@ final class Locator
      * @template T
      *
      * @param class-string<T> $key
-     * @param T $value
+     * @param T|null $value
      */
-    private function add(string $key, mixed $value): self
+    private function add(string $key, mixed $value = null): self
     {
         $this->instanceCache[$key] = $value;
 

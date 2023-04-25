@@ -25,6 +25,28 @@ final class Locator
     {
     }
 
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
+    }
+
+    public static function addSingleton(string $key, mixed $value): void
+    {
+        self::getInstance()->add($key, $value);
+    }
+
+    /**
+     * @template T
+     *
+     * @param class-string<T> $className
+     *
+     * @return T|null
+     */
+    public static function getSingleton(string $className)
+    {
+        return self::getInstance()->get($className);
+    }
+
     public static function getInstance(): self
     {
         if (self::$instance === null) {
@@ -32,11 +54,6 @@ final class Locator
         }
 
         return self::$instance;
-    }
-
-    public static function resetInstance(): void
-    {
-        self::$instance = null;
     }
 
     /**
@@ -63,5 +80,12 @@ final class Locator
         $this->instanceCache[$className] = $locatedInstance;
 
         return $locatedInstance;
+    }
+
+    private function add(string $key, mixed $value): self
+    {
+        $this->instanceCache[$key] = $value;
+
+        return $this;
     }
 }

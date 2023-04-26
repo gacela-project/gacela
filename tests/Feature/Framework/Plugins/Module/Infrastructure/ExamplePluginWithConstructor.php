@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\PrePlugins\Module\Infrastructure;
+namespace GacelaTest\Feature\Framework\Plugins\Module\Infrastructure;
 
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Plugin\PluginInterface;
 use GacelaTest\Fixtures\StringValue;
 
-final class ExamplePlugin implements PluginInterface
+final class ExamplePluginWithConstructor implements PluginInterface
 {
     public function __construct(
         private Container $container,
@@ -19,6 +19,6 @@ final class ExamplePlugin implements PluginInterface
     {
         $string = $this->container->getLocator()->get(StringValue::class);
 
-        $string->setValue('updated from plugin');
+        $string->setValue('Set from plugin ExamplePluginWithConstructor');
     }
 }

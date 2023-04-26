@@ -29,7 +29,7 @@ final class SetupGacela extends AbstractSetupGacela
     public const projectNamespaces = 'projectNamespaces';
     public const configKeyValues = 'configKeyValues';
     public const servicesToExtend = 'servicesToExtend';
-    public const prePlugins = 'prePlugins';
+    public const plugins = 'plugins';
 
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
     private const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
@@ -40,7 +40,7 @@ final class SetupGacela extends AbstractSetupGacela
     private const DEFAULT_GENERIC_LISTENERS = [];
     private const DEFAULT_SPECIFIC_LISTENERS = [];
     private const DEFAULT_SERVICES_TO_EXTEND = [];
-    private const DEFAULT_PRE_PLUGINS = [];
+    private const DEFAULT_PLUGINS = [];
 
     /** @var callable(ConfigBuilder):void */
     private $configFn;
@@ -89,7 +89,7 @@ final class SetupGacela extends AbstractSetupGacela
     private ?array $servicesToExtend = null;
 
     /** @var ?list<class-string<PluginInterface>> */
-    private ?array $prePlugins = null;
+    private ?array $plugins = null;
 
     public function __construct()
     {
@@ -144,7 +144,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
             ->setSpecificListeners($build['specific-listeners'])
-            ->setPrePlugins($build['pre-plugins'])
+            ->setPlugins($build['plugins'])
             ->setServicesToExtend($build['services-to-extend']);
     }
 
@@ -451,9 +451,9 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return list<class-string<PluginInterface>>
      */
-    public function getPrePlugins(): array
+    public function getPlugins(): array
     {
-        return (array)$this->prePlugins;
+        return (array)$this->plugins;
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self
@@ -493,10 +493,10 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param ?list<class-string<PluginInterface>> $list
      */
-    private function setPrePlugins(?array $list): self
+    private function setPlugins(?array $list): self
     {
-        $this->markPropertyChanged(self::prePlugins, $list);
-        $this->prePlugins = $list ?? self::DEFAULT_PRE_PLUGINS;
+        $this->markPropertyChanged(self::plugins, $list);
+        $this->plugins = $list ?? self::DEFAULT_PLUGINS;
 
         return $this;
     }

@@ -81,5 +81,5 @@ interface SetupGacelaInterface
     /**
      * @return list<class-string<PluginInterface>>
      */
-    public function getPrePlugins(): array;
+    public function getPlugins(): array;
 }

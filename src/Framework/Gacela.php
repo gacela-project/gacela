@@ -48,7 +48,7 @@ final class Gacela
         $config->setAppRootDir($appRootDir)
             ->init();
 
-        self::runPrePlugins($config);
+        self::runPlugins($config);
     }
 
     /**
@@ -81,17 +81,17 @@ final class Gacela
         return new SetupGacela();
     }
 
-    private static function runPrePlugins(Config $config): void
+    private static function runPlugins(Config $config): void
     {
-        $prePlugins = $config->getSetupGacela()->getPrePlugins();
+        $plugins = $config->getSetupGacela()->getPlugins();
 
-        if ($prePlugins === []) {
+        if ($plugins === []) {
             return;
         }
 
         $container = Container::withConfig($config);
 
-        foreach ($prePlugins as $pluginName) {
+        foreach ($plugins as $pluginName) {
             /** @var PluginInterface $plugin */
             $plugin = $container->get($pluginName);
             $plugin->run();

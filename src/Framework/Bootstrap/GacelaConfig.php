@@ -10,6 +10,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\GacelaEventInterface;
+use Gacela\Framework\Plugin\PluginInterface;
 
 final class GacelaConfig
 {
@@ -41,6 +42,9 @@ final class GacelaConfig
 
     /** @var array<class-string,list<callable>> */
     private ?array $specificListeners = null;
+
+    /** @var list<class-string<PluginInterface>>  */
+    private ?array $prePlugins = null;
 
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend = [];
@@ -302,6 +306,16 @@ final class GacelaConfig
     }
 
     /**
+     * @param list<class-string<PluginInterface>> $list
+     */
+    public function prePlugins(array $list): self
+    {
+        $this->prePlugins = $list;
+
+        return $this;
+    }
+
+    /**
      * @return array{
      *     external-services: array<string,class-string|object|callable>,
      *     config-builder: ConfigBuilder,
@@ -315,6 +329,7 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
+     *     pre-plugins: ?list<class-string<PluginInterface>>,
      *     services-to-extend: array<string,list<Closure>>,
      * }
      *
@@ -335,6 +350,7 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
+            'pre-plugins' => $this->prePlugins,
             'services-to-extend' => $this->servicesToExtend,
         ];
     }

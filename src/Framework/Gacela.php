@@ -15,7 +15,10 @@ use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
+use Gacela\Framework\Container\Container;
+use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
+use Gacela\Framework\Plugin\PluginInterface;
 
 final class Gacela
 {
@@ -41,9 +44,23 @@ final class Gacela
             Config::resetInstance();
         }
 
-        Config::createWithSetup($setup)
-            ->setAppRootDir($appRootDir)
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir($appRootDir)
             ->init();
+
+        self::runPrePlugins($config);
+    }
+
+    /**
+     * @template T
+     *
+     * @param class-string<T> $className
+     *
+     * @return T|null
+     */
+    public static function get(string $className): mixed
+    {
+        return Locator::getSingleton($className);
     }
 
     /**
@@ -62,5 +79,22 @@ final class Gacela
         }
 
         return new SetupGacela();
+    }
+
+    private static function runPrePlugins(Config $config): void
+    {
+        $prePlugins = $config->getSetupGacela()->getPrePlugins();
+
+        if ($prePlugins === []) {
+            return;
+        }
+
+        $container = Container::withConfig($config);
+
+        foreach ($prePlugins as $pluginName) {
+            /** @var PluginInterface $plugin */
+            $plugin = $container->get($pluginName);
+            $plugin->run();
+        }
     }
 }

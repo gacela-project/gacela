@@ -12,6 +12,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
+use Gacela\Framework\Plugin\PluginInterface;
 use RuntimeException;
 
 use function is_callable;
@@ -28,6 +29,7 @@ final class SetupGacela extends AbstractSetupGacela
     public const projectNamespaces = 'projectNamespaces';
     public const configKeyValues = 'configKeyValues';
     public const servicesToExtend = 'servicesToExtend';
+    public const prePlugins = 'prePlugins';
 
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
     private const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
@@ -38,6 +40,7 @@ final class SetupGacela extends AbstractSetupGacela
     private const DEFAULT_GENERIC_LISTENERS = [];
     private const DEFAULT_SPECIFIC_LISTENERS = [];
     private const DEFAULT_SERVICES_TO_EXTEND = [];
+    private const DEFAULT_PRE_PLUGINS = [];
 
     /** @var callable(ConfigBuilder):void */
     private $configFn;
@@ -84,6 +87,9 @@ final class SetupGacela extends AbstractSetupGacela
 
     /** @var ?array<string,list<Closure>> */
     private ?array $servicesToExtend = null;
+
+    /** @var ?list<class-string<PluginInterface>> */
+    private ?array $prePlugins = null;
 
     public function __construct()
     {
@@ -138,6 +144,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
             ->setSpecificListeners($build['specific-listeners'])
+            ->setPrePlugins($build['pre-plugins'])
             ->setServicesToExtend($build['services-to-extend']);
     }
 
@@ -441,6 +448,14 @@ final class SetupGacela extends AbstractSetupGacela
         $this->setConfigKeyValues(array_merge($this->configKeyValues ?? [], $list));
     }
 
+    /**
+     * @return list<class-string<PluginInterface>>
+     */
+    public function getPrePlugins(): array
+    {
+        return (array)$this->prePlugins;
+    }
+
     private function setAreEventListenersEnabled(?bool $flag): self
     {
         $this->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
@@ -471,6 +486,17 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $this->markPropertyChanged(self::servicesToExtend, $list);
         $this->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
+
+        return $this;
+    }
+
+    /**
+     * @param ?list<class-string<PluginInterface>> $list
+     */
+    private function setPrePlugins(?array $list): self
+    {
+        $this->markPropertyChanged(self::prePlugins, $list);
+        $this->prePlugins = $list ?? self::DEFAULT_PRE_PLUGINS;
 
         return $this;
     }

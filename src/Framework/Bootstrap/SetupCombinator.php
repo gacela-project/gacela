@@ -26,6 +26,7 @@ final class SetupCombinator
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
         $this->combineServicesToExtend($other);
+        $this->combinePlugins($other);
 
         return $this->original;
     }
@@ -96,6 +97,13 @@ final class SetupCombinator
             foreach ($other->getServicesToExtend() as $serviceId => $otherServiceToExtend) {
                 $this->original->addServicesToExtend($serviceId, $otherServiceToExtend);
             }
+        }
+    }
+
+    private function combinePlugins(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::plugins)) {
+            $this->original->combinePlugins($other->getPlugins());
         }
     }
 }

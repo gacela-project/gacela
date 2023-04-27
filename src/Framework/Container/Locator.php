@@ -10,7 +10,7 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 /**
  * @internal
  */
-final class Locator
+final class Locator implements LocatorInterface
 {
     private static ?Locator $instance = null;
 

@@ -449,6 +449,14 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @param list<class-string<PluginInterface>> $list
+     */
+    public function combinePlugins(array $list): void
+    {
+        $this->setPlugins(array_merge($this->plugins ?? [], $list));
+    }
+
+    /**
      * @return list<class-string<PluginInterface>>
      */
     public function getPlugins(): array

@@ -41,14 +41,14 @@ final class FeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->addPlugins([
-                ExamplePluginWithoutConstructor::class,
                 ExamplePluginWithConstructor::class,
+                ExamplePluginWithoutConstructor::class,
             ]);
         });
 
         /** @var StringValue $singleton */
         $singleton = Gacela::get(StringValue::class);
 
-        self::assertSame('Set from plugin ExamplePluginWithConstructor', $singleton->value());
+        self::assertSame('Set from plugin ExamplePluginWithoutConstructor', $singleton->value());
     }
 }

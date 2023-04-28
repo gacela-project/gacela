@@ -10,7 +10,7 @@ use Gacela\Framework\Config\Config;
 /**
  * This is a decorator class to simplify the usage of the decoupled Container
  */
-final class Container extends GacelaContainer
+final class Container extends GacelaContainer implements ContainerInterface
 {
     public static function withConfig(Config $config): self
     {
@@ -20,7 +20,7 @@ final class Container extends GacelaContainer
         );
     }
 
-    public function getLocator(): Locator
+    public function getLocator(): LocatorInterface
     {
         return Locator::getInstance();
     }

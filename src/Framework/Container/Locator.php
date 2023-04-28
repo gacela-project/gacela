@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
-use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 
 /**
@@ -17,8 +16,12 @@ final class Locator implements LocatorInterface
     /** @var array<string, mixed> */
     private array $instanceCache = [];
 
-    private function __construct()
-    {
+    private Container $container;
+
+    private function __construct(
+        ?Container $container = null,
+    ) {
+        $this->container = $container ?? new Container();
     }
 
     /**
@@ -51,15 +54,15 @@ final class Locator implements LocatorInterface
      *
      * @return T|null
      */
-    public static function getSingleton(string $className)
+    public static function getSingleton(string $className, ?Container $container = null)
     {
-        return self::getInstance()->get($className);
+        return self::getInstance($container)->get($className);
     }
 
-    public static function getInstance(): self
+    public static function getInstance(?Container $container = null): self
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            self::$instance = new self($container);
         }
 
         return self::$instance;
@@ -83,7 +86,7 @@ final class Locator implements LocatorInterface
 
         /** @var T|null $locatedInstance */
         $locatedInstance = AnonymousGlobal::getByClassName($className)
-            ?? GacelaContainer::create($className);
+            ?? $this->container->get($className);
 
         $this->add($className, $locatedInstance);
 

@@ -22,6 +22,6 @@ final class Container extends GacelaContainer implements ContainerInterface
 
     public function getLocator(): LocatorInterface
     {
-        return Locator::getInstance();
+        return Locator::getInstance($this);
     }
 }

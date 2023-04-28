@@ -19,9 +19,12 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Plugin\PluginInterface;
+use RuntimeException;
 
 final class Gacela
 {
+    private static ?Container $mainContainer = null;
+
     /**
      * Define the entry point of Gacela.
      *
@@ -60,7 +63,11 @@ final class Gacela
      */
     public static function get(string $className): mixed
     {
-        return Locator::getSingleton($className);
+        if (self::$mainContainer === null) {
+            throw new RuntimeException('You forgot to call first `Gacela::bootstrap()`');
+        }
+
+        return Locator::getSingleton($className, self::$mainContainer);
     }
 
     /**
@@ -89,11 +96,11 @@ final class Gacela
             return;
         }
 
-        $container = Container::withConfig($config);
+        self::$mainContainer = Container::withConfig($config);
 
         foreach ($plugins as $pluginName) {
             /** @var PluginInterface $plugin */
-            $plugin = $container->get($pluginName);
+            $plugin = self::$mainContainer->get($pluginName);
             $plugin->run();
         }
     }

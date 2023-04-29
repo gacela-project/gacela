@@ -17,7 +17,7 @@ interface GacelaConfigFileInterface
      *
      * @return array<class-string, class-string|callable|object>
      */
-    public function getMappingInterfaces(): array;
+    public function getBindings(): array;
 
     /**
      * @return array{

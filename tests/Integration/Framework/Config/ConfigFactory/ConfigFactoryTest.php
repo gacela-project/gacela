@@ -6,8 +6,8 @@ namespace GacelaTest\Integration\Framework\Config\ConfigFactory;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\ConfigFactory;
+use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
@@ -60,7 +60,7 @@ final class ConfigFactoryTest extends TestCase
             ->setConfigItems([
                 new GacelaConfigItem('config/from-gacela-file.php', ''),
             ])
-            ->setMappingInterfaces([
+            ->setBindings([
                 CustomInterface::class => CustomClass::class,
             ])
             ->setSuffixTypes([
@@ -80,9 +80,9 @@ final class ConfigFactoryTest extends TestCase
             ->setConfigFn(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
-            ->setMappingInterfacesFn(
-                static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
-                    $mappingInterfacesBuilder->bind(
+            ->setBindingsFn(
+                static function (BindingsBuilder $bindingsBuilder, array $externalServices): void {
+                    $bindingsBuilder->bind(
                         CustomInterface::class,
                         $externalServices['CustomClassFromExternalService'],
                     );
@@ -103,7 +103,7 @@ final class ConfigFactoryTest extends TestCase
             ->setConfigItems([
                 new GacelaConfigItem('config/from-bootstrap.php', ''),
             ])
-            ->setMappingInterfaces([
+            ->setBindings([
                 CustomInterface::class => CustomClass::class,
             ])
             ->setSuffixTypes([
@@ -123,9 +123,9 @@ final class ConfigFactoryTest extends TestCase
             ->setConfigFn(static function (ConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
-            ->setMappingInterfacesFn(
-                static function (MappingInterfacesBuilder $mappingInterfacesBuilder, array $externalServices): void {
-                    $mappingInterfacesBuilder->bind(
+            ->setBindingsFn(
+                static function (BindingsBuilder $bindingsBuilder, array $externalServices): void {
+                    $bindingsBuilder->bind(
                         AbstractCustom::class,
                         $externalServices['CustomClassFromExternalService'],
                     );
@@ -147,7 +147,7 @@ final class ConfigFactoryTest extends TestCase
                 new GacelaConfigItem('config/from-bootstrap.php', ''),
                 new GacelaConfigItem('config/from-gacela-file.php', ''),
             ])
-            ->setMappingInterfaces([
+            ->setBindings([
                 CustomInterface::class => CustomClass::class,
                 AbstractCustom::class => CustomClass::class,
             ])

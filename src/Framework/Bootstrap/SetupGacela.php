@@ -6,8 +6,8 @@ namespace Gacela\Framework\Bootstrap;
 
 use Closure;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
+use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
@@ -45,8 +45,8 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var callable(ConfigBuilder):void */
     private $configFn;
 
-    /** @var callable(MappingInterfacesBuilder,array<string,mixed>):void */
-    private $mappingInterfacesFn;
+    /** @var callable(BindingsBuilder,array<string,mixed>):void */
+    private $bindingsFn;
 
     /** @var callable(SuffixTypesBuilder):void */
     private $suffixTypesFn;
@@ -58,7 +58,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     private ?SuffixTypesBuilder $suffixTypesBuilder = null;
 
-    private ?MappingInterfacesBuilder $mappingInterfacesBuilder = null;
+    private ?BindingsBuilder $bindingsBuilder = null;
 
     private ?bool $shouldResetInMemoryCache = null;
 
@@ -97,7 +97,7 @@ final class SetupGacela extends AbstractSetupGacela
         };
 
         $this->configFn = $emptyFn;
-        $this->mappingInterfacesFn = $emptyFn;
+        $this->bindingsFn = $emptyFn;
         $this->suffixTypesFn = $emptyFn;
     }
 
@@ -135,7 +135,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setExternalServices($build['external-services'])
             ->setConfigBuilder($build['config-builder'])
             ->setSuffixTypesBuilder($build['suffix-types-builder'])
-            ->setMappingInterfacesBuilder($build['mapping-interfaces-builder'])
+            ->setBindingsBuilder($build['mapping-interfaces-builder'])
             ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
             ->setFileCacheEnabled($build['file-cache-enabled'])
             ->setFileCacheDirectory($build['file-cache-directory'])
@@ -173,9 +173,9 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    public function setMappingInterfacesBuilder(MappingInterfacesBuilder $builder): self
+    public function setBindingsBuilder(BindingsBuilder $builder): self
     {
-        $this->mappingInterfacesBuilder = $builder;
+        $this->bindingsBuilder = $builder;
 
         return $this;
     }
@@ -204,11 +204,11 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param callable(MappingInterfacesBuilder,array<string,mixed>):void $callable
+     * @param callable(BindingsBuilder,array<string,mixed>):void $callable
      */
-    public function setMappingInterfacesFn(callable $callable): self
+    public function setBindingsFn(callable $callable): self
     {
-        $this->mappingInterfacesFn = $callable;
+        $this->bindingsFn = $callable;
 
         return $this;
     }
@@ -218,17 +218,17 @@ final class SetupGacela extends AbstractSetupGacela
      *
      * @param array<string,class-string|object|callable> $externalServices
      */
-    public function buildMappingInterfaces(
-        MappingInterfacesBuilder $builder,
+    public function buildBindings(
+        BindingsBuilder $builder,
         array $externalServices,
-    ): MappingInterfacesBuilder {
-        $builder = parent::buildMappingInterfaces($builder, $externalServices);
+    ): BindingsBuilder {
+        $builder = parent::buildBindings($builder, $externalServices);
 
-        if ($this->mappingInterfacesBuilder) {
-            $builder = $this->mappingInterfacesBuilder;
+        if ($this->bindingsBuilder) {
+            $builder = $this->bindingsBuilder;
         }
 
-        ($this->mappingInterfacesFn)(
+        ($this->bindingsFn)(
             $builder,
             array_merge($this->externalServices ?? [], $externalServices)
         );

@@ -140,7 +140,7 @@ abstract class AbstractClassResolver
     {
         if ($this->container === null) {
             $this->container = new Container(
-                $this->getGacelaConfigFile()->getMappingInterfaces(),
+                $this->getGacelaConfigFile()->getBindings(),
             );
         }
 

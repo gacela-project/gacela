@@ -51,7 +51,7 @@ final class FileCacheBench
             $config->addAppConfig('config/*.php');
             $config->setFileCache($cacheEnabled);
 
-            $config->addMappingInterface(StringValueInterface::class, new StringValue('testing-string'));
+            $config->addBinding(StringValueInterface::class, new StringValue('testing-string'));
 
             $config->addSuffixTypeFactory('FactoryA');
             $config->addSuffixTypeFactory('FactoryB');

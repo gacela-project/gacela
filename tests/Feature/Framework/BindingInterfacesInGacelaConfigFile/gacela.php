@@ -14,12 +14,12 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 // Check the test _BindingInterfacesWithInnerDependencies_ BUT be aware this way is not possible
 // if the class has dependencies that cannot be resolved automatically!
 return static fn (GacelaConfig $config) => $config
-    ->addMappingInterface(
+    ->addBinding(
         AbstractClass::class,
         new ConcreteClass(true, 'string', 1, 1.2, ['array']),
     )
     // Resolve anonymous-classes/callables from abstract classes and interfaces
-    ->addMappingInterface(
+    ->addBinding(
         AbstractFromAnonymousClass::class,
         new class() extends AbstractFromAnonymousClass {
             public function getClassName(): string
@@ -28,7 +28,7 @@ return static fn (GacelaConfig $config) => $config
             }
         },
     )
-    ->addMappingInterface(
+    ->addBinding(
         AbstractFromCallable::class,
         new class() extends AbstractFromCallable {
             public function getClassName(): string
@@ -37,7 +37,7 @@ return static fn (GacelaConfig $config) => $config
             }
         },
     )
-    ->addMappingInterface(
+    ->addBinding(
         InterfaceFromAnonymousClass::class,
         new class() implements InterfaceFromAnonymousClass {
             public function getClassName(): string
@@ -46,7 +46,7 @@ return static fn (GacelaConfig $config) => $config
             }
         },
     )
-    ->addMappingInterface(
+    ->addBinding(
         InterfaceFromCallable::class,
         new class() implements InterfaceFromCallable {
             public function getClassName(): string

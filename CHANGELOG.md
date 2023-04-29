@@ -1,12 +1,12 @@
 # Changelog
 
-### 1.2.0
-### 2023-04-28
+### Unreleased
 
 - Unify `setFileCacheEnabled` and `setFileCacheDirectory` into one single method: `setFileCache(bool $enabled, string $dir)`. Deprecated the former methods.
 - Rename dependency; from `resolver` to `container`.
 - Moved the current `Container` logic to the decoupled `container` dependency.
 - Add "plugins" to run right after the `Gacela::bootstrap()`
+- Deprecated `addMappingInterface()` in favor of `addBinding()`
 
 ### 1.1.1
 ### 2023-04-19

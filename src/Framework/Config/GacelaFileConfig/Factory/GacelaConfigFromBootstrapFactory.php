@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
@@ -22,12 +22,12 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $configBuilder = $this->createConfigBuilder();
-        $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder();
+        $bindingsBuilder = $this->createBindingsBuilder();
         $suffixTypesBuilder = $this->createSuffixTypesBuilder();
 
         return (new GacelaConfigFile())
             ->setConfigItems($configBuilder->build())
-            ->setMappingInterfaces($mappingInterfacesBuilder->build())
+            ->setBindings($bindingsBuilder->build())
             ->setSuffixTypes($suffixTypesBuilder->build());
     }
 
@@ -36,9 +36,9 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
         return $this->bootstrapSetup->buildConfig(new ConfigBuilder());
     }
 
-    private function createMappingInterfacesBuilder(): MappingInterfacesBuilder
+    private function createBindingsBuilder(): BindingsBuilder
     {
-        return $this->bootstrapSetup->buildMappingInterfaces(new MappingInterfacesBuilder(), []);
+        return $this->bootstrapSetup->buildBindings(new BindingsBuilder(), []);
     }
 
     private function createSuffixTypesBuilder(): SuffixTypesBuilder

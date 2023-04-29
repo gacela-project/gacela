@@ -12,7 +12,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     private array $configItems = [];
 
     /** @var array<class-string,class-string|callable|object> */
-    private array $mappingInterfaces = [];
+    private array $bindings = [];
 
     /**
      * @var array{
@@ -43,11 +43,11 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
-     * @param array<class-string,class-string|callable|object> $mappingInterfaces
+     * @param array<class-string,class-string|callable|object> $bindings
      */
-    public function setMappingInterfaces(array $mappingInterfaces): self
+    public function setBindings(array $bindings): self
     {
-        $this->mappingInterfaces = $mappingInterfaces;
+        $this->bindings = $bindings;
 
         return $this;
     }
@@ -58,9 +58,9 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      *
      * @return array<class-string,class-string|callable|object>
      */
-    public function getMappingInterfaces(): array
+    public function getBindings(): array
     {
-        return $this->mappingInterfaces;
+        return $this->bindings;
     }
 
     /**
@@ -97,7 +97,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     {
         $new = clone $this;
         $new->configItems = array_merge($this->configItems, $other->getConfigItems());
-        $new->mappingInterfaces = array_merge($this->mappingInterfaces, $other->getMappingInterfaces());
+        $new->bindings = array_merge($this->bindings, $other->getBindings());
         $new->suffixTypes = [
             'Facade' => $this->filterList($other, 'Facade'),
             'Factory' => $this->filterList($other, 'Factory'),

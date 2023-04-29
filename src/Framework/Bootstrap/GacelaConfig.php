@@ -137,12 +137,24 @@ final class GacelaConfig
     }
 
     /**
+     * @deprecated in favor of `$this->addBinding()`
+     * It will be removed in the next release
+     *
+     * @param class-string $key
+     * @param class-string|object|callable $value
+     */
+    public function addMappingInterface(string $key, string|object|callable $value): self
+    {
+        return $this->addBinding($key, $value);
+    }
+
+    /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
      * @param class-string $key
      * @param class-string|object|callable $value
      */
-    public function addBinding(string $key, $value): self
+    public function addBinding(string $key, string|object|callable $value): self
     {
         $this->bindingBuilder->bind($key, $value);
 

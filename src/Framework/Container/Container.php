@@ -15,7 +15,7 @@ final class Container extends GacelaContainer implements ContainerInterface
     public static function withConfig(Config $config): self
     {
         return new self(
-            $config->getFactory()->createGacelaFileConfig()->getMappingInterfaces(),
+            $config->getFactory()->createGacelaFileConfig()->getBindings(),
             $config->getSetupGacela()->getServicesToExtend(),
         );
     }

@@ -8,8 +8,8 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\FileIoInterface;
+use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
@@ -35,12 +35,12 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $this->bootstrapSetup->combine($projectSetupGacela);
 
         $configBuilder = $this->createConfigBuilder($projectSetupGacela);
-        $mappingInterfacesBuilder = $this->createMappingInterfacesBuilder($projectSetupGacela);
+        $bindingsBuilder = $this->createBindingsBuilder($projectSetupGacela);
         $suffixTypesBuilder = $this->createSuffixTypesBuilder($projectSetupGacela);
 
         return (new GacelaConfigFile())
             ->setConfigItems($configBuilder->build())
-            ->setMappingInterfaces($mappingInterfacesBuilder->build())
+            ->setBindings($bindingsBuilder->build())
             ->setSuffixTypes($suffixTypesBuilder->build());
     }
 
@@ -65,9 +65,9 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         return $setupGacela->buildConfig(new ConfigBuilder());
     }
 
-    private function createMappingInterfacesBuilder(SetupGacelaInterface $setupGacela): MappingInterfacesBuilder
+    private function createBindingsBuilder(SetupGacelaInterface $setupGacela): BindingsBuilder
     {
-        return $setupGacela->buildMappingInterfaces(new MappingInterfacesBuilder(), $this->bootstrapSetup->externalServices());
+        return $setupGacela->buildBindings(new BindingsBuilder(), $this->bootstrapSetup->externalServices());
     }
 
     private function createSuffixTypesBuilder(SetupGacelaInterface $setupGacela): SuffixTypesBuilder

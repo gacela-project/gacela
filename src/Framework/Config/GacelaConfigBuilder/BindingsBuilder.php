@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaConfigBuilder;
 
-final class MappingInterfacesBuilder
+final class BindingsBuilder
 {
     /** @var array<class-string,class-string|object|callable> */
     private array $mapping = [];

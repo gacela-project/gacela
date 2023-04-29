@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Plugin\PluginInterface;
@@ -23,10 +23,10 @@ interface SetupGacelaInterface
      *
      * @param array<string, class-string|object|callable> $externalServices
      */
-    public function buildMappingInterfaces(
-        MappingInterfacesBuilder $builder,
+    public function buildBindings(
+        BindingsBuilder $builder,
         array $externalServices,
-    ): MappingInterfacesBuilder;
+    ): BindingsBuilder;
 
     /**
      * Allow overriding gacela resolvable types.

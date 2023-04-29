@@ -137,7 +137,7 @@ final class GacelaConfig
     }
 
     /**
-     * @deprecated in favor of `$this->addBinding()`
+     * @deprecated in favor of `$this->addBinding(key, value)`
      * It will be removed in the next release
      *
      * @param class-string $key
@@ -149,7 +149,7 @@ final class GacelaConfig
     }
 
     /**
-     * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
+     * Bind a key class or interface name to be resolved by Gacela automatically.
      *
      * @param class-string $key
      * @param class-string|object|callable $value

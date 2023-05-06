@@ -15,7 +15,7 @@ final class ExamplePluginWithConstructor implements PluginInterface
     ) {
     }
 
-    public function run(): void
+    public function __invoke(): void
     {
         $string = $this->container->getLocator()->get(StringValue::class);
 

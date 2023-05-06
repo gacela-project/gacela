@@ -18,7 +18,6 @@ use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
-use Gacela\Framework\Plugin\PluginInterface;
 use RuntimeException;
 
 final class Gacela
@@ -99,9 +98,9 @@ final class Gacela
         self::$mainContainer = Container::withConfig($config);
 
         foreach ($plugins as $pluginName) {
-            /** @var PluginInterface $plugin */
+            /** @var callable $plugin */
             $plugin = self::$mainContainer->get($pluginName);
-            $plugin->run();
+            $plugin();
         }
     }
 }

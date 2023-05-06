@@ -6,5 +6,5 @@ namespace Gacela\Framework\Plugin;
 
 interface PluginInterface
 {
-    public function run(): void;
+    public function __invoke(): void;
 }

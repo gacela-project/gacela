@@ -10,7 +10,7 @@ use GacelaTest\Fixtures\StringValue;
 
 final class ExamplePluginWithoutConstructor implements PluginInterface
 {
-    public function run(): void
+    public function __invoke(): void
     {
         $string = Gacela::get(StringValue::class);
 

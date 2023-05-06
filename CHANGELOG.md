@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Rename PluginInterface main method from `run()` to `__invoke()` 
+
 ### 1.2.0
 ### 2023-04-29
 

@@ -66,8 +66,7 @@
             "php": "8.0"
         },
         "allow-plugins": {
-            "composer/package-versions-deprecated": true,
-            "veewee/composer-run-parallel": true
+            "composer/package-versions-deprecated": true
         }
     },
     "scripts": {

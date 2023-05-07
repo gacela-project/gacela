@@ -29,7 +29,7 @@ final class SetupGacela extends AbstractSetupGacela
     public const projectNamespaces = 'projectNamespaces';
     public const configKeyValues = 'configKeyValues';
     public const servicesToExtend = 'servicesToExtend';
-    public const plugins = 'plugins';
+    public const afterPlugins = 'afterPlugins';
 
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
     private const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
@@ -89,7 +89,7 @@ final class SetupGacela extends AbstractSetupGacela
     private ?array $servicesToExtend = null;
 
     /** @var ?list<class-string<PluginInterface>> */
-    private ?array $plugins = null;
+    private ?array $afterPlugins = null;
 
     public function __construct()
     {
@@ -144,7 +144,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
             ->setSpecificListeners($build['specific-listeners'])
-            ->setPlugins($build['plugins'])
+            ->setAfterPlugins($build['after-plugins'])
             ->setServicesToExtend($build['services-to-extend']);
     }
 
@@ -453,15 +453,15 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combinePlugins(array $list): void
     {
-        $this->setPlugins(array_merge($this->plugins ?? [], $list));
+        $this->setAfterPlugins(array_merge($this->afterPlugins ?? [], $list));
     }
 
     /**
      * @return list<class-string<PluginInterface>>
      */
-    public function getPlugins(): array
+    public function getAfterPlugins(): array
     {
-        return (array)$this->plugins;
+        return (array)$this->afterPlugins;
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self
@@ -501,10 +501,10 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param ?list<class-string<PluginInterface>> $list
      */
-    private function setPlugins(?array $list): self
+    private function setAfterPlugins(?array $list): self
     {
-        $this->markPropertyChanged(self::plugins, $list);
-        $this->plugins = $list ?? self::DEFAULT_PLUGINS;
+        $this->markPropertyChanged(self::afterPlugins, $list);
+        $this->afterPlugins = $list ?? self::DEFAULT_PLUGINS;
 
         return $this;
     }

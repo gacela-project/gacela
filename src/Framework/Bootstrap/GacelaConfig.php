@@ -44,7 +44,7 @@ final class GacelaConfig
     private ?array $specificListeners = null;
 
     /** @var list<class-string<PluginInterface>>  */
-    private ?array $plugins = null;
+    private ?array $afterPlugins = null;
 
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend = [];
@@ -316,13 +316,23 @@ final class GacelaConfig
 
         return $this;
     }
-
     /**
+     * @deprecated in favor of `addAfterPlugin()`
+     * It will be removed in the next release
+     *
      * @param class-string<PluginInterface> $plugin
      */
     public function addPlugin(string $plugin): self
     {
-        $this->plugins[] = $plugin;
+        return $this->addAfterPlugin($plugin);
+    }
+
+    /**
+     * @param class-string<PluginInterface> $plugin
+     */
+    public function addAfterPlugin(string $plugin): self
+    {
+        $this->afterPlugins[] = $plugin;
 
         return $this;
     }
@@ -330,9 +340,9 @@ final class GacelaConfig
     /**
      * @param list<class-string<PluginInterface>> $list
      */
-    public function addPlugins(array $list): self
+    public function addAfterPlugins(array $list): self
     {
-        $this->plugins = array_merge($this->plugins ?? [], $list);
+        $this->afterPlugins = array_merge($this->afterPlugins ?? [], $list);
 
         return $this;
     }
@@ -351,7 +361,7 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
-     *     plugins: ?list<class-string<PluginInterface>>,
+     *     after-plugins: ?list<class-string<PluginInterface>>,
      *     services-to-extend: array<string,list<Closure>>,
      * }
      *
@@ -372,7 +382,7 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
-            'plugins' => $this->plugins,
+            'after-plugins' => $this->afterPlugins,
             'services-to-extend' => $this->servicesToExtend,
         ];
     }

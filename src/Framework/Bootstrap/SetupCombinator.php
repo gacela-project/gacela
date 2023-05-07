@@ -102,8 +102,8 @@ final class SetupCombinator
 
     private function combinePlugins(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged(SetupGacela::plugins)) {
-            $this->original->combinePlugins($other->getPlugins());
+        if ($other->isPropertyChanged(SetupGacela::afterPlugins)) {
+            $this->original->combinePlugins($other->getAfterPlugins());
         }
     }
 }

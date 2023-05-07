@@ -89,7 +89,7 @@ final class Gacela
 
     private static function runPlugins(Config $config): void
     {
-        $plugins = $config->getSetupGacela()->getPlugins();
+        $plugins = $config->getSetupGacela()->getAfterPlugins();
 
         if ($plugins === []) {
             return;

@@ -11,12 +11,12 @@ use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWith
 use GacelaTest\Fixtures\StringValue;
 use PHPUnit\Framework\TestCase;
 
-final class FeatureTest extends TestCase
+final class AfterFeatureTest extends TestCase
 {
     public function test_singleton_altered_via_plugin_with_constructor(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addPlugin(ExamplePluginWithConstructor::class);
+            $config->addAfterPlugin(ExamplePluginWithConstructor::class);
         });
 
         /** @var StringValue $singleton */
@@ -28,7 +28,7 @@ final class FeatureTest extends TestCase
     public function test_singleton_altered_via_plugin_without_constructor(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addPlugin(ExamplePluginWithoutConstructor::class);
+            $config->addAfterPlugin(ExamplePluginWithoutConstructor::class);
         });
 
         /** @var StringValue $singleton */
@@ -40,7 +40,7 @@ final class FeatureTest extends TestCase
     public function test_multiple_plugins_latest_win(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addPlugins([
+            $config->addAfterPlugins([
                 ExamplePluginWithConstructor::class,
                 ExamplePluginWithoutConstructor::class,
             ]);

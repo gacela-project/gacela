@@ -6,8 +6,8 @@ namespace GacelaTest\Feature\Framework\Plugins;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithConstructor;
-use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithoutConstructor;
+use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExampleAfterPluginWithConstructor;
+use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExampleAfterPluginWithoutConstructor;
 use GacelaTest\Fixtures\StringValue;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +16,7 @@ final class AfterFeatureTest extends TestCase
     public function test_singleton_altered_via_plugin_with_constructor(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addAfterPlugin(ExamplePluginWithConstructor::class);
+            $config->addAfterPlugin(ExampleAfterPluginWithConstructor::class);
         });
 
         /** @var StringValue $singleton */
@@ -28,7 +28,7 @@ final class AfterFeatureTest extends TestCase
     public function test_singleton_altered_via_plugin_without_constructor(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addAfterPlugin(ExamplePluginWithoutConstructor::class);
+            $config->addAfterPlugin(ExampleAfterPluginWithoutConstructor::class);
         });
 
         /** @var StringValue $singleton */
@@ -41,8 +41,8 @@ final class AfterFeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->addAfterPlugins([
-                ExamplePluginWithConstructor::class,
-                ExamplePluginWithoutConstructor::class,
+                ExampleAfterPluginWithConstructor::class,
+                ExampleAfterPluginWithoutConstructor::class,
             ]);
         });
 

@@ -13,7 +13,7 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
-use Gacela\Framework\Plugin\PluginInterface;
+
 use RuntimeException;
 
 use function is_callable;
@@ -90,10 +90,10 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var ?array<string,list<Closure>> */
     private ?array $servicesToExtend = null;
 
-    /** @var ?list<class-string<PluginInterface>> */
+    /** @var ?list<class-string> */
     private ?array $beforePlugins = null;
 
-    /** @var ?list<class-string<PluginInterface>> */
+    /** @var ?list<class-string> */
     private ?array $afterPlugins = null;
 
     public function __construct()
@@ -458,7 +458,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param list<class-string<PluginInterface>> $list
+     * @param list<class-string> $list
      */
     public function combineBeforePlugins(array $list): void
     {
@@ -466,7 +466,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param list<class-string<PluginInterface>> $list
+     * @param list<class-string> $list
      */
     public function combineAfterPlugins(array $list): void
     {
@@ -474,7 +474,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return list<class-string<PluginInterface>>
+     * @return list<class-string>
      */
     public function getBeforePlugins(): array
     {
@@ -482,7 +482,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return list<class-string<PluginInterface>>
+     * @return list<class-string>
      */
     public function getAfterPlugins(): array
     {
@@ -500,7 +500,7 @@ final class SetupGacela extends AbstractSetupGacela
         foreach ($plugins as $pluginName) {
             /** @var callable $plugin */
             $plugin = Container::create($pluginName);
-            $plugin();
+            $plugin($config);
         }
     }
 
@@ -539,7 +539,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param ?list<class-string<PluginInterface>> $list
+     * @param ?list<class-string> $list
      */
     private function setBeforePlugins(?array $list): self
     {
@@ -550,7 +550,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param ?list<class-string<PluginInterface>> $list
+     * @param ?list<class-string> $list
      */
     private function setAfterPlugins(?array $list): self
     {

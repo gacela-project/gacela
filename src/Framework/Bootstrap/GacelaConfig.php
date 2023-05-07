@@ -10,7 +10,6 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\GacelaEventInterface;
-use Gacela\Framework\Plugin\PluginInterface;
 
 final class GacelaConfig
 {
@@ -43,10 +42,10 @@ final class GacelaConfig
     /** @var array<class-string,list<callable>> */
     private ?array $specificListeners = null;
 
-    /** @var list<class-string<PluginInterface>>  */
+    /** @var list<class-string>  */
     private ?array $beforePlugins = null;
 
-    /** @var list<class-string<PluginInterface>>  */
+    /** @var list<class-string>  */
     private ?array $afterPlugins = null;
 
     /** @var array<string,list<Closure>> */
@@ -323,7 +322,7 @@ final class GacelaConfig
      * @deprecated in favor of `addAfterPlugin()`
      * It will be removed in the next release
      *
-     * @param class-string<PluginInterface> $plugin
+     * @param class-string $plugin
      */
     public function addPlugin(string $plugin): self
     {
@@ -331,7 +330,7 @@ final class GacelaConfig
     }
 
     /**
-     * @param class-string<PluginInterface> $plugin
+     * @param class-string $plugin
      */
     public function addBeforePlugin(string $plugin): self
     {
@@ -341,7 +340,7 @@ final class GacelaConfig
     }
 
     /**
-     * @param list<class-string<PluginInterface>> $list
+     * @param list<class-string> $list
      */
     public function addBeforePlugins(array $list): self
     {
@@ -351,7 +350,7 @@ final class GacelaConfig
     }
 
     /**
-     * @param class-string<PluginInterface> $plugin
+     * @param class-string $plugin
      */
     public function addAfterPlugin(string $plugin): self
     {
@@ -361,7 +360,7 @@ final class GacelaConfig
     }
 
     /**
-     * @param list<class-string<PluginInterface>> $list
+     * @param list<class-string> $list
      */
     public function addAfterPlugins(array $list): self
     {
@@ -384,8 +383,8 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
-     *     before-plugins: ?list<class-string<PluginInterface>>,
-     *     after-plugins: ?list<class-string<PluginInterface>>,
+     *     before-plugins: ?list<class-string>,
+     *     after-plugins: ?list<class-string>,
      *     services-to-extend: array<string,list<Closure>>,
      * }
      *

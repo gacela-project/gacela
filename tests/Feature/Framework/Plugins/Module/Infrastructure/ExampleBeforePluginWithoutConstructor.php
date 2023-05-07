@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\Plugins\Module\Infrastructure;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use Gacela\Framework\Plugin\PluginInterface;
+
 use GacelaTest\Fixtures\StringValue;
 
-final class ExamplePluginWithoutConstructor implements PluginInterface
+final class ExampleBeforePluginWithoutConstructor
 {
-    public function __invoke(): void
+    public function __invoke(GacelaConfig $config): void
     {
         $string = Gacela::get(StringValue::class);
 

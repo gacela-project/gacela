@@ -128,11 +128,9 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $gacelaConfig = new GacelaConfig();
         $setupGacelaFileFn($gacelaConfig);
+        self::runBeforePlugins($gacelaConfig);
 
-        $self = self::fromGacelaConfig($gacelaConfig);
-        self::runBeforePlugins($self, $gacelaConfig);
-
-        return $self;
+        return self::fromGacelaConfig($gacelaConfig);
     }
 
     public static function fromGacelaConfig(GacelaConfig $gacelaConfig): self
@@ -489,9 +487,9 @@ final class SetupGacela extends AbstractSetupGacela
         return (array)$this->afterPlugins;
     }
 
-    private static function runBeforePlugins(self $self, GacelaConfig $config): void
+    private static function runBeforePlugins(GacelaConfig $config): void
     {
-        $plugins = $self->getBeforePlugins();
+        $plugins = $config->build()['before-plugins'] ?? [];
 
         if ($plugins === []) {
             return;

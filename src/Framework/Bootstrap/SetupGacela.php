@@ -9,6 +9,7 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
@@ -30,6 +31,7 @@ final class SetupGacela extends AbstractSetupGacela
     public const configKeyValues = 'configKeyValues';
     public const servicesToExtend = 'servicesToExtend';
     public const afterPlugins = 'afterPlugins';
+    public const beforePlugins = 'beforePlugins';
 
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
     private const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
@@ -89,6 +91,9 @@ final class SetupGacela extends AbstractSetupGacela
     private ?array $servicesToExtend = null;
 
     /** @var ?list<class-string<PluginInterface>> */
+    private ?array $beforePlugins = null;
+
+    /** @var ?list<class-string<PluginInterface>> */
     private ?array $afterPlugins = null;
 
     public function __construct()
@@ -124,7 +129,10 @@ final class SetupGacela extends AbstractSetupGacela
         $gacelaConfig = new GacelaConfig();
         $setupGacelaFileFn($gacelaConfig);
 
-        return self::fromGacelaConfig($gacelaConfig);
+        $self = self::fromGacelaConfig($gacelaConfig);
+        self::runBeforePlugins($self, $gacelaConfig);
+
+        return $self;
     }
 
     public static function fromGacelaConfig(GacelaConfig $gacelaConfig): self
@@ -144,6 +152,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
             ->setSpecificListeners($build['specific-listeners'])
+            ->setBeforePlugins($build['before-plugins'])
             ->setAfterPlugins($build['after-plugins'])
             ->setServicesToExtend($build['services-to-extend']);
     }
@@ -451,9 +460,25 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param list<class-string<PluginInterface>> $list
      */
-    public function combinePlugins(array $list): void
+    public function combineBeforePlugins(array $list): void
+    {
+        $this->setBeforePlugins(array_merge($this->beforePlugins ?? [], $list));
+    }
+
+    /**
+     * @param list<class-string<PluginInterface>> $list
+     */
+    public function combineAfterPlugins(array $list): void
     {
         $this->setAfterPlugins(array_merge($this->afterPlugins ?? [], $list));
+    }
+
+    /**
+     * @return list<class-string<PluginInterface>>
+     */
+    public function getBeforePlugins(): array
+    {
+        return (array)$this->beforePlugins;
     }
 
     /**
@@ -462,6 +487,21 @@ final class SetupGacela extends AbstractSetupGacela
     public function getAfterPlugins(): array
     {
         return (array)$this->afterPlugins;
+    }
+
+    private static function runBeforePlugins(self $self, GacelaConfig $config): void
+    {
+        $plugins = $self->getBeforePlugins();
+
+        if ($plugins === []) {
+            return;
+        }
+
+        foreach ($plugins as $pluginName) {
+            /** @var callable $plugin */
+            $plugin = Container::create($pluginName);
+            $plugin();
+        }
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self
@@ -494,6 +534,17 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $this->markPropertyChanged(self::servicesToExtend, $list);
         $this->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
+
+        return $this;
+    }
+
+    /**
+     * @param ?list<class-string<PluginInterface>> $list
+     */
+    private function setBeforePlugins(?array $list): self
+    {
+        $this->markPropertyChanged(self::beforePlugins, $list);
+        $this->beforePlugins = $list ?? self::DEFAULT_PLUGINS;
 
         return $this;
     }

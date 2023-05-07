@@ -44,6 +44,9 @@ final class GacelaConfig
     private ?array $specificListeners = null;
 
     /** @var list<class-string<PluginInterface>>  */
+    private ?array $beforePlugins = null;
+
+    /** @var list<class-string<PluginInterface>>  */
     private ?array $afterPlugins = null;
 
     /** @var array<string,list<Closure>> */
@@ -330,6 +333,26 @@ final class GacelaConfig
     /**
      * @param class-string<PluginInterface> $plugin
      */
+    public function addBeforePlugin(string $plugin): self
+    {
+        $this->beforePlugins[] = $plugin;
+
+        return $this;
+    }
+
+    /**
+     * @param list<class-string<PluginInterface>> $list
+     */
+    public function addBeforePlugins(array $list): self
+    {
+        $this->beforePlugins = array_merge($this->beforePlugins ?? [], $list);
+
+        return $this;
+    }
+
+    /**
+     * @param class-string<PluginInterface> $plugin
+     */
     public function addAfterPlugin(string $plugin): self
     {
         $this->afterPlugins[] = $plugin;
@@ -361,6 +384,7 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
+     *     before-plugins: ?list<class-string<PluginInterface>>,
      *     after-plugins: ?list<class-string<PluginInterface>>,
      *     services-to-extend: array<string,list<Closure>>,
      * }
@@ -382,6 +406,7 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
+            'before-plugins' => $this->beforePlugins,
             'after-plugins' => $this->afterPlugins,
             'services-to-extend' => $this->servicesToExtend,
         ];

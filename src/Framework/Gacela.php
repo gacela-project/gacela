@@ -18,7 +18,6 @@ use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
-use RuntimeException;
 
 final class Gacela
 {
@@ -31,6 +30,8 @@ final class Gacela
      */
     public static function bootstrap(string $appRootDir, Closure $configFn = null): void
     {
+        self::$mainContainer = null;
+
         $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
 
         if ($setup->shouldResetInMemoryCache()) {
@@ -44,6 +45,7 @@ final class Gacela
             AbstractClassResolver::resetCache();
             ConfigFactory::resetCache();
             Config::resetInstance();
+            Locator::resetInstance();
         }
 
         $config = Config::createWithSetup($setup);
@@ -62,10 +64,6 @@ final class Gacela
      */
     public static function get(string $className): mixed
     {
-        if (self::$mainContainer === null) {
-            throw new RuntimeException('You forgot to call first `Gacela::bootstrap()`');
-        }
-
         return Locator::getSingleton($className, self::$mainContainer);
     }
 
@@ -89,13 +87,9 @@ final class Gacela
 
     private static function runPlugins(Config $config): void
     {
-        $plugins = $config->getSetupGacela()->getAfterPlugins();
-
-        if ($plugins === []) {
-            return;
-        }
-
         self::$mainContainer = Container::withConfig($config);
+
+        $plugins = $config->getSetupGacela()->getPlugins();
 
         foreach ($plugins as $pluginName) {
             /** @var callable $plugin */

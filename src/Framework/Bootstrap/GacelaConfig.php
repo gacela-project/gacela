@@ -10,7 +10,6 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\GacelaEventInterface;
-use Gacela\Framework\Plugin\PluginInterface;
 
 final class GacelaConfig
 {
@@ -43,8 +42,11 @@ final class GacelaConfig
     /** @var array<class-string,list<callable>> */
     private ?array $specificListeners = null;
 
-    /** @var list<class-string<PluginInterface>>  */
-    private ?array $afterPlugins = null;
+    /** @var list<class-string>  */
+    private ?array $extendConfig = null;
+
+    /** @var list<class-string>  */
+    private ?array $plugins = null;
 
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend = [];
@@ -316,33 +318,43 @@ final class GacelaConfig
 
         return $this;
     }
-    /**
-     * @deprecated in favor of `addAfterPlugin()`
-     * It will be removed in the next release
-     *
-     * @param class-string<PluginInterface> $plugin
-     */
-    public function addPlugin(string $plugin): self
-    {
-        return $this->addAfterPlugin($plugin);
-    }
 
     /**
-     * @param class-string<PluginInterface> $plugin
+     * @param class-string $config
      */
-    public function addAfterPlugin(string $plugin): self
+    public function addExtendConfig(string $config): self
     {
-        $this->afterPlugins[] = $plugin;
+        $this->extendConfig[] = $config;
 
         return $this;
     }
 
     /**
-     * @param list<class-string<PluginInterface>> $list
+     * @param list<class-string> $list
      */
-    public function addAfterPlugins(array $list): self
+    public function addExtendConfigs(array $list): self
     {
-        $this->afterPlugins = array_merge($this->afterPlugins ?? [], $list);
+        $this->extendConfig = array_merge($this->extendConfig ?? [], $list);
+
+        return $this;
+    }
+
+    /**
+     * @param class-string $plugin
+     */
+    public function addPlugin(string $plugin): self
+    {
+        $this->plugins[] = $plugin;
+
+        return $this;
+    }
+
+    /**
+     * @param list<class-string> $list
+     */
+    public function addPlugins(array $list): self
+    {
+        $this->plugins = array_merge($this->plugins ?? [], $list);
 
         return $this;
     }
@@ -361,7 +373,8 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
-     *     after-plugins: ?list<class-string<PluginInterface>>,
+     *     before-config: ?list<class-string>,
+     *     after-plugins: ?list<class-string>,
      *     services-to-extend: array<string,list<Closure>>,
      * }
      *
@@ -382,7 +395,8 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
-            'after-plugins' => $this->afterPlugins,
+            'before-config' => $this->extendConfig,
+            'after-plugins' => $this->plugins,
             'services-to-extend' => $this->servicesToExtend,
         ];
     }

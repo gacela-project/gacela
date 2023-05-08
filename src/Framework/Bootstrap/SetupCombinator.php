@@ -27,6 +27,7 @@ final class SetupCombinator
         $this->combineEventDispatcher($other);
         $this->combineServicesToExtend($other);
         $this->combinePlugins($other);
+        $this->combineExtendConfig($other);
 
         return $this->original;
     }
@@ -102,8 +103,15 @@ final class SetupCombinator
 
     private function combinePlugins(SetupGacela $other): void
     {
-        if ($other->isPropertyChanged(SetupGacela::afterPlugins)) {
-            $this->original->combinePlugins($other->getAfterPlugins());
+        if ($other->isPropertyChanged(SetupGacela::plugins)) {
+            $this->original->combinePlugins($other->getPlugins());
+        }
+    }
+
+    private function combineExtendConfig(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::extendConfig)) {
+            $this->original->combineExtendConfig($other->getExtendConfig());
         }
     }
 }

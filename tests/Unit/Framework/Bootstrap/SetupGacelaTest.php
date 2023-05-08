@@ -205,11 +205,11 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->addAfterPlugin(ExamplePluginWithoutConstructor::class),
+                ->addPlugin(ExamplePluginWithoutConstructor::class),
         );
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->addAfterPlugin(ExamplePluginWithConstructor::class),
+                ->addPlugin(ExamplePluginWithConstructor::class),
         );
 
         $setup->combine($setup2);
@@ -217,6 +217,6 @@ final class SetupGacelaTest extends TestCase
         self::assertEquals([
             ExamplePluginWithoutConstructor::class,
             ExamplePluginWithConstructor::class,
-        ], $setup->getAfterPlugins());
+        ], $setup->getPlugins());
     }
 }

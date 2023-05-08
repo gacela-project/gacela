@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\Plugins\Module\Infrastructure;
 
 use Gacela\Framework\Gacela;
-use Gacela\Framework\Plugin\PluginInterface;
+
 use GacelaTest\Fixtures\StringValue;
 
-final class ExamplePluginWithoutConstructor implements PluginInterface
+final class ExamplePluginWithoutConstructor
 {
     public function __invoke(): void
     {

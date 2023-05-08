@@ -2,8 +2,9 @@
 
 ### Unreleased
 
-- Rename PluginInterface main method from `run()` to `__invoke()` 
-- Rename `addPlugin()` to `addAfterPlugin()`
+- Deleted `PluginInterface`
+  - A plugin can be any class that implements `__invoke()`
+- Added `GacelaConfig::addExtendConfig()`
 
 ### 1.2.0
 ### 2023-04-29

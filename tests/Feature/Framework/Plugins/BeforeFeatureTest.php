@@ -6,7 +6,7 @@ namespace GacelaTest\Feature\Framework\Plugins;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExampleBeforePluginWithoutConstructor;
+use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExampleBeforePlugin;
 use GacelaTest\Fixtures\StringValue;
 use PHPUnit\Framework\TestCase;
 
@@ -16,12 +16,12 @@ final class BeforeFeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->addBeforePlugin(ExampleBeforePluginWithoutConstructor::class);
+            $config->addBeforePlugin(ExampleBeforePlugin::class);
         });
 
         /** @var StringValue $singleton */
         $singleton = Gacela::get(StringValue::class);
 
-        self::assertSame('Set from plugin ExampleBeforePluginWithoutConstructor', $singleton->value());
+        self::assertSame('Set from plugin ExampleBeforePlugin', $singleton->value());
     }
 }

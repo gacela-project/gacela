@@ -294,11 +294,18 @@ final class GacelaConfig
     }
 
     /**
-     * @param class-string $config
+     * Add a new invokable class that can extend the GacelaConfig object.
+     *
+     * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
+     * ```
+     * __invoke(GacelaConfig $config): void
+     * ```
+     *
+     * @param class-string $configClass
      */
-    public function addExtendConfig(string $config): self
+    public function addExtendConfig(string $configClass): self
     {
-        $this->extendConfig[] = $config;
+        $this->extendConfig[] = $configClass;
 
         return $this;
     }

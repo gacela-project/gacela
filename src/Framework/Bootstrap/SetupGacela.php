@@ -31,7 +31,7 @@ final class SetupGacela extends AbstractSetupGacela
     public const configKeyValues = 'configKeyValues';
     public const servicesToExtend = 'servicesToExtend';
     public const afterPlugins = 'afterPlugins';
-    public const beforePlugins = 'beforePlugins';
+    public const extendConfig = 'extendConfig';
 
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
     private const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
@@ -42,6 +42,7 @@ final class SetupGacela extends AbstractSetupGacela
     private const DEFAULT_GENERIC_LISTENERS = [];
     private const DEFAULT_SPECIFIC_LISTENERS = [];
     private const DEFAULT_SERVICES_TO_EXTEND = [];
+    private const DEFAULT_EXTEND_CONFIG = [];
     private const DEFAULT_PLUGINS = [];
 
     /** @var callable(ConfigBuilder):void */
@@ -91,7 +92,7 @@ final class SetupGacela extends AbstractSetupGacela
     private ?array $servicesToExtend = null;
 
     /** @var ?list<class-string> */
-    private ?array $beforePlugins = null;
+    private ?array $extendConfig = null;
 
     /** @var ?list<class-string> */
     private ?array $afterPlugins = null;
@@ -128,7 +129,7 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $gacelaConfig = new GacelaConfig();
         $setupGacelaFileFn($gacelaConfig);
-        self::runBeforePlugins($gacelaConfig);
+        self::runExtendConfig($gacelaConfig);
 
         return self::fromGacelaConfig($gacelaConfig);
     }
@@ -150,7 +151,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
             ->setSpecificListeners($build['specific-listeners'])
-            ->setBeforePlugins($build['before-plugins'])
+            ->setExtendConfig($build['before-config'])
             ->setAfterPlugins($build['after-plugins'])
             ->setServicesToExtend($build['services-to-extend']);
     }
@@ -458,9 +459,9 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param list<class-string> $list
      */
-    public function combineBeforePlugins(array $list): void
+    public function combineExtendConfig(array $list): void
     {
-        $this->setBeforePlugins(array_merge($this->beforePlugins ?? [], $list));
+        $this->setExtendConfig(array_merge($this->extendConfig ?? [], $list));
     }
 
     /**
@@ -474,9 +475,9 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return list<class-string>
      */
-    public function getBeforePlugins(): array
+    public function getExtendConfig(): array
     {
-        return (array)$this->beforePlugins;
+        return (array)$this->extendConfig;
     }
 
     /**
@@ -487,9 +488,9 @@ final class SetupGacela extends AbstractSetupGacela
         return (array)$this->afterPlugins;
     }
 
-    private static function runBeforePlugins(GacelaConfig $config): void
+    private static function runExtendConfig(GacelaConfig $config): void
     {
-        $plugins = $config->build()['before-plugins'] ?? [];
+        $plugins = $config->build()['before-config'] ?? [];
 
         if ($plugins === []) {
             return;
@@ -539,10 +540,10 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param ?list<class-string> $list
      */
-    private function setBeforePlugins(?array $list): self
+    private function setExtendConfig(?array $list): self
     {
-        $this->markPropertyChanged(self::beforePlugins, $list);
-        $this->beforePlugins = $list ?? self::DEFAULT_PLUGINS;
+        $this->markPropertyChanged(self::extendConfig, $list);
+        $this->extendConfig = $list ?? self::DEFAULT_EXTEND_CONFIG;
 
         return $this;
     }

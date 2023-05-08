@@ -30,6 +30,8 @@ final class Gacela
      */
     public static function bootstrap(string $appRootDir, Closure $configFn = null): void
     {
+        self::$mainContainer = null;
+
         $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
 
         if ($setup->shouldResetInMemoryCache()) {
@@ -43,6 +45,7 @@ final class Gacela
             AbstractClassResolver::resetCache();
             ConfigFactory::resetCache();
             Config::resetInstance();
+            Locator::resetInstance();
         }
 
         $config = Config::createWithSetup($setup);

@@ -80,7 +80,7 @@ interface SetupGacelaInterface
     /**
      * @return list<class-string>
      */
-    public function getBeforePlugins(): array;
+    public function getExtendConfig(): array;
 
     /**
      * @return list<class-string>

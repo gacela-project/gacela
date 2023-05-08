@@ -8,7 +8,7 @@ use Gacela\Framework\Container\Container;
 
 use GacelaTest\Fixtures\StringValue;
 
-final class ExampleAfterPluginWithConstructor
+final class ExamplePluginWithConstructor
 {
     public function __construct(
         private Container $container,

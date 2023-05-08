@@ -52,7 +52,7 @@ final class Gacela
         $config->setAppRootDir($appRootDir)
             ->init();
 
-        self::runAfterPlugins($config);
+        self::runPlugins($config);
     }
 
     /**
@@ -85,11 +85,11 @@ final class Gacela
         return new SetupGacela();
     }
 
-    private static function runAfterPlugins(Config $config): void
+    private static function runPlugins(Config $config): void
     {
         self::$mainContainer = Container::withConfig($config);
 
-        $plugins = $config->getSetupGacela()->getAfterPlugins();
+        $plugins = $config->getSetupGacela()->getPlugins();
 
         foreach ($plugins as $pluginName) {
             /** @var callable $plugin */

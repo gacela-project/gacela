@@ -30,7 +30,7 @@ final class SetupGacela extends AbstractSetupGacela
     public const projectNamespaces = 'projectNamespaces';
     public const configKeyValues = 'configKeyValues';
     public const servicesToExtend = 'servicesToExtend';
-    public const afterPlugins = 'afterPlugins';
+    public const plugins = 'plugins';
     public const extendConfig = 'extendConfig';
 
     private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
@@ -95,7 +95,7 @@ final class SetupGacela extends AbstractSetupGacela
     private ?array $extendConfig = null;
 
     /** @var ?list<class-string> */
-    private ?array $afterPlugins = null;
+    private ?array $plugins = null;
 
     public function __construct()
     {
@@ -152,7 +152,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setGenericListeners($build['generic-listeners'])
             ->setSpecificListeners($build['specific-listeners'])
             ->setExtendConfig($build['before-config'])
-            ->setAfterPlugins($build['after-plugins'])
+            ->setPlugins($build['after-plugins'])
             ->setServicesToExtend($build['services-to-extend']);
     }
 
@@ -467,9 +467,9 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param list<class-string> $list
      */
-    public function combineAfterPlugins(array $list): void
+    public function combinePlugins(array $list): void
     {
-        $this->setAfterPlugins(array_merge($this->afterPlugins ?? [], $list));
+        $this->setPlugins(array_merge($this->plugins ?? [], $list));
     }
 
     /**
@@ -483,9 +483,9 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return list<class-string>
      */
-    public function getAfterPlugins(): array
+    public function getPlugins(): array
     {
-        return (array)$this->afterPlugins;
+        return (array)$this->plugins;
     }
 
     private static function runExtendConfig(GacelaConfig $config): void
@@ -551,10 +551,10 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param ?list<class-string> $list
      */
-    private function setAfterPlugins(?array $list): self
+    private function setPlugins(?array $list): self
     {
-        $this->markPropertyChanged(self::afterPlugins, $list);
-        $this->afterPlugins = $list ?? self::DEFAULT_PLUGINS;
+        $this->markPropertyChanged(self::plugins, $list);
+        $this->plugins = $list ?? self::DEFAULT_PLUGINS;
 
         return $this;
     }

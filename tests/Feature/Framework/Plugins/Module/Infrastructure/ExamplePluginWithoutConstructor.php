@@ -8,7 +8,7 @@ use Gacela\Framework\Gacela;
 
 use GacelaTest\Fixtures\StringValue;
 
-final class ExampleAfterPluginWithoutConstructor
+final class ExamplePluginWithoutConstructor
 {
     public function __invoke(): void
     {

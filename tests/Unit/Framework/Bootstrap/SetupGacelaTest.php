@@ -10,8 +10,8 @@ use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use Gacela\Framework\Event\GacelaEventInterface;
-use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExampleAfterPluginWithConstructor;
-use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExampleAfterPluginWithoutConstructor;
+use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithConstructor;
+use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithoutConstructor;
 use GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory\FakeEvent;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -205,18 +205,18 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->addAfterPlugin(ExampleAfterPluginWithoutConstructor::class),
+                ->addPlugin(ExamplePluginWithoutConstructor::class),
         );
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->addAfterPlugin(ExampleAfterPluginWithConstructor::class),
+                ->addPlugin(ExamplePluginWithConstructor::class),
         );
 
         $setup->combine($setup2);
 
         self::assertEquals([
-            ExampleAfterPluginWithoutConstructor::class,
-            ExampleAfterPluginWithConstructor::class,
-        ], $setup->getAfterPlugins());
+            ExamplePluginWithoutConstructor::class,
+            ExamplePluginWithConstructor::class,
+        ], $setup->getPlugins());
     }
 }

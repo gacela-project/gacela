@@ -46,7 +46,7 @@ final class GacelaConfig
     private ?array $extendConfig = null;
 
     /** @var list<class-string>  */
-    private ?array $afterPlugins = null;
+    private ?array $plugins = null;
 
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend = [];
@@ -318,16 +318,6 @@ final class GacelaConfig
 
         return $this;
     }
-    /**
-     * @deprecated in favor of `addAfterPlugin()`
-     * It will be removed in the next release
-     *
-     * @param class-string $plugin
-     */
-    public function addPlugin(string $plugin): self
-    {
-        return $this->addAfterPlugin($plugin);
-    }
 
     /**
      * @param class-string $config
@@ -352,9 +342,9 @@ final class GacelaConfig
     /**
      * @param class-string $plugin
      */
-    public function addAfterPlugin(string $plugin): self
+    public function addPlugin(string $plugin): self
     {
-        $this->afterPlugins[] = $plugin;
+        $this->plugins[] = $plugin;
 
         return $this;
     }
@@ -362,9 +352,9 @@ final class GacelaConfig
     /**
      * @param list<class-string> $list
      */
-    public function addAfterPlugins(array $list): self
+    public function addPlugins(array $list): self
     {
-        $this->afterPlugins = array_merge($this->afterPlugins ?? [], $list);
+        $this->plugins = array_merge($this->plugins ?? [], $list);
 
         return $this;
     }
@@ -406,7 +396,7 @@ final class GacelaConfig
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
             'before-config' => $this->extendConfig,
-            'after-plugins' => $this->afterPlugins,
+            'after-plugins' => $this->plugins,
             'services-to-extend' => $this->servicesToExtend,
         ];
     }

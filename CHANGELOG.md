@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 1.3.0
+### 2023-05-08
 
 - Deleted `PluginInterface`
   - A plugin can be any class that implements `__invoke()`

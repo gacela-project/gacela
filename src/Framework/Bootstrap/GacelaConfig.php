@@ -208,32 +208,6 @@ final class GacelaConfig
     }
 
     /**
-     * Define whether the file cache flag is enabled.
-     *
-     * @deprecated in favor of setFileCache()
-     * It will be removed in the next release
-     */
-    public function setFileCacheEnabled(bool $flag): self
-    {
-        $this->fileCacheEnabled = $flag;
-
-        return $this;
-    }
-
-    /**
-     * Define the file cache directory.
-     *
-     * @deprecated in favor of setFileCache()
-     * It will be removed in the next release
-     */
-    public function setFileCacheDirectory(string $dir): self
-    {
-        $this->fileCacheDirectory = $dir;
-
-        return $this;
-    }
-
-    /**
      * Define a list of project namespaces.
      *
      * @param list<string> $list

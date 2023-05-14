@@ -12,7 +12,7 @@ final class GacelaTest extends TestCase
 {
     public function test_null_get_cache_dir(): void
     {
-        self::assertNull(Gacela::get('rootDir'));
+        self::assertNull(Gacela::rootDir());
     }
 
     /**
@@ -20,10 +20,10 @@ final class GacelaTest extends TestCase
      */
     public function test_get_cache_dir(): void
     {
-        Gacela::bootstrap(__DIR__, function (GacelaConfig $config) {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
 
-        self::assertEquals(__DIR__, Gacela::get('rootDir'));
+        self::assertEquals(__DIR__, Gacela::rootDir());
     }
 }

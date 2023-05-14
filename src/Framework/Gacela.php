@@ -53,6 +53,8 @@ final class Gacela
             ->init();
 
         self::runPlugins($config);
+
+        self::$mainContainer?->set('rootDir', $appRootDir);
     }
 
     /**

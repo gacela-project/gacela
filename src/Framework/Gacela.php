@@ -22,6 +22,7 @@ use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 final class Gacela
 {
     private static ?Container $mainContainer = null;
+    private static ?string $appRootDir = null;
 
     /**
      * Define the entry point of Gacela.
@@ -30,6 +31,7 @@ final class Gacela
      */
     public static function bootstrap(string $appRootDir, Closure $configFn = null): void
     {
+        self::$appRootDir = $appRootDir;
         self::$mainContainer = null;
 
         $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
@@ -65,6 +67,11 @@ final class Gacela
     public static function get(string $className): mixed
     {
         return Locator::getSingleton($className, self::$mainContainer);
+    }
+
+    public static function rootDir(): ?string
+    {
+        return self::$appRootDir;
     }
 
     /**

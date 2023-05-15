@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+
+- Added `Gacela::rootDir()`
+
 ### 1.3.0
 ### 2023-05-08
 

@@ -18,6 +18,7 @@ use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
+use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
 final class Gacela
 {
@@ -34,7 +35,7 @@ final class Gacela
         self::$appRootDir = $appRootDir;
         self::$mainContainer = null;
 
-        $setup = self::processConfigFnIntoSetup($appRootDir, $configFn);
+        $setup = self::processConfigFnIntoSetup($configFn);
 
         if ($setup->shouldResetInMemoryCache()) {
             AbstractFacade::resetCache();
@@ -69,21 +70,24 @@ final class Gacela
         return Locator::getSingleton($className, self::$mainContainer);
     }
 
-    public static function rootDir(): ?string
+    public static function rootDir(): string
     {
+        if (self::$appRootDir === null) {
+            throw new GacelaNotBootstrappedException();
+        }
         return self::$appRootDir;
     }
 
     /**
      * @param null|Closure(GacelaConfig):void $configFn
      */
-    private static function processConfigFnIntoSetup(string $appRootDir, Closure $configFn = null): SetupGacelaInterface
+    private static function processConfigFnIntoSetup(Closure $configFn = null): SetupGacelaInterface
     {
         if ($configFn !== null) {
             return SetupGacela::fromCallable($configFn);
         }
 
-        $gacelaFilePath = $appRootDir . '/gacela.php';
+        $gacelaFilePath = self::rootDir() . '/gacela.php';
 
         if (is_file($gacelaFilePath)) {
             return SetupGacela::fromFile($gacelaFilePath);

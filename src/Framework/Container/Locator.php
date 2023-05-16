@@ -16,10 +16,10 @@ final class Locator implements LocatorInterface
     /** @var array<string, mixed> */
     private array $instanceCache = [];
 
-    private Container $container;
+    private ContainerInterface $container;
 
     private function __construct(
-        ?Container $container = null,
+        ?ContainerInterface $container = null,
     ) {
         $this->container = $container ?? new Container();
     }

@@ -23,7 +23,7 @@ final class GacelaTest extends TestCase
 
         $this->expectException(GacelaNotBootstrappedException::class);
 
-        self::assertNull(Gacela::rootDir());
+        Gacela::rootDir();
     }
 
     public function test_get_cache_dir(): void

@@ -10,9 +10,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Container\Container;
-use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
-use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use RuntimeException;
 
 use function is_callable;
@@ -340,24 +338,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function getEventDispatcher(): EventDispatcherInterface
     {
-        if ($this->eventDispatcher !== null) {
-            return $this->eventDispatcher;
-        }
-
-        if ($this->canCreateEventDispatcher()) {
-            $this->eventDispatcher = new ConfigurableEventDispatcher();
-            $this->eventDispatcher->registerGenericListeners($this->genericListeners ?? []);
-
-            foreach ($this->specificListeners ?? [] as $event => $listeners) {
-                foreach ($listeners as $callable) {
-                    $this->eventDispatcher->registerSpecificListener($event, $callable);
-                }
-            }
-        } else {
-            $this->eventDispatcher = new NullEventDispatcher();
-        }
-
-        return $this->eventDispatcher;
+        return $this->eventDispatcher ??= (new SetupEventDispatcher($this))();
     }
 
     /**

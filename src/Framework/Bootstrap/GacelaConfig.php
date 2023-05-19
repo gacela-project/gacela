@@ -17,7 +17,7 @@ final class GacelaConfig
 
     private SuffixTypesBuilder $suffixTypesBuilder;
 
-    private BindingsBuilder $bindingBuilder;
+    private BindingsBuilder $bindingsBuilder;
 
     /** @var array<string, class-string|object|callable> */
     private array $externalServices;
@@ -59,7 +59,7 @@ final class GacelaConfig
         $this->externalServices = $externalServices;
         $this->configBuilder = new ConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
-        $this->bindingBuilder = new BindingsBuilder();
+        $this->bindingsBuilder = new BindingsBuilder();
     }
 
     /**
@@ -158,7 +158,7 @@ final class GacelaConfig
      */
     public function addBinding(string $key, string|object|callable $value): self
     {
-        $this->bindingBuilder->bind($key, $value);
+        $this->bindingsBuilder->bind($key, $value);
 
         return $this;
     }
@@ -345,7 +345,7 @@ final class GacelaConfig
      *     external-services: array<string,class-string|object|callable>,
      *     config-builder: ConfigBuilder,
      *     suffix-types-builder: SuffixTypesBuilder,
-     *     mapping-interfaces-builder: BindingsBuilder,
+     *     bindings-builder: BindingsBuilder,
      *     should-reset-in-memory-cache: ?bool,
      *     file-cache-enabled: ?bool,
      *     file-cache-directory: ?string,
@@ -354,9 +354,9 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
-     *     before-config: ?list<class-string>,
-     *     after-plugins: ?list<class-string|callable>,
-     *     services-to-extend: array<string,list<Closure>>,
+     *     extend-config: ?list<class-string>,
+     *     plugins: ?list<class-string|callable>,
+     *     instances-to-extend: array<string,list<Closure>>,
      * }
      *
      * @internal
@@ -367,7 +367,7 @@ final class GacelaConfig
             'external-services' => $this->externalServices,
             'config-builder' => $this->configBuilder,
             'suffix-types-builder' => $this->suffixTypesBuilder,
-            'mapping-interfaces-builder' => $this->bindingBuilder,
+            'bindings-builder' => $this->bindingsBuilder,
             'should-reset-in-memory-cache' => $this->shouldResetInMemoryCache,
             'file-cache-enabled' => $this->fileCacheEnabled,
             'file-cache-directory' => $this->fileCacheDirectory,
@@ -376,9 +376,9 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
-            'before-config' => $this->extendConfig,
-            'after-plugins' => $this->plugins,
-            'services-to-extend' => $this->servicesToExtend,
+            'extend-config' => $this->extendConfig,
+            'plugins' => $this->plugins,
+            'instances-to-extend' => $this->servicesToExtend,
         ];
     }
 }

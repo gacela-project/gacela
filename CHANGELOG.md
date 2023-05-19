@@ -3,6 +3,8 @@
 ### Unreleased
 
 - Added `Gacela::rootDir()`
+- Added plugins as callable
+    - `GacelaConfig::addPlugin(string|callable)`
 
 ### 1.3.0
 ### 2023-05-08

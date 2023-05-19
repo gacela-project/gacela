@@ -45,7 +45,7 @@ final class GacelaConfig
     /** @var list<class-string>  */
     private ?array $extendConfig = null;
 
-    /** @var list<class-string>  */
+    /** @var list<class-string|callable>  */
     private ?array $plugins = null;
 
     /** @var array<string,list<Closure>> */
@@ -321,9 +321,9 @@ final class GacelaConfig
     }
 
     /**
-     * @param class-string $plugin
+     * @param class-string|callable $plugin
      */
-    public function addPlugin(string $plugin): self
+    public function addPlugin(string|callable $plugin): self
     {
         $this->plugins[] = $plugin;
 
@@ -331,7 +331,7 @@ final class GacelaConfig
     }
 
     /**
-     * @param list<class-string> $list
+     * @param list<class-string|callable> $list
      */
     public function addPlugins(array $list): self
     {
@@ -355,7 +355,7 @@ final class GacelaConfig
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
      *     before-config: ?list<class-string>,
-     *     after-plugins: ?list<class-string>,
+     *     after-plugins: ?list<class-string|callable>,
      *     services-to-extend: array<string,list<Closure>>,
      * }
      *

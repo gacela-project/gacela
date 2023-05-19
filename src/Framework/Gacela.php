@@ -20,6 +20,8 @@ use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
+use function is_string;
+
 final class Gacela
 {
     private static ?Container $mainContainer = null;
@@ -102,10 +104,13 @@ final class Gacela
 
         $plugins = $config->getSetupGacela()->getPlugins();
 
-        foreach ($plugins as $pluginName) {
-            /** @var callable $plugin */
-            $plugin = self::$mainContainer->get($pluginName);
-            $plugin();
+        foreach ($plugins as $plugin) {
+            /** @var callable $current */
+            $current = is_string($plugin)
+                ? self::$mainContainer->get($plugin)
+                : $plugin;
+
+            self::$mainContainer->resolve($current);
         }
     }
 }

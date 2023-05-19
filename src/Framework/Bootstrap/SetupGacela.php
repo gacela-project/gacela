@@ -495,10 +495,7 @@ final class SetupGacela extends AbstractSetupGacela
             return;
         }
 
-        $container = new Container(
-            $gacelaConfig->build()['bindings-builder']->build(),
-            $gacelaConfig->build()['instances-to-extend'],
-        );
+        $container = new Container();
 
         foreach ($extendConfigs as $extendConfig) {
             /** @var callable $configToExtend */

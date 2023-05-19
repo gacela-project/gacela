@@ -13,7 +13,6 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
-
 use RuntimeException;
 
 use function is_callable;
@@ -142,7 +141,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setExternalServices($build['external-services'])
             ->setConfigBuilder($build['config-builder'])
             ->setSuffixTypesBuilder($build['suffix-types-builder'])
-            ->setBindingsBuilder($build['mapping-interfaces-builder'])
+            ->setBindingsBuilder($build['bindings-builder'])
             ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
             ->setFileCacheEnabled($build['file-cache-enabled'])
             ->setFileCacheDirectory($build['file-cache-directory'])
@@ -153,7 +152,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setSpecificListeners($build['specific-listeners'])
             ->setExtendConfig($build['extend-config'])
             ->setPlugins($build['plugins'])
-            ->setServicesToExtend($build['services-to-extend']);
+            ->setServicesToExtend($build['instances-to-extend']);
     }
 
     /**
@@ -496,9 +495,14 @@ final class SetupGacela extends AbstractSetupGacela
             return;
         }
 
+        $container = new Container(
+            $gacelaConfig->build()['bindings-builder']->build(),
+            $gacelaConfig->build()['instances-to-extend'],
+        );
+
         foreach ($extendConfigs as $extendConfig) {
             /** @var callable $configToExtend */
-            $configToExtend = Container::create($extendConfig);
+            $configToExtend = $container->get($extendConfig);
             $configToExtend($gacelaConfig);
         }
     }

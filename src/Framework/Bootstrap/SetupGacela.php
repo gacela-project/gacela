@@ -94,7 +94,7 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var ?list<class-string> */
     private ?array $extendConfig = null;
 
-    /** @var ?list<class-string> */
+    /** @var ?list<class-string|callable> */
     private ?array $plugins = null;
 
     public function __construct()
@@ -465,7 +465,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param list<class-string> $list
+     * @param list<class-string|callable> $list
      */
     public function combinePlugins(array $list): void
     {
@@ -481,7 +481,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return list<class-string>
+     * @return list<class-string|callable>
      */
     public function getPlugins(): array
     {
@@ -549,7 +549,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param ?list<class-string> $list
+     * @param ?list<class-string|callable> $list
      */
     private function setPlugins(?array $list): self
     {

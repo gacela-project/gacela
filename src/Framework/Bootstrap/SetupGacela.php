@@ -151,8 +151,8 @@ final class SetupGacela extends AbstractSetupGacela
             ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
             ->setGenericListeners($build['generic-listeners'])
             ->setSpecificListeners($build['specific-listeners'])
-            ->setExtendConfig($build['before-config'])
-            ->setPlugins($build['after-plugins'])
+            ->setExtendConfig($build['extend-config'])
+            ->setPlugins($build['plugins'])
             ->setServicesToExtend($build['services-to-extend']);
     }
 
@@ -488,18 +488,18 @@ final class SetupGacela extends AbstractSetupGacela
         return (array)$this->plugins;
     }
 
-    private static function runExtendConfig(GacelaConfig $config): void
+    private static function runExtendConfig(GacelaConfig $gacelaConfig): void
     {
-        $plugins = $config->build()['before-config'] ?? [];
+        $extendConfigs = $gacelaConfig->build()['extend-config'] ?? [];
 
-        if ($plugins === []) {
+        if ($extendConfigs === []) {
             return;
         }
 
-        foreach ($plugins as $pluginName) {
-            /** @var callable $plugin */
-            $plugin = Container::create($pluginName);
-            $plugin($config);
+        foreach ($extendConfigs as $extendConfig) {
+            /** @var callable $configToExtend */
+            $configToExtend = Container::create($extendConfig);
+            $configToExtend($gacelaConfig);
         }
     }
 

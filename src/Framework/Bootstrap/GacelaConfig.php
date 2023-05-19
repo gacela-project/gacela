@@ -354,8 +354,8 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
-     *     before-config: ?list<class-string>,
-     *     after-plugins: ?list<class-string|callable>,
+     *     extend-config: ?list<class-string>,
+     *     plugins: ?list<class-string|callable>,
      *     services-to-extend: array<string,list<Closure>>,
      * }
      *
@@ -376,8 +376,8 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
-            'before-config' => $this->extendConfig,
-            'after-plugins' => $this->plugins,
+            'extend-config' => $this->extendConfig,
+            'plugins' => $this->plugins,
             'services-to-extend' => $this->servicesToExtend,
         ];
     }

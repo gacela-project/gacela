@@ -12,8 +12,9 @@ use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
  */
 final class SetupCombinator
 {
-    public function __construct(private SetupGacela $original)
-    {
+    public function __construct(
+        private SetupGacela $original,
+    ) {
     }
 
     public function combine(SetupGacela $other): SetupGacela

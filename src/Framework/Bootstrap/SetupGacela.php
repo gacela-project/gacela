@@ -338,7 +338,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function getEventDispatcher(): EventDispatcherInterface
     {
-        return $this->eventDispatcher ??= (new SetupEventDispatcher($this))();
+        return $this->eventDispatcher ??= SetupEventDispatcher::getDispatcher($this);
     }
 
     /**

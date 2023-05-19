@@ -10,21 +10,16 @@ use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 
 final class SetupEventDispatcher
 {
-    public function __construct(
-        private SetupGacela $setupGacela,
-    ) {
-    }
-
-    public function __invoke(): EventDispatcherInterface
+    public static function getDispatcher(SetupGacela $setupGacela): EventDispatcherInterface
     {
-        if (!$this->setupGacela->canCreateEventDispatcher()) {
+        if (!$setupGacela->canCreateEventDispatcher()) {
             return new NullEventDispatcher();
         }
 
         $dispatcher = new ConfigurableEventDispatcher();
-        $dispatcher->registerGenericListeners($this->setupGacela->getGenericListeners() ?? []);
+        $dispatcher->registerGenericListeners($setupGacela->getGenericListeners() ?? []);
 
-        foreach ($this->setupGacela->getSpecificListeners() ?? [] as $event => $listeners) {
+        foreach ($setupGacela->getSpecificListeners() ?? [] as $event => $listeners) {
             foreach ($listeners as $callable) {
                 $dispatcher->registerSpecificListener($event, $callable);
             }

@@ -80,7 +80,7 @@ interface SetupGacelaInterface
     /**
      * @return list<class-string>
      */
-    public function getExtendGacelaConfigs(): array;
+    public function getGacelaConfigsToExtend(): array;
 
     /**
      * @return list<class-string|callable>

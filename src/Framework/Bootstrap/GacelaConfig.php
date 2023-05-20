@@ -43,7 +43,7 @@ final class GacelaConfig
     private ?array $specificListeners = null;
 
     /** @var list<class-string>  */
-    private ?array $extendGacelaConfigs = null;
+    private ?array $gacelaConfigsToExtend = null;
 
     /** @var list<class-string|callable>  */
     private ?array $plugins = null;
@@ -301,7 +301,7 @@ final class GacelaConfig
      */
     public function extendGacelaConfig(string $className): self
     {
-        $this->extendGacelaConfigs[] = $className;
+        $this->gacelaConfigsToExtend[] = $className;
 
         return $this;
     }
@@ -311,7 +311,7 @@ final class GacelaConfig
      */
     public function extendGacelaConfigs(array $list): self
     {
-        $this->extendGacelaConfigs = array_merge($this->extendGacelaConfigs ?? [], $list);
+        $this->gacelaConfigsToExtend = array_merge($this->gacelaConfigsToExtend ?? [], $list);
 
         return $this;
     }
@@ -350,7 +350,7 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
-     *     extend-gacela-configs: ?list<class-string>,
+     *     gacela-configs-to-extend: ?list<class-string>,
      *     plugins: ?list<class-string|callable>,
      *     instances-to-extend: array<string,list<Closure>>,
      * }
@@ -372,7 +372,7 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
-            'extend-gacela-configs' => $this->extendGacelaConfigs,
+            'gacela-configs-to-extend' => $this->gacelaConfigsToExtend,
             'plugins' => $this->plugins,
             'instances-to-extend' => $this->servicesToExtend,
         ];

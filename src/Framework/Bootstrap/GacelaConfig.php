@@ -63,16 +63,6 @@ final class GacelaConfig
     }
 
     /**
-     * @deprecated use `defaultPhpConfig()` instead
-     *
-     * @return Closure(GacelaConfig):void
-     */
-    public static function withPhpConfigDefault(): callable
-    {
-        return self::defaultPhpConfig();
-    }
-
-    /**
      * Define 'config/*.php' as path, and 'config/local.php' as local path for the configuration.
      *
      * @return Closure(GacelaConfig):void

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Config\GacelaConfigBuilder;
 
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use GacelaTest\Fixtures\SimpleEnvConfigReader;
 use PHPUnit\Framework\TestCase;
@@ -14,14 +14,14 @@ final class ConfigBuilderTest extends TestCase
 {
     public function test_empty(): void
     {
-        $builder = new ConfigBuilder();
+        $builder = new AppConfigBuilder();
 
         self::assertEquals([], $builder->build());
     }
 
     public function test_custom_path(): void
     {
-        $builder = new ConfigBuilder();
+        $builder = new AppConfigBuilder();
         $builder->add('custom/*.php');
 
         self::assertEquals(
@@ -32,7 +32,7 @@ final class ConfigBuilderTest extends TestCase
 
     public function test_custom_path_local(): void
     {
-        $builder = new ConfigBuilder();
+        $builder = new AppConfigBuilder();
         $builder->add('', 'custom/local.php');
 
         self::assertEquals(
@@ -50,7 +50,7 @@ final class ConfigBuilderTest extends TestCase
             }
         };
 
-        $builder = new ConfigBuilder();
+        $builder = new AppConfigBuilder();
         $builder->add('custom/*.php', 'custom/local.php', $reader);
 
         self::assertEquals(
@@ -61,7 +61,7 @@ final class ConfigBuilderTest extends TestCase
 
     public function test_custom_reader_by_class_name(): void
     {
-        $builder = new ConfigBuilder();
+        $builder = new AppConfigBuilder();
         $builder->add('custom/*.php', 'custom/local.php', SimpleEnvConfigReader::class);
 
         self::assertEquals(

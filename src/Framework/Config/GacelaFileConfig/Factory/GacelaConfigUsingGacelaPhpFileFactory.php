@@ -8,8 +8,8 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\FileIoInterface;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
@@ -60,9 +60,9 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         return $gacelaConfig;
     }
 
-    private function createConfigBuilder(SetupGacelaInterface $setupGacela): ConfigBuilder
+    private function createConfigBuilder(SetupGacelaInterface $setupGacela): AppConfigBuilder
     {
-        return $setupGacela->buildConfig(new ConfigBuilder());
+        return $setupGacela->buildAppConfig(new AppConfigBuilder());
     }
 
     private function createBindingsBuilder(SetupGacelaInterface $setupGacela): BindingsBuilder

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 abstract class AbstractSetupGacela implements SetupGacelaInterface
@@ -13,7 +13,7 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * Define different config sources.
      */
-    public function buildConfig(ConfigBuilder $builder): ConfigBuilder
+    public function buildAppConfig(AppConfigBuilder $builder): AppConfigBuilder
     {
         return $builder;
     }

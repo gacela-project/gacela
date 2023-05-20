@@ -42,10 +42,10 @@ final class GacelaConfig
     /** @var array<class-string,list<callable>> */
     private ?array $specificListeners = null;
 
-    /** @var list<class-string>  */
+    /** @var list<class-string> */
     private ?array $gacelaConfigsToExtend = null;
 
-    /** @var list<class-string|callable>  */
+    /** @var list<class-string|callable> */
     private ?array $plugins = null;
 
     /** @var array<string,list<Closure>> */
@@ -193,6 +193,14 @@ final class GacelaConfig
         $this->shouldResetInMemoryCache = true;
 
         return $this;
+    }
+
+    /**
+     * Shortcut to setFileCache(true)
+     */
+    public function enableFileCache(string $dir = null): self
+    {
+        return $this->setFileCache(true, $dir);
     }
 
     /**

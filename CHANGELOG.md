@@ -5,6 +5,7 @@
 - Added `Gacela::rootDir()`
 - Added plugins as callable
     - `GacelaConfig::addPlugin(string|callable)`
+- Rename `addExtendConfig()` to `extendGacelaConfig()` in `GacelaConfig`
 
 ### 1.3.0
 ### 2023-05-08

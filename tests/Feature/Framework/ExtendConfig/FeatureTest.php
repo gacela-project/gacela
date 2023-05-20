@@ -16,7 +16,7 @@ final class FeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->addExtendConfig(BindingStringValue::class);
+            $config->extendGacelaConfig(BindingStringValue::class);
         });
 
         /** @var StringValue $singleton */

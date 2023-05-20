@@ -32,7 +32,7 @@ final class FileCacheFeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->setFileCache(true, '/custom/cache-dir');
+            $config->enableFileCache('/custom/cache-dir');
         });
 
         $facade = new Module\Facade();

@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 1.4.0
+### 2023-05-20
 
 - Added `Gacela::rootDir()`
 - Added plugins as callable

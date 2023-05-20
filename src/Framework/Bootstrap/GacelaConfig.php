@@ -6,14 +6,14 @@ namespace Gacela\Framework\Bootstrap;
 
 use Closure;
 use Gacela\Framework\Config\ConfigReaderInterface;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\GacelaEventInterface;
 
 final class GacelaConfig
 {
-    private ConfigBuilder $configBuilder;
+    private AppConfigBuilder $appConfigBuilder;
 
     private SuffixTypesBuilder $suffixTypesBuilder;
 
@@ -57,7 +57,7 @@ final class GacelaConfig
     public function __construct(array $externalServices = [])
     {
         $this->externalServices = $externalServices;
-        $this->configBuilder = new ConfigBuilder();
+        $this->appConfigBuilder = new AppConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
         $this->bindingsBuilder = new BindingsBuilder();
     }
@@ -93,7 +93,7 @@ final class GacelaConfig
      */
     public function addAppConfig(string $path, string $pathLocal = '', $reader = null): self
     {
-        $this->configBuilder->add($path, $pathLocal, $reader);
+        $this->appConfigBuilder->add($path, $pathLocal, $reader);
 
         return $this;
     }
@@ -343,7 +343,7 @@ final class GacelaConfig
     /**
      * @return array{
      *     external-services: array<string,class-string|object|callable>,
-     *     config-builder: ConfigBuilder,
+     *     app-config-builder: AppConfigBuilder,
      *     suffix-types-builder: SuffixTypesBuilder,
      *     bindings-builder: BindingsBuilder,
      *     should-reset-in-memory-cache: ?bool,
@@ -365,7 +365,7 @@ final class GacelaConfig
     {
         return [
             'external-services' => $this->externalServices,
-            'config-builder' => $this->configBuilder,
+            'app-config-builder' => $this->appConfigBuilder,
             'suffix-types-builder' => $this->suffixTypesBuilder,
             'bindings-builder' => $this->bindingsBuilder,
             'should-reset-in-memory-cache' => $this->shouldResetInMemoryCache,

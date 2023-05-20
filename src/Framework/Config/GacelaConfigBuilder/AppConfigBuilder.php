@@ -10,7 +10,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 use function is_string;
 
-final class ConfigBuilder
+final class AppConfigBuilder
 {
     /** @var list<GacelaConfigItem> */
     private array $configItems = [];

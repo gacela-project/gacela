@@ -6,8 +6,8 @@ namespace GacelaTest\Integration\Framework\Config\ConfigFactory;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\ConfigFactory;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
@@ -77,7 +77,7 @@ final class ConfigFactoryTest extends TestCase
     {
         $bootstrapSetup = (new SetupGacela())
             ->setExternalServices(['CustomClassFromExternalService' => CustomClass::class])
-            ->setConfigFn(static function (ConfigBuilder $builder): void {
+            ->setAppConfigFn(static function (AppConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
             ->setBindingsFn(
@@ -120,7 +120,7 @@ final class ConfigFactoryTest extends TestCase
     {
         $setup = (new SetupGacela())
             ->setExternalServices(['CustomClassFromExternalService' => CustomClass::class])
-            ->setConfigFn(static function (ConfigBuilder $builder): void {
+            ->setAppConfigFn(static function (AppConfigBuilder $builder): void {
                 $builder->add('config/from-bootstrap.php');
             })
             ->setBindingsFn(

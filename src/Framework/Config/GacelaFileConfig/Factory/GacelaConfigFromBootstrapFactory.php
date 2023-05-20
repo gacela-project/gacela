@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
@@ -31,9 +31,9 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
             ->setSuffixTypes($suffixTypesBuilder->build());
     }
 
-    private function createConfigBuilder(): ConfigBuilder
+    private function createConfigBuilder(): AppConfigBuilder
     {
-        return $this->bootstrapSetup->buildConfig(new ConfigBuilder());
+        return $this->bootstrapSetup->buildAppConfig(new AppConfigBuilder());
     }
 
     private function createBindingsBuilder(): BindingsBuilder

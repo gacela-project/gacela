@@ -6,8 +6,8 @@ namespace Gacela\Framework\Bootstrap;
 
 use Closure;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
@@ -42,8 +42,8 @@ final class SetupGacela extends AbstractSetupGacela
     private const DEFAULT_EXTEND_CONFIG = [];
     private const DEFAULT_PLUGINS = [];
 
-    /** @var callable(ConfigBuilder):void */
-    private $configFn;
+    /** @var callable(AppConfigBuilder):void */
+    private $appConfigFn;
 
     /** @var callable(BindingsBuilder,array<string,mixed>):void */
     private $bindingsFn;
@@ -54,7 +54,7 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var ?array<string,class-string|object|callable> */
     private ?array $externalServices = null;
 
-    private ?ConfigBuilder $configBuilder = null;
+    private ?AppConfigBuilder $appConfigBuilder = null;
 
     private ?SuffixTypesBuilder $suffixTypesBuilder = null;
 
@@ -99,7 +99,7 @@ final class SetupGacela extends AbstractSetupGacela
         $emptyFn = static function (): void {
         };
 
-        $this->configFn = $emptyFn;
+        $this->appConfigFn = $emptyFn;
         $this->bindingsFn = $emptyFn;
         $this->suffixTypesFn = $emptyFn;
     }
@@ -137,7 +137,7 @@ final class SetupGacela extends AbstractSetupGacela
 
         return (new self())
             ->setExternalServices($build['external-services'])
-            ->setConfigBuilder($build['config-builder'])
+            ->setAppConfigBuilder($build['app-config-builder'])
             ->setSuffixTypesBuilder($build['suffix-types-builder'])
             ->setBindingsBuilder($build['bindings-builder'])
             ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
@@ -164,9 +164,9 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    public function setConfigBuilder(ConfigBuilder $builder): self
+    public function setAppConfigBuilder(AppConfigBuilder $builder): self
     {
-        $this->configBuilder = $builder;
+        $this->appConfigBuilder = $builder;
 
         return $this;
     }
@@ -186,24 +186,24 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param callable(ConfigBuilder):void $callable
+     * @param callable(AppConfigBuilder):void $callable
      */
-    public function setConfigFn(callable $callable): self
+    public function setAppConfigFn(callable $callable): self
     {
-        $this->configFn = $callable;
+        $this->appConfigFn = $callable;
 
         return $this;
     }
 
-    public function buildConfig(ConfigBuilder $builder): ConfigBuilder
+    public function buildAppConfig(AppConfigBuilder $builder): AppConfigBuilder
     {
-        $builder = parent::buildConfig($builder);
+        $builder = parent::buildAppConfig($builder);
 
-        if ($this->configBuilder) {
-            $builder = $this->configBuilder;
+        if ($this->appConfigBuilder) {
+            $builder = $this->appConfigBuilder;
         }
 
-        ($this->configFn)($builder);
+        ($this->appConfigFn)($builder);
 
         return $builder;
     }

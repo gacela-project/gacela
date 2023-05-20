@@ -297,11 +297,11 @@ final class GacelaConfig
      * __invoke(GacelaConfig $config): void
      * ```
      *
-     * @param class-string $gacelaConfigClass
+     * @param class-string $className
      */
-    public function addExtendGacelaConfig(string $gacelaConfigClass): self
+    public function extendGacelaConfig(string $className): self
     {
-        $this->extendGacelaConfigs[] = $gacelaConfigClass;
+        $this->extendGacelaConfigs[] = $className;
 
         return $this;
     }
@@ -309,7 +309,7 @@ final class GacelaConfig
     /**
      * @param list<class-string> $list
      */
-    public function addExtendGacelaConfigs(array $list): self
+    public function extendGacelaConfigs(array $list): self
     {
         $this->extendGacelaConfigs = array_merge($this->extendGacelaConfigs ?? [], $list);
 

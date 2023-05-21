@@ -72,6 +72,9 @@ final class Gacela
         return Locator::getSingleton($className, self::$mainContainer);
     }
 
+    /**
+     * Get the application root dir set when bootstrapping gacela
+     */
     public static function rootDir(): string
     {
         if (self::$appRootDir === null) {

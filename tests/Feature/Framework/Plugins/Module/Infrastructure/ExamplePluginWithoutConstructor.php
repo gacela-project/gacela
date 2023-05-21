@@ -14,6 +14,6 @@ final class ExamplePluginWithoutConstructor
     {
         $string = Gacela::get(StringValue::class);
 
-        $string->setValue('Set from plugin ExamplePluginWithoutConstructor');
+        $string?->setValue('Set from plugin ExamplePluginWithoutConstructor');
     }
 }

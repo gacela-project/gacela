@@ -8,6 +8,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithConstructor;
+use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithInvokeArgs;
 use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithoutConstructor;
 use GacelaTest\Fixtures\StringValue;
 use PHPUnit\Framework\TestCase;
@@ -24,6 +25,18 @@ final class FeatureTest extends TestCase
         $singleton = Gacela::get(StringValue::class);
 
         self::assertSame('Set from plugin ExamplePluginWithConstructor', $singleton->value());
+    }
+
+    public function test_singleton_altered_via_plugin_with_invoke_args(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->addPlugin(ExamplePluginWithInvokeArgs::class);
+        });
+
+        /** @var StringValue $singleton */
+        $singleton = Gacela::get(StringValue::class);
+
+        self::assertSame('Set from plugin ExamplePluginWithInvokeArgs', $singleton->value());
     }
 
     public function test_singleton_altered_via_plugin_without_constructor(): void

@@ -19,6 +19,6 @@ final class ExamplePluginWithConstructor
     {
         $string = $this->container->getLocator()->get(StringValue::class);
 
-        $string->setValue('Set from plugin ExamplePluginWithConstructor');
+        $string?->setValue('Set from plugin ExamplePluginWithConstructor');
     }
 }

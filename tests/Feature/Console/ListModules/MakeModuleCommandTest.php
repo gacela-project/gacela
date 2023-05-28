@@ -29,5 +29,6 @@ final class MakeModuleCommandTest extends TestCase
         self::assertMatchesRegularExpression('#TestModule2.*ListModules\\\TestModule2#', $out);
         self::assertMatchesRegularExpression('#TestModule3.*ListModules\\\LevelUp\\\TestModule3#', $out);
         self::assertStringNotContainsString('vendor', $out);
+        self::assertStringNotContainsString('ToBeIgnored', $out);
     }
 }

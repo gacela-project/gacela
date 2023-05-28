@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\CodeGenerator;
+namespace GacelaTest\Feature\Console\CodeGenerator;
 
 use Gacela\Console\Domain\ConsoleException;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;

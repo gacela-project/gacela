@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\CodeGenerator;
+namespace GacelaTest\Feature\Console\CodeGenerator;
 
 use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Gacela;

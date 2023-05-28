@@ -7,6 +7,8 @@ namespace GacelaTest\Integration\Console\AllAppModules\Domain;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\Gacela;
+use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\IntegrationAppModulesFacade1;
+use GacelaTest\Integration\Console\AllAppModules\Domain\Module2\IntegrationAppModulesFacade2;
 use PHPUnit\Framework\TestCase;
 
 final class AllAppModulesFinderTest extends TestCase
@@ -19,14 +21,8 @@ final class AllAppModulesFinderTest extends TestCase
         $actual = $facade->findAllAppModules();
 
         $expected = [
-            new AppModule(
-                'IntegrationAppModulesFacade1',
-                'GacelaTest\Integration\Console\AllAppModules\Domain\Namespace1\Level1',
-            ),
-            new AppModule(
-                'IntegrationAppModulesFacade2',
-                'GacelaTest\Integration\Console\AllAppModules\Domain\Namespace1\Level1',
-            ),
+            AppModule::fromClass(IntegrationAppModulesFacade1::class),
+            AppModule::fromClass(IntegrationAppModulesFacade2::class),
         ];
 
         self::assertEquals($expected, $actual);

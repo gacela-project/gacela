@@ -29,12 +29,12 @@ final class ListModulesCommand extends Command
         $modules = $this->getFacade()->findAllAppModules();
 
         $table = new Table($output);
-        $table->setHeaders(['class_name', 'namespace']);
+        $table->setHeaders(['Module', 'Facade']);
 
         foreach ($modules as $module) {
             $table->addRow([
-                $module->className(),
-                $module->fullyQualifiedClassName(),
+                $module->moduleName(),
+                $module->facadeClass(),
             ]);
         }
 

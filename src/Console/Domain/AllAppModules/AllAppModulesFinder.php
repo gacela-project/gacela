@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\AllAppModules;
 
 use Gacela\Framework\AbstractFacade;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use OuterIterator;
 use ReflectionClass;
 use SplFileInfo;
 
 final class AllAppModulesFinder
 {
     public function __construct(
-        private string $appRootDir,
+        private OuterIterator $fileIterator,
     ) {
     }
 
@@ -25,7 +24,7 @@ final class AllAppModulesFinder
         $result = [];
 
         /** @var SplFileInfo $fileInfo */
-        foreach ($this->createRecursiveIterator() as $fileInfo) {
+        foreach ($this->fileIterator as $fileInfo) {
             $appModule = $this->createAppModule($fileInfo);
             if ($appModule !== null && $this->isFacade($appModule)) {
                 $result[] = $appModule;
@@ -33,14 +32,6 @@ final class AllAppModulesFinder
         }
 
         return $result;
-    }
-
-    private function createRecursiveIterator(): RecursiveIteratorIterator
-    {
-        return new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($this->appRootDir, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::LEAVES_ONLY,
-        );
     }
 
     private function isFacade(AppModule $appModule): bool

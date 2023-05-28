@@ -34,7 +34,7 @@ final class ListModulesCommand extends Command
         foreach ($modules as $module) {
             $table->addRow([
                 $module->className(),
-                $module->namespace(),
+                $module->fullyQualifiedClassName(),
             ]);
         }
 

@@ -15,6 +15,8 @@ use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Gacela;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Symfony\Component\Console\Command\Command;
 
 /**
@@ -55,7 +57,15 @@ final class ConsoleFactory extends AbstractFactory
     public function createAllAppModulesFinder(): AllAppModulesFinder
     {
         return new AllAppModulesFinder(
-            Gacela::rootDir(),
+            $this->createRecursiveIterator(),
+        );
+    }
+
+    private function createRecursiveIterator(): RecursiveIteratorIterator
+    {
+        return new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(Gacela::rootDir(), RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY,
         );
     }
 

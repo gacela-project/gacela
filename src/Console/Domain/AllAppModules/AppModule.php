@@ -17,11 +17,6 @@ final class AppModule
         return $this->className;
     }
 
-    public function namespace(): string
-    {
-        return $this->namespace;
-    }
-
     /**
      * @return class-string
      */

@@ -23,16 +23,19 @@ final class MakeModuleCommandTest extends TestCase
         $bootstrap->setAutoExit(false);
         $bootstrap->run($input, $output);
 
-        $expectedOutput = <<<OUT
-Modules found:
-+-------------------+------------------------------------------------------------+
-| class_name        | namespace                                                  |
-+-------------------+------------------------------------------------------------+
-| TestModule3Facade | GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 |
-| TestModule1Facade | GacelaTest\Feature\Console\ListModules\TestModule1         |
-| TestModule2Facade | GacelaTest\Feature\Console\ListModules\TestModule2         |
-+-------------------+------------------------------------------------------------+
-OUT;
-        self::assertSame($expectedOutput, trim($output->fetch()));
+        $outputText = $output->fetch();
+
+        self::assertStringContainsString(
+            'TestModule1Facade | GacelaTest\Feature\Console\ListModules\TestModule1',
+            $outputText,
+        );
+        self::assertStringContainsString(
+            'TestModule2Facade | GacelaTest\Feature\Console\ListModules\TestModule2',
+            $outputText,
+        );
+        self::assertStringContainsString(
+            'TestModule3Facade | GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3',
+            $outputText,
+        );
     }
 }

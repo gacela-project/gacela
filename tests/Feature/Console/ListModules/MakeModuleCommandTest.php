@@ -15,7 +15,8 @@ final class MakeModuleCommandTest extends TestCase
     public function test_list_modules(): void
     {
         Gacela::bootstrap(__DIR__);
-        $input = new StringInput("list:modules");
+
+        $input = new StringInput('list:modules');
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -24,9 +25,13 @@ final class MakeModuleCommandTest extends TestCase
 
         $expectedOutput = <<<OUT
 Modules found:
-- TestModule1 | GacelaTest\Feature\Console\ListModules\Modules\TestModule1
-- TestModule2 | GacelaTest\Feature\Console\ListModules\Modules\TestModule2
-- TestModule3 | GacelaTest\Feature\Console\ListModules\Modules\LevelUp\TestModule3
++-------------------+------------------------------------------------------------+
+| class_name        | namespace                                                  |
++-------------------+------------------------------------------------------------+
+| TestModule3Facade | GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 |
+| TestModule1Facade | GacelaTest\Feature\Console\ListModules\TestModule1         |
+| TestModule2Facade | GacelaTest\Feature\Console\ListModules\TestModule2         |
++-------------------+------------------------------------------------------------+
 OUT;
         self::assertSame($expectedOutput, trim($output->fetch()));
     }

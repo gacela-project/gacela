@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console;
 
+use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Framework\AbstractFacade;
 
@@ -34,5 +35,15 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createFileContentGenerator()
             ->generate($commandArguments, $filename, $withShortName);
+    }
+
+    /**
+     * @return list<AppModule>
+     */
+    public function findAllAppModules(): array
+    {
+        return $this->getFactory()
+            ->createAllAppModulesFinder()
+            ->findAllAppModules();
     }
 }

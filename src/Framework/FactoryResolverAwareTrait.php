@@ -8,13 +8,16 @@ use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use RuntimeException;
 
 /**
+ * The `__callStatic` and `__call` methods allow defining `getFactory` as static and non-static methods.
+ *
  * @psalm-suppress MethodSignatureMismatch
  *
+ * @method static AbstractFactory getFactory()
  * @method AbstractFactory getFactory()
  */
 trait FactoryResolverAwareTrait
 {
-    /** @var array<string,AbstractFactory> */
+    /** @var array<string, AbstractFactory> */
     private static array $factories = [];
 
     public static function __callStatic(string $name = '', array $arguments = [])

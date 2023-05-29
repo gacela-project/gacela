@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Framework\AbstractDependencyProvider;
@@ -30,6 +31,7 @@ final class ConsoleDependencyProvider extends AbstractDependencyProvider
         $container->set(self::COMMANDS, static fn () => [
             new MakeFileCommand(),
             new MakeModuleCommand(),
+            new ListModulesCommand(),
         ]);
     }
 

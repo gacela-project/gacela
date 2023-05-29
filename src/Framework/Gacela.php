@@ -40,17 +40,7 @@ final class Gacela
         $setup = self::processConfigFnIntoSetup($configFn);
 
         if ($setup->shouldResetInMemoryCache()) {
-            AbstractFacade::resetCache();
-            AnonymousGlobal::resetCache();
-            AbstractFactory::resetCache();
-            GacelaFileCache::resetCache();
-            DocBlockResolverCache::resetCache();
-            ClassResolverCache::resetCache();
-            InMemoryCache::resetCache();
-            AbstractClassResolver::resetCache();
-            ConfigFactory::resetCache();
-            Config::resetInstance();
-            Locator::resetInstance();
+            self::resetCache();
         }
 
         $config = Config::createWithSetup($setup);
@@ -99,6 +89,21 @@ final class Gacela
         }
 
         return new SetupGacela();
+    }
+
+    private static function resetCache(): void
+    {
+        AbstractFacade::resetCache();
+        AnonymousGlobal::resetCache();
+        AbstractFactory::resetCache();
+        GacelaFileCache::resetCache();
+        DocBlockResolverCache::resetCache();
+        ClassResolverCache::resetCache();
+        InMemoryCache::resetCache();
+        AbstractClassResolver::resetCache();
+        ConfigFactory::resetCache();
+        Config::resetInstance();
+        Locator::resetInstance();
     }
 
     private static function runPlugins(Config $config): void

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-final class MakeModuleCommandTest extends TestCase
+final class ListModulesCommandTest extends TestCase
 {
     public function test_list_modules(): void
     {

@@ -28,8 +28,7 @@ final class ListModulesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var ?string $filter */
-        $filter = $input->getArgument('filter');
+        $filter = (string)$input->getArgument('filter');
         $modules = $this->getFacade()->findAllAppModules($filter);
 
         $table = new Table($output);

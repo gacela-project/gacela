@@ -40,7 +40,7 @@ final class ConsoleFacade extends AbstractFacade
     /**
      * @return list<AppModule>
      */
-    public function findAllAppModules(string $filter): array
+    public function findAllAppModules(?string $filter): array
     {
         return $this->getFactory()
             ->createAllAppModulesFinder()

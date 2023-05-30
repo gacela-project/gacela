@@ -12,11 +12,14 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 final class FilterListModulesCommandTest extends TestCase
 {
-    public function test_list_modules_with_filter(): void
+    /**
+     * @dataProvider commandInputProvider
+     */
+    public function test_list_modules_with_filter(string $input): void
     {
         Gacela::bootstrap(__DIR__);
 
-        $input = new StringInput('list:modules ListModules/TestModule1');
+        $input = new StringInput('list:modules ' . $input);
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -30,5 +33,11 @@ final class FilterListModulesCommandTest extends TestCase
         self::assertStringNotContainsString('TestModule3', $out);
         self::assertStringNotContainsString('vendor', $out);
         self::assertStringNotContainsString('ToBeIgnored', $out);
+    }
+
+    public function commandInputProvider(): iterable
+    {
+        yield 'slashes' => ['ListModules/TestModule1'];
+        yield 'backward slashes' => ['ListModules\\\TestModule1'];
     }
 }

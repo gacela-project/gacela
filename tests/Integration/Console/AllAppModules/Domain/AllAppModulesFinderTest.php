@@ -18,7 +18,7 @@ final class AllAppModulesFinderTest extends TestCase
         Gacela::bootstrap(__DIR__);
 
         $facade = new ConsoleFacade();
-        $actual = $facade->findAllAppModules();
+        $actual = $facade->findAllAppModules(null);
 
         $expected = [
             AppModule::fromClass(IntegrationAppModulesFacade1::class),

@@ -23,7 +23,7 @@ final class ListModulesCommand extends Command
     {
         $this->setName('list:modules')
             ->setDescription('Render all modules found')
-            ->addArgument('filter', InputArgument::OPTIONAL, 'The filter path. For example "App/TestModule/TestSubModule');
+            ->addArgument('filter', InputArgument::OPTIONAL, 'Any filter to simplify the output');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

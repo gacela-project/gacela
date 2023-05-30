@@ -47,7 +47,7 @@ final class AllAppModulesFinder
         $namespace = $this->getNamespace($fileInfo);
         $className = $this->buildClassName($fileInfo);
 
-        if (!empty($filter)) {
+        if ($filter !== '') {
             $filterNamespace = str_replace('/', '\\', $filter);
             if (!str_contains($namespace, $filterNamespace)) {
                 return null;

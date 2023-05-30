@@ -16,7 +16,7 @@ final class FilterListModulesCommandTest extends TestCase
     {
         Gacela::bootstrap(__DIR__);
 
-        $input = new StringInput('list:modules GacelaTest/Feature/Console/ListModules/TestModule1');
+        $input = new StringInput('list:modules ListModules/TestModule1');
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();

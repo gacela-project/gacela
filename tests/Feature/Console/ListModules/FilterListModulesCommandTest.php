@@ -12,11 +12,11 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 final class FilterListModulesCommandTest extends TestCase
 {
-    public function test_list_modules(): void
+    public function test_list_modules_with_filter(): void
     {
         Gacela::bootstrap(__DIR__);
 
-        $input = new StringInput('list:modules -f ' . __DIR__ . '/TestModule1');
+        $input = new StringInput('list:modules GacelaTest/Feature/Console/ListModules/TestModule1');
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();

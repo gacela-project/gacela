@@ -19,13 +19,13 @@ final class AllAppModulesFinder
     /**
      * @return list<AppModule>
      */
-    public function findAllAppModules(): array
+    public function findAllAppModules(string $filter): array
     {
         $result = [];
 
         /** @var SplFileInfo $fileInfo */
         foreach ($this->fileIterator as $fileInfo) {
-            $appModule = $this->createAppModule($fileInfo);
+            $appModule = $this->createAppModule($fileInfo, $filter);
             if ($appModule !== null && $this->isFacade($appModule)) {
                 $result[$appModule->facadeClass()] = $appModule;
             }
@@ -35,7 +35,7 @@ final class AllAppModulesFinder
         return array_values($result);
     }
 
-    private function createAppModule(SplFileInfo $fileInfo): ?AppModule
+    private function createAppModule(SplFileInfo $fileInfo, string $filter): ?AppModule
     {
         if (!$fileInfo->isFile()
             || $fileInfo->getExtension() !== 'php'
@@ -43,6 +43,7 @@ final class AllAppModulesFinder
         ) {
             return null;
         }
+
         $namespace = $this->getNamespace($fileInfo);
         $className = $this->buildClassName($fileInfo);
 
@@ -51,6 +52,13 @@ final class AllAppModulesFinder
             $namespace,
             $className,
         );
+
+        if ($filter !== '') {
+            $filterNamespace = str_replace('/', '\\', $filter);
+            if (!str_contains($fullyQualifiedClassName, $filterNamespace)) {
+                return null;
+            }
+        }
 
         if (!class_exists($fullyQualifiedClassName)) {
             return null;

@@ -8,6 +8,7 @@ use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\DocBlockResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -21,12 +22,14 @@ final class ListModulesCommand extends Command
     protected function configure(): void
     {
         $this->setName('list:modules')
-            ->setDescription('Render all modules found');
+            ->setDescription('Render all modules found')
+            ->addArgument('filter', InputArgument::OPTIONAL, 'Any filter to simplify the output');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $modules = $this->getFacade()->findAllAppModules();
+        $filter = (string)$input->getArgument('filter');
+        $modules = $this->getFacade()->findAllAppModules($filter);
 
         $table = new Table($output);
         $table->setHeaders(['Module', 'Facade']);

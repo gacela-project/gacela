@@ -13,16 +13,32 @@ use PHPUnit\Framework\TestCase;
 
 final class AllAppModulesFinderTest extends TestCase
 {
-    public function test_find_all_app_modules(): void
+    private ConsoleFacade $facade;
+
+    public function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
+        $this->facade = new ConsoleFacade();
+    }
 
-        $facade = new ConsoleFacade();
-        $actual = $facade->findAllAppModules();
+    public function test_find_all_app_modules(): void
+    {
+        $actual = $this->facade->findAllAppModules();
 
         $expected = [
             AppModule::fromClass(IntegrationAppModulesFacade1::class),
             AppModule::fromClass(IntegrationAppModulesFacade2::class),
+        ];
+
+        self::assertEquals($expected, $actual);
+    }
+
+    public function test_find_some_app_modules(): void
+    {
+        $actual = $this->facade->findAllAppModules('IntegrationAppModulesFacade1');
+
+        $expected = [
+            AppModule::fromClass(IntegrationAppModulesFacade1::class),
         ];
 
         self::assertEquals($expected, $actual);

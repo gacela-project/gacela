@@ -68,7 +68,6 @@
         },
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
-            "veewee/composer-run-parallel": true,
             "infection/extension-installer": true
         }
     },

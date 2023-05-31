@@ -30,13 +30,13 @@ jobs:
           tools: composer
 
       - name: Get composer cache directory
-        id: composercache
+        id: composer-cache
         run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
       - name: Cache dependencies
         uses: actions/cache@v3.3.1
         with:
-          path: ${{ steps.composercache.outputs.dir }}
+          path: ${{ steps.composer-cache.outputs.dir }}
           key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-${{ hashFiles('**/composer.json') }}"
           restore-keys: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-"
 

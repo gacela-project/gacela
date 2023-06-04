@@ -12,6 +12,10 @@ final class DocBlockParser
             return '';
         }
 
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+            $docBlock = str_replace("\n", PHP_EOL, $docBlock);
+        }
+
         $lines = array_filter(
             explode(PHP_EOL, $docBlock),
             static fn (string $l) => str_contains($l, $method),

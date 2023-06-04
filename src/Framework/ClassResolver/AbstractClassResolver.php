@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Container\Container;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
@@ -17,7 +18,6 @@ use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedCreatedDefaultClassEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
-use Gacela\Resolver\InstanceCreator;
 
 use function is_array;
 use function is_object;
@@ -33,7 +33,7 @@ abstract class AbstractClassResolver
 
     private ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
-    private ?InstanceCreator $instanceCreator = null;
+    private ?Container $container = null;
 
     /**
      * @internal remove all cached instances: facade, factory, config, dependency-provider
@@ -136,15 +136,18 @@ abstract class AbstractClassResolver
     /**
      * @param class-string $resolvedClassName
      */
-    private function createInstance(string $resolvedClassName): ?object
+    private function createInstance(string $resolvedClassName): object
     {
-        if ($this->instanceCreator === null) {
-            $this->instanceCreator = new InstanceCreator(
-                $this->getGacelaConfigFile()->getMappingInterfaces(),
+        if ($this->container === null) {
+            $this->container = new Container(
+                $this->getGacelaConfigFile()->getBindings(),
             );
         }
 
-        return $this->instanceCreator->createByClassName($resolvedClassName);
+        /** @var object $instance */
+        $instance = $this->container->get($resolvedClassName);
+
+        return $instance;
     }
 
     private function getGacelaConfigFile(): GacelaConfigFileInterface

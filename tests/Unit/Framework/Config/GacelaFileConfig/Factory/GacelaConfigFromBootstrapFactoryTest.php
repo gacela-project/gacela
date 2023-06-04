@@ -6,8 +6,8 @@ namespace GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\ConfigReader\PhpConfigReader;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
@@ -39,8 +39,8 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_global_service_config(): void
     {
         $factory = new GacelaConfigFromBootstrapFactory(
-            (new SetupGacela())->setConfigFn(
-                static function (ConfigBuilder $configBuilder): void {
+            (new SetupGacela())->setAppConfigFn(
+                static function (AppConfigBuilder $configBuilder): void {
                     $configBuilder->add('custom-path.php', 'custom-path_local.php');
                 },
             ),
@@ -57,8 +57,8 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
         $factory = new GacelaConfigFromBootstrapFactory(
             (new SetupGacela())
                 ->setExternalServices(['externalServiceKey' => static fn () => 'externalServiceValue'])
-                ->setMappingInterfacesFn(static function (
-                    MappingInterfacesBuilder $interfacesBuilder,
+                ->setBindingsFn(static function (
+                    BindingsBuilder $interfacesBuilder,
                     array $externalServices,
                 ): void {
                     self::assertSame($externalServices['externalServiceKey']->__invoke(), 'externalServiceValue');
@@ -67,7 +67,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
         );
 
         $expected = (new GacelaConfigFile())
-            ->setMappingInterfaces([CustomInterface::class => CustomClass::class]);
+            ->setBindings([CustomInterface::class => CustomClass::class]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());
     }

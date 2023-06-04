@@ -12,8 +12,9 @@ use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
  */
 final class SetupCombinator
 {
-    public function __construct(private SetupGacela $original)
-    {
+    public function __construct(
+        private SetupGacela $original,
+    ) {
     }
 
     public function combine(SetupGacela $other): SetupGacela
@@ -26,6 +27,8 @@ final class SetupCombinator
         $this->combineConfigKeyValues($other);
         $this->combineEventDispatcher($other);
         $this->combineServicesToExtend($other);
+        $this->combinePlugins($other);
+        $this->combineGacelaConfigsToExtend($other);
 
         return $this->original;
     }
@@ -96,6 +99,20 @@ final class SetupCombinator
             foreach ($other->getServicesToExtend() as $serviceId => $otherServiceToExtend) {
                 $this->original->addServicesToExtend($serviceId, $otherServiceToExtend);
             }
+        }
+    }
+
+    private function combinePlugins(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::plugins)) {
+            $this->original->combinePlugins($other->getPlugins());
+        }
+    }
+
+    private function combineGacelaConfigsToExtend(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::gacelaConfigsToExtend)) {
+            $this->original->combineGacelaConfigsToExtend($other->getGacelaConfigsToExtend());
         }
     }
 }

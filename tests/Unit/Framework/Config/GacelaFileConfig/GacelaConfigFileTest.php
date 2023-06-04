@@ -49,18 +49,18 @@ final class GacelaConfigFileTest extends TestCase
     public function test_combine_duplicated_mapping_interfaces(): void
     {
         $configFile1 = (new GacelaConfigFile())
-            ->setMappingInterfaces([
+            ->setBindings([
                 CustomInterface::class => CustomClass::class,
             ]);
         $configFile2 = (new GacelaConfigFile())
-            ->setMappingInterfaces([
+            ->setBindings([
                 CustomInterface::class => new CustomClass(),
             ]);
 
         $actual = $configFile1->combine($configFile2);
 
         $expected = (new GacelaConfigFile())
-            ->setMappingInterfaces([
+            ->setBindings([
                 CustomInterface::class => new CustomClass(),
             ]);
 
@@ -70,18 +70,18 @@ final class GacelaConfigFileTest extends TestCase
     public function test_combine_different_mapping_interfaces(): void
     {
         $configFile1 = (new GacelaConfigFile())
-            ->setMappingInterfaces([
+            ->setBindings([
                 AbstractCustom::class => CustomClass::class,
             ]);
         $configFile2 = (new GacelaConfigFile())
-            ->setMappingInterfaces([
+            ->setBindings([
                 CustomInterface::class => new CustomClass(),
             ]);
 
         $actual = $configFile1->combine($configFile2);
 
         $expected = (new GacelaConfigFile())
-            ->setMappingInterfaces([
+            ->setBindings([
                 AbstractCustom::class => CustomClass::class,
                 CustomInterface::class => new CustomClass(),
             ]);

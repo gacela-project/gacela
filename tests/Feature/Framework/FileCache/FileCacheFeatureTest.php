@@ -17,7 +17,7 @@ final class FileCacheFeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->setFileCacheEnabled(false);
+            $config->setFileCache(false);
         });
 
         DirectoryUtil::removeDir(__DIR__ . '/custom/cache-dir');
@@ -32,8 +32,7 @@ final class FileCacheFeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->setFileCacheEnabled(true);
-            $config->setFileCacheDirectory('/custom/cache-dir');
+            $config->enableFileCache('/custom/cache-dir');
         });
 
         $facade = new Module\Facade();
@@ -47,8 +46,7 @@ final class FileCacheFeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->setFileCacheEnabled(false);
-            $config->setFileCacheDirectory('/custom/cache-dir');
+            $config->setFileCache(false, '/custom/cache-dir');
         });
 
         $facade = new Module\Facade();

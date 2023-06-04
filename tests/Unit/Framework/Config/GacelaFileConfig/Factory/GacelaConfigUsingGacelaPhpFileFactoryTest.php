@@ -80,8 +80,8 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             static function (GacelaConfig $config): void {
                 $config->addExternalService('externalServiceKey', static fn () => 'externalServiceValue');
                 self::assertSame('externalServiceValue', $config->getExternalService('externalServiceKey')->__invoke());
-                $config->addMappingInterface(CustomInterface::class, new CustomClass());
-                $config->addMappingInterface(CustomInterface::class, CustomClass::class);
+                $config->addBinding(CustomInterface::class, new CustomClass());
+                $config->addBinding(CustomInterface::class, CustomClass::class);
             },
         );
 
@@ -92,7 +92,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         );
 
         $expected = (new GacelaConfigFile())
-            ->setMappingInterfaces([CustomInterface::class => CustomClass::class]);
+            ->setBindings([CustomInterface::class => CustomClass::class]);
 
         self::assertEquals($expected, $factory->createGacelaFileConfig());
     }

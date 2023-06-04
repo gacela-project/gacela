@@ -12,3 +12,4 @@ parameters:
         - '#Method .*::__callStatic\(\) has no return type specified.*#'
         - '#Method .*::__call\(\) has no return type specified.*#'
         - '#.* calls parent::__call.*\(\) but .* does not extend any class.#'
+        - '#Cannot cast mixed to string.#'

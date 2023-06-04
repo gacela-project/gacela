@@ -1,5 +1,36 @@
 # Changelog
 
+### Unreleased
+
+- Added command `gacela list:modules`
+
+### 1.4.0
+### 2023-05-20
+
+- Added `Gacela::rootDir()`
+- Added `GacelaConfig::enableFileCache()`
+- Added plugins as callable
+    - `GacelaConfig::addPlugin(string|callable)`
+- Rename `addExtendConfig()` to `extendGacelaConfig()` in `GacelaConfig`
+- Removed deprecated `withPhpConfigDefault()`
+
+### 1.3.0
+### 2023-05-08
+
+- Deleted `PluginInterface`
+  - A plugin can be any class that implements `__invoke()`
+- Added `GacelaConfig::addExtendConfig()`
+- Remove the deprecated methods `setFileCacheEnabled()` & `setFileCacheDirectory()`
+
+### 1.2.0
+### 2023-04-29
+
+- Unify `setFileCacheEnabled` and `setFileCacheDirectory` into one single method: `setFileCache(bool $enabled, string $dir)`. Deprecated the former methods
+- Rename dependency; from `resolver` to `container`.
+- Moved the current `Container` logic to the decoupled `container` dependency
+- Add "plugins" to run right after the `Gacela::bootstrap()`
+- Deprecated `addMappingInterface()` in favor of `addBinding()`
+
 ### 1.1.1
 ### 2023-04-19
 

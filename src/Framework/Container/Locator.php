@@ -6,15 +6,22 @@ namespace Gacela\Framework\Container;
 
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 
-final class Locator
+/**
+ * @internal
+ */
+final class Locator implements LocatorInterface
 {
     private static ?Locator $instance = null;
 
     /** @var array<string, mixed> */
     private array $instanceCache = [];
 
-    private function __construct()
-    {
+    private ContainerInterface $container;
+
+    private function __construct(
+        ?ContainerInterface $container = null,
+    ) {
+        $this->container = $container ?? new Container();
     }
 
     /**
@@ -24,18 +31,41 @@ final class Locator
     {
     }
 
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
-
     public static function resetInstance(): void
     {
         self::$instance = null;
+    }
+
+    /**
+     * @template T
+     *
+     * @param class-string<T> $key
+     * @param T $value
+     */
+    public static function addSingleton(string $key, mixed $value): void
+    {
+        self::getInstance()->add($key, $value);
+    }
+
+    /**
+     * @template T
+     *
+     * @param class-string<T> $className
+     *
+     * @return T|null
+     */
+    public static function getSingleton(string $className, ?Container $container = null)
+    {
+        return self::getInstance($container)->get($className);
+    }
+
+    public static function getInstance(?Container $container = null): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self($container);
+        }
+
+        return self::$instance;
     }
 
     /**
@@ -54,11 +84,11 @@ final class Locator
             return $instance;
         }
 
+        /** @var T|null $locatedInstance */
         $locatedInstance = AnonymousGlobal::getByClassName($className)
-            ?? $this->newInstance($className);
+            ?? $this->container->get($className);
 
-        /** @psalm-suppress MixedAssignment */
-        $this->instanceCache[$className] = $locatedInstance;
+        $this->add($className, $locatedInstance);
 
         return $locatedInstance;
     }
@@ -66,17 +96,13 @@ final class Locator
     /**
      * @template T
      *
-     * @param class-string<T> $className
-     *
-     * @return T|null
+     * @param class-string<T> $key
+     * @param T|null $value
      */
-    private function newInstance(string $className)
+    private function add(string $key, mixed $value = null): self
     {
-        if (class_exists($className)) {
-            /** @psalm-suppress MixedMethodCall */
-            return new $className();
-        }
+        $this->instanceCache[$key] = $value;
 
-        return null;
+        return $this;
     }
 }

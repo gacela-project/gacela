@@ -23,7 +23,7 @@ final class FeatureTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->setFileCacheEnabled(false);
+            $config->setFileCache(false);
 
             $config->setProjectNamespaces([
                 'GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\src\Main',

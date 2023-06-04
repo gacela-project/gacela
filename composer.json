@@ -28,7 +28,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^8.0, <8.3",
-        "gacela-project/resolver": "^0.1"
+        "gacela-project/container": "^0.5"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.16",
@@ -39,7 +39,7 @@
         "psalm/plugin-phpunit": "^0.18",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^5.9"
+        "vimeo/psalm": "^5.11"
     },
     "suggest": {
         "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",
@@ -66,8 +66,7 @@
             "php": "8.0"
         },
         "allow-plugins": {
-            "composer/package-versions-deprecated": true,
-            "veewee/composer-run-parallel": true
+            "composer/package-versions-deprecated": true
         }
     },
     "scripts": {

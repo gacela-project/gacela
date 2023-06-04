@@ -11,5 +11,5 @@ return static function (GacelaConfig $config): void {
 
     // Overriding the `GreeterGeneratorInterface` with the proper external service.
     // Check the FeatureTest class to see how the external service with key `greeterGenerator` is defined.
-    $config->addMappingInterface(GreeterGeneratorInterface::class, $config->getExternalService('greeterGenerator'));
+    $config->addBinding(GreeterGeneratorInterface::class, $config->getExternalService('greeterGenerator'));
 };

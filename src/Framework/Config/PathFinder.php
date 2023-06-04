@@ -14,6 +14,10 @@ final class PathFinder implements PathFinderInterface
      */
     public function matchingPattern(string $pattern): array
     {
+        if ($pattern === '') {
+            return [];
+        }
+
         $this->ensureGlobBraceIsDefined();
 
         return glob($pattern, GLOB_BRACE) ?: [];

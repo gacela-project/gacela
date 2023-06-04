@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Closure;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
-use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 
 abstract class AbstractFactory
 {
@@ -25,9 +23,6 @@ abstract class AbstractFactory
         self::$containers = [];
     }
 
-    /**
-     * @throws ContainerKeyNotFoundException
-     */
     protected function getProvidedDependency(string $key): mixed
     {
         return $this->getContainer()->get($key);
@@ -46,21 +41,12 @@ abstract class AbstractFactory
 
     private function createContainerWithProvidedDependencies(): Container
     {
-        $container = new Container($this->getServicesToExtend());
+        $container = Container::withConfig(Config::getInstance());
+
         $dependencyProvider = $this->resolveDependencyProvider();
         $dependencyProvider->provideModuleDependencies($container);
 
         return $container;
-    }
-
-    /**
-     * @return array<string,list<Closure>>
-     */
-    private function getServicesToExtend(): array
-    {
-        return Config::getInstance()
-            ->getSetupGacela()
-            ->getServicesToExtend();
     }
 
     /**

@@ -7,7 +7,6 @@ namespace GacelaTest\Feature\Framework\MissingFile;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
-use Gacela\Framework\Container\Exception\ContainerKeyNotFoundException;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
@@ -37,14 +36,6 @@ final class FeatureTest extends TestCase
         $this->expectException(DependencyProviderNotFoundException::class);
 
         $facade = new MissingDependencyProviderFile\Facade();
-        $facade->error();
-    }
-
-    public function test_missing_container_service_key_module(): void
-    {
-        $this->expectException(ContainerKeyNotFoundException::class);
-
-        $facade = new MissingContainerServiceKey\Facade();
         $facade->error();
     }
 }

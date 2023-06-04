@@ -38,6 +38,8 @@
         <exclude>
             <directory prefix="CodeGenerator">src/CodeGenerator</directory>
             <directory suffix=".php">src/CodeGenerator/Infrastructure</directory>
+            <directory suffix=".php">src/Framework/Event/ClassResolver</directory>
+            <directory suffix=".php">src/Framework/Event/ConfigReader</directory>
         </exclude>
     </coverage>
 </phpunit>

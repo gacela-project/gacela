@@ -6,18 +6,18 @@ namespace Gacela\Framework\Bootstrap;
 
 use Closure;
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Config\GacelaConfigBuilder\ConfigBuilder;
-use Gacela\Framework\Config\GacelaConfigBuilder\MappingInterfacesBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
+use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\GacelaEventInterface;
 
 final class GacelaConfig
 {
-    private ConfigBuilder $configBuilder;
+    private AppConfigBuilder $appConfigBuilder;
 
     private SuffixTypesBuilder $suffixTypesBuilder;
 
-    private MappingInterfacesBuilder $mappingInterfacesBuilder;
+    private BindingsBuilder $bindingsBuilder;
 
     /** @var array<string, class-string|object|callable> */
     private array $externalServices;
@@ -42,6 +42,12 @@ final class GacelaConfig
     /** @var array<class-string,list<callable>> */
     private ?array $specificListeners = null;
 
+    /** @var list<class-string> */
+    private ?array $gacelaConfigsToExtend = null;
+
+    /** @var list<class-string|callable> */
+    private ?array $plugins = null;
+
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend = [];
 
@@ -51,19 +57,9 @@ final class GacelaConfig
     public function __construct(array $externalServices = [])
     {
         $this->externalServices = $externalServices;
-        $this->configBuilder = new ConfigBuilder();
+        $this->appConfigBuilder = new AppConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
-        $this->mappingInterfacesBuilder = new MappingInterfacesBuilder();
-    }
-
-    /**
-     * @deprecated use `defaultPhpConfig()` instead
-     *
-     * @return Closure(GacelaConfig):void
-     */
-    public static function withPhpConfigDefault(): callable
-    {
-        return self::defaultPhpConfig();
+        $this->bindingsBuilder = new BindingsBuilder();
     }
 
     /**
@@ -87,7 +83,7 @@ final class GacelaConfig
      */
     public function addAppConfig(string $path, string $pathLocal = '', $reader = null): self
     {
-        $this->configBuilder->add($path, $pathLocal, $reader);
+        $this->appConfigBuilder->add($path, $pathLocal, $reader);
 
         return $this;
     }
@@ -133,14 +129,26 @@ final class GacelaConfig
     }
 
     /**
-     * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
+     * @deprecated in favor of `$this->addBinding(key, value)`
+     * It will be removed in the next release
      *
      * @param class-string $key
      * @param class-string|object|callable $value
      */
-    public function addMappingInterface(string $key, $value): self
+    public function addMappingInterface(string $key, string|object|callable $value): self
     {
-        $this->mappingInterfacesBuilder->bind($key, $value);
+        return $this->addBinding($key, $value);
+    }
+
+    /**
+     * Bind a key class or interface name to be resolved by Gacela automatically.
+     *
+     * @param class-string $key
+     * @param class-string|object|callable $value
+     */
+    public function addBinding(string $key, string|object|callable $value): self
+    {
+        $this->bindingsBuilder->bind($key, $value);
 
         return $this;
     }
@@ -178,20 +186,20 @@ final class GacelaConfig
     }
 
     /**
-     * Define whether the file cache flag is enabled.
+     * Shortcut to setFileCache(true)
      */
-    public function setFileCacheEnabled(bool $flag): self
+    public function enableFileCache(string $dir = null): self
     {
-        $this->fileCacheEnabled = $flag;
-
-        return $this;
+        return $this->setFileCache(true, $dir);
     }
 
     /**
-     * Define the file cache directory.
+     * Define whether the file cache flag is enabled,
+     * and the file cache directory.
      */
-    public function setFileCacheDirectory(string $dir): self
+    public function setFileCache(bool $enabled, string $dir = null): self
     {
+        $this->fileCacheEnabled = $enabled;
         $this->fileCacheDirectory = $dir;
 
         return $this;
@@ -251,9 +259,7 @@ final class GacelaConfig
      */
     public function registerGenericListener(callable $listener): self
     {
-        if ($this->genericListeners === null) {
-            $this->genericListeners = [];
-        }
+        $this->genericListeners ??= [];
         $this->genericListeners[] = $listener;
 
         return $this;
@@ -267,9 +273,7 @@ final class GacelaConfig
      */
     public function registerSpecificListener(string $event, callable $listener): self
     {
-        if ($this->specificListeners === null) {
-            $this->specificListeners = [];
-        }
+        $this->specificListeners[$event] ??= [];
         $this->specificListeners[$event][] = $listener;
 
         return $this;
@@ -284,11 +288,58 @@ final class GacelaConfig
     }
 
     /**
+     * Add a new invokable class that can extend the GacelaConfig object.
+     *
+     * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
+     * ```
+     * __invoke(GacelaConfig $config): void
+     * ```
+     *
+     * @param class-string $className
+     */
+    public function extendGacelaConfig(string $className): self
+    {
+        $this->gacelaConfigsToExtend[] = $className;
+
+        return $this;
+    }
+
+    /**
+     * @param list<class-string> $list
+     */
+    public function extendGacelaConfigs(array $list): self
+    {
+        $this->gacelaConfigsToExtend = array_merge($this->gacelaConfigsToExtend ?? [], $list);
+
+        return $this;
+    }
+
+    /**
+     * @param class-string|callable $plugin
+     */
+    public function addPlugin(string|callable $plugin): self
+    {
+        $this->plugins[] = $plugin;
+
+        return $this;
+    }
+
+    /**
+     * @param list<class-string|callable> $list
+     */
+    public function addPlugins(array $list): self
+    {
+        $this->plugins = array_merge($this->plugins ?? [], $list);
+
+        return $this;
+    }
+
+    /**
      * @return array{
      *     external-services: array<string,class-string|object|callable>,
-     *     config-builder: ConfigBuilder,
+     *     app-config-builder: AppConfigBuilder,
      *     suffix-types-builder: SuffixTypesBuilder,
-     *     mapping-interfaces-builder: MappingInterfacesBuilder,
+     *     bindings-builder: BindingsBuilder,
      *     should-reset-in-memory-cache: ?bool,
      *     file-cache-enabled: ?bool,
      *     file-cache-directory: ?string,
@@ -297,7 +348,9 @@ final class GacelaConfig
      *     are-event-listeners-enabled: ?bool,
      *     generic-listeners: ?list<callable>,
      *     specific-listeners: ?array<class-string,list<callable>>,
-     *     services-to-extend: array<string,list<Closure>>,
+     *     gacela-configs-to-extend: ?list<class-string>,
+     *     plugins: ?list<class-string|callable>,
+     *     instances-to-extend: array<string,list<Closure>>,
      * }
      *
      * @internal
@@ -306,9 +359,9 @@ final class GacelaConfig
     {
         return [
             'external-services' => $this->externalServices,
-            'config-builder' => $this->configBuilder,
+            'app-config-builder' => $this->appConfigBuilder,
             'suffix-types-builder' => $this->suffixTypesBuilder,
-            'mapping-interfaces-builder' => $this->mappingInterfacesBuilder,
+            'bindings-builder' => $this->bindingsBuilder,
             'should-reset-in-memory-cache' => $this->shouldResetInMemoryCache,
             'file-cache-enabled' => $this->fileCacheEnabled,
             'file-cache-directory' => $this->fileCacheDirectory,
@@ -317,7 +370,9 @@ final class GacelaConfig
             'are-event-listeners-enabled' => $this->areEventListenersEnabled,
             'generic-listeners' => $this->genericListeners,
             'specific-listeners' => $this->specificListeners,
-            'services-to-extend' => $this->servicesToExtend,
+            'gacela-configs-to-extend' => $this->gacelaConfigsToExtend,
+            'plugins' => $this->plugins,
+            'instances-to-extend' => $this->servicesToExtend,
         ];
     }
 }

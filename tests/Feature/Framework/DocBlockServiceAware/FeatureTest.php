@@ -30,6 +30,11 @@ final class FeatureTest extends TestCase
 fake-admin(id:1)
 fake-admin(id:2)
 TXT;
+
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+            $expected = str_replace("\n", PHP_EOL, $expected);
+        }
+
         self::assertSame($expected, $output->fetch());
     }
 }

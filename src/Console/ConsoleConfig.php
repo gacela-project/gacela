@@ -35,7 +35,7 @@ final class ConsoleConfig extends AbstractConfig
      *
      * @throws ConsoleException|JsonException
      *
-     * @return array{autoload: array{psr-4: array<string,string>}}
+     * @return array{autoload: array{"psr-4": array<string,string>}}
      */
     public function getComposerJsonContentAsArray(): array
     {

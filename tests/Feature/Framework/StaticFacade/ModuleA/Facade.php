@@ -15,4 +15,9 @@ final class Facade extends AbstractFacade
     {
         return self::getFactory()->createString();
     }
+
+    public static function unknownFacadeMethod(): void
+    {
+        self::innerUnknownFacadeMethod();
+    }
 }

@@ -3,6 +3,7 @@
 ### Unreleased
 
 - Added command `gacela list:modules`
+- Fixed Windows support
 
 ### 1.4.0
 ### 2023-05-20

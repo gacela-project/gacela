@@ -26,6 +26,10 @@ final class UseBlockParser
     {
         $needle = "{$className};";
 
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+            $phpCode = str_replace("\n", PHP_EOL, $phpCode);
+        }
+
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
             static fn (string $l) => strncmp($l, 'use ', 4) === 0 && str_contains($l, $needle),
@@ -39,6 +43,10 @@ final class UseBlockParser
 
     private function lookInCurrentNamespace(string $phpCode): string
     {
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+            $phpCode = str_replace("\n", PHP_EOL, $phpCode);
+        }
+
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
             static fn (string $l) => strncmp($l, 'namespace ', 10) === 0,

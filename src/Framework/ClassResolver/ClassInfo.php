@@ -86,7 +86,7 @@ final class ClassInfo implements ClassInfoInterface
         $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
         $filename = self::normalizeFilename($filepath);
 
-        if (str_contains($filepath, 'anonymous')) {
+        if (str_contains($callerClass, 'anonymous')) {
             $callerClassParts = [
                 self::MODULE_NAME_ANONYMOUS . '\\' . $filename,
                 $filepath,

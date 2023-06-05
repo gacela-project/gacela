@@ -7,6 +7,10 @@ namespace GacelaTest\Benchmark\Framework\ClassResolver\NormalModule;
 use Gacela\Framework\Gacela;
 
 /**
+ * @Revs(5)
+ *
+ * @Iterations(2)
+ *
  * @BeforeMethods("setUp")
  */
 final class NormalModuleBench

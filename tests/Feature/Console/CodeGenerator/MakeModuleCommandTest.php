@@ -43,6 +43,11 @@ final class MakeModuleCommandTest extends TestCase
 > Path 'data/TestModule/{$fileName}DependencyProvider.php' created successfully
 Module 'TestModule' created successfully
 OUT;
+
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+            $expectedOutput = str_replace("\n", PHP_EOL, $expectedOutput);
+        }
+
         self::assertSame($expectedOutput, trim($output->fetch()));
 
         self::assertFileExists("./data/TestModule/{$fileName}Facade.php");

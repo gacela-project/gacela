@@ -37,10 +37,10 @@ final class ConfigTest extends TestCase
     public function test_normalize_app_root_dir(): void
     {
         $config = Config::getInstance();
-        $config->setAppRootDir('/directory1');
-        self::assertSame('/directory1', $config->getAppRootDir());
+        $config->setAppRootDir(DIRECTORY_SEPARATOR . 'directory1');
+        self::assertSame(DIRECTORY_SEPARATOR . 'directory1', $config->getAppRootDir());
 
-        $config->setAppRootDir('/directory2/');
-        self::assertSame('/directory2', $config->getAppRootDir());
+        $config->setAppRootDir(DIRECTORY_SEPARATOR . 'directory2' . DIRECTORY_SEPARATOR);
+        self::assertSame(DIRECTORY_SEPARATOR . 'directory2', $config->getAppRootDir());
     }
 }

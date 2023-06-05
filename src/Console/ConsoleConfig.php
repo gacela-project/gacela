@@ -35,7 +35,7 @@ final class ConsoleConfig extends AbstractConfig
      *
      * @throws ConsoleException|JsonException
      *
-     * @return array{autoload: array{psr-4: array<string,string>}}
+     * @return array{autoload: array{"psr-4": array<string,string>}}
      */
     public function getComposerJsonContentAsArray(): array
     {
@@ -44,11 +44,20 @@ final class ConsoleConfig extends AbstractConfig
             throw ConsoleException::composerJsonNotFound();
         }
 
-        return (array)json_decode((string)file_get_contents($filename), true, 512, JSON_THROW_ON_ERROR);
+        /** @var string $content */
+        $content = file_get_contents($filename);
+
+        /** @var array{autoload: array{"psr-4": array<string,string>}} $jsonDecode */
+        $jsonDecode = json_decode(json: $content, associative: true, flags: JSON_THROW_ON_ERROR);
+
+        return $jsonDecode;
     }
 
     private function getCommandTemplateContent(string $filename): string
     {
-        return (string)file_get_contents(__DIR__ . '/Infrastructure/Template/Command/' . $filename);
+        /** @var string $content */
+        $content = file_get_contents(__DIR__ . '/Infrastructure/Template/Command/' . $filename);
+
+        return $content;
     }
 }

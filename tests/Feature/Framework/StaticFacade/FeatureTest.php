@@ -25,6 +25,20 @@ final class FeatureTest extends TestCase
         TestStaticFacade::unknown();
     }
 
+    public function test_unknown_object_factory_method(): void
+    {
+        $this->expectExceptionMessage("Method unknown: 'unknown'");
+
+        (new TestObjectFacade())->unknown();
+    }
+
+    public function test_unknown_static_factory_method(): void
+    {
+        $this->expectExceptionMessage("Method unknown: 'innerUnknownFacadeMethod'");
+
+        TestStaticFacade::unknownFacadeMethod();
+    }
+
     public function test_module_a_static_facade(): void
     {
         $actual = TestStaticFacade::createString();

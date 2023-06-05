@@ -1,0 +1,18 @@
+{
+    $schema: 'vendor/infection/infection/resources/schema.json',
+    logs: {
+        html: 'data/mutation-report.html',
+        "stryker": {
+            "report": "main"
+        }
+    },
+    timeout: 3,
+    source: {
+        directories: [
+            'src'
+        ]
+    },
+    mutators: {
+        '@default': true
+    }
+}

@@ -16,7 +16,7 @@ final class DocBlockResolverInMemoryAwareTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
-        DirectoryUtil::removeDir(__DIR__ . '/.gacela');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . '.gacela');
     }
 
     protected function setUp(): void

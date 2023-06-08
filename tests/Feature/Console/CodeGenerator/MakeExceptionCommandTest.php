@@ -16,7 +16,7 @@ final class MakeExceptionCommandTest extends TestCase
 {
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__ . '/undefined-folder/');
+        Gacela::bootstrap(__DIR__ . DIRECTORY_SEPARATOR . 'undefined-folder' . DIRECTORY_SEPARATOR);
     }
 
     public function test_make_module_exception_when_composer_file_not_found(): void

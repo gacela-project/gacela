@@ -13,6 +13,8 @@ use PHPUnit\Framework\TestCase;
 
 final class FileCacheFeatureTest extends TestCase
 {
+    private const CACHE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'custom' . DIRECTORY_SEPARATOR . 'cache-dir';
+
     public static function tearDownAfterClass(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
@@ -20,12 +22,12 @@ final class FileCacheFeatureTest extends TestCase
             $config->setFileCache(false);
         });
 
-        DirectoryUtil::removeDir(__DIR__ . '/custom/cache-dir');
+        DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
     protected function setUp(): void
     {
-        DirectoryUtil::removeDir(__DIR__ . '/custom/cache-dir');
+        DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
     public function test_custom_cache_dir(): void

@@ -14,9 +14,11 @@ use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverCustomServicesAwareTest extends TestCase
 {
+    private const CACHE_DIR = __DIR__ . DIRECTORY_SEPARATOR . '.gacela';
+
     public static function setUpBeforeClass(): void
     {
-        DirectoryUtil::removeDir(__DIR__ . '/.gacela');
+        DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
     protected function setUp(): void

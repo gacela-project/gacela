@@ -13,15 +13,17 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 final class MakeModuleCommandTest extends TestCase
 {
+    private const CACHE_DIR = '.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'TestModule';
+
     public static function tearDownAfterClass(): void
     {
-        DirectoryUtil::removeDir('./data/TestModule');
+        DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
-        DirectoryUtil::removeDir('./data/TestModule');
+        DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
     /**

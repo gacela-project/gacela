@@ -9,6 +9,9 @@ use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
+    private const FACADE_ROOT_DIR = 'tests' . DIRECTORY_SEPARATOR . 'Feature' . DIRECTORY_SEPARATOR
+                                    . 'Framework' . DIRECTORY_SEPARATOR . 'UsingAbstractGacelaClassesByDefault';
+
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
@@ -18,9 +21,6 @@ final class FeatureTest extends TestCase
     {
         $facade = new Module\Facade();
 
-        self::assertStringContainsString(
-            'tests/Feature/Framework/UsingAbstractGacelaClassesByDefault',
-            $facade->getAppRootDir(),
-        );
+        self::assertStringContainsString(self::FACADE_ROOT_DIR, $facade->getAppRootDir());
     }
 }

@@ -31,6 +31,7 @@ final class ListModulesCommand extends Command
     {
         $this->setName('list:modules')
             ->setDescription('Render all modules found')
+            ->addOption('all', 'a', InputOption::VALUE_NONE, 'Show all module\'s information')
             ->addArgument('filter', InputArgument::OPTIONAL, 'Any filter to simplify the output')
             ->addOption('detailed', 'd', InputOption::VALUE_NONE, 'Display all the modules in detail');
     }
@@ -40,6 +41,7 @@ final class ListModulesCommand extends Command
         $this->output = $output;
 
         $filter = (string)$input->getArgument('filter');
+        $withAll = (bool)$input->getOption('all'); // TODO: not used yet
 
         $this->generateListOfModules(
             (bool)$input->getOption('detailed'),

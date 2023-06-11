@@ -87,6 +87,26 @@ TXT;
         self::assertStringNotContainsString('ToBeIgnored', $out);
     }
 
+    public function test_list_modules_all(): void
+    {
+        Gacela::bootstrap(__DIR__);
+
+        $input = new StringInput('list:modules --all');
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+        $bootstrap->run($input, $output);
+
+        $out = $output->fetch();
+
+        self::assertMatchesRegularExpression('#TestModule1.*ListModules\\\TestModule1#', $out);
+        self::assertMatchesRegularExpression('#TestModule2.*ListModules\\\TestModule2#', $out);
+        self::assertMatchesRegularExpression('#TestModule3.*ListModules\\\LevelUp\\\TestModule3#', $out);
+        self::assertStringNotContainsString('vendor', $out);
+        self::assertStringNotContainsString('ToBeIgnored', $out);
+    }
+
     public function commandInputProvider(): iterable
     {
         yield 'slashes' => ['ListModules/TestModule1'];

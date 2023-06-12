@@ -29,6 +29,31 @@ final class ListModulesCommandTest extends TestCase
         $expected = <<<TXT
 ==============
 TestModule3
+==============
+TestModule1
+==============
+TestModule2
+
+TXT;
+        self::assertSame($expected, $output->fetch());
+    }
+
+    public function test_list_detailed_modules(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $input = new StringInput('list:modules --detailed');
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+        $bootstrap->run($input, $output);
+
+        $expected = <<<TXT
+==============
+TestModule3
 --------------
 Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
 Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory

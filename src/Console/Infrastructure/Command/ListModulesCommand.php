@@ -9,6 +9,7 @@ use Gacela\Framework\DocBlockResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -22,12 +23,14 @@ final class ListModulesCommand extends Command
     {
         $this->setName('list:modules')
             ->setDescription('Render all modules found')
-            ->addArgument('filter', InputArgument::OPTIONAL, 'Any filter to simplify the output');
+            ->addArgument('filter', InputArgument::OPTIONAL, 'Any filter to simplify the output')
+            ->addOption('detailed', 'd', InputOption::VALUE_NONE, 'Display a detailed information of each module');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $filter = (string)$input->getArgument('filter');
+        $isDetailed = (bool)$input->getOption('detailed');
         $modules = $this->getFacade()->findAllAppModules($filter);
 
         $return = '';
@@ -36,8 +39,14 @@ final class ListModulesCommand extends Command
             $factory = $module->factoryClass() ?? 'None';
             $config = $module->configClass() ?? 'None';
             $dependencyProviderClass = $module->dependencyProviderClass() ?? 'None';
+            if (!$isDetailed) {
+                $return .= <<<TXT
+==============
+{$module->moduleName()}
 
-            $return .= <<<TXT
+TXT;
+            } else {
+                $return .= <<<TXT
 ==============
 {$module->moduleName()}
 --------------
@@ -47,6 +56,7 @@ Config: {$config}
 DependencyProvider: {$dependencyProviderClass}
 
 TXT;
+            }
         }
 
         $output->write($return);

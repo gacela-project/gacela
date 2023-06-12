@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Console\AllAppModules\Domain;
 
+use Gacela\Console\ConsoleFactory;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
-use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Config;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1DependencyProvider;
@@ -20,10 +20,8 @@ final class AppModuleTest extends TestCase
 
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-        });
-        $this->appModuleCreator = new AppModuleCreator();
+        Gacela::bootstrap(__DIR__);
+        $this->appModuleCreator = (new ConsoleFactory())->createAppModuleCreator();
     }
 
     public function test_with_only_facade(): void

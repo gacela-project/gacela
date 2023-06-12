@@ -49,7 +49,7 @@ DependencyProvider: {$dependencyProviderClass}
 TXT;
         }
 
-        $output->writeln($return);
+        $output->write($return);
 
         return self::SUCCESS;
     }

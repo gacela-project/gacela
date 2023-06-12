@@ -14,6 +14,13 @@ use ReflectionClass;
 
 final class AppModuleCreator
 {
+    public function __construct(
+        private FactoryResolver $factoryResolver,
+        private ConfigResolver $configResolver,
+        private DependencyProviderResolver $dependencyProviderResolver,
+    ) {
+    }
+
     /**
      * @param class-string $facadeClass
      */
@@ -45,7 +52,7 @@ final class AppModuleCreator
     private function findFactory(string $facadeClass): ?string
     {
         try {
-            $resolver = (new FactoryResolver())->resolve($facadeClass);
+            $resolver = $this->factoryResolver->resolve($facadeClass);
 
             if ((new ReflectionClass($resolver))->isAnonymous()) {
                 throw new FactoryNotFoundException($facadeClass);
@@ -63,7 +70,7 @@ final class AppModuleCreator
     private function findConfig(string $facadeClass): ?string
     {
         try {
-            $resolver = (new ConfigResolver())->resolve($facadeClass);
+            $resolver = $this->configResolver->resolve($facadeClass);
 
             if ((new ReflectionClass($resolver))->isAnonymous()) {
                 throw new ConfigNotFoundException($facadeClass);
@@ -81,7 +88,7 @@ final class AppModuleCreator
     private function findDependencyProvider(string $facadeClass): ?string
     {
         try {
-            $resolver = (new DependencyProviderResolver())->resolve($facadeClass);
+            $resolver = $this->dependencyProviderResolver->resolve($facadeClass);
 
             if ((new ReflectionClass($resolver))->isAnonymous()) {
                 throw new DependencyProviderNotFoundException($resolver);

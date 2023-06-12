@@ -49,7 +49,6 @@ Factory: None
 Config: None
 DependencyProvider: None
 
-
 TXT;
         self::assertSame($expected, $output->fetch());
     }

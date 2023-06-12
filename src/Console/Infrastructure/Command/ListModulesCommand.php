@@ -31,18 +31,27 @@ final class ListModulesCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $filter = (string)$input->getArgument('filter');
-        $isDetailed = (bool)$input->getOption('detailed');
-        $modules = $this->getFacade()->findAllAppModules($filter);
 
-        if ($isDetailed) {
-            $return = $this->generateDetailedView($modules);
-        } else {
-            $return = $this->generateNonDetailedView($modules);
-        }
+        $listOfModules = $this->generateListOfModules(
+            (bool)$input->getOption('detailed'),
+            $this->getFacade()->findAllAppModules($filter),
+        );
 
-        $output->write($return);
+        $output->write($listOfModules);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    private function generateListOfModules(bool $isDetailed, array $modules): string
+    {
+        if ($isDetailed) {
+            return $this->generateDetailedView($modules);
+        }
+
+        return $this->generateNonDetailedView($modules);
     }
 
     /**

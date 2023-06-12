@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console;
 
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
+use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
@@ -58,6 +59,7 @@ final class ConsoleFactory extends AbstractFactory
     {
         return new AllAppModulesFinder(
             $this->createRecursiveIterator(),
+            $this->createAppModuleCreator(),
         );
     }
 
@@ -82,5 +84,10 @@ final class ConsoleFactory extends AbstractFactory
     private function getTemplateByFilenameMap(): array
     {
         return (array)$this->getProvidedDependency(ConsoleDependencyProvider::TEMPLATE_BY_FILENAME_MAP);
+    }
+
+    private function createAppModuleCreator(): AppModuleCreator
+    {
+        return new AppModuleCreator();
     }
 }

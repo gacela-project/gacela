@@ -7,7 +7,6 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\DocBlockResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -31,19 +30,23 @@ final class ListModulesCommand extends Command
         $filter = (string)$input->getArgument('filter');
         $modules = $this->getFacade()->findAllAppModules($filter);
 
-        $return ='';
+        $return = '';
 
         foreach ($modules as $module) {
+            $factory = $module->factoryClass() ?? 'None';
+            $config = $module->configClass() ?? 'None';
+            $dependencyProviderClass = $module->dependencyProviderClass() ?? 'None';
+
             $return .= <<<TXT
 ==============
 {$module->moduleName()}
 --------------
 Facade: {$module->facadeClass()}
-Factory: {$module->factoryClass()}
-Config: {$module->configClass()}
-DependencyProvider: {$module->dependencyProviderClass()}
-TXT;
+Factory: {$factory}
+Config: {$config}
+DependencyProvider: {$dependencyProviderClass}
 
+TXT;
         }
 
         $output->writeln($return);

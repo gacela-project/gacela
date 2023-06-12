@@ -23,12 +23,30 @@ final class ListModulesCommandTest extends TestCase
         $bootstrap->setAutoExit(false);
         $bootstrap->run($input, $output);
 
-        $out = $output->fetch();
+        $expected = <<<TXT
+==============
+TestModule3
+--------------
+Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
+Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory
+Config: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Config
+DependencyProvider: None
+==============
+TestModule1
+--------------
+Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade
+Factory: None
+Config: None
+DependencyProvider: None
+==============
+TestModule2
+--------------
+Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule2Facade
+Factory: None
+Config: None
+DependencyProvider: None
 
-        self::assertMatchesRegularExpression('#TestModule1.*ListModules\\\TestModule1#', $out);
-        self::assertMatchesRegularExpression('#TestModule2.*ListModules\\\TestModule2#', $out);
-        self::assertMatchesRegularExpression('#TestModule3.*ListModules\\\LevelUp\\\TestModule3#', $out);
-        self::assertStringNotContainsString('vendor', $out);
-        self::assertStringNotContainsString('ToBeIgnored', $out);
+TXT;
+        self::assertSame($expected, $output->fetch());
     }
 }

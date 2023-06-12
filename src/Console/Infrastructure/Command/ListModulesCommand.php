@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
+use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\DocBlockResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -33,20 +34,29 @@ final class ListModulesCommand extends Command
         $isDetailed = (bool)$input->getOption('detailed');
         $modules = $this->getFacade()->findAllAppModules($filter);
 
-        $return = '';
+        if ($isDetailed) {
+            $return = $this->generateDetailedView($modules);
+        } else {
+            $return = $this->generateNonDetailedView($modules);
+        }
 
+        $output->write($return);
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    private function generateDetailedView(array $modules): string
+    {
+        $result = '';
         foreach ($modules as $module) {
             $factory = $module->factoryClass() ?? 'None';
             $config = $module->configClass() ?? 'None';
             $dependencyProviderClass = $module->dependencyProviderClass() ?? 'None';
-            if (!$isDetailed) {
-                $return .= <<<TXT
-==============
-{$module->moduleName()}
 
-TXT;
-            } else {
-                $return .= <<<TXT
+            $result .= <<<TXT
 ==============
 {$module->moduleName()}
 --------------
@@ -56,11 +66,25 @@ Config: {$config}
 DependencyProvider: {$dependencyProviderClass}
 
 TXT;
-            }
+        }
+        return $result;
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    private function generateNonDetailedView(array $modules): string
+    {
+        $result = '';
+
+        foreach ($modules as $module) {
+            $result .= <<<TXT
+==============
+{$module->moduleName()}
+
+TXT;
         }
 
-        $output->write($return);
-
-        return self::SUCCESS;
+        return $result;
     }
 }

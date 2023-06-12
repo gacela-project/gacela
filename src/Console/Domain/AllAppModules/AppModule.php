@@ -8,7 +8,10 @@ final class AppModule
 {
     private function __construct(
         private string $moduleName,
-        private string $facadeClass,
+        private string  $facadeClass,
+        private ?string $factoryClass = null,
+        private ?string $configClass = null,
+        private ?string $dependencyProviderClass = null,
     ) {
     }
 
@@ -35,5 +38,20 @@ final class AppModule
     public function facadeClass(): string
     {
         return $this->facadeClass;
+    }
+
+    public function factoryClass(): ?string
+    {
+        return $this->factoryClass;
+    }
+
+    public function configClass(): ?string
+    {
+        return $this->configClass;
+    }
+
+    public function dependencyProviderClass(): ?string
+    {
+        return $this->dependencyProviderClass;
     }
 }

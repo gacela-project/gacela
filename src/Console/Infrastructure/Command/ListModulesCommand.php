@@ -31,18 +31,22 @@ final class ListModulesCommand extends Command
         $filter = (string)$input->getArgument('filter');
         $modules = $this->getFacade()->findAllAppModules($filter);
 
-        $table = new Table($output);
-        $table->setHeaders(['Module', 'Facade']);
+        $return ='';
 
         foreach ($modules as $module) {
-            $table->addRow([
-                $module->moduleName(),
-                $module->facadeClass(),
-            ]);
+            $return .= <<<TXT
+==============
+{$module->moduleName()}
+--------------
+Facade: {$module->facadeClass()}
+Factory: {$module->factoryClass()}
+Config: {$module->configClass()}
+DependencyProvider: {$module->dependencyProviderClass()}
+TXT;
+
         }
 
-        $output->writeln('Modules found:');
-        $table->render();
+        $output->writeln($return);
 
         return self::SUCCESS;
     }

@@ -60,14 +60,15 @@ final class ListModulesCommand extends Command
     private function generateDetailedView(array $modules): string
     {
         $result = '';
-        foreach ($modules as $module) {
+        foreach ($modules as $i => $module) {
+            $n = $i + 1;
             $factory = $module->factoryClass() ?? 'None';
             $config = $module->configClass() ?? 'None';
             $dependencyProviderClass = $module->dependencyProviderClass() ?? 'None';
 
             $result .= <<<TXT
 ============================
-<fg=green>{$module->moduleName()}</>
+{$n}.- <fg=green>{$module->moduleName()}</>
 ----------------------------
 <fg=cyan>Facade</>: {$module->facadeClass()}
 <fg=cyan>Factory</>: {$factory}
@@ -87,7 +88,7 @@ TXT;
         $result = '';
 
         foreach ($modules as $i => $module) {
-            $n = $i+1;
+            $n = $i + 1;
             $result .= <<<TXT
 {$n}.- <fg=green>{$module->moduleName()}</>
 

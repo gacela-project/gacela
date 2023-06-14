@@ -50,21 +50,21 @@ TXT;
 
         $expected = <<<TXT
 ============================
-TestModule3
+1.- TestModule3
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
 Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory
 Config: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Config
 DependencyProvider: None
 ============================
-TestModule1
+2.- TestModule1
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade
 Factory: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Factory
 Config: None
 DependencyProvider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1DependencyProvider
 ============================
-TestModule2
+3.- TestModule2
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule2\TestModule2Facade
 Factory: None

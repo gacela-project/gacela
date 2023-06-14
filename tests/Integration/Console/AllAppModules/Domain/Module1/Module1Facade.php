@@ -6,6 +6,6 @@ namespace GacelaTest\Integration\Console\AllAppModules\Domain\Module1;
 
 use Gacela\Framework\AbstractFacade;
 
-final class IntegrationAppModulesFacade1 extends AbstractFacade
+final class Module1Facade extends AbstractFacade
 {
 }

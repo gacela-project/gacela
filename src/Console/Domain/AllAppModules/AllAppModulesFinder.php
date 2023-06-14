@@ -13,6 +13,7 @@ final class AllAppModulesFinder
 {
     public function __construct(
         private OuterIterator $fileIterator,
+        private AppModuleCreator $appModuleCreator,
     ) {
     }
 
@@ -64,7 +65,7 @@ final class AllAppModulesFinder
             return null;
         }
 
-        return AppModule::fromClass($fullyQualifiedClassName);
+        return $this->appModuleCreator->fromClass($fullyQualifiedClassName);
     }
 
     private function getNamespace(SplFileInfo $fileInfo): string

@@ -18,7 +18,8 @@
         },
         {
             "name": "Jesus Valera Reales",
-            "email": "jesus1902@outlook.com"
+            "email": "jesus1902@outlook.com",
+            "homepage": "https://jesusvalerareales.com/"
         }
     ],
     "support": {
@@ -31,7 +32,7 @@
         "gacela-project/container": "^0.5"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.17",
+        "friendsofphp/php-cs-fixer": "^3.18",
         "infection/infection": "^0.26",
         "phpbench/phpbench": "^1.2",
         "phpmetrics/phpmetrics": "^2.8",

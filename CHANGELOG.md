@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- Added command `gacela list:modules [--detailed|-d]`
+- Added command `gacela list:modules [--simple|-s]`
 - Fixed Windows support
 
 ### 1.4.0

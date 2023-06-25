@@ -25,7 +25,7 @@ final class ListModulesCommand extends Command
         $this->setName('list:modules')
             ->setDescription('Render all modules found')
             ->addArgument('filter', InputArgument::OPTIONAL, 'Any filter to simplify the output')
-            ->addOption('detailed', 'd', InputOption::VALUE_NONE, 'Display a detailed information of each module');
+            ->addOption('simple', 's', InputOption::VALUE_NONE, 'Display just the module names');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -33,7 +33,7 @@ final class ListModulesCommand extends Command
         $filter = (string)$input->getArgument('filter');
 
         $listOfModules = $this->generateListOfModules(
-            (bool)$input->getOption('detailed'),
+            (bool)$input->getOption('simple'),
             $this->getFacade()->findAllAppModules($filter),
         );
 
@@ -45,13 +45,29 @@ final class ListModulesCommand extends Command
     /**
      * @param list<AppModule> $modules
      */
-    private function generateListOfModules(bool $isDetailed, array $modules): string
+    private function generateListOfModules(bool $isSimple, array $modules): string
     {
-        if ($isDetailed) {
-            return $this->generateDetailedView($modules);
+        return ($isSimple)
+            ? $this->generateSimpleView($modules)
+            : $this->generateDetailedView($modules);
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    private function generateSimpleView(array $modules): string
+    {
+        $result = '';
+
+        foreach ($modules as $i => $module) {
+            $n = $i + 1;
+            $result .= <<<TXT
+{$n}.- <fg=green>{$module->moduleName()}</>
+
+TXT;
         }
 
-        return $this->generateNonDetailedView($modules);
+        return $result;
     }
 
     /**
@@ -77,24 +93,6 @@ final class ListModulesCommand extends Command
 
 TXT;
         }
-        return $result;
-    }
-
-    /**
-     * @param list<AppModule> $modules
-     */
-    private function generateNonDetailedView(array $modules): string
-    {
-        $result = '';
-
-        foreach ($modules as $i => $module) {
-            $n = $i + 1;
-            $result .= <<<TXT
-{$n}.- <fg=green>{$module->moduleName()}</>
-
-TXT;
-        }
-
         return $result;
     }
 }

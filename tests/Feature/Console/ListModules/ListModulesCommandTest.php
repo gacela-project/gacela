@@ -13,13 +13,13 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 final class ListModulesCommandTest extends TestCase
 {
-    public function test_list_modules(): void
+    public function test_list_modules_simple(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
 
-        $input = new StringInput('list:modules');
+        $input = new StringInput('list:modules --simple');
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -35,13 +35,13 @@ TXT;
         self::assertSame($expected, $output->fetch());
     }
 
-    public function test_list_detailed_modules(): void
+    public function test_list_modules(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
 
-        $input = new StringInput('list:modules --detailed');
+        $input = new StringInput('list:modules');
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -82,7 +82,7 @@ TXT;
     {
         Gacela::bootstrap(__DIR__);
 
-        $input = new StringInput('list:modules ' . $input);
+        $input = new StringInput('list:modules' . $input);
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();

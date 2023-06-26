@@ -7,12 +7,18 @@ namespace Gacela\Console\Domain\AllAppModules;
 final class AppModule
 {
     public function __construct(
+        private string $fullModuleName,
         private string $moduleName,
         private string $facadeClass,
         private ?string $factoryClass = null,
         private ?string $configClass = null,
         private ?string $dependencyProviderClass = null,
     ) {
+    }
+
+    public function fullModuleName(): string
+    {
+        return $this->fullModuleName;
     }
 
     public function moduleName(): string

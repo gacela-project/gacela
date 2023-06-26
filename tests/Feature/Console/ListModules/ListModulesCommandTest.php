@@ -25,12 +25,16 @@ final class ListModulesCommandTest extends TestCase
 
     public function test_list_modules_simple(): void
     {
-        $this->command->execute(['--simple' => null]);
+        $this->command->execute([]);
 
         $expected = <<<TXT
-1.- TestModule3
-2.- TestModule1
-3.- TestModule2
+┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬───────────────┐
+│ Module namespace                                           │ Facade │ Factory │ Config │ Dep. Provider │
+├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼───────────────┤
+│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ ✔️     │ ✔️      │ ✔️     │ ✖️            │
+│ GacelaTest\Feature\Console\ListModules\TestModule1         │ ✔️     │ ✔️      │ ✖️     │ ✔️            │
+│ GacelaTest\Feature\Console\ListModules\TestModule2         │ ✔️     │ ✖️      │ ✖️     │ ✖️            │
+└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴───────────────┘
 
 TXT;
         self::assertSame($expected, $this->command->getDisplay());
@@ -38,7 +42,7 @@ TXT;
 
     public function test_list_modules(): void
     {
-        $this->command->execute([]);
+        $this->command->execute(['--detailed' => null]);
 
         $expected = <<<TXT
 ============================

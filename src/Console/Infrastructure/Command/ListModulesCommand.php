@@ -12,6 +12,7 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -20,6 +21,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 final class ListModulesCommand extends Command
 {
     use DocBlockResolverAwareTrait;
+
+    private const CHECK_SYMBOL = '✔️';
+    private const CROSS_SYMBOL = '✖️';
+
+    private ?OutputInterface $output = null;
 
     protected function configure(): void
     {
@@ -31,10 +37,11 @@ final class ListModulesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->output = $output;
+
         $filter = (string)$input->getArgument('filter');
 
         $this->generateListOfModules(
-            $output,
             (bool)$input->getOption('detailed'),
             $this->getFacade()->findAllAppModules($filter),
         );
@@ -42,36 +49,40 @@ final class ListModulesCommand extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * @param list<AppModule> $modules
-     */
-    private function generateListOfModules(OutputInterface $output, bool $isDetailed, array $modules): void
+    private function output(): OutputInterface
     {
-        if ($isDetailed) {
-            $this->generateDetailedView($output, $modules);
-            return;
-        }
-
-        $this->generateSimpleView($output, $modules);
+        return $this->output ?? new ConsoleOutput();
     }
 
     /**
      * @param list<AppModule> $modules
      */
-    private function generateSimpleView(OutputInterface $output, array $modules): void
+    private function generateListOfModules(bool $isDetailed, array $modules): void
+    {
+        if ($isDetailed) {
+            $this->generateDetailedView($modules);
+        } else {
+            $this->generateSimpleView($modules);
+        }
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    private function generateSimpleView(array $modules): void
     {
         $rows = [];
 
         foreach ($modules as $module) {
             $rows[] = [
                 $module->fullModuleName(),
-                '✔️', // facade is always true
-                $module->factoryClass() ? '✔️' : '✖️',
-                $module->configClass() ? '✔️' : '✖️',
-                $module->dependencyProviderClass() ? '✔️' : '✖️',
+                self::CHECK_SYMBOL, // facade is always true
+                $module->factoryClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->configClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->dependencyProviderClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
             ];
         }
-        $table = new Table($output);
+        $table = new Table($this->output());
         $table->setStyle('box');
         $table->setHeaders(['Module namespace', 'Facade', 'Factory', 'Config', 'Dep. Provider']);
         $table->setRows($rows);
@@ -81,7 +92,7 @@ final class ListModulesCommand extends Command
     /**
      * @param list<AppModule> $modules
      */
-    private function generateDetailedView(OutputInterface $output, array $modules): void
+    private function generateDetailedView(array $modules): void
     {
         $result = '';
         foreach ($modules as $i => $module) {
@@ -102,6 +113,6 @@ final class ListModulesCommand extends Command
 TXT;
         }
 
-        $output->write($result);
+        $this->output()->write($result);
     }
 }

@@ -69,37 +69,14 @@ final class ListModulesCommand extends Command
     /**
      * @param list<AppModule> $modules
      */
-    private function generateSimpleView(array $modules): void
-    {
-        $rows = [];
-
-        foreach ($modules as $module) {
-            $rows[] = [
-                $module->fullModuleName(),
-                self::CHECK_SYMBOL, // facade is always true
-                $module->factoryClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-                $module->configClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-                $module->dependencyProviderClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-            ];
-        }
-        $table = new Table($this->output());
-        $table->setStyle('box');
-        $table->setHeaders(['Module namespace', 'Facade', 'Factory', 'Config', 'Dep. Provider']);
-        $table->setRows($rows);
-        $table->render();
-    }
-
-    /**
-     * @param list<AppModule> $modules
-     */
     private function generateDetailedView(array $modules): void
     {
         $result = '';
         foreach ($modules as $i => $module) {
             $n = $i + 1;
-            $factory = $module->factoryClass() ?? 'None';
-            $config = $module->configClass() ?? 'None';
-            $dependencyProviderClass = $module->dependencyProviderClass() ?? 'None';
+            $factory = $module->factoryClass() ?? self::CROSS_SYMBOL;
+            $config = $module->configClass() ?? self::CROSS_SYMBOL;
+            $dependencyProviderClass = $module->dependencyProviderClass() ?? self::CROSS_SYMBOL;
 
             $result .= <<<TXT
 ============================
@@ -114,5 +91,29 @@ TXT;
         }
 
         $this->output()->write($result);
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    private function generateSimpleView(array $modules): void
+    {
+        $rows = [];
+
+        foreach ($modules as $module) {
+            $rows[] = [
+                $module->fullModuleName(),
+                self::CHECK_SYMBOL, // facade is always true
+                $module->factoryClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->configClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->dependencyProviderClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+            ];
+        }
+
+        $table = new Table($this->output());
+        $table->setStyle('box');
+        $table->setHeaders(['Module namespace', 'Facade', 'Factory', 'Config', 'Dep. Provider']);
+        $table->setRows($rows);
+        $table->render();
     }
 }

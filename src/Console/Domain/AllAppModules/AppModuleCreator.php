@@ -12,6 +12,8 @@ use Gacela\Framework\ClassResolver\Factory\FactoryNotFoundException;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use ReflectionClass;
 
+use function strlen;
+
 final class AppModuleCreator
 {
     public function __construct(
@@ -27,6 +29,7 @@ final class AppModuleCreator
     public function fromClass(string $facadeClass): AppModule
     {
         return new AppModule(
+            $this->fullModuleName($facadeClass),
             $this->moduleName($facadeClass),
             $facadeClass,
             $this->findFactory($facadeClass),
@@ -38,12 +41,23 @@ final class AppModuleCreator
     /**
      * @param class-string $facadeClass
      */
+    private function fullModuleName(string $facadeClass): string
+    {
+        $moduleNameIndex = strrpos($facadeClass, '\\') ?: strlen($facadeClass);
+
+        return substr($facadeClass, 0, $moduleNameIndex);
+    }
+
+    /**
+     * @param class-string $facadeClass
+     */
     private function moduleName(string $facadeClass): string
     {
-        $parts = explode('\\', $facadeClass);
-        array_pop($parts);
+        $fullModuleName = $this->fullModuleName($facadeClass);
 
-        return (string)end($parts);
+        $moduleName = strrchr($fullModuleName, '\\') ?: $fullModuleName;
+
+        return ltrim($moduleName, '\\');
     }
 
     /**

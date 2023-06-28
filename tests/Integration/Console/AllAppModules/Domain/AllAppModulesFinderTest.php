@@ -14,6 +14,8 @@ use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Factory;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module2\Module2Facade;
 use PHPUnit\Framework\TestCase;
 
+use function array_slice;
+
 final class AllAppModulesFinderTest extends TestCase
 {
     private ConsoleFacade $consoleFacade;
@@ -30,6 +32,7 @@ final class AllAppModulesFinderTest extends TestCase
 
         $expected = [
             new AppModule(
+                join('\\', array_slice(explode('\\', Module1Facade::class), 0, -1)),
                 'Module1',
                 Module1Facade::class,
                 Module1Factory::class,
@@ -37,6 +40,7 @@ final class AllAppModulesFinderTest extends TestCase
                 Module1DependencyProvider::class,
             ),
             new AppModule(
+                join('\\', array_slice(explode('\\', Module2Facade::class), 0, -1)),
                 'Module2',
                 Module2Facade::class,
             ),
@@ -51,6 +55,7 @@ final class AllAppModulesFinderTest extends TestCase
 
         $expected = [
             new AppModule(
+                join('\\', array_slice(explode('\\', Module1Facade::class), 0, -1)),
                 'Module1',
                 Module1Facade::class,
                 Module1Factory::class,

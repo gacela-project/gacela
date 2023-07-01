@@ -1,6 +1,7 @@
 # Changelog
 
-### Unreleased
+### 1.5.0
+### 2023-07-01
 
 - Added command `gacela list:modules [--detailed|-d]`
 - Fixed Windows support

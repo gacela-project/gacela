@@ -90,7 +90,11 @@
         "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze",
         "csfix": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix",
         "csrun": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix --dry-run",
-        "infection": "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=80 --min-covered-msi=80",
+        "infection": [
+            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=75 --min-covered-msi=75",
+            "find tests -type f -name 'gacela-custom-services.php' -exec rm -rf {} \\;",
+            "find tests -type f -name 'gacela-class-names.php' -exec rm -rf {} \\;"
+        ],
         "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
         "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",

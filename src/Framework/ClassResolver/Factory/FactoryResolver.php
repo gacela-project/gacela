@@ -13,8 +13,6 @@ final class FactoryResolver extends AbstractClassResolver
 
     /**
      * @param object|class-string $caller
-     *
-     * @throws FactoryNotFoundException
      */
     public function resolve(object|string $caller): AbstractFactory
     {

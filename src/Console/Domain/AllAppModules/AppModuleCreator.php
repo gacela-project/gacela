@@ -8,7 +8,6 @@ use Gacela\Framework\ClassResolver\Config\ConfigNotFoundException;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderResolver;
-use Gacela\Framework\ClassResolver\Factory\FactoryNotFoundException;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use ReflectionClass;
 
@@ -65,17 +64,13 @@ final class AppModuleCreator
      */
     private function findFactory(string $facadeClass): ?string
     {
-        try {
-            $resolver = $this->factoryResolver->resolve($facadeClass);
+        $resolver = $this->factoryResolver->resolve($facadeClass);
 
-            if ((new ReflectionClass($resolver))->isAnonymous()) {
-                throw new FactoryNotFoundException($facadeClass);
-            }
-
-            return $resolver::class;
-        } catch (FactoryNotFoundException $e) {
+        if ((new ReflectionClass($resolver))->isAnonymous()) {
             return null;
         }
+
+        return $resolver::class;
     }
 
     /**

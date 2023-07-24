@@ -18,7 +18,7 @@ final class DocBlockServiceResolver extends AbstractClassResolver
      *
      * @throws DocBlockServiceNotFoundException
      */
-    public function resolve(object|string $caller): ?object
+    public function resolve(object|string $caller): object
     {
         $resolved = $this->doResolve($caller);
 

@@ -8,8 +8,10 @@ use RuntimeException;
 
 final class GacelaNotBootstrappedException extends RuntimeException
 {
+    public const MESSAGE = 'Did you forget to call Gacela::bootstrap()?';
+
     public function __construct()
     {
-        parent::__construct('Did you forget to call Gacela::bootstrap()?');
+        parent::__construct(self::MESSAGE);
     }
 }

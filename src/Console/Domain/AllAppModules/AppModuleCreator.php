@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\AllAppModules;
 
-use Gacela\Framework\ClassResolver\Config\ConfigNotFoundException;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
 use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderResolver;
@@ -78,17 +77,13 @@ final class AppModuleCreator
      */
     private function findConfig(string $facadeClass): ?string
     {
-        try {
-            $resolver = $this->configResolver->resolve($facadeClass);
+        $resolver = $this->configResolver->resolve($facadeClass);
 
-            if ((new ReflectionClass($resolver))->isAnonymous()) {
-                throw new ConfigNotFoundException($facadeClass);
-            }
-
-            return $resolver::class;
-        } catch (ConfigNotFoundException $e) {
+        if ((new ReflectionClass($resolver))->isAnonymous()) {
             return null;
         }
+
+        return $resolver::class;
     }
 
     /**

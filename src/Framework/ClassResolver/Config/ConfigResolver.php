@@ -13,17 +13,11 @@ final class ConfigResolver extends AbstractClassResolver
 
     /**
      * @param object|class-string $caller
-     *
-     * @throws ConfigNotFoundException
      */
     public function resolve(object|string $caller): AbstractConfig
     {
-        /** @var ?AbstractConfig $resolved */
+        /** @var AbstractConfig $resolved */
         $resolved = $this->doResolve($caller);
-
-        if ($resolved === null) {
-            throw new ConfigNotFoundException($caller);
-        }
 
         return $resolved;
     }

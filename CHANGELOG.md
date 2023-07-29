@@ -1,5 +1,10 @@
 # Changelog
 
+
+### Unreleased
+
+- Fixed combining event listeners from different SetupGacela objects
+
 ### 1.5.0
 ### 2023-07-01
 

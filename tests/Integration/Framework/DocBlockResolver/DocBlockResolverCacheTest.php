@@ -60,9 +60,8 @@ final class DocBlockResolverCacheTest extends TestCase
     {
         Config::getInstance()
             ->getSetupGacela()
-            ->combine(SetupGacela::fromCallable(function (GacelaConfig $config): void {
+            ->combine(SetupGacela::fromCallable(static function (GacelaConfig $config): void {
                 $config->enableFileCache();
-                $config->registerGenericListener([$this, 'saveInMemoryEvent']);
             }));
 
         DocBlockResolverCache::getCacheInstance();

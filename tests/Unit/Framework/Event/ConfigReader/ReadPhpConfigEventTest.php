@@ -9,17 +9,26 @@ use PHPUnit\Framework\TestCase;
 
 final class ReadPhpConfigEventTest extends TestCase
 {
-    public function test_to_string(): void
-    {
-        $event = new ReadPhpConfigEvent('absolute/path');
+    private ReadPhpConfigEvent $event;
 
-        self::assertStringContainsString('{absolutePath:"absolute/path"}', $event->toString());
+    protected function setUp(): void
+    {
+        $this->event = new ReadPhpConfigEvent('absolute/path');
     }
 
     public function test_absolute_path(): void
     {
-        $event = new ReadPhpConfigEvent('absolute/path');
+        self::assertSame(
+            'absolute/path',
+            $this->event->absolutePath(),
+        );
+    }
 
-        self::assertSame('absolute/path', $event->absolutePath());
+    public function test_to_string(): void
+    {
+        self::assertStringContainsString(
+            '{absolutePath:"absolute/path"}',
+            $this->event->toString(),
+        );
     }
 }

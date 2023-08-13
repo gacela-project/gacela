@@ -479,9 +479,11 @@ final class SetupGacela extends AbstractSetupGacela
         $container = new Container();
 
         foreach ($configsToExtend as $className) {
-            /** @var callable $configToExtend */
+            /** @var callable|null $configToExtend */
             $configToExtend = $container->get($className);
-            $configToExtend($gacelaConfig);
+            if (is_callable($configToExtend)) {
+                $configToExtend($gacelaConfig);
+            }
         }
     }
 

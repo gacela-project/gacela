@@ -104,6 +104,9 @@ final class SetupGacela extends AbstractSetupGacela
         $this->suffixTypesFn = $emptyFn;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromFile(string $gacelaFilePath): self
     {
         if (!is_file($gacelaFilePath)) {

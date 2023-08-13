@@ -9,9 +9,9 @@ use Gacela\Framework\Container\Container;
 
 use function is_callable;
 
-final class RunExtendConfig
+final class GacelaConfigExtender
 {
-    public function __invoke(GacelaConfig $gacelaConfig): void
+    public function extend(GacelaConfig $gacelaConfig): void
     {
         $configsToExtend = $gacelaConfig->build()['gacela-configs-to-extend'] ?? [];
 

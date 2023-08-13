@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
-use Gacela\Framework\Bootstrap\Setup\RunExtendConfig;
+use Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
@@ -136,7 +136,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public static function fromGacelaConfig(GacelaConfig $gacelaConfig): self
     {
-        (new RunExtendConfig())->__invoke($gacelaConfig);
+        (new GacelaConfigExtender())->extend($gacelaConfig);
 
         $build = $gacelaConfig->build();
 

@@ -12,11 +12,24 @@ use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
-    public function test_binding_class(): void
+    public function test_single_binding_class(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
             $config->extendGacelaConfig(BindingStringValue::class);
+        });
+
+        /** @var StringValue $singleton */
+        $singleton = Gacela::get(StringValue::class);
+
+        self::assertSame('Set from BindingStringValue', $singleton->value());
+    }
+
+    public function test_multiple_binding_class(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->extendGacelaConfigs([BindingStringValue::class]);
         });
 
         /** @var StringValue $singleton */

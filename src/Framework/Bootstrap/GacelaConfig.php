@@ -350,7 +350,7 @@ final class GacelaConfig
      *     specific-listeners: ?array<class-string,list<callable>>,
      *     gacela-configs-to-extend: ?list<class-string>,
      *     plugins: ?list<class-string|callable>,
-     *     instances-to-extend: array<string,list<Closure>>,
+     *     services-to-extend: array<string,list<Closure>>,
      * }
      *
      * @internal
@@ -372,7 +372,7 @@ final class GacelaConfig
             'specific-listeners' => $this->specificListeners,
             'gacela-configs-to-extend' => $this->gacelaConfigsToExtend,
             'plugins' => $this->plugins,
-            'instances-to-extend' => $this->servicesToExtend,
+            'services-to-extend' => $this->servicesToExtend,
         ];
     }
 }

@@ -150,7 +150,7 @@ final class SetupGacela extends AbstractSetupGacela
             ->setSpecificListeners($build['specific-listeners'])
             ->setGacelaConfigsToExtend($build['gacela-configs-to-extend'])
             ->setPlugins($build['plugins'])
-            ->setServicesToExtend($build['instances-to-extend']);
+            ->setServicesToExtend($build['services-to-extend']);
     }
 
     /**

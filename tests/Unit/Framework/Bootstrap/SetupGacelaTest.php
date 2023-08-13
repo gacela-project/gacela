@@ -224,7 +224,8 @@ final class SetupGacelaTest extends TestCase
     public function test_gacela_configs_to_extends(): void
     {
         $setup = SetupGacela::fromGacelaConfig(
-            (new GacelaConfig()),
+            (new GacelaConfig())
+                ->extendGacelaConfigs([CustomGacelaConfig::class]),
         );
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())

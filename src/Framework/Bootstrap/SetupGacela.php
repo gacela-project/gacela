@@ -13,6 +13,7 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use RuntimeException;
 
+use function array_unique;
 use function is_callable;
 
 /**
@@ -444,7 +445,9 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineGacelaConfigsToExtend(array $list): void
     {
-        $this->setGacelaConfigsToExtend(array_merge($this->gacelaConfigsToExtend ?? [], $list));
+        $this->setGacelaConfigsToExtend(
+            array_unique(array_merge($this->gacelaConfigsToExtend ?? [], $list)),
+        );
     }
 
     /**

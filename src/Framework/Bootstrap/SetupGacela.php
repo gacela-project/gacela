@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\Bootstrap\Setup\RunExtendConfig;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use RuntimeException;
 
@@ -136,7 +136,8 @@ final class SetupGacela extends AbstractSetupGacela
 
     public static function fromGacelaConfig(GacelaConfig $gacelaConfig): self
     {
-        self::runExtendConfig($gacelaConfig);
+        (new RunExtendConfig())->__invoke($gacelaConfig);
+
         $build = $gacelaConfig->build();
 
         return (new self())
@@ -472,25 +473,6 @@ final class SetupGacela extends AbstractSetupGacela
     public function getPlugins(): array
     {
         return (array)$this->plugins;
-    }
-
-    private static function runExtendConfig(GacelaConfig $gacelaConfig): void
-    {
-        $configsToExtend = $gacelaConfig->build()['gacela-configs-to-extend'] ?? [];
-
-        if ($configsToExtend === []) {
-            return;
-        }
-
-        $container = new Container();
-
-        foreach ($configsToExtend as $className) {
-            /** @var callable|null $configToExtend */
-            $configToExtend = $container->get($className);
-            if (is_callable($configToExtend)) {
-                $configToExtend($gacelaConfig);
-            }
-        }
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self

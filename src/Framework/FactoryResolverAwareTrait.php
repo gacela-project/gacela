@@ -26,11 +26,6 @@ trait FactoryResolverAwareTrait
             return self::doGetFactory();
         }
 
-        if (method_exists(static::class, $name)) {
-            /** @psalm-suppress ParentNotFound */
-            return parent::__callStatic($name, $arguments);
-        }
-
         throw new RuntimeException("Method unknown: '{$name}'");
     }
 
@@ -38,11 +33,6 @@ trait FactoryResolverAwareTrait
     {
         if ($name === 'getFactory') {
             return self::doGetFactory();
-        }
-
-        if (method_exists(static::class, $name)) {
-            /** @psalm-suppress ParentNotFound */
-            return parent::__call($name, $arguments);
         }
 
         throw new RuntimeException("Method unknown: '{$name}'");

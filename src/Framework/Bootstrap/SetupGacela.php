@@ -126,13 +126,13 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $gacelaConfig = new GacelaConfig();
         $setupGacelaFileFn($gacelaConfig);
-        self::runExtendConfig($gacelaConfig);
 
         return self::fromGacelaConfig($gacelaConfig);
     }
 
     public static function fromGacelaConfig(GacelaConfig $gacelaConfig): self
     {
+        self::runExtendConfig($gacelaConfig);
         $build = $gacelaConfig->build();
 
         return (new self())

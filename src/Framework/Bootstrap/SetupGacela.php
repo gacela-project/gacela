@@ -115,30 +115,30 @@ final class SetupGacela extends AbstractSetupGacela
     {
         (new GacelaConfigExtender())->extend($gacelaConfig);
 
-        $build = $gacelaConfig->build();
+        $dto = $gacelaConfig->toTransfer();
 
         return (new self())
-            ->setExternalServices($build['external-services'])
-            ->setAppConfigBuilder($build['app-config-builder'])
-            ->setSuffixTypesBuilder($build['suffix-types-builder'])
-            ->setBindingsBuilder($build['bindings-builder'])
-            ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
-            ->setFileCacheEnabled($build['file-cache-enabled'])
-            ->setFileCacheDirectory($build['file-cache-directory'])
-            ->setProjectNamespaces($build['project-namespaces'])
-            ->setConfigKeyValues($build['config-key-values'])
-            ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
-            ->setGenericListeners($build['generic-listeners'])
-            ->setSpecificListeners($build['specific-listeners'])
-            ->setGacelaConfigsToExtend($build['gacela-configs-to-extend'])
-            ->setPlugins($build['plugins'])
-            ->setServicesToExtend($build['services-to-extend']);
+            ->setExternalServices($dto->getExternalServices())
+            ->setAppConfigBuilder($dto->getAppConfigBuilder())
+            ->setSuffixTypesBuilder($dto->getSuffixTypesBuilder())
+            ->setBindingsBuilder($dto->getBindingsBuilder())
+            ->setShouldResetInMemoryCache($dto->getShouldResetInMemoryCache())
+            ->setFileCacheEnabled($dto->getFileCacheEnabled())
+            ->setFileCacheDirectory($dto->getFileCacheDirectory())
+            ->setProjectNamespaces($dto->getProjectNamespaces())
+            ->setConfigKeyValues($dto->getConfigKeyValues())
+            ->setAreEventListenersEnabled($dto->getAreEventListenersEnabled())
+            ->setGenericListeners($dto->getGenericListeners())
+            ->setSpecificListeners($dto->getSpecificListeners())
+            ->setGacelaConfigsToExtend($dto->getGacelaConfigsToExtend())
+            ->setPlugins($dto->getPlugins())
+            ->setServicesToExtend($dto->getServicesToExtend());
     }
 
     /**
      * @param array<string,class-string|object|callable> $array
      */
-    public function setExternalServices(array $array): self
+    public function setExternalServices(?array $array): self
     {
         $this->markPropertyChanged(self::externalServices, true);
         $this->externalServices = $array;

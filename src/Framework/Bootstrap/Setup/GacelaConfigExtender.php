@@ -13,7 +13,7 @@ final class GacelaConfigExtender
 {
     public function extend(GacelaConfig $gacelaConfig): void
     {
-        $configsToExtend = $gacelaConfig->toTransfer()->getGacelaConfigsToExtend();
+        $configsToExtend = $gacelaConfig->toTransfer()->getGacelaConfigsToExtend() ?? [];
 
         if ($configsToExtend === []) {
             return;

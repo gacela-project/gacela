@@ -12,14 +12,14 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 final class GacelaConfigTransfer
 {
     /**
-     * @param array<string, class-string|object|callable> $externalServices
-     * @param list<string> $projectNamespaces
-     * @param array<string,mixed> $configKeyValues
-     * @param list<callable> $genericListeners
-     * @param array<class-string,list<callable>> $specificListeners
-     * @param list<class-string> $gacelaConfigsToExtend
-     * @param list<class-string|callable> $plugins
-     * @param array<string,list<Closure>> $servicesToExtend
+     * @param ?array<string, class-string|object|callable> $externalServices
+     * @param ?list<string> $projectNamespaces
+     * @param ?array<string,mixed> $configKeyValues
+     * @param ?list<callable> $genericListeners
+     * @param ?array<class-string,list<callable>> $specificListeners
+     * @param ?list<class-string> $gacelaConfigsToExtend
+     * @param ?list<class-string|callable> $plugins
+     * @param ?array<string,list<Closure>> $servicesToExtend
      */
     public function __construct(
         private AppConfigBuilder $appConfigBuilder,
@@ -56,7 +56,7 @@ final class GacelaConfigTransfer
     }
 
     /**
-     * @return null|array<string, class-string|object|callable>
+     * @return ?array<string, class-string|object|callable>
      */
     public function getExternalServices(): ?array
     {
@@ -78,11 +78,17 @@ final class GacelaConfigTransfer
         return $this->fileCacheDirectory;
     }
 
+    /**
+     * @return ?list<string>
+     */
     public function getProjectNamespaces(): ?array
     {
         return $this->projectNamespaces;
     }
 
+    /**
+     * @return ?array<string,mixed>
+     */
     public function getConfigKeyValues(): ?array
     {
         return $this->configKeyValues;
@@ -93,29 +99,41 @@ final class GacelaConfigTransfer
         return $this->areEventListenersEnabled;
     }
 
+    /**
+     * @return ?list<callable>
+     */
     public function getGenericListeners(): ?array
     {
         return $this->genericListeners;
     }
 
+    /**
+     * @return ?array<class-string,list<callable>>
+     */
     public function getSpecificListeners(): ?array
     {
         return $this->specificListeners;
     }
 
     /**
-     * @return list<class-string>
+     * @return ?list<class-string>
      */
-    public function getGacelaConfigsToExtend(): array
+    public function getGacelaConfigsToExtend(): ?array
     {
-        return $this->gacelaConfigsToExtend ?? [];
+        return $this->gacelaConfigsToExtend;
     }
 
+    /**
+     * @return ?list<class-string|callable>
+     */
     public function getPlugins(): ?array
     {
         return $this->plugins;
     }
 
+    /**
+     * @return ?array<string,list<Closure>>
+     */
     public function getServicesToExtend(): ?array
     {
         return $this->servicesToExtend;

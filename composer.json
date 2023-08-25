@@ -73,7 +73,7 @@
         }
     },
     "scripts": {
-        "post-install-cmd": ".github/git-hooks/init.sh",
+        "post-install-cmd": "tools/git-hooks/init.sh",
         "ctal": ["@static-clear-cache", "@csfix", "@test-all"],
         "static-clear-cache": ["@clear-cache-psalm", "@clear-cache-phpstan"],
         "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",

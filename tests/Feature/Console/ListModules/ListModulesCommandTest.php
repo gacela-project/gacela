@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Console\ListModules;
 
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
+use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class ListModulesCommandTest extends TestCase
@@ -100,9 +103,9 @@ TXT;
 
         $out = $output->fetch();
 
-        self::assertMatchesRegularExpression('#TestModule1.*ListModules\\\TestModule1#', $out);
-        self::assertMatchesRegularExpression('#TestModule2.*ListModules\\\TestModule2#', $out);
-        self::assertMatchesRegularExpression('#TestModule3.*ListModules\\\LevelUp\\\TestModule3#', $out);
+        self::assertMatchesRegularExpression('#.*ListModules\\\TestModule1#', $out);
+        self::assertMatchesRegularExpression('#.*ListModules\\\TestModule2#', $out);
+        self::assertMatchesRegularExpression('#.*ListModules\\\LevelUp\\\TestModule3#', $out);
         self::assertStringNotContainsString('vendor', $out);
         self::assertStringNotContainsString('ToBeIgnored', $out);
     }

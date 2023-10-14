@@ -29,7 +29,7 @@ return (new Config())
         'ereg_to_preg' => true,
         'explicit_string_variable' => true,
         'fully_qualified_strict_types' => true,
-        'function_typehint_space' => true,
+        'type_declaration_spaces' => true,
         'general_phpdoc_annotation_remove' => [
             'annotations' => [
                 'author',

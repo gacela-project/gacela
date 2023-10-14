@@ -43,17 +43,9 @@ abstract class AbstractFactory
     {
         $container = Container::withConfig(Config::getInstance());
 
-        $dependencyProvider = $this->resolveDependencyProvider();
+        $dependencyProvider = (new DependencyProviderResolver())->resolve($this);
         $dependencyProvider->provideModuleDependencies($container);
 
         return $container;
-    }
-
-    /**
-     * @throws ClassResolver\DependencyProvider\DependencyProviderNotFoundException
-     */
-    private function resolveDependencyProvider(): AbstractDependencyProvider
-    {
-        return (new DependencyProviderResolver())->resolve($this);
     }
 }

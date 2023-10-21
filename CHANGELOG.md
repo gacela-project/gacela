@@ -1,9 +1,12 @@
 # Changelog
 
+### 1.6.0
+### 2023-10-21
 
-### Unreleased
-
-- Fixed combining event listeners from different SetupGacela objects
+- Fixed combining event listeners from different `SetupGacela` objects
+- Removed `ConfigNotFoundException`
+- Simplify `FactoryResolverAwareTrait`
+- Refactor `SetupGacela` and `FactoryResolver`
 
 ### 1.5.0
 ### 2023-07-01

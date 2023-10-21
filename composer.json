@@ -78,6 +78,7 @@
         "static-clear-cache": ["@clear-cache-psalm", "@clear-cache-phpstan"],
         "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
+        "test": ["@test-all"],
         "test-all": ["@quality", "@phpunit"],
         "quality": ["@csrun", "@psalm", "@phpstan"],
         "phpunit": ["@test-unit", "@test-integration", "@test-feature"],

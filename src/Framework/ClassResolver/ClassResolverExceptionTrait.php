@@ -36,8 +36,9 @@ trait ClassResolverExceptionTrait
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string
     {
         return sprintf(
-            '\\%s\\%s',
+            '\\%s\\%s\\%s',
             $classInfo->getModuleNamespace(),
+            $classInfo->getModuleName(),
             $resolvableType,
         );
     }

@@ -8,6 +8,7 @@ data/
 vendor/
 
 *.cache
+gacela-local.php
 gacela-custom-services.php
 gacela-class-names.php
 mutation-report.html

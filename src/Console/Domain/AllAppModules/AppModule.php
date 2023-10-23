@@ -6,22 +6,19 @@ namespace Gacela\Console\Domain\AllAppModules;
 
 final class AppModule
 {
-    private function __construct(
+    public function __construct(
+        private string $fullModuleName,
         private string $moduleName,
         private string $facadeClass,
+        private ?string $factoryClass = null,
+        private ?string $configClass = null,
+        private ?string $dependencyProviderClass = null,
     ) {
     }
 
-    public static function fromClass(string $facadeClass): self
+    public function fullModuleName(): string
     {
-        $parts = explode('\\', $facadeClass);
-        array_pop($parts);
-        $moduleName = (string)end($parts);
-
-        return new self(
-            $moduleName,
-            $facadeClass,
-        );
+        return $this->fullModuleName;
     }
 
     public function moduleName(): string
@@ -35,5 +32,29 @@ final class AppModule
     public function facadeClass(): string
     {
         return $this->facadeClass;
+    }
+
+    /**
+     * @return ?class-string
+     */
+    public function factoryClass(): ?string
+    {
+        return $this->factoryClass;
+    }
+
+    /**
+     * @return ?class-string
+     */
+    public function configClass(): ?string
+    {
+        return $this->configClass;
+    }
+
+    /**
+     * @return ?class-string
+     */
+    public function dependencyProviderClass(): ?string
+    {
+        return $this->dependencyProviderClass;
     }
 }

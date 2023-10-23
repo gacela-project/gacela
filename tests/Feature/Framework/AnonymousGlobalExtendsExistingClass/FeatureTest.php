@@ -10,25 +10,45 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use PHPUnit\Framework\TestCase;
 
+use function assert;
+
 final class FeatureTest extends TestCase
 {
     public function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
-            $config->addAppConfig('config/*.php', 'config/local.php');
+            $config->addAppConfig('config/*.php');
         });
     }
 
-    public function test_override_factory_as_anonymous_global_when_config_method_is_called(): void
+    public function test_override_factory_as_anonymous_global(): void
     {
         AnonymousGlobal::overrideExistingResolvedClass(
             Module\Factory::class,
             new class() extends Module\Factory {
                 public function createDomainService(): StringValue
                 {
-                    $this->getConfigValue();
+                    assert($this->getConfigValue() === 'value');
                     return new StringValue('other');
+                }
+            },
+        );
+
+        $facade = new Module\Facade();
+        $result = $facade->getSomething();
+
+        self::assertSame('other', $result);
+    }
+
+    public function test_override_config_as_anonymous_global(): void
+    {
+        AnonymousGlobal::overrideExistingResolvedClass(
+            Module\Config::class,
+            new class() extends Module\Config {
+                public function getValue(): string
+                {
+                    return 'other';
                 }
             },
         );

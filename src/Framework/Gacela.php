@@ -84,7 +84,12 @@ final class Gacela
             return SetupGacela::fromCallable($configFn);
         }
 
-        $gacelaFilePath = sprintf('%s%s%s', self::rootDir(), DIRECTORY_SEPARATOR, self::GACELA_PHP_FILENAME);
+        $gacelaFilePath = sprintf(
+            '%s%s%s',
+            self::rootDir(),
+            DIRECTORY_SEPARATOR,
+            self::GACELA_PHP_FILENAME,
+        );
 
         if (is_file($gacelaFilePath)) {
             return SetupGacela::fromFile($gacelaFilePath);

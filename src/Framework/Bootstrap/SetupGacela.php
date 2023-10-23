@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
-use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
+use Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use RuntimeException;
 
+use function array_unique;
 use function is_callable;
 
 /**
@@ -20,28 +20,6 @@ use function is_callable;
  */
 final class SetupGacela extends AbstractSetupGacela
 {
-    public const shouldResetInMemoryCache = 'shouldResetInMemoryCache';
-    public const fileCacheEnabled = 'fileCacheEnabled';
-    public const fileCacheDirectory = 'fileCacheDirectory';
-    public const externalServices = 'externalServices';
-    public const projectNamespaces = 'projectNamespaces';
-    public const configKeyValues = 'configKeyValues';
-    public const servicesToExtend = 'servicesToExtend';
-    public const plugins = 'plugins';
-    public const gacelaConfigsToExtend = 'gacelaConfigsToExtend';
-
-    private const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
-    private const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
-    private const DEFAULT_FILE_CACHE_ENABLED = GacelaFileCache::DEFAULT_ENABLED_VALUE;
-    private const DEFAULT_FILE_CACHE_DIRECTORY = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
-    private const DEFAULT_PROJECT_NAMESPACES = [];
-    private const DEFAULT_CONFIG_KEY_VALUES = [];
-    private const DEFAULT_GENERIC_LISTENERS = [];
-    private const DEFAULT_SPECIFIC_LISTENERS = [];
-    private const DEFAULT_SERVICES_TO_EXTEND = [];
-    private const DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
-    private const DEFAULT_PLUGINS = [];
-
     /** @var callable(AppConfigBuilder):void */
     private $appConfigFn;
 
@@ -104,6 +82,9 @@ final class SetupGacela extends AbstractSetupGacela
         $this->suffixTypesFn = $emptyFn;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromFile(string $gacelaFilePath): self
     {
         if (!is_file($gacelaFilePath)) {
@@ -126,37 +107,38 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $gacelaConfig = new GacelaConfig();
         $setupGacelaFileFn($gacelaConfig);
-        self::runExtendConfig($gacelaConfig);
 
         return self::fromGacelaConfig($gacelaConfig);
     }
 
     public static function fromGacelaConfig(GacelaConfig $gacelaConfig): self
     {
-        $build = $gacelaConfig->build();
+        (new GacelaConfigExtender())->extend($gacelaConfig);
+
+        $dto = $gacelaConfig->toTransfer();
 
         return (new self())
-            ->setExternalServices($build['external-services'])
-            ->setAppConfigBuilder($build['app-config-builder'])
-            ->setSuffixTypesBuilder($build['suffix-types-builder'])
-            ->setBindingsBuilder($build['bindings-builder'])
-            ->setShouldResetInMemoryCache($build['should-reset-in-memory-cache'])
-            ->setFileCacheEnabled($build['file-cache-enabled'])
-            ->setFileCacheDirectory($build['file-cache-directory'])
-            ->setProjectNamespaces($build['project-namespaces'])
-            ->setConfigKeyValues($build['config-key-values'])
-            ->setAreEventListenersEnabled($build['are-event-listeners-enabled'])
-            ->setGenericListeners($build['generic-listeners'])
-            ->setSpecificListeners($build['specific-listeners'])
-            ->setGacelaConfigsToExtend($build['gacela-configs-to-extend'])
-            ->setPlugins($build['plugins'])
-            ->setServicesToExtend($build['instances-to-extend']);
+            ->setExternalServices($dto->getExternalServices())
+            ->setAppConfigBuilder($dto->getAppConfigBuilder())
+            ->setSuffixTypesBuilder($dto->getSuffixTypesBuilder())
+            ->setBindingsBuilder($dto->getBindingsBuilder())
+            ->setShouldResetInMemoryCache($dto->getShouldResetInMemoryCache())
+            ->setFileCacheEnabled($dto->getFileCacheEnabled())
+            ->setFileCacheDirectory($dto->getFileCacheDirectory())
+            ->setProjectNamespaces($dto->getProjectNamespaces())
+            ->setConfigKeyValues($dto->getConfigKeyValues())
+            ->setAreEventListenersEnabled($dto->getAreEventListenersEnabled())
+            ->setGenericListeners($dto->getGenericListeners())
+            ->setSpecificListeners($dto->getSpecificListeners())
+            ->setGacelaConfigsToExtend($dto->getGacelaConfigsToExtend())
+            ->setPlugins($dto->getPlugins())
+            ->setServicesToExtend($dto->getServicesToExtend());
     }
 
     /**
      * @param array<string,class-string|object|callable> $array
      */
-    public function setExternalServices(array $array): self
+    public function setExternalServices(?array $array): self
     {
         $this->markPropertyChanged(self::externalServices, true);
         $this->externalServices = $array;
@@ -441,7 +423,9 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineGacelaConfigsToExtend(array $list): void
     {
-        $this->setGacelaConfigsToExtend(array_merge($this->gacelaConfigsToExtend ?? [], $list));
+        $this->setGacelaConfigsToExtend(
+            array_unique(array_merge($this->gacelaConfigsToExtend ?? [], $list)),
+        );
     }
 
     /**
@@ -466,23 +450,6 @@ final class SetupGacela extends AbstractSetupGacela
     public function getPlugins(): array
     {
         return (array)$this->plugins;
-    }
-
-    private static function runExtendConfig(GacelaConfig $gacelaConfig): void
-    {
-        $configsToExtend = $gacelaConfig->build()['gacela-configs-to-extend'] ?? [];
-
-        if ($configsToExtend === []) {
-            return;
-        }
-
-        $container = new Container();
-
-        foreach ($configsToExtend as $className) {
-            /** @var callable $configToExtend */
-            $configToExtend = $container->get($className);
-            $configToExtend($gacelaConfig);
-        }
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self

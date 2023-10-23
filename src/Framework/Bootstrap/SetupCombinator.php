@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
-use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 
 /**
  * @psalm-suppress MixedArgumentTypeCoercion
@@ -88,7 +87,7 @@ final class SetupCombinator
                 }
             }
         } else {
-            $eventDispatcher = new NullEventDispatcher();
+            $eventDispatcher = $this->original->getEventDispatcher();
         }
         $this->original->setEventDispatcher($eventDispatcher);
     }

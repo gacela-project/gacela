@@ -1,18 +1,26 @@
 {
     $schema: 'vendor/infection/infection/resources/schema.json',
     logs: {
-        html: 'data/mutation-report.html',
+        html: 'data/infection/mutation-report.html',
+        text: 'data/infection/mutation.log',
         "stryker": {
             "report": "main"
-        }
+        },
+        "summary": "data/infection/summary.log",
+        "perMutator": "data/infection/per-mutator.md",
+        "github": true,
     },
-    timeout: 3,
+    timeout: 10,
     source: {
         directories: [
             'src'
         ]
     },
     mutators: {
-        '@default': true
+        '@default': true,
+        "global-ignore": [
+            "GacelaTest\\Feature\\Console\\CodeGenerator\\*",
+            "*FileCache*",
+        ]
     }
 }

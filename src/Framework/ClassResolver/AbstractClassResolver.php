@@ -6,9 +6,11 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Container\Container;
 use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
+use Gacela\Framework\ClassResolver\Facade\FacadeResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
@@ -26,7 +28,7 @@ abstract class AbstractClassResolver
 {
     use EventDispatchingCapabilities;
 
-    /** @var array<string,null|object> */
+    /** @var array<string, null|object> */
     private static array $cachedInstances = [];
 
     private static ?ClassNameFinderInterface $classNameFinder = null;
@@ -163,15 +165,11 @@ abstract class AbstractClassResolver
 
     private function createDefaultGacelaClass(): ?object
     {
-        switch ($this->getResolvableType()) {
-            case FactoryResolver::TYPE:
-                return new class() extends AbstractFactory {
-                };
-            case ConfigResolver::TYPE:
-                return new class() extends AbstractConfig {
-                };
-            default:
-                return null;
-        }
+        return match ($this->getResolvableType()) {
+            FacadeResolver::TYPE => new class() extends AbstractFacade {},
+            FactoryResolver::TYPE => new class() extends AbstractFactory {},
+            ConfigResolver::TYPE => new class() extends AbstractConfig {},
+            default => null,
+        };
     }
 }

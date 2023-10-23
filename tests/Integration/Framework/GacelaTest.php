@@ -22,6 +22,7 @@ final class GacelaTest extends TestCase
         $appRootDirProp->setValue(null);
 
         $this->expectException(GacelaNotBootstrappedException::class);
+        $this->expectExceptionMessage(GacelaNotBootstrappedException::MESSAGE);
 
         Gacela::rootDir();
     }

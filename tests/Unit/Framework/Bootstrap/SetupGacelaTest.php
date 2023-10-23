@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Bootstrap;
 
 use ArrayObject;
+use Fixtures\CustomGacelaConfig;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
@@ -218,5 +219,23 @@ final class SetupGacelaTest extends TestCase
             ExamplePluginWithoutConstructor::class,
             ExamplePluginWithConstructor::class,
         ], $setup->getPlugins());
+    }
+
+    public function test_gacela_configs_to_extends(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->extendGacelaConfigs([CustomGacelaConfig::class]),
+        );
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->extendGacelaConfig(CustomGacelaConfig::class),
+        );
+
+        $setup->combine($setup2);
+
+        self::assertEquals([
+            CustomGacelaConfig::class,
+        ], $setup->getGacelaConfigsToExtend());
     }
 }

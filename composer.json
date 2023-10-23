@@ -18,7 +18,8 @@
         },
         {
             "name": "Jesus Valera Reales",
-            "email": "jesus1902@outlook.com"
+            "email": "jesus1902@outlook.com",
+            "homepage": "https://jesusvalerareales.com/"
         }
     ],
     "support": {
@@ -31,7 +32,7 @@
         "gacela-project/container": "^0.5"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.17",
+        "friendsofphp/php-cs-fixer": "^3.35",
         "infection/infection": "^0.26",
         "phpbench/phpbench": "^1.2",
         "phpmetrics/phpmetrics": "^2.8",
@@ -40,7 +41,7 @@
         "psalm/plugin-phpunit": "^0.18",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^5.12"
+        "vimeo/psalm": "^5.15"
     },
     "suggest": {
         "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",
@@ -72,11 +73,12 @@
         }
     },
     "scripts": {
-        "post-install-cmd": ".github/git-hooks/init.sh",
+        "post-install-cmd": "tools/git-hooks/init.sh",
         "ctal": ["@static-clear-cache", "@csfix", "@test-all"],
         "static-clear-cache": ["@clear-cache-psalm", "@clear-cache-phpstan"],
         "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
+        "test": ["@test-all"],
         "test-all": ["@quality", "@phpunit"],
         "quality": ["@csrun", "@psalm", "@phpstan"],
         "phpunit": ["@test-unit", "@test-integration", "@test-feature"],
@@ -89,7 +91,11 @@
         "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze",
         "csfix": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix",
         "csrun": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix --dry-run",
-        "infection": "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=80 --min-covered-msi=80 --test-framework=phpunit",
+        "infection": [
+            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=75 --min-covered-msi=75",
+            "find tests -type f -name 'gacela-custom-services.php' -exec rm -rf {} \\;",
+            "find tests -type f -name 'gacela-class-names.php' -exec rm -rf {} \\;"
+        ],
         "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
         "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",

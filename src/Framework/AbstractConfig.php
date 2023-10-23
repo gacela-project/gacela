@@ -18,6 +18,8 @@ abstract class AbstractConfig
     }
 
     /**
+     * Get a project config value by its key.
+     *
      * @throws ConfigException
      */
     protected function get(string $key, mixed $default = Config::DEFAULT_CONFIG_VALUE): mixed

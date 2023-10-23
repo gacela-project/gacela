@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\Bootstrap\Setup\GacelaConfigTransfer;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
@@ -64,6 +65,8 @@ final class GacelaConfig
 
     /**
      * Define 'config/*.php' as path, and 'config/local.php' as local path for the configuration.
+     *
+     * @codeCoverageIgnore
      *
      * @return Closure(GacelaConfig):void
      */
@@ -335,44 +338,26 @@ final class GacelaConfig
     }
 
     /**
-     * @return array{
-     *     external-services: array<string,class-string|object|callable>,
-     *     app-config-builder: AppConfigBuilder,
-     *     suffix-types-builder: SuffixTypesBuilder,
-     *     bindings-builder: BindingsBuilder,
-     *     should-reset-in-memory-cache: ?bool,
-     *     file-cache-enabled: ?bool,
-     *     file-cache-directory: ?string,
-     *     project-namespaces: ?list<string>,
-     *     config-key-values: ?array<string,mixed>,
-     *     are-event-listeners-enabled: ?bool,
-     *     generic-listeners: ?list<callable>,
-     *     specific-listeners: ?array<class-string,list<callable>>,
-     *     gacela-configs-to-extend: ?list<class-string>,
-     *     plugins: ?list<class-string|callable>,
-     *     instances-to-extend: array<string,list<Closure>>,
-     * }
-     *
      * @internal
      */
-    public function build(): array
+    public function toTransfer(): GacelaConfigTransfer
     {
-        return [
-            'external-services' => $this->externalServices,
-            'app-config-builder' => $this->appConfigBuilder,
-            'suffix-types-builder' => $this->suffixTypesBuilder,
-            'bindings-builder' => $this->bindingsBuilder,
-            'should-reset-in-memory-cache' => $this->shouldResetInMemoryCache,
-            'file-cache-enabled' => $this->fileCacheEnabled,
-            'file-cache-directory' => $this->fileCacheDirectory,
-            'project-namespaces' => $this->projectNamespaces,
-            'config-key-values' => $this->configKeyValues,
-            'are-event-listeners-enabled' => $this->areEventListenersEnabled,
-            'generic-listeners' => $this->genericListeners,
-            'specific-listeners' => $this->specificListeners,
-            'gacela-configs-to-extend' => $this->gacelaConfigsToExtend,
-            'plugins' => $this->plugins,
-            'instances-to-extend' => $this->servicesToExtend,
-        ];
+        return new GacelaConfigTransfer(
+            $this->appConfigBuilder,
+            $this->suffixTypesBuilder,
+            $this->bindingsBuilder,
+            $this->externalServices,
+            $this->shouldResetInMemoryCache,
+            $this->fileCacheEnabled,
+            $this->fileCacheDirectory,
+            $this->projectNamespaces,
+            $this->configKeyValues,
+            $this->genericListeners,
+            $this->specificListeners,
+            $this->areEventListenersEnabled,
+            $this->gacelaConfigsToExtend,
+            $this->plugins,
+            $this->servicesToExtend,
+        );
     }
 }

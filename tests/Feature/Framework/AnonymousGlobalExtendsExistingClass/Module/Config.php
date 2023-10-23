@@ -6,7 +6,7 @@ namespace GacelaTest\Feature\Framework\AnonymousGlobalExtendsExistingClass\Modul
 
 use Gacela\Framework\AbstractConfig;
 
-final class Config extends AbstractConfig
+class Config extends AbstractConfig
 {
     public function getValue(): string
     {

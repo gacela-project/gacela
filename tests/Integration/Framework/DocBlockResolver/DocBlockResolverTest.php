@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\DocBlockResolver;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceNotFoundException;
+use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
+use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\DocBlockResolver\DocBlockResolvable;
 use Gacela\Framework\DocBlockResolver\DocBlockResolver;
 use Gacela\Framework\Gacela;
@@ -22,6 +25,22 @@ final class DocBlockResolverTest extends TestCase
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
+    }
+
+    public function test_missing_class_definition(): void
+    {
+        $this->expectException(MissingClassDefinitionException::class);
+
+        (new FakeCommand())->getUnknown();
+    }
+
+    public function test_service_not_found(): void
+    {
+        $this->expectException(DocBlockServiceNotFoundException::class);
+
+        $resolver = new DocBlockServiceResolver('');
+        $command = new FakeCommand();
+        $resolver->resolve($command);
     }
 
     public function test_normalize_facade(): void

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.7.0](https://github.com/gacela-project/gacela/compare/1.6.0...1.7.0) - 2023-12-21
+
+- Change min PHP support for `PHP>=8.1`
+
 ## [1.6.0](https://github.com/gacela-project/gacela/compare/1.5.0...1.6.0) - 2023-10-15
 
 - Fixed combining event listeners from different `SetupGacela` objects

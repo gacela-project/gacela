@@ -28,7 +28,7 @@
     "prefer-stable": true,
     "minimum-stability": "dev",
     "require": {
-        "php": "^8.0, <8.3",
+        "php": ">=8.1",
         "gacela-project/container": "^0.5"
     },
     "require-dev": {
@@ -65,7 +65,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.0"
+            "php": "8.1"
         },
         "allow-plugins": {
             "composer/package-versions-deprecated": true,

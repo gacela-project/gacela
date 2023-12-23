@@ -97,7 +97,7 @@ final class Config implements ConfigInterface
         /** @psalm-suppress DuplicateArrayKey */
         $this->config = [
             ...$this->loadAllConfigValues(),
-            ...$this->getSetupGacela()->getConfigKeyValues(),
+            ...$this->setup->getConfigKeyValues(),
         ];
     }
 
@@ -121,7 +121,7 @@ final class Config implements ConfigInterface
     {
         return $this->getAppRootDir()
             . DIRECTORY_SEPARATOR
-            . ltrim($this->getSetupGacela()->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
+            . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -132,7 +132,7 @@ final class Config implements ConfigInterface
         if (!$this->configFactory instanceof \Gacela\Framework\Config\ConfigFactory) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
-                $this->getSetupGacela(),
+                $this->setup,
             );
         }
 

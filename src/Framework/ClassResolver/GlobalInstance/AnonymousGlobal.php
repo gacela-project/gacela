@@ -100,7 +100,7 @@ final class AnonymousGlobal
     {
         if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
             throw new RuntimeException(
-                "Type '{$type}' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL),
+                sprintf("Type '%s' not allowed. Valid types: ", $type) . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL),
             );
         }
     }

@@ -24,13 +24,6 @@ final class Locator implements LocatorInterface
         $this->container = $container ?? new Container();
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
-    private function __clone()
-    {
-    }
-
     public static function resetInstance(): void
     {
         self::$instance = null;
@@ -61,7 +54,7 @@ final class Locator implements LocatorInterface
 
     public static function getInstance(?Container $container = null): self
     {
-        if (self::$instance === null) {
+        if (!self::$instance instanceof self) {
             self::$instance = new self($container);
         }
 

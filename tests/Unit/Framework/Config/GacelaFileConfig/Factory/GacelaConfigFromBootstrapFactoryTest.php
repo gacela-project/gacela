@@ -28,7 +28,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     public function test_no_special_global_services_then_default(): void
     {
         $setupGacela = (new SetupGacela())->setExternalServices([
-            'randomKey' => static fn () => 'randomValue',
+            'randomKey' => static fn (): string => 'randomValue',
         ]);
 
         $factory = new GacelaConfigFromBootstrapFactory($setupGacela);
@@ -56,7 +56,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
     {
         $factory = new GacelaConfigFromBootstrapFactory(
             (new SetupGacela())
-                ->setExternalServices(['externalServiceKey' => static fn () => 'externalServiceValue'])
+                ->setExternalServices(['externalServiceKey' => static fn (): string => 'externalServiceValue'])
                 ->setBindingsFn(static function (
                     BindingsBuilder $interfacesBuilder,
                     array $externalServices,

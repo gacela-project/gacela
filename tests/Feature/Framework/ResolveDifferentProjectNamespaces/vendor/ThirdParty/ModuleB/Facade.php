@@ -9,7 +9,7 @@ use Gacela\Framework\AbstractFacade;
 /**
  * @method Factory getFactory()
  */
-class Facade extends AbstractFacade
+final class Facade extends AbstractFacade
 {
     public function stringValueB1(): string
     {

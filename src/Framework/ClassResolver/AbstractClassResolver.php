@@ -112,7 +112,7 @@ abstract class AbstractClassResolver
 
     private function getClassNameFinder(): ClassNameFinderInterface
     {
-        if (self::$classNameFinder === null) {
+        if (!self::$classNameFinder instanceof ClassNameFinderInterface) {
             self::$classNameFinder = (new ClassResolverFactory(
                 Config::getInstance()->getSetupGacela(),
             ))->createClassNameFinder();
@@ -140,7 +140,7 @@ abstract class AbstractClassResolver
      */
     private function createInstance(string $resolvedClassName): object
     {
-        if ($this->container === null) {
+        if (!$this->container instanceof Container) {
             $this->container = new Container(
                 $this->getGacelaConfigFile()->getBindings(),
             );
@@ -154,7 +154,7 @@ abstract class AbstractClassResolver
 
     private function getGacelaConfigFile(): GacelaConfigFileInterface
     {
-        if ($this->gacelaFileConfig === null) {
+        if (!$this->gacelaFileConfig instanceof GacelaConfigFileInterface) {
             $this->gacelaFileConfig = Config::getInstance()
                 ->getFactory()
                 ->createGacelaFileConfig();

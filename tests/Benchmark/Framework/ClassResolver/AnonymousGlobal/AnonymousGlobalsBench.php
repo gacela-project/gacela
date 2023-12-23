@@ -76,6 +76,7 @@ final class AnonymousGlobalsBench
 
                     return new class($configValues, $valueFromDependencyProvider) {
                         private array $configValues;
+
                         private string $valueFromDependencyProvider;
 
                         public function __construct(

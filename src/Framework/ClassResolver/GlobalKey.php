@@ -15,7 +15,7 @@ final class GlobalKey
 
         $resolvableType = ResolvableType::fromClassName($matches['resolvable_type'] ?? '');
 
-        if (empty($resolvableType->moduleName())) {
+        if ($resolvableType->moduleName() === '') {
             return sprintf('\\%s', ltrim($fullClassName, '\\'));
         }
 

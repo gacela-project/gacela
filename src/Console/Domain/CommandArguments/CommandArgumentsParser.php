@@ -47,6 +47,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             if (isset($psr4[$psr4Key])) {
                 return $this->foundPsr4($psr4Key, $psr4[$psr4Key], $desiredNamespace);
             }
+
             if (isset($psr4Dev[$psr4Key])) {
                 return $this->foundPsr4($psr4Key, $psr4Dev[$psr4Key], $desiredNamespace);
             }
@@ -72,7 +73,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
         $result = [];
 
         foreach (explode('/', $desiredNamespace) as $explodedArg) {
-            if (empty($result)) {
+            if ($result === []) {
                 $result[] = $explodedArg;
             } else {
                 $prevValue = $result[count($result) - 1];

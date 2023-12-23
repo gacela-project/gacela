@@ -24,14 +24,16 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
     /** @var list<GacelaEventInterface> */
     private static array $inMemoryEvents = [];
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         self::$inMemoryEvents = [];
 
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
 
-            $config->registerGenericListener([$this, 'saveInMemoryEvent']);
+            $config->registerGenericListener(function (GacelaEventInterface $event): void {
+                $this->saveInMemoryEvent($event);
+            });
         });
     }
 

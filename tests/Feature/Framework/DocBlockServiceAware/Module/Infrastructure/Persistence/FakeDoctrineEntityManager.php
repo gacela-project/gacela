@@ -8,6 +8,6 @@ final class FakeDoctrineEntityManager
 {
     public function findAdminName(int $id): string
     {
-        return "fake-admin(id:{$id})";
+        return sprintf('fake-admin(id:%d)', $id);
     }
 }

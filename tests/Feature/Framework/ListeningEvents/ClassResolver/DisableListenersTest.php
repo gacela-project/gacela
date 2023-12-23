@@ -17,7 +17,9 @@ final class DisableListenersTest extends TestCase
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->disableEventListeners();
 
-            $config->registerGenericListener([$this, 'throwExceptionListener']);
+            $config->registerGenericListener(function (): never {
+                $this->throwExceptionListener();
+            });
         });
 
         $facade = new Facade();
@@ -29,7 +31,7 @@ final class DisableListenersTest extends TestCase
         $this->expectNotToPerformAssertions();
     }
 
-    public function throwExceptionListener(): void
+    public function throwExceptionListener(): never
     {
         throw new RuntimeException('This should never be called');
     }

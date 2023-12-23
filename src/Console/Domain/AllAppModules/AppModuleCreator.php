@@ -97,8 +97,9 @@ final class AppModuleCreator
             if ((new ReflectionClass($resolver))->isAnonymous()) {
                 throw new DependencyProviderNotFoundException($resolver);
             }
+
             return $resolver::class;
-        } catch (DependencyProviderNotFoundException $e) {
+        } catch (DependencyProviderNotFoundException $dependencyProviderNotFoundException) {
             return null;
         }
     }

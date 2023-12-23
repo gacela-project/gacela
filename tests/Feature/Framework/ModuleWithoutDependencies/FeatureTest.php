@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
     }

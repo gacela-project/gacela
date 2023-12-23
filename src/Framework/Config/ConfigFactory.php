@@ -16,6 +16,7 @@ use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 final class ConfigFactory extends AbstractFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
+
     private const GACELA_PHP_CONFIG_EXTENSION = '.php';
 
     private static ?GacelaConfigFileInterface $gacelaFileConfig = null;
@@ -42,7 +43,7 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        if (self::$gacelaFileConfig !== null) {
+        if (self::$gacelaFileConfig instanceof GacelaConfigFileInterface) {
             return self::$gacelaFileConfig;
         }
 
@@ -67,7 +68,7 @@ final class ConfigFactory extends AbstractFactory
 
         self::$gacelaFileConfig = array_reduce(
             $gacelaConfigFiles,
-            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item) => $carry->combine($item),
+            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->combine($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
         );
 

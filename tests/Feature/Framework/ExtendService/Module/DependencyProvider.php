@@ -18,6 +18,6 @@ final class DependencyProvider extends AbstractDependencyProvider
     {
         $container->set(self::ARRAY_AS_OBJECT, new ArrayObject([1, 2]));
 
-        $container->set(self::ARRAY_FROM_FUNCTION, static fn () => new ArrayObject([1, 2]));
+        $container->set(self::ARRAY_FROM_FUNCTION, static fn (): ArrayObject => new ArrayObject([1, 2]));
     }
 }

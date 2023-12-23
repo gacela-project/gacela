@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         # Remove the APP_ENV
         putenv('APP_ENV');

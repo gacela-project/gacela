@@ -25,12 +25,10 @@ trait ClassResolverExceptionTrait
             $resolvableType,
         ) . PHP_EOL;
 
-        $message .= sprintf(
+        return $message . (sprintf(
             'E.g. `%s`',
             $this->findClassNameExample($callerClassInfo, $resolvableType),
-        ) . PHP_EOL;
-
-        return $message;
+        ) . PHP_EOL);
     }
 
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string

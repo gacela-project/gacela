@@ -27,11 +27,12 @@ final class AllAppModulesFinder
         /** @var SplFileInfo $fileInfo */
         foreach ($this->fileIterator as $fileInfo) {
             $appModule = $this->createAppModule($fileInfo, $filter);
-            if ($appModule !== null && $this->isFacade($appModule)) {
+            if ($appModule instanceof AppModule && $this->isFacade($appModule)) {
                 $result[$appModule->facadeClass()] = $appModule;
             }
         }
-        uksort($result, static fn ($a, $b) => $a <=> $b);
+
+        uksort($result, static fn ($a, $b): int => $a <=> $b);
 
         return array_values($result);
     }

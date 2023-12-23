@@ -96,8 +96,9 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     public function combine(GacelaConfigFileInterface $other): GacelaConfigFileInterface
     {
         $new = clone $this;
-        $new->configItems = array_merge($this->configItems, $other->getConfigItems());
-        $new->bindings = array_merge($this->bindings, $other->getBindings());
+        $new->configItems = [...$this->configItems, ...$other->getConfigItems()];
+        /** @psalm-suppress DuplicateArrayKey */
+        $new->bindings = [...$this->bindings, ...$other->getBindings()];
         $new->suffixTypes = [
             'Facade' => $this->filterList($other, 'Facade'),
             'Factory' => $this->filterList($other, 'Factory'),

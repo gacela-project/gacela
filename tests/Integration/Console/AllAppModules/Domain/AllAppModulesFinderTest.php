@@ -20,7 +20,7 @@ final class AllAppModulesFinderTest extends TestCase
 {
     private ConsoleFacade $consoleFacade;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
         $this->consoleFacade = new ConsoleFacade();
@@ -32,7 +32,7 @@ final class AllAppModulesFinderTest extends TestCase
 
         $expected = [
             new AppModule(
-                join('\\', array_slice(explode('\\', Module1Facade::class), 0, -1)),
+                implode('\\', array_slice(explode('\\', Module1Facade::class), 0, -1)),
                 'Module1',
                 Module1Facade::class,
                 Module1Factory::class,
@@ -40,7 +40,7 @@ final class AllAppModulesFinderTest extends TestCase
                 Module1DependencyProvider::class,
             ),
             new AppModule(
-                join('\\', array_slice(explode('\\', Module2Facade::class), 0, -1)),
+                implode('\\', array_slice(explode('\\', Module2Facade::class), 0, -1)),
                 'Module2',
                 Module2Facade::class,
             ),
@@ -55,7 +55,7 @@ final class AllAppModulesFinderTest extends TestCase
 
         $expected = [
             new AppModule(
-                join('\\', array_slice(explode('\\', Module1Facade::class), 0, -1)),
+                implode('\\', array_slice(explode('\\', Module1Facade::class), 0, -1)),
                 'Module1',
                 Module1Facade::class,
                 Module1Factory::class,

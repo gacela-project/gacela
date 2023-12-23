@@ -34,7 +34,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
 
         $template = $this->templateByFilenameMap[$filename] ?? '';
         if (empty($template)) {
-            throw new RuntimeException("Unknown template for '{$filename}'?");
+            throw new RuntimeException(sprintf("Unknown template for '%s'?", $filename));
         }
 
         $fileContent = str_replace($search, $replace, $template);

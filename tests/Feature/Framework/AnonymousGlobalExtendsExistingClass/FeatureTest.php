@@ -14,7 +14,7 @@ use function assert;
 
 final class FeatureTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();

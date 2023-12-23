@@ -16,6 +16,7 @@ final class ResolvableType
     ];
 
     private string $resolvableType;
+
     private string $moduleName;
 
     private function __construct(string $resolvableType, string $moduleName)

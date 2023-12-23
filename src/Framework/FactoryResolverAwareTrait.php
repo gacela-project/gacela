@@ -26,7 +26,7 @@ trait FactoryResolverAwareTrait
             return self::doGetFactory();
         }
 
-        throw new RuntimeException("Method unknown: '{$name}'");
+        throw new RuntimeException(sprintf("Method unknown: '%s'", $name));
     }
 
     public function __call(string $name = '', array $arguments = [])
@@ -35,7 +35,7 @@ trait FactoryResolverAwareTrait
             return self::doGetFactory();
         }
 
-        throw new RuntimeException("Method unknown: '{$name}'");
+        throw new RuntimeException(sprintf("Method unknown: '%s'", $name));
     }
 
     public static function resetCache(): void

@@ -13,7 +13,7 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 // Is it also possible to bind classes like => AbstractClass::class => SpecificClass::class
 // Check the test _BindingInterfacesWithInnerDependencies_ BUT be aware this way is not possible
 // if the class has dependencies that cannot be resolved automatically!
-return static fn (GacelaConfig $config) => $config
+return static fn (GacelaConfig $config): GacelaConfig => $config
     ->addBinding(
         AbstractClass::class,
         new ConcreteClass(true, 'string', 1, 1.2, ['array']),

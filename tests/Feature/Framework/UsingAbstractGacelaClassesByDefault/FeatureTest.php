@@ -12,7 +12,7 @@ final class FeatureTest extends TestCase
     private const FACADE_ROOT_DIR = 'tests' . DIRECTORY_SEPARATOR . 'Feature' . DIRECTORY_SEPARATOR
                                     . 'Framework' . DIRECTORY_SEPARATOR . 'UsingAbstractGacelaClassesByDefault';
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
     }

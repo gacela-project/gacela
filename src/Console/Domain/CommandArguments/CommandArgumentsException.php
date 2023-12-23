@@ -23,7 +23,10 @@ final class CommandArgumentsException extends RuntimeException
      */
     public static function noAutoloadPsr4MatchFound(string $desiredNamespace, array $knownPsr4 = []): self
     {
-        $parsedKnownPsr4 = array_map(static fn (string $p) => str_replace('\\', '', $p), $knownPsr4);
+        $parsedKnownPsr4 = array_map(
+            static fn (string $p): string => str_replace('\\', '', $p),
+            $knownPsr4,
+        );
 
         return new self(
             sprintf(

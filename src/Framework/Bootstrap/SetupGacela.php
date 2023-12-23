@@ -88,7 +88,7 @@ final class SetupGacela extends AbstractSetupGacela
     public static function fromFile(string $gacelaFilePath): self
     {
         if (!is_file($gacelaFilePath)) {
-            throw new RuntimeException("Invalid file path: '{$gacelaFilePath}'");
+            throw new RuntimeException(sprintf("Invalid file path: '%s'", $gacelaFilePath));
         }
 
         /** @var callable(GacelaConfig):void|null $setupGacelaFileFn */
@@ -181,7 +181,7 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $builder = parent::buildAppConfig($builder);
 
-        if ($this->appConfigBuilder) {
+        if ($this->appConfigBuilder instanceof AppConfigBuilder) {
             $builder = $this->appConfigBuilder;
         }
 
@@ -211,7 +211,7 @@ final class SetupGacela extends AbstractSetupGacela
     ): BindingsBuilder {
         $builder = parent::buildBindings($builder, $externalServices);
 
-        if ($this->bindingsBuilder) {
+        if ($this->bindingsBuilder instanceof BindingsBuilder) {
             $builder = $this->bindingsBuilder;
         }
 
@@ -240,7 +240,7 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $builder = parent::buildSuffixTypes($builder);
 
-        if ($this->suffixTypesBuilder) {
+        if ($this->suffixTypesBuilder instanceof SuffixTypesBuilder) {
             $builder = $this->suffixTypesBuilder;
         }
 
@@ -395,10 +395,7 @@ final class SetupGacela extends AbstractSetupGacela
     public function addServicesToExtend(string $serviceId, array $servicesToExtend): self
     {
         $this->servicesToExtend[$serviceId] ??= [];
-        $this->servicesToExtend[$serviceId] = array_merge(
-            $this->servicesToExtend[$serviceId],
-            $servicesToExtend,
-        );
+        $this->servicesToExtend[$serviceId] = [...$this->servicesToExtend[$serviceId], ...$servicesToExtend];
 
         return $this;
     }
@@ -461,8 +458,8 @@ final class SetupGacela extends AbstractSetupGacela
 
     private function hasEventListeners(): bool
     {
-        return !empty($this->genericListeners)
-            || !empty($this->specificListeners);
+        return ($this->genericListeners !== null && $this->genericListeners !== [])
+            || ($this->specificListeners !== null && $this->specificListeners !== []);
     }
 
     /**

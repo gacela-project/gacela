@@ -100,14 +100,14 @@ final class Gacela
 
     private static function resetCache(): void
     {
-        AbstractFacade::resetCache();
         AnonymousGlobal::resetCache();
+        AbstractFacade::resetCache();
         AbstractFactory::resetCache();
+        AbstractClassResolver::resetCache();
+        InMemoryCache::resetCache();
         GacelaFileCache::resetCache();
         DocBlockResolverCache::resetCache();
         ClassResolverCache::resetCache();
-        InMemoryCache::resetCache();
-        AbstractClassResolver::resetCache();
         ConfigFactory::resetCache();
         Config::resetInstance();
         Locator::resetInstance();

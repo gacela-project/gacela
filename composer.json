@@ -32,6 +32,7 @@
         "gacela-project/container": "^0.6"
     },
     "require-dev": {
+        "ergebnis/composer-normalize": "^2.40.0",
         "friendsofphp/php-cs-fixer": "^3.41",
         "infection/infection": "^0.26",
         "phpbench/phpbench": "^1.2",
@@ -70,7 +71,8 @@
         },
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
-            "infection/extension-installer": true
+            "infection/extension-installer": true,
+            "ergebnis/composer-normalize": true
         },
         "sort-packages": true
     },

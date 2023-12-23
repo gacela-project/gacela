@@ -17,10 +17,13 @@ final class FileContentIo implements FileContentIoInterface
         if (is_dir($directory)) {
             return;
         }
-
-        if (!mkdir($directory) && !is_dir($directory)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
+        if (mkdir($directory)) {
+            return;
         }
+        if (is_dir($directory)) {
+            return;
+        }
+        throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
     }
 
     public function filePutContents(string $path, string $fileContent): void

@@ -28,7 +28,7 @@ return (new Config())
         'encoding' => true,
         'ereg_to_preg' => true,
         'explicit_string_variable' => true,
-        'fully_qualified_strict_types' => true,
+        'fully_qualified_strict_types' => false,
         'type_declaration_spaces' => true,
         'general_phpdoc_annotation_remove' => [
             'annotations' => [

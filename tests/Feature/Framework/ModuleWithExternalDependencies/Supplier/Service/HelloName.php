@@ -17,6 +17,9 @@ final class HelloName
 
     public function greet(string $name): array
     {
-        return [sprintf('Hello, %s from Supplier.', $name), ...$this->dependentFacade->greet($name)];
+        return [
+            sprintf('Hello, %s from Supplier.', $name),
+            ...$this->dependentFacade->greet($name),
+        ];
     }
 }

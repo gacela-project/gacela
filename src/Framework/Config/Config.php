@@ -56,7 +56,7 @@ final class Config implements ConfigInterface
 
     public static function getEventDispatcher(): EventDispatcherInterface
     {
-        if (!self::$eventDispatcher instanceof \Gacela\Framework\Event\Dispatcher\EventDispatcherInterface) {
+        if (!self::$eventDispatcher instanceof EventDispatcherInterface) {
             self::$eventDispatcher = self::getInstance()
                 ->getSetupGacela()
                 ->getEventDispatcher();
@@ -129,7 +129,7 @@ final class Config implements ConfigInterface
      */
     public function getFactory(): ConfigFactory
     {
-        if (!$this->configFactory instanceof \Gacela\Framework\Config\ConfigFactory) {
+        if (!$this->configFactory instanceof ConfigFactory) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
                 $this->setup,

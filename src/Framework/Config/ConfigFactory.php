@@ -43,7 +43,7 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        if (self::$gacelaFileConfig instanceof \Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface) {
+        if (self::$gacelaFileConfig instanceof GacelaConfigFileInterface) {
             return self::$gacelaFileConfig;
         }
 
@@ -68,7 +68,7 @@ final class ConfigFactory extends AbstractFactory
 
         self::$gacelaFileConfig = array_reduce(
             $gacelaConfigFiles,
-            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): \Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface => $carry->combine($item),
+            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->combine($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
         );
 

@@ -30,7 +30,7 @@ final class ClassResolverCache
 
     public static function getCache(): CacheInterface
     {
-        if (self::$cache !== null) {
+        if (self::$cache instanceof \Gacela\Framework\ClassResolver\Cache\CacheInterface) {
             self::dispatchEvent(new ClassNameCacheCachedEvent());
             return self::$cache;
         }

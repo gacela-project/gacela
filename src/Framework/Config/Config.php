@@ -38,7 +38,7 @@ final class Config implements ConfigInterface
 
     public static function getInstance(): self
     {
-        if (self::$instance === null) {
+        if (!self::$instance instanceof self) {
             throw new RuntimeException('You have to call createWithSetup() first.');
         }
 
@@ -56,7 +56,7 @@ final class Config implements ConfigInterface
 
     public static function getEventDispatcher(): EventDispatcherInterface
     {
-        if (self::$eventDispatcher === null) {
+        if (!self::$eventDispatcher instanceof \Gacela\Framework\Event\Dispatcher\EventDispatcherInterface) {
             self::$eventDispatcher = self::getInstance()
                 ->getSetupGacela()
                 ->getEventDispatcher();
@@ -70,7 +70,7 @@ final class Config implements ConfigInterface
      */
     public function get(string $key, mixed $default = self::DEFAULT_CONFIG_VALUE): mixed
     {
-        if (empty($this->config)) {
+        if ($this->config === []) {
             $this->init();
         }
 
@@ -101,7 +101,7 @@ final class Config implements ConfigInterface
     {
         $this->appRootDir = rtrim($dir, DIRECTORY_SEPARATOR);
 
-        if (empty($this->appRootDir)) {
+        if ($this->appRootDir === '' || $this->appRootDir === '0') {
             $this->appRootDir = getcwd() ?: ''; // @codeCoverageIgnore
         }
 
@@ -125,7 +125,7 @@ final class Config implements ConfigInterface
      */
     public function getFactory(): ConfigFactory
     {
-        if ($this->configFactory === null) {
+        if (!$this->configFactory instanceof \Gacela\Framework\Config\ConfigFactory) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
                 $this->getSetupGacela(),

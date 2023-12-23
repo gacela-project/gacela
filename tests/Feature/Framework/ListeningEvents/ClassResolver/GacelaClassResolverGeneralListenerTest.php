@@ -31,7 +31,9 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
 
-            $config->registerGenericListener([$this, 'saveInMemoryEvent']);
+            $config->registerGenericListener(function (GacelaEventInterface $event): void {
+                $this->saveInMemoryEvent($event);
+            });
         });
     }
 

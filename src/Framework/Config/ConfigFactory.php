@@ -42,7 +42,7 @@ final class ConfigFactory extends AbstractFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        if (self::$gacelaFileConfig !== null) {
+        if (self::$gacelaFileConfig instanceof \Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface) {
             return self::$gacelaFileConfig;
         }
 

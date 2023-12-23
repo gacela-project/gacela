@@ -72,7 +72,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
         $result = [];
 
         foreach (explode('/', $desiredNamespace) as $explodedArg) {
-            if (empty($result)) {
+            if ($result === []) {
                 $result[] = $explodedArg;
             } else {
                 $prevValue = $result[count($result) - 1];

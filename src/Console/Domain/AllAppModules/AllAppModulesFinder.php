@@ -27,7 +27,7 @@ final class AllAppModulesFinder
         /** @var SplFileInfo $fileInfo */
         foreach ($this->fileIterator as $fileInfo) {
             $appModule = $this->createAppModule($fileInfo, $filter);
-            if ($appModule !== null && $this->isFacade($appModule)) {
+            if ($appModule instanceof \Gacela\Console\Domain\AllAppModules\AppModule && $this->isFacade($appModule)) {
                 $result[$appModule->facadeClass()] = $appModule;
             }
         }

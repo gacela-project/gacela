@@ -54,7 +54,7 @@ final class Locator implements LocatorInterface
 
     public static function getInstance(?Container $container = null): self
     {
-        if (self::$instance === null) {
+        if (!self::$instance instanceof self) {
             self::$instance = new self($container);
         }
 

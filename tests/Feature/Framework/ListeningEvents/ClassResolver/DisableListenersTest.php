@@ -17,7 +17,9 @@ final class DisableListenersTest extends TestCase
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->disableEventListeners();
 
-            $config->registerGenericListener([$this, 'throwExceptionListener']);
+            $config->registerGenericListener(function (): void {
+                $this->throwExceptionListener();
+            });
         });
 
         $facade = new Facade();

@@ -181,7 +181,7 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $builder = parent::buildAppConfig($builder);
 
-        if ($this->appConfigBuilder) {
+        if ($this->appConfigBuilder instanceof \Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder) {
             $builder = $this->appConfigBuilder;
         }
 
@@ -211,7 +211,7 @@ final class SetupGacela extends AbstractSetupGacela
     ): BindingsBuilder {
         $builder = parent::buildBindings($builder, $externalServices);
 
-        if ($this->bindingsBuilder) {
+        if ($this->bindingsBuilder instanceof \Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder) {
             $builder = $this->bindingsBuilder;
         }
 
@@ -240,7 +240,7 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $builder = parent::buildSuffixTypes($builder);
 
-        if ($this->suffixTypesBuilder) {
+        if ($this->suffixTypesBuilder instanceof \Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder) {
             $builder = $this->suffixTypesBuilder;
         }
 
@@ -461,8 +461,8 @@ final class SetupGacela extends AbstractSetupGacela
 
     private function hasEventListeners(): bool
     {
-        return !empty($this->genericListeners)
-            || !empty($this->specificListeners);
+        return $this->genericListeners !== null && $this->genericListeners !== []
+            || $this->specificListeners !== null && $this->specificListeners !== [];
     }
 
     /**

@@ -14,10 +14,6 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
     /** @var array<class-string,list<callable>> */
     private array $specificListeners = [];
 
-    public function __construct()
-    {
-    }
-
     /**
      * @param list<callable> $genericListeners
      */

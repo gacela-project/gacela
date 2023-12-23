@@ -154,7 +154,7 @@ abstract class AbstractClassResolver
 
     private function getGacelaConfigFile(): GacelaConfigFileInterface
     {
-        if (!$this->gacelaFileConfig instanceof \Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface) {
+        if (!$this->gacelaFileConfig instanceof GacelaConfigFileInterface) {
             $this->gacelaFileConfig = Config::getInstance()
                 ->getFactory()
                 ->createGacelaFileConfig();

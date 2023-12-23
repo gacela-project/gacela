@@ -17,6 +17,7 @@ final class FileContentIo implements FileContentIoInterface
         if (is_dir($directory)) {
             return;
         }
+
         if (!mkdir($directory) && !is_dir($directory)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
         }

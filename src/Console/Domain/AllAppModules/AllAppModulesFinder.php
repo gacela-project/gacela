@@ -31,6 +31,7 @@ final class AllAppModulesFinder
                 $result[$appModule->facadeClass()] = $appModule;
             }
         }
+
         uksort($result, static fn ($a, $b) => $a <=> $b);
 
         return array_values($result);

@@ -20,7 +20,7 @@ final class MakeModuleCommandTest extends TestCase
         DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
         DirectoryUtil::removeDir(self::CACHE_DIR);
@@ -31,7 +31,7 @@ final class MakeModuleCommandTest extends TestCase
      */
     public function test_make_module(string $fileName, string $shortName): void
     {
-        $input = new StringInput("make:module Psr4CodeGeneratorData/TestModule {$shortName}");
+        $input = new StringInput('make:module Psr4CodeGeneratorData/TestModule ' . $shortName);
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -52,10 +52,10 @@ OUT;
 
         self::assertSame($expectedOutput, trim($output->fetch()));
 
-        self::assertFileExists("./data/TestModule/{$fileName}Facade.php");
-        self::assertFileExists("./data/TestModule/{$fileName}Factory.php");
-        self::assertFileExists("./data/TestModule/{$fileName}Config.php");
-        self::assertFileExists("./data/TestModule/{$fileName}DependencyProvider.php");
+        self::assertFileExists(sprintf('./data/TestModule/%sFacade.php', $fileName));
+        self::assertFileExists(sprintf('./data/TestModule/%sFactory.php', $fileName));
+        self::assertFileExists(sprintf('./data/TestModule/%sConfig.php', $fileName));
+        self::assertFileExists(sprintf('./data/TestModule/%sDependencyProvider.php', $fileName));
     }
 
     public function createModulesProvider(): iterable

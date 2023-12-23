@@ -83,6 +83,7 @@ final class AnonymousClassesTest extends TestCase
 
                     return new class($myService, ...$configValues) {
                         private object $myService;
+
                         /** @var int[] */
                         private array $configValues;
 
@@ -119,7 +120,7 @@ final class AnonymousClassesTest extends TestCase
                     $container->set('my-greeter', new class() {
                         public function greet(string $name): string
                         {
-                            return "Hello, {$name}!";
+                            return sprintf('Hello, %s!', $name);
                         }
                     });
                 }

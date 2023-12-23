@@ -80,6 +80,7 @@ final class ClassInfo implements ClassInfoInterface
         if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
             return self::$callerClassCache[$callerClass][$resolvableType];
         }
+
         /** @var list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $lastCallerClassPart = end($callerClassParts);

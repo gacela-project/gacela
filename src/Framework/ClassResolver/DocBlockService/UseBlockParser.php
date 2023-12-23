@@ -24,7 +24,7 @@ final class UseBlockParser
 
     private function searchInUsesStatements(string $className, string $phpCode): string
     {
-        $needle = "{$className};";
+        $needle = $className . ';';
 
         if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
             $phpCode = str_replace("\n", PHP_EOL, $phpCode);

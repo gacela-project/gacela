@@ -8,6 +8,6 @@ final class HelloName
 {
     public function greet(string $name): array
     {
-        return ["Hello, {$name} from Dependent."];
+        return [sprintf('Hello, %s from Dependent.', $name)];
     }
 }

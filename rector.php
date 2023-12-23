@@ -13,6 +13,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->sets([
         SetList::CODE_QUALITY,
+        SetList::CODING_STYLE,
         SetList::DEAD_CODE,
     ]);
 };

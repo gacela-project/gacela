@@ -47,6 +47,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             if (isset($psr4[$psr4Key])) {
                 return $this->foundPsr4($psr4Key, $psr4[$psr4Key], $desiredNamespace);
             }
+
             if (isset($psr4Dev[$psr4Key])) {
                 return $this->foundPsr4($psr4Key, $psr4Dev[$psr4Key], $desiredNamespace);
             }

@@ -16,6 +16,7 @@ use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 final class ConfigFactory extends AbstractFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
+
     private const GACELA_PHP_CONFIG_EXTENSION = '.php';
 
     private static ?GacelaConfigFileInterface $gacelaFileConfig = null;

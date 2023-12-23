@@ -20,7 +20,7 @@ final class MakeFileCommandTest extends TestCase
         DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
         DirectoryUtil::removeDir(self::CACHE_DIR);
@@ -31,15 +31,15 @@ final class MakeFileCommandTest extends TestCase
      */
     public function test_make_file(string $action, string $fileName, string $shortName): void
     {
-        $input = new StringInput("make:file Psr4CodeGenerator/TestModule {$action} {$shortName}");
+        $input = new StringInput(sprintf('make:file Psr4CodeGenerator/TestModule %s %s', $action, $shortName));
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
         $bootstrap->setAutoExit(false);
         $bootstrap->run($input, $output);
 
-        self::assertSame("> Path 'src/TestModule/{$fileName}.php' created successfully", trim($output->fetch()));
-        self::assertFileExists("./src/TestModule/{$fileName}.php");
+        self::assertSame(sprintf("> Path 'src/TestModule/%s.php' created successfully", $fileName), trim($output->fetch()));
+        self::assertFileExists(sprintf('./src/TestModule/%s.php', $fileName));
     }
 
     public function createFilesProvider(): iterable

@@ -93,8 +93,12 @@ final class Config implements ConfigInterface
     public function init(): void
     {
         $this->configFactory = null;
-        $this->config = $this->loadAllConfigValues();
-        $this->config = array_merge($this->config, $this->getSetupGacela()->getConfigKeyValues());
+
+        /** @psalm-suppress DuplicateArrayKey */
+        $this->config = [
+            ...$this->loadAllConfigValues(),
+            ...$this->getSetupGacela()->getConfigKeyValues(),
+        ];
     }
 
     public function setAppRootDir(string $dir): self

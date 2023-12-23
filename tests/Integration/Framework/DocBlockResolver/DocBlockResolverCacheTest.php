@@ -20,7 +20,7 @@ final class DocBlockResolverCacheTest extends TestCase
     /** @var list<class-string> */
     private static array $inMemoryEvents = [];
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         self::$inMemoryEvents = [];
 

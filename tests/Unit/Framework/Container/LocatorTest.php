@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class LocatorTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         Locator::resetInstance();
     }

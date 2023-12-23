@@ -14,8 +14,11 @@ final class SuffixTypesBuilder
     ];
 
     private const DEFAULT_FACADES = ['Facade'];
+
     private const DEFAULT_FACTORIES = ['Factory'];
+
     private const DEFAULT_CONFIGS = ['Config'];
+
     private const DEFAULT_DEPENDENCY_PROVIDERS = ['DependencyProvider'];
 
     /** @var list<string> */

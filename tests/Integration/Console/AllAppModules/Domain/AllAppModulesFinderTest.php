@@ -20,7 +20,7 @@ final class AllAppModulesFinderTest extends TestCase
 {
     private ConsoleFacade $consoleFacade;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
         $this->consoleFacade = new ConsoleFacade();

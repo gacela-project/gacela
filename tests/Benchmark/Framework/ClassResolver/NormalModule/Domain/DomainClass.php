@@ -7,6 +7,7 @@ namespace GacelaTest\Benchmark\Framework\ClassResolver\NormalModule\Domain;
 final class DomainClass
 {
     private array $configValues;
+
     private string $valueFromDependencyProvider;
 
     public function __construct(

@@ -10,7 +10,9 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 final class GacelaConfigItem
 {
     private string $path;
+
     private string $pathLocal;
+
     private ConfigReaderInterface $reader;
 
     public function __construct(

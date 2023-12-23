@@ -24,7 +24,7 @@ final class GacelaClassResolverGeneralListenerTest extends TestCase
     /** @var list<GacelaEventInterface> */
     private static array $inMemoryEvents = [];
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         self::$inMemoryEvents = [];
 

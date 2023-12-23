@@ -11,8 +11,11 @@ use function count;
 final class FilenameSanitizer implements FilenameSanitizerInterface
 {
     public const FACADE = 'Facade';
+
     public const FACTORY = 'Factory';
+
     public const CONFIG = 'Config';
+
     public const DEPENDENCY_PROVIDER = 'DependencyProvider';
 
     public const EXPECTED_FILENAMES = [

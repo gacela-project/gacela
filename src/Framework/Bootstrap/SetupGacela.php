@@ -88,7 +88,7 @@ final class SetupGacela extends AbstractSetupGacela
     public static function fromFile(string $gacelaFilePath): self
     {
         if (!is_file($gacelaFilePath)) {
-            throw new RuntimeException("Invalid file path: '{$gacelaFilePath}'");
+            throw new RuntimeException(sprintf("Invalid file path: '%s'", $gacelaFilePath));
         }
 
         /** @var callable(GacelaConfig):void|null $setupGacelaFileFn */
@@ -395,10 +395,7 @@ final class SetupGacela extends AbstractSetupGacela
     public function addServicesToExtend(string $serviceId, array $servicesToExtend): self
     {
         $this->servicesToExtend[$serviceId] ??= [];
-        $this->servicesToExtend[$serviceId] = array_merge(
-            $this->servicesToExtend[$serviceId],
-            $servicesToExtend,
-        );
+        $this->servicesToExtend[$serviceId] = [...$this->servicesToExtend[$serviceId], ...$servicesToExtend];
 
         return $this;
     }

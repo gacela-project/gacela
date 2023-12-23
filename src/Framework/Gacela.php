@@ -27,6 +27,7 @@ final class Gacela
     private const GACELA_PHP_FILENAME = 'gacela.php';
 
     private static ?Container $mainContainer = null;
+
     private static ?string $appRootDir = null;
 
     /**
@@ -72,6 +73,7 @@ final class Gacela
         if (self::$appRootDir === null) {
             throw new GacelaNotBootstrappedException();
         }
+
         return self::$appRootDir;
     }
 

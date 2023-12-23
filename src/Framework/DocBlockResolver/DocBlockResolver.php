@@ -100,6 +100,7 @@ final class DocBlockResolver
         if (!isset(self::$fileContentCache[$fileName])) {
             self::$fileContentCache[$fileName] = (string)file_get_contents($fileName);
         }
+
         $phpFile = self::$fileContentCache[$fileName];
 
         return (new UseBlockParser())->getUseStatement($className, $phpFile);

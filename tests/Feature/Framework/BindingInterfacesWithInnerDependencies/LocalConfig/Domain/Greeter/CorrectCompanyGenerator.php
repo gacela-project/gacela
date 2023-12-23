@@ -21,6 +21,6 @@ final class CorrectCompanyGenerator implements GreeterGeneratorInterface
     {
         $names = $this->nameGenerator->getNames();
 
-        return "Hello {$name}! Name: {$names}";
+        return sprintf('Hello %s! Name: %s', $name, $names);
     }
 }

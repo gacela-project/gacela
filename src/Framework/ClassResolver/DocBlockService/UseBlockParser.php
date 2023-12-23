@@ -32,7 +32,7 @@ final class UseBlockParser
 
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
-            static fn (string $l) => strncmp($l, 'use ', 4) === 0 && str_contains($l, $needle),
+            static fn (string $l): bool => strncmp($l, 'use ', 4) === 0 && str_contains($l, $needle),
         );
 
         /** @psalm-suppress RedundantCast */
@@ -49,7 +49,7 @@ final class UseBlockParser
 
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
-            static fn (string $l) => strncmp($l, 'namespace ', 10) === 0,
+            static fn (string $l): bool => strncmp($l, 'namespace ', 10) === 0,
         );
         /** @psalm-suppress RedundantCast */
         $lineSplit = (array)explode(' ', (string)reset($lines));

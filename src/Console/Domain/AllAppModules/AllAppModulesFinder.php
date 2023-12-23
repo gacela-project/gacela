@@ -32,7 +32,7 @@ final class AllAppModulesFinder
             }
         }
 
-        uksort($result, static fn ($a, $b) => $a <=> $b);
+        uksort($result, static fn ($a, $b): int => $a <=> $b);
 
         return array_values($result);
     }

@@ -28,7 +28,7 @@ final class ConsoleDependencyProvider extends AbstractDependencyProvider
 
     private function addCommands(Container $container): void
     {
-        $container->set(self::COMMANDS, static fn () => [
+        $container->set(self::COMMANDS, static fn (): array => [
             new MakeFileCommand(),
             new MakeModuleCommand(),
             new ListModulesCommand(),
@@ -37,7 +37,7 @@ final class ConsoleDependencyProvider extends AbstractDependencyProvider
 
     private function addTemplateByFilenameMap(Container $container): void
     {
-        $container->set(self::TEMPLATE_BY_FILENAME_MAP, fn () => [
+        $container->set(self::TEMPLATE_BY_FILENAME_MAP, fn (): array => [
             FilenameSanitizer::FACADE => $this->getConfig()->getFacadeMakerTemplate(),
             FilenameSanitizer::FACTORY => $this->getConfig()->getFactoryMakerTemplate(),
             FilenameSanitizer::CONFIG => $this->getConfig()->getConfigMakerTemplate(),

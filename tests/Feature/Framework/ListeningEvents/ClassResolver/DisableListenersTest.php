@@ -31,7 +31,7 @@ final class DisableListenersTest extends TestCase
         $this->expectNotToPerformAssertions();
     }
 
-    public function throwExceptionListener(): void
+    public function throwExceptionListener(): never
     {
         throw new RuntimeException('This should never be called');
     }

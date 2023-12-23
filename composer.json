@@ -70,7 +70,8 @@
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
             "infection/extension-installer": true
-        }
+        },
+        "sort-packages": true
     },
     "scripts": {
         "post-install-cmd": "tools/git-hooks/init.sh",

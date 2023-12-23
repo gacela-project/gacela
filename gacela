@@ -22,4 +22,8 @@ if (!class_exists(Application::class)) {
 Gacela::bootstrap($cwd);
 
 $bootstrap = new ConsoleBootstrap();
-$bootstrap->run();
+try {
+    $bootstrap->run();
+} catch (Exception $e) {
+    echo "gacela script failed. Error: " . $e->getMessage() . PHP_EOL;
+}

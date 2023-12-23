@@ -99,10 +99,8 @@ final class Locator implements LocatorInterface
      * @param class-string<T> $key
      * @param T|null $value
      */
-    private function add(string $key, mixed $value = null): self
+    private function add(string $key, mixed $value = null): void
     {
         $this->instanceCache[$key] = $value;
-
-        return $this;
     }
 }

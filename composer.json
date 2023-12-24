@@ -1,15 +1,14 @@
 {
     "name": "gacela-project/gacela",
     "description": "Gacela helps you separate your project into modules",
+    "license": "MIT",
     "type": "library",
-    "homepage": "https://gacela-project.com",
     "keywords": [
         "php",
         "modular",
         "framework",
         "kernel"
     ],
-    "license": "MIT",
     "authors": [
         {
             "name": "Jose Maria Valera Reales",
@@ -22,16 +21,16 @@
             "homepage": "https://jesusvalerareales.com/"
         }
     ],
+    "homepage": "https://gacela-project.com",
     "support": {
         "issues": "https://github.com/gacela-project/gacela/issues"
     },
-    "prefer-stable": true,
-    "minimum-stability": "dev",
     "require": {
         "php": ">=8.1",
         "gacela-project/container": "^0.6"
     },
     "require-dev": {
+        "ergebnis/composer-normalize": "^2.40.0",
         "friendsofphp/php-cs-fixer": "^3.41",
         "infection/infection": "^0.26",
         "phpbench/phpbench": "^1.2",
@@ -45,14 +44,13 @@
         "vimeo/psalm": "^5.18"
     },
     "suggest": {
-        "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files",
+        "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",
         "symfony/console": "Allows to use vendor/bin/gacela script"
     },
-    "bin": [
-        "gacela"
-    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Gacela\\": "src/"
@@ -64,46 +62,70 @@
             "GacelaTest\\": "tests/"
         }
     },
+    "bin": [
+        "gacela"
+    ],
     "config": {
-        "platform": {
-            "php": "8.1"
-        },
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
+            "ergebnis/composer-normalize": true,
             "infection/extension-installer": true
+        },
+        "platform": {
+            "php": "8.1"
         },
         "sort-packages": true
     },
     "scripts": {
         "post-install-cmd": "tools/git-hooks/init.sh",
-        "ctal": ["@static-clear-cache", "@csfix", "@test-all"],
-        "static-clear-cache": ["@clear-cache-psalm", "@clear-cache-phpstan"],
-        "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
-        "test": ["@test-all"],
-        "test-all": ["@quality", "@phpunit"],
-        "quality": ["@csrun", "@psalm", "@phpstan"],
-        "phpunit": ["@test-unit", "@test-integration", "@test-feature"],
-        "test-unit": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit",
-        "test-integration": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=integration",
-        "test-feature": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=feature",
-        "test-all-suites": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit,integration,feature --log-junit=data/log-junit.xml",
-        "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=data/coverage-html --coverage-xml=data/coverage-xml --log-junit=data/coverage-xml/junit.xml",
-        "psalm": "XDEBUG_MODE=off ./vendor/bin/psalm",
-        "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze",
+        "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "csfix": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix",
         "csrun": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix --dry-run",
+        "ctal": [
+            "@static-clear-cache",
+            "@csfix",
+            "@test-all"
+        ],
         "infection": [
             "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=75 --min-covered-msi=75",
             "find tests -type f -name 'gacela-custom-services.php' -exec rm -rf {} \\;",
             "find tests -type f -name 'gacela-class-names.php' -exec rm -rf {} \\;"
         ],
-        "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
-        "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
-        "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
         "metrics-report": [
             "@test-all-suites",
             "XDEBUG_MODE=off ./vendor/bin/phpmetrics --config=phpmetrics-config.json --junit=data/log-junit.xml"
-        ]
+        ],
+        "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
+        "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
+        "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
+        "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze",
+        "phpunit": [
+            "@test-unit",
+            "@test-integration",
+            "@test-feature"
+        ],
+        "psalm": "XDEBUG_MODE=off ./vendor/bin/psalm",
+        "quality": [
+            "@csrun",
+            "@psalm",
+            "@phpstan"
+        ],
+        "static-clear-cache": [
+            "@clear-cache-psalm",
+            "@clear-cache-phpstan"
+        ],
+        "test": [
+            "@test-all"
+        ],
+        "test-all": [
+            "@quality",
+            "@phpunit"
+        ],
+        "test-all-suites": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit,integration,feature --log-junit=data/log-junit.xml",
+        "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=data/coverage-html --coverage-xml=data/coverage-xml --log-junit=data/coverage-xml/junit.xml",
+        "test-feature": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=feature",
+        "test-integration": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=integration",
+        "test-unit": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit"
     }
 }

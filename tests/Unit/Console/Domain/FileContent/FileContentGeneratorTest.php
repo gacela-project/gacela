@@ -94,6 +94,30 @@ final class FileContentGeneratorTest extends TestCase
         self::assertSame('Dir/DirFactory.php', $actualPath);
     }
 
+    public function test_factory_maker_template_with_short_name(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('Dir/Factory.php', 'template-result');
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            'Factory' => 'template-result',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::FACTORY,
+            withShortName: true,
+        );
+
+        self::assertSame('Dir/Factory.php', $actualPath);
+    }
+
     public function test_config_maker_template(): void
     {
         $fileContentIo = $this->createMock(FileContentIoInterface::class);

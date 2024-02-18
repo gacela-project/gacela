@@ -141,6 +141,30 @@ final class FileContentGeneratorTest extends TestCase
         self::assertSame('Dir/DirConfig.php', $actualPath);
     }
 
+    public function test_config_maker_template_with_short_name(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('Dir/Config.php', 'template-result');
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            'Config' => 'template-result',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::CONFIG,
+            withShortName: true,
+        );
+
+        self::assertSame('Dir/Config.php', $actualPath);
+    }
+
     public function test_dependency_provider_maker_template(): void
     {
         $fileContentIo = $this->createMock(FileContentIoInterface::class);
@@ -162,5 +186,29 @@ final class FileContentGeneratorTest extends TestCase
         );
 
         self::assertSame('Dir/DirDependencyProvider.php', $actualPath);
+    }
+
+    public function test_dependency_provider_maker_template_with_short_name(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('Dir/DependencyProvider.php', 'template-result');
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            'DependencyProvider' => 'template-result',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::DEPENDENCY_PROVIDER,
+            withShortName: true,
+        );
+
+        self::assertSame('Dir/DependencyProvider.php', $actualPath);
     }
 }

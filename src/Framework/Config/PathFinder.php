@@ -24,7 +24,7 @@ final class PathFinder implements PathFinderInterface
     }
 
     /**
-     * Note: The GLOB_BRACE flag is not available on some non GNU systems, like Solaris or Alpine Linux.
+     * Note: The GLOB_BRACE flag is not available on some non-GNU systems, like Solaris or Alpine Linux.
      *
      * @see https://www.php.net/manual/en/function.glob.php
      */

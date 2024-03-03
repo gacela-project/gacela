@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Domain\FilenameSanitizer;
+namespace GacelaTest\Unit\Console\Domain\FilenameSanitizer;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use PHPUnit\Framework\TestCase;

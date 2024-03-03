@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Domain\CommandArguments;
+namespace GacelaTest\Unit\Console\Domain\CommandArguments;
 
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsException;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;

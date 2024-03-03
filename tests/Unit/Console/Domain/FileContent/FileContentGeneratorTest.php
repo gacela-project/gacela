@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Domain\FileContent;
+namespace GacelaTest\Unit\Console\Domain\FileContent;
 
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;

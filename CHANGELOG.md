@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.1](https://github.com/gacela-project/gacela/compare/1.7.0...1.7.1) - 2024-04-16
+
+- Keep packages sorted in composer.json
+- Added `ergebnis/composer-normalize`
+- Added `rector`
+
 ## [1.7.0](https://github.com/gacela-project/gacela/compare/1.6.0...1.7.0) - 2023-12-21
 
 - Change min PHP support for `PHP>=8.1`

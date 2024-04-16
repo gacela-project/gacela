@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 final class FeatureTest extends TestCase
 {
     private const FACADE_ROOT_DIR = 'tests' . DIRECTORY_SEPARATOR . 'Feature' . DIRECTORY_SEPARATOR
-                                    . 'Framework' . DIRECTORY_SEPARATOR . 'UsingAbstractGacelaClassesByDefault';
+        . 'Framework' . DIRECTORY_SEPARATOR . 'UsingAbstractGacelaClassesByDefault';
 
     protected function setUp(): void
     {

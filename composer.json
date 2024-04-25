@@ -31,7 +31,7 @@
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.42",
-        "friendsofphp/php-cs-fixer": "^3.53",
+        "friendsofphp/php-cs-fixer": "^3.54",
         "infection/infection": "^0.26",
         "phpbench/phpbench": "^1.2",
         "phpmetrics/phpmetrics": "^2.8",
@@ -41,7 +41,7 @@
         "rector/rector": "^0.18",
         "symfony/console": "^5.4",
         "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^5.22"
+        "vimeo/psalm": "^5.23"
     },
     "suggest": {
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",

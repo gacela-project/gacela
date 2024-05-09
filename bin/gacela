@@ -7,7 +7,7 @@ use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Application;
 
-(static function () {
+(static function (): void {
 
     $cwd = (string)getcwd();
     if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {

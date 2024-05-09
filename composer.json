@@ -63,7 +63,7 @@
         }
     },
     "bin": [
-        "gacela"
+        "bin/gacela"
     ],
     "config": {
         "allow-plugins": {

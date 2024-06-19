@@ -105,9 +105,9 @@ TXT;
             $rows[] = [
                 $module->fullModuleName(),
                 self::CHECK_SYMBOL, // facade is always true
-                $module->factoryClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-                $module->configClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-                $module->dependencyProviderClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->factoryClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->configClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->dependencyProviderClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
             ];
         }
 

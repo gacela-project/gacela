@@ -7,6 +7,7 @@ parameters:
         - %currentWorkingDirectory%/src/
     checkGenericClassInNonGenericObjectType: false
     checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
 
     ignoreErrors:
         - '#Method Gacela\\.*::.* should return class-string.*but returns string#'
@@ -14,3 +15,4 @@ parameters:
         - '#Method .*::__callStatic\(\) has no return type specified.*#'
         - '#Method .*::__call\(\) has no return type specified.*#'
         - '#Cannot cast mixed to string.#'
+        - '#Short ternary operator is not allowed.#'

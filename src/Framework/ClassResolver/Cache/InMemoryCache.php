@@ -16,6 +16,8 @@ final class InMemoryCache implements CacheInterface
 
     /**
      * @internal
+     *
+     * @return array<string, string>
      */
     public static function getAllFromKey(string $key): array
     {
@@ -24,6 +26,8 @@ final class InMemoryCache implements CacheInterface
 
     /**
      * @internal
+     *
+     * @return array<string, array<string,string>>
      */
     public static function all(): array
     {

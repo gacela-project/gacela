@@ -10,6 +10,9 @@ interface CacheInterface
 
     public function get(string $cacheKey): string;
 
+    /**
+     * @return array<string, string>
+     */
     public function getAll(): array;
 
     public function put(string $cacheKey, string $className): void;

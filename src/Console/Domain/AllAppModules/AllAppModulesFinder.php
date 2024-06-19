@@ -91,7 +91,7 @@ final class AllAppModulesFinder
         $rc = new ReflectionClass($appModule->facadeClass());
         $parentClass = $rc->getParentClass();
 
-        return $parentClass
+        return $parentClass !== false
             && $parentClass->name === AbstractFacade::class;
     }
 }

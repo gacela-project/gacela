@@ -12,7 +12,7 @@ final class DocBlockParser
             return '';
         }
 
-        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') === 0) {
             $docBlock = str_replace("\n", PHP_EOL, $docBlock);
         }
 
@@ -20,8 +20,9 @@ final class DocBlockParser
             explode(PHP_EOL, $docBlock),
             static fn (string $l): bool => str_contains($l, $method),
         );
-        /** @psalm-suppress RedundantCast */
-        $lineSplit = (array)explode(' ', (string)reset($lines));
+
+        /** @var array<int, string> $lineSplit */
+        $lineSplit = explode(' ', (string)reset($lines));
 
         return $lineSplit[3] ?? '';
     }

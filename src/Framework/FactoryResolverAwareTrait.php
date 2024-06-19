@@ -20,7 +20,10 @@ trait FactoryResolverAwareTrait
     /** @var array<string, AbstractFactory> */
     private static array $factories = [];
 
-    public static function __callStatic(string $name = '', array $arguments = [])
+    /**
+     * @param list<mixed> $arguments
+     */
+    public static function __callStatic(string $name = '', array $arguments = []): AbstractFactory
     {
         if ($name === 'getFactory') {
             return self::doGetFactory();
@@ -29,7 +32,10 @@ trait FactoryResolverAwareTrait
         throw new RuntimeException(sprintf("Method unknown: '%s'", $name));
     }
 
-    public function __call(string $name = '', array $arguments = [])
+    /**
+     * @param list<mixed> $arguments
+     */
+    public function __call(string $name = '', array $arguments = []): AbstractFactory
     {
         if ($name === 'getFactory') {
             return self::doGetFactory();

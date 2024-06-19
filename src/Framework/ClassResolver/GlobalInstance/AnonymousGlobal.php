@@ -42,7 +42,7 @@ final class AnonymousGlobal
         $key = self::getGlobalKeyFromClassName($className);
 
         /** @var ?T $instance */
-        $instance = self::getByKey($key)
+        $instance = self::getByKey($key) // @phpstan-ignore-line
             ?? self::getByKey('\\' . $key)
             ?? null;
 

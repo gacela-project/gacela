@@ -400,16 +400,25 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    /**
+     * @param array<string,class-string|object|callable> $list
+     */
     public function combineExternalServices(array $list): void
     {
         $this->setExternalServices(array_merge($this->externalServices ?? [], $list));
     }
 
+    /**
+     * @param list<string> $list
+     */
     public function combineProjectNamespaces(array $list): void
     {
         $this->setProjectNamespaces(array_merge($this->projectNamespaces ?? [], $list));
     }
 
+    /**
+     * @param array<string,mixed> $list
+     */
     public function combineConfigKeyValues(array $list): void
     {
         $this->setConfigKeyValues(array_merge($this->configKeyValues ?? [], $list));
@@ -421,6 +430,7 @@ final class SetupGacela extends AbstractSetupGacela
     public function combineGacelaConfigsToExtend(array $list): void
     {
         $this->setGacelaConfigsToExtend(
+            // @phpstan-ignore-next-line
             array_unique(array_merge($this->gacelaConfigsToExtend ?? [], $list)),
         );
     }

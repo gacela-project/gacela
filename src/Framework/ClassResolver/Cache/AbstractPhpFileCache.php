@@ -37,6 +37,9 @@ abstract class AbstractPhpFileCache implements CacheInterface
         return self::$cache[static::class][$cacheKey];
     }
 
+    /**
+     * @return array<string,string>
+     */
     public function getAll(): array
     {
         return self::$cache[static::class];

@@ -115,8 +115,8 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     private function filterList(GacelaConfigFileInterface $other, string $key): array
     {
         $merged = array_merge($this->suffixTypes[$key], $other->getSuffixTypes()[$key]); // @phpstan-ignore-line
-        $filtered = array_filter(array_unique($merged));
-        /** @var list<string> $values */
+        $filtered = array_filter(array_unique($merged), static fn (string $str): bool => $str !== '');
+        /** @var list<non-empty-string> $values */
         $values = array_values($filtered);
 
         return $values;

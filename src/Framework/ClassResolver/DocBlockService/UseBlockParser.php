@@ -38,7 +38,7 @@ final class UseBlockParser
         );
 
         /** @psalm-suppress RedundantCast */
-        $lineSplit = (array)explode(' ', (string)reset($lines));
+        $lineSplit = explode(' ', (string)reset($lines));
 
         return rtrim($lineSplit[1] ?? '', ';');
     }
@@ -54,7 +54,7 @@ final class UseBlockParser
             static fn (string $l): bool => strncmp($l, 'namespace ', 10) === 0,
         );
         /** @psalm-suppress RedundantCast */
-        $lineSplit = (array)explode(' ', (string)reset($lines));
+        $lineSplit = explode(' ', (string)reset($lines));
 
         return rtrim($lineSplit[1] ?? '', ';');
     }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2267bcdd919c482298b47a1ff49b7afd",
+    "content-hash": "901845b78c008d569a952e6ba9dbd8ea",
     "packages": [
         {
             "name": "gacela-project/container",
@@ -4323,27 +4323,30 @@
         },
         {
             "name": "rector/rector",
-            "version": "0.18.13",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "f8011a76d36aa4f839f60f3b4f97707d97176618"
+                "reference": "044e6364017882d1e346da8690eeabc154da5495"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/f8011a76d36aa4f839f60f3b4f97707d97176618",
-                "reference": "f8011a76d36aa4f839f60f3b4f97707d97176618",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/044e6364017882d1e346da8690eeabc154da5495",
+                "reference": "044e6364017882d1e346da8690eeabc154da5495",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.2|^8.0",
-                "phpstan/phpstan": "^1.10.35"
+                "phpstan/phpstan": "^1.11"
             },
             "conflict": {
                 "rector/rector-doctrine": "*",
                 "rector/rector-downgrade-php": "*",
                 "rector/rector-phpunit": "*",
                 "rector/rector-symfony": "*"
+            },
+            "suggest": {
+                "ext-dom": "To manipulate phpunit.xml via the custom-rule command"
             },
             "bin": [
                 "bin/rector"
@@ -4367,7 +4370,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/0.18.13"
+                "source": "https://github.com/rectorphp/rector/tree/1.2.2"
             },
             "funding": [
                 {
@@ -4375,7 +4378,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-12-20T16:08:01+00:00"
+            "time": "2024-07-25T07:44:34+00:00"
         },
         {
             "name": "sanmai/later",

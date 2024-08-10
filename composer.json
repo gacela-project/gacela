@@ -30,13 +30,13 @@
         "gacela-project/container": "^0.6"
     },
     "require-dev": {
-        "ergebnis/composer-normalize": "^2.42",
-        "friendsofphp/php-cs-fixer": "^3.54",
+        "ergebnis/composer-normalize": "^2.43",
+        "friendsofphp/php-cs-fixer": "^3.56",
         "infection/infection": "^0.26",
-        "phpbench/phpbench": "^1.2",
+        "phpbench/phpbench": "^1.3",
         "phpmetrics/phpmetrics": "^2.8",
-        "phpstan/phpstan": "^1.10",
-        "phpstan/phpstan-strict-rules": "^1.5",
+        "phpstan/phpstan": "^1.11",
+        "phpstan/phpstan-strict-rules": "^1.6",
         "phpunit/phpunit": "^10.5",
         "psalm/plugin-phpunit": "^0.19",
         "rector/rector": "^1.2",

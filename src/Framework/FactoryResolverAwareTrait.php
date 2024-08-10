@@ -23,7 +23,7 @@ trait FactoryResolverAwareTrait
     /**
      * @param list<mixed> $arguments
      */
-    public static function __callStatic(string $name = '', array $arguments = []): AbstractFactory
+    public static function __callStatic(string $name = '', array $arguments = [])
     {
         if ($name === 'getFactory') {
             return self::doGetFactory();
@@ -35,7 +35,7 @@ trait FactoryResolverAwareTrait
     /**
      * @param list<mixed> $arguments
      */
-    public function __call(string $name = '', array $arguments = []): AbstractFactory
+    public function __call(string $name = '', array $arguments = [])
     {
         if ($name === 'getFactory') {
             return self::doGetFactory();

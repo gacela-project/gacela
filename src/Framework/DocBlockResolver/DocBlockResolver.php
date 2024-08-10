@@ -84,6 +84,9 @@ final class DocBlockResolver
         throw MissingClassDefinitionException::missingDefinition($this->callerClass, $method, $className);
     }
 
+    /**
+     * @param ReflectionClass<object> $reflectionClass
+     */
     private function searchClassOverDocBlock(ReflectionClass $reflectionClass, string $method): string
     {
         $docBlock = (string)$reflectionClass->getDocComment();
@@ -93,6 +96,8 @@ final class DocBlockResolver
 
     /**
      * Look the uses, to find the fully-qualified class name for the className.
+     *
+     * @param ReflectionClass<object> $reflectionClass
      */
     private function searchClassOverUseStatements(ReflectionClass $reflectionClass, string $className): string
     {

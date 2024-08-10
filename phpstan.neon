@@ -6,8 +6,6 @@ parameters:
     level: max
     paths:
         - %currentWorkingDirectory%/src/
-    checkGenericClassInNonGenericObjectType: false
-    treatPhpDocTypesAsCertain: false
 
     ignoreErrors:
         - '#Method Gacela\\.*::__call.*\(\) has no return type specified.#'

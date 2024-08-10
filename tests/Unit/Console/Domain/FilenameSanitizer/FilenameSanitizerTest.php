@@ -40,7 +40,7 @@ final class FilenameSanitizerTest extends TestCase
         );
     }
 
-    public function providerFacade(): iterable
+    public static function providerFacade(): iterable
     {
         yield ['faca'];
         yield ['facad'];
@@ -60,7 +60,7 @@ final class FilenameSanitizerTest extends TestCase
         );
     }
 
-    public function providerFactory(): iterable
+    public static function providerFactory(): iterable
     {
         yield ['fact'];
         yield ['facto'];
@@ -81,7 +81,7 @@ final class FilenameSanitizerTest extends TestCase
         );
     }
 
-    public function providerConfig(): iterable
+    public static function providerConfig(): iterable
     {
         yield ['conf'];
         yield ['confi'];
@@ -101,7 +101,7 @@ final class FilenameSanitizerTest extends TestCase
         );
     }
 
-    public function providerDependencyProvider(): iterable
+    public static function providerDependencyProvider(): iterable
     {
         yield ['depe'];
         yield ['dependency'];

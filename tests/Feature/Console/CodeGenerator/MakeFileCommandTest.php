@@ -44,7 +44,7 @@ final class MakeFileCommandTest extends TestCase
         self::assertFileExists(sprintf('./src/TestModule/%s.php', $fileName));
     }
 
-    public function createFilesProvider(): iterable
+    public static function createFilesProvider(): iterable
     {
         yield 'facade' => ['facade', 'TestModuleFacade', ''];
         yield 'factory' => ['factory', 'TestModuleFactory', ''];

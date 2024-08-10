@@ -87,7 +87,7 @@ TXT;
         self::assertStringNotContainsString('ToBeIgnored', $out);
     }
 
-    public function commandInputProvider(): iterable
+    public static function commandInputProvider(): iterable
     {
         yield 'slashes' => ['ListModules/TestModule1'];
         yield 'backward slashes' => ['ListModules\\TestModule1'];

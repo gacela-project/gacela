@@ -65,7 +65,7 @@ final class AnonymousGlobalTest extends TestCase
         self::assertSame($resolvedClass, AnonymousGlobal::getByClassName($className));
     }
 
-    public function providerOverrideExistingResolvedClass(): iterable
+    public static function providerOverrideExistingResolvedClass(): iterable
     {
         yield 'using the module prefix' => [
             'App\Module\ModuleClassNameFacade',

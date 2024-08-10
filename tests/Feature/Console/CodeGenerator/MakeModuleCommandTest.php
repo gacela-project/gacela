@@ -60,7 +60,7 @@ OUT;
         self::assertFileExists(sprintf('./data/TestModule/%sDependencyProvider.php', $fileName));
     }
 
-    public function createModulesProvider(): iterable
+    public static function createModulesProvider(): iterable
     {
         yield 'module' => ['TestModule', ''];
         yield 'module -s' => ['', '-s'];

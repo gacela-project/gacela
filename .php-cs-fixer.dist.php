@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 $finder = Finder::create()
     ->files()
@@ -124,4 +125,5 @@ return (new Config())
             'identical' => false,
             'less_and_greater' => null,
         ],
-    ]);
+    ])
+    ->setParallelConfig(ParallelConfigFactory::detect());

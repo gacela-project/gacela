@@ -9,6 +9,8 @@ use OuterIterator;
 use ReflectionClass;
 use SplFileInfo;
 
+use function sprintf;
+
 final class AllAppModulesFinder
 {
     public function __construct(

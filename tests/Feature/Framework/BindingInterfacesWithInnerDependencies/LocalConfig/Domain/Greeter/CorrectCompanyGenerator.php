@@ -6,6 +6,8 @@ namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Lo
 
 use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
 
+use function sprintf;
+
 final class CorrectCompanyGenerator implements GreeterGeneratorInterface
 {
     /**

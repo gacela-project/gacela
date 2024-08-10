@@ -6,6 +6,8 @@ namespace GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Supplier\S
 
 use GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Dependent;
 
+use function sprintf;
+
 final class HelloName
 {
     private Dependent\FacadeInterface $dependentFacade;

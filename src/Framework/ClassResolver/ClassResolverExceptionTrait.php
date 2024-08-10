@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use function sprintf;
+
 trait ClassResolverExceptionTrait
 {
     /**

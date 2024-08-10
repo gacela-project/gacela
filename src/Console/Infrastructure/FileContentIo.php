@@ -7,6 +7,8 @@ namespace Gacela\Console\Infrastructure;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use RuntimeException;
 
+use function sprintf;
+
 /**
  * @codeCoverageIgnore
  */

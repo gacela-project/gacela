@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DocBlockService;
 
+use function sprintf;
+
 final class UseBlockParser
 {
     public function getUseStatement(string $className, string $phpCode): string

@@ -12,6 +12,7 @@ use RuntimeException;
 use function get_class;
 use function in_array;
 use function is_string;
+use function sprintf;
 
 final class AnonymousGlobal
 {

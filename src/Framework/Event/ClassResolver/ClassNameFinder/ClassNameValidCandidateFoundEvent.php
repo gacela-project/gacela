@@ -6,6 +6,8 @@ namespace Gacela\Framework\Event\ClassResolver\ClassNameFinder;
 
 use Gacela\Framework\Event\GacelaEventInterface;
 
+use function sprintf;
+
 final class ClassNameValidCandidateFoundEvent implements GacelaEventInterface
 {
     public function __construct(

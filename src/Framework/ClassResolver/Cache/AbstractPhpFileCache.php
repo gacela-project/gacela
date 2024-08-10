@@ -6,6 +6,8 @@ namespace Gacela\Framework\ClassResolver\Cache;
 
 use RuntimeException;
 
+use function sprintf;
+
 abstract class AbstractPhpFileCache implements CacheInterface
 {
     /** @var array<class-string,array<string,string>> */

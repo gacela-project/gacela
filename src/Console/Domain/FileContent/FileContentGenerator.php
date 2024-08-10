@@ -7,6 +7,8 @@ namespace Gacela\Console\Domain\FileContent;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use RuntimeException;
 
+use function sprintf;
+
 final class FileContentGenerator implements FileContentGeneratorInterface
 {
     /**

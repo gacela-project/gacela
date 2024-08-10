@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\PathNormalizer;
 
+use function sprintf;
+
 final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
     public function __construct(

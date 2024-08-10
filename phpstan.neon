@@ -7,7 +7,6 @@ parameters:
     paths:
         - %currentWorkingDirectory%/src/
     checkGenericClassInNonGenericObjectType: false
-    checkMissingIterableValueType: false
     treatPhpDocTypesAsCertain: false
 
     ignoreErrors:

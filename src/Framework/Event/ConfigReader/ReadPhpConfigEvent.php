@@ -7,6 +7,7 @@ namespace Gacela\Framework\Event\ConfigReader;
 use Gacela\Framework\Event\GacelaEventInterface;
 
 use function get_class;
+use function sprintf;
 
 final class ReadPhpConfigEvent implements GacelaEventInterface
 {

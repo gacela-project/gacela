@@ -40,9 +40,9 @@
         "phpunit/phpunit": "^9.6",
         "psalm/plugin-phpunit": "^0.18",
         "rector/rector": "^0.18",
-        "symfony/console": "^5.4",
-        "symfony/var-dumper": "^5.4",
-        "vimeo/psalm": "^5.23"
+        "symfony/console": "^6.4",
+        "symfony/var-dumper": "^6.4",
+        "vimeo/psalm": "^5.25"
     },
     "suggest": {
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",

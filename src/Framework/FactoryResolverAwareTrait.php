@@ -7,6 +7,8 @@ namespace Gacela\Framework;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use RuntimeException;
 
+use function sprintf;
+
 /**
  * The `__callStatic` and `__call` methods allow defining `getFactory` as static and non-static methods.
  *

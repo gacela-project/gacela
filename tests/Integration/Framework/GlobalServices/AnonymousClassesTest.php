@@ -13,6 +13,8 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
+
 final class AnonymousClassesTest extends TestCase
 {
     protected function setUp(): void

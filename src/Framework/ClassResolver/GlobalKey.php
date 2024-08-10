@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use function sprintf;
+
 final class GlobalKey
 {
     /**
@@ -21,7 +23,7 @@ final class GlobalKey
 
         return sprintf(
             '\\%s\\%s',
-            ltrim($matches['pre_namespace'], '\\'),
+            ltrim($matches['pre_namespace'] ?? '', '\\'),
             $resolvableType->resolvableType(),
         );
     }

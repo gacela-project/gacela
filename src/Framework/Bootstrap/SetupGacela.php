@@ -14,6 +14,7 @@ use RuntimeException;
 
 use function array_unique;
 use function is_callable;
+use function sprintf;
 
 /**
  * @psalm-suppress ArgumentTypeCoercion,MixedArgumentTypeCoercion

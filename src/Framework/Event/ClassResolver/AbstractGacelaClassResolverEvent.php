@@ -9,6 +9,7 @@ use Gacela\Framework\ClassResolver\ClassInfoInterface;
 use Gacela\Framework\Event\GacelaEventInterface;
 
 use function get_class;
+use function sprintf;
 
 abstract class AbstractGacelaClassResolverEvent implements GacelaEventInterface
 {

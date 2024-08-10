@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
+use function sprintf;
+
 final class MakeModuleCommandTest extends TestCase
 {
     private const CACHE_DIR = '.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'TestModule';
@@ -58,7 +60,7 @@ OUT;
         self::assertFileExists(sprintf('./data/TestModule/%sDependencyProvider.php', $fileName));
     }
 
-    public function createModulesProvider(): iterable
+    public static function createModulesProvider(): iterable
     {
         yield 'module' => ['TestModule', ''];
         yield 'module -s' => ['', '-s'];

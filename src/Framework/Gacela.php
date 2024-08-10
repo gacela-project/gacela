@@ -21,6 +21,7 @@ use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
 use function is_string;
+use function sprintf;
 
 final class Gacela
 {

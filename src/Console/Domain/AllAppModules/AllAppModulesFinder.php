@@ -6,11 +6,18 @@ namespace Gacela\Console\Domain\AllAppModules;
 
 use Gacela\Framework\AbstractFacade;
 use OuterIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ReflectionClass;
 use SplFileInfo;
 
+use function sprintf;
+
 final class AllAppModulesFinder
 {
+    /**
+     * @param RecursiveIteratorIterator<RecursiveDirectoryIterator> $fileIterator
+     */
     public function __construct(
         private OuterIterator $fileIterator,
         private AppModuleCreator $appModuleCreator,

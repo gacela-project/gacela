@@ -13,6 +13,8 @@ use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
 use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
 use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 
+use function sprintf;
+
 final class ConfigFactory extends AbstractFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';

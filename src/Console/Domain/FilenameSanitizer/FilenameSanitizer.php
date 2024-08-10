@@ -7,6 +7,7 @@ namespace Gacela\Console\Domain\FilenameSanitizer;
 use RuntimeException;
 
 use function count;
+use function sprintf;
 
 final class FilenameSanitizer implements FilenameSanitizerInterface
 {

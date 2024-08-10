@@ -9,6 +9,7 @@ use function count;
 use function get_class;
 use function is_object;
 use function is_string;
+use function sprintf;
 
 final class ClassInfo implements ClassInfoInterface
 {

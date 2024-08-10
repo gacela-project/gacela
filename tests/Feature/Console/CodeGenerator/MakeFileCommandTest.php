@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
+use function sprintf;
+
 final class MakeFileCommandTest extends TestCase
 {
     private const CACHE_DIR = '.' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'TestModule';
@@ -42,7 +44,7 @@ final class MakeFileCommandTest extends TestCase
         self::assertFileExists(sprintf('./src/TestModule/%s.php', $fileName));
     }
 
-    public function createFilesProvider(): iterable
+    public static function createFilesProvider(): iterable
     {
         yield 'facade' => ['facade', 'TestModuleFacade', ''];
         yield 'factory' => ['factory', 'TestModuleFactory', ''];

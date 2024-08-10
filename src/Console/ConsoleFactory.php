@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console;
 
+use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
@@ -75,10 +76,13 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
+    /**
+     * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
+     */
     private function createRecursiveIterator(): RecursiveIteratorIterator
     {
         return new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(Gacela::rootDir(), RecursiveDirectoryIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator(Gacela::rootDir(), FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::LEAVES_ONLY,
         );
     }

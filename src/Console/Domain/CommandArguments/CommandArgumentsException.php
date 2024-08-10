@@ -6,6 +6,8 @@ namespace Gacela\Console\Domain\CommandArguments;
 
 use RuntimeException;
 
+use function sprintf;
+
 final class CommandArgumentsException extends RuntimeException
 {
     public static function noAutoloadFound(): self

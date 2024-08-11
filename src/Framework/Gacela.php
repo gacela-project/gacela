@@ -83,8 +83,11 @@ final class Gacela
      * bound to the context that it is passed as first argument.
      * It can be the string-key (from a non-class/file context) or the class/object itself.
      */
-    public static function addGlobal(object|string $context, object $resolvedClass): void
+    public static function addGlobal(object $resolvedClass, object|string $context = ''): void
     {
+        if ($context === '') {
+            $context = basename(debug_backtrace()[0]['file'] ?? __FILE__, '.php');
+        }
         AnonymousGlobal::addGlobal($context, $resolvedClass);
     }
 

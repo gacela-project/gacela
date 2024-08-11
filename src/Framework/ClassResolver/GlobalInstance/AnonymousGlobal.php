@@ -70,7 +70,6 @@ final class AnonymousGlobal
     {
         $contextName = self::extractContextNameFromContext($context);
         $parentClass = get_parent_class($resolvedClass);
-
         $type = is_string($parentClass)
             ? ResolvableType::fromClassName($parentClass)->resolvableType()
             : $contextName;

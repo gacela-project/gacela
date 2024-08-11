@@ -7,6 +7,7 @@ namespace GacelaTest\Feature\Console\ListModules;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -71,9 +72,7 @@ TXT;
         self::assertSame($expected, $this->command->getDisplay());
     }
 
-    /**
-     * @dataProvider commandInputProvider
-     */
+    #[DataProvider('commandInputProvider')]
     public function test_list_modules_with_filter(string $input): void
     {
         $this->command->execute(['filter' => $input]);

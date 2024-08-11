@@ -15,7 +15,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
      * @param array<string,string> $templateByFilenameMap
      */
     public function __construct(
-        private FileContentIoInterface $fileContentIo,
+        private readonly FileContentIoInterface $fileContentIo,
         private array $templateByFilenameMap,
     ) {
     }

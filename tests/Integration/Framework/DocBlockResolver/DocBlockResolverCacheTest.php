@@ -42,7 +42,7 @@ final class DocBlockResolverCacheTest extends TestCase
     {
         DocBlockResolverCache::getCacheInstance();
 
-        self::assertEquals([
+        self::assertSame([
             CustomServicesInMemoryCacheCreatedEvent::class,
         ], self::$inMemoryEvents);
     }
@@ -52,7 +52,7 @@ final class DocBlockResolverCacheTest extends TestCase
         DocBlockResolverCache::getCacheInstance();
         DocBlockResolverCache::getCacheInstance();
 
-        self::assertEquals([
+        self::assertSame([
             CustomServicesInMemoryCacheCreatedEvent::class,
             CustomServicesCacheCachedEvent::class,
         ], self::$inMemoryEvents);
@@ -68,7 +68,7 @@ final class DocBlockResolverCacheTest extends TestCase
 
         DocBlockResolverCache::getCacheInstance();
 
-        self::assertEquals([
+        self::assertSame([
             CustomServicesPhpCacheCreatedEvent::class,
         ], self::$inMemoryEvents);
     }

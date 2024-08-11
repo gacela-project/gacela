@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Console\Domain\FilenameSanitizer;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class FilenameSanitizerTest extends TestCase
@@ -29,9 +30,7 @@ final class FilenameSanitizerTest extends TestCase
         $this->filenameSanitizer->sanitize('fac');
     }
 
-    /**
-     * @dataProvider providerFacade
-     */
+    #[DataProvider('providerFacade')]
     public function test_facade(string $filename): void
     {
         self::assertSame(

@@ -11,7 +11,7 @@ use function sprintf;
 final class ClassNamePhpCacheCreatedEvent implements GacelaEventInterface
 {
     public function __construct(
-        private string $cacheDir,
+        private readonly string $cacheDir,
     ) {
     }
 

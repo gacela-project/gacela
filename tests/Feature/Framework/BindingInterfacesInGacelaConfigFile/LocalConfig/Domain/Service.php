@@ -7,11 +7,11 @@ namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Local
 final class Service
 {
     public function __construct(
-        private AbstractClass $resolvedClass,
-        private AbstractFromAnonymousClass $resolveAbstractFromAnonymousClass,
-        private AbstractFromCallable $resolveAbstractFromCallable,
-        private InterfaceFromAnonymousClass $resolveInterfaceFromAnonymousClass,
-        private InterfaceFromCallable $resolveInterfaceFromCallable,
+        private readonly AbstractClass $resolvedClass,
+        private readonly AbstractFromAnonymousClass $resolveAbstractFromAnonymousClass,
+        private readonly AbstractFromCallable $resolveAbstractFromCallable,
+        private readonly InterfaceFromAnonymousClass $resolveInterfaceFromAnonymousClass,
+        private readonly InterfaceFromCallable $resolveInterfaceFromCallable,
     ) {
     }
 

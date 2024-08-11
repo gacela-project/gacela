@@ -7,8 +7,8 @@ namespace Gacela\Console\Domain\CommandArguments;
 final class CommandArguments
 {
     public function __construct(
-        private string $namespace,
-        private string $directory,
+        private readonly string $namespace,
+        private readonly string $directory,
     ) {
     }
 

@@ -22,21 +22,21 @@ final class GacelaConfigTransfer
      * @param ?array<string,list<Closure>> $servicesToExtend
      */
     public function __construct(
-        private AppConfigBuilder $appConfigBuilder,
-        private SuffixTypesBuilder $suffixTypesBuilder,
-        private BindingsBuilder $bindingsBuilder,
-        private ?array $externalServices,
-        private ?bool $shouldResetInMemoryCache,
-        private ?bool $fileCacheEnabled,
-        private ?string $fileCacheDirectory,
-        private ?array $projectNamespaces,
-        private ?array $configKeyValues,
-        private ?array $genericListeners,
-        private ?array $specificListeners,
-        private ?bool $areEventListenersEnabled,
-        private ?array $gacelaConfigsToExtend,
-        private ?array $plugins,
-        private ?array $servicesToExtend,
+        private readonly AppConfigBuilder $appConfigBuilder,
+        private readonly SuffixTypesBuilder $suffixTypesBuilder,
+        private readonly BindingsBuilder $bindingsBuilder,
+        private readonly ?array $externalServices,
+        private readonly ?bool $shouldResetInMemoryCache,
+        private readonly ?bool $fileCacheEnabled,
+        private readonly ?string $fileCacheDirectory,
+        private readonly ?array $projectNamespaces,
+        private readonly ?array $configKeyValues,
+        private readonly ?array $genericListeners,
+        private readonly ?array $specificListeners,
+        private readonly ?bool $areEventListenersEnabled,
+        private readonly ?array $gacelaConfigsToExtend,
+        private readonly ?array $plugins,
+        private readonly ?array $servicesToExtend,
     ) {
     }
 

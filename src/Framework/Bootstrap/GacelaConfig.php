@@ -14,14 +14,11 @@ use Gacela\Framework\Event\GacelaEventInterface;
 
 final class GacelaConfig
 {
-    private AppConfigBuilder $appConfigBuilder;
+    private readonly AppConfigBuilder $appConfigBuilder;
 
-    private SuffixTypesBuilder $suffixTypesBuilder;
+    private readonly SuffixTypesBuilder $suffixTypesBuilder;
 
-    private BindingsBuilder $bindingsBuilder;
-
-    /** @var array<string, class-string|object|callable> */
-    private array $externalServices;
+    private readonly BindingsBuilder $bindingsBuilder;
 
     private ?bool $shouldResetInMemoryCache = null;
 
@@ -55,9 +52,8 @@ final class GacelaConfig
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
-    public function __construct(array $externalServices = [])
+    public function __construct(private array $externalServices = [])
     {
-        $this->externalServices = $externalServices;
         $this->appConfigBuilder = new AppConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
         $this->bindingsBuilder = new BindingsBuilder();
@@ -222,10 +218,8 @@ final class GacelaConfig
 
     /**
      * Add/replace an existent configuration key with a specific value.
-     *
-     * @param mixed $value
      */
-    public function addAppConfigKeyValue(string $key, $value): self
+    public function addAppConfigKeyValue(string $key, mixed $value): self
     {
         $this->configKeyValues[$key] = $value;
 

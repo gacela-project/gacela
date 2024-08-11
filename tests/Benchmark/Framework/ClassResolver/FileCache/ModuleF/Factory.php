@@ -19,11 +19,9 @@ final class Factory extends AbstractFactory
 {
     use DocBlockResolverAwareTrait;
 
-    private StringValueInterface $stringValue;
-
-    public function __construct(StringValueInterface $stringValue)
-    {
-        $this->stringValue = $stringValue;
+    public function __construct(
+        private StringValueInterface $stringValue,
+    ) {
     }
 
     public function getArrayConfigAndProvidedDependency(): array

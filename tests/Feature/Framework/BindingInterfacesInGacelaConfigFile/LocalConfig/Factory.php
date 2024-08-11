@@ -15,11 +15,11 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 final class Factory extends AbstractFactory
 {
     public function __construct(
-        private AbstractClass $resolvedClass,
-        private AbstractFromAnonymousClass $resolvingAbstractAnonClassFunction,
-        private AbstractFromCallable $resolvingAbstractAnonClassCallable,
-        private InterfaceFromAnonymousClass $resolvingAnonClassFunction,
-        private InterfaceFromCallable $resolvingAnonClassCallable,
+        private readonly AbstractClass $resolvedClass,
+        private readonly AbstractFromAnonymousClass $resolvingAbstractAnonClassFunction,
+        private readonly AbstractFromCallable $resolvingAbstractAnonClassCallable,
+        private readonly InterfaceFromAnonymousClass $resolvingAnonClassFunction,
+        private readonly InterfaceFromCallable $resolvingAnonClassCallable,
     ) {
     }
 

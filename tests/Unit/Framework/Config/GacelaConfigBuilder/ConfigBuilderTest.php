@@ -16,7 +16,7 @@ final class ConfigBuilderTest extends TestCase
     {
         $builder = new AppConfigBuilder();
 
-        self::assertEquals([], $builder->build());
+        self::assertSame([], $builder->build());
     }
 
     public function test_custom_path(): void

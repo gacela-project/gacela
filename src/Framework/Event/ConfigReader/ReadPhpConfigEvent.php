@@ -6,13 +6,12 @@ namespace Gacela\Framework\Event\ConfigReader;
 
 use Gacela\Framework\Event\GacelaEventInterface;
 
-use function get_class;
 use function sprintf;
 
 final class ReadPhpConfigEvent implements GacelaEventInterface
 {
     public function __construct(
-        private string $absolutePath,
+        private readonly string $absolutePath,
     ) {
     }
 
@@ -25,7 +24,7 @@ final class ReadPhpConfigEvent implements GacelaEventInterface
     {
         return sprintf(
             '%s {absolutePath:"%s"}',
-            get_class($this),
+            self::class,
             $this->absolutePath,
         );
     }

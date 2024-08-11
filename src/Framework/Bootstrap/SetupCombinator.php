@@ -12,7 +12,7 @@ use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 final class SetupCombinator
 {
     public function __construct(
-        private SetupGacela $original,
+        private readonly SetupGacela $original,
     ) {
     }
 

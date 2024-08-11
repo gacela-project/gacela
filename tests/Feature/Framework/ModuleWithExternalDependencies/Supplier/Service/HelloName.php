@@ -10,11 +10,9 @@ use function sprintf;
 
 final class HelloName
 {
-    private Dependent\FacadeInterface $dependentFacade;
-
-    public function __construct(Dependent\FacadeInterface $dependentFacade)
-    {
-        $this->dependentFacade = $dependentFacade;
+    public function __construct(
+        private readonly Dependent\FacadeInterface $dependentFacade,
+    ) {
     }
 
     public function greet(string $name): array

@@ -15,7 +15,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
     public function __construct(
-        private SetupGacelaInterface $bootstrapSetup,
+        private readonly SetupGacelaInterface $bootstrapSetup,
     ) {
     }
 

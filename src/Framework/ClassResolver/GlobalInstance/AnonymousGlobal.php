@@ -9,7 +9,6 @@ use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableType;
 use RuntimeException;
 
-use function get_class;
 use function in_array;
 use function is_string;
 use function sprintf;
@@ -88,7 +87,7 @@ final class AnonymousGlobal
             return $context;
         }
 
-        $callerClass = get_class($context);
+        $callerClass = $context::class;
         /** @var list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
 

@@ -11,7 +11,7 @@ use GacelaTest\Fixtures\StringValue;
 final class ExamplePluginWithConstructor
 {
     public function __construct(
-        private Container $container,
+        private readonly Container $container,
     ) {
     }
 

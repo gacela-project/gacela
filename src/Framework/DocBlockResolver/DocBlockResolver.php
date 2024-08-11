@@ -9,7 +9,6 @@ use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionExcepti
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
 use ReflectionClass;
 
-use function get_class;
 use function is_string;
 
 final class DocBlockResolver
@@ -20,7 +19,7 @@ final class DocBlockResolver
     private static array $fileContentCache = [];
 
     /** @var class-string */
-    private string $callerClass;
+    private readonly string $callerClass;
 
     /**
      * @param class-string $callerClass
@@ -33,7 +32,7 @@ final class DocBlockResolver
 
     public static function fromCaller(object $caller): self
     {
-        return new self(get_class($caller));
+        return new self($caller::class);
     }
 
     public function getDocBlockResolvable(string $method): DocBlockResolvable

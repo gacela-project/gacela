@@ -19,8 +19,8 @@ final class AllAppModulesFinder
      * @param RecursiveIteratorIterator<RecursiveDirectoryIterator> $fileIterator
      */
     public function __construct(
-        private OuterIterator $fileIterator,
-        private AppModuleCreator $appModuleCreator,
+        private readonly OuterIterator $fileIterator,
+        private readonly AppModuleCreator $appModuleCreator,
     ) {
     }
 

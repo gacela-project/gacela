@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Lo
 final class GreeterService
 {
     public function __construct(
-        private GreeterGeneratorInterface $greeter,
+        private readonly GreeterGeneratorInterface $greeter,
     ) {
     }
 

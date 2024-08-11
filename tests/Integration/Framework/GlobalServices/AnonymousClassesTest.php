@@ -84,16 +84,13 @@ final class AnonymousClassesTest extends TestCase
                     $configValues = $this->getConfig()->getValues();
 
                     return new class($myService, ...$configValues) {
-                        private object $myService;
-
                         /** @var int[] */
-                        private array $configValues;
+                        private readonly array $configValues;
 
                         public function __construct(
-                            object $myService,
+                            private readonly object $myService,
                             int ...$configValues,
                         ) {
-                            $this->myService = $myService;
                             $this->configValues = $configValues;
                         }
 

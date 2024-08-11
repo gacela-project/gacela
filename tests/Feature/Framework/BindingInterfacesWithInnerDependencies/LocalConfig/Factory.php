@@ -11,7 +11,7 @@ use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalCon
 final class Factory extends AbstractFactory
 {
     public function __construct(
-        private GreeterGeneratorInterface $greeterGenerator,
+        private readonly GreeterGeneratorInterface $greeterGenerator,
     ) {
     }
 

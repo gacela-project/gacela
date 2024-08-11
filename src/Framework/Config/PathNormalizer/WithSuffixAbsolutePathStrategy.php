@@ -9,7 +9,7 @@ use function sprintf;
 final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
     public function __construct(
-        private string $appRootDir,
+        private readonly string $appRootDir,
         private string $configFileNameSuffix = '',
     ) {
     }

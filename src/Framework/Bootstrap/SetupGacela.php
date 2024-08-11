@@ -75,8 +75,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function __construct()
     {
-        $emptyFn = static function (): void {
-        };
+        $emptyFn = static function (): void {};
 
         $this->appConfigFn = $emptyFn;
         $this->bindingsFn = $emptyFn;

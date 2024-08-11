@@ -5,6 +5,7 @@
 - Move `./gacela` script to `bin/` directory
 - Fixed disable event listeners
 - Add `Gacela::addGlobal()`
+- Add `Gacela::overrideExistingResolvedClass()`
 
 ## [1.7.1](https://github.com/gacela-project/gacela/compare/1.7.0...1.7.1) - 2024-04-16
 

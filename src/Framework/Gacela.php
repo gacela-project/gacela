@@ -79,6 +79,16 @@ final class Gacela
     }
 
     /**
+     * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
+     * bound to the context that it is passed as first argument.
+     * It can be the string-key (from a non-class/file context) or the class/object itself.
+     */
+    public static function addGlobal(object|string $context, object $resolvedClass): void
+    {
+        AnonymousGlobal::addGlobal($context, $resolvedClass);
+    }
+
+    /**
      * @param null|Closure(GacelaConfig):void $configFn
      */
     private static function processConfigFnIntoSetup(Closure $configFn = null): SetupGacelaInterface

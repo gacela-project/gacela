@@ -15,7 +15,7 @@ final class CorrectCompanyGenerator implements GreeterGeneratorInterface
      *                                           See gacela.php in this Feature test.
      */
     public function __construct(
-        private CustomNameGenerator $nameGenerator,
+        private readonly CustomNameGenerator $nameGenerator,
     ) {
     }
 

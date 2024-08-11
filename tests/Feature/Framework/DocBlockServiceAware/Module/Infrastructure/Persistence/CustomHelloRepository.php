@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructur
 final class CustomHelloRepository
 {
     public function __construct(
-        private FakeDoctrineEntityManager $entityManager,
+        private readonly FakeDoctrineEntityManager $entityManager,
     ) {
     }
 

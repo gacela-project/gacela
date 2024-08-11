@@ -24,8 +24,8 @@ final class ConfigFactory extends AbstractFactory
     private static ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
     public function __construct(
-        private string $appRootDir,
-        private SetupGacelaInterface $setup,
+        private readonly string $appRootDir,
+        private readonly SetupGacelaInterface $setup,
     ) {
     }
 

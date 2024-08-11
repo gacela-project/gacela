@@ -10,7 +10,7 @@ final class InMemoryCache implements CacheInterface
     private static array $cache = [];
 
     public function __construct(
-        private string $key,
+        private readonly string $key,
     ) {
     }
 

@@ -15,9 +15,9 @@ use function strlen;
 final class AppModuleCreator
 {
     public function __construct(
-        private FactoryResolver $factoryResolver,
-        private ConfigResolver $configResolver,
-        private DependencyProviderResolver $dependencyProviderResolver,
+        private readonly FactoryResolver $factoryResolver,
+        private readonly ConfigResolver $configResolver,
+        private readonly DependencyProviderResolver $dependencyProviderResolver,
     ) {
     }
 
@@ -99,7 +99,7 @@ final class AppModuleCreator
             }
 
             return $resolver::class;
-        } catch (DependencyProviderNotFoundException $dependencyProviderNotFoundException) {
+        } catch (DependencyProviderNotFoundException) {
             return null;
         }
     }

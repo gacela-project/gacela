@@ -9,11 +9,11 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig
 final class ConcreteClass extends AbstractClass
 {
     public function __construct(
-        private bool $bool,
-        private string $string,
-        private int $int,
-        private float $float,
-        private array $array,
+        private readonly bool $bool,
+        private readonly string $string,
+        private readonly int $int,
+        private readonly float $float,
+        private readonly array $array,
     ) {
     }
 

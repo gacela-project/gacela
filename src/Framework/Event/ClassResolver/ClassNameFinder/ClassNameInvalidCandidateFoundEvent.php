@@ -11,7 +11,7 @@ use function sprintf;
 final class ClassNameInvalidCandidateFoundEvent implements GacelaEventInterface
 {
     public function __construct(
-        private string $className,
+        private readonly string $className,
     ) {
     }
 

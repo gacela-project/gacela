@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverInMemoryAwareTest extends TestCase
@@ -36,9 +37,7 @@ final class DocBlockResolverInMemoryAwareTest extends TestCase
         self::assertSame('name', $actual);
     }
 
-    /**
-     * @depends test_existing_service
-     */
+    #[Depends('test_existing_service')]
     public function test_existing_service_cached(): void
     {
         self::assertCount(0, InMemoryCache::getAllFromKey(CustomServicesPhpCache::class));

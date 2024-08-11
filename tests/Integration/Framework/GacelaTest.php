@@ -32,6 +32,6 @@ final class GacelaTest extends TestCase
             $config->resetInMemoryCache();
         });
 
-        self::assertEquals('any/root/directory', Gacela::rootDir());
+        self::assertSame('any/root/directory', Gacela::rootDir());
     }
 }

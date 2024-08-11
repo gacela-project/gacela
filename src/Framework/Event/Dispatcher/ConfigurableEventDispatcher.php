@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Event\Dispatcher;
 
-use function get_class;
-
 final class ConfigurableEventDispatcher implements EventDispatcherInterface
 {
     /** @var array<callable> */
@@ -36,7 +34,7 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
             $this->notifyListener($listener, $event);
         }
 
-        foreach ($this->specificListeners[get_class($event)] ?? [] as $listener) {
+        foreach ($this->specificListeners[$event::class] ?? [] as $listener) {
             $this->notifyListener($listener, $event);
         }
     }

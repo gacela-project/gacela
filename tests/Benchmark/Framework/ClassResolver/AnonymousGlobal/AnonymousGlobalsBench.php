@@ -75,16 +75,10 @@ final class AnonymousGlobalsBench
                     $valueFromDependencyProvider = $this->getProvidedDependency('key');
 
                     return new class($configValues, $valueFromDependencyProvider) {
-                        private array $configValues;
-
-                        private string $valueFromDependencyProvider;
-
                         public function __construct(
-                            array $configValues,
-                            string $valueFromDependencyProvider,
+                            private readonly array $configValues,
+                            private readonly string $valueFromDependencyProvider,
                         ) {
-                            $this->configValues = $configValues;
-                            $this->valueFromDependencyProvider = $valueFromDependencyProvider;
                         }
 
                         public function getConfigValues(): array

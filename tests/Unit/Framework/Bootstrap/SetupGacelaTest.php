@@ -215,7 +215,7 @@ final class SetupGacelaTest extends TestCase
 
         $setup->combine($setup2);
 
-        self::assertEquals([
+        self::assertSame([
             ExamplePluginWithoutConstructor::class,
             ExamplePluginWithConstructor::class,
         ], $setup->getPlugins());
@@ -234,7 +234,7 @@ final class SetupGacelaTest extends TestCase
 
         $setup->combine($setup2);
 
-        self::assertEquals([
+        self::assertSame([
             CustomGacelaConfig::class,
         ], $setup->getGacelaConfigsToExtend());
     }

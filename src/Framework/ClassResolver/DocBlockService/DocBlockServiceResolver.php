@@ -9,7 +9,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 final class DocBlockServiceResolver extends AbstractClassResolver
 {
     public function __construct(
-        private string $resolvableType,
+        private readonly string $resolvableType,
     ) {
     }
 

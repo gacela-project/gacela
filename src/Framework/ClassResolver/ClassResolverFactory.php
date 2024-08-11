@@ -17,7 +17,7 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleWithoutModuleP
 final class ClassResolverFactory
 {
     public function __construct(
-        private SetupGacelaInterface $setupGacela,
+        private readonly SetupGacelaInterface $setupGacela,
     ) {
     }
 

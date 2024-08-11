@@ -25,7 +25,7 @@ final class Config implements ConfigInterface
     private array $config = [];
 
     private function __construct(
-        private SetupGacelaInterface $setup,
+        private readonly SetupGacelaInterface $setup,
     ) {
     }
 

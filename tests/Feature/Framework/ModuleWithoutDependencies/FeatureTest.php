@@ -18,7 +18,7 @@ final class FeatureTest extends TestCase
     {
         $facade = new WithPrefix\WithPrefixFacade();
 
-        self::assertEquals(
+        self::assertSame(
             ['Hello, Gacela from WithPrefix.'],
             $facade->greet('Gacela'),
         );
@@ -28,7 +28,7 @@ final class FeatureTest extends TestCase
     {
         $facade = new WithoutPrefix\Facade();
 
-        self::assertEquals(
+        self::assertSame(
             ['Hello, Gacela from WithoutPrefix.'],
             $facade->greet('Gacela'),
         );

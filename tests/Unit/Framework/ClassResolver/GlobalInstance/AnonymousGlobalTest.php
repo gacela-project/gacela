@@ -9,6 +9,7 @@ use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class AnonymousGlobalTest extends TestCase
@@ -53,9 +54,7 @@ final class AnonymousGlobalTest extends TestCase
         self::assertTrue(true); # Assert non error is thrown
     }
 
-    /**
-     * @dataProvider providerOverrideExistingResolvedClass
-     */
+    #[DataProvider('providerOverrideExistingResolvedClass')]
     public function test_override_existing_resolved_class(string $className): void
     {
         $resolvedClass = new class() {

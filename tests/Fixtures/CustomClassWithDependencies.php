@@ -6,11 +6,9 @@ namespace GacelaTest\Fixtures;
 
 final class CustomClassWithDependencies implements CustomInterface
 {
-    private StringValueInterface $stringValue;
-
-    public function __construct(StringValueInterface $stringValue)
-    {
-        $this->stringValue = $stringValue;
+    public function __construct(
+        private readonly StringValueInterface $stringValue,
+    ) {
     }
 
     public function getStringValue(): StringValueInterface

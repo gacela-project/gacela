@@ -86,8 +86,10 @@ final class Gacela
     public static function addGlobal(object $resolvedClass, object|string $context = ''): void
     {
         if ($context === '') {
+            // Use the caller's file as context
             $context = basename(debug_backtrace()[0]['file'] ?? __FILE__, '.php');
         }
+
         AnonymousGlobal::addGlobal($context, $resolvedClass);
     }
 

@@ -342,7 +342,7 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function canCreateEventDispatcher(): bool
     {
-        return $this->areEventListenersEnabled !== null
+        return $this->areEventListenersEnabled === true
             && $this->hasEventListeners();
     }
 

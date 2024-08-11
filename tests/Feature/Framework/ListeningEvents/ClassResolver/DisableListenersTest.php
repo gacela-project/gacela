@@ -7,11 +7,15 @@ namespace GacelaTest\Feature\Framework\ListeningEvents\ClassResolver;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\ListeningEvents\ClassResolver\Module\Facade;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 final class DisableListenersTest extends TestCase
 {
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function test_disable_class_resolver_listener(): void
     {
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {

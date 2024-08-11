@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\AnonymousGlobalExtendsExistingClass;
+namespace GacelaTest\Feature\Framework\OverrideExistingResolvedClass;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +23,7 @@ final class FeatureTest extends TestCase
 
     public function test_override_factory_as_anonymous_global(): void
     {
-        AnonymousGlobal::overrideExistingResolvedClass(
+        Gacela::overrideExistingResolvedClass(
             Module\Factory::class,
             new class() extends Module\Factory {
                 public function createDomainService(): StringValue
@@ -43,7 +42,7 @@ final class FeatureTest extends TestCase
 
     public function test_override_config_as_anonymous_global(): void
     {
-        AnonymousGlobal::overrideExistingResolvedClass(
+        Gacela::overrideExistingResolvedClass(
             Module\Config::class,
             new class() extends Module\Config {
                 public function getValue(): string

@@ -91,6 +91,11 @@ final class Gacela
         AnonymousGlobal::addGlobal($context, $resolvedClass);
     }
 
+    public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
+    {
+        AnonymousGlobal::overrideExistingResolvedClass($className, $resolvedClass);
+    }
+
     /**
      * @param null|Closure(GacelaConfig):void $configFn
      */

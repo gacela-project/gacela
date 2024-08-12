@@ -79,6 +79,30 @@ final class Gacela
     }
 
     /**
+     * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
+     * bound to the context that it is passed as second argument.
+     *
+     * @param object|string $context It can be the string-key (file path) or the class/object itself.
+     *                               If empty then the caller's file will be use
+     */
+    public static function addGlobal(object $resolvedClass, object|string $context = ''): void
+    {
+        if (is_string($context) && is_file($context)) {
+            $context = basename($context, '.php');
+        } elseif ($context === '') {
+            // Use the caller's file as context
+            $context = basename(debug_backtrace()[0]['file'] ?? __FILE__, '.php');
+        }
+
+        AnonymousGlobal::addGlobal($context, $resolvedClass);
+    }
+
+    public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
+    {
+        AnonymousGlobal::overrideExistingResolvedClass($className, $resolvedClass);
+    }
+
+    /**
      * @param null|Closure(GacelaConfig):void $configFn
      */
     private static function processConfigFnIntoSetup(Closure $configFn = null): SetupGacelaInterface

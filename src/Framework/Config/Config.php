@@ -39,7 +39,7 @@ final class Config implements ConfigInterface
     public static function getInstance(): self
     {
         if (!self::$instance instanceof self) {
-            throw new RuntimeException('You have to call createWithSetup() first.');
+            throw new RuntimeException('You have to call createWithSetup() first. Have you forgot to bootstrap Gacela?');
         }
 
         return self::$instance;

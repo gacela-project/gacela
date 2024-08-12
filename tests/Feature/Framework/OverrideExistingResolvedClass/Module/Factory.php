@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\AnonymousGlobalExtendsExistingClass\Module;
+namespace GacelaTest\Feature\Framework\OverrideExistingResolvedClass\Module;
 
 use Gacela\Framework\AbstractFactory;
 use GacelaTest\Fixtures\StringValue;

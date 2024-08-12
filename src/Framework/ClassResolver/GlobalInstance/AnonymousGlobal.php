@@ -13,9 +13,16 @@ use function in_array;
 use function is_string;
 use function sprintf;
 
+/**
+ * @internal
+ */
 final class AnonymousGlobal
 {
-    private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = ['Config', 'Factory', 'DependencyProvider'];
+    private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = [
+        'Config',
+        'Factory',
+        'DependencyProvider',
+    ];
 
     /** @var array<string,object> */
     private static array $cachedGlobalInstances = [];
@@ -63,7 +70,6 @@ final class AnonymousGlobal
     {
         $contextName = self::extractContextNameFromContext($context);
         $parentClass = get_parent_class($resolvedClass);
-
         $type = is_string($parentClass)
             ? ResolvableType::fromClassName($parentClass)->resolvableType()
             : $contextName;
@@ -100,7 +106,10 @@ final class AnonymousGlobal
     {
         if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
             throw new RuntimeException(
-                sprintf("Type '%s' not allowed. Valid types: ", $type) . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL),
+                sprintf("Type '%s' not allowed. Valid types: ", $type) . implode(
+                    ', ',
+                    self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL,
+                ),
             );
         }
     }

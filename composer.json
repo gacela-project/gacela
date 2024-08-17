@@ -127,6 +127,7 @@
         "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite=unit,integration,feature --coverage-html=data/coverage-html --coverage-xml=data/coverage-xml --log-junit=data/coverage-xml/junit.xml",
         "test-feature": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=feature",
         "test-integration": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=integration",
-        "test-unit": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit"
+        "test-unit": "XDEBUG_MODE=off ./vendor/bin/phpunit --testsuite=unit",
+        "rector": "./vendor/bin/rector"
     }
 }

@@ -11,7 +11,7 @@ use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Doma
 use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Infrastructure\ConcreteClass;
 
 // Is it also possible to bind classes like => AbstractClass::class => SpecificClass::class
-// Check the test _BindingInterfacesWithInnerDependencies_ BUT be aware this way is not possible
+// Check the test BindingInterfacesWithInnerDependencies BUT be aware this way is not possible
 // if the class has dependencies that cannot be resolved automatically!
 return static fn (GacelaConfig $config): GacelaConfig => $config
     ->addBinding(
@@ -30,7 +30,7 @@ return static fn (GacelaConfig $config): GacelaConfig => $config
     )
     ->addBinding(
         AbstractFromCallable::class,
-        static fn () => new class() extends AbstractFromCallable {
+        static fn (): AbstractFromCallable => new class() extends AbstractFromCallable {
             public function getClassName(): string
             {
                 return AbstractFromCallable::class;
@@ -48,7 +48,7 @@ return static fn (GacelaConfig $config): GacelaConfig => $config
     )
     ->addBinding(
         InterfaceFromCallable::class,
-        static fn () => new class() implements InterfaceFromCallable {
+        static fn (): InterfaceFromCallable => new class() implements InterfaceFromCallable {
             public function getClassName(): string
             {
                 return InterfaceFromCallable::class;

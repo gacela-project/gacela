@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\Greeter;
+namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Module\Domain\Greeter;
 
-use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
+use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Module\Domain\GreeterGeneratorInterface;
 use RuntimeException;
 
 final class IncorrectCompanyGenerator implements GreeterGeneratorInterface

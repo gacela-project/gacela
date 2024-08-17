@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain;
+namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Module\Domain;
 
 final class GreeterService
 {

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig;
+namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Module;
 
 use Gacela\Framework\AbstractFactory;
-use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterGeneratorInterface;
-use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\LocalConfig\Domain\GreeterService;
+use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Module\Domain\GreeterGeneratorInterface;
+use GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Module\Domain\GreeterService;
 
 final class Factory extends AbstractFactory
 {

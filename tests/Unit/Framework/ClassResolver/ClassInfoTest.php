@@ -24,7 +24,7 @@ final class ClassInfoTest extends TestCase
         self::assertSame('\module-name@anonymous\ClassInfoTest\Factory', $actual->getCacheKey(), 'cache key');
     }
 
-    public function test_anonymous_dep_pro_class(): void
+    public function test_anonymous_dependency_provider_class(): void
     {
         $dependencyProvider = new class() extends AbstractDependencyProvider {
             public function provideModuleDependencies(Container $container): void

@@ -23,6 +23,14 @@ final class DependencyProviderResolver extends AbstractClassResolver
         /** @var ?AbstractDependencyProvider $resolved */
         $resolved = $this->doResolve($caller);
 
+        if ($resolved !== null) {
+            trigger_deprecation('gacela-project/gacela', '1.8', sprintf(
+                'Use %s. %s will be removed in version 2.0',
+                AbstractProvider::class,
+                AbstractDependencyProvider::class,
+            ));
+        }
+
         return $resolved;
     }
 

@@ -65,11 +65,11 @@ final class FileCacheBench
             $config->addSuffixTypeConfig('ConfigD');
             $config->addSuffixTypeConfig('ConfigE');
 
-            $config->addSuffixTypeDependencyProvider('DepProvA');
-            $config->addSuffixTypeDependencyProvider('DepProvB');
-            $config->addSuffixTypeDependencyProvider('DepProvC');
-            $config->addSuffixTypeDependencyProvider('DepProvD');
-            $config->addSuffixTypeDependencyProvider('DepProvE');
+            $config->addSuffixTypeAbstractProvider('DepProvA');
+            $config->addSuffixTypeAbstractProvider('DepProvB');
+            $config->addSuffixTypeAbstractProvider('DepProvC');
+            $config->addSuffixTypeAbstractProvider('DepProvD');
+            $config->addSuffixTypeAbstractProvider('DepProvE');
         });
     }
 

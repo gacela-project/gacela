@@ -16,9 +16,9 @@ final class NormalModuleFactory extends AbstractFactory
     {
         $configValues = $this->getConfig()->getValues();
 
-        /** @var string $valueFromDependencyProvider */
-        $valueFromDependencyProvider = $this->getProvidedDependency('key');
+        /** @var string $valueFromAbstractProvider */
+        $valueFromAbstractProvider = $this->getProvidedDependency('key');
 
-        return new DomainClass($configValues, $valueFromDependencyProvider);
+        return new DomainClass($configValues, $valueFromAbstractProvider);
     }
 }

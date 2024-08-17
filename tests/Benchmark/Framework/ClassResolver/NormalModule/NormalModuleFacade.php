@@ -18,10 +18,10 @@ final class NormalModuleFacade extends AbstractFacade
             ->getConfigValues();
     }
 
-    public function getValueFromDependencyProvider(): string
+    public function getValueFromAbstractProvider(): string
     {
         return $this->getFactory()
             ->createDomainClass()
-            ->getValueFromDependencyProvider();
+            ->getValueFromAbstractProvider();
     }
 }

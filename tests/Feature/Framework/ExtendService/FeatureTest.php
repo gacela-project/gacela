@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\ExtendService;
 use ArrayObject;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\ExtendService\Module\DependencyProvider;
+use GacelaTest\Feature\Framework\ExtendService\Module\Provider;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
@@ -20,14 +20,14 @@ final class FeatureTest extends TestCase
             $config->resetInMemoryCache();
 
             $config->extendService(
-                DependencyProvider::ARRAY_AS_OBJECT,
+                Provider::ARRAY_AS_OBJECT,
                 static function (ArrayObject $arrayObject): void {
                     $arrayObject->append(3);
                 },
             );
 
             $config->extendService(
-                DependencyProvider::ARRAY_FROM_FUNCTION,
+                Provider::ARRAY_FROM_FUNCTION,
                 static function (ArrayObject $arrayObject): void {
                     $arrayObject->append(4);
                 },

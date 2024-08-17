@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\MissingFile\MissingDependencyProviderFile;
+namespace GacelaTest\Feature\Framework\MissingFile\MissingProviderFile;
 
 use Gacela\Framework\AbstractFactory;
 

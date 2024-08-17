@@ -21,7 +21,8 @@ final class AnonymousGlobal
     private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = [
         'Config',
         'Factory',
-        'DependencyProvider',
+        'Provider',
+        'Provider',
     ];
 
     /** @var array<string,object> */
@@ -62,7 +63,7 @@ final class AnonymousGlobal
     }
 
     /**
-     * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
+     * Add an anonymous class as 'Config', 'Factory' or 'Provider' as a global resource
      * bound to the context that it's pass as first argument. It can be the string-key
      * (from a non-class/file context) or the class/object itself.
      */

@@ -48,12 +48,12 @@ final class MakeFileCommandTest extends TestCase
         yield 'facade' => ['facade', 'TestModuleFacade', ''];
         yield 'factory' => ['factory', 'TestModuleFactory', ''];
         yield 'config' => ['config', 'TestModuleConfig', ''];
-        yield 'dependency provider' => ['dependency-provider', 'TestModuleDependencyProvider', ''];
+        yield 'dependency provider' => ['dependency-provider', 'TestModuleProvider', ''];
 
         // Sort name flag
         yield 'facade -s' => ['facade', 'Facade', '-s'];
         yield 'factory -s' => ['factory', 'Factory', '-s'];
         yield 'config -s' => ['config', 'Config', '-s'];
-        yield 'dependency provider -s' => ['dependency-provider', 'DependencyProvider', '-s'];
+        yield 'dependency provider -s' => ['dependency-provider', 'Provider', '-s'];
     }
 }

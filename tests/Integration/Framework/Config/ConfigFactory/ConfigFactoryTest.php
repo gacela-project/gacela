@@ -67,7 +67,7 @@ final class ConfigFactoryTest extends TestCase
                 'Facade' => ['Facade', 'FacadeFromGacelaFile'],
                 'Factory' => ['Factory', 'FactoryFromGacelaFile'],
                 'Config' => ['Config', 'ConfigFromGacelaFile'],
-                'DependencyProvider' => ['DependencyProvider', 'DependencyProviderFromGacelaFile'],
+                'Provider' => ['Provider', 'AbstractProviderFromGacelaFile'],
             ]);
 
         self::assertEquals($expected, $actual);
@@ -93,7 +93,7 @@ final class ConfigFactoryTest extends TestCase
                     ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')
                     ->addConfig('ConfigFromBootstrap')
-                    ->addDependencyProvider('DependencyProviderFromBootstrap');
+                    ->addProvider('ProviderFromBootstrap');
             });
 
         $actual = (new ConfigFactory(__DIR__ . '/WithoutGacelaFile', $bootstrapSetup))
@@ -110,7 +110,7 @@ final class ConfigFactoryTest extends TestCase
                 'Facade' => ['Facade', 'FacadeFromBootstrap'],
                 'Factory' => ['Factory', 'FactoryFromBootstrap'],
                 'Config' => ['Config', 'ConfigFromBootstrap'],
-                'DependencyProvider' => ['DependencyProvider', 'DependencyProviderFromBootstrap'],
+                'Provider' => ['Provider', 'ProviderFromBootstrap'],
             ]);
 
         self::assertEquals($expected, $actual);
@@ -136,7 +136,7 @@ final class ConfigFactoryTest extends TestCase
                     ->addFacade('FacadeFromBootstrap')
                     ->addFactory('FactoryFromBootstrap')
                     ->addConfig('ConfigFromBootstrap')
-                    ->addDependencyProvider('DependencyProviderFromBootstrap');
+                    ->addProvider('ProviderFromBootstrap');
             });
 
         $actual = (new ConfigFactory(__DIR__ . '/WithGacelaFile', $setup))
@@ -167,10 +167,10 @@ final class ConfigFactoryTest extends TestCase
                     'ConfigFromBootstrap',
                     'ConfigFromGacelaFile',
                 ],
-                'DependencyProvider' => [
-                    'DependencyProvider',
-                    'DependencyProviderFromBootstrap',
-                    'DependencyProviderFromGacelaFile',
+                'Provider' => [
+                    'Provider',
+                    'ProviderFromBootstrap',
+                    'AbstractProviderFromGacelaFile',
                 ],
             ]);
 

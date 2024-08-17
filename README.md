@@ -38,7 +38,7 @@ It encourages your modules to interact with each other in a unified way by follo
 - Modules interact with each other **only** via their **Facade**
 - The [**Facade**](https://gacela-project.com/docs/facade/) is the *entry point* of a module
 - The [**Factory**](https://gacela-project.com/docs/factory/) manage the *intra-dependencies* the module
-- The [**DependencyProvider**](https://gacela-project.com/docs/dependency-provider/) resolves the *extra-dependencies* of the module
+- The [**AbstractProvider**](https://gacela-project.com/docs/dependency-provider/) resolves the *extra-dependencies* of the module
 - The [**Config**](https://gacela-project.com/docs/config/) has access to the project's *config files*
 
 ### Installation
@@ -70,7 +70,7 @@ application-name
 │   │   │ # These are the 4 "gacela classes":
 │   │   ├── Facade.php
 │   │   ├── Factory.php
-│   │   ├── DependencyProvider.php
+│   │   ├── AbstractProvider.php
 │   │   └── Config.php
 │   │
 │   └── ModuleB

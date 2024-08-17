@@ -77,7 +77,7 @@ final class ListModulesCommand extends Command
             $n = $i + 1;
             $factory = $module->factoryClass() ?? self::CROSS_SYMBOL;
             $config = $module->configClass() ?? self::CROSS_SYMBOL;
-            $dependencyProviderClass = $module->dependencyProviderClass() ?? self::CROSS_SYMBOL;
+            $provider = $module->providerClass() ?? self::CROSS_SYMBOL;
 
             $result .= <<<TXT
 ============================
@@ -86,7 +86,7 @@ final class ListModulesCommand extends Command
 <fg=cyan>Facade</>: {$module->facadeClass()}
 <fg=cyan>Factory</>: {$factory}
 <fg=cyan>Config</>: {$config}
-<fg=cyan>DependencyProvider</>: {$dependencyProviderClass}
+<fg=cyan>Provider</>: {$provider}
 
 TXT;
         }
@@ -107,7 +107,7 @@ TXT;
                 self::CHECK_SYMBOL, // facade is always true
                 $module->factoryClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
                 $module->configClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-                $module->dependencyProviderClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->providerClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
             ];
         }
 

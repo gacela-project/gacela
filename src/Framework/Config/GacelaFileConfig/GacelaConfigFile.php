@@ -16,10 +16,10 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @var array{
-     *     Facade:list<string>,
-     *     Factory:list<string>,
-     *     Config:list<string>,
-     *     DependencyProvider:list<string>,
+     *     Facade: list<string>,
+     *     Factory: list<string>,
+     *     Config: list<string>,
+     *     Provider: list<string>,
      * }
      */
     private array $suffixTypes = SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES;
@@ -65,10 +65,10 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @param array{
-     *     Facade:list<string>,
-     *     Factory:list<string>,
-     *     Config:list<string>,
-     *     DependencyProvider:list<string>,
+     *     Facade: list<string>,
+     *     Factory: list<string>,
+     *     Config: list<string>,
+     *     Provider: list<string>,
      * } $suffixTypes
      */
     public function setSuffixTypes(array $suffixTypes): self
@@ -82,10 +82,10 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      * @psalm-suppress ImplementedReturnTypeMismatch
      *
      * @return array{
-     *     Facade:list<string>,
-     *     Factory:list<string>,
-     *     Config:list<string>,
-     *     DependencyProvider:list<string>,
+     *     Facade: list<string>,
+     *     Factory: list<string>,
+     *     Config: list<string>,
+     *     Provider: list<string>,
      * }
      */
     public function getSuffixTypes(): array
@@ -103,7 +103,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
             'Facade' => $this->filterList($other, 'Facade'),
             'Factory' => $this->filterList($other, 'Factory'),
             'Config' => $this->filterList($other, 'Config'),
-            'DependencyProvider' => $this->filterList($other, 'DependencyProvider'),
+            'Provider' => $this->filterList($other, 'Provider'),
         ];
 
         return $new;

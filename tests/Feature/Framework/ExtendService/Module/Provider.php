@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ExtendService\Module;
 
 use ArrayObject;
-use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 
-final class DependencyProvider extends AbstractDependencyProvider
+final class Provider extends AbstractProvider
 {
     public const ARRAY_AS_OBJECT = 'ARRAY_AS_OBJECT';
 

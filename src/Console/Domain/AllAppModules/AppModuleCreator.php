@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\AllAppModules;
 
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
-use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
-use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
+use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use ReflectionClass;
 
 use function strlen;
@@ -17,7 +17,7 @@ final class AppModuleCreator
     public function __construct(
         private readonly FactoryResolver $factoryResolver,
         private readonly ConfigResolver $configResolver,
-        private readonly DependencyProviderResolver $dependencyProviderResolver,
+        private readonly ProviderResolver $dependencyProviderResolver,
     ) {
     }
 
@@ -32,7 +32,7 @@ final class AppModuleCreator
             $facadeClass,
             $this->findFactory($facadeClass),
             $this->findConfig($facadeClass),
-            $this->findDependencyProvider($facadeClass),
+            $this->findAbstractProvider($facadeClass),
         );
     }
 
@@ -89,17 +89,17 @@ final class AppModuleCreator
     /**
      * @param class-string $facadeClass
      */
-    private function findDependencyProvider(string $facadeClass): ?string
+    private function findAbstractProvider(string $facadeClass): ?string
     {
         try {
             $resolver = $this->dependencyProviderResolver->resolve($facadeClass);
 
             if ((new ReflectionClass($resolver))->isAnonymous()) {
-                throw new DependencyProviderNotFoundException($resolver);
+                throw new ProviderNotFoundException($resolver);
             }
 
             return $resolver::class;
-        } catch (DependencyProviderNotFoundException) {
+        } catch (ProviderNotFoundException) {
             return null;
         }
     }

@@ -228,7 +228,7 @@
 - Moved the "config readers" next to their config item itself
   - Performance improvement specially when using different config readers in the same project
 - Added OverrideResolvableTypes feature
-  - Allow overriding Gacela resolvable types (Factory, Config, DependencyProvider)
+  - Allow overriding Gacela resolvable types (Factory, Config, AbstractProvider)
 - Removed deprecated methods `getApplicationRootDir()` & `setApplicationRootDir()` from Config
   - Use `getAppRootDir()` & `setAppRootDir()` instead
 - Deprecated and removed `CustomService` feature. Use `MappingInterfaces` feature instead
@@ -302,5 +302,5 @@
 
 ## [0.1.0](https://github.com/gacela-project/gacela/compare/690484441389a2d3bd921ab7f278c6d945f50cac...0.1.0) - 2021-04-02
 
-- Added Facade, Factory, Config and DependencyProvider basic functionality
+- Added Facade, Factory, Config and AbstractProvider basic functionality
 - Provide documentation for each of these concepts with examples

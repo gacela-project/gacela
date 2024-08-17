@@ -8,7 +8,7 @@ final class DomainClass
 {
     public function __construct(
         private readonly array $configValues,
-        private readonly string $valueFromDependencyProvider,
+        private readonly string $valueFromAbstractProvider,
     ) {
     }
 
@@ -17,8 +17,8 @@ final class DomainClass
         return $this->configValues;
     }
 
-    public function getValueFromDependencyProvider(): string
+    public function getValueFromAbstractProvider(): string
     {
-        return $this->valueFromDependencyProvider;
+        return $this->valueFromAbstractProvider;
     }
 }

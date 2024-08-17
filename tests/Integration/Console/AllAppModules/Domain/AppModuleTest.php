@@ -8,9 +8,9 @@ use Gacela\Console\ConsoleFactory;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Config;
-use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1DependencyProvider;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Facade;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Factory;
+use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Provider;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module2\Module2Facade;
 use PHPUnit\Framework\TestCase;
 
@@ -32,7 +32,7 @@ final class AppModuleTest extends TestCase
         self::assertSame(Module2Facade::class, $actual->facadeClass());
         self::assertNull($actual->factoryClass());
         self::assertNull($actual->configClass());
-        self::assertNull($actual->dependencyProviderClass());
+        self::assertNull($actual->providerClass());
     }
 
     public function test_full_module(): void
@@ -43,6 +43,6 @@ final class AppModuleTest extends TestCase
         self::assertSame(Module1Facade::class, $actual->facadeClass());
         self::assertSame(Module1Factory::class, $actual->factoryClass());
         self::assertSame(Module1Config::class, $actual->configClass());
-        self::assertSame(Module1DependencyProvider::class, $actual->dependencyProviderClass());
+        self::assertSame(Module1Provider::class, $actual->providerClass());
     }
 }

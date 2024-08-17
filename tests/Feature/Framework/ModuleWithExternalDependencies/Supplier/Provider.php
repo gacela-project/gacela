@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Supplier;
 
-use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 use GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Dependent;
 
-final class DependencyProvider extends AbstractDependencyProvider
+final class Provider extends AbstractProvider
 {
     public const FACADE_DEPENDENT = 'FACADE_DEPENDENT';
 
@@ -21,7 +21,7 @@ final class DependencyProvider extends AbstractDependencyProvider
     {
         $container->set(
             self::FACADE_DEPENDENT,
-            static fn (Container $container): Dependent\FacadeInterface => $container->getLocator()->get(Dependent\Facade::class),
+            static fn (Container $container) => $container->getLocator()->get(Dependent\Facade::class),
         );
     }
 }

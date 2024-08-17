@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\MissingFile\MissingContainerServiceKey;
 
-use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 
-final class DependencyProvider extends AbstractDependencyProvider
+final class Provider extends AbstractProvider
 {
     public function provideModuleDependencies(Container $container): void
     {

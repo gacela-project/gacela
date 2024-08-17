@@ -12,7 +12,7 @@ final class AppModule
         private readonly string $facadeClass,
         private readonly ?string $factoryClass = null,
         private readonly ?string $configClass = null,
-        private readonly ?string $dependencyProviderClass = null,
+        private readonly ?string $providerClass = null,
     ) {
     }
 
@@ -53,8 +53,8 @@ final class AppModule
     /**
      * @return ?class-string
      */
-    public function dependencyProviderClass(): ?string
+    public function providerClass(): ?string
     {
-        return $this->dependencyProviderClass;
+        return $this->providerClass;
     }
 }

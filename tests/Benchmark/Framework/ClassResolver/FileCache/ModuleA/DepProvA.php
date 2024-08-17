@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleA;
 
-use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 
-final class DepProvA extends AbstractDependencyProvider
+final class DepProvA extends AbstractProvider
 {
     public function provideModuleDependencies(Container $container): void
     {

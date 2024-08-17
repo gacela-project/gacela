@@ -6,17 +6,13 @@ namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Container\Container;
 use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Facade\FacadeResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
-use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
-use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
@@ -89,6 +85,7 @@ abstract class AbstractClassResolver
             self::dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
             $instance = $this->createDefaultGacelaClass();
         }
+
         self::$cachedInstances[$cacheKey] = $instance;
 
         return self::$cachedInstances[$cacheKey];
@@ -171,16 +168,6 @@ abstract class AbstractClassResolver
             FacadeResolver::TYPE => new class() extends AbstractFacade {},
             FactoryResolver::TYPE => new class() extends AbstractFactory {},
             ConfigResolver::TYPE => new class() extends AbstractConfig {},
-            //            DependencyProviderResolver::TYPE => new class() extends AbstractDependencyProvider {
-            //                public function provideModuleDependencies(\Gacela\Framework\Container\Container $container): void
-            //                {
-            //                }
-            //            },
-            //            ProviderResolver::TYPE => new class() extends AbstractProvider {
-            //                public function provideModuleDependencies(\Gacela\Framework\Container\Container $container): void
-            //                {
-            //                }
-            //            },
             default => null,
         };
     }

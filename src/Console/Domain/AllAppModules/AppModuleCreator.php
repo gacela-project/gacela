@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\AllAppModules;
 
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
@@ -91,7 +92,7 @@ final class AppModuleCreator
     private function findProvider(string $facadeClass): ?string
     {
         $resolver = $this->providerResolver->resolve($facadeClass);
-        if ($resolver === null) {
+        if (!$resolver instanceof AbstractProvider) {
             return null;
         }
 

@@ -48,10 +48,11 @@ abstract class AbstractFactory
         $resolver = (new ProviderResolver())->resolve($this);
         $resolver?->provideModuleDependencies($container);
 
+        // Temporal solution to keep BC with the AbstractDependencyProvider
         $dpResolver = (new DependencyProviderResolver())->resolve($this);
         $dpResolver?->provideModuleDependencies($container);
 
-        if ($resolver === null && $dpResolver === null) {
+        if (!$resolver instanceof AbstractProvider && !$dpResolver instanceof AbstractProvider) {
             throw new ProviderNotFoundException(static::class);
         }
 

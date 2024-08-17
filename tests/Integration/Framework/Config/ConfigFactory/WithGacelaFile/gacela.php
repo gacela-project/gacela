@@ -11,4 +11,4 @@ return static fn (GacelaConfig $config): GacelaConfig => $config
     ->addSuffixTypeFacade('FacadeFromGacelaFile')
     ->addSuffixTypeFactory('FactoryFromGacelaFile')
     ->addSuffixTypeConfig('ConfigFromGacelaFile')
-    ->addSuffixTypeDependencyProvider('DependencyProviderFromGacelaFile');
+    ->addSuffixTypeProvider('AbstractProviderFromGacelaFile');

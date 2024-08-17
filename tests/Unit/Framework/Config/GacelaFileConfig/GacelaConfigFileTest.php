@@ -96,14 +96,14 @@ final class GacelaConfigFileTest extends TestCase
                 'Facade' => ['FA'],
                 'Factory' => ['F'],
                 'Config' => ['C'],
-                'DependencyProvider' => ['DP'],
+                'Provider' => ['DP'],
             ]);
         $configFile2 = (new GacelaConfigFile())
             ->setSuffixTypes([
                 'Facade' => ['FA'],
                 'Factory' => ['F'],
                 'Config' => ['C'],
-                'DependencyProvider' => ['DP'],
+                'Provider' => ['DP'],
             ]);
 
         $actual = $configFile1->combine($configFile2);
@@ -113,7 +113,7 @@ final class GacelaConfigFileTest extends TestCase
                 'Facade' => ['FA'],
                 'Factory' => ['F'],
                 'Config' => ['C'],
-                'DependencyProvider' => ['DP'],
+                'Provider' => ['DP'],
             ]);
 
         self::assertEquals($expected, $actual);
@@ -126,14 +126,14 @@ final class GacelaConfigFileTest extends TestCase
                 'Facade' => ['FA1'],
                 'Factory' => ['F1'],
                 'Config' => ['C1'],
-                'DependencyProvider' => ['DP1'],
+                'Provider' => ['DP1'],
             ]);
         $configFile2 = (new GacelaConfigFile())
             ->setSuffixTypes([
                 'Facade' => ['FA2'],
                 'Factory' => ['F2'],
                 'Config' => ['C2'],
-                'DependencyProvider' => ['DP2'],
+                'Provider' => ['DP2'],
             ]);
 
         $actual = $configFile1->combine($configFile2);
@@ -143,7 +143,7 @@ final class GacelaConfigFileTest extends TestCase
                 'Facade' => ['FA1', 'FA2'],
                 'Factory' => ['F1', 'F2'],
                 'Config' => ['C1', 'C2'],
-                'DependencyProvider' => ['DP1', 'DP2'],
+                'Provider' => ['DP1', 'DP2'],
             ]);
 
         self::assertEquals($expected, $actual);

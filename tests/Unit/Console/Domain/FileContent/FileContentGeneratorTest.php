@@ -174,18 +174,18 @@ final class FileContentGeneratorTest extends TestCase
 
         $fileContentIo->expects(self::once())
             ->method('filePutContents')
-            ->with('Dir/DirDependencyProvider.php', 'template-result');
+            ->with('Dir/DirProvider.php', 'template-result');
 
         $generator = new FileContentGenerator($fileContentIo, [
-            'DependencyProvider' => 'template-result',
+            'Provider' => 'template-result',
         ]);
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            FilenameSanitizer::DEPENDENCY_PROVIDER,
+            FilenameSanitizer::PROVIDER,
         );
 
-        self::assertSame('Dir/DirDependencyProvider.php', $actualPath);
+        self::assertSame('Dir/DirProvider.php', $actualPath);
     }
 
     public function test_dependency_provider_maker_template_with_short_name(): void
@@ -197,18 +197,18 @@ final class FileContentGeneratorTest extends TestCase
 
         $fileContentIo->expects(self::once())
             ->method('filePutContents')
-            ->with('Dir/DependencyProvider.php', 'template-result');
+            ->with('Dir/Provider.php', 'template-result');
 
         $generator = new FileContentGenerator($fileContentIo, [
-            'DependencyProvider' => 'template-result',
+            'Provider' => 'template-result',
         ]);
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            FilenameSanitizer::DEPENDENCY_PROVIDER,
+            FilenameSanitizer::PROVIDER,
             withShortName: true,
         );
 
-        self::assertSame('Dir/DependencyProvider.php', $actualPath);
+        self::assertSame('Dir/Provider.php', $actualPath);
     }
 }

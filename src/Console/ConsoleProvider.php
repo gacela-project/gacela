@@ -8,13 +8,13 @@ use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
-use Gacela\Framework\AbstractDependencyProvider;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 
 /**
  * @method ConsoleConfig getConfig()
  */
-final class ConsoleDependencyProvider extends AbstractDependencyProvider
+final class ConsoleProvider extends AbstractProvider
 {
     public const COMMANDS = 'COMMANDS';
 
@@ -41,7 +41,7 @@ final class ConsoleDependencyProvider extends AbstractDependencyProvider
             FilenameSanitizer::FACADE => $this->getConfig()->getFacadeMakerTemplate(),
             FilenameSanitizer::FACTORY => $this->getConfig()->getFactoryMakerTemplate(),
             FilenameSanitizer::CONFIG => $this->getConfig()->getConfigMakerTemplate(),
-            FilenameSanitizer::DEPENDENCY_PROVIDER => $this->getConfig()->getDependencyProviderMakerTemplate(),
+            FilenameSanitizer::PROVIDER => $this->getConfig()->getProviderMakerTemplate(),
         ]);
     }
 }

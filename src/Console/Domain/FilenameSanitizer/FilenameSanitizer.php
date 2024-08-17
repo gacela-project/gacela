@@ -17,13 +17,13 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
 
     public const CONFIG = 'Config';
 
-    public const DEPENDENCY_PROVIDER = 'DependencyProvider';
+    public const PROVIDER = 'Provider';
 
     public const EXPECTED_FILENAMES = [
         self::FACADE,
         self::FACTORY,
         self::CONFIG,
-        self::DEPENDENCY_PROVIDER,
+        self::PROVIDER,
     ];
 
     /**

@@ -59,10 +59,10 @@ final class ResolvableTypeTest extends TestCase
 
     public function test_not_using_module_prefix_dependency_provider(): void
     {
-        $actual = ResolvableType::fromClassName('DependencyProvider');
+        $actual = ResolvableType::fromClassName('Provider');
 
         self::assertSame('', $actual->moduleName());
-        self::assertSame('DependencyProvider', $actual->resolvableType());
+        self::assertSame('Provider', $actual->resolvableType());
     }
 
     public function test_using_the_module_prefix_facade(): void
@@ -91,9 +91,9 @@ final class ResolvableTypeTest extends TestCase
 
     public function test_using_module_prefix_dependency_provider(): void
     {
-        $actual = ResolvableType::fromClassName('ModuleExampleDependencyProvider');
+        $actual = ResolvableType::fromClassName('ModuleExampleProvider');
 
         self::assertSame('ModuleExample', $actual->moduleName());
-        self::assertSame('DependencyProvider', $actual->resolvableType());
+        self::assertSame('Provider', $actual->resolvableType());
     }
 }

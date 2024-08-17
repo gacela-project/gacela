@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\Framework\ClassResolver\AnonymousGlobal;
 
 use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
@@ -24,7 +24,7 @@ final class AnonymousGlobalsBench
         Gacela::bootstrap(__DIR__);
 
         $this->setupAbstractConfig();
-        $this->setupAbstractDependencyProvider();
+        $this->setupAbstractProvider();
         $this->setupAbstractFactory();
         $this->setupAbstractFacade();
     }
@@ -32,7 +32,7 @@ final class AnonymousGlobalsBench
     public function bench_class_resolving(): void
     {
         $this->facade->getConfigValues();
-        $this->facade->getValueFromDependencyProvider();
+        $this->facade->getValueFromProvider();
     }
 
     private function setupAbstractConfig(): void
@@ -48,11 +48,11 @@ final class AnonymousGlobalsBench
         );
     }
 
-    private function setupAbstractDependencyProvider(): void
+    private function setupAbstractProvider(): void
     {
         AnonymousGlobal::addGlobal(
             $this,
-            new class() extends AbstractDependencyProvider {
+            new class() extends AbstractProvider {
                 public function provideModuleDependencies(Container $container): void
                 {
                     $container->set('key', 'value');
@@ -71,13 +71,13 @@ final class AnonymousGlobalsBench
                     /** @var array $configValues */
                     $configValues = $this->getConfig()->getValues();
 
-                    /** @var string $valueFromDependencyProvider */
-                    $valueFromDependencyProvider = $this->getProvidedDependency('key');
+                    /** @var string $valueFromProvider */
+                    $valueFromProvider = $this->getProvidedDependency('key');
 
-                    return new class($configValues, $valueFromDependencyProvider) {
+                    return new class($configValues, $valueFromProvider) {
                         public function __construct(
                             private readonly array $configValues,
-                            private readonly string $valueFromDependencyProvider,
+                            private readonly string $valueFromProvider,
                         ) {
                         }
 
@@ -86,9 +86,9 @@ final class AnonymousGlobalsBench
                             return $this->configValues;
                         }
 
-                        public function getValueFromDependencyProvider(): string
+                        public function getValueFromProvider(): string
                         {
-                            return $this->valueFromDependencyProvider;
+                            return $this->valueFromProvider;
                         }
                     };
                 }
@@ -106,11 +106,11 @@ final class AnonymousGlobalsBench
                     ->getConfigValues();
             }
 
-            public function getValueFromDependencyProvider(): string
+            public function getValueFromProvider(): string
             {
                 return $this->getFactory()
                     ->createDomainClass()
-                    ->getValueFromDependencyProvider();
+                    ->getValueFromProvider();
             }
         };
     }

@@ -19,6 +19,6 @@ final class Factory extends AbstractFactory
 
     private function getDependentFacade(): Dependent\FacadeInterface
     {
-        return $this->getProvidedDependency(DependencyProvider::FACADE_DEPENDENT);
+        return $this->getProvidedDependency(Provider::FACADE_DEPENDENT);
     }
 }

@@ -102,7 +102,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
             static fn (GacelaConfig $config): GacelaConfig => $config
-                ->addSuffixTypeDependencyProvider('Binding'),
+                ->addSuffixTypeProvider('Binding'),
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
@@ -115,7 +115,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             ->setSuffixTypes([
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],
-                'DependencyProvider' => ['DependencyProvider', 'Binding'],
+                'Provider' => ['Provider', 'Binding'],
                 'Facade' => ['Facade'],
             ]);
 

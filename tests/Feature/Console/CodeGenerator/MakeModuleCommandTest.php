@@ -43,7 +43,7 @@ final class MakeModuleCommandTest extends TestCase
 > Path 'data/TestModule/{$fileName}Facade.php' created successfully
 > Path 'data/TestModule/{$fileName}Factory.php' created successfully
 > Path 'data/TestModule/{$fileName}Config.php' created successfully
-> Path 'data/TestModule/{$fileName}DependencyProvider.php' created successfully
+> Path 'data/TestModule/{$fileName}Provider.php' created successfully
 Module 'TestModule' created successfully
 OUT;
 
@@ -56,7 +56,7 @@ OUT;
         self::assertFileExists(sprintf('./data/TestModule/%sFacade.php', $fileName));
         self::assertFileExists(sprintf('./data/TestModule/%sFactory.php', $fileName));
         self::assertFileExists(sprintf('./data/TestModule/%sConfig.php', $fileName));
-        self::assertFileExists(sprintf('./data/TestModule/%sDependencyProvider.php', $fileName));
+        self::assertFileExists(sprintf('./data/TestModule/%sProvider.php', $fileName));
     }
 
     public static function createModulesProvider(): iterable

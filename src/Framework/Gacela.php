@@ -79,7 +79,7 @@ final class Gacela
     }
 
     /**
-     * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
+     * Add an anonymous class as 'Config', 'Factory' or 'Provider' as a global resource
      * bound to the context that it is passed as second argument.
      *
      * @param object|string $context It can be the string-key (file path) or the class/object itself.

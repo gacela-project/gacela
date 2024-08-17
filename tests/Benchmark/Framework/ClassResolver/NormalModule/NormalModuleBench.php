@@ -27,6 +27,6 @@ final class NormalModuleBench
     public function bench_class_resolving(): void
     {
         $this->facade->getConfigValues();
-        $this->facade->getValueFromDependencyProvider();
+        $this->facade->getValueFromAbstractProvider();
     }
 }

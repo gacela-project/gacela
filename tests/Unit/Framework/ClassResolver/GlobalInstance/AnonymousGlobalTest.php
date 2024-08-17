@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\ClassResolver\GlobalInstance;
 
 use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 final class AnonymousGlobalTest extends TestCase
 {
     /**
-     * The anonymous class is not extending from Abstract[Factory,Config,DependencyProvider]
+     * The anonymous class is not extending from Abstract[Factory,Config,AbstractProvider]
      * For this reason, the context of this anon-global will be the one of this (test)class
      * therefore it's not allowed.
      */
@@ -44,7 +44,7 @@ final class AnonymousGlobalTest extends TestCase
     {
         $this->expectNotToPerformAssertions();
 
-        AnonymousGlobal::addGlobal($this, new class() extends AbstractDependencyProvider {
+        AnonymousGlobal::addGlobal($this, new class() extends AbstractProvider {
             public function provideModuleDependencies(Container $container): void
             {
             }

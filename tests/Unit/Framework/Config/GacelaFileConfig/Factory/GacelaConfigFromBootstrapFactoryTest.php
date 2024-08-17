@@ -78,14 +78,14 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
             (new SetupGacela())
                 ->setSuffixTypesFn(
                     static function (SuffixTypesBuilder $suffixTypesBuilder): void {
-                        $suffixTypesBuilder->addDependencyProvider('DPCustom');
+                        $suffixTypesBuilder->addProvider('DPCustom');
                     },
                 ),
         );
 
         $expected = (new GacelaConfigFile())
             ->setSuffixTypes([
-                'DependencyProvider' => ['DependencyProvider', 'DPCustom'],
+                'Provider' => ['Provider', 'DPCustom'],
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],
                 'Facade' => ['Facade'],

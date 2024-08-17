@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\GlobalServices;
 
 use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
@@ -26,7 +26,7 @@ final class AnonymousClassesTest extends TestCase
     {
         $this->registerConfig();
         $this->registerFactory();
-        $this->registerDependencyProvider();
+        $this->registerAbstractProvider();
 
         $facade = new class() extends AbstractFacade {
             public function getSomething(): array
@@ -109,11 +109,11 @@ final class AnonymousClassesTest extends TestCase
         );
     }
 
-    private function registerDependencyProvider(): void
+    private function registerAbstractProvider(): void
     {
         AnonymousGlobal::addGlobal(
             $this,
-            new class() extends AbstractDependencyProvider {
+            new class() extends AbstractProvider {
                 public function provideModuleDependencies(Container $container): void
                 {
                     $container->set('my-greeter', new class() {

@@ -6,7 +6,7 @@ namespace GacelaTest\Feature\Framework\MissingFile;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
+use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
@@ -33,9 +33,9 @@ final class FeatureTest extends TestCase
 
     public function test_missing_dependency_provider_module(): void
     {
-        $this->expectException(DependencyProviderNotFoundException::class);
+        $this->expectException(ProviderNotFoundException::class);
 
-        $facade = new MissingDependencyProviderFile\Facade();
+        $facade = new MissingProviderFile\Facade();
         $facade->error();
     }
 }

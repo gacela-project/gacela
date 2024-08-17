@@ -12,7 +12,7 @@ final class ResolvableType
         'Facade',
         'Factory',
         'Config',
-        'DependencyProvider',
+        'Provider',
     ];
 
     private function __construct(

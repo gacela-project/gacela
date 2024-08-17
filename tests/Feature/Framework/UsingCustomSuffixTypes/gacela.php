@@ -12,10 +12,10 @@ return static function (GacelaConfig $config): void {
         ->addSuffixTypeFacade('FacaModuleA')
         ->addSuffixTypeFactory('FactModuleA')
         ->addSuffixTypeConfig('ConfModuleA')
-        ->addSuffixTypeDependencyProvider('DepProModuleA')
+        ->addSuffixTypeProvider('ProModuleA')
         // ModuleB
         ->addSuffixTypeFacade('FacadeModuleB')
         ->addSuffixTypeFactory('FactoryModuleB')
         ->addSuffixTypeConfig('ConfigModuleB')
-        ->addSuffixTypeDependencyProvider('DependencyProviderModuleB');
+        ->addSuffixTypeProvider('ProviderModuleB');
 };

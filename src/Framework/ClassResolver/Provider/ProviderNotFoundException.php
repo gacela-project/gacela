@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\ClassResolver\DependencyProvider;
+namespace Gacela\Framework\ClassResolver\Provider;
 
-use Exception;
 use Gacela\Framework\ClassResolver\ClassResolverExceptionTrait;
+use RuntimeException;
 
-final class DependencyProviderNotFoundException extends Exception
+final class ProviderNotFoundException extends RuntimeException
 {
     use ClassResolverExceptionTrait;
 
@@ -16,6 +16,6 @@ final class DependencyProviderNotFoundException extends Exception
      */
     public function __construct($caller)
     {
-        parent::__construct($this->buildMessage($caller, 'DependencyProvider'));
+        parent::__construct($this->buildMessage($caller, 'Provider'));
     }
 }

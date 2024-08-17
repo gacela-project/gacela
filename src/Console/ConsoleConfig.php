@@ -25,9 +25,9 @@ final class ConsoleConfig extends AbstractConfig
         return $this->getCommandTemplateContent('config-maker.txt');
     }
 
-    public function getDependencyProviderMakerTemplate(): string
+    public function getProviderMakerTemplate(): string
     {
-        return $this->getCommandTemplateContent('dependency-provider-maker.txt');
+        return $this->getCommandTemplateContent('provider-maker.txt');
     }
 
     /**

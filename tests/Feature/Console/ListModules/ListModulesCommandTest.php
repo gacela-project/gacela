@@ -52,21 +52,21 @@ TXT;
 Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
 Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory
 Config: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Config
-DependencyProvider: ✖️
+Provider: ✖️
 ============================
 2.- TestModule1
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade
 Factory: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Factory
 Config: ✖️
-DependencyProvider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1DependencyProvider
+Provider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Provider
 ============================
 3.- TestModule2
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule2\TestModule2Facade
 Factory: ✖️
 Config: ✖️
-DependencyProvider: ✖️
+Provider: ✖️
 
 TXT;
         self::assertSame($expected, $this->command->getDisplay());

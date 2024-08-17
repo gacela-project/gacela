@@ -6,7 +6,6 @@ namespace Gacela\Console\Domain\AllAppModules;
 
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
-use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use ReflectionClass;
 
@@ -91,16 +90,15 @@ final class AppModuleCreator
      */
     private function findProvider(string $facadeClass): ?string
     {
-        try {
-            $resolver = $this->providerResolver->resolve($facadeClass);
-
-            if ((new ReflectionClass($resolver))->isAnonymous()) {
-                throw new ProviderNotFoundException($resolver);
-            }
-
-            return $resolver::class;
-        } catch (ProviderNotFoundException) {
+        $resolver = $this->providerResolver->resolve($facadeClass);
+        if ($resolver === null) {
             return null;
         }
+
+        if ((new ReflectionClass($resolver))->isAnonymous()) {
+            return null;
+        }
+
+        return $resolver::class;
     }
 }

@@ -11,11 +11,11 @@ final class Factory extends AbstractFactory
 {
     public function getArrayAsObject(): ArrayObject
     {
-        return $this->getProvidedDependency(Provider::ARRAY_AS_OBJECT);
+        return $this->getProvidedDependency(DependencyProvider::ARRAY_AS_OBJECT);
     }
 
     public function getArrayFromFunction(): ArrayObject
     {
-        return $this->getProvidedDependency(Provider::ARRAY_FROM_FUNCTION);
+        return $this->getProvidedDependency(DependencyProvider::ARRAY_FROM_FUNCTION);
     }
 }

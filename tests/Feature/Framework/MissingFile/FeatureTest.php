@@ -31,7 +31,7 @@ final class FeatureTest extends TestCase
         self::assertInstanceOf(AbstractConfig::class, $facade->getConfig());
     }
 
-    public function test_missing_dependency_provider_module(): void
+    public function test_missing_provider_module(): void
     {
         $this->expectException(ProviderNotFoundException::class);
 

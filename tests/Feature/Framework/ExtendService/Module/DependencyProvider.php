@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ExtendService\Module;
 
 use ArrayObject;
-use Gacela\Framework\AbstractProvider;
+use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\Container\Container;
 
-final class Provider extends AbstractProvider
+/**
+ * Testing Backward Compatibility for AbstractDependencyProvider.
+ * Use AbstractProvider when AbstractDependencyProvider is completely removed.
+ */
+final class DependencyProvider extends AbstractDependencyProvider
 {
     public const ARRAY_AS_OBJECT = 'ARRAY_AS_OBJECT';
 

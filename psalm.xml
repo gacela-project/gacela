@@ -19,6 +19,7 @@
     </plugins>
 
     <issueHandlers>
+        <DeprecatedClass errorLevel="suppress" />
         <MoreSpecificReturnType errorLevel="suppress" />
         <LessSpecificReturnStatement errorLevel="suppress" />
         <UnsafeInstantiation errorLevel="suppress" />

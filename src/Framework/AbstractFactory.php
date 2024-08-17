@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
@@ -43,8 +45,15 @@ abstract class AbstractFactory
     {
         $container = Container::withConfig(Config::getInstance());
 
-        $provider = (new ProviderResolver())->resolve($this);
-        $provider->provideModuleDependencies($container);
+        $resolver = (new ProviderResolver())->resolve($this);
+        $resolver?->provideModuleDependencies($container);
+
+        $dpResolver = (new DependencyProviderResolver())->resolve($this);
+        $dpResolver?->provideModuleDependencies($container);
+
+        if ($resolver === null && $dpResolver === null) {
+            throw new ProviderNotFoundException(static::class);
+        }
 
         return $container;
     }

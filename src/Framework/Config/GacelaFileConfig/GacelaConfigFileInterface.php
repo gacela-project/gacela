@@ -23,7 +23,7 @@ interface GacelaConfigFileInterface
      * @return array{
      *     Factory?:list<string>,
      *     Config?:list<string>,
-     *     AbstractProvider?:list<string>
+     *     Provider?:list<string>
      * }
      */
     public function getSuffixTypes(): array;

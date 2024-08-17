@@ -17,7 +17,7 @@ final class AppModuleCreator
     public function __construct(
         private readonly FactoryResolver $factoryResolver,
         private readonly ConfigResolver $configResolver,
-        private readonly ProviderResolver $dependencyProviderResolver,
+        private readonly ProviderResolver $providerResolver,
     ) {
     }
 
@@ -32,7 +32,7 @@ final class AppModuleCreator
             $facadeClass,
             $this->findFactory($facadeClass),
             $this->findConfig($facadeClass),
-            $this->findAbstractProvider($facadeClass),
+            $this->findProvider($facadeClass),
         );
     }
 
@@ -89,10 +89,10 @@ final class AppModuleCreator
     /**
      * @param class-string $facadeClass
      */
-    private function findAbstractProvider(string $facadeClass): ?string
+    private function findProvider(string $facadeClass): ?string
     {
         try {
-            $resolver = $this->dependencyProviderResolver->resolve($facadeClass);
+            $resolver = $this->providerResolver->resolve($facadeClass);
 
             if ((new ReflectionClass($resolver))->isAnonymous()) {
                 throw new ProviderNotFoundException($resolver);

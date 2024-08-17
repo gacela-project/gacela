@@ -7,7 +7,7 @@ namespace GacelaTest\Benchmark\Framework\ClassResolver\FileCache\ModuleG;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 
-final class ModuleGAbstractProvider extends AbstractProvider
+final class ModuleGProvider extends AbstractProvider
 {
     public function provideModuleDependencies(Container $container): void
     {

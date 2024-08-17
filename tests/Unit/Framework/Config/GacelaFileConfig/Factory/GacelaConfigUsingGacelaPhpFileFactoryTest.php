@@ -102,7 +102,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
             static fn (GacelaConfig $config): GacelaConfig => $config
-                ->addSuffixTypeAbstractProvider('Binding'),
+                ->addSuffixTypeProvider('Binding'),
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(

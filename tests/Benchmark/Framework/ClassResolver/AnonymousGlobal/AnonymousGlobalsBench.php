@@ -32,7 +32,7 @@ final class AnonymousGlobalsBench
     public function bench_class_resolving(): void
     {
         $this->facade->getConfigValues();
-        $this->facade->getValueFromAbstractProvider();
+        $this->facade->getValueFromProvider();
     }
 
     private function setupAbstractConfig(): void
@@ -71,13 +71,13 @@ final class AnonymousGlobalsBench
                     /** @var array $configValues */
                     $configValues = $this->getConfig()->getValues();
 
-                    /** @var string $valueFromAbstractProvider */
-                    $valueFromAbstractProvider = $this->getProvidedDependency('key');
+                    /** @var string $valueFromProvider */
+                    $valueFromProvider = $this->getProvidedDependency('key');
 
-                    return new class($configValues, $valueFromAbstractProvider) {
+                    return new class($configValues, $valueFromProvider) {
                         public function __construct(
                             private readonly array $configValues,
-                            private readonly string $valueFromAbstractProvider,
+                            private readonly string $valueFromProvider,
                         ) {
                         }
 
@@ -86,9 +86,9 @@ final class AnonymousGlobalsBench
                             return $this->configValues;
                         }
 
-                        public function getValueFromAbstractProvider(): string
+                        public function getValueFromProvider(): string
                         {
-                            return $this->valueFromAbstractProvider;
+                            return $this->valueFromProvider;
                         }
                     };
                 }
@@ -106,11 +106,11 @@ final class AnonymousGlobalsBench
                     ->getConfigValues();
             }
 
-            public function getValueFromAbstractProvider(): string
+            public function getValueFromProvider(): string
             {
                 return $this->getFactory()
                     ->createDomainClass()
-                    ->getValueFromAbstractProvider();
+                    ->getValueFromProvider();
             }
         };
     }

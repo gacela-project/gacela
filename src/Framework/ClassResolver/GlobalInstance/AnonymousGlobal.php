@@ -22,7 +22,6 @@ final class AnonymousGlobal
         'Config',
         'Factory',
         'Provider',
-        'Provider',
     ];
 
     /** @var array<string,object> */

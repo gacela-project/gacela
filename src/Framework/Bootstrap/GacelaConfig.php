@@ -120,7 +120,7 @@ final class GacelaConfig
     /**
      * Allow overriding gacela dependency provider suffixes.
      */
-    public function addSuffixTypeAbstractProvider(string $suffix): self
+    public function addSuffixTypeProvider(string $suffix): self
     {
         $this->suffixTypesBuilder->addProvider($suffix);
 

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig;
+namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module;
 
 use Gacela\Framework\AbstractFactory;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractClass;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromAnonymousClass;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromCallable;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromAnonymousClass;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromCallable;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\Service;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\AbstractClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\AbstractFromAnonymousClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\AbstractFromCallable;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\InterfaceFromAnonymousClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\InterfaceFromCallable;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\Service;
 
 final class Factory extends AbstractFactory
 {

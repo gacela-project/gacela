@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure;
+namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Infrastructure;
 
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\AbstractClass;
 
 final class ConcreteClass extends AbstractClass
 {

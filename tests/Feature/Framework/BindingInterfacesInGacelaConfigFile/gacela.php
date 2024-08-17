@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractClass;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromAnonymousClass;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\AbstractFromCallable;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromAnonymousClass;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Domain\InterfaceFromCallable;
-use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig\Infrastructure\ConcreteClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\AbstractClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\AbstractFromAnonymousClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\AbstractFromCallable;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\InterfaceFromAnonymousClass;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Domain\InterfaceFromCallable;
+use GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module\Infrastructure\ConcreteClass;
 
 // Is it also possible to bind classes like => AbstractClass::class => SpecificClass::class
 // Check the test _BindingInterfacesWithInnerDependencies_ BUT be aware this way is not possible
@@ -30,7 +30,7 @@ return static fn (GacelaConfig $config): GacelaConfig => $config
     )
     ->addBinding(
         AbstractFromCallable::class,
-        new class() extends AbstractFromCallable {
+        static fn () => new class() extends AbstractFromCallable {
             public function getClassName(): string
             {
                 return AbstractFromCallable::class;
@@ -48,7 +48,7 @@ return static fn (GacelaConfig $config): GacelaConfig => $config
     )
     ->addBinding(
         InterfaceFromCallable::class,
-        new class() implements InterfaceFromCallable {
+        static fn () => new class() implements InterfaceFromCallable {
             public function getClassName(): string
             {
                 return InterfaceFromCallable::class;

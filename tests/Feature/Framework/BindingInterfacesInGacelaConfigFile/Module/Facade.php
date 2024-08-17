@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\LocalConfig;
+namespace GacelaTest\Feature\Framework\BindingInterfacesInGacelaConfigFile\Module;
 
 use Gacela\Framework\AbstractFacade;
 

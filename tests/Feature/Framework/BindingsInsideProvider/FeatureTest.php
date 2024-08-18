@@ -20,7 +20,7 @@ final class FeatureTest extends TestCase
     public function test_mapping_interfaces_from_bindings(): void
     {
         self::assertSame(
-            'Hello Gacela! Name: Chemaclass & Jesus',
+            'Hello Gacela! Team: Chemaclass & Jesus',
             (new Module\Facade())->generateCompanyAndName(),
         );
     }

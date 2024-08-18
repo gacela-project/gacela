@@ -21,6 +21,7 @@ final class SetupCombinator
         $this->overrideResetInMemoryCache($other);
         $this->overrideFileCacheSettings($other);
 
+        $this->combineBindings($other);
         $this->combineExternalServices($other);
         $this->combineProjectNamespaces($other);
         $this->combineConfigKeyValues($other);
@@ -115,6 +116,13 @@ final class SetupCombinator
     {
         if ($other->isPropertyChanged(SetupGacela::gacelaConfigsToExtend)) {
             $this->original->combineGacelaConfigsToExtend($other->getGacelaConfigsToExtend());
+        }
+    }
+
+    private function combineBindings(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::bindings)) {
+            $this->original->combineBindings($other->getBindings());
         }
     }
 }

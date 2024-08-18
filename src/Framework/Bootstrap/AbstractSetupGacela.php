@@ -19,6 +19,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const externalServices = 'externalServices';
 
+    public const bindings = 'bindings';
+
     public const projectNamespaces = 'projectNamespaces';
 
     public const configKeyValues = 'configKeyValues';
@@ -50,6 +52,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
 
     protected const DEFAULT_PLUGINS = [];
+
+    protected const DEFAULT_BINDINGS = [];
 
     /**
      * Define different config sources.

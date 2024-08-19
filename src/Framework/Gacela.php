@@ -20,6 +20,7 @@ use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
+use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -181,13 +182,9 @@ final class Gacela
             return [];
         }
 
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(self::$appRootDir),
-        );
-
         $result = [];
         /** @var SplFileInfo $file */
-        foreach ($iterator as $file) {
+        foreach (self::createRecursiveIterator() as $file) {
             if ($file->getExtension() === 'php') {
                 $fileContents = (string)file_get_contents($file->getPathname());
                 if (preg_match('/namespace\s+([a-zA-Z0-9_\\\\]+)\s*;/', $fileContents, $matches) !== false) {
@@ -210,5 +207,31 @@ final class Gacela
             }
         }
         return $result;
+    }
+
+    /**
+     * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
+     */
+    private static function createRecursiveIterator(): RecursiveIteratorIterator
+    {
+        $directoryIterator = new RecursiveDirectoryIterator(
+            self::$appRootDir ?? '',
+            RecursiveDirectoryIterator::SKIP_DOTS,
+        );
+
+        $filterIterator = new RecursiveCallbackFilterIterator(
+            $directoryIterator,
+            static function ($current, $key, $iterator) {
+                /** @var SplFileInfo $current */
+                if ($iterator->hasChildren() && $current->getFilename() === 'vendor') {
+                    // Skip the vendor directory
+                    return false;
+                }
+                return true;
+            },
+        );
+
+        /** @var RecursiveIteratorIterator<RecursiveDirectoryIterator> */
+        return new RecursiveIteratorIterator($filterIterator);
     }
 }

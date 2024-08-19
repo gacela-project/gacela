@@ -20,6 +20,9 @@ final class GacelaConfig
 
     private readonly BindingsBuilder $bindingsBuilder;
 
+    /** @var array<class-string, class-string|object|callable> */
+    private array $bindings = [];
+
     private ?bool $shouldResetInMemoryCache = null;
 
     private ?bool $fileCacheEnabled = null;
@@ -148,6 +151,7 @@ final class GacelaConfig
     public function addBinding(string $key, string|object|callable $value): self
     {
         $this->bindingsBuilder->bind($key, $value);
+        $this->bindings[$key] = $value;
 
         return $this;
     }
@@ -340,6 +344,7 @@ final class GacelaConfig
             $this->appConfigBuilder,
             $this->suffixTypesBuilder,
             $this->bindingsBuilder,
+            $this->bindings,
             $this->externalServices,
             $this->shouldResetInMemoryCache,
             $this->fileCacheEnabled,

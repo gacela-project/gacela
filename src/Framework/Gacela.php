@@ -20,6 +20,11 @@ use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
+use SplFileInfo;
+
 use function is_string;
 use function sprintf;
 
@@ -46,6 +51,8 @@ final class Gacela
         if ($setup->shouldResetInMemoryCache()) {
             self::resetCache();
         }
+
+        self::addModuleBindingsToSetup($setup);
 
         $config = Config::createWithSetup($setup);
         $config->setAppRootDir($appRootDir)
@@ -154,5 +161,54 @@ final class Gacela
 
             self::$mainContainer->resolve($current);
         }
+    }
+
+    private static function addModuleBindingsToSetup(SetupGacelaInterface $setup): void
+    {
+        $setup->combine(SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            foreach (self::collectBindingsFromProviders() as $k => $v) {
+                $config->addBinding($k, $v);
+            }
+        }));
+    }
+
+    /**
+     * @return array<class-string, class-string|callable|object>
+     */
+    private static function collectBindingsFromProviders(): array
+    {
+        if (self::$appRootDir === null || !is_dir(self::$appRootDir)) {
+            return [];
+        }
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(self::$appRootDir),
+        );
+
+        $result = [];
+        /** @var SplFileInfo $file */
+        foreach ($iterator as $file) {
+            if ($file->getExtension() === 'php') {
+                $fileContents = (string)file_get_contents($file->getPathname());
+                if (preg_match('/namespace\s+([a-zA-Z0-9_\\\\]+)\s*;/', $fileContents, $matches) !== false) {
+                    $namespace = $matches[1] ?? ''; // @phpstan-ignore-line
+                } else {
+                    $namespace = '';
+                }
+
+                /** @var string $className */
+                $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                $fullClassName = $namespace !== ''
+                    ? $namespace . '\\' . $className
+                    : $className;
+
+                if (class_exists($fullClassName)) {
+                    if (is_subclass_of($fullClassName, AbstractProvider::class)) {
+                        $result = array_merge($result, (new $fullClassName())->bindings);
+                    }
+                }
+            }
+        }
+        return $result;
     }
 }

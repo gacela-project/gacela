@@ -27,6 +27,9 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var callable(BindingsBuilder,array<string,mixed>):void */
     private $bindingsFn;
 
+    /** @var ?array<class-string,class-string|object|callable> */
+    private ?array $bindings = null;
+
     /** @var callable(SuffixTypesBuilder):void */
     private $suffixTypesFn;
 
@@ -118,21 +121,22 @@ final class SetupGacela extends AbstractSetupGacela
         $dto = $gacelaConfig->toTransfer();
 
         return (new self())
-            ->setExternalServices($dto->getExternalServices())
-            ->setAppConfigBuilder($dto->getAppConfigBuilder())
-            ->setSuffixTypesBuilder($dto->getSuffixTypesBuilder())
-            ->setBindingsBuilder($dto->getBindingsBuilder())
-            ->setShouldResetInMemoryCache($dto->getShouldResetInMemoryCache())
-            ->setFileCacheEnabled($dto->getFileCacheEnabled())
-            ->setFileCacheDirectory($dto->getFileCacheDirectory())
-            ->setProjectNamespaces($dto->getProjectNamespaces())
-            ->setConfigKeyValues($dto->getConfigKeyValues())
-            ->setAreEventListenersEnabled($dto->getAreEventListenersEnabled())
-            ->setGenericListeners($dto->getGenericListeners())
-            ->setSpecificListeners($dto->getSpecificListeners())
-            ->setGacelaConfigsToExtend($dto->getGacelaConfigsToExtend())
-            ->setPlugins($dto->getPlugins())
-            ->setServicesToExtend($dto->getServicesToExtend());
+            ->setExternalServices($dto->externalServices)
+            ->setAppConfigBuilder($dto->appConfigBuilder)
+            ->setSuffixTypesBuilder($dto->suffixTypesBuilder)
+            ->setBindingsBuilder($dto->bindingsBuilder)
+            ->setBindings($dto->bindings)
+            ->setShouldResetInMemoryCache($dto->shouldResetInMemoryCache)
+            ->setFileCacheEnabled($dto->fileCacheEnabled)
+            ->setFileCacheDirectory($dto->fileCacheDirectory)
+            ->setProjectNamespaces($dto->projectNamespaces)
+            ->setConfigKeyValues($dto->configKeyValues)
+            ->setAreEventListenersEnabled($dto->areEventListenersEnabled)
+            ->setGenericListeners($dto->genericListeners)
+            ->setSpecificListeners($dto->specificListeners)
+            ->setGacelaConfigsToExtend($dto->gacelaConfigsToExtend)
+            ->setPlugins($dto->plugins)
+            ->setServicesToExtend($dto->servicesToExtend);
     }
 
     /**
@@ -142,6 +146,17 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $this->markPropertyChanged(self::externalServices, true);
         $this->externalServices = $array;
+
+        return $this;
+    }
+
+    /**
+     * @param array<class-string, class-string|object|callable> $array
+     */
+    public function setBindings(?array $array): self
+    {
+        $this->markPropertyChanged(self::bindings, true);
+        $this->bindings = $array;
 
         return $this;
     }
@@ -213,6 +228,10 @@ final class SetupGacela extends AbstractSetupGacela
 
         if ($this->bindingsBuilder instanceof BindingsBuilder) {
             $builder = $this->bindingsBuilder;
+        }
+
+        foreach ($this->bindings ?? [] as $k => $v) {
+            $builder->bind($k, $v);
         }
 
         ($this->bindingsFn)(
@@ -459,6 +478,22 @@ final class SetupGacela extends AbstractSetupGacela
         return (array)$this->plugins;
     }
 
+    /**
+     * @return array<class-string,class-string|object|callable>
+     */
+    public function getBindings(): array
+    {
+        return $this->bindings ?? self::DEFAULT_BINDINGS;
+    }
+
+    /**
+     * @param array<class-string,class-string|object|callable> $list
+     */
+    public function combineBindings(array $list): void
+    {
+        $this->setBindings(array_merge($this->bindings ?? [], $list));
+    }
+
     private function setAreEventListenersEnabled(?bool $flag): self
     {
         $this->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
@@ -525,7 +560,12 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    private function markPropertyChanged(string $name, mixed $value): void
+    /**
+     * @param (Closure[]|callable|class-string|mixed)[]|bool|null|string $value
+     *
+     * @psalm-param array<int<0, max>|string, callable|class-string|list<Closure>|mixed>|bool|null|string $value
+     */
+    private function markPropertyChanged(string $name, array|bool|string|null $value): void
     {
         $this->changedProperties[$name] = ($value !== null);
     }

@@ -61,7 +61,7 @@ final class GacelaConfigFromBootstrapFactoryTest extends TestCase
                     BindingsBuilder $interfacesBuilder,
                     array $externalServices,
                 ): void {
-                    self::assertSame($externalServices['externalServiceKey']->__invoke(), 'externalServiceValue');
+                    self::assertSame('externalServiceValue', $externalServices['externalServiceKey']->__invoke());
                     $interfacesBuilder->bind(CustomInterface::class, CustomClass::class);
                 }),
         );

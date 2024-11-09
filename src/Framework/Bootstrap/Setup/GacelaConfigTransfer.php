@@ -12,7 +12,6 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 final class GacelaConfigTransfer
 {
     /**
-     * @param ?array<class-string, class-string|object|callable> $bindings
      * @param ?array<string, class-string|object|callable> $externalServices
      * @param ?list<string> $projectNamespaces
      * @param ?array<string,mixed> $configKeyValues
@@ -26,7 +25,6 @@ final class GacelaConfigTransfer
         public readonly AppConfigBuilder $appConfigBuilder,
         public readonly SuffixTypesBuilder $suffixTypesBuilder,
         public readonly BindingsBuilder $bindingsBuilder,
-        public readonly ?array $bindings,
         public readonly ?array $externalServices,
         public readonly ?bool $shouldResetInMemoryCache,
         public readonly ?bool $fileCacheEnabled,

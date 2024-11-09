@@ -27,9 +27,6 @@ final class SetupGacela extends AbstractSetupGacela
     /** @var callable(BindingsBuilder,array<string,mixed>):void */
     private $bindingsFn;
 
-    /** @var ?array<class-string,class-string|object|callable> */
-    private ?array $bindings = null;
-
     /** @var callable(SuffixTypesBuilder):void */
     private $suffixTypesFn;
 
@@ -125,7 +122,6 @@ final class SetupGacela extends AbstractSetupGacela
             ->setAppConfigBuilder($dto->appConfigBuilder)
             ->setSuffixTypesBuilder($dto->suffixTypesBuilder)
             ->setBindingsBuilder($dto->bindingsBuilder)
-            ->setBindings($dto->bindings)
             ->setShouldResetInMemoryCache($dto->shouldResetInMemoryCache)
             ->setFileCacheEnabled($dto->fileCacheEnabled)
             ->setFileCacheDirectory($dto->fileCacheDirectory)
@@ -146,17 +142,6 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $this->markPropertyChanged(self::externalServices, true);
         $this->externalServices = $array;
-
-        return $this;
-    }
-
-    /**
-     * @param array<class-string, class-string|object|callable> $array
-     */
-    public function setBindings(?array $array): self
-    {
-        $this->markPropertyChanged(self::bindings, true);
-        $this->bindings = $array;
 
         return $this;
     }
@@ -228,10 +213,6 @@ final class SetupGacela extends AbstractSetupGacela
 
         if ($this->bindingsBuilder instanceof BindingsBuilder) {
             $builder = $this->bindingsBuilder;
-        }
-
-        foreach ($this->bindings ?? [] as $k => $v) {
-            $builder->bind($k, $v);
         }
 
         ($this->bindingsFn)(
@@ -476,22 +457,6 @@ final class SetupGacela extends AbstractSetupGacela
     public function getPlugins(): array
     {
         return (array)$this->plugins;
-    }
-
-    /**
-     * @return array<class-string,class-string|object|callable>
-     */
-    public function getBindings(): array
-    {
-        return $this->bindings ?? self::DEFAULT_BINDINGS;
-    }
-
-    /**
-     * @param array<class-string,class-string|object|callable> $list
-     */
-    public function combineBindings(array $list): void
-    {
-        $this->setBindings(array_merge($this->bindings ?? [], $list));
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self

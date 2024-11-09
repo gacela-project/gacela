@@ -20,12 +20,6 @@ use Gacela\Framework\Container\Locator;
 use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
-use RecursiveCallbackFilterIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-
-use SplFileInfo;
-
 use function is_string;
 use function sprintf;
 
@@ -40,7 +34,7 @@ final class Gacela
     /**
      * Define the entry point of Gacela.
      *
-     * @param null|Closure(GacelaConfig):void $configFn
+     * @param  null|Closure(GacelaConfig):void  $configFn
      */
     public static function bootstrap(string $appRootDir, Closure $configFn = null): void
     {
@@ -53,8 +47,6 @@ final class Gacela
             self::resetCache();
         }
 
-        self::addModuleBindingsToSetup($setup);
-
         $config = Config::createWithSetup($setup);
         $config->setAppRootDir($appRootDir)
             ->init();
@@ -65,7 +57,7 @@ final class Gacela
     /**
      * @template T
      *
-     * @param class-string<T> $className
+     * @param  class-string<T>  $className
      *
      * @return T|null
      */
@@ -90,7 +82,7 @@ final class Gacela
      * Add an anonymous class as 'Config', 'Factory' or 'Provider' as a global resource
      * bound to the context that it is passed as second argument.
      *
-     * @param object|string $context It can be the string-key (file path) or the class/object itself.
+     * @param  object|string  $context  It can be the string-key (file path) or the class/object itself.
      *                               If empty then the caller's file will be use
      */
     public static function addGlobal(object $resolvedClass, object|string $context = ''): void
@@ -111,7 +103,7 @@ final class Gacela
     }
 
     /**
-     * @param null|Closure(GacelaConfig):void $configFn
+     * @param  null|Closure(GacelaConfig):void  $configFn
      */
     private static function processConfigFnIntoSetup(Closure $configFn = null): SetupGacelaInterface
     {
@@ -162,76 +154,5 @@ final class Gacela
 
             self::$mainContainer->resolve($current);
         }
-    }
-
-    private static function addModuleBindingsToSetup(SetupGacelaInterface $setup): void
-    {
-        $setup->combine(SetupGacela::fromCallable(static function (GacelaConfig $config): void {
-            foreach (self::collectBindingsFromProviders() as $k => $v) {
-                $config->addBinding($k, $v);
-            }
-        }));
-    }
-
-    /**
-     * @return array<class-string, class-string|callable|object>
-     */
-    private static function collectBindingsFromProviders(): array
-    {
-        if (self::$appRootDir === null || !is_dir(self::$appRootDir)) {
-            return [];
-        }
-
-        $result = [];
-        /** @var SplFileInfo $file */
-        foreach (self::createRecursiveIterator() as $file) {
-            if ($file->getExtension() === 'php') {
-                $fileContents = (string)file_get_contents($file->getPathname());
-                if (preg_match('/namespace\s+([a-zA-Z0-9_\\\\]+)\s*;/', $fileContents, $matches) !== false) {
-                    $namespace = $matches[1] ?? ''; // @phpstan-ignore-line
-                } else {
-                    $namespace = '';
-                }
-
-                /** @var string $className */
-                $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                $fullClassName = $namespace !== ''
-                    ? $namespace . '\\' . $className
-                    : $className;
-
-                if (class_exists($fullClassName)) {
-                    if (is_subclass_of($fullClassName, AbstractProvider::class)) {
-                        $result = array_merge($result, (new $fullClassName())->bindings);
-                    }
-                }
-            }
-        }
-        return $result;
-    }
-
-    /**
-     * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
-     */
-    private static function createRecursiveIterator(): RecursiveIteratorIterator
-    {
-        $directoryIterator = new RecursiveDirectoryIterator(
-            self::$appRootDir ?? '',
-            RecursiveDirectoryIterator::SKIP_DOTS,
-        );
-
-        $filterIterator = new RecursiveCallbackFilterIterator(
-            $directoryIterator,
-            static function ($current, $key, $iterator) {
-                /** @var SplFileInfo $current */
-                if ($iterator->hasChildren() && $current->getFilename() === 'vendor') {
-                    // Skip the vendor directory
-                    return false;
-                }
-                return true;
-            },
-        );
-
-        /** @var RecursiveIteratorIterator<RecursiveDirectoryIterator> */
-        return new RecursiveIteratorIterator($filterIterator);
     }
 }

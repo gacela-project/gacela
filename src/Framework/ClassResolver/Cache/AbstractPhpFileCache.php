@@ -14,7 +14,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
     private static array $cache = [];
 
     public function __construct(
-        private string $cacheDir,
+        private readonly string $cacheDir,
     ) {
         self::$cache[static::class] = $this->getExistingCache();
     }

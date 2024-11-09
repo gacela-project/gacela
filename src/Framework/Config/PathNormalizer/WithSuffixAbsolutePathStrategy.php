@@ -10,7 +10,7 @@ final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterf
 {
     public function __construct(
         private readonly string $appRootDir,
-        private string $configFileNameSuffix = '',
+        private readonly string $configFileNameSuffix = '',
     ) {
     }
 

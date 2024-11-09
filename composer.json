@@ -88,6 +88,12 @@
             "@csfix",
             "@test-all"
         ],
+        "fix": [
+            "@static-clear-cache",
+            "@composer normalize",
+            "@csfix",
+            "@rector"
+        ],
         "infection": [
             "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=75 --min-covered-msi=75",
             "find tests -type f -name 'gacela-custom-services.php' -exec rm -rf {} \\;",

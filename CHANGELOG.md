@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.8.1](https://github.com/gacela-project/gacela/compare/1.8.0...1.8.1) - 2024-11-09
+
+- Internal optimizations
+
 ## [1.8.0](https://github.com/gacela-project/gacela/compare/1.7.1...1.8.0) - 2024-08-17
 
 - Move `./gacela` script to `bin/` directory

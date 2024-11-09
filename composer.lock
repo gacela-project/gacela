@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0895799b7d05b1f3e30d444fa4bc82c1",
+    "content-hash": "dbbaaee940218b8de73bbf05c57a55fc",
     "packages": [
         {
             "name": "gacela-project/container",

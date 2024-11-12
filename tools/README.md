@@ -7,7 +7,7 @@ Here you can find developer tools to improve your DX.
 Install testing library with:
 ```bash
 cd tools
-curl -s https://bashunit.typeddevs.com/install.sh | bash -s lib 0.10.1
+./install-dependencies.sh
 ```
 
 Run bash tests:

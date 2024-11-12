@@ -1,9 +1,11 @@
 #!/bin/bash
 
+function set_up() {
+  SCRIPT="$(current_dir)"/../git-hooks/pre-commit.sh
+}
+
 function test_pre_commit() {
-  spy composer
+  mock composer echo "mocked composer"
 
-  "$(dirname "${BASH_SOURCE[0]}")"/../git-hooks/pre-commit.sh
-
-  assert_have_been_called_times 2 composer
+  assert_match_snapshot "$($SCRIPT)"
 }

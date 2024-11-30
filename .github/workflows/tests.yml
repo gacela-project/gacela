@@ -22,7 +22,7 @@ jobs:
           - "ubuntu-latest"
 #          - "windows-latest" # TODO: Windows is not working in the CI at the moment for some reason
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Compatibility with PHP 8.4
+
 ## [1.8.1](https://github.com/gacela-project/gacela/compare/1.8.0...1.8.1) - 2024-11-09
 
 - Internal optimizations

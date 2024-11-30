@@ -105,7 +105,7 @@ final class Gacela
     /**
      * @param  null|Closure(GacelaConfig):void  $configFn
      */
-    private static function processConfigFnIntoSetup(Closure $configFn = null): SetupGacelaInterface
+    private static function processConfigFnIntoSetup(?Closure $configFn = null): SetupGacelaInterface
     {
         if ($configFn instanceof Closure) {
             return SetupGacela::fromCallable($configFn);

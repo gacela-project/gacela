@@ -12,7 +12,7 @@ final class GacelaFileCache
 
     public const DEFAULT_ENABLED_VALUE = false;
 
-    public const DEFAULT_DIRECTORY_VALUE = '/.gacela/cache';
+    public const DEFAULT_DIRECTORY_VALUE = null;
 
     private static ?bool $isEnabled = null;
 

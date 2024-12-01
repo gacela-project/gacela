@@ -48,6 +48,7 @@ final class FileCacheFeatureTest extends TestCase
 
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
+            $config->enableFileCache('/custom/this-will-be-overwritten');
         });
 
         $facade = new Module\Facade();
@@ -55,6 +56,9 @@ final class FileCacheFeatureTest extends TestCase
 
         self::assertFileExists(__DIR__ . '/custom/cache-dir/' . ClassNamePhpCache::FILENAME);
         self::assertFileExists(__DIR__ . '/custom/cache-dir/' . CustomServicesPhpCache::FILENAME);
+
+        self::assertFileDoesNotExist(__DIR__ . '/custom/this-will-be-overwritten/' . ClassNamePhpCache::FILENAME);
+        self::assertFileDoesNotExist(__DIR__ . '/custom/this-will-be-overwritten/' . CustomServicesPhpCache::FILENAME);
     }
 
     public function test_custom_cache_dir_but_cache_disable(): void

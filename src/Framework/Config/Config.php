@@ -119,6 +119,11 @@ final class Config implements ConfigInterface
 
     public function getCacheDir(): string
     {
+        if (isset($_ENV['GACELA_CACHE_DIR'])) {
+            /** @psalm-suppress RedundantCast */
+            return rtrim((string) $_ENV['GACELA_CACHE_DIR'], DIRECTORY_SEPARATOR);
+        }
+
         return $this->getAppRootDir()
             . DIRECTORY_SEPARATOR
             . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);

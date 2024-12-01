@@ -125,9 +125,7 @@ final class Config implements ConfigInterface
             return $this->cacheDir;
         }
 
-        $this->cacheDir = getenv('GACELA_CACHE_DIR') ?: $this->getAppRootDir()
-            . DIRECTORY_SEPARATOR
-            . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
+        $this->cacheDir = getenv('GACELA_CACHE_DIR') ?: $this->getDefaultCacheDir();
 
         return rtrim($this->cacheDir, DIRECTORY_SEPARATOR);
     }
@@ -155,6 +153,17 @@ final class Config implements ConfigInterface
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
+    }
+
+    private function getDefaultCacheDir(): string
+    {
+        if ($this->setup->getFileCacheDirectory() === '') {
+            return sys_get_temp_dir();
+        }
+
+        return $this->getAppRootDir()
+            . DIRECTORY_SEPARATOR
+            . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
     }
 
     /**

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.9.0](https://github.com/gacela-project/gacela/compare/1.8.1...1.9.0) - 2024-12-01
 
 - Compatibility with PHP 8.4
 - Added `GACELA_CACHE_DIR` env variable to override where to place the cache files

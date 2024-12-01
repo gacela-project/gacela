@@ -24,6 +24,8 @@ final class Config implements ConfigInterface
     /** @var array<string,mixed> */
     private array $config = [];
 
+    private ?string $cacheDir = null;
+
     private function __construct(
         private readonly SetupGacelaInterface $setup,
     ) {
@@ -119,9 +121,15 @@ final class Config implements ConfigInterface
 
     public function getCacheDir(): string
     {
-        return $this->getAppRootDir()
+        if ($this->cacheDir !== null) {
+            return $this->cacheDir;
+        }
+
+        $this->cacheDir = getenv('GACELA_CACHE_DIR') ?: $this->getAppRootDir()
             . DIRECTORY_SEPARATOR
             . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
+
+        return rtrim($this->cacheDir, DIRECTORY_SEPARATOR);
     }
 
     /**

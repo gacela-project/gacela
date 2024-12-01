@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Compatibility with PHP 8.4
+- Added `GACELA_CACHE_DIR` env variable to override where to place the cache files
 
 ## [1.8.1](https://github.com/gacela-project/gacela/compare/1.8.0...1.8.1) - 2024-11-09
 
@@ -10,11 +11,11 @@
 
 ## [1.8.0](https://github.com/gacela-project/gacela/compare/1.7.1...1.8.0) - 2024-08-17
 
-- Move `./gacela` script to `bin/` directory
+- Moved `./gacela` script to `bin/` directory
 - Fixed disable event listeners
-- Add `Gacela::addGlobal()`
-- Add `Gacela::overrideExistingResolvedClass()`
-- Deprecate `AbstractDependencyProvider` in favor of `AbstractProvider`
+- Added `Gacela::addGlobal()`
+- Added `Gacela::overrideExistingResolvedClass()`
+- Deprecated `AbstractDependencyProvider` in favor of `AbstractProvider`
 
 ## [1.7.1](https://github.com/gacela-project/gacela/compare/1.7.0...1.7.1) - 2024-04-16
 

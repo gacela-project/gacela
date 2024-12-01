@@ -10,7 +10,6 @@ use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
 
 use function array_key_exists;
-use function is_string;
 
 final class Config implements ConfigInterface
 {
@@ -126,16 +125,11 @@ final class Config implements ConfigInterface
             return $this->cacheDir;
         }
 
-        $cacheDir = getenv('GACELA_CACHE_DIR');
-        if (is_string($cacheDir)) {
-            $this->cacheDir = rtrim($cacheDir, DIRECTORY_SEPARATOR);
-            return $this->cacheDir;
-        }
-
-        $this->cacheDir = $this->getAppRootDir()
+        $this->cacheDir = getenv('GACELA_CACHE_DIR') ?: $this->getAppRootDir()
             . DIRECTORY_SEPARATOR
             . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
-        return $this->cacheDir;
+
+        return rtrim($this->cacheDir, DIRECTORY_SEPARATOR);
     }
 
     /**

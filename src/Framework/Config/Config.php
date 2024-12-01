@@ -10,6 +10,7 @@ use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
 
 use function array_key_exists;
+use function is_string;
 
 final class Config implements ConfigInterface
 {
@@ -119,9 +120,9 @@ final class Config implements ConfigInterface
 
     public function getCacheDir(): string
     {
-        if (isset($_ENV['GACELA_CACHE_DIR'])) {
-            /** @psalm-suppress RedundantCast */
-            return rtrim((string) $_ENV['GACELA_CACHE_DIR'], DIRECTORY_SEPARATOR);
+        $cacheDir = getenv('GACELA_CACHE_DIR');
+        if (is_string($cacheDir)) {
+            return rtrim($cacheDir, DIRECTORY_SEPARATOR);
         }
 
         return $this->getAppRootDir()

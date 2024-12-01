@@ -44,7 +44,7 @@ final class FileCacheFeatureTest extends TestCase
 
     public function test_custom_env_gacela_cache_dir(): void
     {
-        $_ENV['GACELA_CACHE_DIR'] = __DIR__ . '/custom/cache-dir';
+        putenv('GACELA_CACHE_DIR=' . __DIR__ . '/custom/cache-dir');
 
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();

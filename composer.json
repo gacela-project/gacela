@@ -30,7 +30,7 @@
         "gacela-project/container": "^0.6"
     },
     "require-dev": {
-        "ergebnis/composer-normalize": "^2.44",
+        "ergebnis/composer-normalize": "^2.45",
         "friendsofphp/php-cs-fixer": "^3.56",
         "infection/infection": "^0.26",
         "phpbench/phpbench": "^1.3",

@@ -26,6 +26,7 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
+            $config->enableFileCache(__DIR__);
             $config->addAppConfigKeyValue(GacelaFileCache::KEY_ENABLED, true);
             $config->registerGenericListener(static function (GacelaEventInterface $event): void {
                 // dump('Triggered -> ' . \get_class($event)); # useful for debugging

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.1](https://github.com/gacela-project/gacela/compare/1.9.0...1.9.1) - 2024-12-12
+
+- Better compatibility with PHP 8.4
+
 ## [1.9.0](https://github.com/gacela-project/gacela/compare/1.8.1...1.9.0) - 2024-12-01
 
 - Compatibility with PHP 8.4

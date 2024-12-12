@@ -36,7 +36,7 @@ final class Gacela
      *
      * @param  null|Closure(GacelaConfig):void  $configFn
      */
-    public static function bootstrap(string $appRootDir, Closure $configFn = null): void
+    public static function bootstrap(string $appRootDir, ?Closure $configFn = null): void
     {
         self::$appRootDir = $appRootDir;
         self::$mainContainer = null;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Gacela;
 
 use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +16,7 @@ final class AddGlobalContextTest extends TestCase
         Gacela::addGlobal(new class() extends AbstractConfig {});
 
         $context = basename(__FILE__, '.php');
-        $key = '\\' . ClassInfo::MODULE_NAME_ANONYMOUS . '\\' . $context . '\\Config';
+        $key = AnonymousGlobal::createCacheKey($context, 'Config');
 
         self::assertInstanceOf(AbstractConfig::class, AnonymousGlobal::getByKey($key));
     }

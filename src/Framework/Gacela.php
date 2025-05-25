@@ -90,9 +90,8 @@ final class Gacela
         if (is_string($context) && is_file($context)) {
             $context = basename($context, '.php');
         } elseif ($context === '') {
-            // Use the caller's file as context
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-            $callerFile = $trace[1]['file'] ?? __FILE__;
+            $callerFile = $trace[0]['file'] ?? __FILE__;
             $context = basename($callerFile, '.php');
         }
 

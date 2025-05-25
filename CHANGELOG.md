@@ -1,5 +1,10 @@
 # Changelog
 
+
+## Unreleased
+
+- Improve internal `AnonymousGlobal::getByKey()` 
+
 ## [1.9.1](https://github.com/gacela-project/gacela/compare/1.9.0...1.9.1) - 2024-12-12
 
 - Better compatibility with PHP 8.4

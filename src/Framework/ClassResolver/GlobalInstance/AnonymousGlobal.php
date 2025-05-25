@@ -75,9 +75,13 @@ final class AnonymousGlobal
             : $contextName;
 
         self::validateTypeForAnonymousGlobalRegistration($type);
-
-        $key = sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
+        $key = self::createCacheKey($contextName, $type);
         self::addCachedGlobalInstance($key, $resolvedClass);
+    }
+
+    public static function createCacheKey(string $contextName, string $type): string
+    {
+        return sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
     }
 
     public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void

@@ -105,7 +105,14 @@ final class ConfigFactory extends AbstractFactory
 
     private function env(): string
     {
-        return getenv('APP_ENV') ?: '';
+        $env = getenv('APP_ENV') ?: '';
+
+        // Allow only alphanumeric characters, underscores and hyphens
+        if ($env !== '' && !preg_match('/^[A-Za-z0-9_-]+$/', $env)) {
+            return '';
+        }
+
+        return $env;
     }
 
     private function createPathFinder(): PathFinderInterface

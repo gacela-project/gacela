@@ -10,7 +10,7 @@
 
 # Add latest bashunit release to your dependencies
 DEPENDENCIES=(
-  "https://github.com/TypedDevs/bashunit/releases/download/0.19.1/bashunit"
+  "https://github.com/TypedDevs/bashunit/releases/download/0.20.0/bashunit"
   "https://github.com/Chemaclass/bash-dumper/releases/download/0.1/dumper.sh@dev"
 )
 

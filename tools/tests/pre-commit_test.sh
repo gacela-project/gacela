@@ -10,6 +10,6 @@ function test_pre_commit() {
   $($SCRIPT)
 
   assert_have_been_called_times 2 composer
-#  assert_have_been_called_with "quality" composer # not possible to define different args for now
-  assert_have_been_called_with "phpunit" composer
+  assert_have_been_called_with "quality" composer 1
+  assert_have_been_called_with "phpunit" composer 2
 }

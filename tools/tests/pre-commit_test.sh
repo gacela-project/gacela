@@ -5,7 +5,11 @@ function set_up() {
 }
 
 function test_pre_commit() {
-  mock composer echo "mocked composer"
+  spy composer
 
-  assert_match_snapshot "$($SCRIPT)"
+  $($SCRIPT)
+
+  assert_have_been_called_times 2 composer
+#  assert_have_been_called_with "quality" composer # not possible to define different args for now
+  assert_have_been_called_with "phpunit" composer
 }

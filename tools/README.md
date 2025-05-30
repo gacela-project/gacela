@@ -4,7 +4,7 @@ Here you can find developer tools to improve your DX.
 
 ### Testing
 
-Install testing library with:
+Install the testing library with:
 ```bash
 cd tools
 ./install-dependencies.sh
@@ -12,5 +12,5 @@ cd tools
 
 Run bash tests:
 ```bash
-lib/bashunit tests
+lib/bashunit tests -e .env
 ```

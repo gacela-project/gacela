@@ -107,6 +107,7 @@
         "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
         "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze",
+        "phpstan-tests": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze -c phpstan-tests.neon",
         "phpunit": [
             "@test-unit",
             "@test-integration",
@@ -116,7 +117,8 @@
         "quality": [
             "@csrun",
             "@psalm",
-            "@phpstan"
+            "@phpstan",
+            "@phpstan-tests"
         ],
         "rector": "./vendor/bin/rector",
         "static-clear-cache": [

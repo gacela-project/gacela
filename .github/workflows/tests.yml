@@ -22,7 +22,7 @@ jobs:
           - "ubuntu-latest"
 #          - "windows-latest" # TODO: Windows is not working in the CI at the moment for some reason
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -35,7 +35,7 @@ jobs:
         run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
       - name: Cache dependencies
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}"

@@ -10,7 +10,6 @@ use GacelaTest\Feature\Framework\StaticFacade\ModuleA\Factory as StaticFactory;
 use GacelaTest\Feature\Framework\StaticFacade\ModuleB\Facade as TestObjectFacade;
 use GacelaTest\Feature\Framework\StaticFacade\ModuleB\Factory as ObjectFactory;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
@@ -20,7 +19,6 @@ final class FeatureTest extends TestCase
         Gacela::bootstrap(__DIR__);
     }
 
-    #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
     public function test_unknown_static_facade_method(): void
     {
@@ -29,7 +27,6 @@ final class FeatureTest extends TestCase
         TestStaticFacade::unknown();
     }
 
-    #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
     public function test_unknown_object_factory_method(): void
     {
@@ -38,7 +35,6 @@ final class FeatureTest extends TestCase
         (new TestObjectFacade())->unknown();
     }
 
-    #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
     public function test_unknown_static_factory_method(): void
     {
@@ -47,7 +43,6 @@ final class FeatureTest extends TestCase
         TestStaticFacade::unknownFacadeMethod();
     }
 
-    #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
     public function test_module_a_static_facade(): void
     {
@@ -56,7 +51,6 @@ final class FeatureTest extends TestCase
         self::assertSame(StaticFactory::STR, $actual);
     }
 
-    #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
     public function test_module_a_object_facade(): void
     {
@@ -65,7 +59,6 @@ final class FeatureTest extends TestCase
         self::assertSame(ObjectFactory::STR, $actual);
     }
 
-    #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
     public function test_factory_static_facade_method(): void
     {

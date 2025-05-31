@@ -7,7 +7,7 @@ function set_up() {
 function test_pre_commit() {
   spy composer
 
-  $($SCRIPT)
+  eval "$SCRIPT"
 
   assert_have_been_called_times 2 composer
   assert_have_been_called_with "quality" composer 1

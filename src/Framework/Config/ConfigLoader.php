@@ -21,23 +21,22 @@ final class ConfigLoader
      */
     public function loadAll(): array
     {
-        $configs = [];
         $cacheConfigFileContent = [];
-
-        /** @var list<array<string,mixed>> $result */
-        $result = [];
-        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
-            $absolutePatternPath = $this->pathNormalizer->normalizePathPattern($configItem);
-            $result[] = $this->readAbsolutePatternPath($absolutePatternPath, $configItem, $cacheConfigFileContent);
-        }
+        $configs = [];
 
         foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
-            $absolutePatternPath = $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem);
-            $result[] = $this->readAbsolutePatternPath($absolutePatternPath, $configItem, $cacheConfigFileContent);
+            $patterns = [
+                $this->pathNormalizer->normalizePathPattern($configItem),
+                $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem),
+            ];
+
+            foreach ($patterns as $pattern) {
+                foreach ($this->readAbsolutePatternPath($pattern, $configItem, $cacheConfigFileContent) as $config) {
+                    $configs[] = $config;
+                }
+            }
         }
 
-        /** @psalm-suppress MixedArgument,NamedArgumentNotAllowed */
-        $configs[] = array_merge(...array_merge(...$result)); // @phpstan-ignore-line
         $configs[] = $this->readLocalConfigFile();
 
         return array_merge(...$configs);

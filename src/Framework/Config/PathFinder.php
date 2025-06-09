@@ -9,6 +9,9 @@ use function defined;
 
 final class PathFinder implements PathFinderInterface
 {
+    /** @var array<string,array<int,string>> */
+    private static array $cache = [];
+
     /**
      * @return string[]
      */
@@ -18,9 +21,13 @@ final class PathFinder implements PathFinderInterface
             return [];
         }
 
+        if (isset(self::$cache[$pattern])) {
+            return self::$cache[$pattern];
+        }
+
         $this->ensureGlobBraceIsDefined();
 
-        return glob($pattern, GLOB_BRACE) ?: [];
+        return self::$cache[$pattern] = glob($pattern, GLOB_BRACE) ?: [];
     }
 
     /**

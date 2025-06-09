@@ -8,6 +8,8 @@ use RuntimeException;
 
 use function sprintf;
 
+use const LOCK_EX;
+
 abstract class AbstractPhpFileCache implements CacheInterface
 {
     /** @var array<class-string,array<string,string>> */
@@ -49,6 +51,12 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
     public function put(string $cacheKey, string $className): void
     {
+        if (isset(self::$cache[static::class][$cacheKey])
+            && self::$cache[static::class][$cacheKey] === $className
+        ) {
+            return;
+        }
+
         self::$cache[static::class][$cacheKey] = $className;
 
         $fileContent = sprintf(
@@ -56,7 +64,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
             var_export(self::$cache[static::class], true),
         );
 
-        file_put_contents($this->getAbsoluteCacheFilename(), $fileContent);
+        file_put_contents($this->getAbsoluteCacheFilename(), $fileContent, LOCK_EX);
     }
 
     abstract protected function getCacheFilename(): string;

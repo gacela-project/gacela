@@ -375,7 +375,8 @@ function parallel::reset() {
 }
 
 function parallel::is_enabled() {
-  if env::is_parallel_run_enabled && (check_os::is_macos || check_os::is_ubuntu); then
+  if env::is_parallel_run_enabled && \
+    (check_os::is_macos || check_os::is_ubuntu || check_os::is_windows); then
     return 0
   fi
   return 1
@@ -1358,9 +1359,9 @@ function helper::find_files_recursive() {
   local path="${1%%/}"
 
   if [[ "$path" == *"*"* ]]; then
-    eval find "$path" -type f -name '*[tT]est.sh' | sort | uniq
+    eval find "$path" -type f -name '*[tT]est.sh' | sort -u
   elif [[ -d "$path" ]]; then
-    find "$path" -type f -name '*[tT]est.sh' | sort | uniq
+    find "$path" -type f -name '*[tT]est.sh' | sort -u
   else
     echo "$path"
   fi
@@ -1382,17 +1383,17 @@ function helper::normalize_variable_name() {
 function helper::get_provider_data() {
   local function_name="$1"
   local script="$2"
-  local data_provider_function
 
   if [[ ! -f "$script" ]]; then
     return
   fi
 
-  data_provider_function=$(\
-    grep -B 2 "function $function_name()" "$script" |\
-    grep -E "# *@?data_provider " |\
-    sed -E -e 's/\ *# *@?data_provider (.*)$/\1/g'\
-    || true
+  local data_provider_function
+  data_provider_function=$(
+    # shellcheck disable=SC1087
+    grep -B 2 -E "function[[:space:]]+$function_name[[:space:]]*\(\)" "$script" 2>/dev/null | \
+    grep -E "^[[:space:]]*# *@?data_provider[[:space:]]+" | \
+    sed -E 's/^[[:space:]]*# *@?data_provider[[:space:]]+//' || true
   )
 
   if [[ -n "$data_provider_function" ]]; then
@@ -1421,19 +1422,18 @@ function helpers::get_latest_tag() {
 function helpers::find_total_tests() {
     local filter=${1:-}
     local files=("${@:2}")
-    local total_count=0
 
-    for file in "${files[@]}"; do
-        local count
-        if [[ -n "$filter" ]]; then
-            count=$(grep -r -E "^\s*function\s+test.*$filter" "$file" --include=\*.sh 2>/dev/null | wc -l)
-        else
-            count=$(grep -r -E '^\s*function\s+test' "$file" --include=\*.sh 2>/dev/null | wc -l)
-        fi
-        total_count=$((total_count + count))
-    done
+    if [[ ${#files[@]} -eq 0 ]]; then
+        echo 0
+        return
+    fi
 
-    echo "$total_count"
+    local pattern='^\s*function\s+test'
+    if [[ -n "$filter" ]]; then
+        pattern+=".*$filter"
+    fi
+
+    grep -r -E "$pattern" --include="*[tT]est.sh" "${files[@]}" 2>/dev/null | wc -l | xargs
 }
 
 function helper::load_test_files() {
@@ -2278,6 +2278,43 @@ function assert_match_snapshot() {
   state::add_assertions_passed
 }
 
+function assert_match_snapshot_ignore_colors() {
+  local actual
+  actual=$(echo -n "$1" | sed -r 's/\x1B\[[0-9;]*[mK]//g' | tr -d '\r')
+
+  local directory
+  directory="./$(dirname "${BASH_SOURCE[1]}")/snapshots"
+  local test_file
+  test_file="$(helper::normalize_variable_name "$(basename "${BASH_SOURCE[1]}")")"
+  local snapshot_name
+  snapshot_name="$(helper::normalize_variable_name "${FUNCNAME[1]}").snapshot"
+  local snapshot_file
+  snapshot_file="${directory}/${test_file}.${snapshot_name}"
+
+  if [[ ! -f "$snapshot_file" ]]; then
+    mkdir -p "$directory"
+    echo "$actual" > "$snapshot_file"
+
+    state::add_assertions_snapshot
+    return
+  fi
+
+  local snapshot
+  snapshot=$(tr -d '\r' < "$snapshot_file")
+
+  if [[ "$actual" != "$snapshot" ]]; then
+    local label
+    label=$(helper::normalize_test_function_name "${FUNCNAME[1]}")
+
+    state::add_assertions_failed
+    console_results::print_failed_snapshot_test "$label" "$snapshot_file"
+
+    return
+  fi
+
+  state::add_assertions_passed
+}
+
 # skip_todo.sh
 
 function skip() {
@@ -2442,6 +2479,12 @@ function assert_have_been_called_times() {
   fi
 
   state::add_assertions_passed
+}
+
+function assert_not_called() {
+  local command=$1
+  local label="${2:-$(helper::normalize_test_function_name "${FUNCNAME[1]}")}"
+  assert_have_been_called_times 0 "$command" "$label"
 }
 
 # reports.sh
@@ -2694,9 +2737,11 @@ function runner::functions_for_script() {
 
   # Filter the names down to the ones defined in the script, sort them by line number
   shopt -s extdebug
-  for f in $all_fn_names; do
-    declare -F "$f" | grep "$script"
-  done | sort -k2 -n | awk '{print $1}'
+  # shellcheck disable=SC2086
+  declare -F $all_fn_names |
+    awk -v s="$script" '$3 == s {print $1" " $2}' |
+    sort -k2 -n |
+    awk '{print $1}'
   shopt -u extdebug
 }
 
@@ -2965,20 +3010,17 @@ function runner::parse_result_parallel() {
   local test_suite_dir="${TEMP_DIR_PARALLEL_TEST_SUITE}/$(basename "$test_file" .sh)"
   mkdir -p "$test_suite_dir"
 
-  local test_result_file=$(echo "${args[@]}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//')
-  if [[ -z "$test_result_file" ]]; then
-    test_result_file="${fn_name}.$$.result"
+  local sanitized_args
+  sanitized_args=$(echo "${args[*]}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//')
+  local template
+  if [[ -z "$sanitized_args" ]]; then
+    template="${fn_name}.XXXXXX.result"
   else
-    test_result_file="${fn_name}-${test_result_file}.$$.result"
+    template="${fn_name}-${sanitized_args}.XXXXXX.result"
   fi
 
-  local unique_test_result_file="${test_suite_dir}/${test_result_file}"
-  local count=1
-
-  while [ -e "$unique_test_result_file" ]; do
-    unique_test_result_file="${test_suite_dir}/${test_result_file%.result}-$count.result"
-    count=$((count + 1))
-  done
+  local unique_test_result_file
+  unique_test_result_file=$(mktemp -p "$test_suite_dir" "$template")
 
   log "debug" "[PARA]" "fn_name:$fn_name" "execution_result:$execution_result"
 
@@ -2992,41 +3034,32 @@ function runner::parse_result_sync() {
   local fn_name=$1
   local execution_result=$2
 
-  local assertions_failed=$(\
-    echo "$execution_result" |\
-    tail -n 1 |\
-    sed -E -e 's/.*##ASSERTIONS_FAILED=([0-9]*)##.*/\1/g'\
-  )
+  local result_line
+  result_line=$(echo "$execution_result" | tail -n 1)
 
-  local assertions_passed=$(\
-    echo "$execution_result" |\
-    tail -n 1 |\
-    sed -E -e 's/.*##ASSERTIONS_PASSED=([0-9]*)##.*/\1/g'\
-  )
+  local assertions_failed=0
+  local assertions_passed=0
+  local assertions_skipped=0
+  local assertions_incomplete=0
+  local assertions_snapshot=0
+  local test_exit_code=0
 
-  local assertions_skipped=$(\
-    echo "$execution_result" |\
-    tail -n 1 |\
-    sed -E -e 's/.*##ASSERTIONS_SKIPPED=([0-9]*)##.*/\1/g'\
-  )
+  local regex
+  regex='ASSERTIONS_FAILED=([0-9]*)##'
+  regex+='ASSERTIONS_PASSED=([0-9]*)##'
+  regex+='ASSERTIONS_SKIPPED=([0-9]*)##'
+  regex+='ASSERTIONS_INCOMPLETE=([0-9]*)##'
+  regex+='ASSERTIONS_SNAPSHOT=([0-9]*)##'
+  regex+='TEST_EXIT_CODE=([0-9]*)'
 
-  local assertions_incomplete=$(\
-    echo "$execution_result" |\
-    tail -n 1 |\
-    sed -E -e 's/.*##ASSERTIONS_INCOMPLETE=([0-9]*)##.*/\1/g'\
-  )
-
-  local assertions_snapshot=$(\
-    echo "$execution_result" |\
-    tail -n 1 |\
-    sed -E -e 's/.*##ASSERTIONS_SNAPSHOT=([0-9]*)##.*/\1/g'\
-  )
-
-  local test_exit_code=$(\
-    echo "$execution_result" |\
-    tail -n 1 |\
-    sed -E -e 's/.*##TEST_EXIT_CODE=([0-9]*)##.*/\1/g'\
-  )
+  if [[ $result_line =~ $regex ]]; then
+    assertions_failed="${BASH_REMATCH[1]}"
+    assertions_passed="${BASH_REMATCH[2]}"
+    assertions_skipped="${BASH_REMATCH[3]}"
+    assertions_incomplete="${BASH_REMATCH[4]}"
+    assertions_snapshot="${BASH_REMATCH[5]}"
+    test_exit_code="${BASH_REMATCH[6]}"
+  fi
 
   log "debug" "[SYNC]" "fn_name:$fn_name" "execution_result:$execution_result"
 
@@ -3123,8 +3156,8 @@ function main::exec_tests() {
   trap '[[ $? -eq $EXIT_CODE_STOP_ON_FAILURE ]] && main::handle_stop_on_failure_sync' EXIT
 
   if env::is_parallel_run_enabled && ! parallel::is_enabled; then
-    printf "%sWarning: Parallel tests are working only for macOS and Ubuntu.\n" "${_COLOR_INCOMPLETE}"
-    printf "For other OS (Linux/Alpine, Windows), --parallel is not enabled due to inconsistent results,\n"
+    printf "%sWarning: Parallel tests are supported on macOS, Ubuntu and Windows.\n" "${_COLOR_INCOMPLETE}"
+    printf "For other OS (like Alpine), --parallel is not enabled due to inconsistent results,\n"
     printf "particularly involving race conditions.%s " "${_COLOR_DEFAULT}"
     printf "%sFallback using --no-parallel%s\n" "${_COLOR_SKIPPED}" "${_COLOR_DEFAULT}"
   fi
@@ -3271,7 +3304,7 @@ function main::handle_assert_exit_code() {
 set -euo pipefail
 
 # shellcheck disable=SC2034
-declare -r BASHUNIT_VERSION="(non-stable) beta after 0.19.1 [2025-05-31] 🐍 #ca71c26"
+declare -r BASHUNIT_VERSION="0.20.0"
 
 # shellcheck disable=SC2155
 declare -r BASHUNIT_ROOT_DIR="$(dirname "${BASH_SOURCE[0]}")"

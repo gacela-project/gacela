@@ -78,7 +78,7 @@
         "sort-packages": true
     },
     "scripts": {
-        "post-install-cmd": "tools/git-hooks/init.sh",
+        "post-install-cmd": "php tools/git-hooks/init.php",
         "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
         "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "csfix": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix",

@@ -73,8 +73,9 @@ You can verify all your commits will pass the CI (coding guidelines, static anal
 pre-commit hook that will trigger all of them before creating a new commit. Don't worry, it usually takes a couple of
 seconds.
 
-You can add the git hook running the following bash script:
+You can add the git hook running the following script:
 
 ```bash
-$ ./.github/git-hooks/init.sh
+$ php tools/git-hooks/init.php
 ```
+This command works on any system, including Windows.

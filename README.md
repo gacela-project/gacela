@@ -90,6 +90,14 @@ You can check the full documentation in the official [website](https://gacela-pr
 
 You can see examples using gacela in [this repository](https://github.com/gacela-project/gacela-example).
 
+### Windows Support
+
+Development helpers such as the Git hooks can be installed on Windows using:
+
+```bash
+php tools/git-hooks/init.php
+```
+
 ### Contribute
 
 You are more than welcome to contribute reporting 

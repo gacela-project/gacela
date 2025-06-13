@@ -69,7 +69,7 @@ final class Locator implements LocatorInterface
     {
         if (isset($this->instanceCache[$className])) {
             /** @var T $instance */
-            $instance = $this->instanceCache[$className]; // @phpstan-ignore-line
+            $instance = $this->instanceCache[$className];
 
             return $instance;
         }

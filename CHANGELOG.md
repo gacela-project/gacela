@@ -4,6 +4,7 @@
 
 - Improve internal `AnonymousGlobal::getByKey()` 
 - Add internal cache on `PathFinder` and `GlobalKey` 
+- Fix default cache dir
 
 ## [1.9.1](https://github.com/gacela-project/gacela/compare/1.9.0...1.9.1) - 2024-12-12
 

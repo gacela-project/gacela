@@ -157,13 +157,28 @@ final class Config implements ConfigInterface
 
     private function getDefaultCacheDir(): string
     {
-        if ($this->setup->getFileCacheDirectory() === '') {
+        $cacheDir = $this->setup->getFileCacheDirectory();
+        if ($cacheDir === '') {
             return sys_get_temp_dir();
         }
 
-        return $this->getAppRootDir()
+        $appRoot = $this->getAppRootDir();
+
+        if (preg_match('#^[A-Za-z]:[\\/]#', $cacheDir) === 1) {
+            return $cacheDir;
+        }
+
+        if ($cacheDir[0] === DIRECTORY_SEPARATOR) {
+            if (str_starts_with($cacheDir, $appRoot . DIRECTORY_SEPARATOR)) {
+                return $cacheDir;
+            }
+
+            return $appRoot . $cacheDir;
+        }
+
+        return $appRoot
             . DIRECTORY_SEPARATOR
-            . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
+            . ltrim($cacheDir, DIRECTORY_SEPARATOR);
     }
 
     /**

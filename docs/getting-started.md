@@ -62,7 +62,7 @@ final class Factory extends AbstractFactory
 {
     public function createGreeter(): Greeter
     {
-        return $this->singleton(Greeter::class, static fn () => new Greeter());
+        return $this->singleton(Greeter::class, fn () => new Greeter());
     }
 }
 ```

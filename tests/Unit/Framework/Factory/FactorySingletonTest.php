@@ -16,7 +16,7 @@ final class FactorySingletonTest extends TestCase
         $factory = new class() extends AbstractFactory {
             public function createObject(): CustomInterface
             {
-                return $this->singleton(CustomInterface::class, static fn (): \GacelaTest\Fixtures\CustomClass => new CustomClass());
+                return $this->singleton(CustomInterface::class, static fn (): CustomClass => new CustomClass());
             }
         };
         $a = $factory->createObject();

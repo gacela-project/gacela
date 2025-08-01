@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-- Improve internal `AnonymousGlobal::getByKey()` 
-- Add internal cache on `PathFinder` and `GlobalKey` 
+- Improve internal `AnonymousGlobal::getByKey()`
+- Add internal cache on `PathFinder` and `GlobalKey`
 - Fix default cache dir
+- Added factory instance caching via new `singleton()` helper
 
 ## [1.9.1](https://github.com/gacela-project/gacela/compare/1.9.0...1.9.1) - 2024-12-12
 

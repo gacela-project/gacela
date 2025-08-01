@@ -62,10 +62,12 @@ final class Factory extends AbstractFactory
 {
     public function createGreeter(): Greeter
     {
-        return new Greeter();
+        return $this->singleton(Greeter::class, static fn () => new Greeter());
     }
 }
 ```
+
+> Using `singleton()` the factory keeps instances in memory.
 
 `src/Hello/Greeter.php`
 ```php

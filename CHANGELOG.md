@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.10.0](https://github.com/gacela-project/gacela/compare/1.9.1...1.10.0) - 2025-08-02
 
 - Fix default cache dir
 - Improve internal `AnonymousGlobal::getByKey()`

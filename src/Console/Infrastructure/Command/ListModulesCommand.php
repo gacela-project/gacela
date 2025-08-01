@@ -22,9 +22,9 @@ final class ListModulesCommand extends Command
 {
     use DocBlockResolverAwareTrait;
 
-    private const CHECK_SYMBOL = '✔️';
+    private const CHECK_SYMBOL = 'x';
 
-    private const CROSS_SYMBOL = '✖️';
+    private const CROSS_SYMBOL = ' ';
 
     private ?OutputInterface $output = null;
 

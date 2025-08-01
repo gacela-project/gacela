@@ -17,12 +17,20 @@ abstract class AbstractFactory
     /** @var array<string,Container> */
     private static array $containers = [];
 
+    /** @var array<string,mixed> */
+    private array $instances = [];
+
     /**
      * @internal
      */
     public static function resetCache(): void
     {
         self::$containers = [];
+    }
+
+    protected function singleton(string $key, callable $creator): mixed
+    {
+        return $this->instances[$key] ??= $creator();
     }
 
     protected function getProvidedDependency(string $key): mixed

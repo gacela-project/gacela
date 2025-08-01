@@ -32,9 +32,9 @@ final class ListModulesCommandTest extends TestCase
 ┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬───────────────┐
 │ Module namespace                                           │ Facade │ Factory │ Config │ Dep. Provider │
 ├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼───────────────┤
-│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ ✔️     │ ✔️      │ ✔️     │ ✖️            │
-│ GacelaTest\Feature\Console\ListModules\TestModule1         │ ✔️     │ ✔️      │ ✖️     │ ✔️            │
-│ GacelaTest\Feature\Console\ListModules\TestModule2         │ ✔️     │ ✖️      │ ✖️     │ ✖️            │
+│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ x      │ x       │ x      │               │
+│ GacelaTest\Feature\Console\ListModules\TestModule1         │ x      │ x       │        │ x             │
+│ GacelaTest\Feature\Console\ListModules\TestModule2         │ x      │         │        │               │
 └────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴───────────────┘
 
 TXT;
@@ -52,21 +52,21 @@ TXT;
 Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
 Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory
 Config: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Config
-Provider: ✖️
+Provider:  
 ============================
 2.- TestModule1
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade
 Factory: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Factory
-Config: ✖️
+Config:  
 Provider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Provider
 ============================
 3.- TestModule2
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule2\TestModule2Facade
-Factory: ✖️
-Config: ✖️
-Provider: ✖️
+Factory:  
+Config:  
+Provider:  
 
 TXT;
         self::assertSame($expected, $this->command->getDisplay());

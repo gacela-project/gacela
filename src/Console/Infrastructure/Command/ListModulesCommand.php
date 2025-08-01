@@ -113,7 +113,7 @@ TXT;
 
         $table = new Table($this->output());
         $table->setStyle('box');
-        $table->setHeaders(['Module namespace', 'Facade', 'Factory', 'Config', 'Dep. Provider']);
+        $table->setHeaders(['Module namespace', 'Facade', 'Factory', 'Config', 'Provider']);
         $table->setRows($rows);
         $table->render();
     }

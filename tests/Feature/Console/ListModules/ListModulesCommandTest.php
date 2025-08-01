@@ -29,13 +29,13 @@ final class ListModulesCommandTest extends TestCase
         $this->command->execute([]);
 
         $expected = <<<TXT
-┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬───────────────┐
-│ Module namespace                                           │ Facade │ Factory │ Config │ Dep. Provider │
-├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼───────────────┤
-│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ x      │ x       │ x      │               │
-│ GacelaTest\Feature\Console\ListModules\TestModule1         │ x      │ x       │        │ x             │
-│ GacelaTest\Feature\Console\ListModules\TestModule2         │ x      │         │        │               │
-└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴───────────────┘
+┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬──────────┐
+│ Module namespace                                           │ Facade │ Factory │ Config │ Provider │
+├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼──────────┤
+│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ x      │ x       │ x      │          │
+│ GacelaTest\Feature\Console\ListModules\TestModule1         │ x      │ x       │        │ x        │
+│ GacelaTest\Feature\Console\ListModules\TestModule2         │ x      │         │        │          │
+└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴──────────┘
 
 TXT;
         self::assertSame($expected, $this->command->getDisplay());

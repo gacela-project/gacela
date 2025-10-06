@@ -9,7 +9,7 @@ use GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Pers
 final class RepositoryInSameNamespace
 {
     public function __construct(
-        private FakeDoctrineEntityManager $entityManager,
+        private readonly FakeDoctrineEntityManager $entityManager,
     ) {
     }
 

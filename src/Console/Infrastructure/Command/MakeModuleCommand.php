@@ -13,6 +13,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function sprintf;
+
 /**
  * @method ConsoleFacade getFacade()
  */
@@ -41,12 +43,12 @@ final class MakeModuleCommand extends Command
                 $filename,
                 $shortName,
             );
-            $output->writeln("> Path '{$fullPath}' created successfully");
+            $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
         }
 
         $pieces = explode('/', $commandArguments->directory());
         $moduleName = end($pieces);
-        $output->writeln("Module '{$moduleName}' created successfully");
+        $output->writeln(sprintf("Module '%s' created successfully", $moduleName));
 
         return self::SUCCESS;
     }

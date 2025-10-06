@@ -6,14 +6,21 @@ namespace Gacela\Console\Domain\AllAppModules;
 
 use Gacela\Framework\AbstractFacade;
 use OuterIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ReflectionClass;
 use SplFileInfo;
 
+use function sprintf;
+
 final class AllAppModulesFinder
 {
+    /**
+     * @param RecursiveIteratorIterator<RecursiveDirectoryIterator> $fileIterator
+     */
     public function __construct(
-        private OuterIterator $fileIterator,
-        private AppModuleCreator $appModuleCreator,
+        private readonly OuterIterator $fileIterator,
+        private readonly AppModuleCreator $appModuleCreator,
     ) {
     }
 
@@ -27,11 +34,12 @@ final class AllAppModulesFinder
         /** @var SplFileInfo $fileInfo */
         foreach ($this->fileIterator as $fileInfo) {
             $appModule = $this->createAppModule($fileInfo, $filter);
-            if ($appModule !== null && $this->isFacade($appModule)) {
+            if ($appModule instanceof AppModule && $this->isFacade($appModule)) {
                 $result[$appModule->facadeClass()] = $appModule;
             }
         }
-        uksort($result, static fn ($a, $b) => $a <=> $b);
+
+        uksort($result, static fn ($a, $b): int => $a <=> $b);
 
         return array_values($result);
     }
@@ -90,7 +98,7 @@ final class AllAppModulesFinder
         $rc = new ReflectionClass($appModule->facadeClass());
         $parentClass = $rc->getParentClass();
 
-        return $parentClass
+        return $parentClass !== false
             && $parentClass->name === AbstractFacade::class;
     }
 }

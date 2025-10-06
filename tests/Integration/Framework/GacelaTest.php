@@ -18,8 +18,7 @@ final class GacelaTest extends TestCase
         // when you try to access it before bootstrapping the application.
         $gacelaProxy = new ReflectionClass(Gacela::class);
         $appRootDirProp = $gacelaProxy->getProperty('appRootDir');
-        $appRootDirProp->setAccessible(true);
-        $appRootDirProp->setValue(null);
+        $appRootDirProp->setValue($gacelaProxy, value: null);
 
         $this->expectException(GacelaNotBootstrappedException::class);
         $this->expectExceptionMessage(GacelaNotBootstrappedException::MESSAGE);
@@ -33,6 +32,6 @@ final class GacelaTest extends TestCase
             $config->resetInMemoryCache();
         });
 
-        self::assertEquals('any/root/directory', Gacela::rootDir());
+        self::assertSame('any/root/directory', Gacela::rootDir());
     }
 }

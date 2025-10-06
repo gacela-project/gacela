@@ -15,12 +15,11 @@ trait DocBlockResolverAwareTrait
     /**
      * @psalm-suppress LessSpecificImplementedReturnType
      *
-     * @param string $method
-     * @param array $parameters
+     * @param list<mixed> $parameters
      *
      * @return mixed
      */
-    public function __call($method = '', $parameters = [])
+    public function __call(string $method = '', array $parameters = [])
     {
         if (isset($this->customServices[$method])) {
             return $this->customServices[$method];

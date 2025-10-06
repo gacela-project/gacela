@@ -14,14 +14,11 @@ use Gacela\Framework\Event\GacelaEventInterface;
 
 final class GacelaConfig
 {
-    private AppConfigBuilder $appConfigBuilder;
+    private readonly AppConfigBuilder $appConfigBuilder;
 
-    private SuffixTypesBuilder $suffixTypesBuilder;
+    private readonly SuffixTypesBuilder $suffixTypesBuilder;
 
-    private BindingsBuilder $bindingsBuilder;
-
-    /** @var array<string, class-string|object|callable> */
-    private array $externalServices;
+    private readonly BindingsBuilder $bindingsBuilder;
 
     private ?bool $shouldResetInMemoryCache = null;
 
@@ -55,9 +52,8 @@ final class GacelaConfig
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
-    public function __construct(array $externalServices = [])
+    public function __construct(private array $externalServices = [])
     {
-        $this->externalServices = $externalServices;
         $this->appConfigBuilder = new AppConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
         $this->bindingsBuilder = new BindingsBuilder();
@@ -84,7 +80,7 @@ final class GacelaConfig
      * @param string $pathLocal define the path where Gacela will read the local config file
      * @param class-string<ConfigReaderInterface>|ConfigReaderInterface|null $reader Define the reader class which will read and parse the config files
      */
-    public function addAppConfig(string $path, string $pathLocal = '', $reader = null): self
+    public function addAppConfig(string $path, string $pathLocal = '', string|ConfigReaderInterface|null $reader = null): self
     {
         $this->appConfigBuilder->add($path, $pathLocal, $reader);
 
@@ -124,9 +120,9 @@ final class GacelaConfig
     /**
      * Allow overriding gacela dependency provider suffixes.
      */
-    public function addSuffixTypeDependencyProvider(string $suffix): self
+    public function addSuffixTypeProvider(string $suffix): self
     {
-        $this->suffixTypesBuilder->addDependencyProvider($suffix);
+        $this->suffixTypesBuilder->addProvider($suffix);
 
         return $this;
     }
@@ -191,7 +187,7 @@ final class GacelaConfig
     /**
      * Shortcut to setFileCache(true)
      */
-    public function enableFileCache(string $dir = null): self
+    public function enableFileCache(?string $dir = null): self
     {
         return $this->setFileCache(true, $dir);
     }
@@ -200,7 +196,7 @@ final class GacelaConfig
      * Define whether the file cache flag is enabled,
      * and the file cache directory.
      */
-    public function setFileCache(bool $enabled, string $dir = null): self
+    public function setFileCache(bool $enabled, ?string $dir = null): self
     {
         $this->fileCacheEnabled = $enabled;
         $this->fileCacheDirectory = $dir;
@@ -222,10 +218,8 @@ final class GacelaConfig
 
     /**
      * Add/replace an existent configuration key with a specific value.
-     *
-     * @param mixed $value
      */
-    public function addAppConfigKeyValue(string $key, $value): self
+    public function addAppConfigKeyValue(string $key, mixed $value): self
     {
         $this->configKeyValues[$key] = $value;
 

@@ -20,14 +20,16 @@ final class DocBlockResolverCacheTest extends TestCase
     /** @var list<class-string> */
     private static array $inMemoryEvents = [];
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         self::$inMemoryEvents = [];
 
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
 
-            $config->registerGenericListener([$this, 'saveInMemoryEvent']);
+            $config->registerGenericListener(function (GacelaEventInterface $event): void {
+                $this->saveInMemoryEvent($event);
+            });
         });
     }
 
@@ -40,7 +42,7 @@ final class DocBlockResolverCacheTest extends TestCase
     {
         DocBlockResolverCache::getCacheInstance();
 
-        self::assertEquals([
+        self::assertSame([
             CustomServicesInMemoryCacheCreatedEvent::class,
         ], self::$inMemoryEvents);
     }
@@ -50,7 +52,7 @@ final class DocBlockResolverCacheTest extends TestCase
         DocBlockResolverCache::getCacheInstance();
         DocBlockResolverCache::getCacheInstance();
 
-        self::assertEquals([
+        self::assertSame([
             CustomServicesInMemoryCacheCreatedEvent::class,
             CustomServicesCacheCachedEvent::class,
         ], self::$inMemoryEvents);
@@ -66,7 +68,7 @@ final class DocBlockResolverCacheTest extends TestCase
 
         DocBlockResolverCache::getCacheInstance();
 
-        self::assertEquals([
+        self::assertSame([
             CustomServicesPhpCacheCreatedEvent::class,
         ], self::$inMemoryEvents);
     }

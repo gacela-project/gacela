@@ -16,19 +16,9 @@ final class Locator implements LocatorInterface
     /** @var array<string, mixed> */
     private array $instanceCache = [];
 
-    private ContainerInterface $container;
-
     private function __construct(
-        ?ContainerInterface $container = null,
+        private readonly ContainerInterface $container = new Container(),
     ) {
-        $this->container = $container ?? new Container();
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
-    private function __clone()
-    {
     }
 
     public static function resetInstance(): void
@@ -61,8 +51,8 @@ final class Locator implements LocatorInterface
 
     public static function getInstance(?Container $container = null): self
     {
-        if (self::$instance === null) {
-            self::$instance = new self($container);
+        if (!self::$instance instanceof self) {
+            self::$instance = new self($container ?? new Container());
         }
 
         return self::$instance;
@@ -99,10 +89,8 @@ final class Locator implements LocatorInterface
      * @param class-string<T> $key
      * @param T|null $value
      */
-    private function add(string $key, mixed $value = null): self
+    private function add(string $key, mixed $value = null): void
     {
         $this->instanceCache[$key] = $value;
-
-        return $this;
     }
 }

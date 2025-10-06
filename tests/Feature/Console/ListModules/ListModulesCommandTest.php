@@ -7,6 +7,7 @@ namespace GacelaTest\Feature\Console\ListModules;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -28,13 +29,13 @@ final class ListModulesCommandTest extends TestCase
         $this->command->execute([]);
 
         $expected = <<<TXT
-┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬───────────────┐
-│ Module namespace                                           │ Facade │ Factory │ Config │ Dep. Provider │
-├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼───────────────┤
-│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ ✔️     │ ✔️      │ ✔️     │ ✖️            │
-│ GacelaTest\Feature\Console\ListModules\TestModule1         │ ✔️     │ ✔️      │ ✖️     │ ✔️            │
-│ GacelaTest\Feature\Console\ListModules\TestModule2         │ ✔️     │ ✖️      │ ✖️     │ ✖️            │
-└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴───────────────┘
+┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬──────────┐
+│ Module namespace                                           │ Facade │ Factory │ Config │ Provider │
+├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼──────────┤
+│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ x      │ x       │ x      │          │
+│ GacelaTest\Feature\Console\ListModules\TestModule1         │ x      │ x       │        │ x        │
+│ GacelaTest\Feature\Console\ListModules\TestModule2         │ x      │         │        │          │
+└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴──────────┘
 
 TXT;
         self::assertSame($expected, $this->command->getDisplay());
@@ -51,29 +52,27 @@ TXT;
 Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
 Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory
 Config: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Config
-DependencyProvider: ✖️
+Provider:  
 ============================
 2.- TestModule1
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade
 Factory: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Factory
-Config: ✖️
-DependencyProvider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1DependencyProvider
+Config:  
+Provider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Provider
 ============================
 3.- TestModule2
 ----------------------------
 Facade: GacelaTest\Feature\Console\ListModules\TestModule2\TestModule2Facade
-Factory: ✖️
-Config: ✖️
-DependencyProvider: ✖️
+Factory:  
+Config:  
+Provider:  
 
 TXT;
         self::assertSame($expected, $this->command->getDisplay());
     }
 
-    /**
-     * @dataProvider commandInputProvider
-     */
+    #[DataProvider('commandInputProvider')]
     public function test_list_modules_with_filter(string $input): void
     {
         $this->command->execute(['filter' => $input]);
@@ -87,7 +86,7 @@ TXT;
         self::assertStringNotContainsString('ToBeIgnored', $out);
     }
 
-    public function commandInputProvider(): iterable
+    public static function commandInputProvider(): iterable
     {
         yield 'slashes' => ['ListModules/TestModule1'];
         yield 'backward slashes' => ['ListModules\\TestModule1'];

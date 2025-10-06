@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DocBlockService;
 
+use function sprintf;
+
 final class UseBlockParser
 {
     public function getUseStatement(string $className, string $phpCode): string
@@ -24,35 +26,35 @@ final class UseBlockParser
 
     private function searchInUsesStatements(string $className, string $phpCode): string
     {
-        $needle = "{$className};";
+        $needle = $className . ';';
 
-        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') === 0) {
             $phpCode = str_replace("\n", PHP_EOL, $phpCode);
         }
 
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
-            static fn (string $l) => strncmp($l, 'use ', 4) === 0 && str_contains($l, $needle),
+            static fn (string $l): bool => str_starts_with($l, 'use ') && str_contains($l, $needle),
         );
 
         /** @psalm-suppress RedundantCast */
-        $lineSplit = (array)explode(' ', (string)reset($lines));
+        $lineSplit = explode(' ', (string)reset($lines));
 
         return rtrim($lineSplit[1] ?? '', ';');
     }
 
     private function lookInCurrentNamespace(string $phpCode): string
     {
-        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') === 0) {
             $phpCode = str_replace("\n", PHP_EOL, $phpCode);
         }
 
         $lines = array_filter(
             explode(PHP_EOL, $phpCode),
-            static fn (string $l) => strncmp($l, 'namespace ', 10) === 0,
+            static fn (string $l): bool => str_starts_with($l, 'namespace '),
         );
         /** @psalm-suppress RedundantCast */
-        $lineSplit = (array)explode(' ', (string)reset($lines));
+        $lineSplit = explode(' ', (string)reset($lines));
 
         return rtrim($lineSplit[1] ?? '', ';');
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console;
 
+use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
@@ -16,8 +17,8 @@ use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
-use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Gacela;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -35,7 +36,7 @@ final class ConsoleFactory extends AbstractFactory
      */
     public function getConsoleCommands(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleDependencyProvider::COMMANDS);
+        return (array)$this->getProvidedDependency(ConsoleProvider::COMMANDS);
     }
 
     public function createCommandArgumentsParser(): CommandArgumentsParserInterface
@@ -71,14 +72,17 @@ final class ConsoleFactory extends AbstractFactory
         return new AppModuleCreator(
             new FactoryResolver(),
             new ConfigResolver(),
-            new DependencyProviderResolver(),
+            new ProviderResolver(),
         );
     }
 
+    /**
+     * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
+     */
     private function createRecursiveIterator(): RecursiveIteratorIterator
     {
         return new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(Gacela::rootDir(), RecursiveDirectoryIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator(Gacela::rootDir(), FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::LEAVES_ONLY,
         );
     }
@@ -95,6 +99,6 @@ final class ConsoleFactory extends AbstractFactory
      */
     private function getTemplateByFilenameMap(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleDependencyProvider::TEMPLATE_BY_FILENAME_MAP);
+        return (array)$this->getProvidedDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
     }
 }

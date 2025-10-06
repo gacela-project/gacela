@@ -43,7 +43,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('existsFile')->willReturn(true);
-        $fileIo->method('include')->willReturn(static fn (GacelaConfig $config) => $config);
+        $fileIo->method('include')->willReturn(static fn (GacelaConfig $config): GacelaConfig => $config);
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
             'gacelaPhpPath',
@@ -58,7 +58,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
-            static fn (GacelaConfig $config) => $config->addAppConfig('custom-path.php', 'custom-path_local.php'),
+            static fn (GacelaConfig $config): GacelaConfig => $config->addAppConfig('custom-path.php', 'custom-path_local.php'),
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
@@ -78,7 +78,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
             static function (GacelaConfig $config): void {
-                $config->addExternalService('externalServiceKey', static fn () => 'externalServiceValue');
+                $config->addExternalService('externalServiceKey', static fn (): string => 'externalServiceValue');
                 self::assertSame('externalServiceValue', $config->getExternalService('externalServiceKey')->__invoke());
                 $config->addBinding(CustomInterface::class, new CustomClass());
                 $config->addBinding(CustomInterface::class, CustomClass::class);
@@ -101,8 +101,8 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
     {
         $fileIo = $this->createStub(FileIoInterface::class);
         $fileIo->method('include')->willReturn(
-            static fn (GacelaConfig $config) => $config
-                ->addSuffixTypeDependencyProvider('Binding'),
+            static fn (GacelaConfig $config): GacelaConfig => $config
+                ->addSuffixTypeProvider('Binding'),
         );
 
         $factory = new GacelaConfigUsingGacelaPhpFileFactory(
@@ -115,7 +115,7 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             ->setSuffixTypes([
                 'Factory' => ['Factory'],
                 'Config' => ['Config'],
-                'DependencyProvider' => ['DependencyProvider', 'Binding'],
+                'Provider' => ['Provider', 'Binding'],
                 'Facade' => ['Facade'],
             ]);
 

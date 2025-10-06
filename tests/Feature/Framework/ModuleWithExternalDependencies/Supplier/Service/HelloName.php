@@ -6,20 +6,20 @@ namespace GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Supplier\S
 
 use GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Dependent;
 
+use function sprintf;
+
 final class HelloName
 {
-    private Dependent\FacadeInterface $dependentFacade;
-
-    public function __construct(Dependent\FacadeInterface $dependentFacade)
-    {
-        $this->dependentFacade = $dependentFacade;
+    public function __construct(
+        private readonly Dependent\FacadeInterface $dependentFacade,
+    ) {
     }
 
     public function greet(string $name): array
     {
-        return array_merge(
-            ["Hello, {$name} from Supplier."],
-            $this->dependentFacade->greet($name),
-        );
+        return [
+            sprintf('Hello, %s from Supplier.', $name),
+            ...$this->dependentFacade->greet($name),
+        ];
     }
 }

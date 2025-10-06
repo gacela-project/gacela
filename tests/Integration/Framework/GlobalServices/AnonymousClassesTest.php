@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\GlobalServices;
 
 use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
+
+use function sprintf;
 
 final class AnonymousClassesTest extends TestCase
 {
@@ -24,7 +26,7 @@ final class AnonymousClassesTest extends TestCase
     {
         $this->registerConfig();
         $this->registerFactory();
-        $this->registerDependencyProvider();
+        $this->registerAbstractProvider();
 
         $facade = new class() extends AbstractFacade {
             public function getSomething(): array
@@ -82,15 +84,13 @@ final class AnonymousClassesTest extends TestCase
                     $configValues = $this->getConfig()->getValues();
 
                     return new class($myService, ...$configValues) {
-                        private object $myService;
                         /** @var int[] */
-                        private array $configValues;
+                        private readonly array $configValues;
 
                         public function __construct(
-                            object $myService,
+                            private readonly object $myService,
                             int ...$configValues,
                         ) {
-                            $this->myService = $myService;
                             $this->configValues = $configValues;
                         }
 
@@ -109,17 +109,17 @@ final class AnonymousClassesTest extends TestCase
         );
     }
 
-    private function registerDependencyProvider(): void
+    private function registerAbstractProvider(): void
     {
         AnonymousGlobal::addGlobal(
             $this,
-            new class() extends AbstractDependencyProvider {
+            new class() extends AbstractProvider {
                 public function provideModuleDependencies(Container $container): void
                 {
                     $container->set('my-greeter', new class() {
                         public function greet(string $name): string
                         {
-                            return "Hello, {$name}!";
+                            return sprintf('Hello, %s!', $name);
                         }
                     });
                 }

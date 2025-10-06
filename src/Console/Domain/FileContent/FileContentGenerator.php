@@ -7,13 +7,15 @@ namespace Gacela\Console\Domain\FileContent;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use RuntimeException;
 
+use function sprintf;
+
 final class FileContentGenerator implements FileContentGeneratorInterface
 {
     /**
      * @param array<string,string> $templateByFilenameMap
      */
     public function __construct(
-        private FileContentIoInterface $fileContentIo,
+        private readonly FileContentIoInterface $fileContentIo,
         private array $templateByFilenameMap,
     ) {
     }
@@ -33,8 +35,8 @@ final class FileContentGenerator implements FileContentGeneratorInterface
         $replace = [$commandArguments->namespace(), $moduleName, $className];
 
         $template = $this->templateByFilenameMap[$filename] ?? '';
-        if (empty($template)) {
-            throw new RuntimeException("Unknown template for '{$filename}'?");
+        if ($template === '') {
+            throw new RuntimeException(sprintf("Unknown template for '%s'?", $filename));
         }
 
         $fileContent = str_replace($search, $replace, $template);

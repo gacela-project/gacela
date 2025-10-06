@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverCustomServicesAwareTest extends TestCase
@@ -25,6 +26,7 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
+            $config->enableFileCache(self::CACHE_DIR);
             $config->addAppConfigKeyValue(GacelaFileCache::KEY_ENABLED, true);
             $config->registerGenericListener(static function (GacelaEventInterface $event): void {
                 // dump('Triggered -> ' . \get_class($event)); # useful for debugging
@@ -41,9 +43,7 @@ final class DocBlockResolverCustomServicesAwareTest extends TestCase
         self::assertSame('name', $actual);
     }
 
-    /**
-     * @depends test_existing_service
-     */
+    #[Depends('test_existing_service')]
     public function test_existing_service_cached(): void
     {
         self::assertCount(1, CustomServicesPhpCache::all());

@@ -21,9 +21,9 @@ use function is_callable;
 final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFactoryInterface
 {
     public function __construct(
-        private string $gacelaPhpPath,
-        private SetupGacelaInterface $bootstrapSetup,
-        private FileIoInterface $fileIo,
+        private readonly string $gacelaPhpPath,
+        private readonly SetupGacelaInterface $bootstrapSetup,
+        private readonly FileIoInterface $fileIo,
     ) {
     }
 

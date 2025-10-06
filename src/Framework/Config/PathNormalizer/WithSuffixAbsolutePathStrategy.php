@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\PathNormalizer;
 
+use function sprintf;
+
 final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
     public function __construct(
-        private string $appRootDir,
-        private string $configFileNameSuffix = '',
+        private readonly string $appRootDir,
+        private readonly string $configFileNameSuffix = '',
     ) {
     }
 

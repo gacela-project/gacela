@@ -11,7 +11,7 @@ final class UseBlockParserTest extends TestCase
 {
     private UseBlockParser $parser;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->parser = new UseBlockParser();
     }

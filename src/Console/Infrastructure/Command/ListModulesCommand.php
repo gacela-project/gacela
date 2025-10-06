@@ -22,8 +22,9 @@ final class ListModulesCommand extends Command
 {
     use DocBlockResolverAwareTrait;
 
-    private const CHECK_SYMBOL = '✔️';
-    private const CROSS_SYMBOL = '✖️';
+    private const CHECK_SYMBOL = 'x';
+
+    private const CROSS_SYMBOL = ' ';
 
     private ?OutputInterface $output = null;
 
@@ -76,7 +77,7 @@ final class ListModulesCommand extends Command
             $n = $i + 1;
             $factory = $module->factoryClass() ?? self::CROSS_SYMBOL;
             $config = $module->configClass() ?? self::CROSS_SYMBOL;
-            $dependencyProviderClass = $module->dependencyProviderClass() ?? self::CROSS_SYMBOL;
+            $provider = $module->providerClass() ?? self::CROSS_SYMBOL;
 
             $result .= <<<TXT
 ============================
@@ -85,7 +86,7 @@ final class ListModulesCommand extends Command
 <fg=cyan>Facade</>: {$module->facadeClass()}
 <fg=cyan>Factory</>: {$factory}
 <fg=cyan>Config</>: {$config}
-<fg=cyan>DependencyProvider</>: {$dependencyProviderClass}
+<fg=cyan>Provider</>: {$provider}
 
 TXT;
         }
@@ -104,15 +105,15 @@ TXT;
             $rows[] = [
                 $module->fullModuleName(),
                 self::CHECK_SYMBOL, // facade is always true
-                $module->factoryClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-                $module->configClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
-                $module->dependencyProviderClass() ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->factoryClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->configClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
+                $module->providerClass() !== null ? self::CHECK_SYMBOL : self::CROSS_SYMBOL,
             ];
         }
 
         $table = new Table($this->output());
         $table->setStyle('box');
-        $table->setHeaders(['Module namespace', 'Facade', 'Factory', 'Config', 'Dep. Provider']);
+        $table->setHeaders(['Module namespace', 'Facade', 'Factory', 'Config', 'Provider']);
         $table->setRows($rows);
         $table->render();
     }

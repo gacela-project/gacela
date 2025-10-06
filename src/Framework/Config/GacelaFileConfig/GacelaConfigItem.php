@@ -9,18 +9,11 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 
 final class GacelaConfigItem
 {
-    private string $path;
-    private string $pathLocal;
-    private ConfigReaderInterface $reader;
-
     public function __construct(
-        string $path,
-        string $pathLocal = '',
-        ?ConfigReaderInterface $reader = null,
+        private readonly string $path,
+        private readonly string $pathLocal = '',
+        private readonly ConfigReaderInterface $reader = new PhpConfigReader(),
     ) {
-        $this->path = $path;
-        $this->pathLocal = $pathLocal;
-        $this->reader = $reader ?? new PhpConfigReader();
     }
 
     public function path(): string

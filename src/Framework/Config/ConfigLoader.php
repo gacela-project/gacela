@@ -10,9 +10,9 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 final class ConfigLoader
 {
     public function __construct(
-        private GacelaConfigFileInterface $gacelaConfigFile,
-        private PathFinderInterface $pathFinder,
-        private PathNormalizerInterface $pathNormalizer,
+        private readonly GacelaConfigFileInterface $gacelaConfigFile,
+        private readonly PathFinderInterface $pathFinder,
+        private readonly PathNormalizerInterface $pathNormalizer,
     ) {
     }
 

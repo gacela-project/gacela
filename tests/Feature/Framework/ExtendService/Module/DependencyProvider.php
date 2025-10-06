@@ -8,6 +8,10 @@ use ArrayObject;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\Container\Container;
 
+/**
+ * Testing Backward Compatibility for AbstractDependencyProvider.
+ * Use AbstractProvider when AbstractDependencyProvider is completely removed.
+ */
 final class DependencyProvider extends AbstractDependencyProvider
 {
     public const ARRAY_AS_OBJECT = 'ARRAY_AS_OBJECT';
@@ -18,6 +22,6 @@ final class DependencyProvider extends AbstractDependencyProvider
     {
         $container->set(self::ARRAY_AS_OBJECT, new ArrayObject([1, 2]));
 
-        $container->set(self::ARRAY_FROM_FUNCTION, static fn () => new ArrayObject([1, 2]));
+        $container->set(self::ARRAY_FROM_FUNCTION, static fn (): ArrayObject => new ArrayObject([1, 2]));
     }
 }

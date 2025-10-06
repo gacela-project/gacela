@@ -10,13 +10,16 @@ final class SuffixTypesBuilder
         'Facade' => self::DEFAULT_FACADES,
         'Factory' => self::DEFAULT_FACTORIES,
         'Config' => self::DEFAULT_CONFIGS,
-        'DependencyProvider' => self::DEFAULT_DEPENDENCY_PROVIDERS,
+        'Provider' => self::DEFAULT_PROVIDERS,
     ];
 
     private const DEFAULT_FACADES = ['Facade'];
+
     private const DEFAULT_FACTORIES = ['Factory'];
+
     private const DEFAULT_CONFIGS = ['Config'];
-    private const DEFAULT_DEPENDENCY_PROVIDERS = ['DependencyProvider'];
+
+    private const DEFAULT_PROVIDERS = ['Provider'];
 
     /** @var list<string> */
     private array $facades = self::DEFAULT_FACADES;
@@ -28,7 +31,7 @@ final class SuffixTypesBuilder
     private array $configs = self::DEFAULT_CONFIGS;
 
     /** @var list<string> */
-    private array $dependencyProviders = self::DEFAULT_DEPENDENCY_PROVIDERS;
+    private array $providers = self::DEFAULT_PROVIDERS;
 
     public function addFacade(string $suffix): self
     {
@@ -51,19 +54,19 @@ final class SuffixTypesBuilder
         return $this;
     }
 
-    public function addDependencyProvider(string $suffix): self
+    public function addProvider(string $suffix): self
     {
-        $this->dependencyProviders[] = $suffix;
+        $this->providers[] = $suffix;
 
         return $this;
     }
 
     /**
      * @return array{
-     *     Facade:list<string>,
-     *     Factory:list<string>,
-     *     Config:list<string>,
-     *     DependencyProvider:list<string>,
+     *     Facade: list<string>,
+     *     Factory: list<string>,
+     *     Config: list<string>,
+     *     Provider: list<string>,
      * }
      */
     public function build(): array
@@ -72,7 +75,7 @@ final class SuffixTypesBuilder
             'Facade' => array_values(array_unique($this->facades)),
             'Factory' => array_values(array_unique($this->factories)),
             'Config' => array_values(array_unique($this->configs)),
-            'DependencyProvider' => array_values(array_unique($this->dependencyProviders)),
+            'Provider' => array_values(array_unique($this->providers)),
         ];
     }
 }

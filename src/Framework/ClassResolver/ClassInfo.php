@@ -6,9 +6,9 @@ namespace Gacela\Framework\ClassResolver;
 
 use function array_slice;
 use function count;
-use function get_class;
 use function is_object;
 use function is_string;
+use function sprintf;
 
 final class ClassInfo implements ClassInfoInterface
 {
@@ -18,10 +18,10 @@ final class ClassInfo implements ClassInfoInterface
     private static array $callerClassCache;
 
     public function __construct(
-        private string $callerModuleNamespace,
-        private string $callerModuleName,
-        private string $cacheKey,
-        private string $resolvableType = '',
+        private readonly string $callerModuleNamespace,
+        private readonly string $callerModuleName,
+        private readonly string $cacheKey,
+        private readonly string $resolvableType = '',
     ) {
     }
 
@@ -70,7 +70,7 @@ final class ClassInfo implements ClassInfoInterface
 
     private static function fromObject(object $callerObject, string $resolvableType): self
     {
-        $callerClass = get_class($callerObject);
+        $callerClass = $callerObject::class;
 
         return self::fromString($callerClass, $resolvableType);
     }
@@ -80,6 +80,7 @@ final class ClassInfo implements ClassInfoInterface
         if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
             return self::$callerClassCache[$callerClass][$resolvableType];
         }
+
         /** @var list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $lastCallerClassPart = end($callerClassParts);

@@ -44,6 +44,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
             return $cached;
         }
+
         $projectNamespaces = $this->projectNamespaces;
         $projectNamespaces[] = $classInfo->getModuleNamespace();
 

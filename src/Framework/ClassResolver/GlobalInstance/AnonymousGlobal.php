@@ -9,13 +9,20 @@ use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableType;
 use RuntimeException;
 
-use function get_class;
 use function in_array;
 use function is_string;
+use function sprintf;
 
+/**
+ * @internal
+ */
 final class AnonymousGlobal
 {
-    private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = ['Config', 'Factory', 'DependencyProvider'];
+    private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = [
+        'Config',
+        'Factory',
+        'Provider',
+    ];
 
     /** @var array<string,object> */
     private static array $cachedGlobalInstances = [];
@@ -42,20 +49,24 @@ final class AnonymousGlobal
         $key = self::getGlobalKeyFromClassName($className);
 
         /** @var ?T $instance */
-        $instance = self::getByKey($key)
-            ?? self::getByKey('\\' . $key)
-            ?? null;
+        $instance = self::getByKey($key); // @phpstan-ignore-line
 
         return $instance;
     }
 
     public static function getByKey(string $key): ?object
     {
-        return self::$cachedGlobalInstances[$key] ?? null;
+        if (isset(self::$cachedGlobalInstances[$key])) {
+            return self::$cachedGlobalInstances[$key];
+        }
+
+        $normalizedKey = '\\' . ltrim($key, '\\');
+
+        return self::$cachedGlobalInstances[$normalizedKey] ?? null;
     }
 
     /**
-     * Add an anonymous class as 'Config', 'Factory' or 'DependencyProvider' as a global resource
+     * Add an anonymous class as 'Config', 'Factory' or 'Provider' as a global resource
      * bound to the context that it's pass as first argument. It can be the string-key
      * (from a non-class/file context) or the class/object itself.
      */
@@ -63,15 +74,18 @@ final class AnonymousGlobal
     {
         $contextName = self::extractContextNameFromContext($context);
         $parentClass = get_parent_class($resolvedClass);
-
         $type = is_string($parentClass)
             ? ResolvableType::fromClassName($parentClass)->resolvableType()
             : $contextName;
 
         self::validateTypeForAnonymousGlobalRegistration($type);
-
-        $key = sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
+        $key = self::createCacheKey($contextName, $type);
         self::addCachedGlobalInstance($key, $resolvedClass);
+    }
+
+    public static function createCacheKey(string $contextName, string $type): string
+    {
+        return sprintf('\%s\%s\%s', ClassInfo::MODULE_NAME_ANONYMOUS, $contextName, $type);
     }
 
     public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
@@ -87,7 +101,7 @@ final class AnonymousGlobal
             return $context;
         }
 
-        $callerClass = get_class($context);
+        $callerClass = $context::class;
         /** @var list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
 
@@ -100,7 +114,10 @@ final class AnonymousGlobal
     {
         if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
             throw new RuntimeException(
-                "Type '{$type}' not allowed. Valid types: " . implode(', ', self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL),
+                sprintf("Type '%s' not allowed. Valid types: ", $type) . implode(
+                    ', ',
+                    self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL,
+                ),
             );
         }
     }

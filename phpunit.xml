@@ -1,45 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="vendor/autoload.php"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="vendor/autoload.php"
          backupGlobals="false"
-         backupStaticAttributes="false"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
          executionOrder="random"
          processIsolation="false"
          resolveDependencies="true"
          stopOnFailure="false"
-         verbose="true"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         cacheDirectory=".phpunit.cache"
+         backupStaticProperties="false"
 >
-    <php>
-        <ini name="error_reporting" value="-1" />
-        <ini name="memory_limit" value="-1" />
-    </php>
-
-    <testsuites>
-        <testsuite name="unit">
-            <directory suffix="Test.php">tests/Unit</directory>
-        </testsuite>
-
-        <testsuite name="integration">
-            <directory suffix="Test.php">tests/Integration</directory>
-        </testsuite>
-
-        <testsuite name="feature">
-            <directory suffix="Test.php">tests/Feature</directory>
-        </testsuite>
-    </testsuites>
-
-    <coverage>
-        <include>
-            <directory suffix=".php">src</directory>
-        </include>
-        <exclude>
-            <directory prefix="CodeGenerator">src/CodeGenerator</directory>
-            <directory suffix=".php">src/CodeGenerator/Infrastructure</directory>
-            <directory suffix=".php">src/Framework/Event/ClassResolver</directory>
-            <directory suffix=".php">src/Framework/Event/ConfigReader</directory>
-        </exclude>
-    </coverage>
+  <php>
+    <ini name="error_reporting" value="-1"/>
+    <ini name="memory_limit" value="-1"/>
+  </php>
+  <testsuites>
+    <testsuite name="unit">
+      <directory suffix="Test.php">tests/Unit</directory>
+    </testsuite>
+    <testsuite name="integration">
+      <directory suffix="Test.php">tests/Integration</directory>
+    </testsuite>
+    <testsuite name="feature">
+      <directory suffix="Test.php">tests/Feature</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+    <exclude>
+      <directory prefix="CodeGenerator">src/CodeGenerator</directory>
+      <directory suffix=".php">src/CodeGenerator/Infrastructure</directory>
+      <directory suffix=".php">src/Framework/Event/ClassResolver</directory>
+      <directory suffix=".php">src/Framework/Event/ConfigReader</directory>
+    </exclude>
+  </source>
 </phpunit>

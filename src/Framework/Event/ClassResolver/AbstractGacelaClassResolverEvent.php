@@ -8,12 +8,12 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassInfoInterface;
 use Gacela\Framework\Event\GacelaEventInterface;
 
-use function get_class;
+use function sprintf;
 
 abstract class AbstractGacelaClassResolverEvent implements GacelaEventInterface
 {
     public function __construct(
-        private ClassInfo $classInfo,
+        private readonly ClassInfo $classInfo,
     ) {
     }
 
@@ -26,7 +26,7 @@ abstract class AbstractGacelaClassResolverEvent implements GacelaEventInterface
     {
         return sprintf(
             '%s {classInfo:"%s"}',
-            get_class($this),
+            static::class,
             $this->classInfo->toString(),
         );
     }

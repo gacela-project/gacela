@@ -27,7 +27,7 @@ final class DocBlockResolverCache
 
     public static function getCacheInstance(): CacheInterface
     {
-        if (self::$cache !== null) {
+        if (self::$cache instanceof CacheInterface) {
             self::dispatchEvent(new CustomServicesCacheCachedEvent());
 
             return self::$cache;

@@ -9,7 +9,6 @@ use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionExcepti
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
 use ReflectionClass;
 
-use function get_class;
 use function is_string;
 
 final class DocBlockResolver
@@ -20,7 +19,7 @@ final class DocBlockResolver
     private static array $fileContentCache = [];
 
     /** @var class-string */
-    private string $callerClass;
+    private readonly string $callerClass;
 
     /**
      * @param class-string $callerClass
@@ -33,7 +32,7 @@ final class DocBlockResolver
 
     public static function fromCaller(object $caller): self
     {
-        return new self(get_class($caller));
+        return new self($caller::class);
     }
 
     public function getDocBlockResolvable(string $method): DocBlockResolvable
@@ -84,6 +83,9 @@ final class DocBlockResolver
         throw MissingClassDefinitionException::missingDefinition($this->callerClass, $method, $className);
     }
 
+    /**
+     * @param ReflectionClass<object> $reflectionClass
+     */
     private function searchClassOverDocBlock(ReflectionClass $reflectionClass, string $method): string
     {
         $docBlock = (string)$reflectionClass->getDocComment();
@@ -93,6 +95,8 @@ final class DocBlockResolver
 
     /**
      * Look the uses, to find the fully-qualified class name for the className.
+     *
+     * @param ReflectionClass<object> $reflectionClass
      */
     private function searchClassOverUseStatements(ReflectionClass $reflectionClass, string $className): string
     {
@@ -100,6 +104,7 @@ final class DocBlockResolver
         if (!isset(self::$fileContentCache[$fileName])) {
             self::$fileContentCache[$fileName] = (string)file_get_contents($fileName);
         }
+
         $phpFile = self::$fileContentCache[$fileName];
 
         return (new UseBlockParser())->getUseStatement($className, $phpFile);

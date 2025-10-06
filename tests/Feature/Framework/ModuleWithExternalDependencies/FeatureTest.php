@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
     }
@@ -21,7 +21,7 @@ final class FeatureTest extends TestCase
     {
         $facade = new Supplier\Facade();
 
-        self::assertEquals(
+        self::assertSame(
             [
                 'Hello, Gacela from Supplier.',
                 'Hello, Gacela from Dependent.',

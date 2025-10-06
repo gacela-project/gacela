@@ -1,13 +1,16 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
 parameters:
     level: max
     paths:
         - %currentWorkingDirectory%/src/
-    checkGenericClassInNonGenericObjectType: false
-    checkMissingIterableValueType: false
 
     ignoreErrors:
+        - '#Method Gacela\\.*::__call.*\(\) has no return type specified.#'
         - '#Method Gacela\\.*::.* should return class-string.*but returns string#'
         - '#Method Gacela\\.*::.* should return array<.*> but returns array#'
-        - '#Method .*::__callStatic\(\) has no return type specified.*#'
-        - '#Method .*::__call\(\) has no return type specified.*#'
         - '#Cannot cast mixed to string.#'
+        - '#Short ternary operator is not allowed.#'
+        - '#Method .* should return list<.*> but returns array.#'

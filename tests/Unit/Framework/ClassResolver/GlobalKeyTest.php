@@ -54,16 +54,16 @@ final class GlobalKeyTest extends TestCase
     public function test_dependency_provider_using_module_prefix(): void
     {
         self::assertSame(
-            '\App\ModuleExample\DependencyProvider',
-            GlobalKey::fromClassName('\App\ModuleExample\ModuleDependencyProvider'),
+            '\App\ModuleExample\Provider',
+            GlobalKey::fromClassName('\App\ModuleExample\ModuleProvider'),
         );
     }
 
     public function test_dependency_provider_not_using_module_prefix(): void
     {
         self::assertSame(
-            '\App\ModuleExample\DependencyProvider',
-            GlobalKey::fromClassName('\App\ModuleExample\DependencyProvider'),
+            '\App\ModuleExample\Provider',
+            GlobalKey::fromClassName('\App\ModuleExample\Provider'),
         );
     }
 }

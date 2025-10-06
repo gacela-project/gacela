@@ -9,13 +9,15 @@ use Gacela\Framework\Config\ConfigInterface;
 final class GacelaFileCache
 {
     public const KEY_ENABLED = 'gacela-cache-enabled';
+
     public const DEFAULT_ENABLED_VALUE = false;
-    public const DEFAULT_DIRECTORY_VALUE = '/.gacela/cache';
+
+    public const DEFAULT_DIRECTORY_VALUE = null;
 
     private static ?bool $isEnabled = null;
 
     public function __construct(
-        private ConfigInterface $config,
+        private readonly ConfigInterface $config,
     ) {
     }
 

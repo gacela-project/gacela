@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Domain\FileContent;
+namespace GacelaTest\Unit\Console\Domain\FileContent;
 
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
@@ -47,6 +47,30 @@ final class FileContentGeneratorTest extends TestCase
         self::assertSame('Dir/DirFacade.php', $actualPath);
     }
 
+    public function test_facade_maker_template_with_short_name(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('Dir/Facade.php', 'template-result');
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            'Facade' => 'template-result',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::FACADE,
+            withShortName: true,
+        );
+
+        self::assertSame('Dir/Facade.php', $actualPath);
+    }
+
     public function test_factory_maker_template(): void
     {
         $fileContentIo = $this->createMock(FileContentIoInterface::class);
@@ -68,6 +92,30 @@ final class FileContentGeneratorTest extends TestCase
         );
 
         self::assertSame('Dir/DirFactory.php', $actualPath);
+    }
+
+    public function test_factory_maker_template_with_short_name(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('Dir/Factory.php', 'template-result');
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            'Factory' => 'template-result',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::FACTORY,
+            withShortName: true,
+        );
+
+        self::assertSame('Dir/Factory.php', $actualPath);
     }
 
     public function test_config_maker_template(): void
@@ -93,6 +141,30 @@ final class FileContentGeneratorTest extends TestCase
         self::assertSame('Dir/DirConfig.php', $actualPath);
     }
 
+    public function test_config_maker_template_with_short_name(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('Dir/Config.php', 'template-result');
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            'Config' => 'template-result',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::CONFIG,
+            withShortName: true,
+        );
+
+        self::assertSame('Dir/Config.php', $actualPath);
+    }
+
     public function test_dependency_provider_maker_template(): void
     {
         $fileContentIo = $this->createMock(FileContentIoInterface::class);
@@ -102,17 +174,41 @@ final class FileContentGeneratorTest extends TestCase
 
         $fileContentIo->expects(self::once())
             ->method('filePutContents')
-            ->with('Dir/DirDependencyProvider.php', 'template-result');
+            ->with('Dir/DirProvider.php', 'template-result');
 
         $generator = new FileContentGenerator($fileContentIo, [
-            'DependencyProvider' => 'template-result',
+            'Provider' => 'template-result',
         ]);
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
-            FilenameSanitizer::DEPENDENCY_PROVIDER,
+            FilenameSanitizer::PROVIDER,
         );
 
-        self::assertSame('Dir/DirDependencyProvider.php', $actualPath);
+        self::assertSame('Dir/DirProvider.php', $actualPath);
+    }
+
+    public function test_dependency_provider_maker_template_with_short_name(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('Dir/Provider.php', 'template-result');
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            'Provider' => 'template-result',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::PROVIDER,
+            withShortName: true,
+        );
+
+        self::assertSame('Dir/Provider.php', $actualPath);
     }
 }

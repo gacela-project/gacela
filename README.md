@@ -6,8 +6,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gacela-project/gacela/actions">
-    <img src="https://github.com/gacela-project/gacela/workflows/CI/badge.svg" alt="GitHub Build Status">
+  <a href="https://github.com/gacela-project/gacela/actions/workflows/tests.yml">
+    <img src="https://github.com/gacela-project/gacela/actions/workflows/tests.yml/badge.svg" alt="GitHub Build Status">
   </a>
   <a href="https://scrutinizer-ci.com/g/gacela-project/gacela/?branch=main">
     <img src="https://scrutinizer-ci.com/g/gacela-project/gacela/badges/quality-score.png?b=main" alt="Scrutinizer Code Quality">
@@ -38,14 +38,19 @@ It encourages your modules to interact with each other in a unified way by follo
 - Modules interact with each other **only** via their **Facade**
 - The [**Facade**](https://gacela-project.com/docs/facade/) is the *entry point* of a module
 - The [**Factory**](https://gacela-project.com/docs/factory/) manage the *intra-dependencies* the module
-- The [**DependencyProvider**](https://gacela-project.com/docs/dependency-provider/) resolves the *extra-dependencies* of the module
-- The [**Config**](https://gacela-project.com/docs/config/) has access to the project's *config files*
+- The [**Provider**](https://gacela-project.com/docs/provider/) resolves the *extra-dependencies* of the module
+- The [**Config**](https://gacela-project.com/docs/config/) access the project's *config files*
 
 ### Installation
 
 ```bash
 composer require gacela-project/gacela
 ```
+
+### Getting started
+
+See the [getting started guide](docs/getting-started.md) for a step-by-step
+example of creating your first module.
 
 ### Module structure
 
@@ -70,7 +75,7 @@ application-name
 │   │   │ # These are the 4 "gacela classes":
 │   │   ├── Facade.php
 │   │   ├── Factory.php
-│   │   ├── DependencyProvider.php
+│   │   ├── Provider.php
 │   │   └── Config.php
 │   │
 │   └── ModuleB

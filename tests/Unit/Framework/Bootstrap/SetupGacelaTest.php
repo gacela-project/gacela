@@ -154,24 +154,24 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->addExternalService('service1', static fn () => 1),
+                ->addExternalService('service1', static fn (): int => 1),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->addExternalService('service2', static fn () => 2)
+                ->addExternalService('service2', static fn (): int => 2)
                 ->addExternalService('service3', new stdClass()),
         );
 
         self::assertEquals([
-            'service1' => static fn () => 1,
+            'service1' => static fn (): int => 1,
         ], $setup->externalServices());
 
         $setup->combine($setup2);
 
         self::assertEquals([
-            'service1' => static fn () => 1,
-            'service2' => static fn () => 2,
+            'service1' => static fn (): int => 1,
+            'service2' => static fn (): int => 2,
             'service3' => new stdClass(),
         ], $setup->externalServices());
     }
@@ -215,7 +215,7 @@ final class SetupGacelaTest extends TestCase
 
         $setup->combine($setup2);
 
-        self::assertEquals([
+        self::assertSame([
             ExamplePluginWithoutConstructor::class,
             ExamplePluginWithConstructor::class,
         ], $setup->getPlugins());
@@ -234,7 +234,7 @@ final class SetupGacelaTest extends TestCase
 
         $setup->combine($setup2);
 
-        self::assertEquals([
+        self::assertSame([
             CustomGacelaConfig::class,
         ], $setup->getGacelaConfigsToExtend());
     }

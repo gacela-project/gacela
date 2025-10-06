@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gacela\Console\Infrastructure\ConsoleBootstrap;
+use Gacela\Framework\Gacela;
+use Symfony\Component\Console\Application;
+
+(static function (): void {
+
+    $cwd = (string)getcwd();
+    if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
+        exit("Cannot load composer's autoload file: " . $autoloadPath);
+    }
+
+    require $autoloadPath;
+
+    if (!class_exists(Application::class)) {
+        $error = 'Cannot find class: %s. Did you forgot to require `%s` in your composer?';
+        throw new RuntimeException(sprintf($error, Application::class, 'symfony/console:^5'));
+    }
+
+    Gacela::bootstrap($cwd);
+
+    $bootstrap = new ConsoleBootstrap(name: 'Gacela', version: '1.10.0');
+    try {
+        $bootstrap->run();
+    } catch (Exception $e) {
+        echo "gacela script failed. Error: " . $e->getMessage() . PHP_EOL;
+    }
+})();

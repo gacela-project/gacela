@@ -24,8 +24,10 @@ final class Config implements ConfigInterface
     /** @var array<string,mixed> */
     private array $config = [];
 
+    private ?string $cacheDir = null;
+
     private function __construct(
-        private SetupGacelaInterface $setup,
+        private readonly SetupGacelaInterface $setup,
     ) {
     }
 
@@ -38,8 +40,8 @@ final class Config implements ConfigInterface
 
     public static function getInstance(): self
     {
-        if (self::$instance === null) {
-            throw new RuntimeException('You have to call createWithSetup() first.');
+        if (!self::$instance instanceof self) {
+            throw new RuntimeException('You have to call createWithSetup() first. Have you forgot to bootstrap Gacela?');
         }
 
         return self::$instance;
@@ -56,7 +58,7 @@ final class Config implements ConfigInterface
 
     public static function getEventDispatcher(): EventDispatcherInterface
     {
-        if (self::$eventDispatcher === null) {
+        if (!self::$eventDispatcher instanceof EventDispatcherInterface) {
             self::$eventDispatcher = self::getInstance()
                 ->getSetupGacela()
                 ->getEventDispatcher();
@@ -70,7 +72,7 @@ final class Config implements ConfigInterface
      */
     public function get(string $key, mixed $default = self::DEFAULT_CONFIG_VALUE): mixed
     {
-        if (empty($this->config)) {
+        if ($this->config === []) {
             $this->init();
         }
 
@@ -93,15 +95,19 @@ final class Config implements ConfigInterface
     public function init(): void
     {
         $this->configFactory = null;
-        $this->config = $this->loadAllConfigValues();
-        $this->config = array_merge($this->config, $this->getSetupGacela()->getConfigKeyValues());
+
+        /** @psalm-suppress DuplicateArrayKey */
+        $this->config = [
+            ...$this->loadAllConfigValues(),
+            ...$this->setup->getConfigKeyValues(),
+        ];
     }
 
     public function setAppRootDir(string $dir): self
     {
         $this->appRootDir = rtrim($dir, DIRECTORY_SEPARATOR);
 
-        if (empty($this->appRootDir)) {
+        if ($this->appRootDir === '' || $this->appRootDir === '0') {
             $this->appRootDir = getcwd() ?: ''; // @codeCoverageIgnore
         }
 
@@ -115,9 +121,13 @@ final class Config implements ConfigInterface
 
     public function getCacheDir(): string
     {
-        return $this->getAppRootDir()
-            . DIRECTORY_SEPARATOR
-            . ltrim($this->getSetupGacela()->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
+        if ($this->cacheDir !== null) {
+            return $this->cacheDir;
+        }
+
+        $this->cacheDir = getenv('GACELA_CACHE_DIR') ?: $this->getDefaultCacheDir();
+
+        return rtrim($this->cacheDir, DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -125,10 +135,10 @@ final class Config implements ConfigInterface
      */
     public function getFactory(): ConfigFactory
     {
-        if ($this->configFactory === null) {
+        if (!$this->configFactory instanceof ConfigFactory) {
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
-                $this->getSetupGacela(),
+                $this->setup,
             );
         }
 
@@ -143,6 +153,32 @@ final class Config implements ConfigInterface
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
+    }
+
+    private function getDefaultCacheDir(): string
+    {
+        $cacheDir = $this->setup->getFileCacheDirectory();
+        if ($cacheDir === '') {
+            return sys_get_temp_dir();
+        }
+
+        $appRoot = $this->getAppRootDir();
+
+        if (preg_match('#^[A-Za-z]:[\\/]#', $cacheDir) === 1) {
+            return $cacheDir;
+        }
+
+        if ($cacheDir[0] === DIRECTORY_SEPARATOR) {
+            if (str_starts_with($cacheDir, $appRoot . DIRECTORY_SEPARATOR)) {
+                return $cacheDir;
+            }
+
+            return $appRoot . $cacheDir;
+        }
+
+        return $appRoot
+            . DIRECTORY_SEPARATOR
+            . ltrim($cacheDir, DIRECTORY_SEPARATOR);
     }
 
     /**

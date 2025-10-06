@@ -11,7 +11,7 @@ use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdP
 use PHPUnit\Framework\TestCase;
 
 /**
- * ProjectNamespaces is a list of namespaces sort by prio to resolve the Facade, Factory, Config or DependencyProvider.
+ * ProjectNamespaces is a list of namespaces sort by prio to resolve the Facade, Factory, Config or AbstractProvider.
  *
  * In this example, we are using the Facade from a third-party vendor's module (`vendor\ThirdParty\ModuleA\Facade`),
  * and when that Facade uses its Factory, gacela will resolve it from our `src\Main` namespace, because we have the same
@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class FeatureTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();

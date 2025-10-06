@@ -22,120 +22,21 @@ final class GacelaConfigTransfer
      * @param ?array<string,list<Closure>> $servicesToExtend
      */
     public function __construct(
-        private AppConfigBuilder $appConfigBuilder,
-        private SuffixTypesBuilder $suffixTypesBuilder,
-        private BindingsBuilder $bindingsBuilder,
-        private ?array $externalServices,
-        private ?bool $shouldResetInMemoryCache,
-        private ?bool $fileCacheEnabled,
-        private ?string $fileCacheDirectory,
-        private ?array $projectNamespaces,
-        private ?array $configKeyValues,
-        private ?array $genericListeners,
-        private ?array $specificListeners,
-        private ?bool $areEventListenersEnabled,
-        private ?array $gacelaConfigsToExtend,
-        private ?array $plugins,
-        private ?array $servicesToExtend,
+        public readonly AppConfigBuilder $appConfigBuilder,
+        public readonly SuffixTypesBuilder $suffixTypesBuilder,
+        public readonly BindingsBuilder $bindingsBuilder,
+        public readonly ?array $externalServices,
+        public readonly ?bool $shouldResetInMemoryCache,
+        public readonly ?bool $fileCacheEnabled,
+        public readonly ?string $fileCacheDirectory,
+        public readonly ?array $projectNamespaces,
+        public readonly ?array $configKeyValues,
+        public readonly ?array $genericListeners,
+        public readonly ?array $specificListeners,
+        public readonly ?bool $areEventListenersEnabled,
+        public readonly ?array $gacelaConfigsToExtend,
+        public readonly ?array $plugins,
+        public readonly ?array $servicesToExtend,
     ) {
-    }
-
-    public function getAppConfigBuilder(): AppConfigBuilder
-    {
-        return $this->appConfigBuilder;
-    }
-
-    public function getSuffixTypesBuilder(): SuffixTypesBuilder
-    {
-        return $this->suffixTypesBuilder;
-    }
-
-    public function getBindingsBuilder(): BindingsBuilder
-    {
-        return $this->bindingsBuilder;
-    }
-
-    /**
-     * @return ?array<string, class-string|object|callable>
-     */
-    public function getExternalServices(): ?array
-    {
-        return $this->externalServices;
-    }
-
-    public function getShouldResetInMemoryCache(): ?bool
-    {
-        return $this->shouldResetInMemoryCache;
-    }
-
-    public function getFileCacheEnabled(): ?bool
-    {
-        return $this->fileCacheEnabled;
-    }
-
-    public function getFileCacheDirectory(): ?string
-    {
-        return $this->fileCacheDirectory;
-    }
-
-    /**
-     * @return ?list<string>
-     */
-    public function getProjectNamespaces(): ?array
-    {
-        return $this->projectNamespaces;
-    }
-
-    /**
-     * @return ?array<string,mixed>
-     */
-    public function getConfigKeyValues(): ?array
-    {
-        return $this->configKeyValues;
-    }
-
-    public function getAreEventListenersEnabled(): ?bool
-    {
-        return $this->areEventListenersEnabled;
-    }
-
-    /**
-     * @return ?list<callable>
-     */
-    public function getGenericListeners(): ?array
-    {
-        return $this->genericListeners;
-    }
-
-    /**
-     * @return ?array<class-string,list<callable>>
-     */
-    public function getSpecificListeners(): ?array
-    {
-        return $this->specificListeners;
-    }
-
-    /**
-     * @return ?list<class-string>
-     */
-    public function getGacelaConfigsToExtend(): ?array
-    {
-        return $this->gacelaConfigsToExtend;
-    }
-
-    /**
-     * @return ?list<class-string|callable>
-     */
-    public function getPlugins(): ?array
-    {
-        return $this->plugins;
-    }
-
-    /**
-     * @return ?array<string,list<Closure>>
-     */
-    public function getServicesToExtend(): ?array
-    {
-        return $this->servicesToExtend;
     }
 }

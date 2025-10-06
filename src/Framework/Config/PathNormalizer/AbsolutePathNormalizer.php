@@ -10,6 +10,7 @@ use Gacela\Framework\Config\PathNormalizerInterface;
 final class AbsolutePathNormalizer implements PathNormalizerInterface
 {
     public const WITHOUT_SUFFIX = 'WITHOUT_SUFFIX';
+
     public const WITH_SUFFIX = 'WITH_SUFFIX';
 
     /**

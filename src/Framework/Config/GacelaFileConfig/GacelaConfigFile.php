@@ -16,10 +16,10 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @var array{
-     *     Facade:list<string>,
-     *     Factory:list<string>,
-     *     Config:list<string>,
-     *     DependencyProvider:list<string>,
+     *     Facade: list<string>,
+     *     Factory: list<string>,
+     *     Config: list<string>,
+     *     Provider: list<string>,
      * }
      */
     private array $suffixTypes = SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES;
@@ -65,10 +65,10 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
 
     /**
      * @param array{
-     *     Facade:list<string>,
-     *     Factory:list<string>,
-     *     Config:list<string>,
-     *     DependencyProvider:list<string>,
+     *     Facade: list<string>,
+     *     Factory: list<string>,
+     *     Config: list<string>,
+     *     Provider: list<string>,
      * } $suffixTypes
      */
     public function setSuffixTypes(array $suffixTypes): self
@@ -82,10 +82,10 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      * @psalm-suppress ImplementedReturnTypeMismatch
      *
      * @return array{
-     *     Facade:list<string>,
-     *     Factory:list<string>,
-     *     Config:list<string>,
-     *     DependencyProvider:list<string>,
+     *     Facade: list<string>,
+     *     Factory: list<string>,
+     *     Config: list<string>,
+     *     Provider: list<string>,
      * }
      */
     public function getSuffixTypes(): array
@@ -96,13 +96,14 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     public function combine(GacelaConfigFileInterface $other): GacelaConfigFileInterface
     {
         $new = clone $this;
-        $new->configItems = array_merge($this->configItems, $other->getConfigItems());
-        $new->bindings = array_merge($this->bindings, $other->getBindings());
+        $new->configItems = [...$this->configItems, ...$other->getConfigItems()];
+        /** @psalm-suppress DuplicateArrayKey */
+        $new->bindings = [...$this->bindings, ...$other->getBindings()];
         $new->suffixTypes = [
             'Facade' => $this->filterList($other, 'Facade'),
             'Factory' => $this->filterList($other, 'Factory'),
             'Config' => $this->filterList($other, 'Config'),
-            'DependencyProvider' => $this->filterList($other, 'DependencyProvider'),
+            'Provider' => $this->filterList($other, 'Provider'),
         ];
 
         return $new;
@@ -114,8 +115,8 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     private function filterList(GacelaConfigFileInterface $other, string $key): array
     {
         $merged = array_merge($this->suffixTypes[$key], $other->getSuffixTypes()[$key]); // @phpstan-ignore-line
-        $filtered = array_filter(array_unique($merged));
-        /** @var list<string> $values */
+        $filtered = array_filter(array_unique($merged), static fn (string $str): bool => $str !== '');
+        /** @var list<non-empty-string> $values */
         $values = array_values($filtered);
 
         return $values;

@@ -6,6 +6,8 @@ namespace Gacela\Framework\ClassResolver\ClassNameFinder\Rule;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 
+use function sprintf;
+
 final class FinderRuleWithModulePrefix implements FinderRuleInterface
 {
     /**

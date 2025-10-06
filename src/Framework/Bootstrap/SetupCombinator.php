@@ -12,7 +12,7 @@ use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 final class SetupCombinator
 {
     public function __construct(
-        private SetupGacela $original,
+        private readonly SetupGacela $original,
     ) {
     }
 
@@ -44,6 +44,7 @@ final class SetupCombinator
         if ($other->isPropertyChanged(SetupGacela::fileCacheEnabled)) {
             $this->original->setFileCacheEnabled($other->isFileCacheEnabled());
         }
+
         if ($other->isPropertyChanged(SetupGacela::fileCacheDirectory)) {
             $this->original->setFileCacheDirectory($other->getFileCacheDirectory());
         }
@@ -78,6 +79,7 @@ final class SetupCombinator
             } else {
                 $eventDispatcher = new ConfigurableEventDispatcher();
             }
+
             /** @var ConfigurableEventDispatcher $eventDispatcher */
             $eventDispatcher->registerGenericListeners((array)$other->getGenericListeners());
 
@@ -89,6 +91,7 @@ final class SetupCombinator
         } else {
             $eventDispatcher = $this->original->getEventDispatcher();
         }
+
         $this->original->setEventDispatcher($eventDispatcher);
     }
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
-use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderResolver;
+use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
+use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 
@@ -15,12 +17,20 @@ abstract class AbstractFactory
     /** @var array<string,Container> */
     private static array $containers = [];
 
+    /** @var array<string,mixed> */
+    private array $instances = [];
+
     /**
      * @internal
      */
     public static function resetCache(): void
     {
         self::$containers = [];
+    }
+
+    protected function singleton(string $key, callable $creator): mixed
+    {
+        return $this->instances[$key] ??= $creator();
     }
 
     protected function getProvidedDependency(string $key): mixed
@@ -43,8 +53,18 @@ abstract class AbstractFactory
     {
         $container = Container::withConfig(Config::getInstance());
 
-        $dependencyProvider = (new DependencyProviderResolver())->resolve($this);
-        $dependencyProvider->provideModuleDependencies($container);
+        $resolver = (new ProviderResolver())->resolve($this);
+        $resolver?->provideModuleDependencies($container);
+
+        {
+            // Temporal solution to keep BC with the AbstractDependencyProvider
+            $dpResolver = (new DependencyProviderResolver())->resolve($this);
+            $dpResolver?->provideModuleDependencies($container);
+
+            if (!$resolver instanceof AbstractProvider && !$dpResolver instanceof AbstractProvider) {
+                throw new ProviderNotFoundException(static::class);
+            }
+        }
 
         return $container;
     }

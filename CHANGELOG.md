@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.10.0](https://github.com/gacela-project/gacela/compare/1.9.1...1.10.0) - 2025-08-02
+
+- Fix default cache dir
+- Improve internal `AnonymousGlobal::getByKey()`
+- Add internal cache on `PathFinder` and `GlobalKey`
+- Added factory instance caching via new `singleton()` helper
+
+## [1.9.1](https://github.com/gacela-project/gacela/compare/1.9.0...1.9.1) - 2024-12-12
+
+- Better compatibility with PHP 8.4
+
+## [1.9.0](https://github.com/gacela-project/gacela/compare/1.8.1...1.9.0) - 2024-12-01
+
+- Compatibility with PHP 8.4
+- Added `GACELA_CACHE_DIR` env variable to override where to place the cache files
+- Added `RELEASE.md` docs
+
+## [1.8.1](https://github.com/gacela-project/gacela/compare/1.8.0...1.8.1) - 2024-11-09
+
+- Internal optimizations
+
+## [1.8.0](https://github.com/gacela-project/gacela/compare/1.7.1...1.8.0) - 2024-08-17
+
+- Moved `./gacela` script to `bin/` directory
+- Fixed disable event listeners
+- Added `Gacela::addGlobal()`
+- Added `Gacela::overrideExistingResolvedClass()`
+- Deprecated `AbstractDependencyProvider` in favor of `AbstractProvider`
+
+## [1.7.1](https://github.com/gacela-project/gacela/compare/1.7.0...1.7.1) - 2024-04-16
+
+- Keep packages sorted in composer.json
+- Added `ergebnis/composer-normalize`
+- Added `rector`
+
+## [1.7.0](https://github.com/gacela-project/gacela/compare/1.6.0...1.7.0) - 2023-12-21
+
+- Change min PHP support for `PHP>=8.1`
+
 ## [1.6.0](https://github.com/gacela-project/gacela/compare/1.5.0...1.6.0) - 2023-10-15
 
 - Fixed combining event listeners from different `SetupGacela` objects

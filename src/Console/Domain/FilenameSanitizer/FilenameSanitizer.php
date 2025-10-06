@@ -7,19 +7,23 @@ namespace Gacela\Console\Domain\FilenameSanitizer;
 use RuntimeException;
 
 use function count;
+use function sprintf;
 
 final class FilenameSanitizer implements FilenameSanitizerInterface
 {
     public const FACADE = 'Facade';
+
     public const FACTORY = 'Factory';
+
     public const CONFIG = 'Config';
-    public const DEPENDENCY_PROVIDER = 'DependencyProvider';
+
+    public const PROVIDER = 'Provider';
 
     public const EXPECTED_FILENAMES = [
         self::FACADE,
         self::FACTORY,
         self::CONFIG,
-        self::DEPENDENCY_PROVIDER,
+        self::PROVIDER,
     ];
 
     /**

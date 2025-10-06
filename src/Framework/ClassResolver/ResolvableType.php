@@ -12,16 +12,13 @@ final class ResolvableType
         'Facade',
         'Factory',
         'Config',
-        'DependencyProvider',
+        'Provider',
     ];
 
-    private string $resolvableType;
-    private string $moduleName;
-
-    private function __construct(string $resolvableType, string $moduleName)
-    {
-        $this->resolvableType = $resolvableType;
-        $this->moduleName = $moduleName;
+    private function __construct(
+        private readonly string $resolvableType,
+        private readonly string $moduleName,
+    ) {
     }
 
     /**

@@ -6,6 +6,8 @@ namespace Gacela\Framework\Exception;
 
 use RuntimeException;
 
+use function sprintf;
+
 final class ConfigException extends RuntimeException
 {
     public static function keyNotFound(string $key, string $class): self

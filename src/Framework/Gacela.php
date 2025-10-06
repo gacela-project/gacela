@@ -21,20 +21,22 @@ use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
 use function is_string;
+use function sprintf;
 
 final class Gacela
 {
     private const GACELA_PHP_FILENAME = 'gacela.php';
 
     private static ?Container $mainContainer = null;
+
     private static ?string $appRootDir = null;
 
     /**
      * Define the entry point of Gacela.
      *
-     * @param null|Closure(GacelaConfig):void $configFn
+     * @param  null|Closure(GacelaConfig):void  $configFn
      */
-    public static function bootstrap(string $appRootDir, Closure $configFn = null): void
+    public static function bootstrap(string $appRootDir, ?Closure $configFn = null): void
     {
         self::$appRootDir = $appRootDir;
         self::$mainContainer = null;
@@ -55,7 +57,7 @@ final class Gacela
     /**
      * @template T
      *
-     * @param class-string<T> $className
+     * @param  class-string<T>  $className
      *
      * @return T|null
      */
@@ -72,15 +74,41 @@ final class Gacela
         if (self::$appRootDir === null) {
             throw new GacelaNotBootstrappedException();
         }
+
         return self::$appRootDir;
     }
 
     /**
-     * @param null|Closure(GacelaConfig):void $configFn
+     * Add an anonymous class as 'Config', 'Factory' or 'Provider' as a global resource
+     * bound to the context that it is passed as second argument.
+     *
+     * @param  object|string  $context  It can be the string-key (file path) or the class/object itself.
+     *                               If empty then the caller's file will be use
      */
-    private static function processConfigFnIntoSetup(Closure $configFn = null): SetupGacelaInterface
+    public static function addGlobal(object $resolvedClass, object|string $context = ''): void
     {
-        if ($configFn !== null) {
+        if (is_string($context) && is_file($context)) {
+            $context = basename($context, '.php');
+        } elseif ($context === '') {
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+            $callerFile = $trace[0]['file'] ?? __FILE__;
+            $context = basename($callerFile, '.php');
+        }
+
+        AnonymousGlobal::addGlobal($context, $resolvedClass);
+    }
+
+    public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
+    {
+        AnonymousGlobal::overrideExistingResolvedClass($className, $resolvedClass);
+    }
+
+    /**
+     * @param  null|Closure(GacelaConfig):void  $configFn
+     */
+    private static function processConfigFnIntoSetup(?Closure $configFn = null): SetupGacelaInterface
+    {
+        if ($configFn instanceof Closure) {
             return SetupGacela::fromCallable($configFn);
         }
 
@@ -100,14 +128,14 @@ final class Gacela
 
     private static function resetCache(): void
     {
-        AbstractFacade::resetCache();
         AnonymousGlobal::resetCache();
+        AbstractFacade::resetCache();
         AbstractFactory::resetCache();
+        AbstractClassResolver::resetCache();
+        InMemoryCache::resetCache();
         GacelaFileCache::resetCache();
         DocBlockResolverCache::resetCache();
         ClassResolverCache::resetCache();
-        InMemoryCache::resetCache();
-        AbstractClassResolver::resetCache();
         ConfigFactory::resetCache();
         Config::resetInstance();
         Locator::resetInstance();

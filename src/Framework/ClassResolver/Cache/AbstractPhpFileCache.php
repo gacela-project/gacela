@@ -6,13 +6,17 @@ namespace Gacela\Framework\ClassResolver\Cache;
 
 use RuntimeException;
 
+use function sprintf;
+
+use const LOCK_EX;
+
 abstract class AbstractPhpFileCache implements CacheInterface
 {
     /** @var array<class-string,array<string,string>> */
     private static array $cache = [];
 
     public function __construct(
-        private string $cacheDir,
+        private readonly string $cacheDir,
     ) {
         self::$cache[static::class] = $this->getExistingCache();
     }
@@ -37,6 +41,9 @@ abstract class AbstractPhpFileCache implements CacheInterface
         return self::$cache[static::class][$cacheKey];
     }
 
+    /**
+     * @return array<string,string>
+     */
     public function getAll(): array
     {
         return self::$cache[static::class];
@@ -44,6 +51,12 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
     public function put(string $cacheKey, string $className): void
     {
+        if (isset(self::$cache[static::class][$cacheKey])
+            && self::$cache[static::class][$cacheKey] === $className
+        ) {
+            return;
+        }
+
         self::$cache[static::class][$cacheKey] = $className;
 
         $fileContent = sprintf(
@@ -51,7 +64,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
             var_export(self::$cache[static::class], true),
         );
 
-        file_put_contents($this->getAbsoluteCacheFilename(), $fileContent);
+        file_put_contents($this->getAbsoluteCacheFilename(), $fileContent, LOCK_EX);
     }
 
     abstract protected function getCacheFilename(): string;

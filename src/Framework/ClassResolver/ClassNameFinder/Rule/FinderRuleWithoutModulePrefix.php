@@ -6,6 +6,8 @@ namespace Gacela\Framework\ClassResolver\ClassNameFinder\Rule;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 
+use function sprintf;
+
 final class FinderRuleWithoutModulePrefix implements FinderRuleInterface
 {
     public function buildClassCandidate(string $projectNamespace, string $resolvableType, ClassInfo $classInfo): string

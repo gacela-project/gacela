@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\AllAppModules;
 
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
-use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderNotFoundException;
-use Gacela\Framework\ClassResolver\DependencyProvider\DependencyProviderResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use ReflectionClass;
 
 use function strlen;
@@ -15,9 +15,9 @@ use function strlen;
 final class AppModuleCreator
 {
     public function __construct(
-        private FactoryResolver $factoryResolver,
-        private ConfigResolver $configResolver,
-        private DependencyProviderResolver $dependencyProviderResolver,
+        private readonly FactoryResolver $factoryResolver,
+        private readonly ConfigResolver $configResolver,
+        private readonly ProviderResolver $providerResolver,
     ) {
     }
 
@@ -32,7 +32,7 @@ final class AppModuleCreator
             $facadeClass,
             $this->findFactory($facadeClass),
             $this->findConfig($facadeClass),
-            $this->findDependencyProvider($facadeClass),
+            $this->findProvider($facadeClass),
         );
     }
 
@@ -89,17 +89,17 @@ final class AppModuleCreator
     /**
      * @param class-string $facadeClass
      */
-    private function findDependencyProvider(string $facadeClass): ?string
+    private function findProvider(string $facadeClass): ?string
     {
-        try {
-            $resolver = $this->dependencyProviderResolver->resolve($facadeClass);
-
-            if ((new ReflectionClass($resolver))->isAnonymous()) {
-                throw new DependencyProviderNotFoundException($resolver);
-            }
-            return $resolver::class;
-        } catch (DependencyProviderNotFoundException $e) {
+        $resolver = $this->providerResolver->resolve($facadeClass);
+        if (!$resolver instanceof AbstractProvider) {
             return null;
         }
+
+        if ((new ReflectionClass($resolver))->isAnonymous()) {
+            return null;
+        }
+
+        return $resolver::class;
     }
 }

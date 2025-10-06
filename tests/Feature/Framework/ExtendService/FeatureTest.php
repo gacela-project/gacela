@@ -14,7 +14,7 @@ final class FeatureTest extends TestCase
 {
     private Module\Facade $facade;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();

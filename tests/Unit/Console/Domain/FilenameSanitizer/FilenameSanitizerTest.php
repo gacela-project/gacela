@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\CodeGenerator\Domain\FilenameSanitizer;
+namespace GacelaTest\Unit\Console\Domain\FilenameSanitizer;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class FilenameSanitizerTest extends TestCase
 {
     private FilenameSanitizer $filenameSanitizer;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->filenameSanitizer = new FilenameSanitizer();
     }
@@ -20,7 +21,7 @@ final class FilenameSanitizerTest extends TestCase
     {
         $actual = implode(', ', $this->filenameSanitizer->getExpectedFilenames());
 
-        self::assertSame('Facade, Factory, Config, DependencyProvider', $actual);
+        self::assertSame('Facade, Factory, Config, Provider', $actual);
     }
 
     public function test_facade_or_factory_problem(): void
@@ -29,9 +30,7 @@ final class FilenameSanitizerTest extends TestCase
         $this->filenameSanitizer->sanitize('fac');
     }
 
-    /**
-     * @dataProvider providerFacade
-     */
+    #[DataProvider('providerFacade')]
     public function test_facade(string $filename): void
     {
         self::assertSame(
@@ -40,7 +39,7 @@ final class FilenameSanitizerTest extends TestCase
         );
     }
 
-    public function providerFacade(): iterable
+    public static function providerFacade(): iterable
     {
         yield ['faca'];
         yield ['facad'];
@@ -60,7 +59,7 @@ final class FilenameSanitizerTest extends TestCase
         );
     }
 
-    public function providerFactory(): iterable
+    public static function providerFactory(): iterable
     {
         yield ['fact'];
         yield ['facto'];
@@ -81,7 +80,7 @@ final class FilenameSanitizerTest extends TestCase
         );
     }
 
-    public function providerConfig(): iterable
+    public static function providerConfig(): iterable
     {
         yield ['conf'];
         yield ['confi'];
@@ -91,24 +90,21 @@ final class FilenameSanitizerTest extends TestCase
     }
 
     /**
-     * @dataProvider providerDependencyProvider
+     * @dataProvider provideProvider
      */
     public function test_dependency_provider(string $filename): void
     {
         self::assertSame(
-            FilenameSanitizer::DEPENDENCY_PROVIDER,
+            FilenameSanitizer::PROVIDER,
             $this->filenameSanitizer->sanitize($filename),
         );
     }
 
-    public function providerDependencyProvider(): iterable
+    public static function provideProvider(): iterable
     {
-        yield ['depe'];
-        yield ['dependency'];
         yield ['pro'];
         yield ['provider'];
         yield ['de-pr'];
-        yield ['dependencyprovider'];
-        yield ['dependency-provider'];
+        yield ['provider'];
     }
 }

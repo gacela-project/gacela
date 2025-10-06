@@ -6,6 +6,8 @@ namespace Gacela\Framework\Event\ClassResolver\Cache;
 
 use Gacela\Framework\Event\GacelaEventInterface;
 
+use function sprintf;
+
 final class CustomServicesInMemoryCacheCreatedEvent implements GacelaEventInterface
 {
     public function toString(): string

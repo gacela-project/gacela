@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 final class FeatureTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__);
     }

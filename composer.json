@@ -106,7 +106,7 @@
         "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
         "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
-        "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze --debug --no-progress --memory-limit=1G",
+        "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze --no-progress --memory-limit=1G",
         "phpunit": [
             "@test-unit",
             "@test-integration",

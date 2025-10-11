@@ -5,6 +5,7 @@
 - Drop static facade magic methods; call `$facade->getFactory()` directly
 - Improve PHPStan generic type support
   - Replace `@method` annotations with `@extends` for better type inference
+- Improve `SetupGacela`; extract `PropertyChangeTracker` and `SetupGacelaProperties`
 
 ## [1.10.0](https://github.com/gacela-project/gacela/compare/1.9.1...1.10.0) - 2025-08-02
 

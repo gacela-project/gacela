@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Override;
 
 final class GacelaConfigFile implements GacelaConfigFileInterface
 {
@@ -37,6 +38,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     /**
      * @return list<GacelaConfigItem>
      */
+    #[Override]
     public function getConfigItems(): array
     {
         return $this->configItems;
@@ -58,6 +60,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      *
      * @return array<class-string,class-string|callable|object>
      */
+    #[Override]
     public function getBindings(): array
     {
         return $this->bindings;
@@ -88,11 +91,13 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      *     Provider: list<string>,
      * }
      */
+    #[Override]
     public function getSuffixTypes(): array
     {
         return $this->suffixTypes;
     }
 
+    #[Override]
     public function combine(GacelaConfigFileInterface $other): GacelaConfigFileInterface
     {
         $new = clone $this;

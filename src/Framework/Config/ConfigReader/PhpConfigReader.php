@@ -8,6 +8,7 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Event\ConfigReader\ReadPhpConfigEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use JsonSerializable;
+use Override;
 use RuntimeException;
 
 use function is_array;
@@ -19,6 +20,7 @@ final class PhpConfigReader implements ConfigReaderInterface
     /**
      * @return array<string,mixed>
      */
+    #[Override]
     public function read(string $absolutePath): array
     {
         if (!$this->canRead($absolutePath)) {

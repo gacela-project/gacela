@@ -7,6 +7,7 @@ namespace Gacela\Framework\Config;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
+use Override;
 use RuntimeException;
 
 use function array_key_exists;
@@ -70,6 +71,7 @@ final class Config implements ConfigInterface
     /**
      * @throws ConfigException
      */
+    #[Override]
     public function get(string $key, mixed $default = self::DEFAULT_CONFIG_VALUE): mixed
     {
         if ($this->config === []) {
@@ -145,11 +147,13 @@ final class Config implements ConfigInterface
         return $this->configFactory;
     }
 
+    #[Override]
     public function getSetupGacela(): SetupGacelaInterface
     {
         return $this->setup;
     }
 
+    #[Override]
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);

@@ -6,6 +6,7 @@ namespace Gacela\Framework\ClassResolver\Factory;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Override;
 
 final class FactoryResolver extends AbstractClassResolver
 {
@@ -14,6 +15,7 @@ final class FactoryResolver extends AbstractClassResolver
     /**
      * @param object|class-string $caller
      */
+    #[Override]
     public function resolve(object|string $caller): AbstractFactory
     {
         /** @var AbstractFactory $resolved */
@@ -22,6 +24,7 @@ final class FactoryResolver extends AbstractClassResolver
         return $resolved;
     }
 
+    #[Override]
     protected function getResolvableType(): string
     {
         return self::TYPE;

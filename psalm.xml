@@ -3,7 +3,7 @@
     errorLevel="1"
     findUnusedBaselineEntry="true"
     findUnusedCode="false"
-    threads="4"
+    threads="1"
     cacheDirectory="data/cache/psalm"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
@@ -25,7 +25,6 @@
         <MoreSpecificReturnType errorLevel="suppress" />
         <LessSpecificReturnStatement errorLevel="suppress" />
         <UnsafeInstantiation errorLevel="suppress" />
-        <MissingOverrideAttribute errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
     </issueHandlers>
 </psalm>

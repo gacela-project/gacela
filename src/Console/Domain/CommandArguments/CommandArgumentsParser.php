@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\CommandArguments;
 
 use InvalidArgumentException;
+use Override;
 
 use function count;
 
@@ -26,6 +27,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
      *
      * @throws InvalidArgumentException
      */
+    #[Override]
     public function parse(string $desiredNamespace): CommandArguments
     {
         if (!isset($this->composerJson['autoload'])) {

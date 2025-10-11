@@ -12,6 +12,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
 use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
 use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
+use Override;
 
 use function sprintf;
 
@@ -29,6 +30,7 @@ final class ConfigFactory extends AbstractFactory
     ) {
     }
 
+    #[Override]
     public static function resetCache(): void
     {
         self::$gacelaFileConfig = null;

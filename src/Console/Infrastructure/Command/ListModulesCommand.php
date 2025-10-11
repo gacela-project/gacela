@@ -7,6 +7,7 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\DocBlockResolverAwareTrait;
+use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
@@ -28,6 +29,7 @@ final class ListModulesCommand extends Command
 
     private ?OutputInterface $output = null;
 
+    #[Override]
     protected function configure(): void
     {
         $this->setName('list:modules')
@@ -36,6 +38,7 @@ final class ListModulesCommand extends Command
             ->addOption('detailed', 'd', InputOption::VALUE_NONE, 'Display all the modules in detail');
     }
 
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->output = $output;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\PathNormalizer;
 
+use Override;
+
 use function sprintf;
 
 final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
@@ -14,6 +16,7 @@ final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterf
     ) {
     }
 
+    #[Override]
     public function generateAbsolutePath(string $relativePath): string
     {
         $suffix = $this->configFileNameSuffix;

@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\BindingInterfacesWithInnerDependencies\Mo
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method Factory getFactory()
+ * @extends AbstractFacade<Factory>
  */
 final class Facade extends AbstractFacade
 {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\DocBlockResolver;
 
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
@@ -78,6 +79,10 @@ final class DocBlockResolver
         $className = $this->searchClassOverUseStatements($reflectionClass, $className);
         if (class_exists($className)) {
             return $className;
+        }
+
+        if ($method === 'getFactory') {
+            return AbstractFactory::class;
         }
 
         throw MissingClassDefinitionException::missingDefinition($this->callerClass, $method, $className);

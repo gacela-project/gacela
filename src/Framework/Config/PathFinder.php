@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Override;
+
 use function define;
 use function defined;
 
@@ -15,6 +17,7 @@ final class PathFinder implements PathFinderInterface
     /**
      * @return string[]
      */
+    #[Override]
     public function matchingPattern(string $pattern): array
     {
         if ($pattern === '') {

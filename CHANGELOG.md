@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Drop static facade magic methods; call `$facade->getFactory()` directly.
+
 ## [1.10.0](https://github.com/gacela-project/gacela/compare/1.9.1...1.10.0) - 2025-08-02
 
 - Fix default cache dir
@@ -83,7 +87,7 @@
 ## [1.1.0](https://github.com/gacela-project/gacela/compare/1.0.1...1.1.0) - 2023-03-21
 
 - Allow using static facade methods
-  - You can use `::getFactory()` from a static or non-static context 
+  - Enabled calling `::getFactory()` from a static context 
 - ResetInMemoryCache also from anonymous globals and factory containers
 
 ## [1.0.1](https://github.com/gacela-project/gacela/compare/1.0.0...1.0.1) - 2023-03-12

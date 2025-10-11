@@ -6,6 +6,7 @@ namespace Gacela\Framework\Container;
 
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Config\Config;
+use Override;
 
 /**
  * This is a decorator class to simplify the usage of the decoupled Container
@@ -20,6 +21,7 @@ final class Container extends GacelaContainer implements ContainerInterface
         );
     }
 
+    #[Override]
     public function getLocator(): LocatorInterface
     {
         return Locator::getInstance($this);

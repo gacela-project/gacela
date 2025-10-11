@@ -10,6 +10,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Override;
 use RuntimeException;
 
 use function array_unique;
@@ -177,6 +178,7 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    #[Override]
     public function buildAppConfig(AppConfigBuilder $builder): AppConfigBuilder
     {
         $builder = parent::buildAppConfig($builder);
@@ -205,6 +207,7 @@ final class SetupGacela extends AbstractSetupGacela
      *
      * @param array<string,class-string|object|callable> $externalServices
      */
+    #[Override]
     public function buildBindings(
         BindingsBuilder $builder,
         array $externalServices,
@@ -236,6 +239,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * Allow overriding gacela resolvable types.
      */
+    #[Override]
     public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder
     {
         $builder = parent::buildSuffixTypes($builder);
@@ -252,6 +256,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return array<string, class-string|object|callable>
      */
+    #[Override]
     public function externalServices(): array
     {
         return array_merge(
@@ -268,16 +273,19 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    #[Override]
     public function shouldResetInMemoryCache(): bool
     {
         return (bool)$this->shouldResetInMemoryCache;
     }
 
+    #[Override]
     public function isFileCacheEnabled(): bool
     {
         return (bool)$this->fileCacheEnabled;
     }
 
+    #[Override]
     public function getFileCacheDirectory(): string
     {
         return (string)$this->fileCacheDirectory;
@@ -305,6 +313,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return list<string>
      */
+    #[Override]
     public function getProjectNamespaces(): array
     {
         return (array)$this->projectNamespaces;
@@ -313,11 +322,13 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return array<string,mixed>
      */
+    #[Override]
     public function getConfigKeyValues(): array
     {
         return (array)$this->configKeyValues;
     }
 
+    #[Override]
     public function getEventDispatcher(): EventDispatcherInterface
     {
         return $this->eventDispatcher ??= SetupEventDispatcher::getDispatcher($this);
@@ -326,6 +337,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return array<string,list<Closure>>
      */
+    #[Override]
     public function getServicesToExtend(): array
     {
         return (array)$this->servicesToExtend;
@@ -384,6 +396,7 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    #[Override]
     public function combine(self $other): self
     {
         return (new SetupCombinator($this))->combine($other);
@@ -446,6 +459,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return list<class-string>
      */
+    #[Override]
     public function getGacelaConfigsToExtend(): array
     {
         return (array)$this->gacelaConfigsToExtend;
@@ -454,6 +468,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return list<class-string|callable>
      */
+    #[Override]
     public function getPlugins(): array
     {
         return (array)$this->plugins;

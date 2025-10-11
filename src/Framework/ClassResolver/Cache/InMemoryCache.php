@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Cache;
 
+use Override;
+
 final class InMemoryCache implements CacheInterface
 {
     /** @var array<string, array<string,string>> */
@@ -45,21 +47,25 @@ final class InMemoryCache implements CacheInterface
     /**
      * @return array<string, string>
      */
+    #[Override]
     public function getAll(): array
     {
         return self::$cache[$this->key] ?? [];
     }
 
+    #[Override]
     public function has(string $cacheKey): bool
     {
         return isset(self::$cache[$this->key][$cacheKey]);
     }
 
+    #[Override]
     public function get(string $cacheKey): string
     {
         return self::$cache[$this->key][$cacheKey];
     }
 
+    #[Override]
     public function put(string $cacheKey, string $className): void
     {
         self::$cache[$this->key][$cacheKey] = $className;

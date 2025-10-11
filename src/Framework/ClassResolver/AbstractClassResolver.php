@@ -165,7 +165,7 @@ abstract class AbstractClassResolver
     private function createDefaultGacelaClass(): ?object
     {
         return match ($this->getResolvableType()) {
-            FacadeResolver::TYPE => new class() extends AbstractFacade {},
+            FacadeResolver::TYPE => new /** @extends AbstractFacade<AbstractFactory> */ class() extends AbstractFacade {},
             FactoryResolver::TYPE => new class() extends AbstractFactory {},
             ConfigResolver::TYPE => new class() extends AbstractConfig {},
             default => null,

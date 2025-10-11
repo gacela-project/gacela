@@ -7,6 +7,9 @@ namespace $NAMESPACE$;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 
+/**
+ * @extends AbstractProvider<$MODULE_NAME$Config>
+ */
 final class $CLASS_NAME$ extends AbstractProvider
 {
     public function provideModuleDependencies(Container $container): void

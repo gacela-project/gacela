@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\UsingConfigFromCustomEnv\LocalConfig;
 use Gacela\Framework\AbstractFactory;
 
 /**
- * @method Config getConfig()
+ * @extends AbstractFactory<Config>
  */
 final class Factory extends AbstractFactory
 {

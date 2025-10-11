@@ -10,8 +10,12 @@ use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 
+/**
+ * @template TConfig of AbstractConfig = AbstractConfig
+ */
 abstract class AbstractFactory
 {
+    /** @use ConfigResolverAwareTrait<TConfig> */
     use ConfigResolverAwareTrait;
 
     /** @var array<string,Container> */

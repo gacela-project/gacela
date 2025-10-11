@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DocBlockService;
 
+use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 
 final class DocBlockParser
@@ -40,12 +41,30 @@ final class DocBlockParser
             return AbstractFactory::class;
         }
 
+        if ($method === 'getConfig') {
+            $configType = $this->parseFactoryTemplate($docBlock);
+            if ($configType !== '') {
+                return $configType;
+            }
+
+            return AbstractConfig::class;
+        }
+
         return '';
     }
 
     private function parseFacadeTemplate(string $docBlock): string
     {
         if (preg_match('/@extends\s+[^<]*AbstractFacade<\s*([^>\s]+)\s*>/i', $docBlock, $matches) === 1) {
+            return $matches[1];
+        }
+
+        return '';
+    }
+
+    private function parseFactoryTemplate(string $docBlock): string
+    {
+        if (preg_match('/@extends\s+[^<]*AbstractFactory<\s*([^>\s]+)\s*>/i', $docBlock, $matches) === 1) {
             return $matches[1];
         }
 

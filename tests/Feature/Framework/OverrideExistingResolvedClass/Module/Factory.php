@@ -8,7 +8,7 @@ use Gacela\Framework\AbstractFactory;
 use GacelaTest\Fixtures\StringValue;
 
 /**
- * @method Config getConfig()
+ * @extends AbstractFactory<Config>
  */
 class Factory extends AbstractFactory
 {

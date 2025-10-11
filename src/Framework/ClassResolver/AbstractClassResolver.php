@@ -166,7 +166,7 @@ abstract class AbstractClassResolver
     {
         return match ($this->getResolvableType()) {
             FacadeResolver::TYPE => new /** @extends AbstractFacade<AbstractFactory> */ class() extends AbstractFacade {},
-            FactoryResolver::TYPE => new class() extends AbstractFactory {},
+            FactoryResolver::TYPE => new /** @extends AbstractFactory<AbstractConfig> */ class() extends AbstractFactory {},
             ConfigResolver::TYPE => new class() extends AbstractConfig {},
             default => null,
         };

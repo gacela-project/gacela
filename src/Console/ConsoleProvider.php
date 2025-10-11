@@ -13,7 +13,7 @@ use Gacela\Framework\Container\Container;
 use Override;
 
 /**
- * @method ConsoleConfig getConfig()
+ * @extends AbstractProvider<ConsoleConfig>
  */
 final class ConsoleProvider extends AbstractProvider
 {

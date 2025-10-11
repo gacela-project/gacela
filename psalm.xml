@@ -26,5 +26,6 @@
         <LessSpecificReturnStatement errorLevel="suppress" />
         <UnsafeInstantiation errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
+        <MissingOverrideAttribute errorLevel="suppress" />
     </issueHandlers>
 </psalm>

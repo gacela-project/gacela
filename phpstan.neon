@@ -6,12 +6,8 @@ parameters:
     level: max
     paths:
         - %currentWorkingDirectory%/src/
-
-    debugMode: true
-
     parallel:
-        maximumNumberOfProcesses: 1
-
+        maximumNumberOfProcesses: 4
     ignoreErrors:
         - '#Method Gacela\\.*::.* should return class-string.*but returns string#'
         - '#Method Gacela\\.*::.* should return array<.*> but returns array#'

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
@@ -12,10 +13,12 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\PathNormalizer\AbsolutePathNormalizer;
 use Gacela\Framework\Config\PathNormalizer\WithoutSuffixAbsolutePathStrategy;
 use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
-use Override;
 
 use function sprintf;
 
+/**
+ * @extends AbstractFactory<AbstractConfig>
+ */
 final class ConfigFactory extends AbstractFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
@@ -30,7 +33,6 @@ final class ConfigFactory extends AbstractFactory
     ) {
     }
 
-    #[Override]
     public static function resetCache(): void
     {
         self::$gacelaFileConfig = null;

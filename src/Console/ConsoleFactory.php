@@ -25,7 +25,7 @@ use RecursiveIteratorIterator;
 use Symfony\Component\Console\Command\Command;
 
 /**
- * @method ConsoleConfig getConfig()
+ * @extends AbstractFactory<ConsoleConfig>
  */
 final class ConsoleFactory extends AbstractFactory
 {

@@ -8,7 +8,7 @@ use Gacela\Framework\AbstractFactory;
 use GacelaTest\Benchmark\ModuleExample\Domain\DomainClass;
 
 /**
- * @method ModuleExampleConfig getConfig()
+ * @extends AbstractFactory<ModuleExampleConfig>
  */
 final class ModuleExampleFactory extends AbstractFactory
 {

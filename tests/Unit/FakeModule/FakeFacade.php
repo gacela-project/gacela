@@ -7,7 +7,7 @@ namespace GacelaTest\Unit\FakeModule;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method FakeFactory getFactory()
+ * @extends AbstractFacade<FakeFactory>
  */
 final class FakeFacade extends AbstractFacade
 {

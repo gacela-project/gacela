@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DocBlockService;
 
+use Gacela\Framework\AbstractFactory;
+
 final class DocBlockParser
 {
     public function getClassFromMethod(string $docBlock, string $method): string
@@ -24,6 +26,29 @@ final class DocBlockParser
         /** @var array<int, string> $lineSplit */
         $lineSplit = explode(' ', (string)reset($lines));
 
-        return $lineSplit[3] ?? '';
+        $classFromMethod = $lineSplit[3] ?? '';
+        if ($classFromMethod !== '') {
+            return $classFromMethod;
+        }
+
+        if ($method === 'getFactory') {
+            $factoryType = $this->parseFacadeTemplate($docBlock);
+            if ($factoryType !== '') {
+                return $factoryType;
+            }
+
+            return AbstractFactory::class;
+        }
+
+        return '';
+    }
+
+    private function parseFacadeTemplate(string $docBlock): string
+    {
+        if (preg_match('/@extends\s+[^<]*AbstractFacade<\s*([^>\s]+)\s*>/i', $docBlock, $matches) === 1) {
+            return $matches[1];
+        }
+
+        return '';
     }
 }

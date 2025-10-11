@@ -6,6 +6,8 @@ namespace Gacela\Framework\Event\ClassResolver;
 
 use Gacela\Framework\Event\GacelaEventInterface;
 
+use function sprintf;
+
 final class GenericEvent implements GacelaEventInterface
 {
     public function __construct(

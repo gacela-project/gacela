@@ -7,7 +7,7 @@ namespace GacelaTest\Benchmark\ModuleExample;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method ModuleExampleFactory getFactory()
+ * @extends AbstractFacade<ModuleExampleFactory>
  */
 final class ModuleExampleFacade extends AbstractFacade
 {

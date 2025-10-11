@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\Bootstrap\Setup\BuilderExecutor;
+use Gacela\Framework\Bootstrap\Setup\Combiner;
 use Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender;
+use Gacela\Framework\Bootstrap\Setup\Properties;
+use Gacela\Framework\Bootstrap\Setup\PropertyChangeTracker;
+use Gacela\Framework\Bootstrap\Setup\SetupCombinator;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -13,7 +18,6 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Override;
 use RuntimeException;
 
-use function array_unique;
 use function is_callable;
 use function sprintf;
 
@@ -22,14 +26,17 @@ use function sprintf;
  */
 final class SetupGacela extends AbstractSetupGacela
 {
-    private readonly SetupGacelaProperties $properties;
+    private readonly Properties $properties;
 
     private readonly PropertyChangeTracker $changeTracker;
 
+    private readonly BuilderExecutor $builderExecutor;
+
     public function __construct()
     {
-        $this->properties = new SetupGacelaProperties();
+        $this->properties = new Properties();
         $this->changeTracker = new PropertyChangeTracker();
+        $this->builderExecutor = new BuilderExecutor($this->properties);
     }
 
     /**
@@ -132,13 +139,7 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $builder = parent::buildAppConfig($builder);
 
-        if ($this->properties->appConfigBuilder instanceof AppConfigBuilder) {
-            $builder = $this->properties->appConfigBuilder;
-        }
-
-        ($this->properties->appConfigFn)($builder);
-
-        return $builder;
+        return $this->builderExecutor->buildAppConfig($builder);
     }
 
     /**
@@ -163,16 +164,7 @@ final class SetupGacela extends AbstractSetupGacela
     ): BindingsBuilder {
         $builder = parent::buildBindings($builder, $externalServices);
 
-        if ($this->properties->bindingsBuilder instanceof BindingsBuilder) {
-            $builder = $this->properties->bindingsBuilder;
-        }
-
-        ($this->properties->bindingsFn)(
-            $builder,
-            array_merge($this->properties->externalServices ?? [], $externalServices)
-        );
-
-        return $builder;
+        return $this->builderExecutor->buildBindings($builder, $externalServices);
     }
 
     /**
@@ -193,13 +185,7 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $builder = parent::buildSuffixTypes($builder);
 
-        if ($this->properties->suffixTypesBuilder instanceof SuffixTypesBuilder) {
-            $builder = $this->properties->suffixTypesBuilder;
-        }
-
-        ($this->properties->suffixTypesFn)($builder);
-
-        return $builder;
+        return $this->builderExecutor->buildSuffixTypes($builder);
     }
 
     /**
@@ -367,7 +353,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineExternalServices(array $list): void
     {
-        $this->setExternalServices(array_merge($this->properties->externalServices ?? [], $list));
+        (new Combiner($this))->combineExternalServices($list);
     }
 
     /**
@@ -375,7 +361,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineProjectNamespaces(array $list): void
     {
-        $this->setProjectNamespaces(array_merge($this->properties->projectNamespaces ?? [], $list));
+        (new Combiner($this))->combineProjectNamespaces($list);
     }
 
     /**
@@ -383,7 +369,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineConfigKeyValues(array $list): void
     {
-        $this->setConfigKeyValues(array_merge($this->properties->configKeyValues ?? [], $list));
+        (new Combiner($this))->combineConfigKeyValues($list);
     }
 
     /**
@@ -391,10 +377,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineGacelaConfigsToExtend(array $list): void
     {
-        $this->setGacelaConfigsToExtend(
-            // @phpstan-ignore-next-line
-            array_unique(array_merge($this->properties->gacelaConfigsToExtend ?? [], $list)),
-        );
+        (new Combiner($this))->combineGacelaConfigsToExtend($list);
     }
 
     /**
@@ -402,7 +385,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combinePlugins(array $list): void
     {
-        $this->setPlugins(array_merge($this->properties->plugins ?? [], $list));
+        (new Combiner($this))->combinePlugins($list);
     }
 
     /**

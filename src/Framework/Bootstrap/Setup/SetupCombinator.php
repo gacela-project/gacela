@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Bootstrap;
+namespace Gacela\Framework\Bootstrap\Setup;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
 /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Console\CodeGenerator;
 
 use Gacela\Console\Infrastructure\ConsoleBootstrap;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -25,7 +26,9 @@ final class MakeModuleCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
         DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 

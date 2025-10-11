@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\StaticFacade;
 
 use Error;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\StaticFacade\ModuleA\Facade as TestFacade;
 use GacelaTest\Feature\Framework\StaticFacade\ModuleA\Factory as TestFactory;
@@ -14,7 +15,9 @@ final class FeatureTest extends TestCase
 {
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
     }
 
     public function test_unknown_facade_method(): void

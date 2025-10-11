@@ -7,6 +7,11 @@ parameters:
     paths:
         - %currentWorkingDirectory%/src/
 
+    debugMode: true
+
+    parallel:
+        maximumNumberOfProcesses: 1
+
     ignoreErrors:
         - '#Method Gacela\\.*::__call.*\(\) has no return type specified.#'
         - '#Method Gacela\\.*::.* should return class-string.*but returns string#'

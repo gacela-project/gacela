@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Framework\MissingFile;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +15,9 @@ final class FeatureTest extends TestCase
 {
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
     }
 
     public function test_missing_factory_module(): void

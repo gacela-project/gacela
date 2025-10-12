@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Event\ClassResolver\ClassNameFinder;
 
 use Gacela\Framework\Event\GacelaEventInterface;
+use Override;
 
 use function sprintf;
 
@@ -26,6 +27,7 @@ final class ClassNameCachedFoundEvent implements GacelaEventInterface
         return $this->className;
     }
 
+    #[Override]
     public function toString(): string
     {
         return sprintf(

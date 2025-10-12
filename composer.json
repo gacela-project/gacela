@@ -27,22 +27,22 @@
     },
     "require": {
         "php": ">=8.1",
-        "gacela-project/container": "^0.6"
+        "gacela-project/container": "^0.7"
     },
     "require-dev": {
-        "ergebnis/composer-normalize": "^2.45",
-        "friendsofphp/php-cs-fixer": "^3.56",
-        "infection/infection": "^0.26",
+        "ergebnis/composer-normalize": "^2.47",
+        "friendsofphp/php-cs-fixer": "^3.88",
+        "infection/infection": "^0.29",
         "phpbench/phpbench": "^1.3",
-        "phpmetrics/phpmetrics": "^2.8",
+        "phpmetrics/phpmetrics": "^2.9",
         "phpstan/phpstan": "^1.12",
         "phpstan/phpstan-strict-rules": "^1.6",
         "phpunit/phpunit": "^10.5",
-        "psalm/plugin-phpunit": "^0.19",
+        "psalm/plugin-phpunit": "^0.19.5",
         "rector/rector": "^1.2",
         "symfony/console": "^6.4",
         "symfony/var-dumper": "^6.4",
-        "vimeo/psalm": "^5.26"
+        "vimeo/psalm": "^6.13"
     },
     "suggest": {
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
@@ -73,7 +73,7 @@
             "infection/extension-installer": true
         },
         "platform": {
-            "php": "8.1"
+            "php": "8.1.31"
         },
         "sort-packages": true
     },
@@ -106,7 +106,8 @@
         "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
         "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
-        "phpstan": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze",
+        "phpstan": "XDEBUG_MODE=develop ./vendor/bin/phpstan analyze --no-progress --memory-limit=1G",
+        "phpstan-tests": "XDEBUG_MODE=off ./vendor/bin/phpstan analyze -c phpstan-tests.neon",
         "phpunit": [
             "@test-unit",
             "@test-integration",
@@ -116,7 +117,8 @@
         "quality": [
             "@csrun",
             "@psalm",
-            "@phpstan"
+            "@phpstan",
+            "@phpstan-tests"
         ],
         "rector": "./vendor/bin/rector",
         "static-clear-cache": [

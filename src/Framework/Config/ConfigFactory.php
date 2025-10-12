@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
@@ -15,6 +16,9 @@ use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 
 use function sprintf;
 
+/**
+ * @extends AbstractFactory<AbstractConfig>
+ */
 final class ConfigFactory extends AbstractFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
@@ -70,7 +74,7 @@ final class ConfigFactory extends AbstractFactory
 
         self::$gacelaFileConfig = array_reduce(
             $gacelaConfigFiles,
-            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->combine($item),
+            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->merge($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
         );
 

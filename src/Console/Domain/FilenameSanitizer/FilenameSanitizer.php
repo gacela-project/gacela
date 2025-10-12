@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\FilenameSanitizer;
 
+use Override;
 use RuntimeException;
 
 use function count;
@@ -29,11 +30,13 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
     /**
      * @return list<string>
      */
+    #[Override]
     public function getExpectedFilenames(): array
     {
         return self::EXPECTED_FILENAMES;
     }
 
+    #[Override]
     public function sanitize(string $filename): string
     {
         $percents = [];

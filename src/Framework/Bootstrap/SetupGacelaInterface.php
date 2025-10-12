@@ -70,7 +70,7 @@ interface SetupGacelaInterface
 
     public function getEventDispatcher(): EventDispatcherInterface;
 
-    public function combine(SetupGacela $other): self;
+    public function merge(SetupGacela $other): self;
 
     /**
      * @return array<string,list<Closure>>

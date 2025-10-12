@@ -54,7 +54,7 @@ final class SetupGacelaTest extends TestCase
                 },
             ),
         );
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertFalse($listenerDispatched1);
         self::assertFalse($listenerDispatched2);
@@ -75,7 +75,7 @@ final class SetupGacelaTest extends TestCase
             (new GacelaConfig())->addAppConfigKeyValues(['key2' => 'value2']),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame([
             'key1' => 1,
@@ -93,7 +93,7 @@ final class SetupGacelaTest extends TestCase
             (new GacelaConfig())->setProjectNamespaces(['App2']),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame(['App1', 'App2'], $setup->getProjectNamespaces());
     }
@@ -113,7 +113,7 @@ final class SetupGacelaTest extends TestCase
         self::assertFalse($setup->isFileCacheEnabled());
         self::assertSame('original/dir', $setup->getFileCacheDirectory());
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('override/dir', $setup->getFileCacheDirectory());
@@ -131,7 +131,7 @@ final class SetupGacelaTest extends TestCase
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('original/dir', $setup->getFileCacheDirectory());
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('original/dir', $setup->getFileCacheDirectory());
@@ -146,7 +146,7 @@ final class SetupGacelaTest extends TestCase
         );
 
         self::assertFalse($setup->shouldResetInMemoryCache());
-        $setup->combine($setup2);
+        $setup->merge($setup2);
         self::assertTrue($setup->shouldResetInMemoryCache());
     }
 
@@ -167,7 +167,7 @@ final class SetupGacelaTest extends TestCase
             'service1' => static fn (): int => 1,
         ], $setup->externalServices());
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertEquals([
             'service1' => static fn (): int => 1,
@@ -189,7 +189,7 @@ final class SetupGacelaTest extends TestCase
                 ->extendService('service-2', static fn (ArrayObject $ao) => $ao->append(3)),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertEquals([
             'service' => [
@@ -213,7 +213,7 @@ final class SetupGacelaTest extends TestCase
                 ->addPlugin(ExamplePluginWithConstructor::class),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame([
             ExamplePluginWithoutConstructor::class,
@@ -232,10 +232,77 @@ final class SetupGacelaTest extends TestCase
                 ->extendGacelaConfig(CustomGacelaConfig::class),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame([
             CustomGacelaConfig::class,
         ], $setup->getGacelaConfigsToExtend());
+    }
+
+    public function test_register_generic_listener_multiple_times(): void
+    {
+        $listener1 = static function (GacelaEventInterface $event): void {};
+        $listener2 = static function (GacelaEventInterface $event): void {};
+
+        $config = (new GacelaConfig())
+            ->registerGenericListener($listener1)
+            ->registerGenericListener($listener2);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([$listener1, $listener2], $transfer->genericListeners);
+    }
+
+    public function test_register_specific_listener_multiple_times(): void
+    {
+        $listener1 = static function (GacelaEventInterface $event): void {};
+        $listener2 = static function (GacelaEventInterface $event): void {};
+
+        $config = (new GacelaConfig())
+            ->registerSpecificListener(FakeEvent::class, $listener1)
+            ->registerSpecificListener(FakeEvent::class, $listener2);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([$listener1, $listener2], $transfer->specificListeners[FakeEvent::class]);
+    }
+
+    public function test_extend_service_multiple_times(): void
+    {
+        $service1 = static fn (mixed $s): mixed => $s;
+        $service2 = static fn (mixed $s): mixed => $s;
+
+        $config = (new GacelaConfig())
+            ->extendService('service1', $service1)
+            ->extendService('service1', $service2);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([$service1, $service2], $transfer->servicesToExtend['service1']);
+    }
+
+    public function test_add_plugins_merges_with_existing(): void
+    {
+        $config = (new GacelaConfig())
+            ->addPlugin(ExamplePluginWithoutConstructor::class)
+            ->addPlugins([ExamplePluginWithConstructor::class]);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([
+            ExamplePluginWithoutConstructor::class,
+            ExamplePluginWithConstructor::class,
+        ], $transfer->plugins);
+    }
+
+    public function test_extend_gacela_configs_merges_with_existing(): void
+    {
+        $config = (new GacelaConfig())
+            ->extendGacelaConfig(CustomGacelaConfig::class)
+            ->extendGacelaConfigs([CustomGacelaConfig::class]);
+
+        $transfer = $config->toTransfer();
+
+        self::assertCount(2, $transfer->gacelaConfigsToExtend);
     }
 }

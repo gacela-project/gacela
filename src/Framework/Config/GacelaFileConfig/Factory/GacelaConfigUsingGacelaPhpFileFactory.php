@@ -14,6 +14,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Override;
 use RuntimeException;
 
 use function is_callable;
@@ -27,12 +28,13 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
     ) {
     }
 
+    #[Override]
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $projectGacelaConfig = $this->createGacelaConfig();
         $projectSetupGacela = SetupGacela::fromGacelaConfig($projectGacelaConfig);
 
-        $this->bootstrapSetup->combine($projectSetupGacela);
+        $this->bootstrapSetup->merge($projectSetupGacela);
 
         $configBuilder = $this->createConfigBuilder($projectSetupGacela);
         $bindingsBuilder = $this->createBindingsBuilder($projectSetupGacela);

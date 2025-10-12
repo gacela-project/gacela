@@ -123,7 +123,7 @@ return (new Config())
         'trim_array_spaces' => true,
         'unary_operator_spaces' => true,
         'types_spaces' => true,
-        'visibility_required' => true,
+        'modifier_keywords' => true,
         'void_return' => true,
         'yoda_style' => [
             'equal' => false,

@@ -17,7 +17,7 @@ final class GacelaConfigFileTest extends TestCase
     {
         $configFile1 = new GacelaConfigFile();
         $configFile2 = new GacelaConfigFile();
-        $actual = $configFile1->combine($configFile2);
+        $actual = $configFile1->merge($configFile2);
 
         $expected = new GacelaConfigFile();
 
@@ -35,7 +35,7 @@ final class GacelaConfigFileTest extends TestCase
                 new GacelaConfigItem('path2'),
             ]);
 
-        $actual = $configFile1->combine($configFile2);
+        $actual = $configFile1->merge($configFile2);
 
         $expected = (new GacelaConfigFile())
             ->setConfigItems([
@@ -57,7 +57,7 @@ final class GacelaConfigFileTest extends TestCase
                 CustomInterface::class => new CustomClass(),
             ]);
 
-        $actual = $configFile1->combine($configFile2);
+        $actual = $configFile1->merge($configFile2);
 
         $expected = (new GacelaConfigFile())
             ->setBindings([
@@ -78,7 +78,7 @@ final class GacelaConfigFileTest extends TestCase
                 CustomInterface::class => new CustomClass(),
             ]);
 
-        $actual = $configFile1->combine($configFile2);
+        $actual = $configFile1->merge($configFile2);
 
         $expected = (new GacelaConfigFile())
             ->setBindings([
@@ -106,7 +106,7 @@ final class GacelaConfigFileTest extends TestCase
                 'Provider' => ['DP'],
             ]);
 
-        $actual = $configFile1->combine($configFile2);
+        $actual = $configFile1->merge($configFile2);
 
         $expected = (new GacelaConfigFile())
             ->setSuffixTypes([
@@ -136,7 +136,7 @@ final class GacelaConfigFileTest extends TestCase
                 'Provider' => ['DP2'],
             ]);
 
-        $actual = $configFile1->combine($configFile2);
+        $actual = $configFile1->merge($configFile2);
 
         $expected = (new GacelaConfigFile())
             ->setSuffixTypes([

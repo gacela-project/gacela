@@ -7,7 +7,7 @@ namespace GacelaTest\Integration\Framework\DocBlockResolver\Module;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method FakeFactory getFactory()
+ * @extends AbstractFacade<FakeFactory>
  */
 final class FakeFacade extends AbstractFacade
 {

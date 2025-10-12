@@ -1,9 +1,20 @@
 # Changelog
 
-
 ## Unreleased
 
-- Improve internal `AnonymousGlobal::getByKey()` 
+- Add `phpstan-gacela.neon` for reusable PHPStan rules enforcing Gacela naming conventions (Facade, Factory, Provider, Config)
+- Drop static facade magic methods; call `$facade->getFactory()` directly
+- Improve PHPStan generic type support
+  - Replace `@method` annotations with `@extends` for better type inference
+- Improve `SetupGacela`; extract `PropertyChangeTracker` and `SetupGacelaProperties`
+- Run CI tests with PHP 8.4
+
+## [1.10.0](https://github.com/gacela-project/gacela/compare/1.9.1...1.10.0) - 2025-08-02
+
+- Fix default cache dir
+- Improve internal `AnonymousGlobal::getByKey()`
+- Add internal cache on `PathFinder` and `GlobalKey`
+- Added factory instance caching via new `singleton()` helper
 
 ## [1.9.1](https://github.com/gacela-project/gacela/compare/1.9.0...1.9.1) - 2024-12-12
 
@@ -81,7 +92,7 @@
 ## [1.1.0](https://github.com/gacela-project/gacela/compare/1.0.1...1.1.0) - 2023-03-21
 
 - Allow using static facade methods
-  - You can use `::getFactory()` from a static or non-static context 
+  - Enabled calling `::getFactory()` from a static context 
 - ResetInMemoryCache also from anonymous globals and factory containers
 
 ## [1.0.1](https://github.com/gacela-project/gacela/compare/1.0.0...1.0.1) - 2023-03-12

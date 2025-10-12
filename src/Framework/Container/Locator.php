@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Container;
 
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
+use Override;
 
 /**
  * @internal
@@ -65,11 +66,12 @@ final class Locator implements LocatorInterface
      *
      * @return T|null
      */
+    #[Override]
     public function get(string $className)
     {
         if (isset($this->instanceCache[$className])) {
             /** @var T $instance */
-            $instance = $this->instanceCache[$className]; // @phpstan-ignore-line
+            $instance = $this->instanceCache[$className];
 
             return $instance;
         }

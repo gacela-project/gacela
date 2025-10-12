@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Override;
+
 use function array_slice;
 use function count;
 use function is_object;
@@ -37,26 +39,31 @@ final class ClassInfo implements ClassInfoInterface
         return self::fromString($caller, $resolvableType);
     }
 
+    #[Override]
     public function getModuleNamespace(): string
     {
         return $this->callerModuleNamespace;
     }
 
+    #[Override]
     public function getModuleName(): string
     {
         return $this->callerModuleName;
     }
 
+    #[Override]
     public function getCacheKey(): string
     {
         return $this->cacheKey;
     }
 
+    #[Override]
     public function getResolvableType(): string
     {
         return $this->resolvableType;
     }
 
+    #[Override]
     public function toString(): string
     {
         return sprintf(

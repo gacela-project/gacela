@@ -4,66 +4,43 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\StaticFacade;
 
+use Error;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Framework\StaticFacade\ModuleA\Facade as TestStaticFacade;
-use GacelaTest\Feature\Framework\StaticFacade\ModuleA\Factory as StaticFactory;
-use GacelaTest\Feature\Framework\StaticFacade\ModuleB\Facade as TestObjectFacade;
-use GacelaTest\Feature\Framework\StaticFacade\ModuleB\Factory as ObjectFactory;
-use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use GacelaTest\Feature\Framework\StaticFacade\ModuleA\Facade as TestFacade;
+use GacelaTest\Feature\Framework\StaticFacade\ModuleA\Factory as TestFactory;
 use PHPUnit\Framework\TestCase;
 
 final class FeatureTest extends TestCase
 {
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
     }
 
-    #[PreserveGlobalState(false)]
-    public function test_unknown_static_facade_method(): void
+    public function test_unknown_facade_method(): void
     {
-        $this->expectExceptionMessage("Method unknown: 'unknown'");
+        $this->expectException(Error::class);
+        $this->expectExceptionMessage('Call to undefined method ' . TestFacade::class . '::unknown()');
 
-        TestStaticFacade::unknown();
+        (new TestFacade())->unknown();
     }
 
-    #[PreserveGlobalState(false)]
-    public function test_unknown_object_factory_method(): void
+    public function test_facade_can_create_string(): void
     {
-        $this->expectExceptionMessage("Method unknown: 'unknown'");
+        $facade = new TestFacade();
+        $actual = $facade->createString();
 
-        (new TestObjectFacade())->unknown();
+        self::assertSame(TestFactory::STR, $actual);
     }
 
-    #[PreserveGlobalState(false)]
-    public function test_unknown_static_factory_method(): void
+    public function test_factory_access_is_explicit(): void
     {
-        $this->expectExceptionMessage("Method unknown: 'innerUnknownFacadeMethod'");
+        $facade = new TestFacade();
+        $actual = $facade->getFactory()->createString();
 
-        TestStaticFacade::unknownFacadeMethod();
-    }
-
-    #[PreserveGlobalState(false)]
-    public function test_module_a_static_facade(): void
-    {
-        $actual = TestStaticFacade::createString();
-
-        self::assertSame(StaticFactory::STR, $actual);
-    }
-
-    #[PreserveGlobalState(false)]
-    public function test_module_a_object_facade(): void
-    {
-        $actual = (new TestObjectFacade())->createString();
-
-        self::assertSame(ObjectFactory::STR, $actual);
-    }
-
-    #[PreserveGlobalState(false)]
-    public function test_factory_static_facade_method(): void
-    {
-        $actual = TestStaticFacade::getFactory()->createString();
-
-        self::assertSame(StaticFactory::STR, $actual);
+        self::assertSame(TestFactory::STR, $actual);
     }
 }

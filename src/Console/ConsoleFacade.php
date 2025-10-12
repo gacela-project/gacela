@@ -9,7 +9,7 @@ use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method ConsoleFactory getFactory()
+ * @extends AbstractFacade<ConsoleFactory>
  */
 final class ConsoleFacade extends AbstractFacade
 {

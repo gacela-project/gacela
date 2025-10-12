@@ -47,6 +47,11 @@ It encourages your modules to interact with each other in a unified way by follo
 composer require gacela-project/gacela
 ```
 
+### Getting started
+
+See the [getting started guide](docs/getting-started.md) for a step-by-step
+example of creating your first module.
+
 ### Module structure
 
 You can prefix gacela classes with the module name to improve readability. See more [about gacela](https://gacela-project.com/about-gacela/).

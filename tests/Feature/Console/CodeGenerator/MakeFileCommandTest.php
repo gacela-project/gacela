@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Console\CodeGenerator;
 
 use Gacela\Console\Infrastructure\ConsoleBootstrap;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -25,14 +26,35 @@ final class MakeFileCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
         DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
-    #[DataProvider('createFilesProvider')]
-    public function test_make_file(string $action, string $fileName, string $shortName): void
+    public function test_make_file_command_description(): void
     {
-        $input = new StringInput(sprintf('make:file Psr4CodeGenerator/TestModule %s %s', $action, $shortName));
+        $bootstrap = new ConsoleBootstrap();
+        $command = $bootstrap->find('make:file');
+
+        $description = $command->getDescription();
+
+        // Test that the description contains 'Generate a ' followed by the expected filenames
+        self::assertStringContainsString('Generate a ', $description);
+        self::assertStringContainsString('Facade', $description);
+        self::assertStringContainsString('Factory', $description);
+        self::assertStringContainsString('Config', $description);
+        self::assertStringContainsString('Provider', $description);
+
+        // Ensure it's in the correct order (not reversed)
+        self::assertStringStartsWith('Generate a ', $description);
+    }
+
+    #[DataProvider('createFilesProvider')]
+    public function test_make_file(string $action, string $fileName, bool $shortName): void
+    {
+        $shortNameFlag = $shortName ? '--short-name' : '';
+        $input = new StringInput(sprintf('make:file Psr4CodeGenerator/TestModule %s %s', $action, $shortNameFlag));
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -45,15 +67,15 @@ final class MakeFileCommandTest extends TestCase
 
     public static function createFilesProvider(): iterable
     {
-        yield 'facade' => ['facade', 'TestModuleFacade', ''];
-        yield 'factory' => ['factory', 'TestModuleFactory', ''];
-        yield 'config' => ['config', 'TestModuleConfig', ''];
-        yield 'dependency provider' => ['dependency-provider', 'TestModuleProvider', ''];
+        yield 'facade' => ['facade', 'TestModuleFacade', false];
+        yield 'factory' => ['factory', 'TestModuleFactory', false];
+        yield 'config' => ['config', 'TestModuleConfig', false];
+        yield 'dependency provider' => ['dependency-provider', 'TestModuleProvider', false];
 
-        // Sort name flag
-        yield 'facade -s' => ['facade', 'Facade', '-s'];
-        yield 'factory -s' => ['factory', 'Factory', '-s'];
-        yield 'config -s' => ['config', 'Config', '-s'];
-        yield 'dependency provider -s' => ['dependency-provider', 'Provider', '-s'];
+        // Short name flag
+        yield 'facade -s' => ['facade', 'Facade', true];
+        yield 'factory -s' => ['factory', 'Factory', true];
+        yield 'config -s' => ['config', 'Config', true];
+        yield 'dependency provider -s' => ['dependency-provider', 'Provider', true];
     }
 }

@@ -8,16 +8,18 @@ use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
 /**
+ * Merges two SetupGacela instances together with conditional logic based on change tracking.
+ *
  * @psalm-suppress MixedArgumentTypeCoercion
  */
-final class SetupCombinator
+final class SetupMerger
 {
     public function __construct(
         private readonly SetupGacela $original,
     ) {
     }
 
-    public function combine(SetupGacela $other): SetupGacela
+    public function merge(SetupGacela $other): SetupGacela
     {
         $this->overrideResetInMemoryCache($other);
         $this->overrideFileCacheSettings($other);

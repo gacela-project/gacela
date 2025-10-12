@@ -6,11 +6,11 @@ namespace Gacela\Framework\Bootstrap;
 
 use Closure;
 use Gacela\Framework\Bootstrap\Setup\BuilderExecutor;
-use Gacela\Framework\Bootstrap\Setup\Combiner;
 use Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender;
 use Gacela\Framework\Bootstrap\Setup\Properties;
 use Gacela\Framework\Bootstrap\Setup\PropertyChangeTracker;
-use Gacela\Framework\Bootstrap\Setup\SetupCombinator;
+use Gacela\Framework\Bootstrap\Setup\PropertyMerger;
+use Gacela\Framework\Bootstrap\Setup\SetupMerger;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -334,7 +334,7 @@ final class SetupGacela extends AbstractSetupGacela
     #[Override]
     public function combine(self $other): self
     {
-        return (new SetupCombinator($this))->combine($other);
+        return (new SetupMerger($this))->merge($other);
     }
 
     /**
@@ -353,7 +353,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineExternalServices(array $list): void
     {
-        (new Combiner($this))->combineExternalServices($list);
+        (new PropertyMerger($this))->combineExternalServices($list);
     }
 
     /**
@@ -361,7 +361,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineProjectNamespaces(array $list): void
     {
-        (new Combiner($this))->combineProjectNamespaces($list);
+        (new PropertyMerger($this))->combineProjectNamespaces($list);
     }
 
     /**
@@ -369,7 +369,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineConfigKeyValues(array $list): void
     {
-        (new Combiner($this))->combineConfigKeyValues($list);
+        (new PropertyMerger($this))->combineConfigKeyValues($list);
     }
 
     /**
@@ -377,7 +377,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combineGacelaConfigsToExtend(array $list): void
     {
-        (new Combiner($this))->combineGacelaConfigsToExtend($list);
+        (new PropertyMerger($this))->combineGacelaConfigsToExtend($list);
     }
 
     /**
@@ -385,7 +385,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function combinePlugins(array $list): void
     {
-        (new Combiner($this))->combinePlugins($list);
+        (new PropertyMerger($this))->combinePlugins($list);
     }
 
     /**

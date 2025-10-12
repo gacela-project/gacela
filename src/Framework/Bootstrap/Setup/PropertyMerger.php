@@ -11,9 +11,9 @@ use function array_merge;
 use function array_unique;
 
 /**
- * Handles combining/merging of properties for SetupGacela.
+ * Merges individual properties into a SetupGacela instance.
  */
-final class Combiner
+final class PropertyMerger
 {
     public function __construct(
         private readonly SetupGacela $setup,

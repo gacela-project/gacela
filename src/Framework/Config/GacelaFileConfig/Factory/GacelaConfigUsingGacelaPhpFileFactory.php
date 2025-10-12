@@ -34,7 +34,7 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $projectGacelaConfig = $this->createGacelaConfig();
         $projectSetupGacela = SetupGacela::fromGacelaConfig($projectGacelaConfig);
 
-        $this->bootstrapSetup->combine($projectSetupGacela);
+        $this->bootstrapSetup->merge($projectSetupGacela);
 
         $configBuilder = $this->createConfigBuilder($projectSetupGacela);
         $bindingsBuilder = $this->createBindingsBuilder($projectSetupGacela);

@@ -59,7 +59,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
     }
 
     /**
-     * Combine all possible psr-4 combinations and return them ordered by longer to shorter.
+     * Merge all possible psr-4 combinations and return them ordered by longer to shorter.
      * This way we'll be able to find the longer match first.
      * For example: App/TestModule/TestSubModule will produce an array such as:
      * [

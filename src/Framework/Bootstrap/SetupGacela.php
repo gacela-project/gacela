@@ -332,7 +332,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     #[Override]
-    public function combine(self $other): self
+    public function merge(self $other): self
     {
         return (new SetupMerger($this))->merge($other);
     }
@@ -351,41 +351,41 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param array<string,class-string|object|callable> $list
      */
-    public function combineExternalServices(array $list): void
+    public function mergeExternalServices(array $list): void
     {
-        (new PropertyMerger($this))->combineExternalServices($list);
+        (new PropertyMerger($this))->mergeExternalServices($list);
     }
 
     /**
      * @param list<string> $list
      */
-    public function combineProjectNamespaces(array $list): void
+    public function mergeProjectNamespaces(array $list): void
     {
-        (new PropertyMerger($this))->combineProjectNamespaces($list);
+        (new PropertyMerger($this))->mergeProjectNamespaces($list);
     }
 
     /**
      * @param array<string,mixed> $list
      */
-    public function combineConfigKeyValues(array $list): void
+    public function mergeConfigKeyValues(array $list): void
     {
-        (new PropertyMerger($this))->combineConfigKeyValues($list);
+        (new PropertyMerger($this))->mergeConfigKeyValues($list);
     }
 
     /**
      * @param list<class-string> $list
      */
-    public function combineGacelaConfigsToExtend(array $list): void
+    public function mergeGacelaConfigsToExtend(array $list): void
     {
-        (new PropertyMerger($this))->combineGacelaConfigsToExtend($list);
+        (new PropertyMerger($this))->mergeGacelaConfigsToExtend($list);
     }
 
     /**
      * @param list<class-string|callable> $list
      */
-    public function combinePlugins(array $list): void
+    public function mergePlugins(array $list): void
     {
-        (new PropertyMerger($this))->combinePlugins($list);
+        (new PropertyMerger($this))->mergePlugins($list);
     }
 
     /**

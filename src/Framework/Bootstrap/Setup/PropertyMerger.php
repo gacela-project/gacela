@@ -23,7 +23,7 @@ final class PropertyMerger
     /**
      * @param array<string,class-string|object|callable> $list
      */
-    public function combineExternalServices(array $list): void
+    public function mergeExternalServices(array $list): void
     {
         $current = $this->setup->externalServices();
         $this->setup->setExternalServices(array_merge($current, $list));
@@ -32,7 +32,7 @@ final class PropertyMerger
     /**
      * @param list<string> $list
      */
-    public function combineProjectNamespaces(array $list): void
+    public function mergeProjectNamespaces(array $list): void
     {
         $current = $this->setup->getProjectNamespaces();
         $this->setup->setProjectNamespaces(array_merge($current, $list));
@@ -41,7 +41,7 @@ final class PropertyMerger
     /**
      * @param array<string,mixed> $list
      */
-    public function combineConfigKeyValues(array $list): void
+    public function mergeConfigKeyValues(array $list): void
     {
         $current = $this->setup->getConfigKeyValues();
         $this->setup->setConfigKeyValues(array_merge($current, $list));
@@ -50,7 +50,7 @@ final class PropertyMerger
     /**
      * @param list<class-string> $list
      */
-    public function combineGacelaConfigsToExtend(array $list): void
+    public function mergeGacelaConfigsToExtend(array $list): void
     {
         $current = $this->setup->getGacelaConfigsToExtend();
 
@@ -63,7 +63,7 @@ final class PropertyMerger
     /**
      * @param list<class-string|callable> $list
      */
-    public function combinePlugins(array $list): void
+    public function mergePlugins(array $list): void
     {
         $current = $this->setup->getPlugins();
 

@@ -54,7 +54,7 @@ final class SetupGacelaTest extends TestCase
                 },
             ),
         );
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertFalse($listenerDispatched1);
         self::assertFalse($listenerDispatched2);
@@ -75,7 +75,7 @@ final class SetupGacelaTest extends TestCase
             (new GacelaConfig())->addAppConfigKeyValues(['key2' => 'value2']),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame([
             'key1' => 1,
@@ -93,7 +93,7 @@ final class SetupGacelaTest extends TestCase
             (new GacelaConfig())->setProjectNamespaces(['App2']),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame(['App1', 'App2'], $setup->getProjectNamespaces());
     }
@@ -113,7 +113,7 @@ final class SetupGacelaTest extends TestCase
         self::assertFalse($setup->isFileCacheEnabled());
         self::assertSame('original/dir', $setup->getFileCacheDirectory());
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('override/dir', $setup->getFileCacheDirectory());
@@ -131,7 +131,7 @@ final class SetupGacelaTest extends TestCase
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('original/dir', $setup->getFileCacheDirectory());
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertTrue($setup->isFileCacheEnabled());
         self::assertSame('original/dir', $setup->getFileCacheDirectory());
@@ -146,7 +146,7 @@ final class SetupGacelaTest extends TestCase
         );
 
         self::assertFalse($setup->shouldResetInMemoryCache());
-        $setup->combine($setup2);
+        $setup->merge($setup2);
         self::assertTrue($setup->shouldResetInMemoryCache());
     }
 
@@ -167,7 +167,7 @@ final class SetupGacelaTest extends TestCase
             'service1' => static fn (): int => 1,
         ], $setup->externalServices());
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertEquals([
             'service1' => static fn (): int => 1,
@@ -189,7 +189,7 @@ final class SetupGacelaTest extends TestCase
                 ->extendService('service-2', static fn (ArrayObject $ao) => $ao->append(3)),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertEquals([
             'service' => [
@@ -213,7 +213,7 @@ final class SetupGacelaTest extends TestCase
                 ->addPlugin(ExamplePluginWithConstructor::class),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame([
             ExamplePluginWithoutConstructor::class,
@@ -232,7 +232,7 @@ final class SetupGacelaTest extends TestCase
                 ->extendGacelaConfig(CustomGacelaConfig::class),
         );
 
-        $setup->combine($setup2);
+        $setup->merge($setup2);
 
         self::assertSame([
             CustomGacelaConfig::class,

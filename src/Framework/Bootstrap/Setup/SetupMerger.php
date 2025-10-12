@@ -2,32 +2,35 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Bootstrap;
+namespace Gacela\Framework\Bootstrap\Setup;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
 /**
+ * Merges two SetupGacela instances together with conditional logic based on change tracking.
+ *
  * @psalm-suppress MixedArgumentTypeCoercion
  */
-final class SetupCombinator
+final class SetupMerger
 {
     public function __construct(
         private readonly SetupGacela $original,
     ) {
     }
 
-    public function combine(SetupGacela $other): SetupGacela
+    public function merge(SetupGacela $other): SetupGacela
     {
         $this->overrideResetInMemoryCache($other);
         $this->overrideFileCacheSettings($other);
 
-        $this->combineExternalServices($other);
-        $this->combineProjectNamespaces($other);
-        $this->combineConfigKeyValues($other);
-        $this->combineEventDispatcher($other);
-        $this->combineServicesToExtend($other);
-        $this->combinePlugins($other);
-        $this->combineGacelaConfigsToExtend($other);
+        $this->mergeExternalServices($other);
+        $this->mergeProjectNamespaces($other);
+        $this->mergeConfigKeyValues($other);
+        $this->mergeEventDispatcher($other);
+        $this->mergeServicesToExtend($other);
+        $this->mergePlugins($other);
+        $this->mergeGacelaConfigsToExtend($other);
 
         return $this->original;
     }
@@ -50,28 +53,28 @@ final class SetupCombinator
         }
     }
 
-    private function combineExternalServices(SetupGacela $other): void
+    private function mergeExternalServices(SetupGacela $other): void
     {
         if ($other->isPropertyChanged(SetupGacela::externalServices)) {
-            $this->original->combineExternalServices($other->externalServices());
+            $this->original->mergeExternalServices($other->externalServices());
         }
     }
 
-    private function combineProjectNamespaces(SetupGacela $other): void
+    private function mergeProjectNamespaces(SetupGacela $other): void
     {
         if ($other->isPropertyChanged(SetupGacela::projectNamespaces)) {
-            $this->original->combineProjectNamespaces($other->getProjectNamespaces());
+            $this->original->mergeProjectNamespaces($other->getProjectNamespaces());
         }
     }
 
-    private function combineConfigKeyValues(SetupGacela $other): void
+    private function mergeConfigKeyValues(SetupGacela $other): void
     {
         if ($other->isPropertyChanged(SetupGacela::configKeyValues)) {
-            $this->original->combineConfigKeyValues($other->getConfigKeyValues());
+            $this->original->mergeConfigKeyValues($other->getConfigKeyValues());
         }
     }
 
-    private function combineEventDispatcher(SetupGacela $other): void
+    private function mergeEventDispatcher(SetupGacela $other): void
     {
         if ($other->canCreateEventDispatcher()) {
             if ($this->original->getEventDispatcher() instanceof ConfigurableEventDispatcher) {
@@ -95,7 +98,7 @@ final class SetupCombinator
         $this->original->setEventDispatcher($eventDispatcher);
     }
 
-    private function combineServicesToExtend(SetupGacela $other): void
+    private function mergeServicesToExtend(SetupGacela $other): void
     {
         if ($other->isPropertyChanged(SetupGacela::servicesToExtend)) {
             foreach ($other->getServicesToExtend() as $serviceId => $otherServiceToExtend) {
@@ -104,17 +107,17 @@ final class SetupCombinator
         }
     }
 
-    private function combinePlugins(SetupGacela $other): void
+    private function mergePlugins(SetupGacela $other): void
     {
         if ($other->isPropertyChanged(SetupGacela::plugins)) {
-            $this->original->combinePlugins($other->getPlugins());
+            $this->original->mergePlugins($other->getPlugins());
         }
     }
 
-    private function combineGacelaConfigsToExtend(SetupGacela $other): void
+    private function mergeGacelaConfigsToExtend(SetupGacela $other): void
     {
         if ($other->isPropertyChanged(SetupGacela::gacelaConfigsToExtend)) {
-            $this->original->combineGacelaConfigsToExtend($other->getGacelaConfigsToExtend());
+            $this->original->mergeGacelaConfigsToExtend($other->getGacelaConfigsToExtend());
         }
     }
 }

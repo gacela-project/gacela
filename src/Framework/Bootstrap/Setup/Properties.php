@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Bootstrap;
+namespace Gacela\Framework\Bootstrap\Setup;
 
 use Closure;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
@@ -13,7 +13,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 /**
  * Value object that holds all SetupGacela properties.
  */
-final class SetupGacelaProperties
+final class Properties
 {
     /** @var callable(AppConfigBuilder):void */
     public $appConfigFn;

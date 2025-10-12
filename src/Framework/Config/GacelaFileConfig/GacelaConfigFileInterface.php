@@ -29,7 +29,7 @@ interface GacelaConfigFileInterface
     public function getSuffixTypes(): array;
 
     /**
-     * Combine one GacelaConfigFile with another.
+     * Merge one GacelaConfigFile with another.
      */
-    public function combine(self $other): self;
+    public function merge(self $other): self;
 }

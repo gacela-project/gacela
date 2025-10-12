@@ -8,7 +8,6 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Override;
 
 abstract class AbstractSetupGacela implements SetupGacelaInterface
 {
@@ -55,7 +54,6 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * Define different config sources.
      */
-    #[Override]
     public function buildAppConfig(AppConfigBuilder $builder): AppConfigBuilder
     {
         return $builder;
@@ -66,7 +64,6 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
      *
      * @param array<string, class-string|object|callable> $externalServices
      */
-    #[Override]
     public function buildBindings(BindingsBuilder $builder, array $externalServices): BindingsBuilder
     {
         return $builder;
@@ -75,7 +72,6 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * Allow overriding gacela resolvable types.
      */
-    #[Override]
     public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder
     {
         return $builder;
@@ -84,7 +80,6 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * @return array<string, class-string|object|callable>
      */
-    #[Override]
     public function externalServices(): array
     {
         return [];

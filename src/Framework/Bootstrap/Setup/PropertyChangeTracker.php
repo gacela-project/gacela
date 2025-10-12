@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\Bootstrap;
+namespace Gacela\Framework\Bootstrap\Setup;
 
 final class PropertyChangeTracker
 {

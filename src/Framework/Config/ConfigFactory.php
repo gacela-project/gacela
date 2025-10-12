@@ -74,7 +74,7 @@ final class ConfigFactory extends AbstractFactory
 
         self::$gacelaFileConfig = array_reduce(
             $gacelaConfigFiles,
-            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->combine($item),
+            static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->merge($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
         );
 

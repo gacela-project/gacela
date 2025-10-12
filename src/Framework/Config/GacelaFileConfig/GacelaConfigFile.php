@@ -98,7 +98,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     #[Override]
-    public function combine(GacelaConfigFileInterface $other): GacelaConfigFileInterface
+    public function merge(GacelaConfigFileInterface $other): GacelaConfigFileInterface
     {
         $new = clone $this;
         $new->configItems = [...$this->configItems, ...$other->getConfigItems()];

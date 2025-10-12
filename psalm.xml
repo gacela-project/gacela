@@ -3,6 +3,8 @@
     errorLevel="1"
     findUnusedBaselineEntry="true"
     findUnusedCode="false"
+    threads="1"
+    cacheDirectory="data/cache/psalm"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
@@ -24,5 +26,6 @@
         <LessSpecificReturnStatement errorLevel="suppress" />
         <UnsafeInstantiation errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
+        <MissingOverrideAttribute errorLevel="suppress" />
     </issueHandlers>
 </psalm>

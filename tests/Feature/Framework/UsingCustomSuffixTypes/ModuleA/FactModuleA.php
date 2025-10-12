@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 use Gacela\Framework\AbstractFactory;
 
 /**
- * @method ConfModuleA getConfig()
+ * @extends AbstractFactory<ConfModuleA>
  */
 final class FactModuleA extends AbstractFactory
 {

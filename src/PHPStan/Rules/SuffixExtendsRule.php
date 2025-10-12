@@ -10,7 +10,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\Rule;
 
-use function strlen;
+use function sprintf;
 
 /**
  * @implements Rule<Class_>
@@ -19,8 +19,8 @@ use function strlen;
 final class SuffixExtendsRule implements Rule
 {
     public function __construct(
-        private string $suffix,
-        private string $expectedParent,
+        private readonly string $suffix,
+        private readonly string $expectedParent,
     ) {
     }
 
@@ -44,7 +44,7 @@ final class SuffixExtendsRule implements Rule
         $pos = strrpos($className, '\\');
         $shortName = $pos === false ? $className : substr($className, $pos + 1);
 
-        if (substr($shortName, -strlen($this->suffix)) !== $this->suffix) {
+        if (!str_ends_with($shortName, $this->suffix)) {
             return [];
         }
 

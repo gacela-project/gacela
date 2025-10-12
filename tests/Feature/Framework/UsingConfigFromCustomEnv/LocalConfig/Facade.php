@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\UsingConfigFromCustomEnv\LocalConfig;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method Factory getFactory()
+ * @extends AbstractFacade<Factory>
  */
 final class Facade extends AbstractFacade
 {

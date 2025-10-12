@@ -10,7 +10,8 @@ use GacelaTest\Benchmark\FileCache\ModuleC\Infra\EntityManager;
 use GacelaTest\Benchmark\FileCache\ModuleC\Infra\Repository;
 
 /**
- * @method FactoryC getFactory()
+ * @extends AbstractFacade<FactoryC>
+ *
  * @method Repository getRepository()
  * @method EntityManager getEntityManager()
  */

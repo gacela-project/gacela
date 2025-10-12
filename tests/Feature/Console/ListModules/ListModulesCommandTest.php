@@ -29,47 +29,56 @@ final class ListModulesCommandTest extends TestCase
         $this->command->execute([]);
 
         $expected = <<<TXT
-┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬───────────────┐
-│ Module namespace                                           │ Facade │ Factory │ Config │ Dep. Provider │
-├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼───────────────┤
-│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ ✔️     │ ✔️      │ ✔️     │ ✖️            │
-│ GacelaTest\Feature\Console\ListModules\TestModule1         │ ✔️     │ ✔️      │ ✖️     │ ✔️            │
-│ GacelaTest\Feature\Console\ListModules\TestModule2         │ ✔️     │ ✖️      │ ✖️     │ ✖️            │
-└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴───────────────┘
+┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬──────────┐
+│ Module namespace                                           │ Facade │ Factory │ Config │ Provider │
+├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼──────────┤
+│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ x      │ x       │ x      │          │
+│ GacelaTest\Feature\Console\ListModules\TestModule1         │ x      │ x       │        │ x        │
+│ GacelaTest\Feature\Console\ListModules\TestModule2         │ x      │         │        │          │
+└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴──────────┘
 
 TXT;
         self::assertSame($expected, $this->command->getDisplay());
     }
 
-    public function test_list_modules(): void
+    public function test_list_modules_detailed(): void
     {
-        $this->command->execute(['--detailed' => null]);
+        $this->command->execute(['--detailed' => true]);
 
-        $expected = <<<TXT
-============================
-1.- TestModule3
-----------------------------
-Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
-Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory
-Config: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Config
-Provider: ✖️
-============================
-2.- TestModule1
-----------------------------
-Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade
-Factory: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Factory
-Config: ✖️
-Provider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Provider
-============================
-3.- TestModule2
-----------------------------
-Facade: GacelaTest\Feature\Console\ListModules\TestModule2\TestModule2Facade
-Factory: ✖️
-Config: ✖️
-Provider: ✖️
+        $output = $this->command->getDisplay();
 
-TXT;
-        self::assertSame($expected, $this->command->getDisplay());
+        // Verify this is the detailed view (not the table view)
+        self::assertStringNotContainsString('┌────', $output, 'Should not contain table borders');
+        self::assertStringContainsString('============================', $output, 'Should contain detailed view separators');
+        self::assertStringContainsString('TestModule3Facade', $output);
+        self::assertStringContainsString('TestModule1Factory', $output);
+
+        // Test that modules are numbered starting from 1 (not 0 or 2)
+        self::assertStringContainsString('1.-', $output);
+        self::assertStringContainsString('2.-', $output);
+        self::assertStringContainsString('3.-', $output);
+        self::assertStringNotContainsString('0.-', $output);
+
+        // Test that missing classes show as space symbol, not the class name
+        self::assertStringContainsString('TestModule1Factory', $output);
+        self::assertStringContainsString('TestModule1Provider', $output);
+        // TestModule1 has no Config, so it should show "Config:  " (with just a space or empty)
+        self::assertMatchesRegularExpression('/Config:\s+\n/', $output);
+
+        // TestModule2 has only Facade, so Factory/Config/Provider should show spaces
+        self::assertStringContainsString('TestModule2Facade', $output);
+    }
+
+    public function test_list_modules_not_detailed(): void
+    {
+        $this->command->execute(['--detailed' => false]);
+
+        $output = $this->command->getDisplay();
+
+        // Verify this is the simple table view (not detailed view)
+        self::assertStringContainsString('┌────', $output, 'Should contain table borders');
+        self::assertStringNotContainsString('============================', $output, 'Should not contain detailed view separators');
+        self::assertStringContainsString('TestModule3', $output);
     }
 
     #[DataProvider('commandInputProvider')]

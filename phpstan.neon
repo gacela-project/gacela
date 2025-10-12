@@ -6,9 +6,9 @@ parameters:
     level: max
     paths:
         - %currentWorkingDirectory%/src/
-
+    parallel:
+        maximumNumberOfProcesses: 4
     ignoreErrors:
-        - '#Method Gacela\\.*::__call.*\(\) has no return type specified.#'
         - '#Method Gacela\\.*::.* should return class-string.*but returns string#'
         - '#Method Gacela\\.*::.* should return array<.*> but returns array#'
         - '#Cannot cast mixed to string.#'

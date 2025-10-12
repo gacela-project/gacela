@@ -7,6 +7,7 @@ namespace Gacela\Framework\Config;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
+use Override;
 use RuntimeException;
 
 use function array_key_exists;
@@ -70,6 +71,7 @@ final class Config implements ConfigInterface
     /**
      * @throws ConfigException
      */
+    #[Override]
     public function get(string $key, mixed $default = self::DEFAULT_CONFIG_VALUE): mixed
     {
         if ($this->config === []) {
@@ -145,11 +147,13 @@ final class Config implements ConfigInterface
         return $this->configFactory;
     }
 
+    #[Override]
     public function getSetupGacela(): SetupGacelaInterface
     {
         return $this->setup;
     }
 
+    #[Override]
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
@@ -157,13 +161,28 @@ final class Config implements ConfigInterface
 
     private function getDefaultCacheDir(): string
     {
-        if ($this->setup->getFileCacheDirectory() === '') {
+        $cacheDir = $this->setup->getFileCacheDirectory();
+        if ($cacheDir === '') {
             return sys_get_temp_dir();
         }
 
-        return $this->getAppRootDir()
+        $appRoot = $this->getAppRootDir();
+
+        if (preg_match('#^[A-Za-z]:[\\/]#', $cacheDir) === 1) {
+            return $cacheDir;
+        }
+
+        if ($cacheDir[0] === DIRECTORY_SEPARATOR) {
+            if (str_starts_with($cacheDir, $appRoot . DIRECTORY_SEPARATOR)) {
+                return $cacheDir;
+            }
+
+            return $appRoot . $cacheDir;
+        }
+
+        return $appRoot
             . DIRECTORY_SEPARATOR
-            . ltrim($this->setup->getFileCacheDirectory(), DIRECTORY_SEPARATOR);
+            . ltrim($cacheDir, DIRECTORY_SEPARATOR);
     }
 
     /**

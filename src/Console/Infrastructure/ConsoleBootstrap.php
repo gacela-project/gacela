@@ -6,6 +6,7 @@ namespace Gacela\Console\Infrastructure;
 
 use Gacela\Console\ConsoleFactory;
 use Gacela\Framework\DocBlockResolverAwareTrait;
+use Override;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 
@@ -21,6 +22,7 @@ final class ConsoleBootstrap extends Application
      *
      * @psalm-suppress MixedReturnTypeCoercion,PossiblyNullArrayOffset
      */
+    #[Override]
     protected function getDefaultCommands(): array
     {
         $commands = parent::getDefaultCommands();

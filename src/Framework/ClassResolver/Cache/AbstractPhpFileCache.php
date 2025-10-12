@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Cache;
 
+use Override;
 use RuntimeException;
 
 use function sprintf;
+
+use const LOCK_EX;
 
 abstract class AbstractPhpFileCache implements CacheInterface
 {
@@ -29,11 +32,13 @@ abstract class AbstractPhpFileCache implements CacheInterface
         return self::$cache[static::class];
     }
 
+    #[Override]
     public function has(string $cacheKey): bool
     {
         return isset(self::$cache[static::class][$cacheKey]);
     }
 
+    #[Override]
     public function get(string $cacheKey): string
     {
         return self::$cache[static::class][$cacheKey];
@@ -42,13 +47,21 @@ abstract class AbstractPhpFileCache implements CacheInterface
     /**
      * @return array<string,string>
      */
+    #[Override]
     public function getAll(): array
     {
         return self::$cache[static::class];
     }
 
+    #[Override]
     public function put(string $cacheKey, string $className): void
     {
+        if (isset(self::$cache[static::class][$cacheKey])
+            && self::$cache[static::class][$cacheKey] === $className
+        ) {
+            return;
+        }
+
         self::$cache[static::class][$cacheKey] = $className;
 
         $fileContent = sprintf(
@@ -56,7 +69,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
             var_export(self::$cache[static::class], true),
         );
 
-        file_put_contents($this->getAbsoluteCacheFilename(), $fileContent);
+        file_put_contents($this->getAbsoluteCacheFilename(), $fileContent, LOCK_EX);
     }
 
     abstract protected function getCacheFilename(): string;

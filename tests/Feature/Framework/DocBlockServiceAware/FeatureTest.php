@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\DocBlockServiceAware;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Command\HelloCommand;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +15,9 @@ final class FeatureTest extends TestCase
 {
     protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
     }
 
     public function test_custom_service(): void

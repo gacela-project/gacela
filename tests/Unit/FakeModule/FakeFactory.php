@@ -7,7 +7,7 @@ namespace GacelaTest\Unit\FakeModule;
 use Gacela\Framework\AbstractFactory;
 
 /**
- * @method FakeConfig getConfig()
+ * @extends AbstractFactory<FakeConfig>
  */
 final class FakeFactory extends AbstractFactory
 {

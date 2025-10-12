@@ -4,23 +4,33 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Override;
+
 use function define;
 use function defined;
 
 final class PathFinder implements PathFinderInterface
 {
+    /** @var array<string,array<int,string>> */
+    private static array $cache = [];
+
     /**
      * @return string[]
      */
+    #[Override]
     public function matchingPattern(string $pattern): array
     {
         if ($pattern === '') {
             return [];
         }
 
+        if (isset(self::$cache[$pattern])) {
+            return self::$cache[$pattern];
+        }
+
         $this->ensureGlobBraceIsDefined();
 
-        return glob($pattern, GLOB_BRACE) ?: [];
+        return self::$cache[$pattern] = glob($pattern, GLOB_BRACE) ?: [];
     }
 
     /**

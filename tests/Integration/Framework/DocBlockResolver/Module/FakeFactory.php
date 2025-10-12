@@ -7,7 +7,7 @@ namespace GacelaTest\Integration\Framework\DocBlockResolver\Module;
 use Gacela\Framework\AbstractFactory;
 
 /**
- * @method FakeConfig getConfig()
+ * @extends AbstractFactory<FakeConfig>
  */
 final class FakeFactory extends AbstractFactory
 {

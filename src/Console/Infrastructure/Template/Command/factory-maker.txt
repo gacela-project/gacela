@@ -7,7 +7,7 @@ namespace $NAMESPACE$;
 use Gacela\Framework\AbstractFactory;
 
 /**
- * @method $MODULE_NAME$Config getConfig()
+ * @extends AbstractFactory<$MODULE_NAME$Config>
  */
 final class $CLASS_NAME$ extends AbstractFactory
 {

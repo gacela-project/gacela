@@ -49,16 +49,20 @@ final class AnonymousGlobal
         $key = self::getGlobalKeyFromClassName($className);
 
         /** @var ?T $instance */
-        $instance = self::getByKey($key) // @phpstan-ignore-line
-            ?? self::getByKey('\\' . $key)
-            ?? null;
+        $instance = self::getByKey($key); // @phpstan-ignore-line
 
         return $instance;
     }
 
     public static function getByKey(string $key): ?object
     {
-        return self::$cachedGlobalInstances[$key] ?? null;
+        if (isset(self::$cachedGlobalInstances[$key])) {
+            return self::$cachedGlobalInstances[$key];
+        }
+
+        $normalizedKey = '\\' . ltrim($key, '\\');
+
+        return self::$cachedGlobalInstances[$normalizedKey] ?? null;
     }
 
     /**

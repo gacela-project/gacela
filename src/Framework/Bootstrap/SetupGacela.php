@@ -5,14 +5,20 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\Bootstrap\Setup\BuilderExecutor;
 use Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender;
+use Gacela\Framework\Bootstrap\Setup\Properties;
+use Gacela\Framework\Bootstrap\Setup\PropertyChangeTracker;
+use Gacela\Framework\Bootstrap\Setup\PropertyMerger;
+use Gacela\Framework\Bootstrap\Setup\SetupInitializer;
+use Gacela\Framework\Bootstrap\Setup\SetupMerger;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Override;
 use RuntimeException;
 
-use function array_unique;
 use function is_callable;
 use function sprintf;
 
@@ -21,65 +27,20 @@ use function sprintf;
  */
 final class SetupGacela extends AbstractSetupGacela
 {
-    /** @var callable(AppConfigBuilder):void */
-    private $appConfigFn;
+    private readonly Properties $properties;
 
-    /** @var callable(BindingsBuilder,array<string,mixed>):void */
-    private $bindingsFn;
+    private readonly PropertyChangeTracker $changeTracker;
 
-    /** @var callable(SuffixTypesBuilder):void */
-    private $suffixTypesFn;
+    private readonly BuilderExecutor $builderExecutor;
 
-    /** @var ?array<string,class-string|object|callable> */
-    private ?array $externalServices = null;
-
-    private ?AppConfigBuilder $appConfigBuilder = null;
-
-    private ?SuffixTypesBuilder $suffixTypesBuilder = null;
-
-    private ?BindingsBuilder $bindingsBuilder = null;
-
-    private ?bool $shouldResetInMemoryCache = null;
-
-    private ?bool $fileCacheEnabled = null;
-
-    private ?string $fileCacheDirectory = null;
-
-    /** @var ?list<string> */
-    private ?array $projectNamespaces = null;
-
-    /** @var ?array<string,mixed> */
-    private ?array $configKeyValues = null;
-
-    private ?bool $areEventListenersEnabled = null;
-
-    /** @var ?list<callable> */
-    private ?array $genericListeners = null;
-
-    /** @var ?array<class-string,list<callable>> */
-    private ?array $specificListeners = null;
-
-    private ?EventDispatcherInterface $eventDispatcher = null;
-
-    /** @var ?array<string,bool> */
-    private ?array $changedProperties = null;
-
-    /** @var ?array<string,list<Closure>> */
-    private ?array $servicesToExtend = null;
-
-    /** @var ?list<class-string> */
-    private ?array $gacelaConfigsToExtend = null;
-
-    /** @var ?list<class-string|callable> */
-    private ?array $plugins = null;
+    private readonly PropertyMerger $propertyMerger;
 
     public function __construct()
     {
-        $emptyFn = static function (): void {};
-
-        $this->appConfigFn = $emptyFn;
-        $this->bindingsFn = $emptyFn;
-        $this->suffixTypesFn = $emptyFn;
+        $this->properties = new Properties();
+        $this->changeTracker = new PropertyChangeTracker();
+        $this->builderExecutor = new BuilderExecutor($this->properties);
+        $this->propertyMerger = new PropertyMerger($this);
     }
 
     /**
@@ -116,23 +77,9 @@ final class SetupGacela extends AbstractSetupGacela
         (new GacelaConfigExtender())->extend($gacelaConfig);
 
         $dto = $gacelaConfig->toTransfer();
+        $setup = new self();
 
-        return (new self())
-            ->setExternalServices($dto->externalServices)
-            ->setAppConfigBuilder($dto->appConfigBuilder)
-            ->setSuffixTypesBuilder($dto->suffixTypesBuilder)
-            ->setBindingsBuilder($dto->bindingsBuilder)
-            ->setShouldResetInMemoryCache($dto->shouldResetInMemoryCache)
-            ->setFileCacheEnabled($dto->fileCacheEnabled)
-            ->setFileCacheDirectory($dto->fileCacheDirectory)
-            ->setProjectNamespaces($dto->projectNamespaces)
-            ->setConfigKeyValues($dto->configKeyValues)
-            ->setAreEventListenersEnabled($dto->areEventListenersEnabled)
-            ->setGenericListeners($dto->genericListeners)
-            ->setSpecificListeners($dto->specificListeners)
-            ->setGacelaConfigsToExtend($dto->gacelaConfigsToExtend)
-            ->setPlugins($dto->plugins)
-            ->setServicesToExtend($dto->servicesToExtend);
+        return (new SetupInitializer($setup))->initializeFromTransfer($dto);
     }
 
     /**
@@ -140,29 +87,29 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setExternalServices(?array $array): self
     {
-        $this->markPropertyChanged(self::externalServices, true);
-        $this->externalServices = $array;
+        $this->markPropertyAsChanged(self::externalServices, $array !== null);
+        $this->properties->externalServices = $array; // No default fallback for external services
 
         return $this;
     }
 
     public function setAppConfigBuilder(AppConfigBuilder $builder): self
     {
-        $this->appConfigBuilder = $builder;
+        $this->properties->appConfigBuilder = $builder;
 
         return $this;
     }
 
     public function setSuffixTypesBuilder(SuffixTypesBuilder $builder): self
     {
-        $this->suffixTypesBuilder = $builder;
+        $this->properties->suffixTypesBuilder = $builder;
 
         return $this;
     }
 
     public function setBindingsBuilder(BindingsBuilder $builder): self
     {
-        $this->bindingsBuilder = $builder;
+        $this->properties->bindingsBuilder = $builder;
 
         return $this;
     }
@@ -172,22 +119,17 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setAppConfigFn(callable $callable): self
     {
-        $this->appConfigFn = $callable;
+        $this->properties->appConfigFn = $callable;
 
         return $this;
     }
 
+    #[Override]
     public function buildAppConfig(AppConfigBuilder $builder): AppConfigBuilder
     {
         $builder = parent::buildAppConfig($builder);
 
-        if ($this->appConfigBuilder instanceof AppConfigBuilder) {
-            $builder = $this->appConfigBuilder;
-        }
-
-        ($this->appConfigFn)($builder);
-
-        return $builder;
+        return $this->builderExecutor->buildAppConfig($builder);
     }
 
     /**
@@ -195,7 +137,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setBindingsFn(callable $callable): self
     {
-        $this->bindingsFn = $callable;
+        $this->properties->bindingsFn = $callable;
 
         return $this;
     }
@@ -205,22 +147,14 @@ final class SetupGacela extends AbstractSetupGacela
      *
      * @param array<string,class-string|object|callable> $externalServices
      */
+    #[Override]
     public function buildBindings(
         BindingsBuilder $builder,
         array $externalServices,
     ): BindingsBuilder {
         $builder = parent::buildBindings($builder, $externalServices);
 
-        if ($this->bindingsBuilder instanceof BindingsBuilder) {
-            $builder = $this->bindingsBuilder;
-        }
-
-        ($this->bindingsFn)(
-            $builder,
-            array_merge($this->externalServices ?? [], $externalServices)
-        );
-
-        return $builder;
+        return $this->builderExecutor->buildBindings($builder, $externalServices);
     }
 
     /**
@@ -228,7 +162,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setSuffixTypesFn(callable $callable): self
     {
-        $this->suffixTypesFn = $callable;
+        $this->properties->suffixTypesFn = $callable;
 
         return $this;
     }
@@ -236,57 +170,62 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * Allow overriding gacela resolvable types.
      */
+    #[Override]
     public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder
     {
         $builder = parent::buildSuffixTypes($builder);
 
-        if ($this->suffixTypesBuilder instanceof SuffixTypesBuilder) {
-            $builder = $this->suffixTypesBuilder;
-        }
-
-        ($this->suffixTypesFn)($builder);
-
-        return $builder;
+        return $this->builderExecutor->buildSuffixTypes($builder);
     }
 
     /**
      * @return array<string, class-string|object|callable>
      */
+    #[Override]
     public function externalServices(): array
     {
         return array_merge(
             parent::externalServices(),
-            $this->externalServices ?? [],
+            $this->properties->externalServices ?? [],
         );
     }
 
     public function setShouldResetInMemoryCache(?bool $flag): self
     {
-        $this->markPropertyChanged(self::shouldResetInMemoryCache, $flag);
-        $this->shouldResetInMemoryCache = $flag ?? self::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE;
+        $this->properties->shouldResetInMemoryCache = $this->setPropertyWithTracking(
+            self::shouldResetInMemoryCache,
+            $flag,
+            self::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE,
+        );
 
         return $this;
     }
 
+    #[Override]
     public function shouldResetInMemoryCache(): bool
     {
-        return (bool)$this->shouldResetInMemoryCache;
+        return $this->properties->shouldResetInMemoryCache ?? self::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE;
     }
 
+    #[Override]
     public function isFileCacheEnabled(): bool
     {
-        return (bool)$this->fileCacheEnabled;
+        return $this->properties->fileCacheEnabled ?? self::DEFAULT_FILE_CACHE_ENABLED;
     }
 
+    #[Override]
     public function getFileCacheDirectory(): string
     {
-        return (string)$this->fileCacheDirectory;
+        return $this->properties->fileCacheDirectory ?? '';
     }
 
     public function setFileCacheDirectory(?string $dir): self
     {
-        $this->markPropertyChanged(self::fileCacheDirectory, $dir);
-        $this->fileCacheDirectory = $dir ?? self::DEFAULT_FILE_CACHE_DIRECTORY;
+        $this->properties->fileCacheDirectory = $this->setPropertyWithTracking(
+            self::fileCacheDirectory,
+            $dir,
+            self::DEFAULT_FILE_CACHE_DIRECTORY,
+        );
 
         return $this;
     }
@@ -296,8 +235,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setProjectNamespaces(?array $list): self
     {
-        $this->markPropertyChanged(self::projectNamespaces, $list);
-        $this->projectNamespaces = $list ?? self::DEFAULT_PROJECT_NAMESPACES;
+        $this->properties->projectNamespaces = $this->setPropertyWithTracking(
+            self::projectNamespaces,
+            $list,
+            self::DEFAULT_PROJECT_NAMESPACES,
+        );
 
         return $this;
     }
@@ -305,43 +247,50 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return list<string>
      */
+    #[Override]
     public function getProjectNamespaces(): array
     {
-        return (array)$this->projectNamespaces;
+        return $this->properties->projectNamespaces ?? self::DEFAULT_PROJECT_NAMESPACES;
     }
 
     /**
      * @return array<string,mixed>
      */
+    #[Override]
     public function getConfigKeyValues(): array
     {
-        return (array)$this->configKeyValues;
+        return $this->properties->configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
     }
 
+    #[Override]
     public function getEventDispatcher(): EventDispatcherInterface
     {
-        return $this->eventDispatcher ??= SetupEventDispatcher::getDispatcher($this);
+        return $this->properties->eventDispatcher ??= SetupEventDispatcher::getDispatcher($this);
     }
 
     /**
      * @return array<string,list<Closure>>
      */
+    #[Override]
     public function getServicesToExtend(): array
     {
-        return (array)$this->servicesToExtend;
+        return $this->properties->servicesToExtend ?? self::DEFAULT_SERVICES_TO_EXTEND;
     }
 
     public function setFileCacheEnabled(?bool $flag): self
     {
-        $this->markPropertyChanged(self::fileCacheEnabled, $flag);
-        $this->fileCacheEnabled = $flag ?? self::DEFAULT_FILE_CACHE_ENABLED;
+        $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
+            self::fileCacheEnabled,
+            $flag,
+            self::DEFAULT_FILE_CACHE_ENABLED,
+        );
 
         return $this;
     }
 
     public function canCreateEventDispatcher(): bool
     {
-        return $this->areEventListenersEnabled === true
+        return $this->properties->areEventListenersEnabled === true
             && $this->hasEventListeners();
     }
 
@@ -350,8 +299,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setConfigKeyValues(?array $configKeyValues): self
     {
-        $this->markPropertyChanged(self::configKeyValues, $configKeyValues);
-        $this->configKeyValues = $configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
+        $this->properties->configKeyValues = $this->setPropertyWithTracking(
+            self::configKeyValues,
+            $configKeyValues,
+            self::DEFAULT_CONFIG_KEY_VALUES,
+        );
 
         return $this;
     }
@@ -361,7 +313,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function getSpecificListeners(): ?array
     {
-        return $this->specificListeners;
+        return $this->properties->specificListeners;
     }
 
     /**
@@ -369,24 +321,25 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function getGenericListeners(): ?array
     {
-        return $this->genericListeners;
+        return $this->properties->genericListeners;
     }
 
     public function isPropertyChanged(string $name): bool
     {
-        return $this->changedProperties[$name] ?? false;
+        return $this->changeTracker->isChanged($name);
     }
 
     public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
     {
-        $this->eventDispatcher = $eventDispatcher;
+        $this->properties->eventDispatcher = $eventDispatcher;
 
         return $this;
     }
 
-    public function combine(self $other): self
+    #[Override]
+    public function merge(self $other): self
     {
-        return (new SetupCombinator($this))->combine($other);
+        return (new SetupMerger($this))->merge($other);
     }
 
     /**
@@ -394,8 +347,8 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function addServicesToExtend(string $serviceId, array $servicesToExtend): self
     {
-        $this->servicesToExtend[$serviceId] ??= [];
-        $this->servicesToExtend[$serviceId] = [...$this->servicesToExtend[$serviceId], ...$servicesToExtend];
+        $this->properties->servicesToExtend[$serviceId] ??= [];
+        $this->properties->servicesToExtend[$serviceId] = [...$this->properties->servicesToExtend[$serviceId], ...$servicesToExtend];
 
         return $this;
     }
@@ -403,135 +356,171 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @param array<string,class-string|object|callable> $list
      */
-    public function combineExternalServices(array $list): void
+    public function mergeExternalServices(array $list): void
     {
-        $this->setExternalServices(array_merge($this->externalServices ?? [], $list));
+        $this->propertyMerger->mergeExternalServices($list);
     }
 
     /**
      * @param list<string> $list
      */
-    public function combineProjectNamespaces(array $list): void
+    public function mergeProjectNamespaces(array $list): void
     {
-        $this->setProjectNamespaces(array_merge($this->projectNamespaces ?? [], $list));
+        $this->propertyMerger->mergeProjectNamespaces($list);
     }
 
     /**
      * @param array<string,mixed> $list
      */
-    public function combineConfigKeyValues(array $list): void
+    public function mergeConfigKeyValues(array $list): void
     {
-        $this->setConfigKeyValues(array_merge($this->configKeyValues ?? [], $list));
+        $this->propertyMerger->mergeConfigKeyValues($list);
     }
 
     /**
      * @param list<class-string> $list
      */
-    public function combineGacelaConfigsToExtend(array $list): void
+    public function mergeGacelaConfigsToExtend(array $list): void
     {
-        $this->setGacelaConfigsToExtend(
-            // @phpstan-ignore-next-line
-            array_unique(array_merge($this->gacelaConfigsToExtend ?? [], $list)),
-        );
+        $this->propertyMerger->mergeGacelaConfigsToExtend($list);
     }
 
     /**
      * @param list<class-string|callable> $list
      */
-    public function combinePlugins(array $list): void
+    public function mergePlugins(array $list): void
     {
-        $this->setPlugins(array_merge($this->plugins ?? [], $list));
+        $this->propertyMerger->mergePlugins($list);
     }
 
     /**
      * @return list<class-string>
      */
+    #[Override]
     public function getGacelaConfigsToExtend(): array
     {
-        return (array)$this->gacelaConfigsToExtend;
+        return $this->properties->gacelaConfigsToExtend ?? self::DEFAULT_GACELA_CONFIGS_TO_EXTEND;
     }
 
     /**
      * @return list<class-string|callable>
      */
+    #[Override]
     public function getPlugins(): array
     {
-        return (array)$this->plugins;
+        return $this->properties->plugins ?? self::DEFAULT_PLUGINS;
     }
 
-    private function setAreEventListenersEnabled(?bool $flag): self
+    /**
+     * @internal Used by PropertyMerger - do not call directly
+     *
+     * @param ?list<class-string> $list
+     */
+    public function setGacelaConfigsToExtend(?array $list): self
     {
-        $this->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
+        $this->properties->gacelaConfigsToExtend = $this->setPropertyWithTracking(
+            self::gacelaConfigsToExtend,
+            $list,
+            self::DEFAULT_GACELA_CONFIGS_TO_EXTEND,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by PropertyMerger - do not call directly
+     *
+     * @param ?list<class-string|callable> $list
+     */
+    public function setPlugins(?array $list): self
+    {
+        $this->properties->plugins = $this->setPropertyWithTracking(
+            self::plugins,
+            $list,
+            self::DEFAULT_PLUGINS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     */
+    public function setAreEventListenersEnabled(?bool $flag): self
+    {
+        $this->properties->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?list<callable> $listeners
+     */
+    public function setGenericListeners(?array $listeners): self
+    {
+        $this->properties->genericListeners = $listeners ?? self::DEFAULT_GENERIC_LISTENERS;
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,list<Closure>> $list
+     */
+    public function setServicesToExtend(?array $list): self
+    {
+        $this->properties->servicesToExtend = $this->setPropertyWithTracking(
+            self::servicesToExtend,
+            $list,
+            self::DEFAULT_SERVICES_TO_EXTEND,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<class-string,list<callable>> $listeners
+     */
+    public function setSpecificListeners(?array $listeners): self
+    {
+        $this->properties->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
 
         return $this;
     }
 
     private function hasEventListeners(): bool
     {
-        return ($this->genericListeners !== null && $this->genericListeners !== [])
-            || ($this->specificListeners !== null && $this->specificListeners !== []);
+        return ($this->properties->genericListeners !== null && $this->properties->genericListeners !== [])
+            || ($this->properties->specificListeners !== null && $this->properties->specificListeners !== []);
     }
 
     /**
-     * @param ?list<callable> $listeners
-     */
-    private function setGenericListeners(?array $listeners): self
-    {
-        $this->genericListeners = $listeners ?? self::DEFAULT_GENERIC_LISTENERS;
-
-        return $this;
-    }
-
-    /**
-     * @param ?array<string,list<Closure>> $list
-     */
-    private function setServicesToExtend(?array $list): self
-    {
-        $this->markPropertyChanged(self::servicesToExtend, $list);
-        $this->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
-
-        return $this;
-    }
-
-    /**
-     * @param ?list<class-string> $list
-     */
-    private function setGacelaConfigsToExtend(?array $list): self
-    {
-        $this->markPropertyChanged(self::gacelaConfigsToExtend, $list);
-        $this->gacelaConfigsToExtend = $list ?? self::DEFAULT_GACELA_CONFIGS_TO_EXTEND;
-
-        return $this;
-    }
-
-    /**
-     * @param ?list<class-string|callable> $list
-     */
-    private function setPlugins(?array $list): self
-    {
-        $this->markPropertyChanged(self::plugins, $list);
-        $this->plugins = $list ?? self::DEFAULT_PLUGINS;
-
-        return $this;
-    }
-
-    /**
-     * @param ?array<class-string,list<callable>> $listeners
-     */
-    private function setSpecificListeners(?array $listeners): self
-    {
-        $this->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
-
-        return $this;
-    }
-
-    /**
-     * @param (Closure[]|callable|class-string|mixed)[]|bool|null|string $value
+     * Helper method to set a property with change tracking and default value.
      *
-     * @psalm-param array<int<0, max>|string, callable|class-string|list<Closure>|mixed>|bool|null|string $value
+     * @template T
+     *
+     * @param T $value
+     * @param T $default
+     *
+     * @return T
      */
-    private function markPropertyChanged(string $name, array|bool|string|null $value): void
+    private function setPropertyWithTracking(string $propertyName, mixed $value, mixed $default): mixed
     {
-        $this->changedProperties[$name] = ($value !== null);
+        $this->markPropertyAsChanged($propertyName, $value !== null);
+        return $value ?? $default;
+    }
+
+    private function markPropertyAsChanged(string $name, bool $isChanged): void
+    {
+        if ($isChanged) {
+            $this->changeTracker->markAsChanged($name);
+        } else {
+            $this->changeTracker->markAsUnchanged($name);
+        }
     }
 }

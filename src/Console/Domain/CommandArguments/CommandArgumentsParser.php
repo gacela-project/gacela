@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\CommandArguments;
 
 use InvalidArgumentException;
+use Override;
 
 use function count;
 
@@ -26,6 +27,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
      *
      * @throws InvalidArgumentException
      */
+    #[Override]
     public function parse(string $desiredNamespace): CommandArguments
     {
         if (!isset($this->composerJson['autoload'])) {
@@ -57,7 +59,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
     }
 
     /**
-     * Combine all possible psr-4 combinations and return them ordered by longer to shorter.
+     * Merge all possible psr-4 combinations and return them ordered by longer to shorter.
      * This way we'll be able to find the longer match first.
      * For example: App/TestModule/TestSubModule will produce an array such as:
      * [

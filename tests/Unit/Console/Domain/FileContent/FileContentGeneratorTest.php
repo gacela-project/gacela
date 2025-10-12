@@ -211,4 +211,29 @@ final class FileContentGeneratorTest extends TestCase
 
         self::assertSame('Dir/Provider.php', $actualPath);
     }
+
+    public function test_replaces_all_template_tokens(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('src/Module');
+
+        $expectedContent = 'namespace Namespace\Module; class ModuleFacade extends ModuleBase {}';
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('src/Module/ModuleFacade.php', $expectedContent);
+
+        $generator = new FileContentGenerator($fileContentIo, [
+            FilenameSanitizer::FACADE => 'namespace $NAMESPACE$; class $CLASS_NAME$ extends $MODULE_NAME$Base {}',
+        ]);
+
+        $actualPath = $generator->generate(
+            new CommandArguments('Namespace\Module', 'src/Module'),
+            FilenameSanitizer::FACADE,
+        );
+
+        self::assertSame('src/Module/ModuleFacade.php', $actualPath);
+    }
 }

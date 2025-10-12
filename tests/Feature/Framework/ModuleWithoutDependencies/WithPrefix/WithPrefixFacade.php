@@ -7,7 +7,7 @@ namespace GacelaTest\Feature\Framework\ModuleWithoutDependencies\WithPrefix;
 use Gacela\Framework\AbstractFacade;
 
 /**
- * @method WithPrefixFactory getFactory()
+ * @extends AbstractFacade<WithPrefixFactory>
  */
 final class WithPrefixFacade extends AbstractFacade implements WithPrefixFacadeInterface
 {

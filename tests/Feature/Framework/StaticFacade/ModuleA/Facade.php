@@ -6,18 +6,10 @@ namespace GacelaTest\Feature\Framework\StaticFacade\ModuleA;
 
 use Gacela\Framework\AbstractFacade;
 
-/**
- * @method static Factory getFactory()
- */
 final class Facade extends AbstractFacade
 {
-    public static function createString(): string
+    public function createString(): string
     {
-        return self::getFactory()->createString();
-    }
-
-    public static function unknownFacadeMethod(): void
-    {
-        self::innerUnknownFacadeMethod();
+        return $this->getFactory()->createString();
     }
 }

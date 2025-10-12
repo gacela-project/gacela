@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.11.0](https://github.com/gacela-project/gacela/compare/1.10.0...1.11.0) - 2025-10-12
 
 - Add `phpstan-gacela.neon` for reusable PHPStan rules enforcing Gacela naming conventions (Facade, Factory, Provider, Config)
 - Drop static facade magic methods; call `$facade->getFactory()` directly

@@ -32,6 +32,24 @@ final class MakeModuleCommandTest extends TestCase
         DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
+    public function test_make_module_command_description(): void
+    {
+        $bootstrap = new ConsoleBootstrap();
+        $command = $bootstrap->find('make:module');
+
+        $description = $command->getDescription();
+
+        // Test that the description contains 'Generate a basic module with an empty ' followed by the expected filenames
+        self::assertStringContainsString('Generate a basic module with an empty ', $description);
+        self::assertStringContainsString('Facade', $description);
+        self::assertStringContainsString('Factory', $description);
+        self::assertStringContainsString('Config', $description);
+        self::assertStringContainsString('Provider', $description);
+
+        // Ensure it's in the correct order (not reversed or partial)
+        self::assertStringStartsWith('Generate a basic module with an empty ', $description);
+    }
+
     #[DataProvider('createModulesProvider')]
     public function test_make_module(string $fileName, bool $shortName): void
     {

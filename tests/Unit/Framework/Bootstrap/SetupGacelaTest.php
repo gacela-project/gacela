@@ -238,4 +238,71 @@ final class SetupGacelaTest extends TestCase
             CustomGacelaConfig::class,
         ], $setup->getGacelaConfigsToExtend());
     }
+
+    public function test_register_generic_listener_multiple_times(): void
+    {
+        $listener1 = static function (GacelaEventInterface $event): void {};
+        $listener2 = static function (GacelaEventInterface $event): void {};
+
+        $config = (new GacelaConfig())
+            ->registerGenericListener($listener1)
+            ->registerGenericListener($listener2);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([$listener1, $listener2], $transfer->genericListeners);
+    }
+
+    public function test_register_specific_listener_multiple_times(): void
+    {
+        $listener1 = static function (GacelaEventInterface $event): void {};
+        $listener2 = static function (GacelaEventInterface $event): void {};
+
+        $config = (new GacelaConfig())
+            ->registerSpecificListener(FakeEvent::class, $listener1)
+            ->registerSpecificListener(FakeEvent::class, $listener2);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([$listener1, $listener2], $transfer->specificListeners[FakeEvent::class]);
+    }
+
+    public function test_extend_service_multiple_times(): void
+    {
+        $service1 = static fn (mixed $s): mixed => $s;
+        $service2 = static fn (mixed $s): mixed => $s;
+
+        $config = (new GacelaConfig())
+            ->extendService('service1', $service1)
+            ->extendService('service1', $service2);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([$service1, $service2], $transfer->servicesToExtend['service1']);
+    }
+
+    public function test_add_plugins_merges_with_existing(): void
+    {
+        $config = (new GacelaConfig())
+            ->addPlugin(ExamplePluginWithoutConstructor::class)
+            ->addPlugins([ExamplePluginWithConstructor::class]);
+
+        $transfer = $config->toTransfer();
+
+        self::assertSame([
+            ExamplePluginWithoutConstructor::class,
+            ExamplePluginWithConstructor::class,
+        ], $transfer->plugins);
+    }
+
+    public function test_extend_gacela_configs_merges_with_existing(): void
+    {
+        $config = (new GacelaConfig())
+            ->extendGacelaConfig(CustomGacelaConfig::class)
+            ->extendGacelaConfigs([CustomGacelaConfig::class]);
+
+        $transfer = $config->toTransfer();
+
+        self::assertCount(2, $transfer->gacelaConfigsToExtend);
+    }
 }

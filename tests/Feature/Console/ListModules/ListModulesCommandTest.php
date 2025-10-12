@@ -52,6 +52,21 @@ TXT;
         self::assertStringContainsString('============================', $output, 'Should contain detailed view separators');
         self::assertStringContainsString('TestModule3Facade', $output);
         self::assertStringContainsString('TestModule1Factory', $output);
+
+        // Test that modules are numbered starting from 1 (not 0 or 2)
+        self::assertStringContainsString('1.-', $output);
+        self::assertStringContainsString('2.-', $output);
+        self::assertStringContainsString('3.-', $output);
+        self::assertStringNotContainsString('0.-', $output);
+
+        // Test that missing classes show as space symbol, not the class name
+        self::assertStringContainsString('TestModule1Factory', $output);
+        self::assertStringContainsString('TestModule1Provider', $output);
+        // TestModule1 has no Config, so it should show "Config:  " (with just a space or empty)
+        self::assertMatchesRegularExpression('/Config:\s+\n/', $output);
+
+        // TestModule2 has only Facade, so Factory/Config/Provider should show spaces
+        self::assertStringContainsString('TestModule2Facade', $output);
     }
 
     public function test_list_modules_not_detailed(): void

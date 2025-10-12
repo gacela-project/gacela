@@ -32,6 +32,24 @@ final class MakeFileCommandTest extends TestCase
         DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
+    public function test_make_file_command_description(): void
+    {
+        $bootstrap = new ConsoleBootstrap();
+        $command = $bootstrap->find('make:file');
+
+        $description = $command->getDescription();
+
+        // Test that the description contains 'Generate a ' followed by the expected filenames
+        self::assertStringContainsString('Generate a ', $description);
+        self::assertStringContainsString('Facade', $description);
+        self::assertStringContainsString('Factory', $description);
+        self::assertStringContainsString('Config', $description);
+        self::assertStringContainsString('Provider', $description);
+
+        // Ensure it's in the correct order (not reversed)
+        self::assertStringStartsWith('Generate a ', $description);
+    }
+
     #[DataProvider('createFilesProvider')]
     public function test_make_file(string $action, string $fileName, bool $shortName): void
     {

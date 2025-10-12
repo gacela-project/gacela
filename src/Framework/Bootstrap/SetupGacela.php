@@ -10,6 +10,7 @@ use Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender;
 use Gacela\Framework\Bootstrap\Setup\Properties;
 use Gacela\Framework\Bootstrap\Setup\PropertyChangeTracker;
 use Gacela\Framework\Bootstrap\Setup\PropertyMerger;
+use Gacela\Framework\Bootstrap\Setup\SetupInitializer;
 use Gacela\Framework\Bootstrap\Setup\SetupMerger;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
@@ -76,23 +77,9 @@ final class SetupGacela extends AbstractSetupGacela
         (new GacelaConfigExtender())->extend($gacelaConfig);
 
         $dto = $gacelaConfig->toTransfer();
+        $setup = new self();
 
-        return (new self())
-            ->setExternalServices($dto->externalServices)
-            ->setAppConfigBuilder($dto->appConfigBuilder)
-            ->setSuffixTypesBuilder($dto->suffixTypesBuilder)
-            ->setBindingsBuilder($dto->bindingsBuilder)
-            ->setShouldResetInMemoryCache($dto->shouldResetInMemoryCache)
-            ->setFileCacheEnabled($dto->fileCacheEnabled)
-            ->setFileCacheDirectory($dto->fileCacheDirectory)
-            ->setProjectNamespaces($dto->projectNamespaces)
-            ->setConfigKeyValues($dto->configKeyValues)
-            ->setAreEventListenersEnabled($dto->areEventListenersEnabled)
-            ->setGenericListeners($dto->genericListeners)
-            ->setSpecificListeners($dto->specificListeners)
-            ->setGacelaConfigsToExtend($dto->gacelaConfigsToExtend)
-            ->setPlugins($dto->plugins)
-            ->setServicesToExtend($dto->servicesToExtend);
+        return (new SetupInitializer($setup))->initializeFromTransfer($dto);
     }
 
     /**
@@ -456,23 +443,22 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    private function setAreEventListenersEnabled(?bool $flag): self
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     */
+    public function setAreEventListenersEnabled(?bool $flag): self
     {
         $this->properties->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
 
         return $this;
     }
 
-    private function hasEventListeners(): bool
-    {
-        return ($this->properties->genericListeners !== null && $this->properties->genericListeners !== [])
-            || ($this->properties->specificListeners !== null && $this->properties->specificListeners !== []);
-    }
-
     /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
      * @param ?list<callable> $listeners
      */
-    private function setGenericListeners(?array $listeners): self
+    public function setGenericListeners(?array $listeners): self
     {
         $this->properties->genericListeners = $listeners ?? self::DEFAULT_GENERIC_LISTENERS;
 
@@ -480,9 +466,11 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
      * @param ?array<string,list<Closure>> $list
      */
-    private function setServicesToExtend(?array $list): self
+    public function setServicesToExtend(?array $list): self
     {
         $this->properties->servicesToExtend = $this->setPropertyWithTracking(
             self::servicesToExtend,
@@ -494,13 +482,21 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
      * @param ?array<class-string,list<callable>> $listeners
      */
-    private function setSpecificListeners(?array $listeners): self
+    public function setSpecificListeners(?array $listeners): self
     {
         $this->properties->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
 
         return $this;
+    }
+
+    private function hasEventListeners(): bool
+    {
+        return ($this->properties->genericListeners !== null && $this->properties->genericListeners !== [])
+            || ($this->properties->specificListeners !== null && $this->properties->specificListeners !== []);
     }
 
     /**

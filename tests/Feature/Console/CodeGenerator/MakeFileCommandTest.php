@@ -33,9 +33,10 @@ final class MakeFileCommandTest extends TestCase
     }
 
     #[DataProvider('createFilesProvider')]
-    public function test_make_file(string $action, string $fileName, string $shortName): void
+    public function test_make_file(string $action, string $fileName, bool $shortName): void
     {
-        $input = new StringInput(sprintf('make:file Psr4CodeGenerator/TestModule %s %s', $action, $shortName));
+        $shortNameFlag = $shortName ? '--short-name' : '';
+        $input = new StringInput(sprintf('make:file Psr4CodeGenerator/TestModule %s %s', $action, $shortNameFlag));
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -48,15 +49,15 @@ final class MakeFileCommandTest extends TestCase
 
     public static function createFilesProvider(): iterable
     {
-        yield 'facade' => ['facade', 'TestModuleFacade', ''];
-        yield 'factory' => ['factory', 'TestModuleFactory', ''];
-        yield 'config' => ['config', 'TestModuleConfig', ''];
-        yield 'dependency provider' => ['dependency-provider', 'TestModuleProvider', ''];
+        yield 'facade' => ['facade', 'TestModuleFacade', false];
+        yield 'factory' => ['factory', 'TestModuleFactory', false];
+        yield 'config' => ['config', 'TestModuleConfig', false];
+        yield 'dependency provider' => ['dependency-provider', 'TestModuleProvider', false];
 
-        // Sort name flag
-        yield 'facade -s' => ['facade', 'Facade', '-s'];
-        yield 'factory -s' => ['factory', 'Factory', '-s'];
-        yield 'config -s' => ['config', 'Config', '-s'];
-        yield 'dependency provider -s' => ['dependency-provider', 'Provider', '-s'];
+        // Short name flag
+        yield 'facade -s' => ['facade', 'Facade', true];
+        yield 'factory -s' => ['factory', 'Factory', true];
+        yield 'config -s' => ['config', 'Config', true];
+        yield 'dependency provider -s' => ['dependency-provider', 'Provider', true];
     }
 }

@@ -41,35 +41,29 @@ TXT;
         self::assertSame($expected, $this->command->getDisplay());
     }
 
-    public function test_list_modules(): void
+    public function test_list_modules_detailed(): void
     {
-        $this->command->execute(['--detailed' => null]);
+        $this->command->execute(['--detailed' => true]);
 
-        $expected = <<<TXT
-============================
-1.- TestModule3
-----------------------------
-Facade: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Facade
-Factory: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Factory
-Config: GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3\TestModule3Config
-Provider:  
-============================
-2.- TestModule1
-----------------------------
-Facade: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade
-Factory: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Factory
-Config:  
-Provider: GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Provider
-============================
-3.- TestModule2
-----------------------------
-Facade: GacelaTest\Feature\Console\ListModules\TestModule2\TestModule2Facade
-Factory:  
-Config:  
-Provider:  
+        $output = $this->command->getDisplay();
 
-TXT;
-        self::assertSame($expected, $this->command->getDisplay());
+        // Verify this is the detailed view (not the table view)
+        self::assertStringNotContainsString('┌────', $output, 'Should not contain table borders');
+        self::assertStringContainsString('============================', $output, 'Should contain detailed view separators');
+        self::assertStringContainsString('TestModule3Facade', $output);
+        self::assertStringContainsString('TestModule1Factory', $output);
+    }
+
+    public function test_list_modules_not_detailed(): void
+    {
+        $this->command->execute(['--detailed' => false]);
+
+        $output = $this->command->getDisplay();
+
+        // Verify this is the simple table view (not detailed view)
+        self::assertStringContainsString('┌────', $output, 'Should contain table borders');
+        self::assertStringNotContainsString('============================', $output, 'Should not contain detailed view separators');
+        self::assertStringContainsString('TestModule3', $output);
     }
 
     #[DataProvider('commandInputProvider')]

@@ -82,6 +82,15 @@ final class CommandArgumentsParserTest extends TestCase
         $parser->parse('Unknown/Module');
     }
 
+    public function test_parse_with_multibyte_namespace(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleMultibyteComposerJson());
+        $args = $parser->parse('Tëst/Mödülé');
+
+        self::assertSame('Tëst\Mödülé', $args->namespace());
+        self::assertSame('src/Mödülé', $args->directory());
+    }
+
     private function exampleOneLevelComposerJson(): array
     {
         $composerJson = <<<'JSON'
@@ -106,6 +115,23 @@ JSON;
     "autoload": {
         "psr-4": {
             "App\\TestModule\\": "src/"
+        }
+    }
+}
+JSON;
+        return json_decode($composerJson, true);
+    }
+
+    /**
+     * @return array{autoload: array{psr-4: array<string,string>}}
+     */
+    private function exampleMultibyteComposerJson(): array
+    {
+        $composerJson = <<<'JSON'
+{
+    "autoload": {
+        "psr-4": {
+            "Tëst\\": "src/"
         }
     }
 }

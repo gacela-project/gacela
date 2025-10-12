@@ -33,9 +33,10 @@ final class MakeModuleCommandTest extends TestCase
     }
 
     #[DataProvider('createModulesProvider')]
-    public function test_make_module(string $fileName, string $shortName): void
+    public function test_make_module(string $fileName, bool $shortName): void
     {
-        $input = new StringInput('make:module Psr4CodeGeneratorData/TestModule ' . $shortName);
+        $shortNameFlag = $shortName ? '--short-name' : '';
+        $input = new StringInput('make:module Psr4CodeGeneratorData/TestModule ' . $shortNameFlag);
         $output = new BufferedOutput();
 
         $bootstrap = new ConsoleBootstrap();
@@ -64,7 +65,7 @@ OUT;
 
     public static function createModulesProvider(): iterable
     {
-        yield 'module' => ['TestModule', ''];
-        yield 'module -s' => ['', '-s'];
+        yield 'module' => ['TestModule', false];
+        yield 'module -s' => ['', true];
     }
 }

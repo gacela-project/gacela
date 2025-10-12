@@ -1,7 +1,8 @@
 # Changelog
 
-## [Unreleased]
+## Unreleased
 
+- Add `phpstan-gacela-rules.neon`
 - Drop static facade magic methods; call `$facade->getFactory()` directly
 - Improve PHPStan generic type support
   - Replace `@method` annotations with `@extends` for better type inference

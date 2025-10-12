@@ -1,6 +1,7 @@
 includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - phpstan-gacela-rules.neon
 
 parameters:
     level: max
@@ -14,29 +15,3 @@ parameters:
         - '#Cannot cast mixed to string.#'
         - '#Short ternary operator is not allowed.#'
         - '#Method .* should return list<.*> but returns array.#'
-
-services:
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Facade
-            expectedParent: Gacela\Framework\AbstractFacade
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Factory
-            expectedParent: Gacela\Framework\AbstractFactory
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Provider
-            expectedParent: Gacela\Framework\AbstractProvider
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Config
-            expectedParent: Gacela\Framework\AbstractConfig

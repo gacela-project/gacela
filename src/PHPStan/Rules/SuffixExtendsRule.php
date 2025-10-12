@@ -15,7 +15,6 @@ use function sprintf;
 /**
  * @implements Rule<Class_>
  */
-
 final class SuffixExtendsRule implements Rule
 {
     public function __construct(

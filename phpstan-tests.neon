@@ -1,5 +1,6 @@
 includes:
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - phpstan-gacela-rules.neon
 
 parameters:
     level: 0
@@ -7,29 +8,3 @@ parameters:
         - %currentWorkingDirectory%/tests/
     ignoreErrors:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
-
-services:
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Facade
-            expectedParent: Gacela\Framework\AbstractFacade
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Factory
-            expectedParent: Gacela\Framework\AbstractFactory
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Provider
-            expectedParent: Gacela\Framework\AbstractProvider
-    -
-        class: Gacela\PHPStan\Rules\SuffixExtendsRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            suffix: Config
-            expectedParent: Gacela\Framework\AbstractConfig

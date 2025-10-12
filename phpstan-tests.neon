@@ -1,0 +1,10 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - phpstan-gacela.neon
+
+parameters:
+    level: 0
+    paths:
+        - %currentWorkingDirectory%/tests/
+    ignoreErrors:
+        - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'

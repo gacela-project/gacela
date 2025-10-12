@@ -409,6 +409,32 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->plugins ?? self::DEFAULT_PLUGINS;
     }
 
+    /**
+     * @internal Used by PropertyMerger - do not call directly
+     *
+     * @param ?list<class-string> $list
+     */
+    public function setGacelaConfigsToExtend(?array $list): self
+    {
+        $this->markPropertyAsChanged(self::gacelaConfigsToExtend, $list !== null);
+        $this->properties->gacelaConfigsToExtend = $list ?? self::DEFAULT_GACELA_CONFIGS_TO_EXTEND;
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by PropertyMerger - do not call directly
+     *
+     * @param ?list<class-string|callable> $list
+     */
+    public function setPlugins(?array $list): self
+    {
+        $this->markPropertyAsChanged(self::plugins, $list !== null);
+        $this->properties->plugins = $list ?? self::DEFAULT_PLUGINS;
+
+        return $this;
+    }
+
     private function setAreEventListenersEnabled(?bool $flag): self
     {
         $this->properties->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
@@ -439,28 +465,6 @@ final class SetupGacela extends AbstractSetupGacela
     {
         $this->markPropertyAsChanged(self::servicesToExtend, $list !== null);
         $this->properties->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
-
-        return $this;
-    }
-
-    /**
-     * @param ?list<class-string> $list
-     */
-    private function setGacelaConfigsToExtend(?array $list): self
-    {
-        $this->markPropertyAsChanged(self::gacelaConfigsToExtend, $list !== null);
-        $this->properties->gacelaConfigsToExtend = $list ?? self::DEFAULT_GACELA_CONFIGS_TO_EXTEND;
-
-        return $this;
-    }
-
-    /**
-     * @param ?list<class-string|callable> $list
-     */
-    private function setPlugins(?array $list): self
-    {
-        $this->markPropertyAsChanged(self::plugins, $list !== null);
-        $this->properties->plugins = $list ?? self::DEFAULT_PLUGINS;
 
         return $this;
     }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Setup;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
-use ReflectionMethod;
 
 use function array_merge;
 use function array_unique;
@@ -53,11 +52,9 @@ final class PropertyMerger
     public function mergeGacelaConfigsToExtend(array $list): void
     {
         $current = $this->setup->getGacelaConfigsToExtend();
-
-        // Use reflection to call private method setGacelaConfigsToExtend
-        $method = new ReflectionMethod($this->setup, 'setGacelaConfigsToExtend');
-        $method->setAccessible(true);
-        $method->invoke($this->setup, array_unique(array_merge($current, $list)));
+        /** @var list<class-string> $merged */
+        $merged = array_values(array_unique(array_merge($current, $list)));
+        $this->setup->setGacelaConfigsToExtend($merged);
     }
 
     /**
@@ -66,10 +63,6 @@ final class PropertyMerger
     public function mergePlugins(array $list): void
     {
         $current = $this->setup->getPlugins();
-
-        // Use reflection to call private method setPlugins
-        $method = new ReflectionMethod($this->setup, 'setPlugins');
-        $method->setAccessible(true);
-        $method->invoke($this->setup, array_merge($current, $list));
+        $this->setup->setPlugins(array_merge($current, $list));
     }
 }

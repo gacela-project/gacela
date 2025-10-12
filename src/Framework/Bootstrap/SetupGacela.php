@@ -101,7 +101,7 @@ final class SetupGacela extends AbstractSetupGacela
     public function setExternalServices(?array $array): self
     {
         $this->markPropertyAsChanged(self::externalServices, $array !== null);
-        $this->properties->externalServices = $array;
+        $this->properties->externalServices = $array; // No default fallback for external services
 
         return $this;
     }
@@ -205,8 +205,11 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setShouldResetInMemoryCache(?bool $flag): self
     {
-        $this->markPropertyAsChanged(self::shouldResetInMemoryCache, $flag !== null);
-        $this->properties->shouldResetInMemoryCache = $flag ?? self::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE;
+        $this->properties->shouldResetInMemoryCache = $this->setPropertyWithTracking(
+            self::shouldResetInMemoryCache,
+            $flag,
+            self::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE,
+        );
 
         return $this;
     }
@@ -231,8 +234,11 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setFileCacheDirectory(?string $dir): self
     {
-        $this->markPropertyAsChanged(self::fileCacheDirectory, $dir !== null);
-        $this->properties->fileCacheDirectory = $dir ?? self::DEFAULT_FILE_CACHE_DIRECTORY;
+        $this->properties->fileCacheDirectory = $this->setPropertyWithTracking(
+            self::fileCacheDirectory,
+            $dir,
+            self::DEFAULT_FILE_CACHE_DIRECTORY,
+        );
 
         return $this;
     }
@@ -242,8 +248,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setProjectNamespaces(?array $list): self
     {
-        $this->markPropertyAsChanged(self::projectNamespaces, $list !== null);
-        $this->properties->projectNamespaces = $list ?? self::DEFAULT_PROJECT_NAMESPACES;
+        $this->properties->projectNamespaces = $this->setPropertyWithTracking(
+            self::projectNamespaces,
+            $list,
+            self::DEFAULT_PROJECT_NAMESPACES,
+        );
 
         return $this;
     }
@@ -283,8 +292,11 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setFileCacheEnabled(?bool $flag): self
     {
-        $this->markPropertyAsChanged(self::fileCacheEnabled, $flag !== null);
-        $this->properties->fileCacheEnabled = $flag ?? self::DEFAULT_FILE_CACHE_ENABLED;
+        $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
+            self::fileCacheEnabled,
+            $flag,
+            self::DEFAULT_FILE_CACHE_ENABLED,
+        );
 
         return $this;
     }
@@ -300,8 +312,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setConfigKeyValues(?array $configKeyValues): self
     {
-        $this->markPropertyAsChanged(self::configKeyValues, $configKeyValues !== null);
-        $this->properties->configKeyValues = $configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
+        $this->properties->configKeyValues = $this->setPropertyWithTracking(
+            self::configKeyValues,
+            $configKeyValues,
+            self::DEFAULT_CONFIG_KEY_VALUES,
+        );
 
         return $this;
     }
@@ -416,8 +431,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setGacelaConfigsToExtend(?array $list): self
     {
-        $this->markPropertyAsChanged(self::gacelaConfigsToExtend, $list !== null);
-        $this->properties->gacelaConfigsToExtend = $list ?? self::DEFAULT_GACELA_CONFIGS_TO_EXTEND;
+        $this->properties->gacelaConfigsToExtend = $this->setPropertyWithTracking(
+            self::gacelaConfigsToExtend,
+            $list,
+            self::DEFAULT_GACELA_CONFIGS_TO_EXTEND,
+        );
 
         return $this;
     }
@@ -429,8 +447,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setPlugins(?array $list): self
     {
-        $this->markPropertyAsChanged(self::plugins, $list !== null);
-        $this->properties->plugins = $list ?? self::DEFAULT_PLUGINS;
+        $this->properties->plugins = $this->setPropertyWithTracking(
+            self::plugins,
+            $list,
+            self::DEFAULT_PLUGINS,
+        );
 
         return $this;
     }
@@ -463,8 +484,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     private function setServicesToExtend(?array $list): self
     {
-        $this->markPropertyAsChanged(self::servicesToExtend, $list !== null);
-        $this->properties->servicesToExtend = $list ?? self::DEFAULT_SERVICES_TO_EXTEND;
+        $this->properties->servicesToExtend = $this->setPropertyWithTracking(
+            self::servicesToExtend,
+            $list,
+            self::DEFAULT_SERVICES_TO_EXTEND,
+        );
 
         return $this;
     }
@@ -477,6 +501,22 @@ final class SetupGacela extends AbstractSetupGacela
         $this->properties->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
 
         return $this;
+    }
+
+    /**
+     * Helper method to set a property with change tracking and default value.
+     *
+     * @template T
+     *
+     * @param T $value
+     * @param T $default
+     *
+     * @return T
+     */
+    private function setPropertyWithTracking(string $propertyName, mixed $value, mixed $default): mixed
+    {
+        $this->markPropertyAsChanged($propertyName, $value !== null);
+        return $value ?? $default;
     }
 
     private function markPropertyAsChanged(string $name, bool $isChanged): void

@@ -32,11 +32,14 @@ final class SetupGacela extends AbstractSetupGacela
 
     private readonly BuilderExecutor $builderExecutor;
 
+    private readonly PropertyMerger $propertyMerger;
+
     public function __construct()
     {
         $this->properties = new Properties();
         $this->changeTracker = new PropertyChangeTracker();
         $this->builderExecutor = new BuilderExecutor($this->properties);
+        $this->propertyMerger = new PropertyMerger($this);
     }
 
     /**
@@ -211,19 +214,19 @@ final class SetupGacela extends AbstractSetupGacela
     #[Override]
     public function shouldResetInMemoryCache(): bool
     {
-        return (bool)$this->properties->shouldResetInMemoryCache;
+        return $this->properties->shouldResetInMemoryCache ?? self::DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE;
     }
 
     #[Override]
     public function isFileCacheEnabled(): bool
     {
-        return (bool)$this->properties->fileCacheEnabled;
+        return $this->properties->fileCacheEnabled ?? self::DEFAULT_FILE_CACHE_ENABLED;
     }
 
     #[Override]
     public function getFileCacheDirectory(): string
     {
-        return (string)$this->properties->fileCacheDirectory;
+        return $this->properties->fileCacheDirectory ?? '';
     }
 
     public function setFileCacheDirectory(?string $dir): self
@@ -251,7 +254,7 @@ final class SetupGacela extends AbstractSetupGacela
     #[Override]
     public function getProjectNamespaces(): array
     {
-        return (array)$this->properties->projectNamespaces;
+        return $this->properties->projectNamespaces ?? self::DEFAULT_PROJECT_NAMESPACES;
     }
 
     /**
@@ -260,7 +263,7 @@ final class SetupGacela extends AbstractSetupGacela
     #[Override]
     public function getConfigKeyValues(): array
     {
-        return (array)$this->properties->configKeyValues;
+        return $this->properties->configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
     }
 
     #[Override]
@@ -275,7 +278,7 @@ final class SetupGacela extends AbstractSetupGacela
     #[Override]
     public function getServicesToExtend(): array
     {
-        return (array)$this->properties->servicesToExtend;
+        return $this->properties->servicesToExtend ?? self::DEFAULT_SERVICES_TO_EXTEND;
     }
 
     public function setFileCacheEnabled(?bool $flag): self
@@ -353,7 +356,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function mergeExternalServices(array $list): void
     {
-        (new PropertyMerger($this))->mergeExternalServices($list);
+        $this->propertyMerger->mergeExternalServices($list);
     }
 
     /**
@@ -361,7 +364,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function mergeProjectNamespaces(array $list): void
     {
-        (new PropertyMerger($this))->mergeProjectNamespaces($list);
+        $this->propertyMerger->mergeProjectNamespaces($list);
     }
 
     /**
@@ -369,7 +372,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function mergeConfigKeyValues(array $list): void
     {
-        (new PropertyMerger($this))->mergeConfigKeyValues($list);
+        $this->propertyMerger->mergeConfigKeyValues($list);
     }
 
     /**
@@ -377,7 +380,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function mergeGacelaConfigsToExtend(array $list): void
     {
-        (new PropertyMerger($this))->mergeGacelaConfigsToExtend($list);
+        $this->propertyMerger->mergeGacelaConfigsToExtend($list);
     }
 
     /**
@@ -385,7 +388,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function mergePlugins(array $list): void
     {
-        (new PropertyMerger($this))->mergePlugins($list);
+        $this->propertyMerger->mergePlugins($list);
     }
 
     /**
@@ -394,7 +397,7 @@ final class SetupGacela extends AbstractSetupGacela
     #[Override]
     public function getGacelaConfigsToExtend(): array
     {
-        return (array)$this->properties->gacelaConfigsToExtend;
+        return $this->properties->gacelaConfigsToExtend ?? self::DEFAULT_GACELA_CONFIGS_TO_EXTEND;
     }
 
     /**
@@ -403,7 +406,7 @@ final class SetupGacela extends AbstractSetupGacela
     #[Override]
     public function getPlugins(): array
     {
-        return (array)$this->properties->plugins;
+        return $this->properties->plugins ?? self::DEFAULT_PLUGINS;
     }
 
     private function setAreEventListenersEnabled(?bool $flag): self

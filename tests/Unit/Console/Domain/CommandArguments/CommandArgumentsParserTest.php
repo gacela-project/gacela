@@ -74,11 +74,11 @@ final class CommandArgumentsParserTest extends TestCase
 
     public function test_no_autoload_psr4_match_found(): void
     {
-        $this->expectExceptionObject(
-            CommandArgumentsException::noAutoloadPsr4MatchFound('Unknown/Module', ['App']),
+        $this->expectExceptionMessage(
+            'No autoload psr-4 match found for Unknown/Module. Known PSR-4: App, VendorPackage',
         );
 
-        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+        $parser = new CommandArgumentsParser($this->exampleComposerJsonWithVendorNamespace());
         $parser->parse('Unknown/Module');
     }
 
@@ -89,6 +89,15 @@ final class CommandArgumentsParserTest extends TestCase
 
         self::assertSame('Tëst\Mödülé', $args->namespace());
         self::assertSame('src/Mödülé', $args->directory());
+    }
+
+    public function test_parse_prefers_longest_psr4_match(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleComposerJsonWithMultipleNamespaces());
+        $args = $parser->parse('App/Test/SubModule');
+
+        self::assertSame('App\Test\SubModule', $args->namespace());
+        self::assertSame('modules/Test/SubModule', $args->directory());
     }
 
     private function exampleOneLevelComposerJson(): array
@@ -102,7 +111,43 @@ final class CommandArgumentsParserTest extends TestCase
     }
 }
 JSON;
-        return json_decode($composerJson, true);
+        return json_decode($composerJson, true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @return array{autoload: array{psr-4: array<string,string>}}
+     */
+    private function exampleComposerJsonWithMultipleNamespaces(): array
+    {
+        $composerJson = <<<'JSON'
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/",
+            "App\\Test\\": "modules/Test/"
+        }
+    }
+}
+JSON;
+        return json_decode($composerJson, true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @return array{autoload: array{psr-4: array<string,string>}}
+     */
+    private function exampleComposerJsonWithVendorNamespace(): array
+    {
+        $composerJson = <<<'JSON'
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/",
+            "Vendor\\Package\\": "packages/"
+        }
+    }
+}
+JSON;
+        return json_decode($composerJson, true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -119,7 +164,7 @@ JSON;
     }
 }
 JSON;
-        return json_decode($composerJson, true);
+        return json_decode($composerJson, true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**

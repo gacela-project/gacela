@@ -1,6 +1,6 @@
 includes:
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
-    - phpstan-gacela-rules.neon
+    - phpstan-gacela.neon
 
 parameters:
     level: 0

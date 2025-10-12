@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add `phpstan-gacela-rules.neon`
+- Add `phpstan-gacela.neon` for reusable PHPStan rules enforcing Gacela naming conventions (Facade, Factory, Provider, Config)
 - Drop static facade magic methods; call `$facade->getFactory()` directly
 - Improve PHPStan generic type support
   - Replace `@method` annotations with `@extends` for better type inference

@@ -8,6 +8,7 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
+use ReflectionAttribute;
 use ReflectionClass;
 
 use function is_string;
@@ -71,6 +72,12 @@ final class DocBlockResolver
     private function getClassFromDoc(string $method): string
     {
         $reflectionClass = new ReflectionClass($this->callerClass);
+
+        $className = $this->searchClassOverAttributes($reflectionClass, $method);
+        if ($className !== null) {
+            return $className;
+        }
+
         $className = $this->searchClassOverDocBlock($reflectionClass, $method);
         if (class_exists($className)) {
             return $className;
@@ -96,6 +103,26 @@ final class DocBlockResolver
         $docBlock = (string)$reflectionClass->getDocComment();
 
         return (new DocBlockParser())->getClassFromMethod($docBlock, $method);
+    }
+
+    /**
+     * @param ReflectionClass<object> $reflectionClass
+     *
+     * @return class-string|null
+     */
+    private function searchClassOverAttributes(ReflectionClass $reflectionClass, string $method): ?string
+    {
+        $attributes = $reflectionClass->getAttributes(Doc::class, ReflectionAttribute::IS_INSTANCEOF);
+
+        foreach ($attributes as $attribute) {
+            /** @var Doc $instance */
+            $instance = $attribute->newInstance();
+            if ($instance->method === $method) {
+                return $instance->className;
+            }
+        }
+
+        return null;
     }
 
     /**

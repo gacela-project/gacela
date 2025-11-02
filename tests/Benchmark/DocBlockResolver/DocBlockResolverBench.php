@@ -16,16 +16,13 @@ final class DocBlockResolverBench
 {
     public function setUp(): void
     {
-        // Bootstrap Gacela on first run
         Gacela::bootstrap(__DIR__);
 
-        // Clear cache before each benchmark to measure actual resolution time
         DocBlockResolverCache::resetCache();
     }
 
     public function tearDown(): void
     {
-        // Clear cache after each benchmark
         DocBlockResolverCache::resetCache();
     }
 

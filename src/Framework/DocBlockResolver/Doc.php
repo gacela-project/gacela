@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Gacela\Framework\DocBlockResolver;
+
+use Attribute;
+
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+final class Doc
+{
+    /**
+     * @param class-string $className
+     */
+    public function __construct(
+        public readonly string $method,
+        public readonly string $className,
+    ) {
+    }
+}

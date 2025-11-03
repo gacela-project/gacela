@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\DocBlockResolverAware;
+namespace GacelaTest\Integration\Framework\ServiceResolverAware;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 
-final class DocBlockResolverAttributeAwareTest extends TestCase
+final class ServiceResolverInMemoryAwareTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
@@ -23,12 +24,13 @@ final class DocBlockResolverAttributeAwareTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
+            $config->addAppConfigKeyValue(GacelaFileCache::KEY_ENABLED, false);
         });
     }
 
     public function test_existing_service(): void
     {
-        $dummy = new DummyAttributeDocBlockResolverAware();
+        $dummy = new DummyServiceResolverAware();
         $actual = $dummy->getRepository()->findName();
 
         self::assertCount(1, InMemoryCache::getAllFromKey(CustomServicesPhpCache::class));
@@ -40,10 +42,18 @@ final class DocBlockResolverAttributeAwareTest extends TestCase
     {
         self::assertCount(0, InMemoryCache::getAllFromKey(CustomServicesPhpCache::class));
 
-        $dummy = new DummyAttributeDocBlockResolverAware();
+        $dummy = new DummyServiceResolverAware();
         $dummy->getRepository()->findName();
         $dummy->getRepository()->findName();
 
         self::assertCount(1, InMemoryCache::getAllFromKey(CustomServicesPhpCache::class));
+    }
+
+    public function test_non_existing_service(): void
+    {
+        $this->expectExceptionMessage('Missing the concrete return type for the method `getRepository()`');
+
+        $dummy = new BadDummyServiceResolverAware();
+        $dummy->getRepository();
     }
 }

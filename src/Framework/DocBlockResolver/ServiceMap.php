@@ -7,7 +7,7 @@ namespace Gacela\Framework\DocBlockResolver;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-final class Doc
+final class ServiceMap
 {
     /**
      * @param class-string $className

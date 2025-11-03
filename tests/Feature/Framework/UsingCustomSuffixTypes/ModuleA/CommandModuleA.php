@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\UsingCustomSuffixTypes\ModuleA;
 
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 
 /**
  * @method FacaModuleA getFacade()
  */
 final class CommandModuleA
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     public function execute(): array
     {

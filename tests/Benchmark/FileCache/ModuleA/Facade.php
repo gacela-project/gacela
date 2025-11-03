@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\FileCache\ModuleA;
 
 use Gacela\Framework\AbstractFacade;
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Benchmark\FileCache\ModuleA\Infrastructure\EntityManager;
 use GacelaTest\Benchmark\FileCache\ModuleA\Infrastructure\Repository;
 
@@ -17,7 +17,7 @@ use GacelaTest\Benchmark\FileCache\ModuleA\Infrastructure\Repository;
  */
 final class Facade extends AbstractFacade
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     public function loadGacelaCacheFile(): array
     {

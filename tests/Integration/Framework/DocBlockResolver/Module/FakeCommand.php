@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\DocBlockResolver\Module;
 
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 
 /**
  * @method FakeFacade getFacade()
@@ -13,5 +13,5 @@ use Gacela\Framework\DocBlockResolverAwareTrait;
  */
 final class FakeCommand
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 }

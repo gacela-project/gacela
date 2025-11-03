@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\DocBlockResolverAware\Persistence;
+namespace GacelaTest\Integration\Framework\ServiceResolverAware\Persistence;
 
 final class FakeRepository
 {

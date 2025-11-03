@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Command;
 
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Feature\Framework\DocBlockServiceAware\Module\Infrastructure\Persistence\CustomHelloRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class HelloCommand extends Command
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

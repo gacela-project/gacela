@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure;
 
 use Gacela\Console\ConsoleFactory;
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 use Override;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
@@ -15,7 +15,7 @@ use Symfony\Component\Console\Command\Command;
  */
 final class ConsoleBootstrap extends Application
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     /**
      * @return array<string,Command>

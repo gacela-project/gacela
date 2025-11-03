@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\FileCache\ModuleA;
 
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Benchmark\FileCache\ModuleA\Infrastructure\EntityManager;
 use GacelaTest\Benchmark\FileCache\ModuleA\Infrastructure\Repository;
 use GacelaTest\Fixtures\StringValueInterface;
@@ -17,7 +17,7 @@ use GacelaTest\Fixtures\StringValueInterface;
  */
 final class FactoryA extends AbstractFactory
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     public function __construct(
         private StringValueInterface $stringValue,

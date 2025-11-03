@@ -112,10 +112,10 @@ final class DocBlockResolver
      */
     private function searchClassOverAttributes(ReflectionClass $reflectionClass, string $method): ?string
     {
-        $attributes = $reflectionClass->getAttributes(Doc::class, ReflectionAttribute::IS_INSTANCEOF);
+        $attributes = $reflectionClass->getAttributes(ServiceMap::class, ReflectionAttribute::IS_INSTANCEOF);
 
         foreach ($attributes as $attribute) {
-            /** @var Doc $instance */
+            /** @var ServiceMap $instance */
             $instance = $attribute->newInstance();
             if ($instance->method === $method) {
                 return $instance->className;

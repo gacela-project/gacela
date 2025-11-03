@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\FileCache\Module;
 
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Feature\Framework\FileCache\Module\Persistence\FakeRepository;
 
 /**
@@ -13,7 +13,7 @@ use GacelaTest\Feature\Framework\FileCache\Module\Persistence\FakeRepository;
  */
 final class Factory extends AbstractFactory
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     public function getName(): string
     {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\DocBlockResolver;
 
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\ServiceResolverAwareTrait;
 
 /**
  * Test class for benchmarking PHPDoc-based resolution.
@@ -15,12 +15,12 @@ use Gacela\Framework\DocBlockResolverAwareTrait;
  */
 final class DocBlockResolverPhpDocBased
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     /**
      * Get factory through PHPDoc-based resolution (slower path).
      * This will use searchClassOverDocBlock() in DocBlockResolver for string parsing.
-     * No @Doc attribute, so the resolver will fall through to regex-based parsing.
+     * No @ServiceMap attribute, so the resolver will fall through to regex-based parsing.
      */
     public function getFactory(): AbstractFactory
     {

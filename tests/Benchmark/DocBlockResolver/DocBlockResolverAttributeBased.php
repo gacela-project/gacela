@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\DocBlockResolver;
 
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\DocBlockResolver\Doc;
-use Gacela\Framework\DocBlockResolverAwareTrait;
+use Gacela\Framework\DocBlockResolver\ServiceMap;
+use Gacela\Framework\ServiceResolverAwareTrait;
 
 /**
  * Test class for benchmarking attribute-based resolution.
  * Uses PHP attributes for performance comparison.
  */
-#[Doc(method: 'getFactory', className: AbstractFactory::class)]
+#[ServiceMap(method: 'getFactory', className: AbstractFactory::class)]
 final class DocBlockResolverAttributeBased
 {
-    use DocBlockResolverAwareTrait;
+    use ServiceResolverAwareTrait;
 
     /**
      * Get factory through attribute-based resolution (fast path).

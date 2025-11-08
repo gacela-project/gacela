@@ -18,6 +18,8 @@ use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeFactory;
 use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeRandomService;
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
+
 final class DocBlockResolverTest extends TestCase
 {
     protected function setUp(): void
@@ -27,14 +29,22 @@ final class DocBlockResolverTest extends TestCase
         });
     }
 
-    public function test_missing_class_definition(): void
+    /**
+     * Verifies that attempting to resolve a non-existent class from a @method annotation
+     * throws MissingClassDefinitionException.
+     */
+    public function test_throws_exception_when_class_definition_is_missing(): void
     {
         $this->expectException(MissingClassDefinitionException::class);
 
         (new FakeCommand())->getUnknown();
     }
 
-    public function test_service_not_found(): void
+    /**
+     * Verifies that DocBlockServiceResolver throws an exception when given an empty
+     * service name, as there's no valid service to resolve.
+     */
+    public function test_throws_exception_when_service_name_is_empty(): void
     {
         $this->expectException(DocBlockServiceNotFoundException::class);
 
@@ -43,39 +53,66 @@ final class DocBlockResolverTest extends TestCase
         $resolver->resolve($command);
     }
 
-    public function test_normalize_facade(): void
-    {
-        $resolver = DocBlockResolver::fromCaller(new FakeCommand());
-        $actual = $resolver->getDocBlockResolvable('getFacade');
-        $expected = new DocBlockResolvable(FakeFacade::class, 'Facade');
+    /**
+     * Tests that DocBlockResolver correctly resolves service types from @method annotations.
+     *
+     * @dataProvider serviceResolutionProvider
+     */
+    public function test_resolves_service_type_from_docblock(
+        object $caller,
+        string $methodName,
+        string $expectedClass,
+        string $expectedSuffix,
+    ): void {
+        $resolver = DocBlockResolver::fromCaller($caller);
+        $actual = $resolver->getDocBlockResolvable($methodName);
+        $expected = new DocBlockResolvable($expectedClass, $expectedSuffix);
 
-        self::assertEquals($expected, $actual);
+        self::assertEquals(
+            $expected,
+            $actual,
+            sprintf(
+                'Failed to resolve %s() from %s to %s',
+                $methodName,
+                $caller::class,
+                $expectedClass,
+            ),
+        );
     }
 
-    public function test_normalize_factory(): void
+    /**
+     * Provides test cases for service resolution from different callers.
+     *
+     * @return iterable<string, array{object, string, class-string, string}>
+     */
+    public static function serviceResolutionProvider(): iterable
     {
-        $resolver = DocBlockResolver::fromCaller(new FakeFacade());
-        $actual = $resolver->getDocBlockResolvable('getFactory');
-        $expected = new DocBlockResolvable(FakeFactory::class, 'Factory');
+        yield 'Facade resolution from Command' => [
+            new FakeCommand(),
+            'getFacade',
+            FakeFacade::class,
+            'Facade',
+        ];
 
-        self::assertEquals($expected, $actual);
-    }
+        yield 'Factory resolution from Facade' => [
+            new FakeFacade(),
+            'getFactory',
+            FakeFactory::class,
+            'Factory',
+        ];
 
-    public function test_normalize_config(): void
-    {
-        $resolver = DocBlockResolver::fromCaller(new FakeFactory());
-        $actual = $resolver->getDocBlockResolvable('getConfig');
-        $expected = new DocBlockResolvable(FakeConfig::class, 'Config');
+        yield 'Config resolution from Factory' => [
+            new FakeFactory(),
+            'getConfig',
+            FakeConfig::class,
+            'Config',
+        ];
 
-        self::assertEquals($expected, $actual);
-    }
-
-    public function test_normalize_random(): void
-    {
-        $resolver = DocBlockResolver::fromCaller(new FakeCommand());
-        $actual = $resolver->getDocBlockResolvable('getRandom');
-        $expected = new DocBlockResolvable(FakeRandomService::class, 'FakeRandomService');
-
-        self::assertEquals($expected, $actual);
+        yield 'Custom service resolution from Command' => [
+            new FakeCommand(),
+            'getRandom',
+            FakeRandomService::class,
+            'FakeRandomService',
+        ];
     }
 }

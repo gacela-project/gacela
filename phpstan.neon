@@ -9,6 +9,8 @@ parameters:
         - %currentWorkingDirectory%/src/
     parallel:
         maximumNumberOfProcesses: 4
+    excludePaths:
+        - '**/gacela-class-names.php'
     ignoreErrors:
         - '#Method Gacela\\.*::.* should return class-string.*but returns string#'
         - '#Method Gacela\\.*::.* should return array<.*> but returns array#'

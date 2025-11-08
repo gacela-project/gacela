@@ -55,9 +55,8 @@ final class DocBlockResolverTest extends TestCase
 
     /**
      * Tests that DocBlockResolver correctly resolves service types from @method annotations.
-     *
-     * @dataProvider serviceResolutionProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('serviceResolutionProvider')]
     public function test_resolves_service_type_from_docblock(
         object $caller,
         string $methodName,

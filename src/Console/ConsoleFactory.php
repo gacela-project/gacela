@@ -19,6 +19,8 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
+use Gacela\Framework\Config\Config;
+use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -77,6 +79,31 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
+     * @return array{
+     *     registered_services: int,
+     *     frozen_services: int,
+     *     factory_services: int,
+     *     bindings: int,
+     *     cached_dependencies: int,
+     *     memory_usage: string
+     * }
+     */
+    public function getContainerStats(): array
+    {
+        return $this->getMainContainer()->getStats();
+    }
+
+    /**
+     * @param class-string $className
+     *
+     * @return list<string>
+     */
+    public function getContainerDependencyTree(string $className): array
+    {
+        return $this->getMainContainer()->getDependencyTree($className);
+    }
+
+    /**
      * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
      */
     private function createRecursiveIterator(): RecursiveIteratorIterator
@@ -100,5 +127,10 @@ final class ConsoleFactory extends AbstractFactory
     private function getTemplateByFilenameMap(): array
     {
         return (array)$this->getProvidedDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
+    }
+
+    private function getMainContainer(): Container
+    {
+        return Container::withConfig(Config::getInstance());
     }
 }

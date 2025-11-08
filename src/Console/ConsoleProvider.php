@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
@@ -34,6 +35,7 @@ final class ConsoleProvider extends AbstractProvider
             new MakeFileCommand(),
             new MakeModuleCommand(),
             new ListModulesCommand(),
+            new DebugContainerCommand(),
         ]);
     }
 

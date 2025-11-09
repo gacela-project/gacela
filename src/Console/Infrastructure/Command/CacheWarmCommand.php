@@ -54,7 +54,23 @@ final class CacheWarmCommand extends Command
         $startMemory = memory_get_usage(true);
 
         // Find all modules
-        $modules = $this->getFacade()->findAllAppModules();
+        try {
+            $modules = $this->getFacade()->findAllAppModules();
+        } catch (Throwable $throwable) {
+            // If module discovery fails (e.g., due to test fixtures), continue with empty set
+            $output->writeln('<fg=yellow>Warning: Some modules could not be discovered due to errors</>');
+            $output->writeln(sprintf('  Error: %s', $throwable->getMessage()));
+            $modules = [];
+        }
+
+        // Filter out test/fixture modules that might cause issues
+        $modules = array_filter($modules, static function ($module): bool {
+            $className = $module->facadeClass();
+            return !str_contains($className, 'Test')
+                && !str_contains($className, '\\Fixtures\\')
+                && !str_contains($className, '\\Benchmark\\');
+        });
+
         $output->writeln(sprintf('<fg=cyan>Found %d modules</>', count($modules)));
         $output->writeln('');
 

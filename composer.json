@@ -79,6 +79,10 @@
     },
     "scripts": {
         "post-install-cmd": "tools/git-hooks/init.sh",
+        "clear-cache-gacela": [
+            "find tests -type f -name 'gacela-custom-services.php' -exec rm -rf {} \\;",
+            "find tests -type f -name 'gacela-class-names.php' -exec rm -rf {} \\;"
+        ],
         "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
         "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "csfix": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix",
@@ -96,8 +100,7 @@
         ],
         "infection": [
             "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=75 --min-covered-msi=75",
-            "find tests -type f -name 'gacela-custom-services.php' -exec rm -rf {} \\;",
-            "find tests -type f -name 'gacela-class-names.php' -exec rm -rf {} \\;"
+            "@static-clear-cache"
         ],
         "metrics-report": [
             "@test-all-suites",
@@ -123,7 +126,8 @@
         "rector": "./vendor/bin/rector",
         "static-clear-cache": [
             "@clear-cache-psalm",
-            "@clear-cache-phpstan"
+            "@clear-cache-phpstan",
+            "@clear-cache-gacela"
         ],
         "test": [
             "@test-all"

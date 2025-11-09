@@ -10,7 +10,6 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
-use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 
 final class ServiceResolverCustomServicesAwareTest extends TestCase
@@ -47,13 +46,16 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
         self::assertSame('name', $actual);
     }
 
-    #[Depends('test_existing_service')]
     public function test_existing_service_cached(): void
     {
+        // First call should cache the service
+        $dummy = new DummyServiceResolverAware();
+        $dummy->getRepository()->findName();
+
         /** @psalm-suppress InternalMethod */
         self::assertCount(1, CustomServicesPhpCache::all());
 
-        $dummy = new DummyServiceResolverAware();
+        // Subsequent calls should use the cache without adding more entries
         $dummy->getRepository()->findName();
         $dummy->getRepository()->findName();
 

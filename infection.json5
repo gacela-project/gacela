@@ -21,8 +21,7 @@
     mutators: {
         '@default': true,
         "global-ignore": [
-            "Gacela\\Console\\\\*",
-            "*FileCache*"
+            "Gacela\\Console\\*",
         ]
     }
 }

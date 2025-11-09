@@ -20,6 +20,7 @@ final class GacelaConfigTransfer
      * @param ?list<class-string> $gacelaConfigsToExtend
      * @param ?list<class-string|callable> $plugins
      * @param ?array<string,list<Closure>> $servicesToExtend
+     * @param array<string,Closure> $factories
      */
     public function __construct(
         public readonly AppConfigBuilder $appConfigBuilder,
@@ -37,6 +38,7 @@ final class GacelaConfigTransfer
         public readonly ?array $gacelaConfigsToExtend,
         public readonly ?array $plugins,
         public readonly ?array $servicesToExtend,
+        public readonly array $factories,
     ) {
     }
 }

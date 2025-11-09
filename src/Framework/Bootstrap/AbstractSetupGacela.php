@@ -25,6 +25,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const servicesToExtend = 'servicesToExtend';
 
+    public const factories = 'factories';
+
     public const plugins = 'plugins';
 
     public const gacelaConfigsToExtend = 'gacelaConfigsToExtend';
@@ -46,6 +48,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const DEFAULT_SPECIFIC_LISTENERS = [];
 
     protected const DEFAULT_SERVICES_TO_EXTEND = [];
+
+    protected const DEFAULT_FACTORIES = [];
 
     protected const DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
 

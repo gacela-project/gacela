@@ -46,4 +46,29 @@ final class ConsoleFacade extends AbstractFacade
             ->createAllAppModulesFinder()
             ->findAllAppModules($filter);
     }
+
+    /**
+     * @return array{
+     *     registered_services: int,
+     *     frozen_services: int,
+     *     factory_services: int,
+     *     bindings: int,
+     *     cached_dependencies: int,
+     *     memory_usage: string
+     * }
+     */
+    public function getContainerStats(): array
+    {
+        return $this->getFactory()->getContainerStats();
+    }
+
+    /**
+     * @param class-string $className
+     *
+     * @return list<string>
+     */
+    public function getContainerDependencyTree(string $className): array
+    {
+        return $this->getFactory()->getContainerDependencyTree($className);
+    }
 }

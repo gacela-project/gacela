@@ -67,6 +67,21 @@ final class Gacela
     }
 
     /**
+     * Get the main dependency injection container.
+     * This is the actual container created during bootstrap with all runtime bindings and frozen services.
+     *
+     * @throws GacelaNotBootstrappedException if Gacela has not been bootstrapped yet
+     */
+    public static function container(): Container
+    {
+        if (!self::$mainContainer instanceof Container) {
+            throw new GacelaNotBootstrappedException();
+        }
+
+        return self::$mainContainer;
+    }
+
+    /**
      * Get the application root dir set when bootstrapping gacela
      */
     public static function rootDir(): string

@@ -34,6 +34,7 @@ final class SetupInitializer
             ->setSpecificListeners($dto->specificListeners)
             ->setGacelaConfigsToExtend($dto->gacelaConfigsToExtend)
             ->setPlugins($dto->plugins)
-            ->setServicesToExtend($dto->servicesToExtend);
+            ->setServicesToExtend($dto->servicesToExtend)
+            ->setFactories($dto->factories);
     }
 }

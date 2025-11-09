@@ -49,6 +49,9 @@ final class GacelaConfig
     /** @var array<string,list<Closure>> */
     private array $servicesToExtend = [];
 
+    /** @var array<string,Closure> */
+    private array $factories = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -285,6 +288,23 @@ final class GacelaConfig
     }
 
     /**
+     * Register a factory service that creates a new instance on each call.
+     * Unlike regular services (which are singletons), factory services return
+     * a new instance every time they are resolved from the container.
+     *
+     * @param string $id The service identifier (usually a class name or interface)
+     * @param Closure $factory The factory closure that creates the service instance
+     *
+     * @return $this
+     */
+    public function addFactory(string $id, Closure $factory): self
+    {
+        $this->factories[$id] = $factory;
+
+        return $this;
+    }
+
+    /**
      * Add a new invokable class that can extend the GacelaConfig object.
      *
      * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
@@ -352,6 +372,7 @@ final class GacelaConfig
             $this->gacelaConfigsToExtend,
             $this->plugins,
             $this->servicesToExtend,
+            $this->factories,
         );
     }
 }

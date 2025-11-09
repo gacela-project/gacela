@@ -14,10 +14,17 @@ final class Container extends GacelaContainer implements ContainerInterface
 {
     public static function withConfig(Config $config): self
     {
-        return new self(
+        $container = new self(
             $config->getFactory()->createGacelaFileConfig()->getBindings(),
             $config->getSetupGacela()->getServicesToExtend(),
         );
+
+        // Register factory services
+        foreach ($config->getSetupGacela()->getFactories() as $id => $factory) {
+            $container->set($id, $container->factory($factory));
+        }
+
+        return $container;
     }
 
     public function getLocator(): LocatorInterface

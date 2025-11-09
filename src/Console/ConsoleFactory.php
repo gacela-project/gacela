@@ -19,7 +19,6 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
-use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use RecursiveDirectoryIterator;
@@ -131,6 +130,6 @@ final class ConsoleFactory extends AbstractFactory
 
     private function getMainContainer(): Container
     {
-        return Container::withConfig(Config::getInstance());
+        return Gacela::container();
     }
 }

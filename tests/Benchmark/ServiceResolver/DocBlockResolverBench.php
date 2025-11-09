@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Benchmark\DocBlockResolver;
+namespace GacelaTest\Benchmark\ServiceResolver;
 
-use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
 
 /**
  * @BeforeMethods("setUp")

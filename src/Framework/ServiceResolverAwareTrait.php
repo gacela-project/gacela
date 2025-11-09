@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
-use Gacela\Framework\DocBlockResolver\DocBlockResolvable;
-use Gacela\Framework\DocBlockResolver\DocBlockResolver;
+use Gacela\Framework\ServiceResolver\DocBlockResolvable;
+use Gacela\Framework\ServiceResolver\DocBlockResolver;
 
 use function array_key_exists;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\DocBlockResolver;
+namespace Gacela\Framework\ServiceResolver;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;

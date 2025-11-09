@@ -64,9 +64,9 @@ $coreFiles = [
     '/src/Framework/ClassResolver/Cache/InMemoryCache.php',
     '/src/Framework/ClassResolver/Cache/GacelaFileCache.php',
 
-    // DocBlock Resolution
-    '/src/Framework/DocBlockResolver/DocBlockResolver.php',
-    '/src/Framework/DocBlockResolver/DocBlockResolverCache.php',
+    // Service Resolution
+    '/src/Framework/ServiceResolver/DocBlockResolver.php',
+    '/src/Framework/ServiceResolver/DocBlockResolverCache.php',
     '/src/Framework/ServiceResolverAwareTrait.php',
 
     // Base Classes

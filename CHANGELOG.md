@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Renamed `DocBlockResolver` to `ServiceResolver` to better reflect its purpose
 - Added `ServiceResolverAwareTrait` with caching improvements; will replace `DocBlockResolverAwareTrait`
 - Introduced the `#[ServiceMap]` attribute as the preferred service binding instead of `DocBlock`
 - Added `cache:warm` command to pre-resolve module classes for optimal production performance

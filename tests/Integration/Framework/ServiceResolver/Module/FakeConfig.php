@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\DocBlockResolver\Module;
+namespace GacelaTest\Integration\Framework\ServiceResolver\Module;
 
 use Gacela\Framework\AbstractConfig;
 

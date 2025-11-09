@@ -6,7 +6,6 @@ namespace Gacela\Framework\ClassResolver\Facade;
 
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Override;
 
 final class FacadeResolver extends AbstractClassResolver
 {
@@ -15,7 +14,6 @@ final class FacadeResolver extends AbstractClassResolver
     /**
      * @param object|class-string $caller
      */
-    #[Override]
     public function resolve(object|string $caller): AbstractFacade
     {
         /** @var AbstractFacade $resolved */
@@ -24,7 +22,6 @@ final class FacadeResolver extends AbstractClassResolver
         return $resolved;
     }
 
-    #[Override]
     protected function getResolvableType(): string
     {
         return self::TYPE;

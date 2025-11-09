@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Event\Dispatcher;
 
-use Override;
-
 final class ConfigurableEventDispatcher implements EventDispatcherInterface
 {
     /** @var array<callable> */
@@ -30,7 +28,6 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
         $this->specificListeners[$event][] = $listener;
     }
 
-    #[Override]
     public function dispatch(object $event): void
     {
         foreach ($this->genericListeners as $listener) {

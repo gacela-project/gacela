@@ -6,7 +6,6 @@ namespace Gacela\Framework\ClassResolver\Provider;
 
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Override;
 
 final class ProviderResolver extends AbstractClassResolver
 {
@@ -17,7 +16,6 @@ final class ProviderResolver extends AbstractClassResolver
      *
      * @throws ProviderNotFoundException
      */
-    #[Override]
     public function resolve(object|string $caller): ?AbstractProvider
     {
         /** @var ?AbstractProvider $resolved */
@@ -26,7 +24,6 @@ final class ProviderResolver extends AbstractClassResolver
         return $resolved;
     }
 
-    #[Override]
     protected function getResolvableType(): string
     {
         return self::TYPE;

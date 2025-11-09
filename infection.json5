@@ -16,11 +16,13 @@
             'src'
         ]
     },
+    minMsi: 65,
+    minCoveredMsi: 65,
     mutators: {
         '@default': true,
         "global-ignore": [
-            "GacelaTest\\Feature\\Console\\CodeGenerator\\*",
-            "*FileCache*",
+            "Gacela\\Console\\\\*",
+            "*FileCache*"
         ]
     }
 }

@@ -6,7 +6,6 @@ namespace Gacela\Framework\ClassResolver\Config;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Override;
 
 final class ConfigResolver extends AbstractClassResolver
 {
@@ -15,7 +14,6 @@ final class ConfigResolver extends AbstractClassResolver
     /**
      * @param object|class-string $caller
      */
-    #[Override]
     public function resolve(object|string $caller): AbstractConfig
     {
         /** @var AbstractConfig $resolved */
@@ -24,7 +22,6 @@ final class ConfigResolver extends AbstractClassResolver
         return $resolved;
     }
 
-    #[Override]
     protected function getResolvableType(): string
     {
         return self::TYPE;

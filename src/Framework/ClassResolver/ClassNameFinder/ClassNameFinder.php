@@ -12,7 +12,6 @@ use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameInvalidCandida
 use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameNotFoundEvent;
 use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameValidCandidateFoundEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
-use Override;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
@@ -35,7 +34,6 @@ final class ClassNameFinder implements ClassNameFinderInterface
      *
      * @return class-string|null
      */
-    #[Override]
     public function findClassName(ClassInfo $classInfo, array $resolvableTypes): ?string
     {
         $cacheKey = $classInfo->getCacheKey();

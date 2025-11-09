@@ -11,7 +11,6 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFile;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Override;
 
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
@@ -20,7 +19,6 @@ final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryI
     ) {
     }
 
-    #[Override]
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
         $configBuilder = $this->createConfigBuilder();

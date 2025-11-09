@@ -10,7 +10,6 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
-use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 
 final class ServiceResolverCustomServicesAwareTest extends TestCase
@@ -24,6 +23,10 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
 
     protected function setUp(): void
     {
+        // Clear static cache and file cache to ensure test isolation when running in random order
+        CustomServicesPhpCache::clearStaticCache();
+        DirectoryUtil::removeDir(self::CACHE_DIR);
+
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
             $config->enableFileCache(self::CACHE_DIR);
@@ -43,12 +46,15 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
         self::assertSame('name', $actual);
     }
 
-    #[Depends('test_existing_service')]
     public function test_existing_service_cached(): void
     {
+        // First call should populate the cache
+        $dummy = new DummyServiceResolverAware();
+        $dummy->getRepository()->findName();
+
         self::assertCount(1, CustomServicesPhpCache::all());
 
-        $dummy = new DummyServiceResolverAware();
+        // Subsequent calls should reuse the cache without adding new entries
         $dummy->getRepository()->findName();
         $dummy->getRepository()->findName();
 

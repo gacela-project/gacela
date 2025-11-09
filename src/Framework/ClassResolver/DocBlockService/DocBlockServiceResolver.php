@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver\DocBlockService;
 
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Override;
 
 final class DocBlockServiceResolver extends AbstractClassResolver
 {
@@ -19,7 +18,6 @@ final class DocBlockServiceResolver extends AbstractClassResolver
      *
      * @throws DocBlockServiceNotFoundException
      */
-    #[Override]
     public function resolve(object|string $caller): object
     {
         $resolved = $this->doResolve($caller);
@@ -31,7 +29,6 @@ final class DocBlockServiceResolver extends AbstractClassResolver
         return $resolved;
     }
 
-    #[Override]
     protected function getResolvableType(): string
     {
         return $this->resolvableType;

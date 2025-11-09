@@ -6,7 +6,6 @@ namespace Gacela\Framework\Event\ClassResolver\ClassNameFinder;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\Event\GacelaEventInterface;
-use Override;
 
 use function sprintf;
 
@@ -34,7 +33,6 @@ final class ClassNameNotFoundEvent implements GacelaEventInterface
         return $this->resolvableTypes;
     }
 
-    #[Override]
     public function toString(): string
     {
         return sprintf(

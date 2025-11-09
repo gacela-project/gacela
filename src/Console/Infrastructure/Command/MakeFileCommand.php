@@ -7,7 +7,6 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Framework\ServiceResolverAwareTrait;
-use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -23,7 +22,6 @@ final class MakeFileCommand extends Command
 {
     use ServiceResolverAwareTrait;
 
-    #[Override]
     protected function configure(): void
     {
         $this->setName('make:file')
@@ -33,7 +31,6 @@ final class MakeFileCommand extends Command
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
     }
 
-    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @var list<string> $inputFileNames */

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure;
 
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
-use Override;
 use RuntimeException;
 
 use function sprintf;
@@ -15,7 +14,6 @@ use function sprintf;
  */
 final class FileContentIo implements FileContentIoInterface
 {
-    #[Override]
     public function mkdir(string $directory): void
     {
         if (is_dir($directory)) {
@@ -33,7 +31,6 @@ final class FileContentIo implements FileContentIoInterface
         throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
     }
 
-    #[Override]
     public function filePutContents(string $path, string $fileContent): void
     {
         file_put_contents($path, $fileContent);

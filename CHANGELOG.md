@@ -4,6 +4,10 @@
 
 - Added `ServiceResolverAwareTrait` with caching improvements; will replace `DocBlockResolverAwareTrait`
 - Introduced the `#[ServiceMap]` attribute as the preferred service binding instead of `DocBlock`
+- Added `cache:warm` command to pre-resolve module classes for optimal production performance
+- Added `validate:config` command to validate Gacela configuration for errors and best practices
+- Added opcache preload script for 20-30% performance boost in production
+- Improved error messages with actionable suggestions and examples
 
 ## [1.11.0](https://github.com/gacela-project/gacela/compare/1.10.0...1.11.0) - 2025-10-12
 

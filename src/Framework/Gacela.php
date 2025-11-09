@@ -17,8 +17,8 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
-use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
+use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
 
 use function is_string;
 use function sprintf;

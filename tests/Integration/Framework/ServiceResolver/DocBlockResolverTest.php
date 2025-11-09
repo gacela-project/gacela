@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\DocBlockResolver;
+namespace GacelaTest\Integration\Framework\ServiceResolver;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceNotFoundException;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
-use Gacela\Framework\DocBlockResolver\DocBlockResolvable;
-use Gacela\Framework\DocBlockResolver\DocBlockResolver;
 use Gacela\Framework\Gacela;
-use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeCommand;
-use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeConfig;
-use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeFacade;
-use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeFactory;
-use GacelaTest\Integration\Framework\DocBlockResolver\Module\FakeRandomService;
+use Gacela\Framework\ServiceResolver\DocBlockResolvable;
+use Gacela\Framework\ServiceResolver\DocBlockResolver;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeConfig;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFacade;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFactory;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeRandomService;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;

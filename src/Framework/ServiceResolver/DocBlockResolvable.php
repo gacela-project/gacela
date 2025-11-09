@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gacela\Framework\DocBlockResolver;
+namespace Gacela\Framework\ServiceResolver;
 
 final class DocBlockResolvable
 {

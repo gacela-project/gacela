@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Benchmark\DocBlockResolver;
+namespace GacelaTest\Benchmark\ServiceResolver;
 
 use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\DocBlockResolver\ServiceMap;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 
 /**

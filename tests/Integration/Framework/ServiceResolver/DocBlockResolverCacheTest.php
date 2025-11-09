@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Integration\Framework\DocBlockResolver;
+namespace GacelaTest\Integration\Framework\ServiceResolver;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\Config;
-use Gacela\Framework\DocBlockResolver\DocBlockResolverCache;
 use Gacela\Framework\Event\ClassResolver\Cache\CustomServicesCacheCachedEvent;
 use Gacela\Framework\Event\ClassResolver\Cache\CustomServicesInMemoryCacheCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\Cache\CustomServicesPhpCacheCreatedEvent;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockResolverCacheTest extends TestCase

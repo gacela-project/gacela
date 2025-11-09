@@ -7,10 +7,10 @@
 
     <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
 
-    See docs/static-analysis.md for detailed instructions.
+    This suppresses UndefinedMagicMethod for getFacade(), getFactory(), and getConfig().
 -->
 <issueHandlers xmlns="https://getpsalm.org/schema/config">
-    <!-- Gacela framework dynamic resolution suppressions (via #[ServiceMap] attributes) -->
+    <!-- Ignore magic methods from Gacela ServiceResolverAwareTrait (resolved via #[ServiceMap] attributes) -->
     <UndefinedMagicMethod>
         <errorLevel type="suppress">
             <referencedMethod name="*::getFacade" />
@@ -18,8 +18,5 @@
             <referencedMethod name="*::getConfig" />
         </errorLevel>
     </UndefinedMagicMethod>
-    <!-- Ignore config methods that are resolved at runtime by Gacela -->
-    <!-- TODO: narrow the context of this ignoring error to make sure it is by using something that is related to Gacela if possible -->
-    <UndefinedMethod errorLevel="suppress" />
-    <InvalidArgument errorLevel="suppress" />
+
 </issueHandlers>

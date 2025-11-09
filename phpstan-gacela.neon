@@ -2,10 +2,6 @@ parameters:
     ignoreErrors:
         # Ignore magic methods from Gacela ServiceResolverAwareTrait (resolved via #[ServiceMap] attributes)
         - '#Call to an undefined method .+::(getFacade|getFactory|getConfig)\(\)\.$#'
-        # Ignore config methods that are resolved at runtime by Gacela
-        - '#Call to an undefined method Gacela\\Framework\\AbstractConfig::[a-zA-Z]+\(\)\.$#'
-        # Ignore type mismatches for config classes (Gacela resolves the correct type at runtime)
-        - '#Parameter .+ expects .+Config(Interface)?, Gacela\\Framework\\AbstractConfig given\.$#'
 
 services:
     -

@@ -2,12 +2,6 @@
 
 Gacela provides configuration files for PHPStan and Psalm to suppress false positives from dynamic resolution via `#[ServiceMap]` attributes.
 
-## Why Needed
-
-Static analysis tools can't understand Gacela's runtime resolution of:
-- Magic methods: `getFacade()`, `getFactory()`, `getConfig()`
-- Config methods on `AbstractConfig` subclasses
-
 ## PHPStan
 
 Include in your `phpstan.neon`:
@@ -17,11 +11,13 @@ includes:
     - vendor/gacela-project/gacela/phpstan-gacela.neon
 ```
 
-This suppresses errors for magic methods, config methods, and type mismatches.
+This suppresses all Gacela-related errors: magic methods, config methods, and type mismatches.
 
 ## Psalm
 
-Include using [XInclude](https://www.w3.org/TR/xinclude/) in your `psalm.xml`:
+### Setup
+
+Add to your `psalm.xml`:
 
 ```xml
 <?xml version="1.0"?>
@@ -29,19 +25,42 @@ Include using [XInclude](https://www.w3.org/TR/xinclude/) in your `psalm.xml`:
     xmlns:xi="http://www.w3.org/2001/XInclude"
     xmlns="https://getpsalm.org/schema/config"
 >
-    <projectFiles>
-        <directory name="src"/>
-    </projectFiles>
-
     <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
 
     <issueHandlers>
-        <!-- Your other issue handlers -->
+        <!-- Add InvalidArgument suppression (see below) -->
     </issueHandlers>
 </psalm>
 ```
 
-**Note**: Add `xmlns:xi="http://www.w3.org/2001/XInclude"` to enable XInclude support.
+### What's Suppressed
+
+The included `psalm-gacela.xml` suppresses:
+- `UndefinedMagicMethod` for `getFacade()`, `getFactory()`, `getConfig()`
+- `UndefinedMethod` for all `AbstractConfig` methods
+
+### InvalidArgument Suppression
+
+You must add `InvalidArgument` suppression to your `psalm.xml`:
+
+```xml
+<issueHandlers>
+    <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
+
+    <InvalidArgument>
+        <errorLevel type="suppress">
+            <directory name="src" />
+        </errorLevel>
+    </InvalidArgument>
+</issueHandlers>
+```
+
+Or suppress inline for specific cases:
+
+```php
+/** @psalm-suppress InvalidArgument */
+return new YourService($this->getConfig());
+```
 
 
 ## Troubleshooting

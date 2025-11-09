@@ -10,6 +10,7 @@ use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
+use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 use Override;
@@ -38,6 +39,7 @@ final class ConsoleProvider extends AbstractProvider
             new ListModulesCommand(),
             new DebugContainerCommand(),
             new CacheWarmCommand(),
+            new ValidateConfigCommand(),
         ]);
     }
 

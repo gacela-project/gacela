@@ -6,7 +6,6 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\ServiceResolverAwareTrait;
-use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,7 +24,6 @@ final class DebugContainerCommand extends Command
 {
     use ServiceResolverAwareTrait;
 
-    #[Override]
     protected function configure(): void
     {
         $this->setName('debug:container')
@@ -36,7 +34,6 @@ final class DebugContainerCommand extends Command
             ->addOption('tree', 't', InputOption::VALUE_NONE, 'Show dependency tree for specified class');
     }
 
-    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @var string|null $className */

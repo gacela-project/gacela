@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\FileContent;
 
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
-use Override;
 use RuntimeException;
 
 use function sprintf;
@@ -24,7 +23,6 @@ final class FileContentGenerator implements FileContentGeneratorInterface
     /**
      * @return string path result where the file was generated
      */
-    #[Override]
     public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName = false): string
     {
         $this->fileContentIo->mkdir($commandArguments->directory());

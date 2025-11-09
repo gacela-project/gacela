@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\PathNormalizer;
 
-use Override;
-
 use function sprintf;
 
 final class WithoutSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
@@ -15,7 +13,6 @@ final class WithoutSuffixAbsolutePathStrategy implements AbsolutePathStrategyInt
     ) {
     }
 
-    #[Override]
     public function generateAbsolutePath(string $relativePath): string
     {
         return sprintf(

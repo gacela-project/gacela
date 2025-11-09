@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Event\ConfigReader;
 
 use Gacela\Framework\Event\GacelaEventInterface;
-use Override;
 
 use function sprintf;
 
@@ -21,7 +20,6 @@ final class ReadPhpConfigEvent implements GacelaEventInterface
         return $this->absolutePath;
     }
 
-    #[Override]
     public function toString(): string
     {
         return sprintf(

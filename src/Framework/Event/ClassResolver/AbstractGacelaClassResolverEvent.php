@@ -7,7 +7,6 @@ namespace Gacela\Framework\Event\ClassResolver;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassInfoInterface;
 use Gacela\Framework\Event\GacelaEventInterface;
-use Override;
 
 use function sprintf;
 
@@ -23,7 +22,6 @@ abstract class AbstractGacelaClassResolverEvent implements GacelaEventInterface
         return $this->classInfo;
     }
 
-    #[Override]
     public function toString(): string
     {
         return sprintf(

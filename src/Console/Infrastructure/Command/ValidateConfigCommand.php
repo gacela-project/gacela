@@ -6,7 +6,6 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
-use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -23,7 +22,6 @@ use function sprintf;
 
 final class ValidateConfigCommand extends Command
 {
-    #[Override]
     protected function configure(): void
     {
         $this->setName('validate:config')
@@ -31,7 +29,6 @@ final class ValidateConfigCommand extends Command
             ->setHelp($this->getHelpText());
     }
 
-    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('');

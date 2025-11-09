@@ -8,7 +8,6 @@ use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\ServiceResolverAwareTrait;
-use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -27,7 +26,6 @@ final class CacheWarmCommand extends Command
 {
     use ServiceResolverAwareTrait;
 
-    #[Override]
     protected function configure(): void
     {
         $this->setName('cache:warm')
@@ -36,7 +34,6 @@ final class CacheWarmCommand extends Command
             ->addOption('clear', 'c', InputOption::VALUE_NONE, 'Clear existing cache before warming');
     }
 
-    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('');

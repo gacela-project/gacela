@@ -13,7 +13,6 @@ use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
-use Override;
 
 /**
  * @extends AbstractProvider<ConsoleConfig>
@@ -24,7 +23,6 @@ final class ConsoleProvider extends AbstractProvider
 
     public const TEMPLATE_BY_FILENAME_MAP = 'TEMPLATE_FILENAME_MAP';
 
-    #[Override]
     public function provideModuleDependencies(Container $container): void
     {
         $this->addCommands($container);

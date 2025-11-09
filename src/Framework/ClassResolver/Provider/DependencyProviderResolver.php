@@ -7,7 +7,6 @@ namespace Gacela\Framework\ClassResolver\Provider;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Override;
 
 use function dirname;
 
@@ -21,7 +20,6 @@ final class DependencyProviderResolver extends AbstractClassResolver
     /**
      * @param object|class-string $caller
      */
-    #[Override]
     public function resolve(object|string $caller): ?AbstractProvider
     {
         /** @var ?AbstractDependencyProvider $resolved */
@@ -42,7 +40,6 @@ final class DependencyProviderResolver extends AbstractClassResolver
         return $resolved;
     }
 
-    #[Override]
     protected function getResolvableType(): string
     {
         return self::TYPE;

@@ -10,6 +10,7 @@
 - Added opcache preload script for 20-30% performance boost in production
 - Added suppressions to `phpstan-gacela.neon` and `psalm-gacela.xml` for dynamic resolution
 - Improved error messages with actionable suggestions and examples
+- Added `GacelaConfig::addFactory()` to register factory services that create new instances on each resolution
 
 ## [1.11.0](https://github.com/gacela-project/gacela/compare/1.10.0...1.11.0) - 2025-10-12
 

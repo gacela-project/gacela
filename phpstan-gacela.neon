@@ -1,3 +1,8 @@
+parameters:
+    ignoreErrors:
+        # Ignore magic methods from Gacela ServiceResolverAwareTrait (resolved via #[ServiceMap] attributes)
+        - '#Call to an undefined method .+::(getFacade|getFactory|getConfig)\(\)\.$#'
+
 services:
     -
         class: Gacela\PHPStan\Rules\SuffixExtendsRule

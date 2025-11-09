@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Gacela Psalm Configuration
+
+    This file contains issue handler suppressions for Gacela's dynamic resolution patterns.
+    Include this in your psalm.xml using XInclude:
+
+    <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
+
+    This suppresses UndefinedMagicMethod for getFacade(), getFactory(), and getConfig().
+-->
+<issueHandlers xmlns="https://getpsalm.org/schema/config">
+    <!-- Ignore magic methods from Gacela ServiceResolverAwareTrait (resolved via #[ServiceMap] attributes) -->
+    <UndefinedMagicMethod>
+        <errorLevel type="suppress">
+            <referencedMethod name="*::getFacade" />
+            <referencedMethod name="*::getFactory" />
+            <referencedMethod name="*::getConfig" />
+        </errorLevel>
+    </UndefinedMagicMethod>
+
+</issueHandlers>

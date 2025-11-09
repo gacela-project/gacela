@@ -87,6 +87,42 @@ application-name
     └── ...
 ```
 
+### Static Analysis
+
+Gacela provides configuration files for PHPStan and Psalm that suppress false positives related to dynamic resolution via `#[ServiceMap]` attributes.
+
+**PHPStan**: Include `phpstan-gacela.neon` in your `phpstan.neon`:
+
+```neon
+includes:
+    - vendor/gacela-project/gacela/phpstan-gacela.neon
+```
+
+**Psalm**: Include `psalm-gacela.xml` using XInclude:
+
+```xml
+<psalm
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns="https://getpsalm.org/schema/config"
+>
+    <projectFiles>
+        <directory name="src"/>
+    </projectFiles>
+
+    <!-- Include Gacela suppressions -->
+    <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
+
+    <issueHandlers>
+        <!-- Your other issue handlers -->
+    </issueHandlers>
+</psalm>
+```
+
+This suppresses warnings about:
+- Magic methods `getFacade()`, `getFactory()`, `getConfig()` resolved via `ServiceResolverAwareTrait`
+- Config methods on `AbstractConfig` that are resolved at runtime
+- Type mismatches where Gacela resolves the correct concrete type
+
 ### Documentation
 
 You can check the full documentation in the official [website](https://gacela-project.com/).

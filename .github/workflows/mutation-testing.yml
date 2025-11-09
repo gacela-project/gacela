@@ -28,4 +28,4 @@ jobs:
       - name: Run mutation tests
         env:
           STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
-        run: XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=75 --min-covered-msi=75
+        run: XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max

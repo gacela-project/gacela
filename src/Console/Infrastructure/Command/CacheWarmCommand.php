@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Console\Application\CacheWarm\CacheManager;
+use Gacela\Console\Application\CacheWarm\CacheWarmOutputFormatter;
+use Gacela\Console\Application\CacheWarm\CacheWarmService;
+use Gacela\Console\Application\CacheWarm\ClassNotFoundException;
+use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
-use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
-use Gacela\Framework\Config\Config;
+use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,8 +20,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 use function count;
-use function file_exists;
-use function sprintf;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -36,138 +38,104 @@ final class CacheWarmCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $output->writeln('');
-        $output->writeln('<info>Warming Gacela cache...</info>');
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
-        $output->writeln('');
+        $cacheManager = new CacheManager();
+        $cacheWarmService = new CacheWarmService($this->getFacade());
+        $formatter = new CacheWarmOutputFormatter($output);
+        $metrics = new PerformanceMetrics();
+
+        $formatter->writeHeader();
 
         $clearCache = (bool) $input->getOption('clear');
 
         if ($clearCache) {
-            $this->clearCache($output);
+            $cacheManager->clearCache();
+            $formatter->writeCacheCleared();
         }
 
-        $startTime = microtime(true);
-        $startMemory = memory_get_usage(true);
+        $modules = $this->discoverModules($cacheWarmService, $formatter);
+        $modules = $cacheWarmService->filterProductionModules($modules);
 
-        // Find all modules
-        try {
-            $modules = $this->getFacade()->findAllAppModules();
-        } catch (Throwable $throwable) {
-            // If module discovery fails (e.g., due to test fixtures), continue with empty set
-            $output->writeln('<fg=yellow>Warning: Some modules could not be discovered due to errors</>');
-            $output->writeln(sprintf('  Error: %s', $throwable->getMessage()));
-            $modules = [];
-        }
+        $formatter->writeModulesFound($modules);
 
-        // Filter out test/fixture modules that might cause issues
-        $modules = array_filter($modules, static function ($module): bool {
-            $className = $module->facadeClass();
-            return !str_contains($className, 'Test')
-                && !str_contains($className, '\\Fixtures\\')
-                && !str_contains($className, '\\Benchmark\\');
-        });
+        [$resolvedCount, $skippedCount] = $this->warmModulesCache($modules, $cacheWarmService, $formatter);
 
-        $output->writeln(sprintf('<fg=cyan>Found %d modules</>', count($modules)));
-        $output->writeln('');
+        $formatter->writeSummary(
+            count($modules),
+            $resolvedCount,
+            $skippedCount,
+            $metrics->formatElapsedTime(),
+            $metrics->formatMemoryUsed(),
+        );
 
-        $resolvedCount = 0;
-        $skippedCount = 0;
-
-        // Pre-resolve all module classes
-        foreach ($modules as $module) {
-            $moduleClasses = [
-                'Facade' => $module->facadeClass(),
-                'Factory' => $module->factoryClass(),
-                'Config' => $module->configClass(),
-                'Provider' => $module->providerClass(),
-            ];
-
-            $output->writeln(sprintf('<comment>Processing:</> %s', $module->moduleName()));
-
-            foreach ($moduleClasses as $type => $className) {
-                if ($className === null) {
-                    continue;
-                }
-
-                if (!class_exists($className)) {
-                    $output->writeln(sprintf('  <fg=yellow>⚠ Skipped %s:</> %s (class not found)', $type, $className));
-                    ++$skippedCount;
-                    continue;
-                }
-
-                // Trigger class resolution to populate cache
-                try {
-                    class_exists($className, true);
-                    $output->writeln(sprintf('  <fg=green>✓ Resolved %s:</> %s', $type, $className));
-                    ++$resolvedCount;
-                } catch (Throwable $e) {
-                    $output->writeln(sprintf('  <fg=red>✗ Failed %s:</> %s (%s)', $type, $className, $e->getMessage()));
-                    ++$skippedCount;
-                }
-            }
-
-            $output->writeln('');
-        }
-
-        $endTime = microtime(true);
-        $endMemory = memory_get_usage(true);
-
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
-        $output->writeln('<info>Cache warming complete!</info>');
-        $output->writeln('');
-        $output->writeln(sprintf('<fg=cyan>Modules processed:</> %d', count($modules)));
-        $output->writeln(sprintf('<fg=cyan>Classes resolved:</> %d', $resolvedCount));
-        $output->writeln(sprintf('<fg=cyan>Classes skipped:</> %d', $skippedCount));
-        $output->writeln(sprintf('<fg=cyan>Time taken:</> %.3f seconds', $endTime - $startTime));
-        $output->writeln(sprintf('<fg=cyan>Memory used:</> %s', $this->formatBytes($endMemory - $startMemory)));
-        $output->writeln('');
-
-        $this->displayCacheInfo($output);
+        $this->displayCacheInfo($cacheManager, $formatter);
 
         return Command::SUCCESS;
     }
 
-    private function clearCache(OutputInterface $output): void
-    {
-        $cacheDir = Config::getInstance()->getCacheDir();
-        $cacheFile = $cacheDir . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
-
-        if (file_exists($cacheFile)) {
-            unlink($cacheFile);
-            $output->writeln('<fg=yellow>Cleared existing cache</>');
-            $output->writeln('');
+    /**
+     * @return list<AppModule>
+     */
+    private function discoverModules(
+        CacheWarmService $cacheWarmService,
+        CacheWarmOutputFormatter $formatter,
+    ): array {
+        try {
+            return $cacheWarmService->discoverModules();
+        } catch (Throwable $throwable) {
+            $formatter->writeModuleDiscoveryWarning($throwable->getMessage());
+            return [];
         }
     }
 
-    private function displayCacheInfo(OutputInterface $output): void
-    {
-        $cacheDir = Config::getInstance()->getCacheDir();
-        $cacheFile = $cacheDir . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
+    /**
+     * @param list<AppModule> $modules
+     *
+     * @return array{int, int}
+     */
+    private function warmModulesCache(
+        array $modules,
+        CacheWarmService $cacheWarmService,
+        CacheWarmOutputFormatter $formatter,
+    ): array {
+        $resolvedCount = 0;
+        $skippedCount = 0;
 
-        if (file_exists($cacheFile)) {
-            $output->writeln(sprintf('<fg=cyan>Cache file:</> %s', $cacheFile));
-            $output->writeln(sprintf('<fg=cyan>Cache size:</> %s', $this->formatBytes((int) filesize($cacheFile))));
+        foreach ($modules as $module) {
+            $formatter->writeModuleName($module->moduleName());
+
+            $moduleClasses = $cacheWarmService->getModuleClasses($module);
+
+            foreach ($moduleClasses as $classInfo) {
+                try {
+                    $cacheWarmService->resolveClass($classInfo['className']);
+                    $formatter->writeClassResolved($classInfo['type'], $classInfo['className']);
+                    ++$resolvedCount;
+                } catch (ClassNotFoundException) {
+                    $formatter->writeClassSkipped($classInfo['type'], $classInfo['className']);
+                    ++$skippedCount;
+                } catch (Throwable $e) {
+                    $formatter->writeClassFailed($classInfo['type'], $classInfo['className'], $e->getMessage());
+                    ++$skippedCount;
+                }
+            }
+
+            $formatter->writeEmptyLine();
+        }
+
+        return [$resolvedCount, $skippedCount];
+    }
+
+    private function displayCacheInfo(
+        CacheManager $cacheManager,
+        CacheWarmOutputFormatter $formatter,
+    ): void {
+        if ($cacheManager->cacheFileExists()) {
+            $cacheFile = $cacheManager->getCacheFilePath();
+            $cacheSize = $cacheManager->getFormattedCacheFileSize();
+            $formatter->writeCacheInfo($cacheFile, $cacheSize);
         } else {
-            $output->writeln('<fg=yellow>Warning: Cache file was not created. File caching might be disabled.</>');
-            $output->writeln('<comment>Enable file caching in your gacela.php configuration:</>');
-            $output->writeln('<comment>  $config->enableFileCache();</>');
+            $formatter->writeCacheWarning();
         }
-
-        $output->writeln('');
-    }
-
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes < 1024) {
-            return sprintf('%d B', $bytes);
-        }
-
-        if ($bytes < 1048576) {
-            return sprintf('%.2f KB', $bytes / 1024);
-        }
-
-        return sprintf('%.2f MB', $bytes / 1048576);
     }
 
     private function getHelpText(): string

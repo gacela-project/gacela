@@ -33,7 +33,7 @@ final class ValidateConfigCommand extends Command
     {
         $output->writeln('');
         $output->writeln('<info>Validating Gacela Configuration</info>');
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
+        $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
         $output->writeln('');
 
         $hasErrors = false;
@@ -69,7 +69,7 @@ final class ValidateConfigCommand extends Command
 
         // Summary
         $output->writeln('');
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
+        $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
 
         if ($hasErrors) {
             $output->writeln('<error>✗ Validation failed with errors</error>');

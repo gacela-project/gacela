@@ -31,6 +31,17 @@ abstract class AbstractPhpFileCache implements CacheInterface
         return self::$cache[static::class];
     }
 
+    /**
+     * Clears the static in-memory cache.
+     * Useful for testing to ensure test isolation when tests run in the same PHP process.
+     *
+     * @internal
+     */
+    public static function clearStaticCache(): void
+    {
+        self::$cache[static::class] = [];
+    }
+
     public function has(string $cacheKey): bool
     {
         return isset(self::$cache[static::class][$cacheKey]);

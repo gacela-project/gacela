@@ -23,7 +23,8 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
 
     protected function setUp(): void
     {
-        // Clean cache directory before each test to ensure test isolation
+        // Clear static cache and file cache to ensure test isolation when running in random order
+        CustomServicesPhpCache::clearStaticCache();
         DirectoryUtil::removeDir(self::CACHE_DIR);
 
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
@@ -41,25 +42,22 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
         $dummy = new DummyServiceResolverAware();
         $actual = $dummy->getRepository()->findName();
 
-        /** @psalm-suppress InternalMethod */
         self::assertCount(1, CustomServicesPhpCache::all());
         self::assertSame('name', $actual);
     }
 
     public function test_existing_service_cached(): void
     {
-        // First call should cache the service
+        // First call should populate the cache
         $dummy = new DummyServiceResolverAware();
         $dummy->getRepository()->findName();
 
-        /** @psalm-suppress InternalMethod */
         self::assertCount(1, CustomServicesPhpCache::all());
 
-        // Subsequent calls should use the cache without adding more entries
+        // Subsequent calls should reuse the cache without adding new entries
         $dummy->getRepository()->findName();
         $dummy->getRepository()->findName();
 
-        /** @psalm-suppress InternalMethod */
         self::assertCount(1, CustomServicesPhpCache::all());
     }
 

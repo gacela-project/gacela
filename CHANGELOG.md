@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 
 - Renamed `DocBlockResolver` to `ServiceResolver` to better reflect its purpose
 - Added `ServiceResolverAwareTrait` with caching improvements; will replace `DocBlockResolverAwareTrait`

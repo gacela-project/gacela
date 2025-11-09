@@ -12,6 +12,7 @@ use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function dirname;
 use function file_exists;
 use function unlink;
 
@@ -63,6 +64,12 @@ final class CacheWarmCommandTest extends TestCase
 
     public function test_cache_warm_with_clear_option(): void
     {
+        // Ensure cache directory exists
+        $cacheDir = dirname($this->cacheFile);
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0777, true);
+        }
+
         // Create a cache file first
         file_put_contents($this->cacheFile, '<?php return [];');
         self::assertFileExists($this->cacheFile);

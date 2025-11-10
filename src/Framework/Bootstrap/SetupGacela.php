@@ -405,6 +405,30 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeFactories(array $list): void
+    {
+        $this->propertyMerger->mergeFactories($list);
+    }
+
+    /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeProtectedServices(array $list): void
+    {
+        $this->propertyMerger->mergeProtectedServices($list);
+    }
+
+    /**
+     * @param array<string,string> $list
+     */
+    public function mergeAliases(array $list): void
+    {
+        $this->propertyMerger->mergeAliases($list);
+    }
+
+    /**
      * @return list<class-string>
      */
     public function getGacelaConfigsToExtend(): array

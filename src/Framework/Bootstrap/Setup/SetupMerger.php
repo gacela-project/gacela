@@ -29,6 +29,9 @@ final class SetupMerger
         $this->mergeConfigKeyValues($other);
         $this->mergeEventDispatcher($other);
         $this->mergeServicesToExtend($other);
+        $this->mergeFactories($other);
+        $this->mergeProtectedServices($other);
+        $this->mergeAliases($other);
         $this->mergePlugins($other);
         $this->mergeGacelaConfigsToExtend($other);
 
@@ -118,6 +121,27 @@ final class SetupMerger
     {
         if ($other->isPropertyChanged(SetupGacela::gacelaConfigsToExtend)) {
             $this->original->mergeGacelaConfigsToExtend($other->getGacelaConfigsToExtend());
+        }
+    }
+
+    private function mergeFactories(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::factories)) {
+            $this->original->mergeFactories($other->getFactories());
+        }
+    }
+
+    private function mergeProtectedServices(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::protectedServices)) {
+            $this->original->mergeProtectedServices($other->getProtectedServices());
+        }
+    }
+
+    private function mergeAliases(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::aliases)) {
+            $this->original->mergeAliases($other->getAliases());
         }
     }
 }

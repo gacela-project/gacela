@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap\Setup;
 
+use Closure;
 use Gacela\Framework\Bootstrap\SetupGacela;
 
 use function array_merge;
@@ -64,5 +65,32 @@ final class PropertyMerger
     {
         $current = $this->setup->getPlugins();
         $this->setup->setPlugins(array_merge($current, $list));
+    }
+
+    /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeFactories(array $list): void
+    {
+        $current = $this->setup->getFactories();
+        $this->setup->setFactories(array_merge($current, $list));
+    }
+
+    /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeProtectedServices(array $list): void
+    {
+        $current = $this->setup->getProtectedServices();
+        $this->setup->setProtectedServices(array_merge($current, $list));
+    }
+
+    /**
+     * @param array<string,string> $list
+     */
+    public function mergeAliases(array $list): void
+    {
+        $current = $this->setup->getAliases();
+        $this->setup->setAliases(array_merge($current, $list));
     }
 }

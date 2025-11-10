@@ -61,6 +61,12 @@ final class Properties
     /** @var ?array<string,Closure> */
     public ?array $factories = null;
 
+    /** @var ?array<string,Closure> */
+    public ?array $protectedServices = null;
+
+    /** @var ?array<string,string> */
+    public ?array $aliases = null;
+
     /** @var ?list<class-string> */
     public ?array $gacelaConfigsToExtend = null;
 

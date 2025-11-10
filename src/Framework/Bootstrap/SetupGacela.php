@@ -273,6 +273,22 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->factories ?? self::DEFAULT_FACTORIES;
     }
 
+    /**
+     * @return array<string,Closure>
+     */
+    public function getProtectedServices(): array
+    {
+        return $this->properties->protectedServices ?? self::DEFAULT_PROTECTED_SERVICES;
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    public function getAliases(): array
+    {
+        return $this->properties->aliases ?? self::DEFAULT_ALIASES;
+    }
+
     public function setFileCacheEnabled(?bool $flag): self
     {
         $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
@@ -389,6 +405,30 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeFactories(array $list): void
+    {
+        $this->propertyMerger->mergeFactories($list);
+    }
+
+    /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeProtectedServices(array $list): void
+    {
+        $this->propertyMerger->mergeProtectedServices($list);
+    }
+
+    /**
+     * @param array<string,string> $list
+     */
+    public function mergeAliases(array $list): void
+    {
+        $this->propertyMerger->mergeAliases($list);
+    }
+
+    /**
      * @return list<class-string>
      */
     public function getGacelaConfigsToExtend(): array
@@ -485,6 +525,38 @@ final class SetupGacela extends AbstractSetupGacela
             self::factories,
             $list,
             self::DEFAULT_FACTORIES,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,Closure> $list
+     */
+    public function setProtectedServices(?array $list): self
+    {
+        $this->properties->protectedServices = $this->setPropertyWithTracking(
+            self::protectedServices,
+            $list,
+            self::DEFAULT_PROTECTED_SERVICES,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,string> $list
+     */
+    public function setAliases(?array $list): self
+    {
+        $this->properties->aliases = $this->setPropertyWithTracking(
+            self::aliases,
+            $list,
+            self::DEFAULT_ALIASES,
         );
 
         return $this;

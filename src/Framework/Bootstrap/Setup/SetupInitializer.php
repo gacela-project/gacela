@@ -35,6 +35,8 @@ final class SetupInitializer
             ->setGacelaConfigsToExtend($dto->gacelaConfigsToExtend)
             ->setPlugins($dto->plugins)
             ->setServicesToExtend($dto->servicesToExtend)
-            ->setFactories($dto->factories);
+            ->setFactories($dto->factories)
+            ->setProtectedServices($dto->protectedServices)
+            ->setAliases($dto->aliases);
     }
 }

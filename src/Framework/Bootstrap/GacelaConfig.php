@@ -52,6 +52,12 @@ final class GacelaConfig
     /** @var array<string,Closure> */
     private array $factories = [];
 
+    /** @var array<string,Closure> */
+    private array $protectedServices = [];
+
+    /** @var array<string,string> */
+    private array $aliases = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -305,6 +311,39 @@ final class GacelaConfig
     }
 
     /**
+     * Register a protected service that cannot be extended.
+     * Protected services are stored as closures and won't be invoked by the container,
+     * making them useful for storing callable configurations.
+     *
+     * @param string $id The service identifier
+     * @param Closure $service The closure to protect
+     *
+     * @return $this
+     */
+    public function addProtected(string $id, Closure $service): self
+    {
+        $this->protectedServices[$id] = $service;
+
+        return $this;
+    }
+
+    /**
+     * Create an alias for a service.
+     * This allows you to reference the same service with different names.
+     *
+     * @param string $alias The alias name
+     * @param string $id The actual service identifier
+     *
+     * @return $this
+     */
+    public function addAlias(string $alias, string $id): self
+    {
+        $this->aliases[$alias] = $id;
+
+        return $this;
+    }
+
+    /**
      * Add a new invokable class that can extend the GacelaConfig object.
      *
      * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
@@ -373,6 +412,8 @@ final class GacelaConfig
             $this->plugins,
             $this->servicesToExtend,
             $this->factories,
+            $this->protectedServices,
+            $this->aliases,
         );
     }
 }

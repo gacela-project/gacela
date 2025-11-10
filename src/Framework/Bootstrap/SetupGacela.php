@@ -289,6 +289,14 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->aliases ?? self::DEFAULT_ALIASES;
     }
 
+    /**
+     * @return array<string,array<class-string,class-string|callable|object>>
+     */
+    public function getContextualBindings(): array
+    {
+        return $this->properties->contextualBindings ?? self::DEFAULT_CONTEXTUAL_BINDINGS;
+    }
+
     public function setFileCacheEnabled(?bool $flag): self
     {
         $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
@@ -429,6 +437,14 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @param array<string,array<class-string,class-string|callable|object>> $list
+     */
+    public function mergeContextualBindings(array $list): void
+    {
+        $this->propertyMerger->mergeContextualBindings($list);
+    }
+
+    /**
      * @return list<class-string>
      */
     public function getGacelaConfigsToExtend(): array
@@ -557,6 +573,22 @@ final class SetupGacela extends AbstractSetupGacela
             self::aliases,
             $list,
             self::DEFAULT_ALIASES,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,array<class-string,class-string|callable|object>> $list
+     */
+    public function setContextualBindings(?array $list): self
+    {
+        $this->properties->contextualBindings = $this->setPropertyWithTracking(
+            self::contextualBindings,
+            $list,
+            self::DEFAULT_CONTEXTUAL_BINDINGS,
         );
 
         return $this;

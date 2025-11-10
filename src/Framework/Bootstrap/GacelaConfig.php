@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Container\ContextualBindingBuilder;
 use Gacela\Framework\Bootstrap\Setup\GacelaConfigTransfer;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
@@ -57,6 +58,9 @@ final class GacelaConfig
 
     /** @var array<string,string> */
     private array $aliases = [];
+
+    /** @var array<string,array<class-string,class-string|callable|object>> */
+    private array $contextualBindings = [];
 
     /**
      * @param array<string,class-string|object|callable> $externalServices
@@ -344,6 +348,28 @@ final class GacelaConfig
     }
 
     /**
+     * Define contextual bindings - different implementations based on the requesting class.
+     * This allows you to provide different implementations of an interface depending on
+     * which class is requesting it.
+     *
+     * Example:
+     * ```php
+     * $config->when(UserController::class)
+     *     ->needs(LoggerInterface::class)
+     *     ->give(FileLogger::class);
+     * ```
+     *
+     * @param class-string|list<class-string> $concrete The class(es) that need the binding
+     */
+    public function when(string|array $concrete): ContextualBindingBuilder
+    {
+        $builder = new ContextualBindingBuilder($this->contextualBindings);
+        $builder->when($concrete);
+
+        return $builder;
+    }
+
+    /**
      * Add a new invokable class that can extend the GacelaConfig object.
      *
      * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
@@ -414,6 +440,7 @@ final class GacelaConfig
             $this->factories,
             $this->protectedServices,
             $this->aliases,
+            $this->contextualBindings,
         );
     }
 }

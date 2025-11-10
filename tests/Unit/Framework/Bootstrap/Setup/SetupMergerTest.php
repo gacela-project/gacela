@@ -159,4 +159,70 @@ final class SetupMergerTest extends TestCase
         self::assertArrayHasKey('service-a', $factories);
         self::assertCount(1, $factories);
     }
+
+    public function test_merge_contextual_bindings_from_two_setups(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->when(stdClass::class)
+                ->needs('LoggerInterface')
+                ->give('FileLogger');
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->when('OtherClass')
+                ->needs('CacheInterface')
+                ->give('RedisCache');
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        $contextualBindings = $merged->getContextualBindings();
+        self::assertArrayHasKey(stdClass::class, $contextualBindings);
+        self::assertArrayHasKey('OtherClass', $contextualBindings);
+        self::assertSame('FileLogger', $contextualBindings[stdClass::class]['LoggerInterface']);
+        self::assertSame('RedisCache', $contextualBindings['OtherClass']['CacheInterface']);
+    }
+
+    public function test_merge_contextual_bindings_for_same_class_different_interfaces(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->when(stdClass::class)
+                ->needs('LoggerInterface')
+                ->give('FileLogger');
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->when(stdClass::class)
+                ->needs('CacheInterface')
+                ->give('RedisCache');
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        $contextualBindings = $merged->getContextualBindings();
+        self::assertArrayHasKey(stdClass::class, $contextualBindings);
+        self::assertCount(2, $contextualBindings[stdClass::class]);
+        self::assertSame('FileLogger', $contextualBindings[stdClass::class]['LoggerInterface']);
+        self::assertSame('RedisCache', $contextualBindings[stdClass::class]['CacheInterface']);
+    }
+
+    public function test_merge_contextual_bindings_later_values_override_earlier(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->when(stdClass::class)
+                ->needs('LoggerInterface')
+                ->give('FileLogger');
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->when(stdClass::class)
+                ->needs('LoggerInterface')
+                ->give('DatabaseLogger');
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        $contextualBindings = $merged->getContextualBindings();
+        self::assertSame('DatabaseLogger', $contextualBindings[stdClass::class]['LoggerInterface'], 'Later contextual binding should override earlier one');
+    }
 }

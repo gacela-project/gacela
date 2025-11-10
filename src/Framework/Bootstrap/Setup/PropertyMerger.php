@@ -93,4 +93,23 @@ final class PropertyMerger
         $current = $this->setup->getAliases();
         $this->setup->setAliases(array_merge($current, $list));
     }
+
+    /**
+     * @param array<string,array<class-string,class-string|callable|object>> $list
+     */
+    public function mergeContextualBindings(array $list): void
+    {
+        $current = $this->setup->getContextualBindings();
+        $merged = $current;
+
+        foreach ($list as $concrete => $bindings) {
+            if (!isset($merged[$concrete])) {
+                $merged[$concrete] = [];
+            }
+
+            $merged[$concrete] = array_merge($merged[$concrete], $bindings);
+        }
+
+        $this->setup->setContextualBindings($merged);
+    }
 }

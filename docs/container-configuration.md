@@ -47,6 +47,32 @@ $container->get(LoggerInterface::class);
 $container->get('logger');
 ```
 
+## Contextual Bindings
+
+Provide different implementations based on which class is requesting a dependency.
+
+```php
+return static function (GacelaConfig $config): void {
+    $config->when(UserController::class)
+        ->needs(LoggerInterface::class)
+        ->give(FileLogger::class);
+
+    $config->when(AdminController::class)
+        ->needs(LoggerInterface::class)
+        ->give(DatabaseLogger::class);
+};
+```
+
+When `UserController` requests `LoggerInterface`, it receives `FileLogger`. When `AdminController` requests the same interface, it receives `DatabaseLogger`.
+
+You can also bind to multiple classes at once:
+
+```php
+$config->when([ApiController::class, WebController::class])
+    ->needs(CacheInterface::class)
+    ->give(RedisCache::class);
+```
+
 ## Quick Reference
 
 | Type | Behavior | Use Case |
@@ -55,6 +81,7 @@ $container->get('logger');
 | Factory | New instance each call | Stateful services, request-scoped |
 | Protected | Returns closure as-is | Lazy initialization, callable configs |
 | Alias | Points to another service | Backward compatibility, short names |
+| Contextual | Different impl per class | Per-controller loggers, context-specific deps |
 
 ## Example
 

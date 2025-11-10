@@ -37,6 +37,7 @@ final class SetupInitializer
             ->setServicesToExtend($dto->servicesToExtend)
             ->setFactories($dto->factories)
             ->setProtectedServices($dto->protectedServices)
-            ->setAliases($dto->aliases);
+            ->setAliases($dto->aliases)
+            ->setContextualBindings($dto->contextualBindings);
     }
 }

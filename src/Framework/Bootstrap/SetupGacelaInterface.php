@@ -93,6 +93,11 @@ interface SetupGacelaInterface
     public function getAliases(): array;
 
     /**
+     * @return array<string,array<class-string,class-string|callable|object>>
+     */
+    public function getContextualBindings(): array;
+
+    /**
      * @return list<class-string>
      */
     public function getGacelaConfigsToExtend(): array;

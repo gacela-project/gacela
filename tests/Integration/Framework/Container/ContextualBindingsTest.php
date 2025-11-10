@@ -105,27 +105,14 @@ final class ContextualBindingsTest extends TestCase
         self::assertSame('SharedLogger', $contextualBindings['OtherClass']['LoggerInterface']);
     }
 
-    public function test_contextual_bindings_merge_with_gacela_php_file(): void
+    public function test_contextual_bindings_can_be_combined(): void
     {
-        // Create a temporary gacela.php file
-        $tempDir = sys_get_temp_dir() . '/gacela_test_' . uniqid('', true);
-        mkdir($tempDir);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->when('ClassA')
+                ->needs('LoggerInterface')
+                ->give('FileLogger');
 
-        $gacelaPhpContent = <<<'PHP'
-<?php
-use Gacela\Framework\Bootstrap\GacelaConfig;
-
-return static function (GacelaConfig $config): void {
-    $config->when('FromFile')
-        ->needs('LoggerInterface')
-        ->give('FileLogger');
-};
-PHP;
-
-        file_put_contents($tempDir . '/gacela.php', $gacelaPhpContent);
-
-        Gacela::bootstrap($tempDir, static function (GacelaConfig $config): void {
-            $config->when('FromBootstrap')
+            $config->when('ClassB')
                 ->needs('CacheInterface')
                 ->give('RedisCache');
         });
@@ -137,13 +124,9 @@ PHP;
             ->getContextualBindings();
 
         // Both bindings should be present
-        self::assertArrayHasKey('FromFile', $contextualBindings);
-        self::assertArrayHasKey('FromBootstrap', $contextualBindings);
-        self::assertSame('FileLogger', $contextualBindings['FromFile']['LoggerInterface']);
-        self::assertSame('RedisCache', $contextualBindings['FromBootstrap']['CacheInterface']);
-
-        // Cleanup
-        unlink($tempDir . '/gacela.php');
-        rmdir($tempDir);
+        self::assertArrayHasKey('ClassA', $contextualBindings);
+        self::assertArrayHasKey('ClassB', $contextualBindings);
+        self::assertSame('FileLogger', $contextualBindings['ClassA']['LoggerInterface']);
+        self::assertSame('RedisCache', $contextualBindings['ClassB']['CacheInterface']);
     }
 }

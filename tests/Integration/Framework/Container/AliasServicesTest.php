@@ -13,6 +13,13 @@ use stdClass;
 
 final class AliasServicesTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        $reflection = new ReflectionClass(Gacela::class);
+        $method = $reflection->getMethod('resetCache');
+        $method->invoke(null);
+    }
+
     protected function tearDown(): void
     {
         $reflection = new ReflectionClass(Gacela::class);

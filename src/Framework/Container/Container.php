@@ -29,6 +29,11 @@ final class Container extends GacelaContainer implements ContainerInterface
             $container->set($id, $container->protect($service));
         }
 
+        // Register aliases
+        foreach ($config->getSetupGacela()->getAliases() as $alias => $id) {
+            $container->alias($alias, $id);
+        }
+
         return $container;
     }
 

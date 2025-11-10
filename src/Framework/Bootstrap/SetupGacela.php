@@ -281,6 +281,14 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->protectedServices ?? self::DEFAULT_PROTECTED_SERVICES;
     }
 
+    /**
+     * @return array<string,string>
+     */
+    public function getAliases(): array
+    {
+        return $this->properties->aliases ?? self::DEFAULT_ALIASES;
+    }
+
     public function setFileCacheEnabled(?bool $flag): self
     {
         $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
@@ -509,6 +517,22 @@ final class SetupGacela extends AbstractSetupGacela
             self::protectedServices,
             $list,
             self::DEFAULT_PROTECTED_SERVICES,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,string> $list
+     */
+    public function setAliases(?array $list): self
+    {
+        $this->properties->aliases = $this->setPropertyWithTracking(
+            self::aliases,
+            $list,
+            self::DEFAULT_ALIASES,
         );
 
         return $this;

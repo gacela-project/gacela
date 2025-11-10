@@ -36,6 +36,7 @@ final class SetupInitializer
             ->setPlugins($dto->plugins)
             ->setServicesToExtend($dto->servicesToExtend)
             ->setFactories($dto->factories)
-            ->setProtectedServices($dto->protectedServices);
+            ->setProtectedServices($dto->protectedServices)
+            ->setAliases($dto->aliases);
     }
 }

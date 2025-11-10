@@ -88,6 +88,11 @@ interface SetupGacelaInterface
     public function getProtectedServices(): array;
 
     /**
+     * @return array<string,string>
+     */
+    public function getAliases(): array;
+
+    /**
      * @return list<class-string>
      */
     public function getGacelaConfigsToExtend(): array;

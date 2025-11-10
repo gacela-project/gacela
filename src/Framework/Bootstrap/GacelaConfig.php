@@ -55,6 +55,9 @@ final class GacelaConfig
     /** @var array<string,Closure> */
     private array $protectedServices = [];
 
+    /** @var array<string,string> */
+    private array $aliases = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -325,6 +328,22 @@ final class GacelaConfig
     }
 
     /**
+     * Create an alias for a service.
+     * This allows you to reference the same service with different names.
+     *
+     * @param string $alias The alias name
+     * @param string $id The actual service identifier
+     *
+     * @return $this
+     */
+    public function addAlias(string $alias, string $id): self
+    {
+        $this->aliases[$alias] = $id;
+
+        return $this;
+    }
+
+    /**
      * Add a new invokable class that can extend the GacelaConfig object.
      *
      * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
@@ -394,6 +413,7 @@ final class GacelaConfig
             $this->servicesToExtend,
             $this->factories,
             $this->protectedServices,
+            $this->aliases,
         );
     }
 }

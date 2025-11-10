@@ -273,6 +273,14 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->factories ?? self::DEFAULT_FACTORIES;
     }
 
+    /**
+     * @return array<string,Closure>
+     */
+    public function getProtectedServices(): array
+    {
+        return $this->properties->protectedServices ?? self::DEFAULT_PROTECTED_SERVICES;
+    }
+
     public function setFileCacheEnabled(?bool $flag): self
     {
         $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
@@ -485,6 +493,22 @@ final class SetupGacela extends AbstractSetupGacela
             self::factories,
             $list,
             self::DEFAULT_FACTORIES,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,Closure> $list
+     */
+    public function setProtectedServices(?array $list): self
+    {
+        $this->properties->protectedServices = $this->setPropertyWithTracking(
+            self::protectedServices,
+            $list,
+            self::DEFAULT_PROTECTED_SERVICES,
         );
 
         return $this;

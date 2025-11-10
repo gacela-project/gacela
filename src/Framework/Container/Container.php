@@ -24,6 +24,11 @@ final class Container extends GacelaContainer implements ContainerInterface
             $container->set($id, $container->factory($factory));
         }
 
+        // Register protected services
+        foreach ($config->getSetupGacela()->getProtectedServices() as $id => $service) {
+            $container->set($id, $container->protect($service));
+        }
+
         return $container;
     }
 

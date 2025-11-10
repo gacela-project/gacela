@@ -83,6 +83,11 @@ interface SetupGacelaInterface
     public function getFactories(): array;
 
     /**
+     * @return array<string,Closure>
+     */
+    public function getProtectedServices(): array;
+
+    /**
      * @return list<class-string>
      */
     public function getGacelaConfigsToExtend(): array;

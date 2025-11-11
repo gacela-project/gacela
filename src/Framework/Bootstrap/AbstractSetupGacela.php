@@ -31,6 +31,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const aliases = 'aliases';
 
+    public const contextualBindings = 'contextualBindings';
+
     public const plugins = 'plugins';
 
     public const gacelaConfigsToExtend = 'gacelaConfigsToExtend';
@@ -58,6 +60,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const DEFAULT_PROTECTED_SERVICES = [];
 
     protected const DEFAULT_ALIASES = [];
+
+    protected const DEFAULT_CONTEXTUAL_BINDINGS = [];
 
     protected const DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
 

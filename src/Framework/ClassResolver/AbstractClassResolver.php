@@ -143,6 +143,15 @@ abstract class AbstractClassResolver
             $this->container = new Container(
                 $this->getGacelaConfigFile()->getBindings(),
             );
+
+            // Apply contextual bindings
+            foreach (Config::getInstance()->getSetupGacela()->getContextualBindings() as $concrete => $needs) {
+                foreach ($needs as $abstract => $implementation) {
+                    /** @var class-string $concrete */
+                    /** @var class-string $abstract */
+                    $this->container->when($concrete)->needs($abstract)->give($implementation);
+                }
+            }
         }
 
         /** @var object $instance */

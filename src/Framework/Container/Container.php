@@ -34,6 +34,15 @@ final class Container extends GacelaContainer implements ContainerInterface
             $container->alias($alias, $id);
         }
 
+        // Register contextual bindings
+        foreach ($config->getSetupGacela()->getContextualBindings() as $concrete => $needs) {
+            foreach ($needs as $abstract => $implementation) {
+                /** @var class-string $concrete */
+                /** @var class-string $abstract */
+                $container->when($concrete)->needs($abstract)->give($implementation);
+            }
+        }
+
         return $container;
     }
 

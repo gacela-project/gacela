@@ -67,6 +67,9 @@ final class Properties
     /** @var ?array<string,string> */
     public ?array $aliases = null;
 
+    /** @var ?array<string,array<class-string,class-string|callable|object>> */
+    public ?array $contextualBindings = null;
+
     /** @var ?list<class-string> */
     public ?array $gacelaConfigsToExtend = null;
 

@@ -129,4 +129,26 @@ final class ContextualBindingsTest extends TestCase
         self::assertSame('FileLogger', $contextualBindings['ClassA']['LoggerInterface']);
         self::assertSame('RedisCache', $contextualBindings['ClassB']['CacheInterface']);
     }
+
+    public function test_when_method_returns_builder_configured_with_concrete_class(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            // Test that when() properly configures the builder by calling ->when($concrete)
+            // If the internal ->when($concrete) call is removed, needs()->give() would fail
+            // because the builder wouldn't know which concrete classes to bind to
+            $config->when('ConcreteClass')
+                ->needs('DependencyInterface')
+                ->give('Implementation');
+        });
+
+        Container::withConfig(Config::getInstance());
+
+        $contextualBindings = Config::getInstance()
+            ->getSetupGacela()
+            ->getContextualBindings();
+
+        // Verify that the concrete class was properly set in the builder
+        self::assertArrayHasKey('ConcreteClass', $contextualBindings);
+        self::assertSame('Implementation', $contextualBindings['ConcreteClass']['DependencyInterface']);
+    }
 }

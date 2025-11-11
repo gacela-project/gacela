@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Cache;
 
+use Gacela\Framework\Bootstrap\CacheConfigurationInterface;
 use Gacela\Framework\Config\ConfigInterface;
 
 final class GacelaFileCache
@@ -35,6 +36,15 @@ final class GacelaFileCache
             self::$isEnabled = $this->config->hasKey(self::KEY_ENABLED)
                 ? (bool)$this->config->get(self::KEY_ENABLED)
                 : $this->config->getSetupGacela()->isFileCacheEnabled();
+        }
+
+        return self::$isEnabled;
+    }
+
+    public static function isEnabledFromCacheConfig(CacheConfigurationInterface $cacheConfig): bool
+    {
+        if (self::$isEnabled === null) {
+            self::$isEnabled = $cacheConfig->isFileCacheEnabled();
         }
 
         return self::$isEnabled;

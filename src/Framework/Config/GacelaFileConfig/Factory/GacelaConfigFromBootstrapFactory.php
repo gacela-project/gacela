@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig\Factory;
 
-use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Bootstrap\BuilderConfigurationInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
@@ -15,7 +15,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 final class GacelaConfigFromBootstrapFactory implements GacelaConfigFileFactoryInterface
 {
     public function __construct(
-        private readonly SetupGacelaInterface $bootstrapSetup,
+        private readonly BuilderConfigurationInterface $bootstrapSetup,
     ) {
     }
 

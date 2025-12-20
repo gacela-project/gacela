@@ -18,6 +18,7 @@ use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
+use Gacela\Framework\Exception\ServiceNotFoundException;
 use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
 
 use function is_string;
@@ -64,6 +65,23 @@ final class Gacela
     public static function get(string $className): mixed
     {
         return Locator::getSingleton($className, self::$mainContainer);
+    }
+
+    /**
+     * Get a service from the container, throwing an exception if not found.
+     * Use this when you expect the service to exist and want type-safe returns.
+     *
+     * @template T of object
+     *
+     * @param  class-string<T>  $className
+     *
+     * @throws ServiceNotFoundException
+     *
+     * @return T
+     */
+    public static function getRequired(string $className): object
+    {
+        return Locator::getRequiredSingleton($className, self::$mainContainer);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Container;
 
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
+use Gacela\Framework\Exception\ServiceNotFoundException;
 
 /**
  * @internal
@@ -49,6 +50,23 @@ final class Locator implements LocatorInterface
         return self::getInstance($container)->get($className);
     }
 
+    /**
+     * Get a singleton from the container, throwing an exception if not found.
+     * Use this when you expect the service to exist and want type-safe returns.
+     *
+     * @template T of object
+     *
+     * @param class-string<T> $className
+     *
+     * @throws ServiceNotFoundException
+     *
+     * @return T
+     */
+    public static function getRequiredSingleton(string $className, ?Container $container = null): object
+    {
+        return self::getInstance($container)->getRequired($className);
+    }
+
     public static function getInstance(?Container $container = null): self
     {
         if (!self::$instance instanceof self) {
@@ -81,6 +99,26 @@ final class Locator implements LocatorInterface
         $this->add($className, $locatedInstance);
 
         return $locatedInstance;
+    }
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T> $className
+     *
+     * @throws ServiceNotFoundException
+     *
+     * @return T
+     */
+    public function getRequired(string $className): object
+    {
+        $instance = $this->get($className);
+
+        if ($instance === null) {
+            throw new ServiceNotFoundException($className);
+        }
+
+        return $instance;
     }
 
     /**

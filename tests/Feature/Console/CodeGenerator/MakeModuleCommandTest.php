@@ -62,6 +62,7 @@ final class MakeModuleCommandTest extends TestCase
         $bootstrap->run($input, $output);
 
         $expectedOutput = <<<OUT
+Generating module with template: basic
 > Path 'data/TestModule/{$fileName}Facade.php' created successfully
 > Path 'data/TestModule/{$fileName}Factory.php' created successfully
 > Path 'data/TestModule/{$fileName}Config.php' created successfully

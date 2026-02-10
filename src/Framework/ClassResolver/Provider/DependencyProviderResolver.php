@@ -6,6 +6,7 @@ namespace Gacela\Framework\ClassResolver\Provider;
 
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractProvider;
+use Gacela\Framework\Attribute\Deprecated;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
 use function dirname;
@@ -13,6 +14,12 @@ use function dirname;
 /**
  * @psalm-suppress DeprecatedClass
  */
+#[Deprecated(
+    since: '1.8.0',
+    replacement: 'ProviderResolver',
+    willRemoveIn: '2.0.0',
+    reason: 'AbstractDependencyProvider is deprecated, use AbstractProvider instead'
+)]
 final class DependencyProviderResolver extends AbstractClassResolver
 {
     public const TYPE = 'DependencyProvider';

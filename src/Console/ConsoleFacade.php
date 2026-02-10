@@ -115,4 +115,18 @@ final class ConsoleFacade extends AbstractFacade
     {
         return $this->getFactory()->createIdeHelperGenerator()->generatePhpStormMeta($modules);
     }
+
+    /**
+     * @return list<string>
+     */
+    public function generateTemplateFiles(
+        CommandArguments $arguments,
+        string $template,
+        bool $withTests,
+        bool $withApi,
+    ): array {
+        return $this->getFactory()
+            ->createModuleTemplateGenerator()
+            ->generateTemplateFiles($arguments, $template, $withTests, $withApi);
+    }
 }

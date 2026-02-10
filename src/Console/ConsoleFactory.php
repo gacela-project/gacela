@@ -16,11 +16,12 @@ use Gacela\Console\Domain\DependencyAnalyzer\GraphvizFormatter;
 use Gacela\Console\Domain\DependencyAnalyzer\JsonFormatter;
 use Gacela\Console\Domain\DependencyAnalyzer\MermaidFormatter;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
-use Gacela\Console\Domain\IdeHelper\IdeHelperGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Domain\IdeHelper\IdeHelperGenerator;
+use Gacela\Console\Domain\ModuleTemplate\ModuleTemplateGenerator;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
@@ -132,6 +133,11 @@ final class ConsoleFactory extends AbstractFactory
     public function createIdeHelperGenerator(): IdeHelperGenerator
     {
         return new IdeHelperGenerator();
+    }
+
+    public function createModuleTemplateGenerator(): ModuleTemplateGenerator
+    {
+        return new ModuleTemplateGenerator();
     }
 
     public function getMainContainer(): Container

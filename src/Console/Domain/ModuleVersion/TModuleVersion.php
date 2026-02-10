@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\ModuleVersion;
 
-final readonly class TModuleVersion
+final class TModuleVersion
 {
     /**
      * @param non-empty-string $moduleName
@@ -12,9 +12,9 @@ final readonly class TModuleVersion
      * @param array<string, string> $requiredModules
      */
     public function __construct(
-        public string $moduleName,
-        public string $version,
-        public array $requiredModules = [],
+        public readonly string $moduleName,
+        public readonly string $version,
+        public readonly array $requiredModules = [],
     ) {
     }
 }

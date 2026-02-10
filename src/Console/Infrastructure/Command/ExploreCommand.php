@@ -51,6 +51,7 @@ final class ExploreCommand extends Command
         $this->displayModuleList($modules, $output);
 
         // Interactive selection
+        /** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
         $helper = $this->getHelper('question');
         $moduleNames = array_map(static fn (AppModule $m): string => $m->fullModuleName(), $modules);
         $moduleNames[] = 'Exit';

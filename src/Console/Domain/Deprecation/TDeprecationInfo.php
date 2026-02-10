@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\Deprecation;
 
-final readonly class TDeprecationInfo
+final class TDeprecationInfo
 {
     /**
      * @param non-empty-string $elementName
@@ -16,14 +16,14 @@ final readonly class TDeprecationInfo
      * @param non-empty-string $file
      */
     public function __construct(
-        public string $elementName,
-        public string $elementType,
-        public string $since,
-        public ?string $replacement,
-        public ?string $willRemoveIn,
-        public ?string $reason,
-        public string $file,
-        public int $line,
+        public readonly string $elementName,
+        public readonly string $elementType,
+        public readonly string $since,
+        public readonly ?string $replacement,
+        public readonly ?string $willRemoveIn,
+        public readonly ?string $reason,
+        public readonly string $file,
+        public readonly int $line,
     ) {
     }
 }

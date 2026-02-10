@@ -7,7 +7,7 @@ namespace Gacela\Framework\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::TARGET_PROPERTY)]
-final readonly class Deprecated
+final class Deprecated
 {
     /**
      * @param non-empty-string $since Version when the deprecation was introduced
@@ -16,10 +16,10 @@ final readonly class Deprecated
      * @param non-empty-string|null $reason Additional context about the deprecation
      */
     public function __construct(
-        public string $since,
-        public ?string $replacement = null,
-        public ?string $willRemoveIn = null,
-        public ?string $reason = null,
+        public readonly string $since,
+        public readonly ?string $replacement = null,
+        public readonly ?string $willRemoveIn = null,
+        public readonly ?string $reason = null,
     ) {
     }
 }

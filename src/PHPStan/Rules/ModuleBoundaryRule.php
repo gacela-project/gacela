@@ -114,12 +114,12 @@ final class ModuleBoundaryRule implements Rule
         // - Vendor\Module\Infrastructure\Class
         // - Vendor\Module\ModuleFacade
         // - Vendor\Module\ModuleFactory
-        if (preg_match('/\\\\([^\\\\]+)\\\\(?:' . implode('|', $this->restrictedPaths) . '|(?:[^\\\\]+(?:Facade|Factory|Config|Provider)))/', $className, $matches)) {
+        if (preg_match('/\\\\([^\\\\]+)\\\\(?:' . implode('|', $this->restrictedPaths) . '|(?:[^\\\\]+(?:Facade|Factory|Config|Provider)))/', $className, $matches) === 1) {
             return $matches[1];
         }
 
         // Also match if class itself is a Facade/Factory/Config/Provider
-        if (preg_match('/\\\\([^\\\\]+)(?:Facade|Factory|Config|Provider)$/', $className, $matches)) {
+        if (preg_match('/\\\\([^\\\\]+)(?:Facade|Factory|Config|Provider)$/', $className, $matches) === 1) {
             return $matches[1];
         }
 

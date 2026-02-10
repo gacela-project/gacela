@@ -81,9 +81,4 @@ final class MakeModuleCommand extends Command
 
         return self::SUCCESS;
     }
-
-    private function getExpectedFilenames(): string
-    {
-        return implode(', ', FilenameSanitizer::EXPECTED_FILENAMES);
-    }
 }

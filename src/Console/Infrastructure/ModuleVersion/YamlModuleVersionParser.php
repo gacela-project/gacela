@@ -14,7 +14,7 @@ use function file_exists;
 use function is_array;
 use function sprintf;
 
-final readonly class YamlModuleVersionParser implements ModuleVersionParserInterface
+final class YamlModuleVersionParser implements ModuleVersionParserInterface
 {
     public function isAvailable(): bool
     {

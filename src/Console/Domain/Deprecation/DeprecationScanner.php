@@ -16,13 +16,13 @@ use Throwable;
 use function class_exists;
 use function in_array;
 
-final readonly class DeprecationScanner
+final class DeprecationScanner
 {
     /**
      * @param non-empty-string $rootPath
      */
     public function __construct(
-        private string $rootPath,
+        private readonly string $rootPath,
     ) {
     }
 

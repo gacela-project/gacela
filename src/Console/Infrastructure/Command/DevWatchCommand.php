@@ -46,7 +46,9 @@ final class DevWatchCommand extends Command
     {
         /** @var list<string> $watchPaths */
         $watchPaths = $input->getOption('path');
-        $interval = (int)$input->getOption('interval') * 1000; // Convert ms to microseconds
+        /** @var int<1, max> $intervalOption */
+        $intervalOption = $input->getOption('interval');
+        $interval = $intervalOption * 1000; // Convert ms to microseconds
 
         $output->writeln('<info>Starting file watcher...</info>');
         $output->writeln(sprintf('<comment>Watching paths: %s</comment>', implode(', ', $watchPaths)));
@@ -77,7 +79,5 @@ final class DevWatchCommand extends Command
 
             usleep($interval);
         }
-
-        return self::SUCCESS;
     }
 }

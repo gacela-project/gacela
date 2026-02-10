@@ -8,13 +8,13 @@ use function count;
 use function sprintf;
 use function version_compare;
 
-final readonly class VersionCompatibilityChecker
+final class VersionCompatibilityChecker
 {
     /**
      * @param array<string, TModuleVersion> $moduleVersions
      */
     public function __construct(
-        private array $moduleVersions,
+        private readonly array $moduleVersions,
     ) {
     }
 

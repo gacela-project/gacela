@@ -16,7 +16,7 @@ use function sprintf;
 /**
  * Fallback parser that reads PHP arrays from .php files
  */
-final readonly class ArrayModuleVersionParser implements ModuleVersionParserInterface
+final class ArrayModuleVersionParser implements ModuleVersionParserInterface
 {
     public function isAvailable(): bool
     {

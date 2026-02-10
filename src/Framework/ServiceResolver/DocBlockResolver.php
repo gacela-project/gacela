@@ -37,6 +37,16 @@ final class DocBlockResolver
         return new self($caller::class);
     }
 
+    /**
+     * Create a DocBlockResolver from a class name (useful for cache warming).
+     *
+     * @param class-string $className
+     */
+    public static function fromClassName(string $className): self
+    {
+        return new self($className);
+    }
+
     public function getDocBlockResolvable(string $method): DocBlockResolvable
     {
         $className = $this->getClassName($method);

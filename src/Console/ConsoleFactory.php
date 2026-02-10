@@ -9,6 +9,7 @@ use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
+use Gacela\Console\Domain\ContainerCompiler\ContainerCompiler;
 use Gacela\Console\Domain\DependencyAnalyzer\DependencyAnalyzer;
 use Gacela\Console\Domain\DependencyAnalyzer\DependencyFormatterInterface;
 use Gacela\Console\Domain\DependencyAnalyzer\GraphvizFormatter;
@@ -122,6 +123,16 @@ final class ConsoleFactory extends AbstractFactory
         };
     }
 
+    public function createContainerCompiler(): ContainerCompiler
+    {
+        return new ContainerCompiler();
+    }
+
+    public function getMainContainer(): Container
+    {
+        return Gacela::container();
+    }
+
     /**
      * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
      */
@@ -146,10 +157,5 @@ final class ConsoleFactory extends AbstractFactory
     private function getTemplateByFilenameMap(): array
     {
         return (array)$this->getProvidedDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
-    }
-
-    private function getMainContainer(): Container
-    {
-        return Gacela::container();
     }
 }

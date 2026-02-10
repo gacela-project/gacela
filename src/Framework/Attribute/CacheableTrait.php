@@ -9,6 +9,7 @@ use ReflectionMethod;
 
 use function md5;
 use function serialize;
+use function sprintf;
 use function time;
 
 /**
@@ -45,8 +46,6 @@ trait CacheableTrait
      * Execute a method with caching support based on #[Cacheable] attribute.
      *
      * @param list<mixed> $args
-     *
-     * @return mixed
      */
     protected function cached(string $method, array $args, callable $callback): mixed
     {
@@ -120,6 +119,6 @@ trait CacheableTrait
         $className = static::class;
         $argsKey = $args !== [] ? md5(serialize($args)) : 'no-args';
 
-        return "{$className}::{$method}::{$argsKey}";
+        return sprintf('%s::%s::%s', $className, $method, $argsKey);
     }
 }

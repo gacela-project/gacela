@@ -8,6 +8,8 @@ use Gacela\Framework\Attribute\Cacheable;
 use Gacela\Framework\Attribute\CacheableTrait;
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
+
 final class CacheableTest extends TestCase
 {
     protected function tearDown(): void
@@ -146,7 +148,7 @@ final class TestFacadeWithCache
     {
         return $this->cached(__METHOD__, [$id], function () use ($id): string {
             ++$this->argsCallCount;
-            return "result-{$id}-{$this->argsCallCount}";
+            return sprintf('result-%d-%d', $id, $this->argsCallCount);
         });
     }
 

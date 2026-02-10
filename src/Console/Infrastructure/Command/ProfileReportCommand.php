@@ -79,12 +79,10 @@ final class ProfileReportCommand extends Command
      */
     private function sortEntries(array $entries, string $sortBy): array
     {
-        usort($entries, static function ($a, $b) use ($sortBy) {
-            return match ($sortBy) {
-                'memory' => $b->memoryUsage <=> $a->memoryUsage,
-                'operation' => $a->operation <=> $b->operation,
-                default => $b->duration <=> $a->duration,
-            };
+        usort($entries, static fn ($a, $b): int => match ($sortBy) {
+            'memory' => $b->memoryUsage <=> $a->memoryUsage,
+            'operation' => $a->operation <=> $b->operation,
+            default => $b->duration <=> $a->duration,
         });
 
         return $entries;

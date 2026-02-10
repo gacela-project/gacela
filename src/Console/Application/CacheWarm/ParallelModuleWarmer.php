@@ -50,16 +50,14 @@ final class ParallelModuleWarmer
             }
 
             // Create a new fiber for this module
-            $fiber = new Fiber(function () use ($module, $warmAttributes): array {
-                return $this->warmModule($module, $warmAttributes);
-            });
+            $fiber = new Fiber(fn (): array => $this->warmModule($module, $warmAttributes));
 
             $fiber->start();
             $this->activeFibers[] = $fiber;
         }
 
         // Process any remaining fibers
-        while (count($this->activeFibers) > 0) {
+        while ($this->activeFibers !== []) {
             [$resolved, $skipped] = $this->processCompletedFibers();
             $resolvedCount += $resolved;
             $skippedCount += $skipped;
@@ -97,7 +95,7 @@ final class ParallelModuleWarmer
         $this->activeFibers = array_values($this->activeFibers);
 
         // Give other fibers a chance to complete
-        if (count($this->activeFibers) > 0) {
+        if ($this->activeFibers !== []) {
             usleep(1000); // 1ms
         }
 

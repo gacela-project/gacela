@@ -113,7 +113,7 @@ abstract class ContractTestCase extends TestCase
         TContractMethod $expectedMethod,
         ?ReflectionMethod $actualMethod,
     ): void {
-        if ($actualMethod === null) {
+        if (!$actualMethod instanceof ReflectionMethod) {
             self::fail(sprintf('Method "%s::%s()" does not exist', $facadeClass, $expectedMethod->name));
 
             return;

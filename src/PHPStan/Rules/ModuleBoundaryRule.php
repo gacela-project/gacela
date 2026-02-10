@@ -24,22 +24,12 @@ use function str_contains;
  */
 final class ModuleBoundaryRule implements Rule
 {
-    /** @var list<string> */
-    private array $allowedPaths;
-
-    /** @var list<string> */
-    private array $restrictedPaths;
-
     /**
      * @param list<string> $allowedPaths Paths that are allowed to access internal classes (e.g., ['tests/'])
      * @param list<string> $restrictedPaths Paths that should enforce boundaries (e.g., ['Domain/', 'Infrastructure/'])
      */
-    public function __construct(
-        array $allowedPaths = [],
-        array $restrictedPaths = ['Domain', 'Infrastructure'],
-    ) {
-        $this->allowedPaths = $allowedPaths;
-        $this->restrictedPaths = $restrictedPaths;
+    public function __construct(private readonly array $allowedPaths = [], private readonly array $restrictedPaths = ['Domain', 'Infrastructure'])
+    {
     }
 
     public function getNodeType(): string
@@ -54,7 +44,7 @@ final class ModuleBoundaryRule implements Rule
         }
 
         $callerClass = $scope->getClassReflection();
-        if ($callerClass === null) {
+        if (!$callerClass instanceof \PHPStan\Reflection\ClassReflection) {
             return [];
         }
 

@@ -44,7 +44,7 @@ final class ModuleEventTest extends TestCase
         usleep(100);
         $event2 = new TestModuleEvent();
 
-        self::assertNotEquals($event1->getTimestamp(), $event2->getTimestamp());
+        self::assertNotSame($event1->getTimestamp(), $event2->getTimestamp());
     }
 
     public function test_module_event_can_carry_data(): void

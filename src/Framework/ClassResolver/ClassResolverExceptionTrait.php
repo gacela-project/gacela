@@ -34,9 +34,7 @@ trait ClassResolverExceptionTrait
             $this->findClassNameExample($callerClassInfo, $resolvableType),
         ) . PHP_EOL;
 
-        $message .= ErrorSuggestionHelper::addHelpfulTip('facade_not_found');
-
-        return $message;
+        return $message . ErrorSuggestionHelper::addHelpfulTip('facade_not_found');
     }
 
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string

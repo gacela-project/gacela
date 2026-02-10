@@ -37,7 +37,7 @@ final class ModuleTemplateGenerator
         }
 
         if ($withApi) {
-            $generatedFiles = array_merge($generatedFiles, $this->generateApiController($arguments));
+            return array_merge($generatedFiles, $this->generateApiController($arguments));
         }
 
         return $generatedFiles;
@@ -293,7 +293,7 @@ PHP,
         $facadeClass = $namespace . '\\Facade';
 
         return sprintf(
-            <<<'PHP'
+            <<<'PHP_WRAP'
 <?php
 
 declare(strict_types=1);
@@ -313,7 +313,8 @@ final class FacadeTest extends TestCase
     }
 }
 
-PHP,
+PHP_WRAP
+            ,
             $namespace,
             $facadeClass,
         );

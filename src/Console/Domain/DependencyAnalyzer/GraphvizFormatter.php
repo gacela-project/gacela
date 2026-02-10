@@ -29,9 +29,7 @@ final class GraphvizFormatter implements DependencyFormatterInterface
             }
         }
 
-        $output .= "}\n";
-
-        return $output;
+        return $output . "}\n";
     }
 
     private function sanitizeId(string $name): string

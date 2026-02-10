@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Testing;
 
-final readonly class TContractMethod
+final class TContractMethod
 {
     /**
      * @param non-empty-string $name
@@ -12,10 +12,10 @@ final readonly class TContractMethod
      * @param non-empty-string|null $returnType
      */
     public function __construct(
-        public string $name,
-        public array $parameters,
-        public ?string $returnType,
-        public bool $isPublic = true,
+        public readonly string $name,
+        public readonly array $parameters,
+        public readonly ?string $returnType,
+        public readonly bool $isPublic = true,
     ) {
     }
 }

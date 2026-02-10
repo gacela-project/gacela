@@ -8,7 +8,8 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use ReflectionClass;
 use ReflectionMethod;
 
-use function count;
+use ReflectionType;
+
 use function implode;
 use function sprintf;
 
@@ -36,16 +37,15 @@ final class DocumentationGenerator
         $doc .= $this->generatePublicMethods($module);
 
         // Add dependencies
-        if (count($dependencies) > 0) {
+        if ($dependencies !== []) {
             $doc .= "\n## Dependencies\n\n";
             $doc .= $this->generateDependencies($dependencies);
         }
 
         // Add usage example
         $doc .= "\n## Usage Example\n\n";
-        $doc .= $this->generateUsageExample($module);
 
-        return $doc;
+        return $doc . $this->generateUsageExample($module);
     }
 
     private function generateModuleStructure(AppModule $module): string
@@ -65,9 +65,7 @@ final class DocumentationGenerator
             $structure .= sprintf("└── %s (Provider)\n", $this->getClassName($module->providerClass()));
         }
 
-        $structure .= "```\n";
-
-        return $structure;
+        return $structure . "```\n";
     }
 
     private function generatePublicMethods(AppModule $module): string
@@ -93,11 +91,11 @@ final class DocumentationGenerator
             $params = [];
 
             foreach ($method->getParameters() as $param) {
-                $paramType = $param->getType() !== null ? $param->getType() . ' ' : '';
+                $paramType = $param->getType() instanceof ReflectionType ? $param->getType() . ' ' : '';
                 $params[] = sprintf('%s$%s', $paramType, $param->getName());
             }
 
-            $returnType = $method->getReturnType() !== null ? ': ' . $method->getReturnType() : '';
+            $returnType = $method->getReturnType() instanceof ReflectionType ? ': ' . $method->getReturnType() : '';
             $signature = sprintf('%s(%s)%s', $methodName, implode(', ', $params), $returnType);
 
             $doc .= sprintf("### `%s`\n\n", $signature);
@@ -160,8 +158,11 @@ MD;
 
         foreach ($lines as $line) {
             $line = trim($line, " \t/*");
+            if ($line === '') {
+                continue;
+            }
 
-            if ($line === '' || str_starts_with($line, '@')) {
+            if (str_starts_with($line, '@')) {
                 continue;
             }
 

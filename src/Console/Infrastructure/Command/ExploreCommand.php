@@ -9,9 +9,11 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use ReflectionClass;
 use ReflectionMethod;
+use ReflectionType;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
+
 use Symfony\Component\Console\Output\OutputInterface;
 
 use Symfony\Component\Console\Question\ChoiceQuestion;
@@ -160,11 +162,11 @@ final class ExploreCommand extends Command
 
             $params = [];
             foreach ($method->getParameters() as $param) {
-                $paramType = $param->getType() !== null ? $param->getType() . ' ' : '';
+                $paramType = $param->getType() instanceof ReflectionType ? $param->getType() . ' ' : '';
                 $params[] = sprintf('%s$%s', $paramType, $param->getName());
             }
 
-            $returnType = $method->getReturnType() !== null ? ': ' . $method->getReturnType() : '';
+            $returnType = $method->getReturnType() instanceof ReflectionType ? ': ' . $method->getReturnType() : '';
             $output->writeln(sprintf(
                 '  • %s(%s)%s',
                 $method->getName(),
@@ -197,6 +199,7 @@ final class ExploreCommand extends Command
                         $output->writeln(sprintf('  → %s', $dependency));
                     }
                 }
+
                 break;
             }
         }

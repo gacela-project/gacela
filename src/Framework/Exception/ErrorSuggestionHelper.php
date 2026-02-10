@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Exception;
 
 use function array_slice;
-use function count;
 use function implode;
 use function similar_text;
 use function sprintf;
@@ -22,25 +21,25 @@ final class ErrorSuggestionHelper
      */
     public static function suggestSimilar(string $searchTerm, array $availableOptions): string
     {
-        if (count($availableOptions) === 0) {
+        if ($availableOptions === []) {
             return '';
         }
 
         $suggestions = self::findSimilar($searchTerm, $availableOptions);
 
-        if (count($suggestions) === 0) {
+        if ($suggestions === []) {
             return '';
         }
 
         return sprintf(
             "\n\nDid you mean?\n%s",
-            implode("\n", array_map(static fn (string $s): string => "  - {$s}", $suggestions)),
+            implode("\n", array_map(static fn (string $s): string => '  - ' . $s, $suggestions)),
         );
     }
 
     public static function addHelpfulTip(string $context): string
     {
-        $tips = match ($context) {
+        return match ($context) {
             'class_not_found' => "\n\nTips:\n" .
                 "  • Check your class namespace\n" .
                 "  • Ensure the file exists in the correct location\n" .
@@ -64,8 +63,6 @@ final class ErrorSuggestionHelper
 
             default => '',
         };
-
-        return $tips;
     }
 
     /**

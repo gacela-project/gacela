@@ -67,7 +67,7 @@ final readonly class VersionCompatibilityChecker
 
             // For ^1.0, accept >= 1.0 and < 2.0
             return version_compare($actualVersion, $baseVersion, '>=')
-                && version_compare($actualVersion, (string)($majorVersion + 1) . '.0', '<');
+                && version_compare($actualVersion, $majorVersion + 1 . '.0', '<');
         }
 
         // Support for tilde (~) constraint like ~1.2
@@ -77,7 +77,7 @@ final readonly class VersionCompatibilityChecker
 
             // For ~1.2, accept >= 1.2 and < 1.3
             if (count($parts) >= 2) {
-                $nextMinor = (string)((int)$parts[0]) . '.' . (string)((int)$parts[1] + 1);
+                $nextMinor = (int)$parts[0] . '.' . ((int)$parts[1] + 1);
 
                 return version_compare($actualVersion, $baseVersion, '>=')
                     && version_compare($actualVersion, $nextMinor, '<');

@@ -20,9 +20,7 @@ use function usleep;
  */
 final class DevWatchCommand extends Command
 {
-    use ServiceResolverAwareTrait;
-
-    private const DEFAULT_INTERVAL = 1000000; // 1 second in microseconds
+    use ServiceResolverAwareTrait; // 1 second in microseconds
 
     protected function configure(): void
     {

@@ -14,6 +14,7 @@ use SplFileInfo;
 use Throwable;
 
 use function class_exists;
+use function in_array;
 
 final readonly class DeprecationScanner
 {
@@ -42,9 +43,12 @@ final readonly class DeprecationScanner
             }
 
             $pathname = $file->getPathname();
-
             // Skip vendor and test directories
-            if (str_contains($pathname, '/vendor/') || str_contains($pathname, '/tests/')) {
+            if (str_contains($pathname, '/vendor/')) {
+                continue;
+            }
+
+            if (str_contains($pathname, '/tests/')) {
                 continue;
             }
 
@@ -70,7 +74,7 @@ final readonly class DeprecationScanner
         $content = (string)file_get_contents($filePath);
 
         // Simple regex to find namespace and class names
-        if (!preg_match('/namespace\s+([^;]+);/', $content, $namespaceMatches)) {
+        if (in_array(preg_match('/namespace\s+([^;]+);/', $content, $namespaceMatches), [0, false], true)) {
             return [];
         }
 

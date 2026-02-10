@@ -27,7 +27,7 @@ final class Profiler
 
     public static function getInstance(): self
     {
-        if (self::$instance === null) {
+        if (!self::$instance instanceof self) {
             self::$instance = new self();
         }
 
@@ -143,7 +143,7 @@ final class Profiler
         return [
             'total_operations' => count($this->entries),
             'total_duration' => round($totalDuration, 6),
-            'avg_duration' => count($this->entries) > 0
+            'avg_duration' => $this->entries !== []
                 ? round($totalDuration / (float) count($this->entries), 6)
                 : 0.0,
             'peak_memory' => $peakMemory,

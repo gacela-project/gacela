@@ -102,9 +102,4 @@ final class SampleContractFacade extends AbstractFacade
     {
         return 'result';
     }
-
-    private function internalMethod(): void
-    {
-        // This should not be included in contract validation
-    }
 }

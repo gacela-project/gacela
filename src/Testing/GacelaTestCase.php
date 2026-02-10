@@ -270,7 +270,7 @@ abstract class GacelaTestCase extends TestCase
         $visited = [];
         $recursionStack = [];
 
-        foreach ($graph as $node => $dependencies) {
+        foreach (array_keys($graph) as $node) {
             if (!isset($visited[$node])) {
                 $cycle = self::detectCycle($node, $graph, $visited, $recursionStack, []);
 

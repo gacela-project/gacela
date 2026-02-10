@@ -64,7 +64,7 @@ final class HealthCheckReport
     {
         return array_filter(
             $this->results,
-            static fn (HealthStatus $status) => $status->level === $level,
+            static fn (HealthStatus $status): bool => $status->level === $level,
         );
     }
 

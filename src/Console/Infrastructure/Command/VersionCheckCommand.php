@@ -24,6 +24,7 @@ use function sprintf;
 final class VersionCheckCommand extends Command
 {
     private const DEFAULT_YAML_FILE = 'gacela-versions.yaml';
+
     private const DEFAULT_PHP_FILE = 'gacela-versions.php';
 
     protected function configure(): void
@@ -94,6 +95,7 @@ final class VersionCheckCommand extends Command
                 foreach ($result->errors as $error) {
                     $output->writeln(sprintf('  <error>✗</error> %s', $error));
                 }
+
                 $output->writeln('');
             }
 
@@ -102,6 +104,7 @@ final class VersionCheckCommand extends Command
                 foreach ($result->warnings as $warning) {
                     $output->writeln(sprintf('  <fg=yellow>⚠</fg=yellow> %s', $warning));
                 }
+
                 $output->writeln('');
             }
 

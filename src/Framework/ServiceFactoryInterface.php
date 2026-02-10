@@ -12,10 +12,12 @@ interface ServiceFactoryInterface
     /**
      * Create or retrieve a singleton instance of a service.
      *
-     * @param string $key Unique identifier for the service instance
-     * @param callable $creator Factory callable that creates the service
+     * @template TService
      *
-     * @return mixed The service instance
+     * @param string $key Unique identifier for the service instance
+     * @param callable(): TService $creator Factory callable that creates the service
+     *
+     * @return TService The service instance
      */
     public function singleton(string $key, callable $creator): mixed;
 }

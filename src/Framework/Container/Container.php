@@ -57,6 +57,13 @@ final class Container extends GacelaContainer implements ContainerInterface
             }
         }
 
+        // Register lazy services - wrapped as factories that instantiate on first access
+        foreach ($containerConfig->getLazyServices() as $id => $lazyFactory) {
+            $container->set($id, $container->factory(static function () use ($lazyFactory, $container) {
+                return $lazyFactory($container);
+            }));
+        }
+
         return $container;
     }
 

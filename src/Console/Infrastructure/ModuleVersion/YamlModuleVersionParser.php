@@ -7,6 +7,8 @@ namespace Gacela\Console\Infrastructure\ModuleVersion;
 use Gacela\Console\Domain\ModuleVersion\ModuleVersionParserInterface;
 use Gacela\Console\Domain\ModuleVersion\TModuleVersion;
 
+use RuntimeException;
+
 use function class_exists;
 use function file_exists;
 use function is_array;
@@ -25,13 +27,13 @@ final readonly class YamlModuleVersionParser implements ModuleVersionParserInter
     public function parseVersionsFile(string $filePath): array
     {
         if (!$this->isAvailable()) {
-            throw new \RuntimeException(
-                'YAML parser not available. Install gacela-project/gacela-yaml-config-reader or symfony/yaml'
+            throw new RuntimeException(
+                'YAML parser not available. Install gacela-project/gacela-yaml-config-reader or symfony/yaml',
             );
         }
 
         if (!file_exists($filePath)) {
-            throw new \RuntimeException(sprintf('Version file not found: %s', $filePath));
+            throw new RuntimeException(sprintf('Version file not found: %s', $filePath));
         }
 
         /** @var class-string $yamlClass */
@@ -45,6 +47,7 @@ final readonly class YamlModuleVersionParser implements ModuleVersionParserInter
 
     /**
      * @param array<string, mixed> $data
+     *
      * @return array<string, TModuleVersion>
      */
     private function parseData(array $data): array

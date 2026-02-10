@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\ModuleVersion;
 
+use function count;
 use function sprintf;
 use function version_compare;
 
@@ -28,7 +29,7 @@ final readonly class VersionCompatibilityChecker
                     $errors[] = sprintf(
                         'Module "%s" requires "%s" but it is not defined in the version matrix',
                         $moduleName,
-                        $requiredName
+                        $requiredName,
                     );
                     continue;
                 }
@@ -41,7 +42,7 @@ final readonly class VersionCompatibilityChecker
                         $moduleName,
                         $requiredName,
                         $requiredVersion,
-                        $actualVersion
+                        $actualVersion,
                     );
                 }
             }

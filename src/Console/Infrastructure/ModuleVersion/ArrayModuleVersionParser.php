@@ -7,6 +7,8 @@ namespace Gacela\Console\Infrastructure\ModuleVersion;
 use Gacela\Console\Domain\ModuleVersion\ModuleVersionParserInterface;
 use Gacela\Console\Domain\ModuleVersion\TModuleVersion;
 
+use RuntimeException;
+
 use function file_exists;
 use function is_array;
 use function sprintf;
@@ -27,14 +29,14 @@ final readonly class ArrayModuleVersionParser implements ModuleVersionParserInte
     public function parseVersionsFile(string $filePath): array
     {
         if (!file_exists($filePath)) {
-            throw new \RuntimeException(sprintf('Version file not found: %s', $filePath));
+            throw new RuntimeException(sprintf('Version file not found: %s', $filePath));
         }
 
         /** @var mixed $data */
         $data = include $filePath;
 
         if (!is_array($data)) {
-            throw new \RuntimeException('Version file must return an array');
+            throw new RuntimeException('Version file must return an array');
         }
 
         return $this->parseData($data);
@@ -42,6 +44,7 @@ final readonly class ArrayModuleVersionParser implements ModuleVersionParserInte
 
     /**
      * @param array<string, mixed> $data
+     *
      * @return array<string, TModuleVersion>
      */
     private function parseData(array $data): array

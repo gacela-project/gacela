@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="6.13.1@1e3b7f0a8ab32b23197b91107adc0a7ed8a05b51">
+  <file src="src/Console/Application/CacheWarm/ParallelModuleWarmer.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$classInfo['className']]]></code>
+    </ArgumentTypeCoercion>
+    <MixedArrayAccess>
+      <code><![CDATA[$resolved]]></code>
+      <code><![CDATA[$skipped]]></code>
+    </MixedArrayAccess>
+    <MixedAssignment>
+      <code><![CDATA[$resolvedCount]]></code>
+      <code><![CDATA[$skippedCount]]></code>
+      <code><![CDATA[$skippedCount]]></code>
+      <code><![CDATA[[$resolved, $skipped]]]></code>
+    </MixedAssignment>
+    <MixedOperand>
+      <code><![CDATA[$resolved]]></code>
+      <code><![CDATA[$skipped]]></code>
+      <code><![CDATA[$skippedCount]]></code>
+    </MixedOperand>
+    <MixedReturnTypeCoercion>
+      <code><![CDATA[[$resolvedCount, $skippedCount]]]></code>
+      <code><![CDATA[array{int, int}]]></code>
+    </MixedReturnTypeCoercion>
+  </file>
+  <file src="src/Console/Domain/DependencyAnalyzer/JsonFormatter.php">
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string)json_encode(['modules' => $data], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Console/Domain/Deprecation/DeprecationScanner.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$pathname]]></code>
+    </ArgumentTypeCoercion>
+    <InvalidAttribute>
+      <code><![CDATA[Deprecated::class]]></code>
+    </InvalidAttribute>
+    <UnresolvableInclude>
+      <code><![CDATA[require_once $filePath]]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Console/Domain/DocumentationGenerator/DocumentationGenerator.php">
+    <ImplicitToStringCast>
+      <code><![CDATA[$method->getReturnType()]]></code>
+      <code><![CDATA[$param->getType()]]></code>
+    </ImplicitToStringCast>
+  </file>
+  <file src="src/Console/Domain/FileWatcher/FileWatcher.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->fileTimestamps]]></code>
+      <code><![CDATA[$this->fileTimestamps]]></code>
+      <code><![CDATA[$this->fileTimestamps]]></code>
+    </InvalidPropertyAssignmentValue>
+  </file>
+  <file src="src/Console/Infrastructure/Command/AnalyzeDependenciesCommand.php">
+    <MixedArgument>
+      <code><![CDATA[$outputFile]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$outputFile]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Console/Infrastructure/Command/CacheWarmCommand.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$classInfo['className']]]></code>
+    </ArgumentTypeCoercion>
+  </file>
+  <file src="src/Console/Infrastructure/Command/ExploreCommand.php">
+    <ImplicitToStringCast>
+      <code><![CDATA[$method->getReturnType()]]></code>
+      <code><![CDATA[$param->getType()]]></code>
+    </ImplicitToStringCast>
+    <MixedAssignment>
+      <code><![CDATA[$selectedName]]></code>
+    </MixedAssignment>
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[ask]]></code>
+    </UndefinedInterfaceMethod>
+  </file>
+  <file src="src/Console/Infrastructure/Command/ListDeprecatedCommand.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[Gacela::rootDir()]]></code>
+    </ArgumentTypeCoercion>
+    <MixedAssignment>
+      <code><![CDATA[$typeFilter]]></code>
+      <code><![CDATA[$willRemoveInFilter]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Console/Infrastructure/Command/ProfileReportCommand.php">
+    <InvalidOperand>
+      <code><![CDATA[$entry->duration * 1000]]></code>
+      <code><![CDATA[$opStats['avg_duration'] * 1000]]></code>
+      <code><![CDATA[$opStats['total_duration'] * 1000]]></code>
+      <code><![CDATA[$stats['avg_duration'] * 1000]]></code>
+      <code><![CDATA[$stats['total_duration'] * 1000]]></code>
+    </InvalidOperand>
+    <MixedPropertyFetch>
+      <code><![CDATA[$a->duration]]></code>
+      <code><![CDATA[$a->memoryUsage]]></code>
+      <code><![CDATA[$a->operation]]></code>
+      <code><![CDATA[$b->duration]]></code>
+      <code><![CDATA[$b->memoryUsage]]></code>
+      <code><![CDATA[$b->operation]]></code>
+    </MixedPropertyFetch>
+  </file>
+  <file src="src/Console/Infrastructure/Command/VersionCheckCommand.php">
+    <MixedArgument>
+      <code><![CDATA[$customPath]]></code>
+    </MixedArgument>
+  </file>
+  <file src="src/Console/Infrastructure/ModuleVersion/ArrayModuleVersionParser.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$version]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </ArgumentTypeCoercion>
+    <MixedArgumentTypeCoercion>
+      <code><![CDATA[$data]]></code>
+    </MixedArgumentTypeCoercion>
+    <MixedAssignment>
+      <code><![CDATA[$reqVersion]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string)$moduleName]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Console/Infrastructure/ModuleVersion/YamlModuleVersionParser.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$version]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </ArgumentTypeCoercion>
+    <MixedAssignment>
+      <code><![CDATA[$reqVersion]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[$yamlClass::parseFile($filePath)]]></code>
+    </MixedMethodCall>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string)$moduleName]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Framework/AbstractFacade.php">
+    <PropertyTypeCoercion>
+      <code><![CDATA[self::$factories]]></code>
+    </PropertyTypeCoercion>
+  </file>
+  <file src="src/Framework/AbstractFactory.php">
+    <MixedReturnStatement>
+      <code><![CDATA[$this->instances[$key] ??= $creator()]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Framework/Profiler/Profiler.php">
+    <InvalidOperand>
+      <code><![CDATA[hrtime(true) / 1e9]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="src/Testing/GacelaTestCase.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$dependencyGraph]]></code>
+    </ArgumentTypeCoercion>
+  </file>
+</files>

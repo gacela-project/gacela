@@ -1,0 +1,271 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Binary operation \"\\+\\=\" between \\(float\\|int\\) and mixed results in an error\\.$#"
+			count: 2
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Cannot use array destructuring on mixed\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Parameter \\#1 \\$array \\(list\\<Fiber\\>\\) of array_values is already a list, call has no effect\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Parameter \\#1 \\$className of method Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\CacheWarmService\\:\\:warmAttributeCache\\(\\) expects class\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Property Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\ParallelModuleWarmer\\:\\:\\$activeFibers \\(list\\<Fiber\\>\\) does not accept array\\<int\\<0, max\\>, Fiber\\>\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Property Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\ParallelModuleWarmer\\:\\:\\$activeFibers with generic class Fiber does not specify its types\\: TStart, TResume, TReturn, TSuspend$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Casting to string something that's already string\\.$#"
+			count: 1
+			path: src/Console/Domain/DependencyAnalyzer/JsonFormatter.php
+
+		-
+			message: "#^Offset 1 on array\\{list\\<string\\>, list\\<non\\-empty\\-string\\>\\} in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: src/Console/Domain/Deprecation/DeprecationScanner.php
+
+		-
+			message: "#^Parameter \\#1 \\$filePath of method Gacela\\\\Console\\\\Domain\\\\Deprecation\\\\DeprecationScanner\\:\\:scanFile\\(\\) expects non\\-empty\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Domain/Deprecation/DeprecationScanner.php
+
+		-
+			message: "#^PHPDoc tag @param references unknown parameter\\: \\$modules$#"
+			count: 1
+			path: src/Console/Domain/DocumentationGenerator/DocumentationGenerator.php
+
+		-
+			message: "#^Property Gacela\\\\Console\\\\Domain\\\\FileWatcher\\\\FileWatcher\\:\\:\\$fileTimestamps \\(array\\<string, int\\>\\) does not accept array\\<string, bool\\|int\\>\\.$#"
+			count: 3
+			path: src/Console/Domain/FileWatcher/FileWatcher.php
+
+		-
+			message: "#^Offset 0 on non\\-empty\\-list\\<string\\> on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: src/Console/Domain/ModuleVersion/VersionCompatibilityChecker.php
+
+		-
+			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/AnalyzeDependenciesCommand.php
+
+		-
+			message: "#^Parameter \\#1 \\$className of method Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\CacheWarmService\\:\\:warmAttributeCache\\(\\) expects class\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/CacheWarmCommand.php
+
+		-
+			message: "#^Cannot cast mixed to int\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/DevWatchCommand.php
+
+		-
+			message: "#^Unreachable statement \\- code above always terminates\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/DevWatchCommand.php
+
+		-
+			message: "#^While loop condition is always true\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/DevWatchCommand.php
+
+		-
+			message: "#^Call to an undefined method Symfony\\\\Component\\\\Console\\\\Helper\\\\HelperInterface\\:\\:ask\\(\\)\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/ExploreCommand.php
+
+		-
+			message: "#^Parameter \\#1 \\$rootPath of class Gacela\\\\Console\\\\Domain\\\\Deprecation\\\\DeprecationScanner constructor expects non\\-empty\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/ListDeprecatedCommand.php
+
+		-
+			message: "#^Method Gacela\\\\Console\\\\Infrastructure\\\\Command\\\\MakeModuleCommand\\:\\:getExpectedFilenames\\(\\) is unused\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/MakeModuleCommand.php
+
+		-
+			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/VersionCheckCommand.php
+
+		-
+			message: "#^Casting to string something that's already string\\.$#"
+			count: 2
+			path: src/Console/Infrastructure/ModuleVersion/ArrayModuleVersionParser.php
+
+		-
+			message: "#^Parameter \\#1 \\$data of method Gacela\\\\Console\\\\Infrastructure\\\\ModuleVersion\\\\ArrayModuleVersionParser\\:\\:parseData\\(\\) expects array\\<string, mixed\\>, array given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/ModuleVersion/ArrayModuleVersionParser.php
+
+		-
+			message: "#^Parameter \\$moduleName of class Gacela\\\\Console\\\\Domain\\\\ModuleVersion\\\\TModuleVersion constructor expects non\\-empty\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/ModuleVersion/ArrayModuleVersionParser.php
+
+		-
+			message: "#^Parameter \\$version of class Gacela\\\\Console\\\\Domain\\\\ModuleVersion\\\\TModuleVersion constructor expects non\\-empty\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/ModuleVersion/ArrayModuleVersionParser.php
+
+		-
+			message: "#^Casting to string something that's already string\\.$#"
+			count: 2
+			path: src/Console/Infrastructure/ModuleVersion/YamlModuleVersionParser.php
+
+		-
+			message: "#^PHPDoc tag @var with type class\\-string is not subtype of native type 'Symfony\\\\\\\\Component…'\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/ModuleVersion/YamlModuleVersionParser.php
+
+		-
+			message: "#^Parameter \\$moduleName of class Gacela\\\\Console\\\\Domain\\\\ModuleVersion\\\\TModuleVersion constructor expects non\\-empty\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/ModuleVersion/YamlModuleVersionParser.php
+
+		-
+			message: "#^Parameter \\$version of class Gacela\\\\Console\\\\Domain\\\\ModuleVersion\\\\TModuleVersion constructor expects non\\-empty\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/ModuleVersion/YamlModuleVersionParser.php
+
+		-
+			message: "#^Method Gacela\\\\Framework\\\\AbstractFacade\\:\\:dependencies\\(\\) return type with generic class Gacela\\\\Framework\\\\AbstractFacade does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Framework/AbstractFacade.php
+
+		-
+			message: "#^Property Gacela\\\\Framework\\\\AbstractFacade\\:\\:\\$factories with generic class Gacela\\\\Framework\\\\AbstractFacade does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Framework/AbstractFacade.php
+
+		-
+			message: "#^Property Gacela\\\\Framework\\\\AbstractFacade\\:\\:\\$factories with generic class Gacela\\\\Framework\\\\AbstractFactory does not specify its types\\: TConfig$#"
+			count: 1
+			path: src/Framework/AbstractFacade.php
+
+		-
+			message: "#^Template type TDependency of method Gacela\\\\Framework\\\\AbstractFactory\\:\\:getProvidedDependency\\(\\) is not referenced in a parameter\\.$#"
+			count: 1
+			path: src/Framework/AbstractFactory.php
+
+		-
+			message: "#^Trait Gacela\\\\Framework\\\\Attribute\\\\CacheableTrait is used zero times and is not analysed\\.$#"
+			count: 1
+			path: src/Framework/Attribute/CacheableTrait.php
+
+		-
+			message: "#^Method Gacela\\\\Framework\\\\ClassResolver\\\\Facade\\\\FacadeResolver\\:\\:resolve\\(\\) return type with generic class Gacela\\\\Framework\\\\AbstractFacade does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Framework/ClassResolver/Facade/FacadeResolver.php
+
+		-
+			message: "#^PHPDoc tag @var for variable \\$resolved contains generic class Gacela\\\\Framework\\\\AbstractFacade but does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Framework/ClassResolver/Facade/FacadeResolver.php
+
+		-
+			message: "#^Method Gacela\\\\Framework\\\\ClassResolver\\\\Factory\\\\FactoryResolver\\:\\:resolve\\(\\) return type with generic class Gacela\\\\Framework\\\\AbstractFactory does not specify its types\\: TConfig$#"
+			count: 1
+			path: src/Framework/ClassResolver/Factory/FactoryResolver.php
+
+		-
+			message: "#^PHPDoc tag @var for variable \\$resolved contains generic class Gacela\\\\Framework\\\\AbstractFactory but does not specify its types\\: TConfig$#"
+			count: 1
+			path: src/Framework/ClassResolver/Factory/FactoryResolver.php
+
+		-
+			message: "#^Method Gacela\\\\Framework\\\\ClassResolver\\\\Provider\\\\DependencyProviderResolver\\:\\:resolve\\(\\) return type with generic class Gacela\\\\Framework\\\\AbstractProvider does not specify its types\\: TConfig$#"
+			count: 1
+			path: src/Framework/ClassResolver/Provider/DependencyProviderResolver.php
+
+		-
+			message: "#^Method Gacela\\\\Framework\\\\ClassResolver\\\\Provider\\\\ProviderResolver\\:\\:resolve\\(\\) return type with generic class Gacela\\\\Framework\\\\AbstractProvider does not specify its types\\: TConfig$#"
+			count: 1
+			path: src/Framework/ClassResolver/Provider/ProviderResolver.php
+
+		-
+			message: "#^PHPDoc tag @var for variable \\$resolved contains generic class Gacela\\\\Framework\\\\AbstractProvider but does not specify its types\\: TConfig$#"
+			count: 1
+			path: src/Framework/ClassResolver/Provider/ProviderResolver.php
+
+		-
+			message: "#^Method Gacela\\\\Framework\\\\ModuleDependenciesInterface\\:\\:dependencies\\(\\) return type with generic class Gacela\\\\Framework\\\\AbstractFacade does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Framework/ModuleDependenciesInterface.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between int\\<1, max\\> and 0 is always true\\.$#"
+			count: 1
+			path: src/Framework/Profiler/Profiler.php
+
+		-
+			message: "#^Template type TDependency of method Gacela\\\\Framework\\\\ProviderAccessorInterface\\:\\:getProvidedDependency\\(\\) is not referenced in a parameter\\.$#"
+			count: 1
+			path: src/Framework/ProviderAccessorInterface.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, int\\|false given\\.$#"
+			count: 2
+			path: src/PHPStan/Rules/ModuleBoundaryRule.php
+
+		-
+			message: "#^Method Gacela\\\\Testing\\\\ContractTestCase\\:\\:extractPublicMethods\\(\\) has parameter \\$reflection with generic class ReflectionClass but does not specify its types\\: T$#"
+			count: 1
+			path: src/Testing/ContractTestCase.php
+
+		-
+			message: "#^Unreachable statement \\- code above always terminates\\.$#"
+			count: 1
+			path: src/Testing/ContractTestCase.php
+
+		-
+			message: "#^Call to static method PHPUnit\\\\Framework\\\\Assert\\:\\:assertTrue\\(\\) with true will always evaluate to true\\.$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php
+
+		-
+			message: "#^Instanceof between Gacela\\\\Framework\\\\AbstractFacade and Gacela\\\\Framework\\\\ModuleDependenciesInterface will always evaluate to true\\.$#"
+			count: 2
+			path: src/Testing/GacelaTestCase.php
+
+		-
+			message: "#^Method Gacela\\\\Testing\\\\GacelaTestCase\\:\\:assertFacadeHasMethods\\(\\) has parameter \\$facadeClass with generic class Gacela\\\\Framework\\\\AbstractFacade but does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php
+
+		-
+			message: "#^Method Gacela\\\\Testing\\\\GacelaTestCase\\:\\:assertModuleDependencies\\(\\) has parameter \\$expectedDependencies with generic class Gacela\\\\Framework\\\\AbstractFacade but does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php
+
+		-
+			message: "#^Method Gacela\\\\Testing\\\\GacelaTestCase\\:\\:assertModuleDependencies\\(\\) has parameter \\$facadeClass with generic class Gacela\\\\Framework\\\\AbstractFacade but does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php
+
+		-
+			message: "#^Method Gacela\\\\Testing\\\\GacelaTestCase\\:\\:assertNoCircularDependencies\\(\\) has parameter \\$facadeClasses with generic class Gacela\\\\Framework\\\\AbstractFacade but does not specify its types\\: TFactory$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php
+
+		-
+			message: "#^Parameter \\#1 \\$graph of static method Gacela\\\\Testing\\\\GacelaTestCase\\:\\:findCircularDependencies\\(\\) expects array\\<class\\-string, list\\<class\\-string\\>\\>, array\\<class\\-string, array\\<class\\-string\\>\\> given\\.$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php

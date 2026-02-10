@@ -79,5 +79,9 @@ final class DevWatchCommand extends Command
 
             usleep($interval);
         }
+
+        // @codeCoverageIgnoreStart
+        return Command::SUCCESS; // @phpstan-ignore deadCode.unreachable (Infinite loop exits via Ctrl+C)
+        // @codeCoverageIgnoreEnd
     }
 }

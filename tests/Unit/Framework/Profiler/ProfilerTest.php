@@ -71,9 +71,11 @@ final class ProfilerTest extends TestCase
     public function test_profiler_generates_statistics(): void
     {
         $this->profiler->start('operation1', 'subject1');
+        usleep(1000); // Add small delay to ensure measurable duration
         $this->profiler->stop('operation1', 'subject1');
 
         $this->profiler->start('operation1', 'subject2');
+        usleep(1000); // Add small delay to ensure measurable duration
         $this->profiler->stop('operation1', 'subject2');
 
         $stats = $this->profiler->getStats();

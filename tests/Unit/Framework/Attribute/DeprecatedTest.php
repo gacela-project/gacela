@@ -63,4 +63,9 @@ final class DeprecatedTest extends TestCase
 #[Deprecated(since: '1.0.0', replacement: 'ModernClass')]
 final class SampleDeprecatedClass
 {
+    #[Deprecated(since: '1.2.0', replacement: 'newMethod')]
+    public function oldMethod(): string
+    {
+        return 'old';
+    }
 }

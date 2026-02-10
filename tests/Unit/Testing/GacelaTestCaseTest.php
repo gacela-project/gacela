@@ -54,6 +54,16 @@ final class GacelaTestCaseTest extends GacelaTestCase
 
 final class SampleModuleFacade extends AbstractFacade implements ModuleDependenciesInterface
 {
+    public function execute(): string
+    {
+        return 'executed';
+    }
+
+    public function process(): string
+    {
+        return 'processed';
+    }
+
     /**
      * @return list<class-string<AbstractFacade>>
      */

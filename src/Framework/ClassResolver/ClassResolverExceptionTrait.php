@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\Exception\ErrorSuggestionHelper;
+
 use function sprintf;
 
 trait ClassResolverExceptionTrait
@@ -27,10 +29,14 @@ trait ClassResolverExceptionTrait
             $resolvableType,
         ) . PHP_EOL;
 
-        return $message . (sprintf(
+        $message .= sprintf(
             'E.g. `%s`',
             $this->findClassNameExample($callerClassInfo, $resolvableType),
-        ) . PHP_EOL);
+        ) . PHP_EOL;
+
+        $message .= ErrorSuggestionHelper::addHelpfulTip('facade_not_found');
+
+        return $message;
     }
 
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string

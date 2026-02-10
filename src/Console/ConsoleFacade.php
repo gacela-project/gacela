@@ -129,4 +129,36 @@ final class ConsoleFacade extends AbstractFacade
             ->createModuleTemplateGenerator()
             ->generateTemplateFiles($arguments, $template, $withTests, $withApi);
     }
+
+    /**
+     * @param list<string> $watchPaths
+     */
+    public function initializeFileWatcher(array $watchPaths): void
+    {
+        $this->getFactory()->createFileWatcher()->initialize($watchPaths);
+    }
+
+    /**
+     * @param list<string> $watchPaths
+     *
+     * @return list<string>
+     */
+    public function detectFileChanges(array $watchPaths): array
+    {
+        return $this->getFactory()->createFileWatcher()->detectChanges($watchPaths);
+    }
+
+    public function clearDevelopmentCaches(): void
+    {
+        // Clear opcache if available
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+        }
+
+        // Clear realpath cache
+        clearstatcache(true);
+
+        // Clear Gacela's internal caches
+        $this->getFactory()->getMainContainer()->remove('cache');
+    }
 }

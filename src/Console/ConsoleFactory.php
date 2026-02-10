@@ -20,6 +20,7 @@ use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Domain\FileWatcher\FileWatcher;
 use Gacela\Console\Domain\IdeHelper\IdeHelperGenerator;
 use Gacela\Console\Domain\ModuleTemplate\ModuleTemplateGenerator;
 use Gacela\Console\Infrastructure\FileContentIo;
@@ -138,6 +139,11 @@ final class ConsoleFactory extends AbstractFactory
     public function createModuleTemplateGenerator(): ModuleTemplateGenerator
     {
         return new ModuleTemplateGenerator();
+    }
+
+    public function createFileWatcher(): FileWatcher
+    {
+        return new FileWatcher();
     }
 
     public function getMainContainer(): Container

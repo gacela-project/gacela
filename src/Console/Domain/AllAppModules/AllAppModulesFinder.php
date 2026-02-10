@@ -53,8 +53,6 @@ final class AllAppModulesFinder
         if (!$fileInfo->isFile()
             || $fileInfo->getExtension() !== 'php'
             || str_contains($realPath, 'vendor' . DIRECTORY_SEPARATOR)
-            || str_contains($realPath, 'tests' . DIRECTORY_SEPARATOR)
-            || str_contains($realPath, 'test' . DIRECTORY_SEPARATOR)
         ) {
             return null;
         }

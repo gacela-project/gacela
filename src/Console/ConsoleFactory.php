@@ -107,6 +107,21 @@ final class ConsoleFactory extends AbstractFactory
         return $this->getMainContainer()->getDependencyTree($className);
     }
 
+    public function createDependencyAnalyzer(): DependencyAnalyzer
+    {
+        return new DependencyAnalyzer();
+    }
+
+    public function createDependencyFormatter(string $format): DependencyFormatterInterface
+    {
+        return match ($format) {
+            'mermaid' => new MermaidFormatter(),
+            'graphviz', 'dot' => new GraphvizFormatter(),
+            'json' => new JsonFormatter(),
+            default => new JsonFormatter(),
+        };
+    }
+
     /**
      * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
      */

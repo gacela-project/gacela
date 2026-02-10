@@ -33,6 +33,7 @@ final class SetupMerger
         $this->mergeProtectedServices($other);
         $this->mergeAliases($other);
         $this->mergeContextualBindings($other);
+        $this->mergeLazyServices($other);
         $this->mergePlugins($other);
         $this->mergeGacelaConfigsToExtend($other);
 
@@ -150,6 +151,13 @@ final class SetupMerger
     {
         if ($other->isPropertyChanged(SetupGacela::contextualBindings)) {
             $this->original->mergeContextualBindings($other->getContextualBindings());
+        }
+    }
+
+    private function mergeLazyServices(SetupGacela $other): void
+    {
+        if ($other->isPropertyChanged(SetupGacela::lazyServices)) {
+            $this->original->mergeLazyServices($other->getLazyServices());
         }
     }
 }

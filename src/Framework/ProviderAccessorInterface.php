@@ -12,9 +12,11 @@ interface ProviderAccessorInterface
     /**
      * Retrieve a dependency that was provided by a module provider.
      *
+     * @template TDependency
+     *
      * @param string $key The dependency key
      *
-     * @return mixed The dependency value
+     * @return TDependency The dependency value
      */
     public function getProvidedDependency(string $key): mixed;
 }

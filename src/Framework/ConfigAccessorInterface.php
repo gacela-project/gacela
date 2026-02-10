@@ -14,7 +14,9 @@ interface ConfigAccessorInterface
     /**
      * Get the configuration instance for this module.
      *
-     * @return TConfig
+     * @return TConfig The module configuration
+     *
+     * @psalm-return TConfig
      */
     public function getConfig(): AbstractConfig;
 }

@@ -70,6 +70,9 @@ final class Properties
     /** @var ?array<string,array<class-string,class-string|callable|object>> */
     public ?array $contextualBindings = null;
 
+    /** @var ?array<string,Closure> */
+    public ?array $lazyServices = null;
+
     /** @var ?list<class-string> */
     public ?array $gacelaConfigsToExtend = null;
 

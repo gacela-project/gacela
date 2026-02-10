@@ -7,6 +7,8 @@ namespace Gacela\Console\Domain\DependencyAnalyzer;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use ReflectionClass;
 
+use Throwable;
+
 use function count;
 use function in_array;
 
@@ -23,11 +25,18 @@ final class DependencyAnalyzer
         $moduleMap = $this->buildModuleMap($modules);
 
         foreach ($modules as $module) {
-            $deps = $this->extractModuleDependencies($module, $moduleMap);
+            try {
+                $deps = $this->extractModuleDependencies($module, $moduleMap);
+                $depth = $this->calculateDepth($module, $moduleMap, []);
+            } catch (Throwable) {
+                $deps = [];
+                $depth = 0;
+            }
+
             $dependencies[] = new TModuleDependency(
                 $module->fullModuleName(),
                 $deps,
-                $this->calculateDepth($module, $moduleMap, []),
+                $depth,
             );
         }
 
@@ -87,18 +96,26 @@ final class DependencyAnalyzer
     {
         $dependencies = [];
 
-        if ($module->factoryClass() !== null && class_exists($module->factoryClass())) {
-            $dependencies = array_merge(
-                $dependencies,
-                $this->extractDependenciesFromClass($module->factoryClass(), $moduleMap),
-            );
+        try {
+            if ($module->factoryClass() !== null && class_exists($module->factoryClass())) {
+                $dependencies = array_merge(
+                    $dependencies,
+                    $this->extractDependenciesFromClass($module->factoryClass(), $moduleMap),
+                );
+            }
+        } catch (Throwable) {
+            // Skip modules that can't be analyzed
         }
 
-        if ($module->providerClass() !== null && class_exists($module->providerClass())) {
-            $dependencies = array_merge(
-                $dependencies,
-                $this->extractDependenciesFromClass($module->providerClass(), $moduleMap),
-            );
+        try {
+            if ($module->providerClass() !== null && class_exists($module->providerClass())) {
+                $dependencies = array_merge(
+                    $dependencies,
+                    $this->extractDependenciesFromClass($module->providerClass(), $moduleMap),
+                );
+            }
+        } catch (Throwable) {
+            // Skip modules that can't be analyzed
         }
 
         return array_values(array_unique($dependencies));

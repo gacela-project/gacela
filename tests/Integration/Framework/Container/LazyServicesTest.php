@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\Container;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +19,9 @@ final class LazyServicesTest extends TestCase
         $reflection = new ReflectionClass(Gacela::class);
         $method = $reflection->getMethod('resetCache');
         $method->invoke(null);
+
+        // Also reset Config singleton to prevent test pollution
+        Config::resetInstance();
     }
 
     public function test_lazy_service_is_not_instantiated_until_accessed(): void
@@ -72,7 +76,7 @@ final class LazyServicesTest extends TestCase
     public function test_lazy_service_with_container_dependencies(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->addBinding('dependency', static fn () => (object)['name' => 'Dependency']);
+            $config->addFactory('dependency', static fn () => (object)['name' => 'Dependency']);
             $config->addLazy('service-with-dep', static function (Container $c): stdClass {
                 $obj = new stdClass();
                 $obj->dependency = $c->get('dependency');

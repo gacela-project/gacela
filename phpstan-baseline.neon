@@ -71,34 +71,14 @@ parameters:
 			path: src/Console/Infrastructure/Command/CacheWarmCommand.php
 
 		-
-			message: "#^Cannot cast mixed to int\\.$#"
-			count: 1
-			path: src/Console/Infrastructure/Command/DevWatchCommand.php
-
-		-
-			message: "#^Unreachable statement \\- code above always terminates\\.$#"
-			count: 1
-			path: src/Console/Infrastructure/Command/DevWatchCommand.php
-
-		-
 			message: "#^While loop condition is always true\\.$#"
 			count: 1
 			path: src/Console/Infrastructure/Command/DevWatchCommand.php
 
 		-
-			message: "#^Call to an undefined method Symfony\\\\Component\\\\Console\\\\Helper\\\\HelperInterface\\:\\:ask\\(\\)\\.$#"
-			count: 1
-			path: src/Console/Infrastructure/Command/ExploreCommand.php
-
-		-
 			message: "#^Parameter \\#1 \\$rootPath of class Gacela\\\\Console\\\\Domain\\\\Deprecation\\\\DeprecationScanner constructor expects non\\-empty\\-string, string given\\.$#"
 			count: 1
 			path: src/Console/Infrastructure/Command/ListDeprecatedCommand.php
-
-		-
-			message: "#^Method Gacela\\\\Console\\\\Infrastructure\\\\Command\\\\MakeModuleCommand\\:\\:getExpectedFilenames\\(\\) is unused\\.$#"
-			count: 1
-			path: src/Console/Infrastructure/Command/MakeModuleCommand.php
 
 		-
 			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
@@ -221,17 +201,7 @@ parameters:
 			path: src/Framework/ProviderAccessorInterface.php
 
 		-
-			message: "#^Only booleans are allowed in an if condition, int\\|false given\\.$#"
-			count: 2
-			path: src/PHPStan/Rules/ModuleBoundaryRule.php
-
-		-
 			message: "#^Method Gacela\\\\Testing\\\\ContractTestCase\\:\\:extractPublicMethods\\(\\) has parameter \\$reflection with generic class ReflectionClass but does not specify its types\\: T$#"
-			count: 1
-			path: src/Testing/ContractTestCase.php
-
-		-
-			message: "#^Unreachable statement \\- code above always terminates\\.$#"
 			count: 1
 			path: src/Testing/ContractTestCase.php
 

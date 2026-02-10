@@ -74,9 +74,6 @@
     <MixedAssignment>
       <code><![CDATA[$selectedName]]></code>
     </MixedAssignment>
-    <UndefinedInterfaceMethod>
-      <code><![CDATA[ask]]></code>
-    </UndefinedInterfaceMethod>
   </file>
   <file src="src/Console/Infrastructure/Command/ListDeprecatedCommand.php">
     <ArgumentTypeCoercion>

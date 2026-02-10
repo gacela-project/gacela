@@ -161,4 +161,14 @@ final class ConsoleFacade extends AbstractFacade
         // Clear Gacela's internal caches
         $this->getFactory()->getMainContainer()->remove('cache');
     }
+
+    /**
+     * @param list<array{from: string, to: string}> $dependencies
+     */
+    public function generateModuleDocumentation(AppModule $module, array $dependencies): string
+    {
+        return $this->getFactory()
+            ->createDocumentationGenerator()
+            ->generateModuleDocumentation($module, $dependencies);
+    }
 }

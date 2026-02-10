@@ -15,6 +15,7 @@ use Gacela\Console\Domain\DependencyAnalyzer\DependencyFormatterInterface;
 use Gacela\Console\Domain\DependencyAnalyzer\GraphvizFormatter;
 use Gacela\Console\Domain\DependencyAnalyzer\JsonFormatter;
 use Gacela\Console\Domain\DependencyAnalyzer\MermaidFormatter;
+use Gacela\Console\Domain\DocumentationGenerator\DocumentationGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
@@ -144,6 +145,11 @@ final class ConsoleFactory extends AbstractFactory
     public function createFileWatcher(): FileWatcher
     {
         return new FileWatcher();
+    }
+
+    public function createDocumentationGenerator(): DocumentationGenerator
+    {
+        return new DocumentationGenerator();
     }
 
     public function getMainContainer(): Container

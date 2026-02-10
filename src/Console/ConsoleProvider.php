@@ -10,6 +10,7 @@ use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Console\Infrastructure\Command\ContainerCompileCommand;
 use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
 use Gacela\Console\Infrastructure\Command\DevWatchCommand;
+use Gacela\Console\Infrastructure\Command\DocsGenerateCommand;
 use Gacela\Console\Infrastructure\Command\GenerateIdeHelperCommand;
 use Gacela\Console\Infrastructure\Command\ListDeprecatedCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
@@ -48,6 +49,7 @@ final class ConsoleProvider extends AbstractProvider
             new ContainerCompileCommand(),
             new GenerateIdeHelperCommand(),
             new DevWatchCommand(),
+            new DocsGenerateCommand(),
             new VersionCheckCommand(),
             new ListDeprecatedCommand(),
         ]);

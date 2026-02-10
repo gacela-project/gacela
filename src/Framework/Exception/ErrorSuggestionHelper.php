@@ -101,6 +101,6 @@ final class ErrorSuggestionHelper
 
         similar_text(strtolower($string1), strtolower($string2), $percent);
 
-        return $percent / 100;
+        return $percent / 100.0;
     }
 }

@@ -136,7 +136,7 @@ final class Profiler
 
         foreach ($byOperation as $operation => $stats) {
             $byOperation[$operation]['avg_duration'] = $stats['count'] > 0
-                ? round($stats['total_duration'] / $stats['count'], 6)
+                ? round($stats['total_duration'] / (float) $stats['count'], 6)
                 : 0.0;
         }
 
@@ -144,7 +144,7 @@ final class Profiler
             'total_operations' => count($this->entries),
             'total_duration' => round($totalDuration, 6),
             'avg_duration' => count($this->entries) > 0
-                ? round($totalDuration / count($this->entries), 6)
+                ? round($totalDuration / (float) count($this->entries), 6)
                 : 0.0,
             'peak_memory' => $peakMemory,
             'by_operation' => $byOperation,

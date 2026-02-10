@@ -61,14 +61,6 @@ final class SampleModuleFacade extends AbstractFacade implements ModuleDependenc
     {
         return [SampleDependencyFacade::class];
     }
-
-    public function execute(): void
-    {
-    }
-
-    public function process(): void
-    {
-    }
 }
 
 final class SampleDependencyFacade extends AbstractFacade

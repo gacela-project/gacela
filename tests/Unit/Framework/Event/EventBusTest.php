@@ -4,31 +4,30 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Event;
 
-use Gacela\Framework\Config\Config;
-use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Event\EventBus;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class EventBusTest extends TestCase
 {
-    private Config $config;
-    private ConfigurableEventDispatcher $dispatcher;
-
     protected function setUp(): void
     {
         EventBus::resetCache();
 
-        $this->config = mock(Config::class);
-        $this->dispatcher = new ConfigurableEventDispatcher();
-
-        Config::overrideInstanceForTesting($this->config);
-        $this->config->allows('getEventDispatcher')->andReturn($this->dispatcher);
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            // Empty config, just need the event dispatcher to be available
+        });
     }
 
     protected function tearDown(): void
     {
         EventBus::resetCache();
-        Config::resetInstance();
+
+        $reflection = new ReflectionClass(Gacela::class);
+        $method = $reflection->getMethod('resetCache');
+        $method->invoke(null);
     }
 
     public function test_dispatch_event(): void

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Event;
 
 use Gacela\Framework\Config\Config;
-use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
  * EventBus provides a simplified interface for event-driven module communication.
@@ -13,8 +12,6 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
  */
 final class EventBus
 {
-    private static ?EventDispatcherInterface $dispatcher = null;
-
     /**
      * Dispatch an event to all registered listeners.
      *
@@ -22,7 +19,7 @@ final class EventBus
      */
     public static function dispatch(object $event): void
     {
-        self::getDispatcher()->dispatch($event);
+        Config::getEventDispatcher()->dispatch($event);
     }
 
     /**
@@ -35,15 +32,12 @@ final class EventBus
      */
     public static function listen(string $eventClass, callable $listener): void
     {
-        $config = Config::getInstance();
-        $dispatcher = $config->getEventDispatcher();
+        $dispatcher = Config::getEventDispatcher();
 
         if (method_exists($dispatcher, 'registerSpecificListener')) {
             /** @var \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher $dispatcher */
             $dispatcher->registerSpecificListener($eventClass, $listener);
         }
-
-        self::$dispatcher = $dispatcher;
     }
 
     /**
@@ -53,16 +47,7 @@ final class EventBus
      */
     public static function resetCache(): void
     {
-        self::$dispatcher = null;
-    }
-
-    private static function getDispatcher(): EventDispatcherInterface
-    {
-        if (self::$dispatcher === null) {
-            $config = Config::getInstance();
-            self::$dispatcher = $config->getEventDispatcher();
-        }
-
-        return self::$dispatcher;
+        // Delegate to Config's reset
+        Config::resetInstance();
     }
 }

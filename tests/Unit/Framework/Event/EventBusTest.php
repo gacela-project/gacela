@@ -17,7 +17,8 @@ final class EventBusTest extends TestCase
         EventBus::resetCache();
 
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            // Empty config, just need the event dispatcher to be available
+            // Enable event listeners so we get a ConfigurableEventDispatcher
+            $config->registerGenericListener(static fn (object $event) => null);
         });
     }
 
@@ -111,6 +112,11 @@ final class EventBusTest extends TestCase
         EventBus::listen(TestEvent::class, static fn () => null);
 
         EventBus::resetCache();
+
+        // Re-bootstrap after reset
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->registerGenericListener(static fn (object $event) => null);
+        });
 
         // After reset, a new dispatcher will be fetched
         $called = false;

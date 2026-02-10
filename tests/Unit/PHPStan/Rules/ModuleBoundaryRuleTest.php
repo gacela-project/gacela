@@ -114,7 +114,7 @@ final class ModuleBoundaryRuleTest extends TestCase
 
         $node = new StaticCall(
             new Name('App\Module2\Domain\Service'),
-            'someMethod'
+            'someMethod',
         );
 
         $classReflection = $this->createMock(ClassReflection::class);

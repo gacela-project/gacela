@@ -1,0 +1,21 @@
+parameters:
+    # Paths that are allowed to bypass module boundaries (e.g., tests)
+    gacela:
+        moduleBoundary:
+            allowedPaths:
+                - tests/
+                - vendor/
+
+            # Paths within modules that should be protected
+            restrictedPaths:
+                - Domain
+                - Infrastructure
+
+services:
+    -
+        class: Gacela\PHPStan\Rules\ModuleBoundaryRule
+        arguments:
+            allowedPaths: %gacela.moduleBoundary.allowedPaths%
+            restrictedPaths: %gacela.moduleBoundary.restrictedPaths%
+        tags:
+            - phpstan.rules.rule

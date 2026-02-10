@@ -12,8 +12,10 @@ use Gacela\Framework\Container\Container;
 
 /**
  * @template TConfig of AbstractConfig = AbstractConfig
+ *
+ * @implements ConfigAccessorInterface<TConfig>
  */
-abstract class AbstractFactory
+abstract class AbstractFactory implements ServiceFactoryInterface, ConfigAccessorInterface, ProviderAccessorInterface
 {
     /** @use ConfigResolverAwareTrait<TConfig> */
     use ConfigResolverAwareTrait;
@@ -32,12 +34,12 @@ abstract class AbstractFactory
         self::$containers = [];
     }
 
-    protected function singleton(string $key, callable $creator): mixed
+    public function singleton(string $key, callable $creator): mixed
     {
         return $this->instances[$key] ??= $creator();
     }
 
-    protected function getProvidedDependency(string $key): mixed
+    public function getProvidedDependency(string $key): mixed
     {
         return $this->getContainer()->get($key);
     }

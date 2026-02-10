@@ -7,7 +7,6 @@ namespace Gacela\Framework\Attribute;
 use ReflectionClass;
 use ReflectionMethod;
 
-use function is_array;
 use function md5;
 use function serialize;
 use function time;
@@ -21,6 +20,26 @@ trait CacheableTrait
 {
     /** @var array<string,array{result:mixed,expires:int}> */
     private static array $methodCache = [];
+
+    /**
+     * Clear all cached method results.
+     */
+    public static function clearMethodCache(): void
+    {
+        self::$methodCache = [];
+    }
+
+    /**
+     * Clear cached result for a specific method.
+     */
+    public static function clearMethodCacheFor(string $method): void
+    {
+        foreach (array_keys(self::$methodCache) as $key) {
+            if (str_contains($key, $method)) {
+                unset(self::$methodCache[$key]);
+            }
+        }
+    }
 
     /**
      * Execute a method with caching support based on #[Cacheable] attribute.
@@ -60,26 +79,6 @@ trait CacheableTrait
         ];
 
         return $result;
-    }
-
-    /**
-     * Clear all cached method results.
-     */
-    public static function clearMethodCache(): void
-    {
-        self::$methodCache = [];
-    }
-
-    /**
-     * Clear cached result for a specific method.
-     */
-    public static function clearMethodCacheFor(string $method): void
-    {
-        foreach (array_keys(self::$methodCache) as $key) {
-            if (str_contains($key, $method)) {
-                unset(self::$methodCache[$key]);
-            }
-        }
     }
 
     /**

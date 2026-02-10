@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Exception;
 
-use function array_filter;
 use function array_slice;
 use function count;
 use function implode;
 use function similar_text;
 use function sprintf;
-use function usort;
+use function strlen;
 
 final class ErrorSuggestionHelper
 {
@@ -37,6 +36,36 @@ final class ErrorSuggestionHelper
             "\n\nDid you mean?\n%s",
             implode("\n", array_map(static fn (string $s): string => "  - {$s}", $suggestions)),
         );
+    }
+
+    public static function addHelpfulTip(string $context): string
+    {
+        $tips = match ($context) {
+            'class_not_found' => "\n\nTips:\n" .
+                "  • Check your class namespace\n" .
+                "  • Ensure the file exists in the correct location\n" .
+                "  • Run 'composer dump-autoload' to refresh autoloader\n" .
+                '  • Verify PSR-4 namespace mapping in composer.json',
+
+            'service_not_found' => "\n\nTips:\n" .
+                "  • Check if the service is registered in a Provider\n" .
+                "  • Verify the service binding in gacela.php\n" .
+                '  • Ensure the service class exists and is autoloadable',
+
+            'facade_not_found' => "\n\nTips:\n" .
+                "  • Ensure your Facade extends AbstractFacade\n" .
+                "  • Check the module namespace matches the directory structure\n" .
+                '  • Verify the Facade file name matches the class name',
+
+            'config_error' => "\n\nTips:\n" .
+                "  • Check your gacela.php configuration file\n" .
+                "  • Ensure all configuration values are valid\n" .
+                '  • Review the documentation: https://gacela-project.com/docs/',
+
+            default => '',
+        };
+
+        return $tips;
     }
 
     /**
@@ -73,35 +102,5 @@ final class ErrorSuggestionHelper
         similar_text(strtolower($string1), strtolower($string2), $percent);
 
         return $percent / 100;
-    }
-
-    public static function addHelpfulTip(string $context): string
-    {
-        $tips = match ($context) {
-            'class_not_found' => "\n\nTips:\n" .
-                "  • Check your class namespace\n" .
-                "  • Ensure the file exists in the correct location\n" .
-                "  • Run 'composer dump-autoload' to refresh autoloader\n" .
-                "  • Verify PSR-4 namespace mapping in composer.json",
-
-            'service_not_found' => "\n\nTips:\n" .
-                "  • Check if the service is registered in a Provider\n" .
-                "  • Verify the service binding in gacela.php\n" .
-                "  • Ensure the service class exists and is autoloadable",
-
-            'facade_not_found' => "\n\nTips:\n" .
-                "  • Ensure your Facade extends AbstractFacade\n" .
-                "  • Check the module namespace matches the directory structure\n" .
-                "  • Verify the Facade file name matches the class name",
-
-            'config_error' => "\n\nTips:\n" .
-                "  • Check your gacela.php configuration file\n" .
-                "  • Ensure all configuration values are valid\n" .
-                "  • Review the documentation: https://gacela-project.com/docs/",
-
-            default => '',
-        };
-
-        return $tips;
     }
 }

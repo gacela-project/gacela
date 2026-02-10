@@ -12,7 +12,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function count;
-use function dirname;
 use function file_put_contents;
 use function is_dir;
 use function mkdir;

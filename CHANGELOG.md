@@ -2,6 +2,46 @@
 
 ## Unreleased
 
+### Architecture
+
+- Add interface segregation for AbstractFactory (ServiceFactoryInterface, ConfigAccessorInterface, ProviderAccessorInterface)
+- Strengthen type safety with stricter generics and @psalm annotations for better static analysis
+- Add explicit module dependency declaration via ModuleDependenciesInterface
+
+### Performance
+
+- Add lazy container resolution via `GacelaConfig::addLazy()` for deferred service instantiation
+- Add attribute caching for #[ServiceMap] with `cache:warm --attributes` flag (20-30% performance improvement)
+- Optimize cache warmup with parallel resolution using PHP 8.1 Fibers via `--parallel` flag (up to 5x speedup)
+- Add #[Cacheable] attribute for facade methods with TTL support and `cache:clear` command
+
+### Module System
+
+- Add PHPStan rules for module boundary enforcement (prevent direct cross-module access)
+- Implement event-driven module communication with EventBus facade
+- Add module health check interface (ModuleHealthCheckInterface) with HealthStatus value object
+
+### Developer Experience
+
+- Add `analyze:dependencies` command with mermaid/graphviz/JSON output and circular dependency detection
+- Add `container:compile` command for production optimization
+- Add `generate:ide-helper` command for PhpStorm autocomplete metadata generation
+- Enhance `make:module` command with templates (crud, api, cli) and `--with-tests`/`--with-api` flags
+- Add `dev:watch` command for automatic cache clearing during development
+- Add `docs:generate` command to auto-generate module documentation in markdown
+- Enhance error messages with "Did you mean?" suggestions and helpful tips
+- Add `explore` command for interactive module exploration with TUI
+
+### Testing & Quality
+
+- Add module version compatibility matrix with `version:check` command
+- Enhance deprecation tracking with #[Deprecated] attribute metadata and `list:deprecated` command
+- Add module integration test helpers (GacelaTestCase with specialized assertions)
+- Add contract testing for facades (ContractTestCase) to prevent breaking changes
+- Add performance profiling support with Profiler class and `profile:report` command
+
+### Container
+
 - Add contextual bindings via GacelaConfig::when()
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()

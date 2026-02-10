@@ -8,6 +8,8 @@ use Fiber;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Throwable;
 
+use function count;
+
 /**
  * Warms module cache using PHP 8.1 Fibers for parallel resolution.
  *
@@ -84,7 +86,7 @@ final class ParallelModuleWarmer
                     $skippedCount += $skipped;
                 } catch (Throwable) {
                     // Fiber failed, count as skipped
-                    $skippedCount++;
+                    ++$skippedCount;
                 }
 
                 unset($this->activeFibers[$index]);

@@ -81,7 +81,7 @@ final class DocumentationGenerator
         $reflection = new ReflectionClass($facadeClass);
         $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
 
-        $doc = "";
+        $doc = '';
 
         foreach ($methods as $method) {
             // Skip inherited methods from AbstractFacade
@@ -108,7 +108,7 @@ final class DocumentationGenerator
             }
         }
 
-        return $doc !== "" ? $doc : "*No public methods available*\n";
+        return $doc !== '' ? $doc : "*No public methods available*\n";
     }
 
     /**

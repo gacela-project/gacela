@@ -8,10 +8,12 @@ use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use ReflectionClass;
+use ReflectionMethod;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+
 use Symfony\Component\Console\Question\ChoiceQuestion;
 
 use function count;
@@ -147,7 +149,7 @@ final class ExploreCommand extends Command
         }
 
         $reflection = new ReflectionClass($facadeClass);
-        $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
         $count = 0;
 
         foreach ($methods as $method) {
@@ -169,7 +171,7 @@ final class ExploreCommand extends Command
                 implode(', ', $params),
                 $returnType,
             ));
-            $count++;
+            ++$count;
         }
 
         if ($count === 0) {

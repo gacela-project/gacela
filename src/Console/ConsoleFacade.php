@@ -9,6 +9,8 @@ use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\DependencyAnalyzer\TModuleDependency;
 use Gacela\Framework\AbstractFacade;
 
+use function function_exists;
+
 /**
  * @extends AbstractFacade<ConsoleFactory>
  */

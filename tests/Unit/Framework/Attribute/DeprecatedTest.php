@@ -6,6 +6,8 @@ namespace GacelaTest\Unit\Framework\Attribute;
 
 use Gacela\Framework\Attribute\Deprecated;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
 final class DeprecatedTest extends TestCase
 {
@@ -36,7 +38,7 @@ final class DeprecatedTest extends TestCase
 
     public function test_attribute_can_be_applied_to_class(): void
     {
-        $reflection = new \ReflectionClass(SampleDeprecatedClass::class);
+        $reflection = new ReflectionClass(SampleDeprecatedClass::class);
         $attributes = $reflection->getAttributes(Deprecated::class);
 
         self::assertCount(1, $attributes);
@@ -47,7 +49,7 @@ final class DeprecatedTest extends TestCase
 
     public function test_attribute_can_be_applied_to_method(): void
     {
-        $reflection = new \ReflectionMethod(SampleDeprecatedClass::class, 'oldMethod');
+        $reflection = new ReflectionMethod(SampleDeprecatedClass::class, 'oldMethod');
         $attributes = $reflection->getAttributes(Deprecated::class);
 
         self::assertCount(1, $attributes);

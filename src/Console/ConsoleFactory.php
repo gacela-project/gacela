@@ -16,6 +16,7 @@ use Gacela\Console\Domain\DependencyAnalyzer\GraphvizFormatter;
 use Gacela\Console\Domain\DependencyAnalyzer\JsonFormatter;
 use Gacela\Console\Domain\DependencyAnalyzer\MermaidFormatter;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
+use Gacela\Console\Domain\IdeHelper\IdeHelperGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
@@ -126,6 +127,11 @@ final class ConsoleFactory extends AbstractFactory
     public function createContainerCompiler(): ContainerCompiler
     {
         return new ContainerCompiler();
+    }
+
+    public function createIdeHelperGenerator(): IdeHelperGenerator
+    {
+        return new IdeHelperGenerator();
     }
 
     public function getMainContainer(): Container

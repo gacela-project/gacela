@@ -107,4 +107,12 @@ final class ConsoleFacade extends AbstractFacade
             $this->getFactory()->getMainContainer(),
         );
     }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    public function generateIdeHelperMeta(array $modules): string
+    {
+        return $this->getFactory()->createIdeHelperGenerator()->generatePhpStormMeta($modules);
+    }
 }

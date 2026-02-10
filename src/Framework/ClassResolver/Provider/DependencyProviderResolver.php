@@ -18,7 +18,7 @@ use function dirname;
     since: '1.8.0',
     replacement: 'ProviderResolver',
     willRemoveIn: '2.0.0',
-    reason: 'AbstractDependencyProvider is deprecated, use AbstractProvider instead'
+    reason: 'AbstractDependencyProvider is deprecated, use AbstractProvider instead',
 )]
 final class DependencyProviderResolver extends AbstractClassResolver
 {

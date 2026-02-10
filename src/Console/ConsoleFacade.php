@@ -6,6 +6,7 @@ namespace Gacela\Console;
 
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
+use Gacela\Console\Domain\DependencyAnalyzer\TModuleDependency;
 use Gacela\Framework\AbstractFacade;
 
 /**
@@ -70,5 +71,33 @@ final class ConsoleFacade extends AbstractFacade
     public function getContainerDependencyTree(string $className): array
     {
         return $this->getFactory()->getContainerDependencyTree($className);
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     *
+     * @return list<TModuleDependency>
+     */
+    public function analyzeModuleDependencies(array $modules): array
+    {
+        return $this->getFactory()->createDependencyAnalyzer()->analyzeModules($modules);
+    }
+
+    /**
+     * @param list<TModuleDependency> $dependencies
+     *
+     * @return list<array{from: string, to: string}>
+     */
+    public function detectCircularDependencies(array $dependencies): array
+    {
+        return $this->getFactory()->createDependencyAnalyzer()->detectCircularDependencies($dependencies);
+    }
+
+    /**
+     * @param list<TModuleDependency> $dependencies
+     */
+    public function formatDependencies(array $dependencies, string $format): string
+    {
+        return $this->getFactory()->createDependencyFormatter($format)->format($dependencies);
     }
 }

@@ -6,6 +6,9 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `EventBus` for publishing and subscribing to module events with type-safe listener registration
+- Add `ModuleEvent` base class with metadata support for event-driven architecture
+- Add comprehensive documentation for event-driven module communication patterns
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

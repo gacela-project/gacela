@@ -6,10 +6,7 @@ namespace Gacela\Console;
 
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
-use Gacela\Console\Domain\DependencyAnalyzer\TModuleDependency;
 use Gacela\Framework\AbstractFacade;
-
-use function function_exists;
 
 /**
  * @extends AbstractFacade<ConsoleFactory>
@@ -51,6 +48,20 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
+     * @return list<string>
+     */
+    public function generateTemplateFiles(
+        CommandArguments $commandArguments,
+        string $template,
+        bool $withTests,
+        bool $withApi,
+    ): array {
+        return $this->getFactory()
+            ->createModuleTemplateGenerator()
+            ->generateTemplateFiles($commandArguments, $template, $withTests, $withApi);
+    }
+
+    /**
      * @return array{
      *     registered_services: int,
      *     frozen_services: int,
@@ -73,104 +84,5 @@ final class ConsoleFacade extends AbstractFacade
     public function getContainerDependencyTree(string $className): array
     {
         return $this->getFactory()->getContainerDependencyTree($className);
-    }
-
-    /**
-     * @param list<AppModule> $modules
-     *
-     * @return list<TModuleDependency>
-     */
-    public function analyzeModuleDependencies(array $modules): array
-    {
-        return $this->getFactory()->createDependencyAnalyzer()->analyzeModules($modules);
-    }
-
-    /**
-     * @param list<TModuleDependency> $dependencies
-     *
-     * @return list<array{from: string, to: string}>
-     */
-    public function detectCircularDependencies(array $dependencies): array
-    {
-        return $this->getFactory()->createDependencyAnalyzer()->detectCircularDependencies($dependencies);
-    }
-
-    /**
-     * @param list<TModuleDependency> $dependencies
-     */
-    public function formatDependencies(array $dependencies, string $format): string
-    {
-        return $this->getFactory()->createDependencyFormatter($format)->format($dependencies);
-    }
-
-    public function compileContainer(): string
-    {
-        return $this->getFactory()->createContainerCompiler()->compile(
-            $this->getFactory()->getMainContainer(),
-        );
-    }
-
-    /**
-     * @param list<AppModule> $modules
-     */
-    public function generateIdeHelperMeta(array $modules): string
-    {
-        return $this->getFactory()->createIdeHelperGenerator()->generatePhpStormMeta($modules);
-    }
-
-    /**
-     * @return list<string>
-     */
-    public function generateTemplateFiles(
-        CommandArguments $arguments,
-        string $template,
-        bool $withTests,
-        bool $withApi,
-    ): array {
-        return $this->getFactory()
-            ->createModuleTemplateGenerator()
-            ->generateTemplateFiles($arguments, $template, $withTests, $withApi);
-    }
-
-    /**
-     * @param list<string> $watchPaths
-     */
-    public function initializeFileWatcher(array $watchPaths): void
-    {
-        $this->getFactory()->createFileWatcher()->initialize($watchPaths);
-    }
-
-    /**
-     * @param list<string> $watchPaths
-     *
-     * @return list<string>
-     */
-    public function detectFileChanges(array $watchPaths): array
-    {
-        return $this->getFactory()->createFileWatcher()->detectChanges($watchPaths);
-    }
-
-    public function clearDevelopmentCaches(): void
-    {
-        // Clear opcache if available
-        if (function_exists('opcache_reset')) {
-            opcache_reset();
-        }
-
-        // Clear realpath cache
-        clearstatcache(true);
-
-        // Clear Gacela's internal caches
-        $this->getFactory()->getMainContainer()->remove('cache');
-    }
-
-    /**
-     * @param list<array{from: string, to: string}> $dependencies
-     */
-    public function generateModuleDocumentation(AppModule $module, array $dependencies): string
-    {
-        return $this->getFactory()
-            ->createDocumentationGenerator()
-            ->generateModuleDocumentation($module, $dependencies);
     }
 }

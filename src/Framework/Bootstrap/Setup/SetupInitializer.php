@@ -38,6 +38,7 @@ final class SetupInitializer
             ->setFactories($dto->factories)
             ->setProtectedServices($dto->protectedServices)
             ->setAliases($dto->aliases)
-            ->setContextualBindings($dto->contextualBindings);
+            ->setContextualBindings($dto->contextualBindings)
+            ->setLazyServices($dto->lazyServices);
     }
 }

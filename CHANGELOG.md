@@ -6,6 +6,11 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Fix PHP 8.1 compatibility issues with readonly class syntax
+- Fix test directory filtering in AllAppModulesFinder
+- Fix lazy service container bindings to use addFactory instead of addBinding
+- Improve static analysis configuration and type safety
+- Update PHPStan and Psalm configurations
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

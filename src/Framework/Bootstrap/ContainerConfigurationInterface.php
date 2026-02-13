@@ -51,4 +51,14 @@ interface ContainerConfigurationInterface
      * @return array<string,array<class-string,class-string|callable|object>>
      */
     public function getContextualBindings(): array;
+
+    /**
+     * Get lazy-loaded service definitions.
+     *
+     * Lazy services are only instantiated when first accessed,
+     * improving startup performance for expensive services.
+     *
+     * @return array<string,Closure>
+     */
+    public function getLazyServices(): array;
 }

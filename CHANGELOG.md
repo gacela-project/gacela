@@ -6,6 +6,9 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `#[Deprecated]` attribute for marking deprecated code with reason and alternative suggestions
+- Add `DeprecationScanner` for analyzing codebase and finding deprecated usages
+- Add `list:deprecated` command to scan and report all deprecated code in the project with file locations and suggestions
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

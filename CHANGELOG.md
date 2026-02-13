@@ -6,6 +6,10 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `generate:ide-helper` command to generate PHPStorm meta file for better IDE autocomplete
+- Add `docs:generate` command to auto-generate module documentation
+- Add `dev:watch` command for file watching during development with auto-reload
+- Add `explore` command for interactive module exploration and inspection
 - Add `ModuleHealthCheckInterface` for implementing custom health checks in modules
 - Add `HealthChecker` to execute and aggregate health check results with severity levels
 - Add `HealthStatus` with levels (OK, WARNING, ERROR, CRITICAL) for categorizing issues

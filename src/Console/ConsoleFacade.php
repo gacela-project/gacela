@@ -8,6 +8,8 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Framework\AbstractFacade;
 
+use function function_exists;
+
 /**
  * @extends AbstractFacade<ConsoleFactory>
  */
@@ -70,5 +72,55 @@ final class ConsoleFacade extends AbstractFacade
     public function getContainerDependencyTree(string $className): array
     {
         return $this->getFactory()->getContainerDependencyTree($className);
+    }
+
+    /**
+     * @param list<string> $watchPaths
+     */
+    public function initializeFileWatcher(array $watchPaths): void
+    {
+        $this->getFactory()->createFileWatcher()->initialize($watchPaths);
+    }
+
+    /**
+     * @param list<string> $watchPaths
+     *
+     * @return list<string>
+     */
+    public function detectFileChanges(array $watchPaths): array
+    {
+        return $this->getFactory()->createFileWatcher()->detectChanges($watchPaths);
+    }
+
+    public function clearDevelopmentCaches(): void
+    {
+        // Clear opcache if available
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+        }
+
+        // Clear realpath cache
+        clearstatcache(true);
+
+        // Clear Gacela's internal caches
+        $this->getFactory()->getMainContainer()->remove('cache');
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     */
+    public function generateIdeHelperMeta(array $modules): string
+    {
+        return $this->getFactory()->createIdeHelperGenerator()->generatePhpStormMeta($modules);
+    }
+
+    /**
+     * @param list<array{from: string, to: string}> $dependencies
+     */
+    public function generateModuleDocumentation(AppModule $module, array $dependencies): string
+    {
+        return $this->getFactory()
+            ->createDocumentationGenerator()
+            ->generateModuleDocumentation($module, $dependencies);
     }
 }

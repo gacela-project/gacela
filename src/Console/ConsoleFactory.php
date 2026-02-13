@@ -9,11 +9,14 @@ use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
+use Gacela\Console\Domain\DocumentationGenerator\DocumentationGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Domain\FileWatcher\FileWatcher;
+use Gacela\Console\Domain\IdeHelper\IdeHelperGenerator;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
@@ -77,6 +80,21 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
+    public function createFileWatcher(): FileWatcher
+    {
+        return new FileWatcher();
+    }
+
+    public function createIdeHelperGenerator(): IdeHelperGenerator
+    {
+        return new IdeHelperGenerator();
+    }
+
+    public function createDocumentationGenerator(): DocumentationGenerator
+    {
+        return new DocumentationGenerator();
+    }
+
     /**
      * @return array{
      *     registered_services: int,
@@ -100,6 +118,11 @@ final class ConsoleFactory extends AbstractFactory
     public function getContainerDependencyTree(string $className): array
     {
         return $this->getMainContainer()->getDependencyTree($className);
+    }
+
+    public function getMainContainer(): Container
+    {
+        return Gacela::container();
     }
 
     /**
@@ -126,10 +149,5 @@ final class ConsoleFactory extends AbstractFactory
     private function getTemplateByFilenameMap(): array
     {
         return (array)$this->getProvidedDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
-    }
-
-    private function getMainContainer(): Container
-    {
-        return Gacela::container();
     }
 }

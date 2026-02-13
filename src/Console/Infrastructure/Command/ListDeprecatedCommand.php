@@ -16,6 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 use function array_filter;
+use function assert;
 use function count;
 use function sprintf;
 use function str_replace;
@@ -57,7 +58,9 @@ final class ListDeprecatedCommand extends Command
         $output->writeln('');
 
         try {
-            $scanner = new DeprecationScanner(Gacela::rootDir());
+            $rootDir = Gacela::rootDir();
+            assert($rootDir !== '', 'Root directory cannot be empty');
+            $scanner = new DeprecationScanner($rootDir);
             $deprecations = $scanner->scan();
 
             // Apply filters

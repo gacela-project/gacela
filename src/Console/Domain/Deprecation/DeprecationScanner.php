@@ -52,6 +52,10 @@ final class DeprecationScanner
                 continue;
             }
 
+            if ($pathname === '') {
+                continue;
+            }
+
             $deprecations = [
                 ...$deprecations,
                 ...$this->scanFile($pathname),
@@ -80,7 +84,7 @@ final class DeprecationScanner
 
         preg_match_all('/^(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait|enum)\s+(\w+)/m', $content, $classMatches);
 
-        if (!isset($classMatches[1]) || $classMatches[1] === []) {
+        if ($classMatches[1] === []) {
             return [];
         }
 

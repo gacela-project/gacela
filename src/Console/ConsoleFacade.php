@@ -74,8 +74,6 @@ final class ConsoleFacade extends AbstractFacade
 
     public function compileContainer(): string
     {
-        return $this->getFactory()->createContainerCompiler()->compile(
-            $this->getFactory()->getMainContainer(),
-        );
+        return $this->getFactory()->compileContainer();
     }
 }

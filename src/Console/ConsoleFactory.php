@@ -103,9 +103,9 @@ final class ConsoleFactory extends AbstractFactory
         return $this->getMainContainer()->getDependencyTree($className);
     }
 
-    public function createContainerCompiler(): ContainerCompiler
+    public function compileContainer(): string
     {
-        return new ContainerCompiler();
+        return (new ContainerCompiler())->compile($this->getMainContainer());
     }
 
     /**

@@ -1,0 +1,16 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Method Gacela\\\\Testing\\\\ContractTestCase\\:\\:extractPublicMethods\\(\\) has parameter \\$reflection with generic class ReflectionClass but does not specify its types\\: T$#"
+			count: 1
+			path: src/Testing/ContractTestCase.php
+
+		-
+			message: "#^Call to static method PHPUnit\\\\Framework\\\\Assert\\:\\:assertTrue\\(\\) with true will always evaluate to true\\.$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php
+
+		-
+			message: "#^Parameter \\#1 \\$graph of static method Gacela\\\\Testing\\\\GacelaTestCase\\:\\:findCircularDependencies\\(\\) expects array\\<class\\-string, list\\<class\\-string\\>\\>, array\\<class\\-string, array\\<class\\-string\\>\\> given\\.$#"
+			count: 1
+			path: src/Testing/GacelaTestCase.php

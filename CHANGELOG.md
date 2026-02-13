@@ -12,6 +12,15 @@
 - Add `cache:clear` command to clear all cache files
 - Add `ParallelModuleWarmer` for concurrent module processing during cache warming
 - Enhance `cache:warm` command with `--parallel` and `--attributes` flags
+- Add `ErrorSuggestionHelper` for intelligent error messages with actionable suggestions
+- Add `Profiler` for performance profiling and bottleneck detection
+- Add `profile:report` command to generate and analyze performance reports
+- Enhance exception messages with did-you-mean suggestions and examples
+- Add `ModuleHealthCheckInterface` for implementing custom health checks in modules
+- Add `HealthChecker` to execute and aggregate health check results with severity levels
+- Add `HealthStatus` with levels (OK, WARNING, ERROR, CRITICAL) for categorizing issues
+- Add `HealthCheckReport` for detailed health check analysis and reporting
+- Add comprehensive health check documentation with practical examples
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

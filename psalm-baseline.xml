@@ -40,4 +40,26 @@
       <code><![CDATA[$classInfo['className']]]></code>
     </ArgumentTypeCoercion>
   </file>
+  <file src="src/Console/Infrastructure/Command/ProfileReportCommand.php">
+    <InvalidOperand>
+      <code><![CDATA[$entry->duration * 1000]]></code>
+      <code><![CDATA[$opStats['avg_duration'] * 1000]]></code>
+      <code><![CDATA[$opStats['total_duration'] * 1000]]></code>
+      <code><![CDATA[$stats['avg_duration'] * 1000]]></code>
+      <code><![CDATA[$stats['total_duration'] * 1000]]></code>
+    </InvalidOperand>
+    <MixedPropertyFetch>
+      <code><![CDATA[$a->duration]]></code>
+      <code><![CDATA[$a->memoryUsage]]></code>
+      <code><![CDATA[$a->operation]]></code>
+      <code><![CDATA[$b->duration]]></code>
+      <code><![CDATA[$b->memoryUsage]]></code>
+      <code><![CDATA[$b->operation]]></code>
+    </MixedPropertyFetch>
+  </file>
+  <file src="src/Framework/Profiler/Profiler.php">
+    <InvalidOperand>
+      <code><![CDATA[hrtime(true) / 1e9]]></code>
+    </InvalidOperand>
+  </file>
 </files>

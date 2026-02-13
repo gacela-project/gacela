@@ -44,3 +44,8 @@ parameters:
 			message: "#^Trait Gacela\\\\Framework\\\\Attribute\\\\CacheableTrait is used zero times and is not analysed\\.$#"
 			count: 1
 			path: src/Framework/Attribute/CacheableTrait.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between int\\<1, max\\> and 0 is always true\\.$#"
+			count: 1
+			path: src/Framework/Profiler/Profiler.php

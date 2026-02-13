@@ -28,6 +28,10 @@ final class FileWatcher
             foreach ($files as $file) {
                 $currentTimestamp = filemtime($file);
 
+                if ($currentTimestamp === false) {
+                    continue;
+                }
+
                 if (!isset($this->fileTimestamps[$file])) {
                     $this->fileTimestamps[$file] = $currentTimestamp;
                     continue;
@@ -52,7 +56,11 @@ final class FileWatcher
             $files = $this->getPhpFiles($path);
 
             foreach ($files as $file) {
-                $this->fileTimestamps[$file] = filemtime($file);
+                $timestamp = filemtime($file);
+
+                if ($timestamp !== false) {
+                    $this->fileTimestamps[$file] = $timestamp;
+                }
             }
         }
     }

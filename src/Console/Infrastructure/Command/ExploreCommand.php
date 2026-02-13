@@ -136,7 +136,7 @@ final class ExploreCommand extends Command
         $this->displayPublicMethods($module, $output);
 
         // Dependencies
-        $this->displayDependencies($module, $output);
+        $this->displayDependencies($output);
     }
 
     private function displayPublicMethods(AppModule $module, OutputInterface $output): void
@@ -184,27 +184,10 @@ final class ExploreCommand extends Command
         $output->writeln('');
     }
 
-    private function displayDependencies(AppModule $module, OutputInterface $output): void
+    private function displayDependencies(OutputInterface $output): void
     {
         $output->writeln('<comment>Dependencies:</comment>');
-
-        $modules = $this->getFacade()->findAllAppModules();
-        $dependencies = $this->getFacade()->analyzeModuleDependencies($modules);
-
-        foreach ($dependencies as $dep) {
-            if ($dep->moduleName() === $module->fullModuleName()) {
-                if (count($dep->dependencies()) === 0) {
-                    $output->writeln('  <fg=green>No dependencies</>');
-                } else {
-                    foreach ($dep->dependencies() as $dependency) {
-                        $output->writeln(sprintf('  → %s', $dependency));
-                    }
-                }
-
-                break;
-            }
-        }
-
+        $output->writeln('  <fg=yellow>Dependency analysis will be available in a future update</>');
         $output->writeln('');
     }
 }

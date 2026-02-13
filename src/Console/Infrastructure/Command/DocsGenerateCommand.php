@@ -52,22 +52,12 @@ final class DocsGenerateCommand extends Command
             return self::SUCCESS;
         }
 
-        // Analyze dependencies
-        $dependencies = $this->getFacade()->analyzeModuleDependencies($modules);
-        $dependencyMap = [];
-
-        foreach ($dependencies as $dep) {
-            $dependencyMap[$dep->moduleName()] = array_map(
-                static fn (string $d): array => ['from' => $dep->moduleName(), 'to' => $d],
-                $dep->dependencies(),
-            );
-        }
-
         // Generate documentation for each module
         $this->ensureDirectoryExists($outputDir);
 
         foreach ($modules as $module) {
-            $moduleDeps = $dependencyMap[$module->fullModuleName()] ?? [];
+            // Dependencies analysis will be added in a future PR
+            $moduleDeps = [];
             $docContent = $this->getFacade()->generateModuleDocumentation($module, $moduleDeps);
 
             $fileName = str_replace('\\', '_', $module->fullModuleName()) . '.md';

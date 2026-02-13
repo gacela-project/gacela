@@ -16,7 +16,6 @@ use function sprintf;
 final class DocumentationGenerator
 {
     /**
-     * @param list<AppModule> $modules
      * @param list<array{from: string, to: string}> $dependencies
      */
     public function generateModuleDocumentation(AppModule $module, array $dependencies): string

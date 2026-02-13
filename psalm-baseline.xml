@@ -6,85 +6,13 @@
       <code><![CDATA[$param->getType()]]></code>
     </ImplicitToStringCast>
   </file>
-  <file src="src/Console/Domain/FileWatcher/FileWatcher.php">
-    <InvalidPropertyAssignmentValue>
-      <code><![CDATA[$this->fileTimestamps]]></code>
-      <code><![CDATA[$this->fileTimestamps]]></code>
-      <code><![CDATA[$this->fileTimestamps]]></code>
-    </InvalidPropertyAssignmentValue>
-  </file>
-  <file src="src/Console/Infrastructure/Command/DevWatchCommand.php">
-    <MixedArgument>
-      <code><![CDATA[$changedFiles]]></code>
-      <code><![CDATA[$changedFiles]]></code>
-      <code><![CDATA[$file]]></code>
-    </MixedArgument>
-    <MixedAssignment>
-      <code><![CDATA[$changedFiles]]></code>
-      <code><![CDATA[$file]]></code>
-    </MixedAssignment>
-    <UndefinedMethod>
-      <code><![CDATA[clearDevelopmentCaches]]></code>
-      <code><![CDATA[detectFileChanges]]></code>
-      <code><![CDATA[initializeFileWatcher]]></code>
-    </UndefinedMethod>
-  </file>
-  <file src="src/Console/Infrastructure/Command/DocsGenerateCommand.php">
-    <MixedArgument>
-      <code><![CDATA[$dep->dependencies()]]></code>
-      <code><![CDATA[$docContent]]></code>
-    </MixedArgument>
-    <MixedArrayOffset>
-      <code><![CDATA[$dependencyMap[$dep->moduleName()]]]></code>
-    </MixedArrayOffset>
-    <MixedAssignment>
-      <code><![CDATA[$dep]]></code>
-      <code><![CDATA[$dependencies]]></code>
-      <code><![CDATA[$docContent]]></code>
-    </MixedAssignment>
-    <MixedMethodCall>
-      <code><![CDATA[dependencies]]></code>
-      <code><![CDATA[moduleName]]></code>
-      <code><![CDATA[moduleName]]></code>
-    </MixedMethodCall>
-    <UndefinedMethod>
-      <code><![CDATA[analyzeModuleDependencies]]></code>
-      <code><![CDATA[generateModuleDocumentation]]></code>
-    </UndefinedMethod>
-  </file>
   <file src="src/Console/Infrastructure/Command/ExploreCommand.php">
     <ImplicitToStringCast>
       <code><![CDATA[$method->getReturnType()]]></code>
       <code><![CDATA[$param->getType()]]></code>
     </ImplicitToStringCast>
-    <MixedArgument>
-      <code><![CDATA[$dep->dependencies()]]></code>
-      <code><![CDATA[$dependency]]></code>
-    </MixedArgument>
     <MixedAssignment>
-      <code><![CDATA[$dep]]></code>
-      <code><![CDATA[$dependencies]]></code>
-      <code><![CDATA[$dependency]]></code>
       <code><![CDATA[$selectedName]]></code>
     </MixedAssignment>
-    <MixedMethodCall>
-      <code><![CDATA[dependencies]]></code>
-      <code><![CDATA[dependencies]]></code>
-      <code><![CDATA[moduleName]]></code>
-    </MixedMethodCall>
-    <UndefinedMethod>
-      <code><![CDATA[analyzeModuleDependencies]]></code>
-    </UndefinedMethod>
-  </file>
-  <file src="src/Console/Infrastructure/Command/GenerateIdeHelperCommand.php">
-    <MixedArgument>
-      <code><![CDATA[$metaContent]]></code>
-    </MixedArgument>
-    <MixedAssignment>
-      <code><![CDATA[$metaContent]]></code>
-    </MixedAssignment>
-    <UndefinedMethod>
-      <code><![CDATA[generateIdeHelperMeta]]></code>
-    </UndefinedMethod>
   </file>
 </files>

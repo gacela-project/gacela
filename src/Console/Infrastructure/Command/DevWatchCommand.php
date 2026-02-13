@@ -57,6 +57,7 @@ final class DevWatchCommand extends Command
 
         $this->getFacade()->initializeFileWatcher($watchPaths);
 
+        /** @phpstan-ignore-next-line Intentional infinite loop for file watching */
         while (true) {
             $changedFiles = $this->getFacade()->detectFileChanges($watchPaths);
 

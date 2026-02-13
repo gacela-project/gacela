@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="6.13.1@1e3b7f0a8ab32b23197b91107adc0a7ed8a05b51">
+  <file src="src/Console/Domain/DependencyAnalyzer/JsonFormatter.php">
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string)json_encode(['modules' => $data], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Console/Infrastructure/Command/AnalyzeDependenciesCommand.php">
+    <MixedArgument>
+      <code><![CDATA[$outputFile]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$outputFile]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Console/Infrastructure/Command/VersionCheckCommand.php">
+    <MixedArgument>
+      <code><![CDATA[$customPath]]></code>
+    </MixedArgument>
+  </file>
+  <file src="src/Console/Infrastructure/ModuleVersion/ArrayModuleVersionParser.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$version]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </ArgumentTypeCoercion>
+    <MixedArgumentTypeCoercion>
+      <code><![CDATA[$data]]></code>
+    </MixedArgumentTypeCoercion>
+    <MixedAssignment>
+      <code><![CDATA[$reqVersion]]></code>
+    </MixedAssignment>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string)$moduleName]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Console/Infrastructure/ModuleVersion/YamlModuleVersionParser.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$version]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </ArgumentTypeCoercion>
+    <MixedAssignment>
+      <code><![CDATA[$reqVersion]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[$yamlClass::parseFile($filePath)]]></code>
+    </MixedMethodCall>
+    <RedundantCastGivenDocblockType>
+      <code><![CDATA[(string)$moduleName]]></code>
+      <code><![CDATA[(string)$moduleName]]></code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Framework/AbstractFacade.php">
+    <PropertyTypeCoercion>
+      <code><![CDATA[self::$factories]]></code>
+    </PropertyTypeCoercion>
+  </file>
+  <file src="src/Framework/AbstractFactory.php">
+    <MixedReturnStatement>
+      <code><![CDATA[$this->instances[$key] ??= $creator()]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Framework/Bootstrap/GacelaConfig.php">
+    <UndefinedDocblockClass>
+      <code><![CDATA[callable(GacelaEventInterface):void]]></code>
+      <code><![CDATA[callable(GacelaEventInterface):void]]></code>
+    </UndefinedDocblockClass>
+  </file>
+  <file src="src/Framework/Bootstrap/Setup/Properties.php">
+    <UndefinedClass>
+      <code><![CDATA[?EventDispatcherInterface]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="src/Framework/Bootstrap/SetupEventDispatcher.php">
+    <MixedAssignment>
+      <code><![CDATA[$dispatcher]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[registerGenericListeners]]></code>
+      <code><![CDATA[registerSpecificListener]]></code>
+    </MixedMethodCall>
+    <MixedReturnStatement>
+      <code><![CDATA[$dispatcher]]></code>
+      <code><![CDATA[new NullEventDispatcher()]]></code>
+    </MixedReturnStatement>
+    <UndefinedClass>
+      <code><![CDATA[ConfigurableEventDispatcher]]></code>
+      <code><![CDATA[EventDispatcherInterface]]></code>
+      <code><![CDATA[NullEventDispatcher]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="src/Framework/Bootstrap/SetupGacela.php">
+    <UndefinedClass>
+      <code><![CDATA[EventDispatcherInterface]]></code>
+      <code><![CDATA[EventDispatcherInterface]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="src/Framework/Bootstrap/SetupGacelaInterface.php">
+    <UndefinedClass>
+      <code><![CDATA[EventDispatcherInterface]]></code>
+    </UndefinedClass>
+  </file>
+</files>

@@ -15,19 +15,12 @@ use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
-use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
-use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
-use Gacela\Framework\Event\ClassResolver\ResolvedCreatedDefaultClassEvent;
-use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 use function is_array;
 use function is_object;
 
 abstract class AbstractClassResolver
 {
-    use EventDispatchingCapabilities;
-
     /** @var array<string, null|object> */
     private static array $cachedInstances = [];
 
@@ -62,27 +55,21 @@ abstract class AbstractClassResolver
         $cacheKey = $previousCacheKey ?? $classInfo->getCacheKey();
         $resolvedClass = $this->resolveCached($cacheKey);
         if ($resolvedClass !== null) {
-            self::dispatchEvent(new ResolvedClassCachedEvent($classInfo));
-
             return $resolvedClass;
         }
 
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName !== null) {
             $instance = $this->createInstance($resolvedClassName);
-            self::dispatchEvent(new ResolvedClassCreatedEvent($classInfo));
         } else {
             // Try again with its parent class
             if (is_object($caller)) {
                 $parentClass = get_parent_class($caller);
                 if ($parentClass !== false) {
-                    self::dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
-
                     return $this->doResolve($parentClass, $cacheKey);
                 }
             }
 
-            self::dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
             $instance = $this->createDefaultGacelaClass();
         }
 

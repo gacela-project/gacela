@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config\ConfigReader;
 
 use Gacela\Framework\Config\ConfigReaderInterface;
-use Gacela\Framework\Event\ConfigReader\ReadPhpConfigEvent;
-use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use JsonSerializable;
 use RuntimeException;
 
@@ -14,8 +12,6 @@ use function is_array;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {
-    use EventDispatchingCapabilities;
-
     /**
      * @return array<string,mixed>
      */
@@ -24,8 +20,6 @@ final class PhpConfigReader implements ConfigReaderInterface
         if (!$this->canRead($absolutePath)) {
             return [];
         }
-
-        self::dispatchEvent(new ReadPhpConfigEvent($absolutePath));
 
         /**
          * @psalm-suppress UnresolvableInclude

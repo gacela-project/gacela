@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Factory;
 
+use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
@@ -13,10 +14,12 @@ final class FactoryResolver extends AbstractClassResolver
 
     /**
      * @param object|class-string $caller
+     *
+     * @return AbstractFactory<AbstractConfig>
      */
     public function resolve(object|string $caller): AbstractFactory
     {
-        /** @var AbstractFactory $resolved */
+        /** @var AbstractFactory<AbstractConfig> $resolved */
         $resolved = $this->doResolve($caller);
 
         return $resolved;

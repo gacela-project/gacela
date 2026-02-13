@@ -6,6 +6,11 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add interface segregation for AbstractFactory (ConfigAccessorInterface, ProviderAccessorInterface, ServiceFactoryInterface)
+- Add PHPStan rules for module boundary enforcement with analyze:dependencies and version:check commands
+- Add stricter generic type support across framework for better type safety
+- Add explicit module dependency declaration interface with version compatibility checking
+- Add DependencyAnalyzer with Graphviz, Mermaid, and JSON output formats
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

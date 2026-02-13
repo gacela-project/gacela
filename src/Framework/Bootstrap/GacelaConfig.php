@@ -62,6 +62,9 @@ final class GacelaConfig
     /** @var array<string,array<class-string,class-string|callable|object>> */
     private array $contextualBindings = [];
 
+    /** @var array<string,Closure> */
+    private array $lazyServices = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -348,6 +351,30 @@ final class GacelaConfig
     }
 
     /**
+     * Register a lazy-loaded service that is only instantiated when first accessed.
+     * This improves startup performance by deferring expensive service creation
+     * until they are actually needed.
+     *
+     * Example:
+     * ```php
+     * $config->addLazy(ExpensiveService::class, function(ContainerInterface $c) {
+     *     return new ExpensiveService($c->get(Dependency::class));
+     * });
+     * ```
+     *
+     * @param string $id The service identifier
+     * @param Closure $factory The factory closure that creates the service when needed
+     *
+     * @return $this
+     */
+    public function addLazy(string $id, Closure $factory): self
+    {
+        $this->lazyServices[$id] = $factory;
+
+        return $this;
+    }
+
+    /**
      * Define contextual bindings - different implementations based on the requesting class.
      * This allows you to provide different implementations of an interface depending on
      * which class is requesting it.
@@ -441,6 +468,7 @@ final class GacelaConfig
             $this->protectedServices,
             $this->aliases,
             $this->contextualBindings,
+            $this->lazyServices,
         );
     }
 }

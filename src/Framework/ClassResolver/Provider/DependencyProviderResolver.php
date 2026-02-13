@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Provider;
 
+use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
@@ -19,6 +20,8 @@ final class DependencyProviderResolver extends AbstractClassResolver
 
     /**
      * @param object|class-string $caller
+     *
+     * @return ?AbstractProvider<AbstractConfig>
      */
     public function resolve(object|string $caller): ?AbstractProvider
     {

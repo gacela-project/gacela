@@ -297,6 +297,14 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->contextualBindings ?? self::DEFAULT_CONTEXTUAL_BINDINGS;
     }
 
+    /**
+     * @return array<string,Closure>
+     */
+    public function getLazyServices(): array
+    {
+        return $this->properties->lazyServices ?? self::DEFAULT_LAZY_SERVICES;
+    }
+
     public function setFileCacheEnabled(?bool $flag): self
     {
         $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
@@ -445,6 +453,14 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeLazyServices(array $list): void
+    {
+        $this->propertyMerger->mergeLazyServices($list);
+    }
+
+    /**
      * @return list<class-string>
      */
     public function getGacelaConfigsToExtend(): array
@@ -589,6 +605,22 @@ final class SetupGacela extends AbstractSetupGacela
             self::contextualBindings,
             $list,
             self::DEFAULT_CONTEXTUAL_BINDINGS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,Closure> $list
+     */
+    public function setLazyServices(?array $list): self
+    {
+        $this->properties->lazyServices = $this->setPropertyWithTracking(
+            self::lazyServices,
+            $list,
+            self::DEFAULT_LAZY_SERVICES,
         );
 
         return $this;

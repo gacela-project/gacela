@@ -11,6 +11,8 @@ use RecursiveIteratorIterator;
 use ReflectionClass;
 use SplFileInfo;
 
+use Throwable;
+
 use function sprintf;
 
 final class AllAppModulesFinder
@@ -46,9 +48,13 @@ final class AllAppModulesFinder
 
     private function createAppModule(SplFileInfo $fileInfo, string $filter): ?AppModule
     {
+        $realPath = $fileInfo->getRealPath();
+
         if (!$fileInfo->isFile()
             || $fileInfo->getExtension() !== 'php'
-            || str_contains($fileInfo->getRealPath(), 'vendor' . DIRECTORY_SEPARATOR)
+            || str_contains($realPath, 'vendor' . DIRECTORY_SEPARATOR)
+            || str_contains($realPath, 'tests' . DIRECTORY_SEPARATOR)
+            || str_contains($realPath, 'test' . DIRECTORY_SEPARATOR)
         ) {
             return null;
         }
@@ -69,11 +75,15 @@ final class AllAppModulesFinder
             }
         }
 
-        if (!class_exists($fullyQualifiedClassName)) {
+        try {
+            if (!class_exists($fullyQualifiedClassName)) {
+                return null;
+            }
+
+            return $this->appModuleCreator->fromClass($fullyQualifiedClassName);
+        } catch (Throwable) {
             return null;
         }
-
-        return $this->appModuleCreator->fromClass($fullyQualifiedClassName);
     }
 
     private function getNamespace(SplFileInfo $fileInfo): string

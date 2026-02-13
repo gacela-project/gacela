@@ -5,21 +5,12 @@ declare(strict_types=1);
 namespace Gacela\Console;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
-use Gacela\Console\Infrastructure\Command\AnalyzeDependenciesCommand;
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
-use Gacela\Console\Infrastructure\Command\ContainerCompileCommand;
 use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
-use Gacela\Console\Infrastructure\Command\DevWatchCommand;
-use Gacela\Console\Infrastructure\Command\DocsGenerateCommand;
-use Gacela\Console\Infrastructure\Command\ExploreCommand;
-use Gacela\Console\Infrastructure\Command\GenerateIdeHelperCommand;
-use Gacela\Console\Infrastructure\Command\ListDeprecatedCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
-use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
-use Gacela\Console\Infrastructure\Command\VersionCheckCommand;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 
@@ -47,15 +38,6 @@ final class ConsoleProvider extends AbstractProvider
             new DebugContainerCommand(),
             new CacheWarmCommand(),
             new ValidateConfigCommand(),
-            new AnalyzeDependenciesCommand(),
-            new ContainerCompileCommand(),
-            new GenerateIdeHelperCommand(),
-            new DevWatchCommand(),
-            new DocsGenerateCommand(),
-            new ExploreCommand(),
-            new VersionCheckCommand(),
-            new ListDeprecatedCommand(),
-            new ProfileReportCommand(),
         ]);
     }
 

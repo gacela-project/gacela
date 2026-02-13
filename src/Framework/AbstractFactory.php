@@ -11,13 +11,9 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 
 /**
- * Base class for module factories.
- *
- * @template TConfig of AbstractConfig
- *
- * @implements ConfigAccessorInterface<TConfig>
+ * @template TConfig of AbstractConfig = AbstractConfig
  */
-abstract class AbstractFactory implements ServiceFactoryInterface, ConfigAccessorInterface, ProviderAccessorInterface
+abstract class AbstractFactory
 {
     /** @use ConfigResolverAwareTrait<TConfig> */
     use ConfigResolverAwareTrait;
@@ -36,34 +32,12 @@ abstract class AbstractFactory implements ServiceFactoryInterface, ConfigAccesso
         self::$containers = [];
     }
 
-    /**
-     * Create or retrieve a singleton instance.
-     *
-     * @template TService
-     *
-     * @param string $key Unique identifier for the service
-     * @param callable(): TService $creator Factory function to create the service
-     *
-     * @return TService
-     */
-    public function singleton(string $key, callable $creator): mixed
+    protected function singleton(string $key, callable $creator): mixed
     {
         return $this->instances[$key] ??= $creator();
     }
 
-    /**
-     * Get a dependency provided by the module provider.
-     *
-     * @template TDependency
-     *
-     * @param string $key The dependency key
-     *
-     * @return TDependency
-     *
-     * @psalm-suppress MixedInferredReturnType
-     * @psalm-suppress MixedReturnStatement
-     */
-    public function getProvidedDependency(string $key): mixed
+    protected function getProvidedDependency(string $key): mixed
     {
         return $this->getContainer()->get($key);
     }

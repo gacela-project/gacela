@@ -7,15 +7,11 @@ namespace Gacela\Framework;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 
 /**
- * Base class for module facades.
- *
- * @template TFactory of AbstractFactory
- *
- * @psalm-consistent-constructor
+ * @template TFactory of AbstractFactory = AbstractFactory
  */
-abstract class AbstractFacade implements ModuleDependenciesInterface
+abstract class AbstractFacade
 {
-    /** @var array<class-string<self>, AbstractFactory> */
+    /** @var array<string, AbstractFactory> */
     private static array $factories = [];
 
     public static function resetCache(): void
@@ -24,11 +20,7 @@ abstract class AbstractFacade implements ModuleDependenciesInterface
     }
 
     /**
-     * Get the factory instance for this facade.
-     *
      * @return TFactory
-     *
-     * @psalm-return TFactory
      */
     public function getFactory(): AbstractFactory
     {
@@ -37,18 +29,5 @@ abstract class AbstractFacade implements ModuleDependenciesInterface
 
         /** @var TFactory $factory */
         return $factory;
-    }
-
-    /**
-     * Declare the module dependencies.
-     *
-     * Override this method to declare explicit dependencies on other modules.
-     * This enables dependency graph visualization and circular dependency detection.
-     *
-     * @return array<class-string<AbstractFacade>> List of facade class names this module depends on
-     */
-    public function dependencies(): array
-    {
-        return [];
     }
 }

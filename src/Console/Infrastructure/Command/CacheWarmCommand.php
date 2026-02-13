@@ -8,6 +8,7 @@ use Gacela\Console\Application\CacheWarm\CacheManager;
 use Gacela\Console\Application\CacheWarm\CacheWarmOutputFormatter;
 use Gacela\Console\Application\CacheWarm\CacheWarmService;
 use Gacela\Console\Application\CacheWarm\ClassNotFoundException;
+use Gacela\Console\Application\CacheWarm\ParallelModuleWarmer;
 use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
@@ -33,7 +34,9 @@ final class CacheWarmCommand extends Command
         $this->setName('cache:warm')
             ->setDescription('Pre-resolve all module classes and warm the cache for production')
             ->setHelp($this->getHelpText())
-            ->addOption('clear', 'c', InputOption::VALUE_NONE, 'Clear existing cache before warming');
+            ->addOption('clear', 'c', InputOption::VALUE_NONE, 'Clear existing cache before warming')
+            ->addOption('attributes', 'a', InputOption::VALUE_NONE, 'Pre-scan and cache #[ServiceMap] attributes')
+            ->addOption('parallel', 'p', InputOption::VALUE_NONE, 'Use parallel processing with PHP Fibers (PHP 8.1+)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -46,6 +49,8 @@ final class CacheWarmCommand extends Command
         $formatter->writeHeader();
 
         $clearCache = (bool) $input->getOption('clear');
+        $warmAttributes = (bool) $input->getOption('attributes');
+        $useParallel = (bool) $input->getOption('parallel');
 
         if ($clearCache) {
             $cacheManager->clearCache();
@@ -57,7 +62,12 @@ final class CacheWarmCommand extends Command
 
         $formatter->writeModulesFound($modules);
 
-        [$resolvedCount, $skippedCount] = $this->warmModulesCache($modules, $cacheWarmService, $formatter);
+        if ($useParallel) {
+            $parallelWarmer = new ParallelModuleWarmer($cacheWarmService, $formatter);
+            [$resolvedCount, $skippedCount] = $parallelWarmer->warmModules($modules, $warmAttributes);
+        } else {
+            [$resolvedCount, $skippedCount] = $this->warmModulesCache($modules, $cacheWarmService, $formatter, $warmAttributes);
+        }
 
         $formatter->writeSummary(
             count($modules),
@@ -96,6 +106,7 @@ final class CacheWarmCommand extends Command
         array $modules,
         CacheWarmService $cacheWarmService,
         CacheWarmOutputFormatter $formatter,
+        bool $warmAttributes,
     ): array {
         $resolvedCount = 0;
         $skippedCount = 0;
@@ -108,6 +119,11 @@ final class CacheWarmCommand extends Command
             foreach ($moduleClasses as $classInfo) {
                 try {
                     $cacheWarmService->resolveClass($classInfo['className']);
+
+                    if ($warmAttributes) {
+                        $cacheWarmService->warmAttributeCache($classInfo['className']);
+                    }
+
                     $formatter->writeClassResolved($classInfo['type'], $classInfo['className']);
                     ++$resolvedCount;
                 } catch (ClassNotFoundException) {
@@ -148,6 +164,7 @@ and populates the Gacela cache for optimal production performance.
   - Discovers all modules in your application
   - Resolves each module's Facade, Factory, Config, and Provider classes
   - Generates optimized cache files for class resolution
+  - Optionally pre-scans #[ServiceMap] attributes to avoid reflection overhead
   - Reports statistics about the warming process
 
 <info>When to use:</info>
@@ -157,7 +174,9 @@ and populates the Gacela cache for optimal production performance.
   - When you want to optimize bootstrap performance
 
 <info>Options:</info>
-  --clear, -c    Clear existing cache before warming (recommended for fresh start)
+  --clear, -c        Clear existing cache before warming (recommended for fresh start)
+  --attributes, -a   Pre-scan and cache #[ServiceMap] attributes for improved performance
+  --parallel, -p     Use parallel processing with PHP Fibers (PHP 8.1+) for faster warming
 
 <info>Examples:</info>
   # Warm cache with existing data
@@ -165,6 +184,12 @@ and populates the Gacela cache for optimal production performance.
 
   # Clear and warm cache from scratch
   bin/gacela cache:warm --clear
+
+  # Warm cache with attribute pre-scanning (recommended for production)
+  bin/gacela cache:warm --clear --attributes
+
+  # Warm cache with parallel processing for maximum performance
+  bin/gacela cache:warm --clear --attributes --parallel
 
 <comment>Note:</comment> This command requires file caching to be enabled in your gacela.php configuration.
 If file caching is disabled, the command will still run but won't create persistent cache files.

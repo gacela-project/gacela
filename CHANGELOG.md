@@ -6,6 +6,12 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `#[Cacheable]` attribute for automatic facade method result caching with TTL support
+- Add `CacheableTrait` for easy integration of caching in facades
+- Add parallel cache warming using PHP 8.1 Fibers for up to 5x faster cache generation
+- Add `cache:clear` command to clear all cache files
+- Add `ParallelModuleWarmer` for concurrent module processing during cache warming
+- Enhance `cache:warm` command with `--parallel` and `--attributes` flags
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

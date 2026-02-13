@@ -1,0 +1,46 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined static method Gacela\\\\Framework\\\\ServiceResolver\\\\DocBlockResolver\\:\\:fromClassName\\(\\)\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/CacheWarmService.php
+
+		-
+			message: "#^Binary operation \"\\+\\=\" between \\(float\\|int\\) and mixed results in an error\\.$#"
+			count: 2
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Cannot use array destructuring on mixed\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Parameter \\#1 \\$array \\(list\\<Fiber\\>\\) of array_values is already a list, call has no effect\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Parameter \\#1 \\$className of method Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\CacheWarmService\\:\\:warmAttributeCache\\(\\) expects class\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Property Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\ParallelModuleWarmer\\:\\:\\$activeFibers \\(list\\<Fiber\\>\\) does not accept array\\<int\\<0, max\\>, Fiber\\>\\.$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Property Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\ParallelModuleWarmer\\:\\:\\$activeFibers with generic class Fiber does not specify its types\\: TStart, TResume, TReturn, TSuspend$#"
+			count: 1
+			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+
+		-
+			message: "#^Parameter \\#1 \\$className of method Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\CacheWarmService\\:\\:warmAttributeCache\\(\\) expects class\\-string, string given\\.$#"
+			count: 1
+			path: src/Console/Infrastructure/Command/CacheWarmCommand.php
+
+		-
+			message: "#^Trait Gacela\\\\Framework\\\\Attribute\\\\CacheableTrait is used zero times and is not analysed\\.$#"
+			count: 1
+			path: src/Framework/Attribute/CacheableTrait.php

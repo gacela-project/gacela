@@ -113,4 +113,56 @@ final class CacheWarmCommandTest extends TestCase
 
         self::assertSame(0, $exitCode);
     }
+
+    public function test_cache_warm_with_attributes_option(): void
+    {
+        $this->command->execute(['--attributes' => true]);
+
+        $output = $this->command->getDisplay();
+
+        self::assertStringContainsString('Warming Gacela cache', $output);
+        self::assertStringContainsString('Cache warming complete!', $output);
+        self::assertSame(0, $this->command->getStatusCode());
+    }
+
+    public function test_cache_warm_with_all_options(): void
+    {
+        $this->command->execute([
+            '--clear' => true,
+            '--attributes' => true,
+        ]);
+
+        $output = $this->command->getDisplay();
+
+        self::assertStringContainsString('Cleared existing cache', $output);
+        self::assertStringContainsString('Cache warming complete!', $output);
+        self::assertSame(0, $this->command->getStatusCode());
+    }
+
+    public function test_cache_warm_with_parallel_option(): void
+    {
+        $this->command->execute(['--parallel' => true]);
+
+        $output = $this->command->getDisplay();
+
+        self::assertStringContainsString('Warming Gacela cache', $output);
+        self::assertStringContainsString('Cache warming complete!', $output);
+        self::assertSame(0, $this->command->getStatusCode());
+    }
+
+    public function test_cache_warm_with_all_performance_options(): void
+    {
+        $this->command->execute([
+            '--clear' => true,
+            '--attributes' => true,
+            '--parallel' => true,
+        ]);
+
+        $output = $this->command->getDisplay();
+
+        self::assertStringContainsString('Cleared existing cache', $output);
+        self::assertStringContainsString('Cache warming complete!', $output);
+        self::assertMatchesRegularExpression('/Time taken:\s+[\d.]+\s+seconds/', $output);
+        self::assertSame(0, $this->command->getStatusCode());
+    }
 }

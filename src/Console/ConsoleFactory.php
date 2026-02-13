@@ -9,6 +9,7 @@ use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
+use Gacela\Console\Domain\ContainerCompiler\ContainerCompiler;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
@@ -100,6 +101,11 @@ final class ConsoleFactory extends AbstractFactory
     public function getContainerDependencyTree(string $className): array
     {
         return $this->getMainContainer()->getDependencyTree($className);
+    }
+
+    public function compileContainer(): string
+    {
+        return (new ContainerCompiler())->compile($this->getMainContainer());
     }
 
     /**

@@ -25,9 +25,12 @@ final class MakeModuleCommand extends Command
     protected function configure(): void
     {
         $this->setName('make:module')
-            ->setDescription('Generate a basic module with an empty ' . $this->getExpectedFilenames())
+            ->setDescription('Generate a module with optional templates and scaffolding')
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
-            ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
+            ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name')
+            ->addOption('template', 't', InputOption::VALUE_REQUIRED, 'Template type: crud, api, or cli', 'basic')
+            ->addOption('with-tests', null, InputOption::VALUE_NONE, 'Generate test files')
+            ->addOption('with-api', null, InputOption::VALUE_NONE, 'Generate API controller stubs');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -36,7 +39,13 @@ final class MakeModuleCommand extends Command
         $path = $input->getArgument('path');
         $commandArguments = $this->getFacade()->parseArguments($path);
         $shortName = (bool)$input->getOption('short-name');
+        $template = (string)$input->getOption('template');
+        $withTests = (bool)$input->getOption('with-tests');
+        $withApi = (bool)$input->getOption('with-api');
 
+        $output->writeln(sprintf('<info>Generating module with template: %s</info>', $template));
+
+        // Generate core module files
         foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
             $fullPath = $this->getFacade()->generateFileContent(
                 $commandArguments,
@@ -46,15 +55,30 @@ final class MakeModuleCommand extends Command
             $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
         }
 
+        // Generate template-specific files
+        $templateFiles = $this->getFacade()->generateTemplateFiles(
+            $commandArguments,
+            $template,
+            $withTests,
+            $withApi,
+        );
+
+        foreach ($templateFiles as $file) {
+            $output->writeln(sprintf("> Path '%s' created successfully", $file));
+        }
+
         $pieces = explode('/', $commandArguments->directory());
         $moduleName = end($pieces);
-        $output->writeln(sprintf("Module '%s' created successfully", $moduleName));
+        $output->writeln(sprintf("<info>Module '%s' created successfully</info>", $moduleName));
+
+        if ($withTests) {
+            $output->writeln('<comment>Test files generated. Run: vendor/bin/phpunit</comment>');
+        }
+
+        if ($withApi) {
+            $output->writeln('<comment>API controller stubs generated.</comment>');
+        }
 
         return self::SUCCESS;
-    }
-
-    private function getExpectedFilenames(): string
-    {
-        return implode(', ', FilenameSanitizer::EXPECTED_FILENAMES);
     }
 }

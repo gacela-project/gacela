@@ -39,15 +39,7 @@ final class MakeModuleCommandTest extends TestCase
 
         $description = $command->getDescription();
 
-        // Test that the description contains 'Generate a basic module with an empty ' followed by the expected filenames
-        self::assertStringContainsString('Generate a basic module with an empty ', $description);
-        self::assertStringContainsString('Facade', $description);
-        self::assertStringContainsString('Factory', $description);
-        self::assertStringContainsString('Config', $description);
-        self::assertStringContainsString('Provider', $description);
-
-        // Ensure it's in the correct order (not reversed or partial)
-        self::assertStringStartsWith('Generate a basic module with an empty ', $description);
+        self::assertSame('Generate a module with optional templates and scaffolding', $description);
     }
 
     #[DataProvider('createModulesProvider')]
@@ -62,6 +54,7 @@ final class MakeModuleCommandTest extends TestCase
         $bootstrap->run($input, $output);
 
         $expectedOutput = <<<OUT
+Generating module with template: basic
 > Path 'data/TestModule/{$fileName}Facade.php' created successfully
 > Path 'data/TestModule/{$fileName}Factory.php' created successfully
 > Path 'data/TestModule/{$fileName}Config.php' created successfully

@@ -6,6 +6,11 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `ModuleHealthCheckInterface` for implementing custom health checks in modules
+- Add `HealthChecker` to execute and aggregate health check results with severity levels
+- Add `HealthStatus` with levels (OK, WARNING, ERROR, CRITICAL) for categorizing issues
+- Add `HealthCheckReport` for detailed health check analysis and reporting
+- Add comprehensive health check documentation with practical examples
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

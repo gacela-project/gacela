@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
-use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
-
 /**
  * Main configuration interface for Gacela framework setup.
  *
@@ -27,8 +25,6 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
      * @return array<string,mixed>
      */
     public function getConfigKeyValues(): array;
-
-    public function getEventDispatcher(): EventDispatcherInterface;
 
     public function merge(SetupGacela $other): self;
 

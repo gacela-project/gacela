@@ -8,7 +8,6 @@ use Closure;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
  * Value object that holds all SetupGacela properties.
@@ -44,16 +43,6 @@ final class Properties
 
     /** @var ?array<string,mixed> */
     public ?array $configKeyValues = null;
-
-    public ?bool $areEventListenersEnabled = null;
-
-    /** @var ?list<callable> */
-    public ?array $genericListeners = null;
-
-    /** @var ?array<class-string,list<callable>> */
-    public ?array $specificListeners = null;
-
-    public ?EventDispatcherInterface $eventDispatcher = null;
 
     /** @var ?array<string,list<Closure>> */
     public ?array $servicesToExtend = null;

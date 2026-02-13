@@ -11,7 +11,6 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Event\GacelaEventInterface;
 
 final class GacelaConfig
 {
@@ -32,14 +31,6 @@ final class GacelaConfig
 
     /** @var array<string,mixed> */
     private ?array $configKeyValues = null;
-
-    private ?bool $areEventListenersEnabled = null;
-
-    /** @var list<callable> */
-    private ?array $genericListeners = null;
-
-    /** @var array<class-string,list<callable>> */
-    private ?array $specificListeners = null;
 
     /** @var list<class-string> */
     private ?array $gacelaConfigsToExtend = null;
@@ -254,44 +245,6 @@ final class GacelaConfig
         return $this;
     }
 
-    /**
-     * Do not dispatch any event in the application.
-     */
-    public function disableEventListeners(): self
-    {
-        $this->areEventListenersEnabled = false;
-
-        return $this;
-    }
-
-    /**
-     * Register a generic listener when any event happens.
-     * The callable argument must be the type `GacelaEventInterface`.
-     *
-     * @param callable(GacelaEventInterface):void $listener
-     */
-    public function registerGenericListener(callable $listener): self
-    {
-        $this->genericListeners ??= [];
-        $this->genericListeners[] = $listener;
-
-        return $this;
-    }
-
-    /**
-     * Register a listener when some event happens.
-     *
-     * @param class-string $event
-     * @param callable(GacelaEventInterface):void $listener
-     */
-    public function registerSpecificListener(string $event, callable $listener): self
-    {
-        $this->specificListeners[$event] ??= [];
-        $this->specificListeners[$event][] = $listener;
-
-        return $this;
-    }
-
     public function extendService(string $id, Closure $service): self
     {
         $this->servicesToExtend[$id] ??= [];
@@ -458,9 +411,6 @@ final class GacelaConfig
             $this->fileCacheDirectory,
             $this->projectNamespaces,
             $this->configKeyValues,
-            $this->genericListeners,
-            $this->specificListeners,
-            $this->areEventListenersEnabled,
             $this->gacelaConfigsToExtend,
             $this->plugins,
             $this->servicesToExtend,

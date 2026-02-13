@@ -15,7 +15,6 @@ use Gacela\Framework\Bootstrap\Setup\SetupMerger;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use RuntimeException;
 
 use function is_callable;
@@ -252,11 +251,6 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
     }
 
-    public function getEventDispatcher(): EventDispatcherInterface
-    {
-        return $this->properties->eventDispatcher ??= SetupEventDispatcher::getDispatcher($this);
-    }
-
     /**
      * @return array<string,list<Closure>>
      */
@@ -316,12 +310,6 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    public function canCreateEventDispatcher(): bool
-    {
-        return $this->properties->areEventListenersEnabled === true
-            && $this->hasEventListeners();
-    }
-
     /**
      * @param ?array<string,mixed> $configKeyValues
      */
@@ -336,32 +324,9 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
-    /**
-     * @return array<class-string,list<callable>>|null
-     */
-    public function getSpecificListeners(): ?array
-    {
-        return $this->properties->specificListeners;
-    }
-
-    /**
-     * @return list<callable>|null
-     */
-    public function getGenericListeners(): ?array
-    {
-        return $this->properties->genericListeners;
-    }
-
     public function isPropertyChanged(string $name): bool
     {
         return $this->changeTracker->isChanged($name);
-    }
-
-    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
-    {
-        $this->properties->eventDispatcher = $eventDispatcher;
-
-        return $this;
     }
 
     public function merge(self $other): self
@@ -510,28 +475,6 @@ final class SetupGacela extends AbstractSetupGacela
 
     /**
      * @internal Used by SetupInitializer - do not call directly
-     */
-    public function setAreEventListenersEnabled(?bool $flag): self
-    {
-        $this->properties->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
-
-        return $this;
-    }
-
-    /**
-     * @internal Used by SetupInitializer - do not call directly
-     *
-     * @param ?list<callable> $listeners
-     */
-    public function setGenericListeners(?array $listeners): self
-    {
-        $this->properties->genericListeners = $listeners ?? self::DEFAULT_GENERIC_LISTENERS;
-
-        return $this;
-    }
-
-    /**
-     * @internal Used by SetupInitializer - do not call directly
      *
      * @param ?array<string,list<Closure>> $list
      */
@@ -624,24 +567,6 @@ final class SetupGacela extends AbstractSetupGacela
         );
 
         return $this;
-    }
-
-    /**
-     * @internal Used by SetupInitializer - do not call directly
-     *
-     * @param ?array<class-string,list<callable>> $listeners
-     */
-    public function setSpecificListeners(?array $listeners): self
-    {
-        $this->properties->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
-
-        return $this;
-    }
-
-    private function hasEventListeners(): bool
-    {
-        return ($this->properties->genericListeners !== null && $this->properties->genericListeners !== [])
-            || ($this->properties->specificListeners !== null && $this->properties->specificListeners !== []);
     }
 
     /**

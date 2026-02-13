@@ -15,8 +15,6 @@ final class GacelaConfigTransfer
      * @param ?array<string, class-string|object|callable> $externalServices
      * @param ?list<string> $projectNamespaces
      * @param ?array<string,mixed> $configKeyValues
-     * @param ?list<callable> $genericListeners
-     * @param ?array<class-string,list<callable>> $specificListeners
      * @param ?list<class-string> $gacelaConfigsToExtend
      * @param ?list<class-string|callable> $plugins
      * @param ?array<string,list<Closure>> $servicesToExtend
@@ -36,9 +34,6 @@ final class GacelaConfigTransfer
         public readonly ?string $fileCacheDirectory,
         public readonly ?array $projectNamespaces,
         public readonly ?array $configKeyValues,
-        public readonly ?array $genericListeners,
-        public readonly ?array $specificListeners,
-        public readonly ?bool $areEventListenersEnabled,
         public readonly ?array $gacelaConfigsToExtend,
         public readonly ?array $plugins,
         public readonly ?array $servicesToExtend,

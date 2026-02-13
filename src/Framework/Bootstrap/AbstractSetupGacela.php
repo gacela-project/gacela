@@ -39,8 +39,6 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const gacelaConfigsToExtend = 'gacelaConfigsToExtend';
 
-    protected const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
-
     protected const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
 
     protected const DEFAULT_FILE_CACHE_ENABLED = GacelaFileCache::DEFAULT_ENABLED_VALUE;
@@ -50,10 +48,6 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const DEFAULT_PROJECT_NAMESPACES = [];
 
     protected const DEFAULT_CONFIG_KEY_VALUES = [];
-
-    protected const DEFAULT_GENERIC_LISTENERS = [];
-
-    protected const DEFAULT_SPECIFIC_LISTENERS = [];
 
     protected const DEFAULT_SERVICES_TO_EXTEND = [];
 

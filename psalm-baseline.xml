@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <files psalm-version="6.13.1@1e3b7f0a8ab32b23197b91107adc0a7ed8a05b51">
+  <file src="src/Console/Application/CacheWarm/CacheWarmService.php">
+    <MixedAssignment>
+      <code><![CDATA[$docBlockResolver]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[getDocBlockResolvable]]></code>
+    </MixedMethodCall>
+    <UndefinedMethod>
+      <code><![CDATA[DocBlockResolver::fromClassName($className)]]></code>
+    </UndefinedMethod>
+  </file>
+  <file src="src/Console/Application/CacheWarm/ParallelModuleWarmer.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$classInfo['className']]]></code>
+    </ArgumentTypeCoercion>
+    <MixedArrayAccess>
+      <code><![CDATA[$resolved]]></code>
+      <code><![CDATA[$skipped]]></code>
+    </MixedArrayAccess>
+    <MixedAssignment>
+      <code><![CDATA[$resolvedCount]]></code>
+      <code><![CDATA[$skippedCount]]></code>
+      <code><![CDATA[$skippedCount]]></code>
+      <code><![CDATA[[$resolved, $skipped]]]></code>
+    </MixedAssignment>
+    <MixedOperand>
+      <code><![CDATA[$resolved]]></code>
+      <code><![CDATA[$skipped]]></code>
+      <code><![CDATA[$skippedCount]]></code>
+    </MixedOperand>
+    <MixedReturnTypeCoercion>
+      <code><![CDATA[[$resolvedCount, $skippedCount]]]></code>
+      <code><![CDATA[array{int, int}]]></code>
+    </MixedReturnTypeCoercion>
+  </file>
+  <file src="src/Console/Infrastructure/Command/CacheWarmCommand.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$classInfo['className']]]></code>
+    </ArgumentTypeCoercion>
+  </file>
   <file src="src/Console/Infrastructure/Command/ProfileReportCommand.php">
     <InvalidOperand>
       <code><![CDATA[$entry->duration * 1000]]></code>

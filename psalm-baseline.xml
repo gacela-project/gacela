@@ -1,161 +1,231 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <files psalm-version="6.13.1@1e3b7f0a8ab32b23197b91107adc0a7ed8a05b51">
-  <file src="src/Console/Application/CacheWarm/ParallelModuleWarmer.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$classInfo['className']]]></code>
-    </ArgumentTypeCoercion>
-    <MixedArrayAccess>
-      <code><![CDATA[$resolved]]></code>
-      <code><![CDATA[$skipped]]></code>
-    </MixedArrayAccess>
-    <MixedAssignment>
-      <code><![CDATA[$resolvedCount]]></code>
-      <code><![CDATA[$skippedCount]]></code>
-      <code><![CDATA[$skippedCount]]></code>
-      <code><![CDATA[[$resolved, $skipped]]]></code>
-    </MixedAssignment>
-    <MixedOperand>
-      <code><![CDATA[$resolved]]></code>
-      <code><![CDATA[$skipped]]></code>
-      <code><![CDATA[$skippedCount]]></code>
-    </MixedOperand>
-    <MixedReturnTypeCoercion>
-      <code><![CDATA[[$resolvedCount, $skippedCount]]]></code>
-      <code><![CDATA[array{int, int}]]></code>
-    </MixedReturnTypeCoercion>
-  </file>
-  <file src="src/Console/Domain/DependencyAnalyzer/JsonFormatter.php">
-    <RedundantCastGivenDocblockType>
-      <code><![CDATA[(string)json_encode(['modules' => $data], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)]]></code>
-    </RedundantCastGivenDocblockType>
-  </file>
-  <file src="src/Console/Domain/Deprecation/DeprecationScanner.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$pathname]]></code>
-    </ArgumentTypeCoercion>
-    <InvalidAttribute>
-      <code><![CDATA[Deprecated::class]]></code>
-    </InvalidAttribute>
-    <UnresolvableInclude>
-      <code><![CDATA[require_once $filePath]]></code>
-    </UnresolvableInclude>
-  </file>
-  <file src="src/Console/Domain/DocumentationGenerator/DocumentationGenerator.php">
-    <ImplicitToStringCast>
-      <code><![CDATA[$method->getReturnType()]]></code>
-      <code><![CDATA[$param->getType()]]></code>
-    </ImplicitToStringCast>
-  </file>
-  <file src="src/Console/Domain/FileWatcher/FileWatcher.php">
-    <InvalidPropertyAssignmentValue>
-      <code><![CDATA[$this->fileTimestamps]]></code>
-      <code><![CDATA[$this->fileTimestamps]]></code>
-      <code><![CDATA[$this->fileTimestamps]]></code>
-    </InvalidPropertyAssignmentValue>
-  </file>
-  <file src="src/Console/Infrastructure/Command/AnalyzeDependenciesCommand.php">
-    <MixedArgument>
-      <code><![CDATA[$outputFile]]></code>
-    </MixedArgument>
-    <MixedAssignment>
-      <code><![CDATA[$outputFile]]></code>
-    </MixedAssignment>
-  </file>
-  <file src="src/Console/Infrastructure/Command/CacheWarmCommand.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$classInfo['className']]]></code>
-    </ArgumentTypeCoercion>
-  </file>
-  <file src="src/Console/Infrastructure/Command/ExploreCommand.php">
-    <ImplicitToStringCast>
-      <code><![CDATA[$method->getReturnType()]]></code>
-      <code><![CDATA[$param->getType()]]></code>
-    </ImplicitToStringCast>
-    <MixedAssignment>
-      <code><![CDATA[$selectedName]]></code>
-    </MixedAssignment>
-  </file>
-  <file src="src/Console/Infrastructure/Command/ListDeprecatedCommand.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[Gacela::rootDir()]]></code>
-    </ArgumentTypeCoercion>
-    <MixedAssignment>
-      <code><![CDATA[$typeFilter]]></code>
-      <code><![CDATA[$willRemoveInFilter]]></code>
-    </MixedAssignment>
-  </file>
-  <file src="src/Console/Infrastructure/Command/ProfileReportCommand.php">
-    <InvalidOperand>
-      <code><![CDATA[$entry->duration * 1000]]></code>
-      <code><![CDATA[$opStats['avg_duration'] * 1000]]></code>
-      <code><![CDATA[$opStats['total_duration'] * 1000]]></code>
-      <code><![CDATA[$stats['avg_duration'] * 1000]]></code>
-      <code><![CDATA[$stats['total_duration'] * 1000]]></code>
-    </InvalidOperand>
-    <MixedPropertyFetch>
-      <code><![CDATA[$a->duration]]></code>
-      <code><![CDATA[$a->memoryUsage]]></code>
-      <code><![CDATA[$a->operation]]></code>
-      <code><![CDATA[$b->duration]]></code>
-      <code><![CDATA[$b->memoryUsage]]></code>
-      <code><![CDATA[$b->operation]]></code>
-    </MixedPropertyFetch>
-  </file>
-  <file src="src/Console/Infrastructure/Command/VersionCheckCommand.php">
-    <MixedArgument>
-      <code><![CDATA[$customPath]]></code>
-    </MixedArgument>
-  </file>
-  <file src="src/Console/Infrastructure/ModuleVersion/ArrayModuleVersionParser.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$version]]></code>
-      <code><![CDATA[(string)$moduleName]]></code>
-    </ArgumentTypeCoercion>
-    <MixedArgumentTypeCoercion>
-      <code><![CDATA[$data]]></code>
-    </MixedArgumentTypeCoercion>
-    <MixedAssignment>
-      <code><![CDATA[$reqVersion]]></code>
-    </MixedAssignment>
-    <RedundantCastGivenDocblockType>
-      <code><![CDATA[(string)$moduleName]]></code>
-      <code><![CDATA[(string)$moduleName]]></code>
-    </RedundantCastGivenDocblockType>
-  </file>
-  <file src="src/Console/Infrastructure/ModuleVersion/YamlModuleVersionParser.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$version]]></code>
-      <code><![CDATA[(string)$moduleName]]></code>
-    </ArgumentTypeCoercion>
-    <MixedAssignment>
-      <code><![CDATA[$reqVersion]]></code>
-    </MixedAssignment>
-    <MixedMethodCall>
-      <code><![CDATA[$yamlClass::parseFile($filePath)]]></code>
-    </MixedMethodCall>
-    <RedundantCastGivenDocblockType>
-      <code><![CDATA[(string)$moduleName]]></code>
-      <code><![CDATA[(string)$moduleName]]></code>
-    </RedundantCastGivenDocblockType>
-  </file>
-  <file src="src/Framework/AbstractFacade.php">
-    <PropertyTypeCoercion>
-      <code><![CDATA[self::$factories]]></code>
-    </PropertyTypeCoercion>
-  </file>
-  <file src="src/Framework/AbstractFactory.php">
+  <file src="src/Console/Application/CacheWarm/CacheWarmService.php">
+    <MissingDependency>
+      <code><![CDATA[$this->facade]]></code>
+      <code><![CDATA[private]]></code>
+    </MissingDependency>
     <MixedReturnStatement>
-      <code><![CDATA[$this->instances[$key] ??= $creator()]]></code>
+      <code><![CDATA[$this->facade->findAllAppModules()]]></code>
     </MixedReturnStatement>
   </file>
-  <file src="src/Framework/Profiler/Profiler.php">
-    <InvalidOperand>
-      <code><![CDATA[hrtime(true) / 1e9]]></code>
-    </InvalidOperand>
+  <file src="src/Console/Application/CacheWarm/ClassNotFoundException.php">
+    <UndefinedClass>
+      <code><![CDATA[ErrorSuggestionHelper]]></code>
+    </UndefinedClass>
   </file>
-  <file src="src/Testing/GacelaTestCase.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$dependencyGraph]]></code>
-    </ArgumentTypeCoercion>
+  <file src="src/Console/ConsoleFacade.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFacade]]></code>
+      <code><![CDATA[ConsoleFacade]]></code>
+    </MissingDependency>
+  </file>
+  <file src="src/Console/ConsoleFactory.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFactory]]></code>
+    </MissingDependency>
+  </file>
+  <file src="src/Console/ConsoleProvider.php">
+    <UndefinedClass>
+      <code><![CDATA[AnalyzeDependenciesCommand]]></code>
+      <code><![CDATA[ContainerCompileCommand]]></code>
+      <code><![CDATA[DevWatchCommand]]></code>
+      <code><![CDATA[DocsGenerateCommand]]></code>
+      <code><![CDATA[ExploreCommand]]></code>
+      <code><![CDATA[GenerateIdeHelperCommand]]></code>
+      <code><![CDATA[ListDeprecatedCommand]]></code>
+      <code><![CDATA[ProfileReportCommand]]></code>
+      <code><![CDATA[VersionCheckCommand]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="src/Console/Domain/AllAppModules/AllAppModulesFinder.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFacade]]></code>
+    </MissingDependency>
+  </file>
+  <file src="src/Console/Infrastructure/Command/DebugContainerCommand.php">
+    <MissingDependency>
+      <code><![CDATA[$this->getFacade()]]></code>
+      <code><![CDATA[$this->getFacade()]]></code>
+    </MissingDependency>
+    <MixedArgument>
+      <code><![CDATA[$dependency]]></code>
+      <code><![CDATA[$dependencyTree]]></code>
+      <code><![CDATA[$stats['bindings']]]></code>
+      <code><![CDATA[$stats['cached_dependencies']]]></code>
+      <code><![CDATA[$stats['factory_services']]]></code>
+      <code><![CDATA[$stats['frozen_services']]]></code>
+      <code><![CDATA[$stats['memory_usage']]]></code>
+      <code><![CDATA[$stats['registered_services']]]></code>
+    </MixedArgument>
+    <MixedArrayAccess>
+      <code><![CDATA[$stats['bindings']]]></code>
+      <code><![CDATA[$stats['cached_dependencies']]]></code>
+      <code><![CDATA[$stats['factory_services']]]></code>
+      <code><![CDATA[$stats['frozen_services']]]></code>
+      <code><![CDATA[$stats['memory_usage']]]></code>
+      <code><![CDATA[$stats['registered_services']]]></code>
+      <code><![CDATA[$stats['registered_services']]]></code>
+    </MixedArrayAccess>
+    <MixedAssignment>
+      <code><![CDATA[$dependency]]></code>
+      <code><![CDATA[$dependencyTree]]></code>
+      <code><![CDATA[$stats]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Console/Infrastructure/Command/ListModulesCommand.php">
+    <MissingDependency>
+      <code><![CDATA[$this->getFacade()]]></code>
+    </MissingDependency>
+    <MixedArgument>
+      <code><![CDATA[$this->getFacade()->findAllAppModules($filter)]]></code>
+    </MixedArgument>
+  </file>
+  <file src="src/Console/Infrastructure/Command/MakeFileCommand.php">
+    <MissingDependency>
+      <code><![CDATA[$this->getFacade()]]></code>
+      <code><![CDATA[$this->getFacade()]]></code>
+      <code><![CDATA[$this->getFacade()]]></code>
+    </MissingDependency>
+    <MixedArgument>
+      <code><![CDATA[$commandArguments]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$commandArguments]]></code>
+    </MixedAssignment>
+    <MixedReturnStatement>
+      <code><![CDATA[$this->getFacade()->sanitizeFilename($raw)]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Console/Infrastructure/Command/MakeModuleCommand.php">
+    <MissingDependency>
+      <code><![CDATA[$this->getFacade()]]></code>
+      <code><![CDATA[$this->getFacade()]]></code>
+    </MissingDependency>
+    <MixedArgument>
+      <code><![CDATA[$commandArguments]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code><![CDATA[$commandArguments]]></code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Console/Infrastructure/ConsoleBootstrap.php">
+    <MissingDependency>
+      <code><![CDATA[$this->getFactory()]]></code>
+    </MissingDependency>
+    <MixedArrayOffset>
+      <code><![CDATA[$commands[$command->getName()]]]></code>
+    </MixedArrayOffset>
+    <MixedAssignment>
+      <code><![CDATA[$command]]></code>
+      <code><![CDATA[$commands[$command->getName()]]]></code>
+    </MixedAssignment>
+    <MixedMethodCall>
+      <code><![CDATA[getName]]></code>
+    </MixedMethodCall>
+  </file>
+  <file src="src/Framework/AbstractFacade.php">
+    <UndefinedClass>
+      <code><![CDATA[ModuleDependenciesInterface]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="src/Framework/AbstractFactory.php">
+    <UndefinedClass>
+      <code><![CDATA[ServiceFactoryInterface]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="src/Framework/ClassResolver/AbstractClassResolver.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFacade]]></code>
+      <code><![CDATA[AbstractFactory]]></code>
+      <code><![CDATA[Config::getInstance()
+                ->getFactory()]]></code>
+      <code><![CDATA[class() extends AbstractFacade {}]]></code>
+      <code><![CDATA[class() extends AbstractFacade {}]]></code>
+      <code><![CDATA[class() extends AbstractFactory {}]]></code>
+    </MissingDependency>
+    <MixedAssignment>
+      <code><![CDATA[$this->gacelaFileConfig]]></code>
+    </MixedAssignment>
+    <MixedReturnStatement>
+      <code><![CDATA[$this->gacelaFileConfig]]></code>
+      <code><![CDATA[$this->gacelaFileConfig]]></code>
+      <code><![CDATA[match ($this->getResolvableType()) {
+            FacadeResolver::TYPE => new /** @extends AbstractFacade<AbstractFactory> */ class() extends AbstractFacade {},
+            FactoryResolver::TYPE => new /** @extends AbstractFactory<AbstractConfig> */ class() extends AbstractFactory {},
+            ConfigResolver::TYPE => new class() extends AbstractConfig {},
+            default => null,
+        }]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Framework/ClassResolver/DocBlockService/DocBlockParser.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFactory]]></code>
+    </MissingDependency>
+    <MixedReturnStatement>
+      <code><![CDATA[AbstractFactory::class]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Framework/ClassResolver/Facade/FacadeResolver.php">
+    <MissingDependency>
+      <code><![CDATA[$resolved]]></code>
+      <code><![CDATA[AbstractFacade]]></code>
+    </MissingDependency>
+  </file>
+  <file src="src/Framework/ClassResolver/Factory/FactoryResolver.php">
+    <MissingDependency>
+      <code><![CDATA[$resolved]]></code>
+      <code><![CDATA[AbstractFactory]]></code>
+    </MissingDependency>
+  </file>
+  <file src="src/Framework/ClassResolver/Provider/DependencyProviderResolver.php">
+    <UndefinedAttributeClass>
+      <code><![CDATA[Deprecated]]></code>
+    </UndefinedAttributeClass>
+  </file>
+  <file src="src/Framework/Config/Config.php">
+    <MissingDependency>
+      <code><![CDATA[$this->getFactory()]]></code>
+      <code><![CDATA[?ConfigFactory]]></code>
+      <code><![CDATA[ConfigFactory]]></code>
+      <code><![CDATA[ConfigFactory]]></code>
+    </MissingDependency>
+    <MixedMethodCall>
+      <code><![CDATA[loadAll]]></code>
+    </MixedMethodCall>
+    <MixedReturnStatement>
+      <code><![CDATA[$this->getFactory()
+            ->createConfigLoader()
+            ->loadAll()]]></code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/Framework/Config/ConfigFactory.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFactory]]></code>
+    </MissingDependency>
+  </file>
+  <file src="src/Framework/Container/Container.php">
+    <MissingDependency>
+      <code><![CDATA[$config->getFactory()]]></code>
+    </MissingDependency>
+    <MixedArgument>
+      <code><![CDATA[$config->getFactory()->createGacelaFileConfig()->getBindings()]]></code>
+    </MixedArgument>
+    <MixedMethodCall>
+      <code><![CDATA[getBindings]]></code>
+    </MixedMethodCall>
+  </file>
+  <file src="src/Framework/Gacela.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFacade]]></code>
+    </MissingDependency>
+  </file>
+  <file src="src/Framework/ServiceResolver/DocBlockResolver.php">
+    <MissingDependency>
+      <code><![CDATA[AbstractFactory]]></code>
+    </MissingDependency>
+    <MixedReturnStatement>
+      <code><![CDATA[AbstractFactory::class]]></code>
+    </MixedReturnStatement>
   </file>
 </files>

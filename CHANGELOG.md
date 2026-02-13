@@ -6,6 +6,10 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `ErrorSuggestionHelper` for intelligent error messages with actionable suggestions
+- Add `Profiler` for performance profiling and bottleneck detection
+- Add `profile:report` command to generate and analyze performance reports
+- Enhance exception messages with did-you-mean suggestions and examples
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

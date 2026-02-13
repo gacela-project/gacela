@@ -6,6 +6,9 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `GacelaTestCase` base class for testing Gacela modules with helper methods
+- Add `ContractTestCase` for testing facade contracts and interface compliance
+- Add testing helpers and examples for module integration testing
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="6.13.1@1e3b7f0a8ab32b23197b91107adc0a7ed8a05b51">
+  <file src="src/Console/Infrastructure/Command/ProfileReportCommand.php">
+    <InvalidOperand>
+      <code><![CDATA[$entry->duration * 1000]]></code>
+      <code><![CDATA[$opStats['avg_duration'] * 1000]]></code>
+      <code><![CDATA[$opStats['total_duration'] * 1000]]></code>
+      <code><![CDATA[$stats['avg_duration'] * 1000]]></code>
+      <code><![CDATA[$stats['total_duration'] * 1000]]></code>
+    </InvalidOperand>
+    <MixedPropertyFetch>
+      <code><![CDATA[$a->duration]]></code>
+      <code><![CDATA[$a->memoryUsage]]></code>
+      <code><![CDATA[$a->operation]]></code>
+      <code><![CDATA[$b->duration]]></code>
+      <code><![CDATA[$b->memoryUsage]]></code>
+      <code><![CDATA[$b->operation]]></code>
+    </MixedPropertyFetch>
+  </file>
+  <file src="src/Framework/Profiler/Profiler.php">
+    <InvalidOperand>
+      <code><![CDATA[hrtime(true) / 1e9]]></code>
+    </InvalidOperand>
+  </file>
+</files>

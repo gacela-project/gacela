@@ -112,6 +112,7 @@ final class AnalyzeDependenciesCommand extends Command
                 ++$modulesWithDeps;
                 $totalDeps += count($dep->dependencies());
             }
+
             $maxDepth = max($maxDepth, $dep->depth());
         }
 

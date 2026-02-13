@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Setup;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
-use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
 /**
  * Merges two SetupGacela instances together with conditional logic based on change tracking.
@@ -27,7 +26,6 @@ final class SetupMerger
         $this->mergeExternalServices($other);
         $this->mergeProjectNamespaces($other);
         $this->mergeConfigKeyValues($other);
-        $this->mergeEventDispatcher($other);
         $this->mergeServicesToExtend($other);
         $this->mergeFactories($other);
         $this->mergeProtectedServices($other);
@@ -77,30 +75,6 @@ final class SetupMerger
         if ($other->isPropertyChanged(SetupGacela::configKeyValues)) {
             $this->original->mergeConfigKeyValues($other->getConfigKeyValues());
         }
-    }
-
-    private function mergeEventDispatcher(SetupGacela $other): void
-    {
-        if ($other->canCreateEventDispatcher()) {
-            if ($this->original->getEventDispatcher() instanceof ConfigurableEventDispatcher) {
-                $eventDispatcher = $this->original->getEventDispatcher();
-            } else {
-                $eventDispatcher = new ConfigurableEventDispatcher();
-            }
-
-            /** @var ConfigurableEventDispatcher $eventDispatcher */
-            $eventDispatcher->registerGenericListeners((array)$other->getGenericListeners());
-
-            foreach ($other->getSpecificListeners() ?? [] as $event => $listeners) {
-                foreach ($listeners as $callable) {
-                    $eventDispatcher->registerSpecificListener($event, $callable);
-                }
-            }
-        } else {
-            $eventDispatcher = $this->original->getEventDispatcher();
-        }
-
-        $this->original->setEventDispatcher($eventDispatcher);
     }
 
     private function mergeServicesToExtend(SetupGacela $other): void

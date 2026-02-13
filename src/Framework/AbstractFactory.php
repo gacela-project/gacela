@@ -54,11 +54,7 @@ abstract class AbstractFactory implements ServiceFactoryInterface, ConfigAccesso
     /**
      * Get a dependency provided by the module provider.
      *
-     * @template TDependency
-     *
      * @param string $key The dependency key
-     *
-     * @return TDependency
      *
      * @psalm-suppress MixedInferredReturnType
      * @psalm-suppress MixedReturnStatement

@@ -71,11 +71,6 @@
       <code><![CDATA[?EventDispatcherInterface]]></code>
     </UndefinedClass>
   </file>
-  <file src="src/Framework/Bootstrap/Setup/SetupMerger.php">
-    <UndefinedClass>
-      <code><![CDATA[ConfigurableEventDispatcher]]></code>
-    </UndefinedClass>
-  </file>
   <file src="src/Framework/Bootstrap/SetupEventDispatcher.php">
     <MixedAssignment>
       <code><![CDATA[$dispatcher]]></code>
@@ -104,42 +99,5 @@
     <UndefinedClass>
       <code><![CDATA[EventDispatcherInterface]]></code>
     </UndefinedClass>
-  </file>
-  <file src="src/Framework/ClassResolver/AbstractClassResolver.php">
-    <UndefinedTrait>
-      <code><![CDATA[EventDispatchingCapabilities]]></code>
-    </UndefinedTrait>
-  </file>
-  <file src="src/Framework/ClassResolver/ClassNameFinder/ClassNameFinder.php">
-    <UndefinedTrait>
-      <code><![CDATA[EventDispatchingCapabilities]]></code>
-    </UndefinedTrait>
-  </file>
-  <file src="src/Framework/ClassResolver/ClassResolverCache.php">
-    <UndefinedTrait>
-      <code><![CDATA[EventDispatchingCapabilities]]></code>
-    </UndefinedTrait>
-  </file>
-  <file src="src/Framework/Config/Config.php">
-    <UndefinedClass>
-      <code><![CDATA[?EventDispatcherInterface]]></code>
-      <code><![CDATA[EventDispatcherInterface]]></code>
-      <code><![CDATA[EventDispatcherInterface]]></code>
-    </UndefinedClass>
-  </file>
-  <file src="src/Framework/Config/ConfigReader/PhpConfigReader.php">
-    <UndefinedTrait>
-      <code><![CDATA[EventDispatchingCapabilities]]></code>
-    </UndefinedTrait>
-  </file>
-  <file src="src/Framework/Container/Container.php">
-    <MissingClosureReturnType>
-      <code><![CDATA[static function () use ($lazyFactory, $container) {]]></code>
-    </MissingClosureReturnType>
-  </file>
-  <file src="src/Framework/ServiceResolver/DocBlockResolverCache.php">
-    <UndefinedTrait>
-      <code><![CDATA[EventDispatchingCapabilities]]></code>
-    </UndefinedTrait>
   </file>
 </files>

@@ -9,7 +9,6 @@ use ReflectionClass;
 
 use Throwable;
 
-use function count;
 use function in_array;
 
 final class DependencyAnalyzer
@@ -173,7 +172,7 @@ final class DependencyAnalyzer
         $visited[] = $moduleName;
         $dependencies = $this->extractModuleDependencies($module, $moduleMap);
 
-        if (count($dependencies) === 0) {
+        if ($dependencies === []) {
             return 0;
         }
 

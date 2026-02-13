@@ -17,7 +17,7 @@ interface ModuleDependenciesInterface
      * Returns an array of fully-qualified class names of facades
      * that this module depends on.
      *
-     * @return array<class-string<AbstractFacade>> List of facade class names
+     * @return array<class-string<AbstractFacade<AbstractFactory<AbstractConfig>>>> List of facade class names
      */
     public function dependencies(): array;
 }

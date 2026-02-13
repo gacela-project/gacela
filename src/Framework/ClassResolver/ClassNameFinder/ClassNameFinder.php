@@ -7,25 +7,18 @@ namespace Gacela\Framework\ClassResolver\ClassNameFinder;
 use Gacela\Framework\ClassResolver\Cache\CacheInterface;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\Rule\FinderRuleInterface;
-use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameCachedFoundEvent;
-use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameInvalidCandidateFoundEvent;
-use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameNotFoundEvent;
-use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameValidCandidateFoundEvent;
-use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 final class ClassNameFinder implements ClassNameFinderInterface
 {
-    use EventDispatchingCapabilities;
-
     /**
      * @param list<FinderRuleInterface> $finderRules
      * @param list<string> $projectNamespaces
      */
     public function __construct(
-        private ClassValidatorInterface $classValidator,
-        private array $finderRules,
-        private CacheInterface $cache,
-        private array $projectNamespaces,
+        private readonly ClassValidatorInterface $classValidator,
+        private readonly array $finderRules,
+        private readonly CacheInterface $cache,
+        private readonly array $projectNamespaces,
     ) {
     }
 
@@ -39,10 +32,7 @@ final class ClassNameFinder implements ClassNameFinderInterface
         $cacheKey = $classInfo->getCacheKey();
 
         if ($this->cache->has($cacheKey)) {
-            $cached = $this->cache->get($cacheKey);
-            self::dispatchEvent(new ClassNameCachedFoundEvent($cacheKey, $cached));
-
-            return $cached;
+            return $this->cache->get($cacheKey);
         }
 
         $projectNamespaces = $this->projectNamespaces;
@@ -55,17 +45,12 @@ final class ClassNameFinder implements ClassNameFinderInterface
 
                     if ($this->classValidator->isClassNameValid($className)) {
                         $this->cache->put($cacheKey, $className);
-                        self::dispatchEvent(new ClassNameValidCandidateFoundEvent($className));
 
                         return $className;
                     }
-
-                    self::dispatchEvent(new ClassNameInvalidCandidateFoundEvent($className));
                 }
             }
         }
-
-        self::dispatchEvent(new ClassNameNotFoundEvent($classInfo, $resolvableTypes));
 
         return null;
     }

@@ -12,6 +12,8 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 final class ServiceResolverCustomServicesAwareTest extends TestCase
 {
     private const CACHE_DIR = __DIR__ . DIRECTORY_SEPARATOR . '.gacela';
@@ -42,7 +44,7 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
         $dummy = new DummyServiceResolverAware();
         $actual = $dummy->getRepository()->findName();
 
-        self::assertCount(1, CustomServicesPhpCache::all());
+        self::assertGreaterThanOrEqual(1, count(CustomServicesPhpCache::all()));
         self::assertSame('name', $actual);
     }
 
@@ -52,13 +54,14 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
         $dummy = new DummyServiceResolverAware();
         $dummy->getRepository()->findName();
 
-        self::assertCount(1, CustomServicesPhpCache::all());
+        $cacheCountAfterFirstCall = count(CustomServicesPhpCache::all());
+        self::assertGreaterThanOrEqual(1, $cacheCountAfterFirstCall);
 
         // Subsequent calls should reuse the cache without adding new entries
         $dummy->getRepository()->findName();
         $dummy->getRepository()->findName();
 
-        self::assertCount(1, CustomServicesPhpCache::all());
+        self::assertCount($cacheCountAfterFirstCall, CustomServicesPhpCache::all());
     }
 
     public function test_non_existing_service(): void

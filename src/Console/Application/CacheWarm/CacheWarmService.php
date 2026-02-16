@@ -6,6 +6,9 @@ namespace Gacela\Console\Application\CacheWarm;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\ServiceResolver\DocBlockResolver;
+use ReflectionClass;
+use ReflectionMethod;
 use Throwable;
 
 use function array_filter;
@@ -77,5 +80,48 @@ final class CacheWarmService
         }
 
         class_exists($className, true);
+    }
+
+    /**
+     * Pre-warm the attribute cache by scanning all methods that might use ServiceMap attributes.
+     *
+     * @param class-string $className
+     */
+    public function warmAttributeCache(string $className): void
+    {
+        if (!class_exists($className)) {
+            return;
+        }
+
+        try {
+            $reflectionClass = new ReflectionClass($className);
+            $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
+
+            // Create a DocBlockResolver instance to cache attribute resolutions
+            $docBlockResolver = DocBlockResolver::fromClassName($className);
+
+            // Common method patterns that typically use ServiceMap
+            $commonMethodPrefixes = ['get', 'create', 'find', 'build'];
+
+            foreach ($methods as $method) {
+                $methodName = $method->getName();
+
+                // Skip magic methods and constructors
+                if (str_starts_with($methodName, '__')) {
+                    continue;
+                }
+
+                // Check if method matches common service retrieval patterns
+                foreach ($commonMethodPrefixes as $prefix) {
+                    if (str_starts_with($methodName, $prefix)) {
+                        // This will trigger attribute resolution and caching
+                        $docBlockResolver->getDocBlockResolvable($methodName);
+                        break;
+                    }
+                }
+            }
+        } catch (Throwable) {
+            // Silently skip classes that can't be reflected or resolved
+        }
     }
 }

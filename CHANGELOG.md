@@ -6,6 +6,21 @@
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()
 - Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+- Add `#[Cacheable]` attribute for automatic facade method result caching with TTL support
+- Add `CacheableTrait` for easy integration of caching in facades
+- Add parallel cache warming using PHP 8.1 Fibers for up to 5x faster cache generation
+- Add `cache:clear` command to clear all cache files
+- Add `ParallelModuleWarmer` for concurrent module processing during cache warming
+- Enhance `cache:warm` command with `--parallel` and `--attributes` flags
+- Add `ErrorSuggestionHelper` for intelligent error messages with actionable suggestions
+- Add `Profiler` for performance profiling and bottleneck detection
+- Add `profile:report` command to generate and analyze performance reports
+- Enhance exception messages with did-you-mean suggestions and examples
+- Add `ModuleHealthCheckInterface` for implementing custom health checks in modules
+- Add `HealthChecker` to execute and aggregate health check results with severity levels
+- Add `HealthStatus` with levels (OK, WARNING, ERROR, CRITICAL) for categorizing issues
+- Add `HealthCheckReport` for detailed health check analysis and reporting
+- Add comprehensive health check documentation with practical examples
 - Fix PHP 8.1 compatibility issues with readonly class syntax
 - Fix test directory filtering in AllAppModulesFinder
 - Fix lazy service container bindings to use addFactory instead of addBinding

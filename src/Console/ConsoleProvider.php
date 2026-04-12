@@ -7,6 +7,7 @@ namespace Gacela\Console;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
+use Gacela\Console\Infrastructure\Command\DoctorCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
@@ -40,6 +41,7 @@ final class ConsoleProvider extends AbstractProvider
             new CacheWarmCommand(),
             new ValidateConfigCommand(),
             new ProfileReportCommand(),
+            new DoctorCommand(),
         ]);
     }
 

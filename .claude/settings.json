@@ -1,0 +1,61 @@
+{
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "includeCoAuthoredBy": false,
+    "permissions": {
+        "allow": [
+            "Bash(composer *)",
+            "Bash(./vendor/bin/*)",
+            "Bash(./bin/gacela *)",
+            "Bash(git *)",
+            "Bash(gh *)",
+            "Bash(timeout *)",
+            "Bash(ls *)",
+            "Bash(wc *)"
+        ],
+        "deny": [
+            "Bash(rm -rf:*)",
+            "Bash(rm -fr:*)",
+            "Bash(sudo:*)",
+            "Bash(shutdown:*)",
+            "Bash(reboot:*)",
+            "Bash(mkfs:*)"
+        ]
+    },
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": ".claude/hooks/format-php.sh",
+                        "timeout": 30
+                    }
+                ]
+            }
+        ],
+        "PreToolUse": [
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": ".claude/hooks/protect-files.sh",
+                        "timeout": 5
+                    }
+                ]
+            }
+        ],
+        "SessionStart": [
+            {
+                "matcher": "compact",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": ".claude/hooks/compact-context.sh"
+                    }
+                ]
+            }
+        ]
+    }
+}

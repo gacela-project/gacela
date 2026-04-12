@@ -1,5 +1,5 @@
 .idea/
-.claude/
+.claude/settings.local.json
 .gacela/
 .vscode/
 .phpbench/

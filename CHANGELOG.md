@@ -21,6 +21,7 @@
 - Add `HealthStatus` with levels (OK, WARNING, ERROR, CRITICAL) for categorizing issues
 - Add `HealthCheckReport` for detailed health check analysis and reporting
 - Add comprehensive health check documentation with practical examples
+- Add `doctor` command aggregating environmental and wiring health checks (cache staleness, suffix mismatches) with per-check remediation hints
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

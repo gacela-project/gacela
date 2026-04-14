@@ -115,10 +115,26 @@ final class Locator implements LocatorInterface
         $instance = $this->get($className);
 
         if ($instance === null) {
-            throw new ServiceNotFoundException($className);
+            throw new ServiceNotFoundException($className, $this->knownServiceNames());
         }
 
         return $instance;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function knownServiceNames(): array
+    {
+        $names = $this->container->getRegisteredServices();
+
+        if ($this->container instanceof Container) {
+            foreach (array_keys($this->container->getBindings()) as $binding) {
+                $names[] = $binding;
+            }
+        }
+
+        return array_values(array_unique($names));
     }
 
     /**

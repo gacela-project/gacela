@@ -101,4 +101,22 @@ final class LocatorTest extends TestCase
 
         self::assertEquals(new StringValue('from-container'), $singleton);
     }
+
+    public function test_get_required_suggests_similar_service_when_typo(): void
+    {
+        $container = new Container(bindings: [
+            StringValue::class => new StringValue('registered'),
+        ]);
+
+        /** @var class-string $typo */
+        $typo = 'GacelaTest\\Fixtures\\StringValu';
+
+        try {
+            Locator::getInstance($container)->getRequired($typo);
+            self::fail('Expected ServiceNotFoundException');
+        } catch (ServiceNotFoundException $e) {
+            self::assertStringContainsString('Did you mean?', $e->getMessage());
+            self::assertStringContainsString(StringValue::class, $e->getMessage());
+        }
+    }
 }

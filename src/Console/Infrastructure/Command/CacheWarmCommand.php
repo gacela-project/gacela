@@ -135,6 +135,8 @@ final class CacheWarmCommand extends Command
                 }
             }
 
+            $cacheWarmService->warmClassResolution($module->facadeClass());
+
             $formatter->writeEmptyLine();
         }
 

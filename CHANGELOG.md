@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `cache:warm` now eagerly resolves each module's Factory, Config, and Provider through Gacela's class resolvers so the `ClassNamePhpCache` is populated at warm time — first requests skip the cold `namespaces × rules × types × class_exists` lookup
 - Add contextual bindings via GacelaConfig::when()
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()

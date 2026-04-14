@@ -2,28 +2,40 @@
 
 ## Unreleased
 
-- `cache:warm` now eagerly resolves each module's Factory, Config, and Provider through Gacela's class resolvers so the `ClassNamePhpCache` is populated at warm time — first requests skip the cold `namespaces × rules × types × class_exists` lookup
-- Add `MergedConfigCache` to persist the merged file-based config values to disk so bootstraps skip globbing and parsing configuration files; produced by `cache:warm`, removed by `cache:clear`, and keyed per `APP_ENV`
-- Add contextual bindings via GacelaConfig::when()
-- Add service aliases via GacelaConfig::addAlias()
-- Add protected services via GacelaConfig::addProtected()
-- Add `Gacela::getRequired()` and `Locator::getRequired()` methods for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
-- Add `#[Cacheable]` attribute for automatic facade method result caching with TTL support
-- Add `CacheableTrait` for easy integration of caching in facades
-- Add parallel cache warming using PHP 8.1 Fibers for up to 5x faster cache generation
-- Add `cache:clear` command to clear all cache files
-- Add `ParallelModuleWarmer` for concurrent module processing during cache warming
-- Enhance `cache:warm` command with `--parallel` and `--attributes` flags
-- Add `ErrorSuggestionHelper` for intelligent error messages with actionable suggestions
-- Add `Profiler` for performance profiling and bottleneck detection
-- Add `profile:report` command to generate and analyze performance reports
-- Enhance exception messages with did-you-mean suggestions and examples
-- Add `ModuleHealthCheckInterface` for implementing custom health checks in modules
-- Add `HealthChecker` to execute and aggregate health check results with severity levels
-- Add `HealthStatus` with levels (OK, WARNING, ERROR, CRITICAL) for categorizing issues
-- Add `HealthCheckReport` for detailed health check analysis and reporting
-- Add comprehensive health check documentation with practical examples
-- Add `doctor` command aggregating environmental and wiring health checks (cache staleness, suffix mismatches) with per-check remediation hints
+### Added
+
+#### Commands
+
+- `cache:clear` command to remove all Gacela cache files
+- `cache:warm --parallel` flag for parallel cache warming via PHP 8.1 Fibers, up to 5× faster
+- `cache:warm --attributes` flag to pre-scan and cache `#[ServiceMap]` attributes
+- `doctor` command aggregating environmental and wiring health checks (cache staleness, suffix mismatches) with per-check remediation hints
+- `profile:report` command to generate and analyze performance reports
+
+#### Dependency injection
+
+- Contextual bindings via `GacelaConfig::when()`
+- Service aliases via `GacelaConfig::addAlias()`
+- Protected services via `GacelaConfig::addProtected()`
+- `Gacela::getRequired()` and `Locator::getRequired()` for type-safe service resolution that throws `ServiceNotFoundException` instead of returning null
+
+#### Facades
+
+- `#[Cacheable]` attribute and `CacheableTrait` for automatic facade-method result caching with TTL
+
+#### Observability
+
+- `Profiler` for performance profiling and bottleneck detection
+- Custom per-module health checks via `ModuleHealthCheckInterface`, `HealthChecker`, `HealthStatus` (OK / WARNING / ERROR / CRITICAL), and `HealthCheckReport`
+
+### Changed
+
+- Exception messages now include did-you-mean suggestions and actionable examples via `ErrorSuggestionHelper`
+
+### Performance
+
+- Persist the merged file-based config to disk via `MergedConfigCache` so bootstraps skip globbing and parsing configuration files; produced by `cache:warm`, removed by `cache:clear`, keyed per `APP_ENV`
+- `cache:warm` now pre-populates the `ClassNamePhpCache` by running Gacela's resolvers against each module's Facade, so first requests skip the cold `namespaces × rules × types × class_exists` lookup in `ClassNameFinder`
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

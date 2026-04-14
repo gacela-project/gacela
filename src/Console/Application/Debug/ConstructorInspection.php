@@ -53,6 +53,7 @@ final class ConstructorInspection
                 $result[] = $parameter;
             }
         }
+
         return $result;
     }
 }

@@ -21,10 +21,15 @@ final class Container extends GacelaContainer implements ContainerInterface
         );
     }
 
+    public function getLocator(): LocatorInterface
+    {
+        return Locator::getInstance($this);
+    }
+
     /**
      * @param array<class-string,class-string|object|callable> $bindings
      */
-    public static function withContainerConfiguration(
+    private static function withContainerConfiguration(
         ContainerConfigurationInterface $containerConfig,
         array $bindings,
     ): self {
@@ -58,10 +63,5 @@ final class Container extends GacelaContainer implements ContainerInterface
         }
 
         return $container;
-    }
-
-    public function getLocator(): LocatorInterface
-    {
-        return Locator::getInstance($this);
     }
 }

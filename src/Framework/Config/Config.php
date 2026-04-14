@@ -233,9 +233,7 @@ final class Config implements ConfigInterface
             return $appRoot . $cacheDir;
         }
 
-        return $appRoot
-            . DIRECTORY_SEPARATOR
-            . ltrim($cacheDir, DIRECTORY_SEPARATOR);
+        return $appRoot . DIRECTORY_SEPARATOR . $cacheDir;
     }
 
     /**

@@ -156,9 +156,14 @@ final class DebugModulesCommand extends Command
         $pillars = [$module->facadeClass()];
 
         foreach ($this->pillarsBySuffix($module) as $pillar) {
-            if ($pillar === null || !class_exists($pillar)) {
+            if ($pillar === null) {
                 continue;
             }
+
+            if (!class_exists($pillar)) {
+                continue;
+            }
+
             $pillars[] = $pillar;
         }
 

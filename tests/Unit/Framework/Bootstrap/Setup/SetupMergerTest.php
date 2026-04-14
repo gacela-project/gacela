@@ -206,6 +206,41 @@ final class SetupMergerTest extends TestCase
         self::assertSame('RedisCache', $contextualBindings[stdClass::class]['CacheInterface']);
     }
 
+    public function test_merge_gacela_configs_to_extend_skipped_when_other_has_no_changes(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->extendGacelaConfig(\Fixtures\CustomGacelaConfig::class);
+        });
+        $setup2 = new SetupGacela();
+
+        $merged = $setup1->merge($setup2);
+
+        self::assertSame(
+            [\Fixtures\CustomGacelaConfig::class],
+            $merged->getGacelaConfigsToExtend(),
+        );
+    }
+
+    public function test_merge_gacela_configs_to_extend_applied_when_other_has_changes(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->extendGacelaConfig(\Fixtures\CustomGacelaConfig::class);
+        });
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->extendGacelaConfig(\GacelaTest\Unit\Framework\Bootstrap\AnotherSetupFixtureConfig::class);
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        self::assertSame(
+            [
+                \Fixtures\CustomGacelaConfig::class,
+                \GacelaTest\Unit\Framework\Bootstrap\AnotherSetupFixtureConfig::class,
+            ],
+            $merged->getGacelaConfigsToExtend(),
+        );
+    }
+
     public function test_merge_contextual_bindings_later_values_override_earlier(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

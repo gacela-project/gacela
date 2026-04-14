@@ -9,7 +9,6 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-use function count;
 use function file_put_contents;
 use function glob;
 use function is_dir;
@@ -42,6 +41,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
                 unlink($blocker);
             }
         }
+
         $this->blockerFiles = [];
     }
 
@@ -71,6 +71,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
     {
         $cache = new TestPhpFileCache($this->cacheDir);
         $cache->put('key', 'A');
+
         $firstContent = file_get_contents($this->cacheFile());
         $firstMtime = filemtime($this->cacheFile());
 
@@ -94,6 +95,22 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         $cache2 = new TestPhpFileCache($this->cacheDir);
 
         self::assertSame(['persisted' => 'ClassP'], $cache2->getAll());
+    }
+
+    public function test_constructor_loads_every_persisted_entry_not_just_the_first(): void
+    {
+        $cache1 = new TestPhpFileCache($this->cacheDir);
+        $cache1->put('first', 'ClassOne');
+        $cache1->put('second', 'ClassTwo');
+        $cache1->put('third', 'ClassThree');
+        TestPhpFileCache::clearStaticCache();
+
+        $cache2 = new TestPhpFileCache($this->cacheDir);
+
+        self::assertSame(
+            ['first' => 'ClassOne', 'second' => 'ClassTwo', 'third' => 'ClassThree'],
+            $cache2->getAll(),
+        );
     }
 
     public function test_constructor_throws_when_cache_directory_cannot_be_created(): void
@@ -151,6 +168,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
     {
         $cache = new TestPhpFileCache($this->cacheDir);
         $cache->put('key1', 'ClassA');
+
         $contentBefore = file_get_contents($this->cacheFile());
 
         AbstractPhpFileCache::commitBatch();
@@ -166,6 +184,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         for ($i = 0; $i < 50; ++$i) {
             $cache->put('key' . $i, 'ClassX');
         }
+
         AbstractPhpFileCache::commitBatch();
 
         $leftovers = glob($this->cacheDir . '/*.tmp') ?: [];
@@ -239,7 +258,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
             }
         }
 
-        if (count(glob($dir . '/*') ?: []) === 0) {
+        if ((glob($dir . '/*') ?: []) === []) {
             rmdir($dir);
         }
     }

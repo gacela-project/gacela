@@ -35,6 +35,7 @@ final class MergedConfigCacheTest extends TestCase
                 unlink($blocker);
             }
         }
+
         $this->blockerFiles = [];
     }
 
@@ -157,6 +158,7 @@ final class MergedConfigCacheTest extends TestCase
         foreach (glob($this->cacheDir . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
             @unlink($file);
         }
+
         @rmdir($this->cacheDir);
     }
 }

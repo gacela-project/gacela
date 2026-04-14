@@ -65,6 +65,11 @@ final class HealthCheckerTest extends TestCase
         self::assertTrue($status->isUnhealthy());
         self::assertStringContainsString('Health check failed', $status->message);
         self::assertArrayHasKey('exception', $status->metadata);
+        self::assertArrayHasKey('file', $status->metadata);
+        self::assertArrayHasKey('line', $status->metadata);
+        self::assertSame(Exception::class, $status->metadata['exception']);
+        self::assertIsString($status->metadata['file']);
+        self::assertIsInt($status->metadata['line']);
     }
 
     public function test_count_returns_number_of_checks(): void

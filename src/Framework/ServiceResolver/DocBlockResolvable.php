@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ServiceResolver;
 
+use function sprintf;
+
 final class DocBlockResolvable
 {
     /** @var class-string */
@@ -17,7 +19,7 @@ final class DocBlockResolvable
         private readonly string $resolvableType,
     ) {
         /** @psalm-suppress PropertyTypeCoercion */
-        $this->className = '\\' . ltrim($className, '\\'); // @phpstan-ignore-line
+        $this->className = sprintf('\\%s', ltrim($className, '\\')); // @phpstan-ignore-line
     }
 
     /**

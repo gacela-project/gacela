@@ -96,7 +96,9 @@ final class ClassInfo implements ClassInfoInterface
 
         $callerFullNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
 
-        $callerModuleNamespace = substr($callerFullNamespace, 0, (int)strrpos($callerFullNamespace, '\\'));
+        $namespaceParts = explode('\\', $callerFullNamespace);
+        array_pop($namespaceParts);
+        $callerModuleNamespace = implode('\\', $namespaceParts);
         /**
          * @psalm-suppress InvalidArrayOffset
          *
@@ -114,12 +116,16 @@ final class ClassInfo implements ClassInfoInterface
     private static function normalizeFilename(string $filepath): string
     {
         $filename = basename($filepath);
-        $filename = substr($filename, 0, (int)strpos($filename, ':'));
+        $colonPos = strpos($filename, ':');
+        if ($colonPos !== false) {
+            $filename = substr($filename, 0, $colonPos);
+        }
 
-        if (false === ($pos = strpos($filename, '.'))) {
+        $dotPos = strpos($filename, '.');
+        if ($dotPos === false) {
             return $filename;
         }
 
-        return substr($filename, 0, $pos);
+        return substr($filename, 0, $dotPos);
     }
 }

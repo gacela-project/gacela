@@ -94,7 +94,7 @@ final class ConstructorInspector
 
     private function renderType(?ReflectionType $type): string
     {
-        if ($type === null) {
+        if (!$type instanceof ReflectionType) {
             return 'mixed';
         }
 

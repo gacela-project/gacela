@@ -11,6 +11,8 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 final class ClassResolverCacheTest extends TestCase
 {
     protected function setUp(): void
@@ -152,5 +154,48 @@ final class ClassResolverCacheTest extends TestCase
 
         // Old key should not exist in new cache
         self::assertFalse($newCache->has('temp-key'));
+    }
+
+    public function test_second_get_cache_dispatches_class_name_cache_cached_event(): void
+    {
+        $events = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$events): void {
+            $config->resetInMemoryCache();
+            $config->registerGenericListener(static function (\Gacela\Framework\Event\GacelaEventInterface $event) use (&$events): void {
+                $events[] = $event;
+            });
+        });
+
+        ClassResolverCache::getCache();
+        ClassResolverCache::getCache();
+
+        $cachedEvents = array_filter(
+            $events,
+            static fn ($event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\Cache\ClassNameCacheCachedEvent,
+        );
+        self::assertGreaterThanOrEqual(1, count($cachedEvents));
+    }
+
+    public function test_get_cache_dispatches_php_cache_created_event_when_file_cache_enabled(): void
+    {
+        Config::resetInstance();
+        ClassResolverCache::resetCache();
+        \Gacela\Framework\ClassResolver\Cache\GacelaFileCache::resetCache();
+
+        $events = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$events): void {
+            $config->setFileCache(true, sys_get_temp_dir() . '/class-resolver-cache-' . uniqid('', true));
+            $config->registerGenericListener(static function (\Gacela\Framework\Event\GacelaEventInterface $event) use (&$events): void {
+                $events[] = $event;
+            });
+        });
+
+        ClassResolverCache::getCache();
+
+        $created = array_filter(
+            $events,
+            static fn ($event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent,
+        );
+        self::assertCount(1, $created, 'file-cache branch must dispatch ClassNamePhpCacheCreatedEvent');
     }
 }

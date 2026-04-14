@@ -60,6 +60,7 @@ final class CacheWarmServiceTest extends TestCase
         $service = new CacheWarmService(new ConsoleFacade());
 
         $service->warmClassResolution(Module1Facade::class);
+
         $firstRun = ClassNamePhpCache::all();
 
         $service->warmClassResolution(Module1Facade::class);

@@ -11,11 +11,7 @@ final class ClassValidator implements ClassValidatorInterface
 
     public function isClassNameValid(string $className): bool
     {
-        if (isset(self::$existsCache[$className])) {
-            return self::$existsCache[$className];
-        }
-
-        return self::$existsCache[$className] = class_exists($className);
+        return self::$existsCache[$className] ?? (self::$existsCache[$className] = class_exists($className));
     }
 
     public static function resetCache(): void

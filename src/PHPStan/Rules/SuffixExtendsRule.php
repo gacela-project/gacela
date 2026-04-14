@@ -40,8 +40,9 @@ final class SuffixExtendsRule implements Rule
         }
 
         $className = $classReflection->getName();
-        $pos = strrpos($className, '\\');
-        $shortName = $pos === false ? $className : substr($className, $pos + 1);
+        $parts = explode('\\', $className);
+        /** @var string $shortName */
+        $shortName = end($parts);
 
         if (!str_ends_with($shortName, $this->suffix)) {
             return [];

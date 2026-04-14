@@ -44,6 +44,10 @@
 - Share `ReflectionClass` instances between `DocBlockResolver` and `CacheWarmService` via a `ReflectionClassPool` to avoid re-reflecting the same class
 - `cache:warm` batches `AbstractPhpFileCache` writes via new `beginBatch()`/`commitBatch()` and flushes with an atomic `rename()` so a single file write replaces the previous _N modules × 4 resolvers_ full-file rewrites. Also removes the risk of a half-written cache file if the warm process is interrupted mid-write
 
+### Documentation
+
+- Trimmed README and docs for clarity; added `docs/README.md` as a navigable index
+
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 
 - Renamed `DocBlockResolver` to `ServiceResolver` to better reflect its purpose

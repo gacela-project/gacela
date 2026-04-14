@@ -17,4 +17,5 @@ tests/**/Users/
 gacela-local.php
 gacela-custom-services.php
 gacela-class-names.php
+.gacelagacela-*.php
 mutation-report.html

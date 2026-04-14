@@ -40,6 +40,7 @@
 - `cache:warm` now pre-populates the `ClassNamePhpCache` by running Gacela's resolvers against each module's Facade, so first requests skip the cold `namespaces × rules × types × class_exists` lookup in `ClassNameFinder`
 - `ClassValidator` memoizes `class_exists()` results so repeated candidate lookups across `namespaces × rules × types` reuse the autoloader probe within a request
 - Share `ReflectionClass` instances between `DocBlockResolver` and `CacheWarmService` via a `ReflectionClassPool` to avoid re-reflecting the same class
+- `cache:warm` batches `AbstractPhpFileCache` writes via new `beginBatch()`/`commitBatch()` and flushes with an atomic `rename()` so a single file write replaces the previous _N modules × 4 resolvers_ full-file rewrites. Also removes the risk of a half-written cache file if the warm process is interrupted mid-write
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

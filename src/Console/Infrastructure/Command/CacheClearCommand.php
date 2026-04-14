@@ -6,11 +6,13 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\CacheWarm\CacheManager;
 use Gacela\Console\ConsoleFacade;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function file_exists;
 use function sprintf;
 
 /**
@@ -30,25 +32,40 @@ final class CacheClearCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $cacheManager = new CacheManager();
+        $config = Config::getInstance();
+        $mergedConfigCacheFile = $config->mergedConfigCacheFilename();
+        $mergedConfigCacheExists = file_exists($mergedConfigCacheFile);
 
         $output->writeln('<info>Clearing Gacela cache...</info>');
         $output->writeln('');
 
-        if (!$cacheManager->cacheFileExists()) {
+        if (!$cacheManager->cacheFileExists() && !$mergedConfigCacheExists) {
             $output->writeln('<comment>No cache files found.</comment>');
             return Command::SUCCESS;
         }
 
-        $cacheFile = $cacheManager->getCacheFilePath();
-        $cacheSize = $cacheManager->getFormattedCacheFileSize();
+        if ($cacheManager->cacheFileExists()) {
+            $cacheFile = $cacheManager->getCacheFilePath();
+            $cacheSize = $cacheManager->getFormattedCacheFileSize();
 
-        $cacheManager->clearCache();
+            $cacheManager->clearCache();
 
-        $output->writeln(sprintf(
-            '<info>✓</info> Cleared cache file: <comment>%s</comment> (<comment>%s</comment>)',
-            $cacheFile,
-            $cacheSize,
-        ));
+            $output->writeln(sprintf(
+                '<info>✓</info> Cleared cache file: <comment>%s</comment> (<comment>%s</comment>)',
+                $cacheFile,
+                $cacheSize,
+            ));
+        }
+
+        if ($mergedConfigCacheExists) {
+            $config->clearMergedConfigCache();
+
+            $output->writeln(sprintf(
+                '<info>✓</info> Cleared merged config cache: <comment>%s</comment>',
+                $mergedConfigCacheFile,
+            ));
+        }
+
         $output->writeln('');
         $output->writeln('<info>Cache cleared successfully!</info>');
 

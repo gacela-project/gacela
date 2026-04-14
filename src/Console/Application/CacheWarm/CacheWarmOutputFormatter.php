@@ -96,6 +96,13 @@ final class CacheWarmOutputFormatter
         $this->output->writeln('');
     }
 
+    public function writeMergedConfigCacheInfo(string $cacheFile, string $cacheSize): void
+    {
+        $this->output->writeln(sprintf('<fg=cyan>Merged config cache:</> %s', $cacheFile));
+        $this->output->writeln(sprintf('<fg=cyan>Merged config size:</> %s', $cacheSize));
+        $this->output->writeln('');
+    }
+
     public function writeCacheWarning(): void
     {
         $this->output->writeln('<fg=yellow>Warning: Cache file was not created. File caching might be disabled.</>');

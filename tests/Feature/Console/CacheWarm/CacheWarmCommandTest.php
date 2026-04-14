@@ -22,6 +22,8 @@ final class CacheWarmCommandTest extends TestCase
 
     private string $cacheFile;
 
+    private string $mergedConfigCacheFile;
+
     protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
@@ -30,21 +32,16 @@ final class CacheWarmCommandTest extends TestCase
         });
 
         $this->cacheFile = Config::getInstance()->getCacheDir() . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
+        $this->mergedConfigCacheFile = Config::getInstance()->mergedConfigCacheFilename();
 
-        // Clean up cache file before test
-        if (file_exists($this->cacheFile)) {
-            unlink($this->cacheFile);
-        }
+        $this->removeGeneratedCaches();
 
         $this->command = new CommandTester(new CacheWarmCommand());
     }
 
     protected function tearDown(): void
     {
-        // Clean up cache file after test
-        if (file_exists($this->cacheFile)) {
-            unlink($this->cacheFile);
-        }
+        $this->removeGeneratedCaches();
     }
 
     public function test_cache_warm_creates_cache_file(): void
@@ -164,5 +161,16 @@ final class CacheWarmCommandTest extends TestCase
         self::assertStringContainsString('Cache warming complete!', $output);
         self::assertMatchesRegularExpression('/Time taken:\s+[\d.]+\s+seconds/', $output);
         self::assertSame(0, $this->command->getStatusCode());
+    }
+
+    private function removeGeneratedCaches(): void
+    {
+        if (file_exists($this->cacheFile)) {
+            unlink($this->cacheFile);
+        }
+
+        if (file_exists($this->mergedConfigCacheFile)) {
+            unlink($this->mergedConfigCacheFile);
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `MergedConfigCache` to persist the merged file-based config values to disk so bootstraps skip globbing and parsing configuration files; produced by `cache:warm`, removed by `cache:clear`, and keyed per `APP_ENV`
 - Add contextual bindings via GacelaConfig::when()
 - Add service aliases via GacelaConfig::addAlias()
 - Add protected services via GacelaConfig::addProtected()

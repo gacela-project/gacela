@@ -10,6 +10,7 @@ use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
 
 use function array_key_exists;
+use function is_string;
 
 final class Config implements ConfigInterface
 {
@@ -98,9 +99,39 @@ final class Config implements ConfigInterface
 
         /** @psalm-suppress DuplicateArrayKey */
         $this->config = [
-            ...$this->loadAllConfigValues(),
+            ...$this->loadMergedConfigValues(),
             ...$this->setup->getConfigKeyValues(),
         ];
+    }
+
+    /**
+     * @internal persist the merged file-based config values to disk so future
+     *           bootstraps skip globbing and parsing configuration files
+     *
+     * @throws ConfigException
+     */
+    public function writeMergedConfigCache(): string
+    {
+        $cache = $this->createMergedConfigCache();
+        $cache->write($this->loadAllConfigValues());
+
+        return $cache->filename();
+    }
+
+    /**
+     * @internal
+     */
+    public function clearMergedConfigCache(): void
+    {
+        $this->createMergedConfigCache()->clear();
+    }
+
+    /**
+     * @internal
+     */
+    public function mergedConfigCacheFilename(): string
+    {
+        return $this->createMergedConfigCache()->filename();
     }
 
     public function setAppRootDir(string $dir): self
@@ -153,6 +184,32 @@ final class Config implements ConfigInterface
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
+    }
+
+    /**
+     * @throws ConfigException
+     *
+     * @return array<string,mixed>
+     */
+    private function loadMergedConfigValues(): array
+    {
+        $cache = $this->createMergedConfigCache();
+
+        if ($this->setup->isFileCacheEnabled() && $cache->exists()) {
+            return $cache->load();
+        }
+
+        return $this->loadAllConfigValues();
+    }
+
+    private function createMergedConfigCache(): MergedConfigCache
+    {
+        $env = getenv('APP_ENV');
+
+        return new MergedConfigCache(
+            $this->getCacheDir(),
+            is_string($env) ? $env : '',
+        );
     }
 
     private function getDefaultCacheDir(): string

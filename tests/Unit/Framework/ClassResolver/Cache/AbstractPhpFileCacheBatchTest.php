@@ -117,6 +117,18 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         self::assertFileDoesNotExist($this->classNameFile());
     }
 
+    public function test_put_still_works_after_clear_static_cache_on_existing_instance(): void
+    {
+        $cache = new TestPhpFileCache($this->cacheDir);
+
+        TestPhpFileCache::clearStaticCache();
+
+        $cache->put('survivor', 'ClassZ');
+
+        self::assertFileExists($this->cacheFile());
+        self::assertSame(['survivor' => 'ClassZ'], require $this->cacheFile());
+    }
+
     private function cacheFile(): string
     {
         return $this->cacheDir . '/' . TestPhpFileCache::FILENAME;

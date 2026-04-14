@@ -46,12 +46,19 @@ abstract class AbstractPhpFileCache implements CacheInterface
      * Clears this class's in-memory cache entries and any shared batch state.
      * Intended for tests to ensure isolation across runs in the same PHP process.
      *
+     * The filename registry is intentionally preserved: the absolute cache file
+     * path is a deterministic function of the cache directory and subclass, so
+     * it stays valid across clear/reconstruct cycles. Dropping it here would
+     * strand any already-constructed instance held by an outer cache holder
+     * (e.g. ClassResolverCache::$cache) without a way to recover the filename
+     * on a subsequent put().
+     *
      * @internal
      */
     public static function clearStaticCache(): void
     {
         self::$cache[static::class] = [];
-        unset(self::$filenames[static::class], self::$dirty[static::class]);
+        unset(self::$dirty[static::class]);
         self::$batching = false;
     }
 

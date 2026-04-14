@@ -28,3 +28,17 @@ services:
         arguments:
             suffix: Config
             expectedParent: Gacela\Framework\AbstractConfig
+    -
+        class: Gacela\PHPStan\Rules\FacadeOnlyDelegatesRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Gacela\PHPStan\Rules\FactoryDoesNotCallFacadeRule
+        tags: [phpstan.rules.rule]
+    # Opt-in: enable by passing your project's root namespace (and, if needed,
+    # how many segments beneath that root identify a module).
+    # -
+    #     class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
+    #     tags: [phpstan.rules.rule]
+    #     arguments:
+    #         rootNamespace: App\Modules
+    #         modulePathSegments: 1

@@ -12,7 +12,7 @@ use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
-use ReflectionClass;
+use Gacela\Framework\ServiceResolver\ReflectionClassPool;
 use ReflectionMethod;
 use Throwable;
 
@@ -126,7 +126,7 @@ final class CacheWarmService
         }
 
         try {
-            $reflectionClass = new ReflectionClass($className);
+            $reflectionClass = ReflectionClassPool::get($className);
             $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
 
             // Create a DocBlockResolver instance to cache attribute resolutions

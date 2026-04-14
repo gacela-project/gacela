@@ -17,10 +17,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
-use function array_filter;
 use function class_exists;
 use function sprintf;
 use function str_repeat;
+use function strlen;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -92,23 +92,50 @@ final class DebugModulesCommand extends Command
     }
 
     /**
+     * Combine what discovery reported with conventional-name probes so that a
+     * pillar class present on disk is still inspected even when its resolver
+     * would fail to instantiate it (e.g. a factory whose ctor takes an unbound
+     * dependency — exactly the failure mode we want to surface).
+     *
      * @return list<class-string>
      */
     private function existingPillarClasses(AppModule $module): array
     {
-        $candidates = [
-            $module->facadeClass(),
-            $module->factoryClass(),
-            $module->configClass(),
-            $module->providerClass(),
+        $pillars = [$module->facadeClass()];
+
+        foreach ($this->pillarsBySuffix($module) as $pillar) {
+            if ($pillar === null || !class_exists($pillar)) {
+                continue;
+            }
+            $pillars[] = $pillar;
+        }
+
+        return array_values(array_unique($pillars));
+    }
+
+    /**
+     * @return array<string, ?string>
+     */
+    private function pillarsBySuffix(AppModule $module): array
+    {
+        $facade = $module->facadeClass();
+
+        return [
+            'Factory' => $module->factoryClass() ?? $this->classByConvention($facade, 'Factory'),
+            'Config' => $module->configClass() ?? $this->classByConvention($facade, 'Config'),
+            'Provider' => $module->providerClass() ?? $this->classByConvention($facade, 'Provider'),
         ];
+    }
 
-        $pillars = array_filter(
-            $candidates,
-            static fn (?string $class): bool => $class !== null && class_exists($class),
-        );
+    private function classByConvention(string $facadeClass, string $suffix): ?string
+    {
+        if (!str_ends_with($facadeClass, 'Facade')) {
+            return null;
+        }
 
-        return array_values($pillars);
+        $candidate = substr($facadeClass, 0, -strlen('Facade')) . $suffix;
+
+        return class_exists($candidate) ? $candidate : null;
     }
 
     private function writeHeader(OutputInterface $output, string $filter): void
@@ -181,7 +208,7 @@ final class DebugModulesCommand extends Command
         ));
 
         if ($unresolvableTotal > 0) {
-            $output->writeln('<comment>Run bin/gacela debug:dependencies &lt;class&gt; for a per-class view.</comment>');
+            $output->writeln('<comment>Run bin/gacela debug:dependencies \<class> for a per-class view.</comment>');
         }
 
         $output->writeln('');

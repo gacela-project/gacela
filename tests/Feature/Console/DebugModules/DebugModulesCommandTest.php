@@ -7,6 +7,9 @@ namespace GacelaTest\Feature\Console\DebugModules;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Console\DebugModules\BrokenFixtures\BrokenModule\BrokenModuleFacade;
+use GacelaTest\Feature\Console\DebugModules\BrokenFixtures\BrokenModule\BrokenModuleFactory;
+use GacelaTest\Feature\Console\DebugModules\BrokenFixtures\BrokenModule\UnboundDependency;
 use GacelaTest\Feature\Console\DebugModules\Fixtures\GizmoModule\GizmoModuleFacade;
 use GacelaTest\Feature\Console\DebugModules\Fixtures\WidgetModule\WidgetModuleFacade;
 use GacelaTest\Feature\Console\DebugModules\Fixtures\WidgetModule\WidgetModuleFactory;
@@ -64,5 +67,24 @@ final class DebugModulesCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $exitCode);
         self::assertStringContainsString('No modules match filter', $output);
+    }
+
+    public function test_surfaces_factory_whose_resolver_would_fail(): void
+    {
+        Gacela::bootstrap(__DIR__ . '/BrokenFixtures', static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $command = new CommandTester(new DebugModulesCommand());
+        $exitCode = $command->execute([]);
+        $output = $command->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertStringContainsString(BrokenModuleFacade::class, $output);
+        self::assertStringContainsString(BrokenModuleFactory::class, $output);
+        self::assertStringContainsString('$dependency', $output);
+        self::assertStringContainsString(UnboundDependency::class, $output);
+        self::assertStringContainsString('interface, no binding', $output);
+        self::assertStringContainsString('1 unresolvable', $output);
     }
 }

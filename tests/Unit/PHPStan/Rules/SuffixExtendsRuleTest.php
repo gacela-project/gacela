@@ -222,4 +222,48 @@ final class SuffixExtendsRuleTest extends TestCase
 
         self::assertSame(Class_::class, $rule->getNodeType());
     }
+
+    public function test_short_name_is_the_full_class_when_there_is_no_namespace_separator(): void
+    {
+        // Class name without any backslash takes the `$pos === false` branch.
+        // This specifically exercises the identity check and ternary direction
+        // in `$shortName = $pos === false ? $className : substr(...)`.
+        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
+        $node = self::createStub(Class_::class);
+        $node->method('isAnonymous')->willReturn(false);
+
+        $classReflection = $this->createMock(ClassReflection::class);
+        $classReflection->method('getName')->willReturn('Facade');
+        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
+
+        $scope = self::createStub(Scope::class);
+        $scope->method('getClassReflection')->willReturn($classReflection);
+
+        $result = $rule->processNode($node, $scope);
+
+        self::assertCount(1, $result);
+        self::assertStringContainsString('Facade', $result[0]);
+    }
+
+    public function test_short_name_includes_first_character_after_the_namespace_separator(): void
+    {
+        // Class `App\Facade` must be short-named `Facade`, not `acade`. This
+        // guards against `+ 1` being mutated to `+ 2` (which would skip the
+        // `F` and make str_ends_with('acade', 'Facade') fail).
+        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
+        $node = self::createStub(Class_::class);
+        $node->method('isAnonymous')->willReturn(false);
+
+        $classReflection = $this->createMock(ClassReflection::class);
+        $classReflection->method('getName')->willReturn('App\Facade');
+        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
+
+        $scope = self::createStub(Scope::class);
+        $scope->method('getClassReflection')->willReturn($classReflection);
+
+        $result = $rule->processNode($node, $scope);
+
+        self::assertCount(1, $result);
+        self::assertStringContainsString('App\Facade', $result[0]);
+    }
 }

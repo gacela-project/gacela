@@ -7,16 +7,22 @@ namespace GacelaTest\Unit\Framework\ClassResolver\Cache;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function count;
+use function file_put_contents;
 use function glob;
 use function is_dir;
 use function sys_get_temp_dir;
 use function uniqid;
+use function unlink;
 
 final class AbstractPhpFileCacheBatchTest extends TestCase
 {
     private string $cacheDir;
+
+    /** @var list<string> */
+    private array $blockerFiles = [];
 
     protected function setUp(): void
     {
@@ -30,6 +36,85 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         TestPhpFileCache::clearStaticCache();
         ClassNamePhpCache::clearStaticCache();
         $this->removeDir($this->cacheDir);
+
+        foreach ($this->blockerFiles as $blocker) {
+            if (is_file($blocker)) {
+                unlink($blocker);
+            }
+        }
+        $this->blockerFiles = [];
+    }
+
+    public function test_is_batching_reflects_current_batch_state(): void
+    {
+        self::assertFalse(AbstractPhpFileCache::isBatching());
+
+        AbstractPhpFileCache::beginBatch();
+        self::assertTrue(AbstractPhpFileCache::isBatching());
+
+        AbstractPhpFileCache::commitBatch();
+        self::assertFalse(AbstractPhpFileCache::isBatching());
+    }
+
+    public function test_put_overwrites_existing_key_with_different_value(): void
+    {
+        $cache = new TestPhpFileCache($this->cacheDir);
+
+        $cache->put('key', 'Original');
+        $cache->put('key', 'Updated');
+
+        self::assertSame('Updated', $cache->get('key'));
+        self::assertSame(['key' => 'Updated'], require $this->cacheFile());
+    }
+
+    public function test_put_with_identical_value_does_not_rewrite_the_file(): void
+    {
+        $cache = new TestPhpFileCache($this->cacheDir);
+        $cache->put('key', 'A');
+        $firstContent = file_get_contents($this->cacheFile());
+        $firstMtime = filemtime($this->cacheFile());
+
+        // Force a detectable mtime gap on systems with second-resolution filesystems.
+        usleep(1_100_000);
+        clearstatcache(true, $this->cacheFile());
+
+        $cache->put('key', 'A');
+
+        clearstatcache(true, $this->cacheFile());
+        self::assertSame($firstContent, file_get_contents($this->cacheFile()));
+        self::assertSame($firstMtime, filemtime($this->cacheFile()));
+    }
+
+    public function test_constructor_loads_existing_cache_entries_from_disk(): void
+    {
+        $cache1 = new TestPhpFileCache($this->cacheDir);
+        $cache1->put('persisted', 'ClassP');
+        TestPhpFileCache::clearStaticCache();
+
+        $cache2 = new TestPhpFileCache($this->cacheDir);
+
+        self::assertSame(['persisted' => 'ClassP'], $cache2->getAll());
+    }
+
+    public function test_constructor_throws_when_cache_directory_cannot_be_created(): void
+    {
+        $blocker = sys_get_temp_dir() . '/gacela-blocker-' . uniqid('', true);
+        file_put_contents($blocker, 'blocked');
+        $this->blockerFiles[] = $blocker;
+
+        // mkdir() emits an E_WARNING when the parent exists as a file; PHPUnit
+        // turns that into a test warning. Suppress it so only the thrown
+        // RuntimeException reaches the assertions.
+        set_error_handler(static fn (): bool => true, E_WARNING);
+
+        try {
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('was not created');
+
+            new TestPhpFileCache($blocker . '/subdir');
+        } finally {
+            restore_error_handler();
+        }
     }
 
     public function test_put_outside_batch_writes_immediately(): void

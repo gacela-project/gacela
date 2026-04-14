@@ -12,6 +12,7 @@ use Gacela\Console\Application\CacheWarm\ParallelModuleWarmer;
 use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,6 +22,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 use function count;
+use function file_exists;
+use function filesize;
+use function sprintf;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -54,6 +58,7 @@ final class CacheWarmCommand extends Command
 
         if ($clearCache) {
             $cacheManager->clearCache();
+            Config::getInstance()->clearMergedConfigCache();
             $formatter->writeCacheCleared();
         }
 
@@ -78,8 +83,33 @@ final class CacheWarmCommand extends Command
         );
 
         $this->displayCacheInfo($cacheManager, $formatter);
+        $this->warmAndDisplayMergedConfigCache($formatter);
 
         return Command::SUCCESS;
+    }
+
+    private function warmAndDisplayMergedConfigCache(CacheWarmOutputFormatter $formatter): void
+    {
+        $filename = Config::getInstance()->writeMergedConfigCache();
+
+        if (!file_exists($filename)) {
+            return;
+        }
+
+        $formatter->writeMergedConfigCacheInfo($filename, $this->formatBytes((int) filesize($filename)));
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return sprintf('%d B', $bytes);
+        }
+
+        if ($bytes < 1048576) {
+            return sprintf('%.2f KB', $bytes / 1024);
+        }
+
+        return sprintf('%.2f MB', $bytes / 1048576);
     }
 
     /**

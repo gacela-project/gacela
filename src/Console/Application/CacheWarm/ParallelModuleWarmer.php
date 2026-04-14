@@ -135,6 +135,8 @@ final class ParallelModuleWarmer
             }
         }
 
+        $this->cacheWarmService->warmClassResolution($module->facadeClass());
+
         $this->formatter->writeEmptyLine();
 
         return [$resolvedCount, $skippedCount];

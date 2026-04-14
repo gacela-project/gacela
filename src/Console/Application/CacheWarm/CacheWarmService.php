@@ -6,6 +6,11 @@ namespace Gacela\Console\Application\CacheWarm;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\Config\ConfigResolver;
+use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
+use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use ReflectionClass;
 use ReflectionMethod;
@@ -17,9 +22,36 @@ use function str_contains;
 
 final class CacheWarmService
 {
+    /** @var list<AbstractClassResolver>|null */
+    private ?array $classResolvers = null;
+
     public function __construct(
         private readonly ConsoleFacade $facade,
     ) {
+    }
+
+    /**
+     * Eagerly resolve a module's Factory, Config, and Provider through Gacela's
+     * class resolvers so the on-disk ClassNamePhpCache is populated at warm time
+     * rather than paying the namespaces x rules x types x class_exists lookup
+     * on the first request to each module.
+     *
+     * @param class-string $facadeClass
+     */
+    public function warmClassResolution(string $facadeClass): void
+    {
+        if (!class_exists($facadeClass)) {
+            return;
+        }
+
+        foreach ($this->classResolvers() as $resolver) {
+            try {
+                $resolver->resolve($facadeClass);
+            } catch (Throwable) {
+                // A module may legitimately lack a Factory/Config/Provider, or
+                // its dependencies may not be constructible during warm; skip.
+            }
+        }
     }
 
     /**
@@ -123,5 +155,18 @@ final class CacheWarmService
         } catch (Throwable) {
             // Silently skip classes that can't be reflected or resolved
         }
+    }
+
+    /**
+     * @return list<AbstractClassResolver>
+     */
+    private function classResolvers(): array
+    {
+        return $this->classResolvers ??= [
+            new FactoryResolver(),
+            new ConfigResolver(),
+            new ProviderResolver(),
+            new DependencyProviderResolver(),
+        ];
     }
 }

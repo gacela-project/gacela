@@ -4,26 +4,24 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
-use Gacela\Framework\Gacela;
+use Gacela\Console\Application\Debug\ConstructorInspection;
+use Gacela\Console\Application\Debug\ConstructorInspector;
+use Gacela\Console\Application\Debug\ParameterInspection;
+use Gacela\Console\Application\Debug\ParameterStatus;
 use ReflectionClass;
-use ReflectionNamedType;
-use ReflectionParameter;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Throwable;
 
 use function class_exists;
 use function count;
 use function defined;
 use function interface_exists;
 use function is_array;
-use function is_callable;
-use function is_object;
+use function ltrim;
 use function sprintf;
 use function str_repeat;
-use function var_export;
 
 final class DebugDependenciesCommand extends Command
 {
@@ -62,44 +60,64 @@ final class DebugDependenciesCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->writeHeader($output, $className);
+        $inspection = (new ConstructorInspector())->inspect($className);
 
-        $constructor = $reflection->getConstructor();
+        $this->renderInspection($output, $inspection);
 
-        if ($constructor === null || $constructor->getNumberOfParameters() === 0) {
-            $message = $constructor === null ? 'No constructor' : 'Constructor takes no parameters';
-            $output->writeln(sprintf('  <fg=cyan>%s</>', $message));
+        return Command::SUCCESS;
+    }
+
+    private function renderInspection(OutputInterface $output, ConstructorInspection $inspection): void
+    {
+        $output->writeln('');
+        $output->writeln(sprintf('<info>Constructor dependencies for %s</info>', $inspection->className));
+        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
+        $output->writeln('');
+
+        if (!$inspection->hasConstructor) {
+            $output->writeln('  <fg=cyan>No constructor</>');
             $output->writeln('');
-            return Command::SUCCESS;
+            return;
         }
 
-        $bindings = $this->containerBindings();
+        if ($inspection->parameters === []) {
+            $output->writeln('  <fg=cyan>Constructor takes no parameters</>');
+            $output->writeln('');
+            return;
+        }
 
-        $resolvable = 0;
-        $unresolvable = 0;
-
-        foreach ($constructor->getParameters() as $parameter) {
-            $description = $this->describeParameter($parameter, $bindings);
-            $output->writeln('  ' . $description['line']);
-
-            if ($description['resolvable']) {
-                ++$resolvable;
-            } else {
-                ++$unresolvable;
-            }
+        foreach ($inspection->parameters as $parameter) {
+            $output->writeln('  ' . $this->formatParameter($parameter));
         }
 
         $output->writeln('');
-        $output->writeln(sprintf('<fg=cyan>Resolvable:</>   %d', $resolvable));
-        $output->writeln(sprintf('<fg=cyan>Unresolvable:</> %d', $unresolvable));
+        $output->writeln(sprintf('<fg=cyan>Resolvable:</>   %d', $inspection->resolvableCount()));
+        $output->writeln(sprintf('<fg=cyan>Unresolvable:</> %d', $inspection->unresolvableCount()));
         $output->writeln('');
 
-        if ($unresolvable > 0) {
+        if (!$inspection->isFullyResolvable()) {
             $output->writeln('<comment>Unresolvable parameters need an explicit binding or default value.</comment>');
             $output->writeln('');
         }
+    }
 
-        return Command::SUCCESS;
+    private function formatParameter(ParameterInspection $parameter): string
+    {
+        $marker = $parameter->isResolvable() ? '<fg=green>✓</>' : '<fg=red>✗</>';
+        $detail = $parameter->isResolvable()
+            ? $this->parenthesize($parameter)
+            : sprintf('<fg=red>%s</>', $parameter->detail);
+
+        return sprintf('%s %s %s %s', $marker, $parameter->name, $parameter->renderedType, $detail);
+    }
+
+    private function parenthesize(ParameterInspection $parameter): string
+    {
+        if ($parameter->status === ParameterStatus::HasDefault) {
+            return $parameter->detail;
+        }
+
+        return '(' . $parameter->detail . ')';
     }
 
     private function resolveClassName(string $argument, OutputInterface $output): ?string
@@ -225,131 +243,6 @@ final class DebugDependenciesCommand extends Command
         }
 
         return null;
-    }
-
-    private function writeHeader(OutputInterface $output, string $className): void
-    {
-        $output->writeln('');
-        $output->writeln(sprintf('<info>Constructor dependencies for %s</info>', $className));
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
-        $output->writeln('');
-    }
-
-    /**
-     * @return array<class-string, class-string|callable|object>
-     */
-    private function containerBindings(): array
-    {
-        try {
-            return Gacela::container()->getBindings();
-        } catch (Throwable) {
-            return [];
-        }
-    }
-
-    /**
-     * @param array<class-string, class-string|callable|object> $bindings
-     *
-     * @return array{line: string, resolvable: bool}
-     */
-    private function describeParameter(ReflectionParameter $parameter, array $bindings): array
-    {
-        $name = '$' . $parameter->getName();
-        $typeLabel = $this->renderType($parameter);
-        $status = $this->resolveStatus($parameter, $bindings);
-
-        $line = sprintf(
-            '%s %s %s %s',
-            $status['resolvable'] ? '<fg=green>✓</>' : '<fg=red>✗</>',
-            $name,
-            $typeLabel,
-            $status['detail'],
-        );
-
-        return ['line' => $line, 'resolvable' => $status['resolvable']];
-    }
-
-    private function renderType(ReflectionParameter $parameter): string
-    {
-        $type = $parameter->getType();
-
-        if ($type === null) {
-            return '<fg=yellow>mixed</>';
-        }
-
-        if ($type instanceof ReflectionNamedType) {
-            $name = ($type->allowsNull() && $type->getName() !== 'mixed' ? '?' : '') . $type->getName();
-            return $name;
-        }
-
-        return (string) $type;
-    }
-
-    /**
-     * @param array<class-string, class-string|callable|object> $bindings
-     *
-     * @return array{resolvable: bool, detail: string}
-     */
-    private function resolveStatus(ReflectionParameter $parameter, array $bindings): array
-    {
-        $type = $parameter->getType();
-
-        if ($type === null) {
-            return $parameter->isDefaultValueAvailable()
-                ? ['resolvable' => true, 'detail' => $this->defaultDetail($parameter)]
-                : ['resolvable' => false, 'detail' => '<fg=red>no type hint and no default</>'];
-        }
-
-        if (!$type instanceof ReflectionNamedType) {
-            return ['resolvable' => false, 'detail' => '<fg=red>union/intersection types not inspected</>'];
-        }
-
-        $typeName = $type->getName();
-
-        if ($type->isBuiltin()) {
-            if ($parameter->isDefaultValueAvailable()) {
-                return ['resolvable' => true, 'detail' => $this->defaultDetail($parameter)];
-            }
-
-            return ['resolvable' => false, 'detail' => '<fg=red>scalar without default</>'];
-        }
-
-        if (isset($bindings[$typeName])) {
-            return ['resolvable' => true, 'detail' => sprintf('(bound -> %s)', $this->renderBindingTarget($bindings[$typeName]))];
-        }
-
-        if (class_exists($typeName)) {
-            return ['resolvable' => true, 'detail' => '(autowirable)'];
-        }
-
-        if (interface_exists($typeName)) {
-            return ['resolvable' => false, 'detail' => '<fg=red>interface, no binding</>'];
-        }
-
-        return ['resolvable' => false, 'detail' => '<fg=red>type does not exist</>'];
-    }
-
-    private function defaultDetail(ReflectionParameter $parameter): string
-    {
-        /** @var mixed $default */
-        $default = $parameter->getDefaultValue();
-        return sprintf('= %s', var_export($default, true));
-    }
-
-    /**
-     * @param class-string|callable|object $target
-     */
-    private function renderBindingTarget(mixed $target): string
-    {
-        if (is_object($target)) {
-            return $target::class . ' instance';
-        }
-
-        if (is_callable($target)) {
-            return 'callable';
-        }
-
-        return $target;
     }
 
     private function getHelpText(): string

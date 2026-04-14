@@ -9,6 +9,7 @@ use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use ReflectionClass;
+use Throwable;
 
 use function strlen;
 
@@ -63,7 +64,11 @@ final class AppModuleCreator
      */
     private function findFactory(string $facadeClass): ?string
     {
-        $resolver = $this->factoryResolver->resolve($facadeClass);
+        try {
+            $resolver = $this->factoryResolver->resolve($facadeClass);
+        } catch (Throwable) {
+            return null;
+        }
 
         if ((new ReflectionClass($resolver))->isAnonymous()) {
             return null;
@@ -77,7 +82,11 @@ final class AppModuleCreator
      */
     private function findConfig(string $facadeClass): ?string
     {
-        $resolver = $this->configResolver->resolve($facadeClass);
+        try {
+            $resolver = $this->configResolver->resolve($facadeClass);
+        } catch (Throwable) {
+            return null;
+        }
 
         if ((new ReflectionClass($resolver))->isAnonymous()) {
             return null;
@@ -91,7 +100,12 @@ final class AppModuleCreator
      */
     private function findProvider(string $facadeClass): ?string
     {
-        $resolver = $this->providerResolver->resolve($facadeClass);
+        try {
+            $resolver = $this->providerResolver->resolve($facadeClass);
+        } catch (Throwable) {
+            return null;
+        }
+
         if (!$resolver instanceof AbstractProvider) {
             return null;
         }

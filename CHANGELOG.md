@@ -31,11 +31,15 @@
 ### Changed
 
 - Exception messages now include did-you-mean suggestions and actionable examples via `ErrorSuggestionHelper`
+- `Locator::getRequired()` now passes the container's registered services and bindings to `ServiceNotFoundException`, so the existing did-you-mean suggestions are produced when a typo'd service is requested
+- `validate:config` reports binding-mismatch warnings with the expected interface/class, the actual type chain of the bound value, and a fix hint; interface-keyed bindings are now also checked (previously skipped)
 
 ### Performance
 
 - Persist the merged file-based config to disk via `MergedConfigCache` so bootstraps skip globbing and parsing configuration files; produced by `cache:warm`, removed by `cache:clear`, keyed per `APP_ENV`
 - `cache:warm` now pre-populates the `ClassNamePhpCache` by running Gacela's resolvers against each module's Facade, so first requests skip the cold `namespaces × rules × types × class_exists` lookup in `ClassNameFinder`
+- `ClassValidator` memoizes `class_exists()` results so repeated candidate lookups across `namespaces × rules × types` reuse the autoloader probe within a request
+- Share `ReflectionClass` instances between `DocBlockResolver` and `CacheWarmService` via a `ReflectionClassPool` to avoid re-reflecting the same class
 
 ## [1.12.0](https://github.com/gacela-project/gacela/compare/1.11.0...1.12.0) - 2025-11-09
 

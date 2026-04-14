@@ -7,6 +7,8 @@ namespace GacelaTest\Feature\Console\ValidateConfig;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Console\ValidateConfig\Fixtures\SomeContract;
+use GacelaTest\Feature\Console\ValidateConfig\Fixtures\UnrelatedImplementation;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -67,5 +69,24 @@ final class ValidateConfigCommandTest extends TestCase
         $output = $this->command->getDisplay();
 
         self::assertStringContainsString('Checking configuration paths...', $output);
+    }
+
+    public function test_validate_config_explains_binding_mismatch(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addBinding(SomeContract::class, UnrelatedImplementation::class);
+        });
+
+        $command = new CommandTester(new ValidateConfigCommand());
+        $command->execute([]);
+
+        $output = $command->getDisplay();
+
+        self::assertStringContainsString('Binding value may not be compatible with key', $output);
+        self::assertStringContainsString('expected interface: ' . SomeContract::class, $output);
+        self::assertStringContainsString('actual:', $output);
+        self::assertStringContainsString('hint:', $output);
+        self::assertStringContainsString('extend or implement ' . SomeContract::class, $output);
     }
 }

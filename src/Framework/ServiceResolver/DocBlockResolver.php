@@ -71,7 +71,7 @@ final class DocBlockResolver
      */
     private function getClassFromDoc(string $method): string
     {
-        $reflectionClass = new ReflectionClass($this->callerClass);
+        $reflectionClass = ReflectionClassPool::get($this->callerClass);
 
         $className = $this->searchClassOverAttributes($reflectionClass, $method);
         if ($className !== null) {

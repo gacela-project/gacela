@@ -1,6 +1,6 @@
 # Static Analysis
 
-Gacela provides configuration files for PHPStan and Psalm to suppress false positives from dynamic resolution via `#[ServiceMap]` attributes.
+Gacela ships configs for PHPStan and Psalm that suppress false positives from dynamic resolution via `#[ServiceMap]` attributes (magic `getFacade()`/`getFactory()`/`getConfig()`, `AbstractConfig` methods, related type mismatches).
 
 ## PHPStan
 
@@ -11,13 +11,7 @@ includes:
     - vendor/gacela-project/gacela/phpstan-gacela.neon
 ```
 
-This suppresses all Gacela-related errors: magic methods, config methods, and type mismatches.
-
 ## Psalm
-
-### Setup
-
-Add to your `psalm.xml`:
 
 ```xml
 <?xml version="1.0"?>
@@ -25,54 +19,36 @@ Add to your `psalm.xml`:
     xmlns:xi="http://www.w3.org/2001/XInclude"
     xmlns="https://getpsalm.org/schema/config"
 >
+    <projectFiles>
+        <directory name="src"/>
+    </projectFiles>
+
     <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
 
     <issueHandlers>
-        <!-- Add InvalidArgument suppression (see below) -->
+        <InvalidArgument>
+            <errorLevel type="suppress">
+                <directory name="src" />
+            </errorLevel>
+        </InvalidArgument>
     </issueHandlers>
 </psalm>
 ```
 
-### What's Suppressed
-
-The included `psalm-gacela.xml` suppresses:
-- `UndefinedMagicMethod` for `getFacade()`, `getFactory()`, `getConfig()`
-- `UndefinedMethod` for all `AbstractConfig` methods
-
-### InvalidArgument Suppression
-
-You must add `InvalidArgument` suppression to your `psalm.xml`:
-
-```xml
-<issueHandlers>
-    <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
-
-    <InvalidArgument>
-        <errorLevel type="suppress">
-            <directory name="src" />
-        </errorLevel>
-    </InvalidArgument>
-</issueHandlers>
-```
-
-Or suppress inline for specific cases:
+The `InvalidArgument` suppression is required — Gacela resolves concrete types at runtime that Psalm can't infer statically. Suppress inline if you prefer narrower scope:
 
 ```php
 /** @psalm-suppress InvalidArgument */
 return new YourService($this->getConfig());
 ```
 
-
 ## Troubleshooting
 
-**PHPStan errors**: Verify the include path is `vendor/gacela-project/gacela/phpstan-gacela.neon`
+- **PHPStan can't find the file** — verify the include path resolves relative to your `phpstan.neon`.
+- **Psalm ignores the include** — ensure `xmlns:xi="http://www.w3.org/2001/XInclude"` is declared, then `vendor/bin/psalm --clear-cache`.
 
-**Psalm errors**:
-1. Check `xmlns:xi="http://www.w3.org/2001/XInclude"` is declared
-2. Clear cache: `vendor/bin/psalm --clear-cache`
+## See also
 
-## Learn More
-
-- [PHPStan Ignoring Errors](https://phpstan.org/user-guide/ignoring-errors)
-- [Psalm Configuration](https://psalm.dev/docs/running_psalm/configuration/)
+- [PHPStan: ignoring errors](https://phpstan.org/user-guide/ignoring-errors)
+- [Psalm configuration](https://psalm.dev/docs/running_psalm/configuration/)
 - [Gacela ServiceMap](https://gacela-project.com/docs/service-map/)

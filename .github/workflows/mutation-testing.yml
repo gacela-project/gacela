@@ -19,8 +19,9 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: 8.1
-          coverage: xdebug
+          coverage: pcov
           tools: composer
+          ini-values: opcache.enable_cli=0
 
       - name: Install dependencies
         run: composer install --prefer-dist

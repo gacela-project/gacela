@@ -9,7 +9,7 @@
 - `cache:clear` command to remove all Gacela cache files
 - `cache:warm --parallel` flag for parallel cache warming via PHP 8.1 Fibers, up to 5× faster
 - `cache:warm --attributes` flag to pre-scan and cache `#[ServiceMap]` attributes
-- `debug:dependencies <class>` command that inspects a class's constructor and reports each parameter's resolvability through the container (bound → target, autowirable, has default, or unresolvable with a reason)
+- `debug:dependencies <class|file>` command that inspects a class's constructor and reports each parameter's resolvability through the container (bound → target, autowirable, has default, or unresolvable with a reason). Accepts either a fully qualified class name or a path to a PHP file that declares the class.
 - `doctor` command aggregating environmental and wiring health checks (cache staleness, suffix mismatches) with per-check remediation hints
 - `profile:report` command to generate and analyze performance reports
 

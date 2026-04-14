@@ -15,7 +15,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 use function class_exists;
+use function count;
+use function defined;
 use function interface_exists;
+use function is_array;
 use function is_callable;
 use function is_object;
 use function sprintf;
@@ -29,13 +32,18 @@ final class DebugDependenciesCommand extends Command
         $this->setName('debug:dependencies')
             ->setDescription('Show the constructor parameters of a class and their resolvability through the container')
             ->setHelp($this->getHelpText())
-            ->addArgument('class', InputArgument::REQUIRED, 'Fully qualified class name to inspect');
+            ->addArgument('class', InputArgument::REQUIRED, 'Fully qualified class name or a path to a PHP file declaring the class');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var string $className */
-        $className = $input->getArgument('class');
+        /** @var string $argument */
+        $argument = $input->getArgument('class');
+
+        $className = $this->resolveClassName($argument, $output);
+        if ($className === null) {
+            return Command::FAILURE;
+        }
 
         if (!class_exists($className) && !interface_exists($className)) {
             $output->writeln(sprintf('<error>Class "%s" does not exist</error>', $className));
@@ -92,6 +100,131 @@ final class DebugDependenciesCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    private function resolveClassName(string $argument, OutputInterface $output): ?string
+    {
+        if (!is_file($argument)) {
+            return ltrim($argument, '\\');
+        }
+
+        $contents = (string) file_get_contents($argument);
+        $fqcn = $this->extractFqcnFromSource($contents);
+
+        if ($fqcn === null) {
+            $output->writeln(sprintf(
+                '<error>File "%s" does not declare a class, interface, trait, or enum</error>',
+                $argument,
+            ));
+            return null;
+        }
+
+        require_once $argument;
+
+        return $fqcn;
+    }
+
+    private function extractFqcnFromSource(string $source): ?string
+    {
+        $tokens = token_get_all($source);
+        $namespace = '';
+        $count = count($tokens);
+
+        for ($i = 0; $i < $count; ++$i) {
+            $token = $tokens[$i];
+
+            if (!is_array($token)) {
+                continue;
+            }
+
+            if ($token[0] === T_NAMESPACE) {
+                $namespace = $this->readNamespaceName($tokens, $i);
+                continue;
+            }
+
+            if ($this->isClassLikeDeclaration($token[0]) && !$this->isAnonymousClass($tokens, $i)) {
+                $name = $this->readNextIdentifier($tokens, $i);
+                if ($name === null) {
+                    continue;
+                }
+
+                return $namespace === '' ? $name : $namespace . '\\' . $name;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     */
+    private function readNamespaceName(array $tokens, int $from): string
+    {
+        $name = '';
+        $count = count($tokens);
+
+        for ($i = $from + 1; $i < $count; ++$i) {
+            $token = $tokens[$i];
+
+            if ($token === ';' || $token === '{') {
+                break;
+            }
+
+            if (!is_array($token)) {
+                continue;
+            }
+
+            if ($token[0] === T_STRING || $token[0] === T_NS_SEPARATOR || $token[0] === T_NAME_QUALIFIED) {
+                $name .= $token[1];
+            }
+        }
+
+        return trim($name, '\\');
+    }
+
+    private function isClassLikeDeclaration(int $tokenType): bool
+    {
+        if ($tokenType === T_CLASS || $tokenType === T_INTERFACE || $tokenType === T_TRAIT) {
+            return true;
+        }
+
+        return defined('T_ENUM') && $tokenType === T_ENUM;
+    }
+
+    /**
+     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     */
+    private function isAnonymousClass(array $tokens, int $index): bool
+    {
+        for ($j = $index - 1; $j >= 0; --$j) {
+            $previous = $tokens[$j];
+
+            if (is_array($previous) && $previous[0] === T_WHITESPACE) {
+                continue;
+            }
+
+            return is_array($previous) && $previous[0] === T_NEW;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     */
+    private function readNextIdentifier(array $tokens, int $from): ?string
+    {
+        $count = count($tokens);
+
+        for ($i = $from + 1; $i < $count; ++$i) {
+            $token = $tokens[$i];
+
+            if (is_array($token) && $token[0] === T_STRING) {
+                return $token[1];
+            }
+        }
+
+        return null;
     }
 
     private function writeHeader(OutputInterface $output, string $className): void
@@ -225,6 +358,9 @@ final class DebugDependenciesCommand extends Command
 Inspect the constructor signature of a class and report whether each parameter
 can be resolved through the Gacela container.
 
+Accepts either a fully qualified class name or a path to a PHP file that
+declares the target class.
+
 <info>Resolution categories:</info>
   <fg=green>✓ bound</fg=green>        a binding in gacela.php maps the type to a concrete implementation
   <fg=green>✓ autowirable</fg=green>  concrete class exists and will be constructed automatically
@@ -235,6 +371,7 @@ can be resolved through the Gacela container.
 
 <info>Examples:</info>
   bin/gacela debug:dependencies "App\MyModule\MyFactory"
+  bin/gacela debug:dependencies src/MyModule/MyFactory.php
 HELP;
     }
 }

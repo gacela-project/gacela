@@ -12,6 +12,7 @@ use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundImplementation;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\MixedDependenciesService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NoConstructorService;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -80,5 +81,31 @@ final class DebugDependenciesCommandTest extends TestCase
 
         self::assertStringContainsString('Resolvable:', $output);
         self::assertStringContainsString('Unresolvable:', $output);
+    }
+
+    public function test_accepts_a_file_path_argument(): void
+    {
+        $path = (new ReflectionClass(MixedDependenciesService::class))->getFileName();
+        self::assertIsString($path);
+
+        $exitCode = $this->command->execute(['class' => $path]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertStringContainsString(MixedDependenciesService::class, $this->command->getDisplay());
+    }
+
+    public function test_file_without_class_declaration_fails(): void
+    {
+        $path = sys_get_temp_dir() . '/gacela-debug-deps-empty-' . uniqid('', true) . '.php';
+        file_put_contents($path, "<?php\n\n// no declarations\n");
+
+        try {
+            $exitCode = $this->command->execute(['class' => $path]);
+
+            self::assertSame(Command::FAILURE, $exitCode);
+            self::assertStringContainsString('does not declare', $this->command->getDisplay());
+        } finally {
+            @unlink($path);
+        }
     }
 }

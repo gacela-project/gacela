@@ -7,3 +7,4 @@ parameters:
         - %currentWorkingDirectory%/tests/
     ignoreErrors:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
+        - '#Creating new PHPStan\\Node\\InClassNode is not covered by backward compatibility promise#'

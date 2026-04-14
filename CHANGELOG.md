@@ -55,6 +55,10 @@
 - Added suppressions to `phpstan-gacela.neon` and `psalm-gacela.xml` for dynamic resolution
 - Improved error messages with actionable suggestions and examples
 - Added `GacelaConfig::addFactory()` to register factory services that create new instances on each resolution
+- Added module-boundary PHPStan rules to `phpstan-gacela.neon`:
+  - `FacadeOnlyDelegatesRule`: Facade methods must only delegate to `$this->getFactory()`, `getConfig()`, or `getProvider()`
+  - `FactoryDoesNotCallFacadeRule`: Factories must not instantiate Facades or call `$this->getFacade()`
+  - `CrossModuleViaFacadeRule` (opt-in): cross-module references (new/static call/const fetch) must go through a `*Facade`
 
 ## [1.11.0](https://github.com/gacela-project/gacela/compare/1.10.0...1.11.0) - 2025-10-12
 

@@ -22,6 +22,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
     {
         $this->cacheDir = sys_get_temp_dir() . '/gacela-cache-batch-' . uniqid('', true);
         TestPhpFileCache::clearStaticCache();
+        ClassNamePhpCache::clearStaticCache();
     }
 
     protected function tearDown(): void
@@ -46,7 +47,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
     {
         $cache = new TestPhpFileCache($this->cacheDir);
 
-        TestPhpFileCache::beginBatch();
+        AbstractPhpFileCache::beginBatch();
         $cache->put('key1', 'ClassA');
         $cache->put('key2', 'ClassB');
 
@@ -54,7 +55,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         self::assertTrue($cache->has('key1'));
         self::assertSame('ClassA', $cache->get('key1'));
 
-        TestPhpFileCache::commitBatch();
+        AbstractPhpFileCache::commitBatch();
 
         self::assertFileExists($this->cacheFile());
         $entries = require $this->cacheFile();
@@ -65,48 +66,65 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
     {
         $cache = new TestPhpFileCache($this->cacheDir);
         $cache->put('key1', 'ClassA');
-        $before = filemtime($this->cacheFile());
+        $contentBefore = file_get_contents($this->cacheFile());
 
-        usleep(1_100_000);
-        TestPhpFileCache::commitBatch();
+        AbstractPhpFileCache::commitBatch();
 
-        self::assertSame($before, filemtime($this->cacheFile()));
+        self::assertSame($contentBefore, file_get_contents($this->cacheFile()));
     }
 
     public function test_batch_flush_leaves_no_tmp_files_behind(): void
     {
         $cache = new TestPhpFileCache($this->cacheDir);
 
-        TestPhpFileCache::beginBatch();
+        AbstractPhpFileCache::beginBatch();
         for ($i = 0; $i < 50; ++$i) {
             $cache->put('key' . $i, 'ClassX');
         }
-        TestPhpFileCache::commitBatch();
+        AbstractPhpFileCache::commitBatch();
 
         $leftovers = glob($this->cacheDir . '/*.tmp') ?: [];
         self::assertCount(0, $leftovers, 'atomic rename must clean up .tmp stage files');
     }
 
-    public function test_batch_isolation_per_concrete_class(): void
+    public function test_commit_flushes_every_dirty_concrete_cache(): void
     {
-        // ClassNamePhpCache batch is separate from TestPhpFileCache batch.
-        $cacheA = new TestPhpFileCache($this->cacheDir);
+        $testCache = new TestPhpFileCache($this->cacheDir);
+        $classNameCache = new ClassNamePhpCache($this->cacheDir);
+
+        AbstractPhpFileCache::beginBatch();
+        $testCache->put('a', 'A');
+        $classNameCache->put('b', 'B');
+
+        self::assertFileDoesNotExist($this->cacheFile());
+        self::assertFileDoesNotExist($this->classNameFile());
+
+        AbstractPhpFileCache::commitBatch();
+
+        self::assertFileExists($this->cacheFile());
+        self::assertFileExists($this->classNameFile());
+    }
+
+    public function test_commit_skips_concrete_caches_without_puts(): void
+    {
+        new TestPhpFileCache($this->cacheDir);
         new ClassNamePhpCache($this->cacheDir);
 
-        TestPhpFileCache::beginBatch();
-        self::assertTrue(TestPhpFileCache::isBatching());
-        self::assertFalse(ClassNamePhpCache::isBatching());
+        AbstractPhpFileCache::beginBatch();
+        AbstractPhpFileCache::commitBatch();
 
-        $cacheA->put('a', 'A');
         self::assertFileDoesNotExist($this->cacheFile());
-
-        TestPhpFileCache::commitBatch();
-        self::assertFileExists($this->cacheFile());
+        self::assertFileDoesNotExist($this->classNameFile());
     }
 
     private function cacheFile(): string
     {
         return $this->cacheDir . '/' . TestPhpFileCache::FILENAME;
+    }
+
+    private function classNameFile(): string
+    {
+        return $this->cacheDir . '/' . ClassNamePhpCache::FILENAME;
     }
 
     private function removeDir(string $dir): void

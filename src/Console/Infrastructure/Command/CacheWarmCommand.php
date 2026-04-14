@@ -12,8 +12,7 @@ use Gacela\Console\Application\CacheWarm\ParallelModuleWarmer;
 use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
-use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
-use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -69,8 +68,7 @@ final class CacheWarmCommand extends Command
 
         $formatter->writeModulesFound($modules);
 
-        ClassNamePhpCache::beginBatch();
-        CustomServicesPhpCache::beginBatch();
+        AbstractPhpFileCache::beginBatch();
 
         try {
             if ($useParallel) {
@@ -80,8 +78,7 @@ final class CacheWarmCommand extends Command
                 [$resolvedCount, $skippedCount] = $this->warmModulesCache($modules, $cacheWarmService, $formatter, $warmAttributes);
             }
         } finally {
-            ClassNamePhpCache::commitBatch();
-            CustomServicesPhpCache::commitBatch();
+            AbstractPhpFileCache::commitBatch();
         }
 
         $formatter->writeSummary(

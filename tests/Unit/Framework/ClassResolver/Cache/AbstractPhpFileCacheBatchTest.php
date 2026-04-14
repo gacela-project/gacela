@@ -147,13 +147,3 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         }
     }
 }
-
-final class TestPhpFileCache extends AbstractPhpFileCache
-{
-    public const FILENAME = 'gacela-batch-test.php';
-
-    protected function getCacheFilename(): string
-    {
-        return self::FILENAME;
-    }
-}

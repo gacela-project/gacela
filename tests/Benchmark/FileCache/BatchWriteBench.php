@@ -59,20 +59,10 @@ final class BatchWriteBench
     public function bench_200_puts_inside_batch(): void
     {
         $cache = new BatchBenchCache($this->cacheDir);
-        BatchBenchCache::beginBatch();
+        AbstractPhpFileCache::beginBatch();
         for ($i = 0; $i < 200; ++$i) {
             $cache->put('key' . $i, 'ClassName' . $i);
         }
-        BatchBenchCache::commitBatch();
-    }
-}
-
-final class BatchBenchCache extends AbstractPhpFileCache
-{
-    public const FILENAME = 'gacela-batch-bench.php';
-
-    protected function getCacheFilename(): string
-    {
-        return self::FILENAME;
+        AbstractPhpFileCache::commitBatch();
     }
 }

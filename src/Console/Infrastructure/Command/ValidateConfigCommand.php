@@ -128,8 +128,18 @@ final class ValidateConfigCommand extends Command
                     }
 
                     // Check if value is assignable to key (basic check)
-                    if (class_exists($key) && !is_subclass_of($value, $key) && $value !== $key) {
-                        $output->writeln(sprintf('  <fg=yellow>⚠ Warning: Binding value may not be compatible with key:</> %s -> %s', $key, $value));
+                    if (!is_subclass_of($value, $key) && $value !== $key) {
+                        $expectedKind = interface_exists($key) ? 'interface' : 'class';
+                        $valueParents = $this->describeTypeChain($value);
+
+                        $output->writeln(sprintf(
+                            '  <fg=yellow>⚠ Warning: Binding value may not be compatible with key:</> %s -> %s',
+                            $key,
+                            $value,
+                        ));
+                        $output->writeln(sprintf('      expected %s: %s', $expectedKind, $key));
+                        $output->writeln(sprintf('      actual:       %s', $valueParents));
+                        $output->writeln(sprintf('      hint:         make %s extend or implement %s', $value, $key));
                         $hasWarnings = true;
                     }
                 } elseif (is_object($value)) {
@@ -217,6 +227,26 @@ final class ValidateConfigCommand extends Command
         $output->writeln('');
 
         return ['errors' => $hasErrors, 'warnings' => $hasWarnings];
+    }
+
+    private function describeTypeChain(string $className): string
+    {
+        if (!class_exists($className) && !interface_exists($className)) {
+            return $className;
+        }
+
+        $parents = class_parents($className) ?: [];
+        $interfaces = class_implements($className) ?: [];
+
+        $parts = [$className];
+        if ($parents !== []) {
+            $parts[] = 'extends ' . implode(' -> ', $parents);
+        }
+        if ($interfaces !== []) {
+            $parts[] = 'implements ' . implode(', ', $interfaces);
+        }
+
+        return implode(' | ', $parts);
     }
 
     private function getHelpText(): string

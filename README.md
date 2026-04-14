@@ -26,118 +26,51 @@
   </a>
 </p>
 
-## Gacela helps you build modular applications
+## Gacela — build modular PHP applications
 
-**VISION**: Simplify the communication of your different modules in your web application.
+Gacela normalizes module boundaries so parts of your application communicate through a single entry point, without leaking internals.
 
-**MISSION**: Normalize the entry point of a module, without interfering with your domain-business logic.
+Each module exposes four classes:
 
-Splitting your project into different modules help in terms of maintainability and scalability.
-It encourages your modules to interact with each other in a unified way by following these rules:
+- [**Facade**](https://gacela-project.com/docs/facade/) — public API, the only way in
+- [**Factory**](https://gacela-project.com/docs/factory/) — creates internal services
+- [**Provider**](https://gacela-project.com/docs/provider/) — wires external dependencies
+- [**Config**](https://gacela-project.com/docs/config/) — reads project config
 
-- Modules interact with each other **only** via their **Facade**
-- The [**Facade**](https://gacela-project.com/docs/facade/) is the *entry point* of a module
-- The [**Factory**](https://gacela-project.com/docs/factory/) manage the *intra-dependencies* the module
-- The [**Provider**](https://gacela-project.com/docs/provider/) resolves the *extra-dependencies* of the module
-- The [**Config**](https://gacela-project.com/docs/config/) access the project's *config files*
-
-### Installation
+## Installation
 
 ```bash
 composer require gacela-project/gacela
 ```
 
-### Getting started
+## Module structure
 
-See the [getting started guide](docs/getting-started.md) for a step-by-step
-example of creating your first module.
-
-### Module structure
-
-You can prefix gacela classes with the module name to improve readability. See more [about gacela](https://gacela-project.com/about-gacela/).
-
-An example of an application structure using gacela modules:
-
-```bash
-application-name
+```
+app/
 ├── gacela.php
-├── config
-│   └── ...
-│
-├── src
-│   ├── ModuleA
-│   │   ├── Domain
-│   │   │   └── ...
-│   │   ├── Application
-│   │   │   └── ...
-│   │   ├── Infrastructure
-│   │   │   └── ...
-│   │   │ # These are the 4 "gacela classes":
-│   │   ├── Facade.php
-│   │   ├── Factory.php
-│   │   ├── Provider.php
-│   │   └── Config.php
-│   │
-│   └── ModuleB
-│       └── ...
-│
-├── tests
-│   └── ...
-└── vendor
-    └── ...
+├── config/
+└── src/
+    └── ModuleA/
+        ├── Facade.php
+        ├── Factory.php
+        ├── Provider.php
+        └── Config.php
 ```
 
-### Static Analysis
+## Documentation
 
-Gacela provides configuration files for PHPStan and Psalm that suppress false positives related to dynamic resolution via `#[ServiceMap]` attributes.
+- [Getting started](docs/getting-started.md)
+- [Container configuration](docs/container-configuration.md)
+- [Static analysis (PHPStan / Psalm)](docs/static-analysis.md)
+- [Module health checks](docs/module-health-checks.md)
+- [Opcache preload](docs/opcache-preload.md)
+- Full reference: [gacela-project.com](https://gacela-project.com/)
+- Examples: [gacela-example](https://github.com/gacela-project/gacela-example)
 
-**PHPStan**: Include `phpstan-gacela.neon` in your `phpstan.neon`:
+## Contributing
 
-```neon
-includes:
-    - vendor/gacela-project/gacela/phpstan-gacela.neon
-```
-
-**Psalm**: Include `psalm-gacela.xml` using XInclude:
-
-```xml
-<psalm
-    xmlns:xi="http://www.w3.org/2001/XInclude"
-    xmlns="https://getpsalm.org/schema/config"
->
-    <projectFiles>
-        <directory name="src"/>
-    </projectFiles>
-
-    <!-- Include Gacela suppressions -->
-    <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
-
-    <issueHandlers>
-        <!-- Your other issue handlers -->
-    </issueHandlers>
-</psalm>
-```
-
-This suppresses warnings about:
-- Magic methods `getFacade()`, `getFactory()`, `getConfig()` resolved via `ServiceResolverAwareTrait`
-- Config methods on `AbstractConfig` that are resolved at runtime
-- Type mismatches where Gacela resolves the correct concrete type
-
-### Documentation
-
-You can check the full documentation in the official [website](https://gacela-project.com/).
-
-### Examples
-
-You can see examples using gacela in [this repository](https://github.com/gacela-project/gacela-example).
-
-### Contribute
-
-You are more than welcome to contribute reporting 
-[issues](https://github.com/gacela-project/gacela/issues), 
-sharing [ideas](https://github.com/gacela-project/gacela/discussions),
-or [contributing](.github/CONTRIBUTING.md) with your Pull Requests.
+Report [issues](https://github.com/gacela-project/gacela/issues), share [ideas](https://github.com/gacela-project/gacela/discussions), or open a [pull request](.github/CONTRIBUTING.md).
 
 ---
 
-> Inspired by Spryker Framework: https://github.com/spryker
+> Inspired by [Spryker](https://github.com/spryker).

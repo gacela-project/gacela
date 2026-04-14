@@ -69,6 +69,15 @@ final class DebugModulesCommandTest extends TestCase
         self::assertStringContainsString('No modules match filter', $output);
     }
 
+    public function test_filter_accepts_a_directory_path(): void
+    {
+        $this->command->execute(['filter' => __DIR__ . '/Fixtures/WidgetModule']);
+        $output = $this->command->getDisplay();
+
+        self::assertStringContainsString(WidgetModuleFacade::class, $output);
+        self::assertStringNotContainsString(GizmoModuleFacade::class, $output);
+    }
+
     public function test_surfaces_factory_whose_resolver_would_fail(): void
     {
         Gacela::bootstrap(__DIR__ . '/BrokenFixtures', static function (GacelaConfig $config): void {

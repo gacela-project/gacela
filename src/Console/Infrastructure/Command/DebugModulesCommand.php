@@ -10,6 +10,7 @@ use Gacela\Console\Application\Debug\ParameterInspection;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ServiceResolverAwareTrait;
+use ReflectionClass;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,7 +35,7 @@ final class DebugModulesCommand extends Command
         $this->setName('debug:modules')
             ->setDescription('Show dependency resolvability of every Gacela module pillar (Facade, Factory, Config, Provider)')
             ->setHelp($this->getHelpText())
-            ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict output to modules whose name matches this substring', '')
+            ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict output to a namespace substring (e.g. "App\\\\Shop") or a directory on disk (e.g. "src/")', '')
             ->addOption('detail', 'd', InputOption::VALUE_NONE, 'Include every parameter, not just unresolvable ones');
     }
 
@@ -44,11 +45,18 @@ final class DebugModulesCommand extends Command
         $filter = $input->getArgument('filter');
         $detail = (bool) $input->getOption('detail');
 
+        $pathFilter = $this->asPathFilter($filter);
+        $namespaceFilter = $pathFilter === null ? $filter : '';
+
         try {
-            $modules = $this->getFacade()->findAllAppModules($filter);
+            $modules = $this->getFacade()->findAllAppModules($namespaceFilter);
         } catch (Throwable $throwable) {
             $output->writeln(sprintf('<error>Could not discover modules: %s</error>', $throwable->getMessage()));
             return Command::FAILURE;
+        }
+
+        if ($pathFilter !== null) {
+            $modules = $this->filterModulesByPath($modules, $pathFilter);
         }
 
         $this->writeHeader($output, $filter);
@@ -89,6 +97,50 @@ final class DebugModulesCommand extends Command
         $this->writeSummary($output, $moduleCount, $pillarCount, $unresolvableTotal);
 
         return Command::SUCCESS;
+    }
+
+    private function asPathFilter(string $filter): ?string
+    {
+        if ($filter === '' || !is_dir($filter)) {
+            return null;
+        }
+
+        $real = realpath($filter);
+        return $real === false ? null : $real;
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     *
+     * @return list<AppModule>
+     */
+    private function filterModulesByPath(array $modules, string $path): array
+    {
+        $prefix = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $matching = [];
+
+        foreach ($modules as $module) {
+            $file = $this->facadeFilename($module->facadeClass());
+            if ($file !== null && str_starts_with($file, $prefix)) {
+                $matching[] = $module;
+            }
+        }
+
+        return $matching;
+    }
+
+    /**
+     * @param class-string $className
+     */
+    private function facadeFilename(string $className): ?string
+    {
+        try {
+            $file = (new ReflectionClass($className))->getFileName();
+        } catch (Throwable) {
+            return null;
+        }
+
+        return $file === false ? null : $file;
     }
 
     /**

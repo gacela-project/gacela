@@ -6,7 +6,9 @@ namespace GacelaTest\Unit\Framework\Config;
 
 use Gacela\Framework\Config\MergedConfigCache;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
+use function file_put_contents;
 use function rmdir;
 use function sys_get_temp_dir;
 use function uniqid;
@@ -16,6 +18,9 @@ final class MergedConfigCacheTest extends TestCase
 {
     private string $cacheDir;
 
+    /** @var list<string> */
+    private array $blockerFiles = [];
+
     protected function setUp(): void
     {
         $this->cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-merged-config-test-' . uniqid('', true);
@@ -24,6 +29,33 @@ final class MergedConfigCacheTest extends TestCase
     protected function tearDown(): void
     {
         $this->removeCacheDirIfExists();
+
+        foreach ($this->blockerFiles as $blocker) {
+            if (is_file($blocker)) {
+                unlink($blocker);
+            }
+        }
+        $this->blockerFiles = [];
+    }
+
+    public function test_write_throws_when_the_cache_directory_cannot_be_created(): void
+    {
+        $blocker = sys_get_temp_dir() . '/gacela-merged-blocker-' . uniqid('', true);
+        file_put_contents($blocker, 'blocked');
+        $this->blockerFiles[] = $blocker;
+
+        $cache = new MergedConfigCache($blocker . '/subdir');
+
+        set_error_handler(static fn (): bool => true, E_WARNING);
+
+        try {
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('was not created');
+
+            $cache->write(['key' => 'value']);
+        } finally {
+            restore_error_handler();
+        }
     }
 
     public function test_exists_is_false_when_file_not_written(): void

@@ -28,6 +28,11 @@ final class FileCacheFeatureTest extends TestCase
         DirectoryUtil::removeDir(__DIR__ . '/custom');
     }
 
+    protected function tearDown(): void
+    {
+        putenv('GACELA_CACHE_DIR');
+    }
+
     public function test_custom_cache_dir(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {

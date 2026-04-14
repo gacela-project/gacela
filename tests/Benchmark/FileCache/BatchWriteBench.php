@@ -33,6 +33,7 @@ final class BatchWriteBench
         if (!is_dir($this->cacheDir)) {
             mkdir($this->cacheDir, 0777, true);
         }
+
         BatchBenchCache::clearStaticCache();
     }
 
@@ -42,9 +43,11 @@ final class BatchWriteBench
         if (is_file($file)) {
             unlink($file);
         }
+
         if (is_dir($this->cacheDir)) {
             rmdir($this->cacheDir);
         }
+
         BatchBenchCache::clearStaticCache();
     }
 
@@ -63,6 +66,7 @@ final class BatchWriteBench
         for ($i = 0; $i < 200; ++$i) {
             $cache->put('key' . $i, 'ClassName' . $i);
         }
+
         AbstractPhpFileCache::commitBatch();
     }
 }

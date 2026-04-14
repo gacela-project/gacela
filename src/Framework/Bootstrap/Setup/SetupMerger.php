@@ -88,7 +88,7 @@ final class SetupMerger
             }
 
             /** @var ConfigurableEventDispatcher $eventDispatcher */
-            $eventDispatcher->registerGenericListeners((array)$other->getGenericListeners());
+            $eventDispatcher->registerGenericListeners($other->getGenericListeners() ?? []);
 
             foreach ($other->getSpecificListeners() ?? [] as $event => $listeners) {
                 foreach ($listeners as $callable) {

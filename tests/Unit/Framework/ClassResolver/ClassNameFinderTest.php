@@ -18,6 +18,7 @@ final class ClassNameFinderTest extends TestCase
 {
     protected function setUp(): void
     {
+        InMemoryCache::resetCache();
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->setFileCache(false);
         });
@@ -133,5 +134,38 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder->findClassName($classInfo, $resolvableTypes);
         $classNameFinder->findClassName($classInfo, $resolvableTypes);
         $classNameFinder->findClassName($classInfo, $resolvableTypes);
+    }
+
+    public function test_cached_hit_dispatches_class_name_cached_found_event(): void
+    {
+        \Gacela\Framework\Config\Config::resetInstance();
+
+        $events = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$events): void {
+            $config->setFileCache(false);
+            $config->registerGenericListener(static function (\Gacela\Framework\Event\GacelaEventInterface $event) use (&$events): void {
+                $events[] = $event;
+            });
+        });
+
+        $cache = new InMemoryCache(ClassInfo::class);
+        $cache->put('cacheKey', '\cached\class');
+
+        $classNameFinder = new ClassNameFinder(
+            $this->createMock(ClassValidatorInterface::class),
+            [],
+            $cache,
+            [],
+        );
+
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
+
+        self::assertSame('\cached\class', $classNameFinder->findClassName($classInfo, ['A']));
+
+        $cachedFoundEvents = array_filter(
+            $events,
+            static fn ($event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameCachedFoundEvent,
+        );
+        self::assertCount(1, $cachedFoundEvents);
     }
 }

@@ -24,8 +24,11 @@ final class CacheStalenessCheckTest extends TestCase
     protected function tearDown(): void
     {
         foreach ((array) glob($this->tempDir . '/*') as $file) {
-            is_string($file) && @unlink($file);
+            if (is_string($file)) {
+                @unlink($file);
+            }
         }
+
         @rmdir($this->tempDir);
     }
 

@@ -18,7 +18,7 @@ final class Locator implements LocatorInterface
     private array $instanceCache = [];
 
     private function __construct(
-        private readonly ContainerInterface $container = new Container(),
+        private readonly Container $container = new Container(),
     ) {
     }
 
@@ -126,15 +126,10 @@ final class Locator implements LocatorInterface
      */
     private function knownServiceNames(): array
     {
-        $names = $this->container->getRegisteredServices();
+        $services = $this->container->getRegisteredServices();
+        $bindingKeys = array_keys($this->container->getBindings());
 
-        if ($this->container instanceof Container) {
-            foreach (array_keys($this->container->getBindings()) as $binding) {
-                $names[] = $binding;
-            }
-        }
-
-        return array_values(array_unique($names));
+        return array_keys(array_flip([...$services, ...$bindingKeys]));
     }
 
     /**

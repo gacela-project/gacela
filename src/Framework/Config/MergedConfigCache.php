@@ -77,7 +77,7 @@ final class MergedConfigCache
             return;
         }
 
-        if (!mkdir($concurrentDirectory = $this->cacheDir, 0777, true) && !is_dir($concurrentDirectory)) {
+        if (!mkdir($concurrentDirectory = $this->cacheDir, recursive: true) && !is_dir($concurrentDirectory)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
         }
     }

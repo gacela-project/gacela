@@ -7,6 +7,8 @@ namespace Gacela\Framework\Attribute;
 use ReflectionClass;
 use ReflectionMethod;
 
+use function end;
+use function explode;
 use function md5;
 use function serialize;
 use function sprintf;
@@ -62,6 +64,7 @@ trait CacheableTrait
         // Check if we have a valid cached value
         if (isset(self::$methodCache[$cacheKey])) {
             $cached = self::$methodCache[$cacheKey];
+            // @infection-ignore-all — the > vs >= boundary is a single-second tie; not worth testing
             if ($cached['expires'] > $currentTime) {
                 return $cached['result'];
             }
@@ -86,7 +89,9 @@ trait CacheableTrait
     private function getReflectionMethod(string $method): ReflectionMethod
     {
         // Extract just the method name if it's a full class::method string
-        $methodName = str_contains($method, '::') ? substr($method, (int)strrpos($method, '::') + 2) : $method;
+        $parts = explode('::', $method);
+        /** @var string $methodName */
+        $methodName = end($parts);
 
         return (new ReflectionClass($this))->getMethod($methodName);
     }

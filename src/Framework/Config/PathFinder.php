@@ -25,20 +25,12 @@ final class PathFinder implements PathFinderInterface
             return self::$cache[$pattern];
         }
 
-        $this->ensureGlobBraceIsDefined();
-
-        return self::$cache[$pattern] = glob($pattern, GLOB_BRACE) ?: [];
-    }
-
-    /**
-     * Note: The GLOB_BRACE flag is not available on some non-GNU systems, like Solaris or Alpine Linux.
-     *
-     * @see https://www.php.net/manual/en/function.glob.php
-     */
-    private function ensureGlobBraceIsDefined(): void
-    {
+        // GLOB_BRACE is not available on some non-GNU systems (Solaris, Alpine Linux).
+        // @see https://www.php.net/manual/en/function.glob.php
         if (!defined('GLOB_BRACE')) {
             define('GLOB_BRACE', 0x10);
         }
+
+        return self::$cache[$pattern] = glob($pattern, GLOB_BRACE) ?: [];
     }
 }

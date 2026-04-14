@@ -103,7 +103,7 @@ final class AnonymousGlobal
 
         $callerClass = $context::class;
         /** @var list<string> $callerClassParts */
-        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
+        $callerClassParts = explode('\\', $callerClass);
 
         $lastCallerClassParts = end($callerClassParts);
 

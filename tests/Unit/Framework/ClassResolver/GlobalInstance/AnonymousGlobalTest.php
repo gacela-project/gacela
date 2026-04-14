@@ -21,7 +21,7 @@ final class AnonymousGlobalTest extends TestCase
      */
     public function test_error_when_non_allowed_anon_global_type(): void
     {
-        $this->expectExceptionMessage("Type 'AnonymousGlobalTest' not allowed");
+        $this->expectExceptionMessage("Type 'AnonymousGlobalTest' not allowed. Valid types: Config, Factory, Provider");
 
         AnonymousGlobal::addGlobal($this, new class() {});
     }
@@ -77,5 +77,20 @@ final class AnonymousGlobalTest extends TestCase
         yield 'starting with \ and not using the module prefix in the class' => [
             '\App\Module\ClassNameFacade',
         ];
+    }
+
+    public function test_get_by_key_normalizes_missing_leading_backslash(): void
+    {
+        AnonymousGlobal::resetCache();
+        $instance = new class() {
+        };
+        // `overrideExistingResolvedClass` stores under the normalized key (with leading `\`).
+        AnonymousGlobal::overrideExistingResolvedClass('App\\Module\\Facade', $instance);
+
+        // Looking up WITHOUT the leading backslash must still resolve: the
+        // getByKey path has a fallback that prepends `\` before looking again.
+        $resolved = AnonymousGlobal::getByKey('App\\Module\\Facade');
+
+        self::assertSame($instance, $resolved);
     }
 }

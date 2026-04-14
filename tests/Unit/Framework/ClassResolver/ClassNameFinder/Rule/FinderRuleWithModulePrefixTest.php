@@ -38,4 +38,14 @@ final class FinderRuleWithModulePrefixTest extends TestCase
 
         self::assertSame('\App\Rule\RuleFactory', $actual);
     }
+
+    public function test_build_trims_surrounding_backslashes_from_project_namespace(): void
+    {
+        $classInfo = ClassInfo::from($this);
+
+        self::assertSame(
+            '\App\Rule\RuleFactory',
+            $this->rule->buildClassCandidate('\\App\\', 'Factory', $classInfo),
+        );
+    }
 }

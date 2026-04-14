@@ -179,10 +179,7 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function externalServices(): array
     {
-        return array_merge(
-            parent::externalServices(),
-            $this->properties->externalServices ?? [],
-        );
+        return $this->properties->externalServices ?? parent::externalServices();
     }
 
     public function setShouldResetInMemoryCache(?bool $flag): self

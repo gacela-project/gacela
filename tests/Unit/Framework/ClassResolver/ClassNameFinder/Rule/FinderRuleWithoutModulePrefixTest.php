@@ -38,4 +38,17 @@ final class FinderRuleWithoutModulePrefixTest extends TestCase
 
         self::assertSame('\App\Rule\Factory', $actual);
     }
+
+    public function test_build_trims_surrounding_backslashes_from_project_namespace(): void
+    {
+        // The namespace is trimmed so the generated candidate always has
+        // exactly one backslash between segments, regardless of whether the
+        // caller includes leading/trailing backslashes.
+        $classInfo = ClassInfo::from($this);
+
+        self::assertSame(
+            '\App\Rule\Factory',
+            $this->rule->buildClassCandidate('\\App\\', 'Factory', $classInfo),
+        );
+    }
 }

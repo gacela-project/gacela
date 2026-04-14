@@ -123,7 +123,7 @@ final class Gacela
         if (is_string($context) && is_file($context)) {
             $context = basename($context, '.php');
         } elseif ($context === '') {
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $callerFile = $trace[0]['file'] ?? __FILE__;
             $context = basename($callerFile, '.php');
         }

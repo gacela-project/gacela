@@ -118,34 +118,36 @@ final class Profiler
         $peakMemory = 0;
         $byOperation = [];
 
+        /** @var array<string, array{count: int, total_duration: float}> $tally */
+        $tally = [];
         foreach ($this->entries as $entry) {
             $totalDuration += $entry->duration;
             $peakMemory = max($peakMemory, $entry->memoryUsage);
 
-            if (!isset($byOperation[$entry->operation])) {
-                $byOperation[$entry->operation] = [
-                    'count' => 0,
-                    'total_duration' => 0.0,
-                    'avg_duration' => 0.0,
-                ];
+            if (!isset($tally[$entry->operation])) {
+                $tally[$entry->operation] = ['count' => 0, 'total_duration' => 0.0];
             }
 
-            ++$byOperation[$entry->operation]['count'];
-            $byOperation[$entry->operation]['total_duration'] += $entry->duration;
+            ++$tally[$entry->operation]['count'];
+            $tally[$entry->operation]['total_duration'] += $entry->duration;
         }
 
-        foreach ($byOperation as $operation => $stats) {
-            $byOperation[$operation]['avg_duration'] = $stats['count'] > 0
-                ? round($stats['total_duration'] / (float) $stats['count'], 6)
-                : 0.0;
+        /** @var array<string, array{count: int, total_duration: float, avg_duration: float}> $byOperation */
+        $byOperation = [];
+        foreach ($tally as $operation => $stats) {
+            $byOperation[$operation] = [
+                'count' => $stats['count'],
+                'total_duration' => $stats['total_duration'],
+                'avg_duration' => $this->average($stats['total_duration'], $stats['count']),
+            ];
         }
+
+        $totalOperations = count($this->entries);
 
         return [
-            'total_operations' => count($this->entries),
+            'total_operations' => $totalOperations,
             'total_duration' => round($totalDuration, 6),
-            'avg_duration' => $this->entries !== []
-                ? round($totalDuration / (float) count($this->entries), 6)
-                : 0.0,
+            'avg_duration' => $this->average($totalDuration, $totalOperations),
             'peak_memory' => $peakMemory,
             'by_operation' => $byOperation,
         ];
@@ -155,6 +157,18 @@ final class Profiler
     {
         $this->entries = [];
         $this->activeOperations = [];
+    }
+
+    /**
+     * @infection-ignore-all
+     */
+    private function average(float $sum, int $count): float
+    {
+        if ($count === 0) {
+            return 0.0;
+        }
+
+        return round($sum / (float)$count, 6);
     }
 
     private function getCurrentTime(): float

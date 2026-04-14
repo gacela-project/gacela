@@ -98,6 +98,7 @@ final class SuffixMismatchCheck implements HealthCheck
         if ($className === null) {
             return;
         }
+
         $this->inspect($kind, $className, $configured, $bucket);
     }
 
@@ -111,6 +112,7 @@ final class SuffixMismatchCheck implements HealthCheck
                 return true;
             }
         }
+
         return false;
     }
 }

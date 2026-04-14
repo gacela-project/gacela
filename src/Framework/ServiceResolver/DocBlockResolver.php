@@ -12,6 +12,7 @@ use ReflectionAttribute;
 use ReflectionClass;
 
 use function is_string;
+use function sprintf;
 
 final class DocBlockResolver
 {
@@ -20,16 +21,11 @@ final class DocBlockResolver
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];
 
-    /** @var class-string */
-    private readonly string $callerClass;
-
     /**
      * @param class-string $callerClass
      */
-    private function __construct(string $callerClass)
+    private function __construct(private readonly string $callerClass)
     {
-        /** @psalm-suppress PropertyTypeCoercion */
-        $this->callerClass = '\\' . ltrim($callerClass, '\\'); // @phpstan-ignore-line
     }
 
     public static function fromCaller(object $caller): self
@@ -63,7 +59,7 @@ final class DocBlockResolver
 
     private function generateCacheKey(string $method): string
     {
-        return $this->callerClass . '::' . $method;
+        return sprintf('%s::%s', $this->callerClass, $method);
     }
 
     /**
@@ -100,7 +96,10 @@ final class DocBlockResolver
      */
     private function searchClassOverDocBlock(ReflectionClass $reflectionClass, string $method): string
     {
-        $docBlock = (string)$reflectionClass->getDocComment();
+        $docBlock = $reflectionClass->getDocComment();
+        if ($docBlock === false) {
+            return '';
+        }
 
         return (new DocBlockParser())->getClassFromMethod($docBlock, $method);
     }
@@ -132,9 +131,18 @@ final class DocBlockResolver
      */
     private function searchClassOverUseStatements(ReflectionClass $reflectionClass, string $className): string
     {
-        $fileName = (string)$reflectionClass->getFileName();
+        $fileName = $reflectionClass->getFileName();
+        if ($fileName === false) {
+            return '';
+        }
+
         if (!isset(self::$fileContentCache[$fileName])) {
-            self::$fileContentCache[$fileName] = (string)file_get_contents($fileName);
+            $content = file_get_contents($fileName);
+            if ($content === false) {
+                return '';
+            }
+
+            self::$fileContentCache[$fileName] = $content;
         }
 
         $phpFile = self::$fileContentCache[$fileName];

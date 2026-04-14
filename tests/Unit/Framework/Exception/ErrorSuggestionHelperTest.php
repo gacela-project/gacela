@@ -39,9 +39,12 @@ final class ErrorSuggestionHelperTest extends TestCase
 
     public function test_suggest_similar_sorts_by_highest_similarity_first(): void
     {
+        // Options are intentionally given in ASCENDING similarity order; the
+        // helper must sort them DESCENDING so arsort() cannot be silently
+        // removed without breaking this expectation.
         $actual = ErrorSuggestionHelper::suggestSimilar(
             'userName',
-            ['userNam', 'userNa', 'userN'],
+            ['userN', 'userNa', 'userNam'],
         );
 
         self::assertSame(
@@ -65,6 +68,16 @@ final class ErrorSuggestionHelperTest extends TestCase
         $actual = ErrorSuggestionHelper::suggestSimilar('USERNAME', ['username']);
 
         self::assertSame("\n\nDid you mean?\n  - username", $actual);
+    }
+
+    public function test_suggest_similar_lowercases_option_too(): void
+    {
+        // Forces strtolower() on BOTH arguments of similar_text: search is
+        // lowercase, option is uppercase, so only the option needs
+        // normalising for the comparison to succeed.
+        $actual = ErrorSuggestionHelper::suggestSimilar('username', ['USERNAME']);
+
+        self::assertSame("\n\nDid you mean?\n  - USERNAME", $actual);
     }
 
     public function test_suggest_similar_uses_strict_greater_than_threshold(): void

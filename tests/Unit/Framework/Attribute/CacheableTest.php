@@ -8,6 +8,8 @@ use Gacela\Framework\Attribute\Cacheable;
 use Gacela\Framework\Attribute\CacheableTrait;
 use PHPUnit\Framework\TestCase;
 
+use ReflectionClass;
+
 use function sprintf;
 
 final class CacheableTest extends TestCase
@@ -20,6 +22,14 @@ final class CacheableTest extends TestCase
     public function test_cacheable_attribute_can_be_instantiated(): void
     {
         $cacheable = new Cacheable(ttl: 3600);
+
+        self::assertSame(3600, $cacheable->ttl);
+        self::assertNull($cacheable->key);
+    }
+
+    public function test_cacheable_attribute_default_ttl_is_one_hour(): void
+    {
+        $cacheable = new Cacheable();
 
         self::assertSame(3600, $cacheable->ttl);
         self::assertNull($cacheable->key);
@@ -119,6 +129,36 @@ final class CacheableTest extends TestCase
         self::assertSame(2, $facade->getCallCount());
         self::assertNotSame($result1, $result2);
     }
+
+    public function test_cache_entry_with_expires_equal_to_current_time_is_considered_expired(): void
+    {
+        $facade = new TestFacadeWithCache();
+
+        $reflection = new ReflectionClass($facade);
+        $cacheProperty = $reflection->getProperty('methodCache');
+        $cacheProperty->setAccessible(true);
+
+        $cacheKey = TestFacadeWithCache::class . '::getExpensiveData::no-args';
+        $cacheProperty->setValue(null, [
+            $cacheKey => ['result' => 'stale', 'expires' => time()],
+        ]);
+
+        $result = $facade->getExpensiveData();
+
+        self::assertNotSame('stale', $result);
+        self::assertSame(1, $facade->getCallCount());
+    }
+
+    public function test_cached_method_is_accessible_from_subclass(): void
+    {
+        $child = new TestChildFacadeWithCache();
+
+        $result1 = $child->getChildData();
+        $result2 = $child->getChildData();
+
+        self::assertSame($result1, $result2);
+        self::assertSame(1, $child->getChildCallCount());
+    }
 }
 
 /**
@@ -195,5 +235,32 @@ final class TestFacadeWithCacheShortTTL
     public function getCallCount(): int
     {
         return $this->callCount;
+    }
+}
+
+/**
+ * Parent facade (non-final) so that protected visibility on cached() can be verified via inheritance.
+ */
+class TestParentFacadeWithCache
+{
+    use CacheableTrait;
+}
+
+final class TestChildFacadeWithCache extends TestParentFacadeWithCache
+{
+    private int $childCallCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function getChildData(): string
+    {
+        return $this->cached(__METHOD__, [], function (): string {
+            ++$this->childCallCount;
+            return 'child-result-' . $this->childCallCount;
+        });
+    }
+
+    public function getChildCallCount(): int
+    {
+        return $this->childCallCount;
     }
 }

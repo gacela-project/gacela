@@ -131,6 +131,33 @@ final class ConfigTest extends TestCase
         );
     }
 
+    public function test_get_cache_dir_returns_windows_style_absolute_path_unchanged(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setFileCache(true, 'C:/winapp/cache'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir('/tmp/unused-root');
+
+        self::assertSame('C:/winapp/cache', $config->getCacheDir());
+    }
+
+    public function test_get_cache_dir_does_not_collapse_sibling_prefix_into_app_root(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setFileCache(true, '/apps-shared/custom-cache'),
+        );
+        $config = Config::createWithSetup($setup);
+        // Set app root to '/apps' — sibling prefix of '/apps-shared/'.
+        // Without the directory separator in the str_starts_with check,
+        // '/apps-shared' would be mistakenly treated as inside '/apps' root.
+        $config->setAppRootDir('/apps');
+
+        self::assertSame('/apps/apps-shared/custom-cache', $config->getCacheDir());
+    }
+
     public function test_get_cache_dir_strips_leading_separator_before_joining_relative_path(): void
     {
         // An input like `subdir/` with no absolute prefix is treated as relative,
@@ -156,5 +183,32 @@ final class ConfigTest extends TestCase
 
         self::assertInstanceOf(ConfigFactory::class, $factoryA);
         self::assertSame($factoryA, $factoryB);
+    }
+
+    public function test_get_event_dispatcher_memoises_the_instance(): void
+    {
+        Config::resetInstance();
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+        });
+
+        $a = Config::getEventDispatcher();
+        $b = Config::getEventDispatcher();
+
+        self::assertSame($a, $b, 'event dispatcher must be memoised on the class static');
+    }
+
+    public function test_get_self_initializes_lazy_when_never_bootstrapped_with_init(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->setFileCache(false)
+                ->addAppConfigKeyValue('lazy_key', 'lazy_value'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir(__DIR__);
+
+        self::assertSame('lazy_value', $config->get('lazy_key'));
     }
 }

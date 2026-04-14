@@ -10,6 +10,10 @@ data/
 vendor/
 
 *.cache
+*.tmp
+.gacela-cache-*
+cachegacela-*
+tests/**/Users/
 gacela-local.php
 gacela-custom-services.php
 gacela-class-names.php

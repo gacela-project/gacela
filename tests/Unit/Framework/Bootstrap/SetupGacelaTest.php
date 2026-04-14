@@ -305,4 +305,139 @@ final class SetupGacelaTest extends TestCase
 
         self::assertCount(2, $transfer->gacelaConfigsToExtend);
     }
+
+    public function test_merge_gacela_configs_to_extend_keeps_both_when_distinct(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->extendGacelaConfig(CustomGacelaConfig::class),
+        );
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->extendGacelaConfig(\GacelaTest\Unit\Framework\Bootstrap\AnotherSetupFixtureConfig::class),
+        );
+
+        $setup->merge($setup2);
+
+        self::assertSame(
+            [
+                CustomGacelaConfig::class,
+                \GacelaTest\Unit\Framework\Bootstrap\AnotherSetupFixtureConfig::class,
+            ],
+            $setup->getGacelaConfigsToExtend(),
+        );
+    }
+
+    public function test_merge_does_not_override_gacela_configs_when_other_has_no_changes(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->extendGacelaConfig(CustomGacelaConfig::class),
+        );
+        $setup2 = new SetupGacela();
+
+        $setup->merge($setup2);
+
+        self::assertSame([CustomGacelaConfig::class], $setup->getGacelaConfigsToExtend());
+    }
+
+    public function test_is_property_changed_resets_when_setter_called_with_null(): void
+    {
+        $setup = new SetupGacela();
+        $setup->setProjectNamespaces(['App']);
+
+        self::assertTrue($setup->isPropertyChanged(SetupGacela::projectNamespaces));
+
+        $setup->setProjectNamespaces(null);
+
+        self::assertFalse($setup->isPropertyChanged(SetupGacela::projectNamespaces));
+    }
+
+    public function test_disable_event_listeners_prevents_dispatcher_creation(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->disableEventListeners()
+                ->registerGenericListener(static function (): void {
+                }),
+        );
+
+        self::assertFalse($setup->canCreateEventDispatcher());
+    }
+
+    public function test_add_services_to_extend_appends_all_given_items(): void
+    {
+        $a = static fn (mixed $s): mixed => $s;
+        $b = static fn (mixed $s): mixed => $s;
+        $c = static fn (mixed $s): mixed => $s;
+
+        $setup = new SetupGacela();
+        $setup->addServicesToExtend('svc', [$a]);
+        $setup->addServicesToExtend('svc', [$b, $c]);
+
+        self::assertSame([$a, $b, $c], $setup->getServicesToExtend()['svc']);
+    }
+
+    public function test_merge_services_to_extend_combines_multiple_extensions_per_service(): void
+    {
+        $fn1 = static fn (mixed $s): mixed => $s;
+        $fn2 = static fn (mixed $s): mixed => $s;
+        $fn3 = static fn (mixed $s): mixed => $s;
+
+        $setup1 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->extendService('service', $fn1),
+        );
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->extendService('service', $fn2)
+                ->extendService('service', $fn3),
+        );
+
+        $setup1->merge($setup2);
+
+        self::assertSame([$fn1, $fn2, $fn3], $setup1->getServicesToExtend()['service']);
+    }
+
+    public function test_merge_event_dispatcher_when_other_has_only_specific_listeners(): void
+    {
+        $genericListener = static function (GacelaEventInterface $event): void {};
+        $specificListener = static function (GacelaEventInterface $event): void {};
+
+        $setup1 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->registerGenericListener($genericListener),
+        );
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->registerSpecificListener(FakeEvent::class, $specificListener),
+        );
+
+        $setup1->merge($setup2);
+
+        $setup1->getEventDispatcher()->dispatch(new FakeEvent());
+
+        self::assertInstanceOf(ConfigurableEventDispatcher::class, $setup1->getEventDispatcher());
+    }
+
+    public function test_merge_registers_generic_listeners_from_other(): void
+    {
+        $genericFromOther = false;
+        $otherListener = static function (GacelaEventInterface $event) use (&$genericFromOther): void {
+            $genericFromOther = true;
+        };
+
+        $setup1 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->registerSpecificListener(FakeEvent::class, static function (): void {
+            }),
+        );
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->registerGenericListener($otherListener),
+        );
+
+        $setup1->merge($setup2);
+        $setup1->getEventDispatcher()->dispatch(new FakeEvent());
+
+        self::assertTrue($genericFromOther, 'generic listener from `$other` must be registered and fire on dispatch');
+    }
+}
+
+final class AnotherSetupFixtureConfig
+{
 }

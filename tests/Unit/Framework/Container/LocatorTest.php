@@ -114,9 +114,73 @@ final class LocatorTest extends TestCase
         try {
             Locator::getInstance($container)->getRequired($typo);
             self::fail('Expected ServiceNotFoundException');
-        } catch (ServiceNotFoundException $e) {
-            self::assertStringContainsString('Did you mean?', $e->getMessage());
-            self::assertStringContainsString(StringValue::class, $e->getMessage());
+        } catch (ServiceNotFoundException $serviceNotFoundException) {
+            self::assertStringContainsString('Did you mean?', $serviceNotFoundException->getMessage());
+            self::assertStringContainsString(StringValue::class, $serviceNotFoundException->getMessage());
+        }
+    }
+
+    public function test_anonymous_global_takes_precedence_over_container_binding(): void
+    {
+        \Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal::resetCache();
+        $fromGlobal = new StringValue('from-global');
+        $fromContainer = new StringValue('from-container');
+
+        \Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal::overrideExistingResolvedClass(
+            StringValue::class,
+            $fromGlobal,
+        );
+
+        $container = new Container(bindings: [
+            StringValue::class => $fromContainer,
+        ]);
+
+        $resolved = Locator::getInstance($container)->get(StringValue::class);
+
+        self::assertSame($fromGlobal, $resolved, 'AnonymousGlobal must be checked before container in Locator::get');
+        \Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal::resetCache();
+    }
+
+    public function test_known_service_names_deduplicates_entries(): void
+    {
+        $container = new Container(bindings: [
+            StringValue::class => new StringValue('registered'),
+        ]);
+        $container->set(StringValue::class, static fn (): StringValue => new StringValue('x'));
+
+        /** @var class-string $typo */
+        $typo = 'GacelaTest\\Fixtures\\StringValu';
+
+        try {
+            Locator::getInstance($container)->getRequired($typo);
+            self::fail('Expected ServiceNotFoundException');
+        } catch (ServiceNotFoundException $serviceNotFoundException) {
+            self::assertSame(
+                1,
+                substr_count($serviceNotFoundException->getMessage(), StringValue::class),
+                'Service name must appear only once in the suggestion list after dedup',
+            );
+        }
+    }
+
+    public function test_known_service_names_includes_both_registered_services_and_bindings(): void
+    {
+        // Fixtures\StringValue is only registered via set() (in getRegisteredServices),
+        // while a separate binding key exists only in getBindings(). The suggestion
+        // list must consider both sources.
+        $bindingOnlyName = 'GacelaTest\\Fixtures\\OnlyInBinding';
+        $container = new Container(bindings: [
+            $bindingOnlyName => new StringValue('binding'),
+        ]);
+        $container->set(StringValue::class, static fn (): StringValue => new StringValue('registered'));
+
+        /** @var class-string $typoOfRegistered */
+        $typoOfRegistered = 'GacelaTest\\Fixtures\\StringValu';
+        try {
+            Locator::getInstance($container)->getRequired($typoOfRegistered);
+            self::fail('Expected ServiceNotFoundException for registered-service typo');
+        } catch (ServiceNotFoundException $serviceNotFoundException) {
+            self::assertStringContainsString(StringValue::class, $serviceNotFoundException->getMessage());
         }
     }
 }

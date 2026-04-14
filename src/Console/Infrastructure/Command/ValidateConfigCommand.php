@@ -242,6 +242,7 @@ final class ValidateConfigCommand extends Command
         if ($parents !== []) {
             $parts[] = 'extends ' . implode(' -> ', $parents);
         }
+
         if ($interfaces !== []) {
             $parts[] = 'implements ' . implode(', ', $interfaces);
         }

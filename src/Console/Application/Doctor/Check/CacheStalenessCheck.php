@@ -30,6 +30,7 @@ final class CacheStalenessCheck implements HealthCheck
             if (!class_exists($className) && !interface_exists($className)) {
                 return null;
             }
+
             try {
                 $file = (new ReflectionClass($className))->getFileName();
             } catch (ReflectionException) {
@@ -70,10 +71,12 @@ final class CacheStalenessCheck implements HealthCheck
                     $missing[] = sprintf('%s → %s (source file not found)', $cacheKey, $className);
                     continue;
                 }
+
                 if (!is_file($source)) {
                     $missing[] = sprintf('%s → %s (%s)', $cacheKey, $className, $source);
                     continue;
                 }
+
                 if ((int) filemtime($source) > $cacheMtime) {
                     $stale[] = sprintf('%s → %s', $cacheKey, $className);
                 }
@@ -88,6 +91,7 @@ final class CacheStalenessCheck implements HealthCheck
         foreach ($stale as $entry) {
             $details[] = 'stale: ' . $entry;
         }
+
         foreach ($missing as $entry) {
             $details[] = 'missing source: ' . $entry;
         }

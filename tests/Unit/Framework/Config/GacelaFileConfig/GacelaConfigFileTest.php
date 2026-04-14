@@ -148,4 +148,40 @@ final class GacelaConfigFileTest extends TestCase
 
         self::assertEquals($expected, $actual);
     }
+
+    public function test_merge_returns_new_instance_without_mutating_original(): void
+    {
+        $original = (new GacelaConfigFile())
+            ->setConfigItems([new GacelaConfigItem('path1')]);
+        $other = (new GacelaConfigFile())
+            ->setConfigItems([new GacelaConfigItem('path2')]);
+
+        $merged = $original->merge($other);
+
+        self::assertNotSame($original, $merged);
+        self::assertCount(1, $original->getConfigItems());
+        self::assertCount(2, $merged->getConfigItems());
+    }
+
+    public function test_merge_filters_out_empty_string_suffix_entries(): void
+    {
+        $configFile1 = (new GacelaConfigFile())
+            ->setSuffixTypes([
+                'Facade' => ['FA', ''],
+                'Factory' => ['F'],
+                'Config' => ['C'],
+                'Provider' => ['DP'],
+            ]);
+        $configFile2 = (new GacelaConfigFile())
+            ->setSuffixTypes([
+                'Facade' => ['', 'FB'],
+                'Factory' => ['F'],
+                'Config' => ['C'],
+                'Provider' => ['DP'],
+            ]);
+
+        $merged = $configFile1->merge($configFile2);
+
+        self::assertSame(['FA', 'FB'], $merged->getSuffixTypes()['Facade']);
+    }
 }

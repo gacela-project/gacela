@@ -151,4 +151,40 @@ final class ContextualBindingsTest extends TestCase
         self::assertArrayHasKey('ConcreteClass', $contextualBindings);
         self::assertSame('Implementation', $contextualBindings['ConcreteClass']['DependencyInterface']);
     }
+
+    public function test_contextual_binding_is_applied_through_container_resolution(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->addBinding(ContextualDependencyInterface::class, DefaultContextualDependency::class);
+            $config->when(ContextualConsumer::class)
+                ->needs(ContextualDependencyInterface::class)
+                ->give(SpecificContextualDependency::class);
+        });
+
+        $container = Container::withConfig(Config::getInstance());
+        $consumer = $container->get(ContextualConsumer::class);
+
+        self::assertInstanceOf(ContextualConsumer::class, $consumer);
+        self::assertInstanceOf(SpecificContextualDependency::class, $consumer->dependency);
+    }
+}
+
+interface ContextualDependencyInterface
+{
+}
+
+final class DefaultContextualDependency implements ContextualDependencyInterface
+{
+}
+
+final class SpecificContextualDependency implements ContextualDependencyInterface
+{
+}
+
+final class ContextualConsumer
+{
+    public function __construct(
+        public readonly ContextualDependencyInterface $dependency,
+    ) {
+    }
 }

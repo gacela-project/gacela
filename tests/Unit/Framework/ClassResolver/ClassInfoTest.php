@@ -56,4 +56,13 @@ final class ClassInfoTest extends TestCase
         self::assertSame('Fixtures', $actual->getModuleName(), 'module');
         self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey(), 'cache key');
     }
+
+    public function test_string_class_with_leading_backslash_is_normalized(): void
+    {
+        $actual = ClassInfo::from('\\' . ClassInfoTestingFacade::class, 'Factory');
+
+        self::assertSame('GacelaTest', $actual->getModuleNamespace(), 'leading backslash must be trimmed before parsing parts');
+        self::assertSame('Fixtures', $actual->getModuleName());
+        self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey());
+    }
 }

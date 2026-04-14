@@ -88,7 +88,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
         self::$batching = false;
 
-        foreach (self::$dirty as $class => $_) {
+        foreach (array_keys(self::$dirty) as $class) {
             $filename = self::$filenames[$class] ?? null;
             if ($filename === null) {
                 continue;
@@ -163,7 +163,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
     private function computeAbsoluteFilename(): string
     {
         if (!is_dir($this->cacheDir)
-            && !mkdir($concurrentDirectory = $this->cacheDir, 0777, true)
+            && !mkdir($concurrentDirectory = $this->cacheDir, recursive: true)
             && !is_dir($concurrentDirectory)
         ) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));

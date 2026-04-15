@@ -11,6 +11,11 @@
     silently ignored. The alias is deferred to a coordinated follow-up
     once the vendor container migrates to `ReflectionAttribute::IS_INSTANCEOF`
     on its `getAttributes()` calls. See §3.1 and §5.
+  - 2026-04-15 (amendment) — drop `ConstructorInjectionsCache` from
+    PR #8a. Audit showed no existing code scans constructor attributes
+    at boot or in `cache:warm`, so the cache would have neither
+    producer nor consumer — speculative infrastructure. Add it later
+    only when a concrete consumer appears. See §3.6 and §5.
 
 ## 1. Context
 
@@ -140,10 +145,14 @@ without the plugin.
 ### 3.6 Caching
 
 `DependencyResolver::constructorCache` already memoizes reflection
-per-process. Cross-process: a new `ConstructorInjectionsCache` (follows
-`AbstractPhpFileCache`) stores per-class `#[Inject]` metadata so boot
-reflection is O(changed classes). Participates in `cache:clear` /
-`cache:warm`.
+per-process — no change needed. A cross-process `ConstructorInjectionsCache`
+was originally scoped for PR #8 but **dropped**: nothing in the
+codebase scans constructor attributes at boot or during `cache:warm`,
+so the cache would have no producer or consumer. It is carrying
+capacity, not value. Add it in a follow-up only if and when a concrete
+consumer appears (e.g., a future `cache:warm` scanner or a
+`debug:injected` command that lists every `#[Inject]` usage
+repo-wide).
 
 ### 3.7 Symfony bridge (`gacela/symfony-bridge`)
 
@@ -202,19 +211,19 @@ Budget **M** (not L — the attribute already exists).
 
 In scope:
 
-1. `ConstructorInjectionsCache`.
-2. PHPStan rule for `#[Inject(Concrete::class)]` type upgrade.
-3. `debug:dependencies` `kind` column + extended `ParameterStatus`.
-4. `docs/container-configuration.md` section with the migration example
+1. PHPStan rule for `#[Inject(Concrete::class)]` type upgrade.
+2. `debug:dependencies` `kind` column + extended `ParameterStatus`.
+3. `docs/container-configuration.md` section with the migration example
    (canonical import: `use Gacela\Container\Attribute\Inject;`).
-5. `gacela/symfony-bridge` package with `GacelaInjectCompilerPass`,
+4. `gacela/symfony-bridge` package with `GacelaInjectCompilerPass`,
    bundle glue, tests against a minimal Symfony kernel.
-6. CHANGELOG under `Unreleased > Added`.
+5. CHANGELOG under `Unreleased > Added`.
 
 Out of scope (future coordinated PRs): `Gacela\Framework\Attribute\Inject`
 alias (gated on vendor container migrating to `IS_INSTANCEOF` — see §3.1),
-property-level `#[Inject]`, non-Symfony bridges, runtime proxies for
-unbound interfaces.
+`ConstructorInjectionsCache` (deferred until a concrete consumer exists
+— see §3.6), property-level `#[Inject]`, non-Symfony bridges, runtime
+proxies for unbound interfaces.
 
 ## 6. Consequences
 

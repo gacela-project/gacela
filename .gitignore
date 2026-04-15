@@ -2,6 +2,7 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .gacela/
+.release-state/
 .vscode/
 .phpbench/
 .cache/

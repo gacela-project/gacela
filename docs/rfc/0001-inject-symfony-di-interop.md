@@ -1,200 +1,211 @@
-# RFC-0001: `#[Inject]` and `#[ServiceMapTyped]` — Symfony DI interop
+# RFC-0001: `#[Inject]` and Symfony DI interop
 
-- Status: **Proposed** — not yet approved. Implementation is gated on this RFC.
-- Supersedes: —
-- Blocks: `feat/inject-attribute` (PR #8 in `local/pr-plan.md`)
+- Status: **Accepted** (2026-04-15).
+- Blocks: `feat/inject-attribute` (PR #8 in `local/pr-plan.md`).
 
 ## 1. Context
 
-Consumers of Gacela facades frequently see one of three patterns in their code:
+Consumers today reach Gacela services from outside facades via
+`Gacela::getRequired()`, `#[ServiceMap]` + `ServiceResolverAwareTrait`,
+or direct `getFacade()` calls with `@psalm-suppress InternalMethod`.
+None of these read as natural constructor injection. Phel's ~10 Symfony
+`Command` classes are the reference target.
+
+**Existing state (load-bearing for the decisions below):**
+
+- `Gacela\Container\Attribute\Inject` already exists in the vendor
+  container package, targets `TARGET_PARAMETER`, and takes an optional
+  `?string $implementation` override.
+- `DependencyResolver::resolveDependenciesRecursively()` already honors
+  it; falls through to type-hint autowire otherwise.
+- Nothing under `src/Framework/` references `Inject` — it is
+  undocumented and undiscoverable.
+- `#[ServiceMap(method, className)]` at
+  `src/Framework/ServiceResolver/ServiceMap.php` targets `TARGET_CLASS`
+  — a class-level `__call` dispatch map, unrelated to property typing.
+
+PR #8's job is therefore to **promote** `#[Inject]`, not to implement it.
+
+## 2. Decisions
+
+### Q1. Who wires Symfony `Command` constructors? → Separate bridge, lockstep release.
+
+A new `gacela/symfony-bridge` package ships `GacelaInjectCompilerPass`.
+Core stays Symfony-free. **The bridge MUST release alongside PR #8** —
+shipping `#[Inject]` without a working bridge leaves the headline
+consumer (phel commands) unable to adopt it. The pass routes
+`#[Inject]`-annotated parameters to Gacela and fails the build when
+both containers claim the same parameter. May live in a
+`symfony-bridge/` subfolder during development, split once stable.
+
+### Q2. One attribute or two? → One. `#[Inject]`, constructor-only.
+
+The proposed `#[ServiceMapTyped]` is dropped — no concrete consumer for
+property injection, and constructor injection interoperates cleanly
+with `readonly`. A follow-up RFC can extend `TARGET_PROPERTY` later
+without breaking this one. PR #8 adds docs, a Gacela-namespace alias,
+static-analysis upgrade, `debug:dependencies` surfacing, and migration
+examples around the existing attribute.
+
+### Q3. `debug:dependencies` output? → One unified view with a `kind` column.
+
+Extend the existing per-row status with a `kind` column (`inject`,
+`contextual`, `bound`, `autowirable`, `default`, `scalar`, `missing`).
+`ParameterStatus` gains `INJECT`; the renderer inlines the override
+target when `#[Inject($impl)]` is set.
+
+## 3. Specification
+
+### 3.1 Attribute shape (no change required)
 
 ```php
-// Pattern A — verbose typed lookup
-$fs = Gacela::getRequired(FilesystemFacade::class);
+namespace Gacela\Container\Attribute;
 
-// Pattern B — service map attribute, loses interface typing
-final class MyClass
+#[Attribute(Attribute::TARGET_PARAMETER)]
+final class Inject
 {
-    #[ServiceMap(FilesystemFacade::class)]
-    private FilesystemFacade $fs;
+    public function __construct(
+        public ?string $implementation = null,
+    ) {}
 }
-
-// Pattern C — direct facade access with suppressions
-/** @psalm-suppress InternalMethod */
-$fs = $this->getFacade()->clearCache();
 ```
 
-All three work, but none reads as natural constructor injection. Downstream
-projects (phel-lang is the reference case) have dozens of Symfony `Command`
-classes that could drop `ServiceResolverAwareTrait` and `getFacade()` calls
-in favour of a single constructor-injected interface.
+PR #8 adds a bootstrap `class_alias` so `Gacela\Framework\Attribute\Inject`
+resolves to the same class — consistent with `#[Cacheable]` and the rest
+of `Gacela\Framework\Attribute\`.
 
-The proposal is to add `#[Inject]` on constructor parameters and
-`#[ServiceMapTyped]` on properties, both targeting interfaces, and have
-the container resolve them automatically. Psalm and PHPStan then infer
-types without `@psalm-suppress` or manual docblocks.
+### 3.2 Resolution order
 
-## 2. Problem
+For `#[Inject($override)] Type $p` on `Consumer`:
 
-Three open questions must be resolved before implementation. Each one
-has ergonomic and runtime consequences; the cost of picking the wrong
-answer is BC breakage or a silently-wrong DI wiring.
+1. `$override` set → resolve `$override`.
+2. `$config->when(Consumer)->needs(Type)->give(X)` → resolve `X`.
+3. `$config->addBinding(Type, X)` → resolve `X`.
+4. `Type` instantiable → `new Type(...)` with recursive autowire.
+5. `$p` has a default → use it.
+6. Otherwise → throw `ServiceNotFoundException`.
 
-### Q1. Who wires Symfony `Command` constructors?
+Nullable parameters (`?Foo`) with no binding and no default resolve to
+`null`. Every other miss is an exception.
 
-Phel's commands live inside a Symfony `Application`. Symfony autowires
-`Command` constructors through its own container. If Gacela's `#[Inject]`
-attribute also wires them, the two containers race — last-writer wins,
-and the user gets silent mis-wiring that only surfaces at runtime.
+### 3.3 Error surface
 
-**Option A.** Gacela owns the commands. Ship a Symfony compiler pass
-(`GacelaInjectCompilerPass`) that inspects each `Command` service
-definition: if any parameter has `#[Inject]`, route that parameter's
-resolution to Gacela's container. Fail the build when both containers
-bind the same parameter.
-- Pros: clean consumer story (`#[Inject]` just works in Symfony classes).
-- Cons: adds a hard dep on Symfony DI (at least in the interop package);
-  compiler passes are the right extension point but raise the learning
-  curve for debugging wiring issues.
+| Condition | Exception |
+| --- | --- |
+| `#[Inject]` on a parameter without a type hint | `DependencyInvalidArgumentException::noParameterTypeFor` |
+| `#[Inject]` on a scalar type with no default | `DependencyInvalidArgumentException::unableToResolve` |
+| `#[Inject($x)]` where `$x` is not a class-string | `DependencyInvalidArgumentException` (new helper) |
+| Resolution exhausted, type not instantiable | `ServiceNotFoundException` |
 
-**Option B.** `#[Inject]` only applies to non-Symfony classes. Symfony
-commands keep using `Gacela::getRequired()` in `configure()` /
-`execute()`. Document the boundary explicitly.
-- Pros: no Symfony dep; two containers stay decoupled.
-- Cons: the biggest target audience (phel's commands) doesn't benefit —
-  the whole feature becomes much smaller in impact.
+### 3.4 Interactions
 
-**Option C.** Ship a separate `gacela/symfony-bridge` package that
-provides the compiler pass, and keep `#[Inject]` container-agnostic in
-the core. Users opt-in by requiring the bridge.
-- Pros: core stays thin; Symfony coupling is explicit and optional;
-  other frameworks (Laravel, Slim, Mezzio) can ship their own bridges.
-- Cons: one more package to publish and version; users must discover it.
+- **Protected services** (`$config->addProtected`) cannot be injected;
+  the existing resolution path already throws `ServiceNotFoundException`
+  for them.
+- **Contextual bindings** win over global bindings (§3.2 step 2 before 3).
+- **`ContainerFixture`**: `resetContainer()` clears the constructor
+  cache; `captureContainerState()` / `restoreContainerState()` include it.
+- **`#[ServiceMap]` and `ServiceResolverAwareTrait`** are untouched —
+  orthogonal `__call` dispatch, different use case.
 
-**Recommended**: C. It keeps the core decoupled and gives phel a
-narrow bridge they can adopt or fork. If the bridge footprint is small
-enough (< ~200 LOC), it could be a subfolder inside gacela that ships
-as a separate composer package via path-based autoload.
+### 3.5 Static analysis
 
-### Q2. What does `#[ServiceMapTyped]` return — proxy, binding, or hint?
+`#[Inject(ConcreteImpl::class)]` on an interface-typed parameter
+upgrades the analyzer's inferred type to `ConcreteImpl`. Extend the
+existing rule set in `src/PHPStan/`. Without the override, no upgrade —
+analyzers trust the declared hint. Runtime behavior is identical with or
+without the plugin.
 
-`#[ServiceMapTyped(interface: FilesystemFacadeInterface::class)]` needs
-to hand back a value that satisfies the interface *and* routes internal
-method calls through the container's existing facade dispatch.
+### 3.6 Caching
 
-**Option A — Runtime proxy.** Generate an `$ interface`-implementing
-proxy class on first resolution that forwards every method call to
-`Gacela::getRequired($concrete)`. Psalm/PHPStan see the interface
-type; internal `@internal` methods go through Gacela normally.
-- Pros: zero call-site awareness of the proxy.
-- Cons: generated code adds a file-cache entry per interface; reflection
-  cost on boot; debugging traces show proxy methods.
+`DependencyResolver::constructorCache` already memoizes reflection
+per-process. Cross-process: a new `ConstructorInjectionsCache` (follows
+`AbstractPhpFileCache`) stores per-class `#[Inject]` metadata so boot
+reflection is O(changed classes). Participates in `cache:clear` /
+`cache:warm`.
 
-**Option B — Binding.** Register the interface → concrete mapping in
-the container at Provider time, so `Gacela::getRequired(Interface)`
-returns the concrete. `#[ServiceMapTyped]` becomes a typed alias on
-top of existing `addBinding()`.
-- Pros: no code generation; same runtime cost as today's `getRequired`.
-- Cons: doesn't address the `@psalm-suppress InternalMethod` pattern —
-  callers still pierce `@internal` when they call concrete methods
-  directly. Requires users to call only interface methods.
+### 3.7 Symfony bridge (`gacela/symfony-bridge`)
 
-**Option C — Static-analysis hint only.** `#[ServiceMapTyped]` does
-nothing at runtime — it's purely a marker for Psalm/PHPStan extensions
-to upgrade the inferred type of `Gacela::getRequired($interface)` to
-the concrete class.
-- Pros: no runtime cost; no proxy; no new wiring.
-- Cons: requires shipping a Psalm plugin and a PHPStan extension (both
-  already exist in `src/PHPStan/` — scope-check whether extending them
-  is within this RFC's budget).
+- New composer package, ships with PR #8.
+- `GacelaInjectCompilerPass implements CompilerPassInterface`, runs
+  **before** Symfony's autowire pass.
+- Bundle glue included for projects using Symfony bundles; the bare
+  compiler pass remains available otherwise.
+- Conflict (both containers claim a parameter) → build fails with the
+  service id and parameter name.
 
-**Recommended**: B for `#[Inject]` (binding resolution), C for
-`#[ServiceMapTyped]` (static-analysis hint). That keeps runtime code
-simple and solves both problems without generating proxy classes.
-Runtime proxies (A) are deferred unless a concrete need emerges.
+## 4. Migration example
 
-### Q3. `debug:dependencies` output layout
+Before:
 
-Current `DebugDependenciesCommand` reports `#[ServiceMap]` properties
-per class. After `#[Inject]` ships, the same command must surface
-constructor-injected deps.
+```php
+final class PhelRunCommand extends Command
+{
+    use ServiceResolverAwareTrait;
 
-**Option A.** Add a new "Injected parameters" section per class, below
-the existing "Service-mapped properties" section.
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        /** @psalm-suppress InternalMethod */
+        $this->getFacade()->clearCache();
+        return self::SUCCESS;
+    }
+}
+```
 
-**Option B.** Unify into a single "Dependencies" section; distinguish
-with a column (`kind: inject | service-map | contextual-binding`).
+After (bridge installed + pass registered):
 
-**Option C.** Leave `debug:dependencies` untouched; ship a new
-`debug:injected` command.
+```php
+final class PhelRunCommand extends Command
+{
+    public function __construct(
+        #[Inject] private readonly PhelFacadeInterface $phel,
+    ) {
+        parent::__construct();
+    }
 
-**Recommended**: B. A single unified view matches what users actually
-want (one command, full picture of a class's DI graph). Requires a
-small cs fix to the existing command's output format.
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $this->phel->clearCache();
+        return self::SUCCESS;
+    }
+}
+```
 
-## 3. Decision (to be filled after approval)
+Trait gone. `@psalm-suppress` gone. Dependency visible to tooling.
 
-> **Pending.** Fill this section before opening PR #8.
+## 5. Scope for PR #8
 
-## 4. Alternatives considered (not recommended)
+Budget **M** (not L — the attribute already exists).
 
-- **Status quo.** Keep `Gacela::getRequired()` everywhere. Rejected
-  because the `@psalm-suppress InternalMethod` pattern is spreading
-  and will only accumulate.
-- **Remove `@internal` markers on facade methods.** Cheaper than any of
-  the above but breaks the existing encapsulation contract — `@internal`
-  exists precisely to gate which methods are user-facing vs framework-
-  internal. Rejected.
-- **Ship `#[Inject]` on properties only.** Property injection sidesteps
-  constructor wiring but prevents `readonly` properties and hides
-  dependencies. Rejected on modern-PHP grounds.
+In scope:
 
-## 5. Consequences
+1. Bootstrap `class_alias(Gacela\Container\Attribute\Inject::class, Gacela\Framework\Attribute\Inject::class)`.
+2. `ConstructorInjectionsCache`.
+3. PHPStan rule for `#[Inject(Concrete::class)]` type upgrade.
+4. `debug:dependencies` `kind` column + extended `ParameterStatus`.
+5. `docs/container-configuration.md` section with the migration example.
+6. `gacela/symfony-bridge` package with `GacelaInjectCompilerPass`,
+   bundle glue, tests against a minimal Symfony kernel.
+7. CHANGELOG under `Unreleased > Added`.
 
-### Positive
+Out of scope (future RFCs if a consumer emerges): property-level
+`#[Inject]`, non-Symfony bridges, runtime proxies for unbound interfaces.
 
-- Phel's `src/php/*/Infrastructure/Command/*.php` (~10 classes) drop
-  `ServiceResolverAwareTrait` and `$this->getFacade()` calls.
-- No more `@psalm-suppress InternalMethod` on consumer facade calls
-  when they use `#[Inject]` with an interface.
-- `debug:dependencies` becomes a single source of truth for a class's
-  DI graph.
+## 6. Consequences
 
-### Negative
+- **Positive.** Phel's Symfony commands drop `ServiceResolverAwareTrait`
+  and `@psalm-suppress`. `#[Inject]` becomes discoverable.
+  `debug:dependencies` becomes one source of truth for a class's DI graph.
+- **Negative.** Symfony users discover the bridge separately (mitigated
+  by docs). Users without the PHPStan rule lose the type upgrade;
+  runtime is identical.
+- **Backwards compatible.** `Gacela::getRequired()`, `#[ServiceMap]`,
+  `getFacade()`, `ServiceResolverAwareTrait`, and existing autowiring
+  all continue to work unchanged.
 
-- If Q1 lands on Option C (bridge package), consumers pay a
-  discovery tax: "why doesn't `#[Inject]` work in my Symfony command?"
-- Static-analysis hints (Q2 Option C) require users to have the Psalm
-  plugin / PHPStan extension enabled, or they lose the type upgrade.
+## 7. References
 
-### Migration
-
-Backwards-compatible by construction. Existing `Gacela::getRequired()`,
-`#[ServiceMap]`, and `getFacade()` call sites continue to work.
-
-## 6. Scope for PR #8 (when this RFC is approved)
-
-- `#[Inject]` attribute + constructor wiring in Gacela's container.
-- `#[ServiceMapTyped]` as a typed variant of `#[ServiceMap]`.
-- `debug:dependencies` output update per Q3.
-- Psalm plugin + PHPStan extension updates if Q2-C is chosen.
-- The Symfony bridge per Q1-C, if chosen — may be a follow-up PR rather
-  than part of #8.
-- Documentation in `docs/container-configuration.md` with a migration
-  example.
-
-## 7. Open questions (for reviewers)
-
-1. Is the Q1-C bridge-package split the right scope boundary, or should
-   the core take a direct Symfony dep?
-2. For Q2, is shipping a Psalm plugin update in the same PR acceptable,
-   or does that warrant a separate PR?
-3. Any other framework containers (Laravel, Mezzio) that should be
-   considered now rather than left to future bridges?
-
-## 8. References
-
-- `local/phel-lang-feature-proposals.md` §6 — original proposal
-- `local/pr-plan.md` — PR #7 (this RFC) blocks PR #8
-- Existing `#[ServiceMap]` attribute in `src/Framework/Container/`
-- Existing PHPStan rules in `src/PHPStan/`
+- `vendor/gacela-project/container/src/Container/Attribute/Inject.php`
+- `vendor/gacela-project/container/src/Container/DependencyResolver.php`
+- `src/Framework/ServiceResolver/ServiceMap.php`
+- `src/Console/Infrastructure/Command/DebugDependenciesCommand.php`

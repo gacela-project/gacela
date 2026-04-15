@@ -4,126 +4,174 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Attribute;
 
-use ReflectionClass;
+use Closure;
 use ReflectionMethod;
+use stdClass;
 
+use function count;
+use function debug_backtrace;
 use function end;
 use function explode;
+use function is_int;
+use function is_scalar;
+use function is_string;
 use function md5;
+use function preg_replace_callback;
 use function serialize;
 use function sprintf;
-use function time;
+use function str_contains;
 
 /**
- * Trait that enables #[Cacheable] attribute support for facade methods.
+ * Enables #[Cacheable] support for facade methods.
  *
- * Add this trait to your facade to automatically cache methods marked with #[Cacheable].
+ * Usage:
+ * ```php
+ * use Gacela\Framework\Attribute\Cacheable;
+ * use Gacela\Framework\Attribute\CacheableTrait;
+ *
+ * final class MyFacade
+ * {
+ *     use CacheableTrait;
+ *
+ *     #[Cacheable(ttl: 3600)]
+ *     public function getExpensiveData(int $id): array
+ *     {
+ *         return $this->cached(fn (): array =>
+ *             $this->getFactory()->createRepository()->fetchData($id),
+ *         );
+ *     }
+ * }
+ * ```
+ *
+ * The method name and arguments are inferred from the caller's stack frame;
+ * the #[Cacheable] attribute supplies TTL and (optionally) a custom key template.
+ *
+ * For hot paths, very-large arguments, or when `cached()` is invoked from a
+ * helper (not the attributed method itself), pass `$method` and `$args`
+ * explicitly to skip the `debug_backtrace()` call:
+ *
+ * ```php
+ * return $this->cached(fn () => ..., __METHOD__, [$id]);
+ * ```
  */
 trait CacheableTrait
 {
-    /** @var array<string,array{result:mixed,expires:int}> */
-    private static array $methodCache = [];
+    /** @var array<string, Cacheable|false> */
+    private static array $attributeCache = [];
 
-    /**
-     * Clear all cached method results.
-     */
+    private static ?stdClass $cacheMissSentinel = null;
+
     public static function clearMethodCache(): void
     {
-        self::$methodCache = [];
+        CacheableConfig::getStorage()->clear();
     }
 
-    /**
-     * Clear cached result for a specific method.
-     */
     public static function clearMethodCacheFor(string $method): void
     {
-        foreach (array_keys(self::$methodCache) as $key) {
-            if (str_contains($key, $method)) {
-                unset(self::$methodCache[$key]);
-            }
-        }
+        CacheableConfig::getStorage()->deleteByPrefix(sprintf('%s::%s::', static::class, $method));
     }
 
     /**
-     * Execute a method with caching support based on #[Cacheable] attribute.
-     *
-     * @param list<mixed> $args
+     * @param list<mixed>|null $args
      */
-    protected function cached(string $method, array $args, callable $callback): mixed
+    protected function cached(Closure $callback, ?string $method = null, ?array $args = null): mixed
     {
-        $reflectionMethod = $this->getReflectionMethod($method);
-        $cacheableAttr = $this->getCacheableAttribute($reflectionMethod);
+        if ($method === null) {
+            $frame = debug_backtrace(0, 2)[1] ?? null;
+            if ($frame === null || !isset($frame['function'])) {
+                return $callback();
+            }
+            $method = (string) $frame['function'];
+            /** @var list<mixed> $args */
+            $args ??= $frame['args'] ?? [];
+        } else {
+            if (str_contains($method, '::')) {
+                $parts = explode('::', $method);
+                $method = (string) end($parts);
+            }
+            $args ??= [];
+        }
 
-        if ($cacheableAttr === null) {
+        $attribute = $this->resolveCacheableAttribute($method);
+        if ($attribute === null) {
             return $callback();
         }
 
-        $cacheKey = $this->generateCacheKey($method, $args, $cacheableAttr);
-        $currentTime = time();
+        $storage = CacheableConfig::getStorage();
+        $cacheKey = $this->buildCacheKey($method, $args, $attribute);
 
-        // Check if we have a valid cached value
-        if (isset(self::$methodCache[$cacheKey])) {
-            $cached = self::$methodCache[$cacheKey];
-            // @infection-ignore-all — the > vs >= boundary is a single-second tie; not worth testing
-            if ($cached['expires'] > $currentTime) {
-                return $cached['result'];
-            }
-
-            // Expired, remove it
-            unset(self::$methodCache[$cacheKey]);
+        $miss = self::$cacheMissSentinel ??= new stdClass();
+        $cached = $storage->get($cacheKey, $miss);
+        if ($cached !== $miss) {
+            return $cached;
         }
 
-        // Execute the method and cache the result
         $result = $callback();
-        self::$methodCache[$cacheKey] = [
-            'result' => $result,
-            'expires' => $currentTime + $cacheableAttr->ttl,
-        ];
+        $ttl = CacheableConfig::resolveTtl(sprintf('%s::%s', static::class, $method), $attribute->ttl);
+        $storage->set($cacheKey, $result, $ttl);
 
         return $result;
     }
 
-    /**
-     * Get reflection method for the given method name.
-     */
-    private function getReflectionMethod(string $method): ReflectionMethod
+    private function resolveCacheableAttribute(string $method): ?Cacheable
     {
-        // Extract just the method name if it's a full class::method string
-        $parts = explode('::', $method);
-        /** @var string $methodName */
-        $methodName = end($parts);
-
-        return (new ReflectionClass($this))->getMethod($methodName);
-    }
-
-    /**
-     * Get Cacheable attribute from reflection method.
-     */
-    private function getCacheableAttribute(ReflectionMethod $method): ?Cacheable
-    {
-        $attributes = $method->getAttributes(Cacheable::class);
-
-        if ($attributes === []) {
-            return null;
+        $cacheKey = static::class . '::' . $method;
+        if (!isset(self::$attributeCache[$cacheKey])) {
+            $attributes = (new ReflectionMethod($this, $method))->getAttributes(Cacheable::class);
+            self::$attributeCache[$cacheKey] = $attributes === [] ? false : $attributes[0]->newInstance();
         }
 
-        return $attributes[0]->newInstance();
+        $entry = self::$attributeCache[$cacheKey];
+        return $entry === false ? null : $entry;
     }
 
     /**
-     * Generate a cache key for the method call.
+     * @param list<mixed> $args
+     */
+    private function buildCacheKey(string $method, array $args, Cacheable $attribute): string
+    {
+        if ($attribute->key !== null) {
+            return $this->interpolateKey($attribute->key, $args);
+        }
+
+        return sprintf('%s::%s::%s', static::class, $method, $this->hashArgs($args));
+    }
+
+    /**
+     * @param list<mixed> $args
+     */
+    private function hashArgs(array $args): string
+    {
+        if ($args === []) {
+            return 'no-args';
+        }
+        if (count($args) === 1) {
+            $first = $args[0];
+            if (is_int($first) || is_string($first)) {
+                return (string) $first;
+            }
+        }
+        return md5(serialize($args));
+    }
+
+    /**
+     * Replace `{N}` placeholders in the key template with the Nth caller argument.
      *
      * @param list<mixed> $args
      */
-    private function generateCacheKey(string $method, array $args, Cacheable $attribute): string
+    private function interpolateKey(string $template, array $args): string
     {
-        if ($attribute->key !== null) {
-            return $attribute->key;
-        }
-
-        $className = static::class;
-        $argsKey = $args !== [] ? md5(serialize($args)) : 'no-args';
-
-        return sprintf('%s::%s::%s', $className, $method, $argsKey);
+        return (string) preg_replace_callback(
+            '/\{(\d+)\}/',
+            static function (array $match) use ($args): string {
+                $index = (int) $match[1];
+                $value = $args[$index] ?? '';
+                if ($value === null || is_scalar($value)) {
+                    return (string) $value;
+                }
+                return md5(serialize($value));
+            },
+            $template,
+        );
     }
 }

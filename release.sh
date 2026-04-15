@@ -26,6 +26,7 @@ WITH_GH_RELEASE=true
 BACKUP_DIR=""
 VERSION=""
 CURRENT_VERSION=""
+RELEASE_NOTES_FILE=""
 
 log_info()    { echo -e "${BLUE}[INFO]${NC} $1" >&2; }
 log_success() { echo -e "${GREEN}[OK]${NC} $1" >&2; }
@@ -209,6 +210,37 @@ update_bin_gacela() {
   log_success "bin/gacela → $VERSION"
 }
 
+capture_release_notes() {
+  local notes
+  notes=$(awk '
+    /^## Unreleased$/ {flag=1; next}
+    /^## \[/         {flag=0}
+    flag             {lines[++n]=$0}
+    END {
+      start=1; while (start<=n && lines[start] ~ /^[[:space:]]*$/) start++
+      end=n;   while (end>=start && lines[end] ~ /^[[:space:]]*$/) end--
+      for (i=start; i<=end; i++) print lines[i]
+    }
+  ' CHANGELOG.md)
+
+  [[ -n "$notes" ]] || {
+    log_error "Captured release notes from '## Unreleased' are empty."
+    exit $EXIT_VALIDATION_ERROR
+  }
+
+  if [[ "$DRY_RUN" == true ]]; then
+    log_dry "Release notes (from CHANGELOG.md '## Unreleased'):"
+    printf '%s\n' "$notes" | sed 's/^/    /' >&2
+    RELEASE_NOTES_FILE="(dry-run)"
+    return
+  fi
+
+  RELEASE_NOTES_FILE=".release-state/release-notes-${VERSION}.md"
+  mkdir -p .release-state
+  printf '%s\n' "$notes" > "$RELEASE_NOTES_FILE"
+  log_success "Release notes captured → $RELEASE_NOTES_FILE"
+}
+
 update_changelog() {
   local date today header
   today=$(date +%Y-%m-%d)
@@ -277,13 +309,12 @@ git_push() {
 create_gh_release() {
   [[ "$WITH_GH_RELEASE" == true ]] || { log_warn "Skipping gh release (--without-gh-release)"; return; }
   if [[ "$DRY_RUN" == true ]]; then
-    log_dry "Would: gh release create $VERSION --title $VERSION --generate-notes"
+    log_dry "Would: gh release create $VERSION --title $VERSION --notes-file $RELEASE_NOTES_FILE"
     return
   fi
   gh release create "$VERSION" \
     --title "$VERSION" \
-    --notes-start-tag "$CURRENT_VERSION" \
-    --generate-notes
+    --notes-file "$RELEASE_NOTES_FILE"
   log_success "GitHub release $VERSION created."
 }
 
@@ -321,6 +352,7 @@ main() {
 
   [[ "$DRY_RUN" == true ]] || backup_init
 
+  capture_release_notes
   update_bin_gacela
   update_changelog
   run_tests

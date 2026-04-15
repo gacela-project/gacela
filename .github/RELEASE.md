@@ -38,10 +38,11 @@ The script (and a manual release) assume:
    git push origin main
    git push origin X.Y.Z
    ```
-5. **Create the GitHub release** from the pushed tag:
+5. **Create the GitHub release** from the pushed tag, using the CHANGELOG section you just renamed as the body:
    [new release](https://github.com/gacela-project/gacela/releases/new) — or via CLI:
    ```bash
-   gh release create X.Y.Z --title X.Y.Z --generate-notes
+   awk '/^## \[X\.Y\.Z\]/{flag=1;next} /^## /{flag=0} flag' CHANGELOG.md > /tmp/release-notes.md
+   gh release create X.Y.Z --title X.Y.Z --notes-file /tmp/release-notes.md
    ```
 
 ## Rollback

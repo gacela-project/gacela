@@ -75,6 +75,7 @@ final class FactoryDoesNotCallFacadeRule implements Rule
             if (!$call->name instanceof Identifier) {
                 continue;
             }
+
             if ($call->name->toString() !== 'getFacade') {
                 continue;
             }
@@ -82,6 +83,7 @@ final class FactoryDoesNotCallFacadeRule implements Rule
             if (!$call->var instanceof Variable) {
                 continue;
             }
+
             if ($call->var->name !== 'this') {
                 continue;
             }

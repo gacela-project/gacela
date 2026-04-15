@@ -719,7 +719,7 @@ final class RecordingCacheStorage implements CacheStorageInterface
     /** @var list<array{key:string,value:mixed,ttl:int}> */
     public array $sets = [];
 
-    private InMemoryCacheStorage $delegate;
+    private readonly InMemoryCacheStorage $delegate;
 
     public function __construct()
     {

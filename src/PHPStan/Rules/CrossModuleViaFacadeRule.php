@@ -81,6 +81,7 @@ final class CrossModuleViaFacadeRule implements Rule
             if ($refModule === null) {
                 continue;
             }
+
             if ($refModule === $currentModule) {
                 continue;
             }

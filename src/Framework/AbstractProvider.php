@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Attribute\ProvidesScanner;
 use Gacela\Framework\Container\Container;
 
 /**
@@ -14,5 +15,16 @@ abstract class AbstractProvider
     /** @use ConfigResolverAwareTrait<TConfig> */
     use ConfigResolverAwareTrait;
 
-    abstract public function provideModuleDependencies(Container $container): void;
+    public function provideModuleDependencies(Container $container): void
+    {
+    }
+
+    /**
+     * @internal
+     */
+    public function register(Container $container): void
+    {
+        ProvidesScanner::scan($this, $container);
+        $this->provideModuleDependencies($container);
+    }
 }

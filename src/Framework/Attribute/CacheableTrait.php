@@ -81,7 +81,8 @@ trait CacheableTrait
             if ($frame === null || !isset($frame['function'])) {
                 return $callback();
             }
-            $method = (string) $frame['function'];
+
+            $method = $frame['function'];
             /** @var list<mixed> $args */
             $args ??= $frame['args'] ?? [];
         } else {
@@ -89,6 +90,7 @@ trait CacheableTrait
                 $parts = explode('::', $method);
                 $method = (string) end($parts);
             }
+
             $args ??= [];
         }
 
@@ -145,12 +147,14 @@ trait CacheableTrait
         if ($args === []) {
             return 'no-args';
         }
+
         if (count($args) === 1) {
             $first = $args[0];
             if (is_int($first) || is_string($first)) {
                 return (string) $first;
             }
         }
+
         return md5(serialize($args));
     }
 
@@ -169,6 +173,7 @@ trait CacheableTrait
                 if ($value === null || is_scalar($value)) {
                     return (string) $value;
                 }
+
                 return md5(serialize($value));
             },
             $template,

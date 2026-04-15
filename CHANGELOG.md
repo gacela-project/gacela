@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `#[Provides('ID')]` attribute for declarative container registration in providers. Annotated methods are wrapped in a lazy closure and registered under the given id; `Container` is auto-injected when declared in the signature. `AbstractProvider::provideModuleDependencies()` is no longer abstract, so providers can go attribute-only or mix both styles
+
 ### Changed
 
 - `CacheableTrait::cached()` now infers the method name and arguments from the caller's stack frame; callers write `$this->cached(fn () => ...)` instead of `$this->cached(__METHOD__, [...], fn () => ...)`. Callers may still pass `$method` and `$args` explicitly (`$this->cached(fn () => ..., __METHOD__, [$id])`) to skip `debug_backtrace()` on hot paths or when `cached()` is invoked from a helper

@@ -16,7 +16,7 @@ use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\AbstractProvider;
-use Gacela\Framework\Container\Container;
+use Gacela\Framework\Attribute\Provides;
 
 /**
  * @extends AbstractProvider<ConsoleConfig>
@@ -27,15 +27,13 @@ final class ConsoleProvider extends AbstractProvider
 
     public const TEMPLATE_BY_FILENAME_MAP = 'TEMPLATE_FILENAME_MAP';
 
-    public function provideModuleDependencies(Container $container): void
+    /**
+     * @return list<object>
+     */
+    #[Provides(self::COMMANDS)]
+    public function commands(): array
     {
-        $this->addCommands($container);
-        $this->addTemplateByFilenameMap($container);
-    }
-
-    private function addCommands(Container $container): void
-    {
-        $container->set(self::COMMANDS, static fn (): array => [
+        return [
             new MakeFileCommand(),
             new MakeModuleCommand(),
             new ListModulesCommand(),
@@ -46,16 +44,20 @@ final class ConsoleProvider extends AbstractProvider
             new ValidateConfigCommand(),
             new ProfileReportCommand(),
             new DoctorCommand(),
-        ]);
+        ];
     }
 
-    private function addTemplateByFilenameMap(Container $container): void
+    /**
+     * @return array<string,string>
+     */
+    #[Provides(self::TEMPLATE_BY_FILENAME_MAP)]
+    public function templateByFilenameMap(): array
     {
-        $container->set(self::TEMPLATE_BY_FILENAME_MAP, fn (): array => [
+        return [
             FilenameSanitizer::FACADE => $this->getConfig()->getFacadeMakerTemplate(),
             FilenameSanitizer::FACTORY => $this->getConfig()->getFactoryMakerTemplate(),
             FilenameSanitizer::CONFIG => $this->getConfig()->getConfigMakerTemplate(),
             FilenameSanitizer::PROVIDER => $this->getConfig()->getProviderMakerTemplate(),
-        ]);
+        ];
     }
 }

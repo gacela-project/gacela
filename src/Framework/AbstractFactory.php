@@ -58,7 +58,7 @@ abstract class AbstractFactory
         $container = Container::withConfig(Config::getInstance());
 
         $resolver = (new ProviderResolver())->resolve($this);
-        $resolver?->provideModuleDependencies($container);
+        $resolver?->register($container);
 
         // Temporal solution to keep BC with the AbstractDependencyProvider
         $dpResolver = (new DependencyProviderResolver())->resolve($this);

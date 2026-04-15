@@ -106,12 +106,7 @@ final class FileCache
     public function forget(string $key): void
     {
         unset($this->memory[$key], $this->batchPending[$key]);
-
-        $file = $this->entryPath($key);
-        if (is_file($file)) {
-            unlink($file);
-            self::invalidateOpcacheFor($file);
-        }
+        $this->deleteEntryFile($key);
     }
 
     public function clear(): void
@@ -321,8 +316,8 @@ final class FileCache
             return;
         }
 
-        if (!mkdir($concurrentDirectory = $this->directory, recursive: true) && !is_dir($concurrentDirectory)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+        if (!mkdir($this->directory, recursive: true) && !is_dir($this->directory)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $this->directory));
         }
     }
 }

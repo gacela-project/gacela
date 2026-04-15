@@ -5,18 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\Testing;
 
 use FilesystemIterator;
-use Gacela\Framework\AbstractFacade;
-use Gacela\Framework\AbstractFactory;
-use Gacela\Framework\ClassResolver\AbstractClassResolver;
-use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
-use Gacela\Framework\ClassResolver\ClassResolverCache;
-use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
-use Gacela\Framework\Config\ConfigFactory;
-use Gacela\Framework\Container\Locator;
-use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
-
+use Gacela\Framework\Gacela;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -69,37 +60,13 @@ trait ContainerFixture
     private bool $containerTempDirsCleanupRegistered = false;
 
     /**
-     * Reset all Gacela singletons and in-memory caches.
-     *
-     * Runs the same sequence as `Gacela::bootstrap()` does when
-     * `shouldResetInMemoryCache` is enabled. This is the drop-in
-     * replacement for the ad-hoc reset idiom in `setUp()`:
-     *
-     * ```php
-     * Config::resetInstance();
-     * AbstractClassResolver::resetCache();
-     * AnonymousGlobal::resetCache();
-     * InMemoryCache::resetCache();
-     * // ...and so on
-     * ```
-     *
-     * The call is side-effect free beyond clearing static state and
-     * completes in well under 10ms on a medium app — it does not
-     * rescan the filesystem or reinitialize any resolvers.
+     * Reset every Gacela singleton + in-memory cache. Drop-in replacement
+     * for the ad-hoc `::resetCache()` / `::resetInstance()` sequence in
+     * `setUp()`; runs in well under 10ms on a medium app.
      */
     protected function resetContainer(): void
     {
-        AnonymousGlobal::resetCache();
-        AbstractFacade::resetCache();
-        AbstractFactory::resetCache();
-        AbstractClassResolver::resetCache();
-        InMemoryCache::resetCache();
-        GacelaFileCache::resetCache();
-        DocBlockResolverCache::resetCache();
-        ClassResolverCache::resetCache();
-        ConfigFactory::resetCache();
-        Config::resetInstance();
-        Locator::resetInstance();
+        Gacela::resetCache();
     }
 
     /**

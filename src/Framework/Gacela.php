@@ -137,6 +137,27 @@ final class Gacela
     }
 
     /**
+     * Reset every singleton + in-memory cache registered by Gacela.
+     *
+     * Exposed publicly so test fixtures (see {@see Testing\ContainerFixture})
+     * can share this exact sequence instead of duplicating the list.
+     */
+    public static function resetCache(): void
+    {
+        AnonymousGlobal::resetCache();
+        AbstractFacade::resetCache();
+        AbstractFactory::resetCache();
+        AbstractClassResolver::resetCache();
+        InMemoryCache::resetCache();
+        GacelaFileCache::resetCache();
+        DocBlockResolverCache::resetCache();
+        ClassResolverCache::resetCache();
+        ConfigFactory::resetCache();
+        Config::resetInstance();
+        Locator::resetInstance();
+    }
+
+    /**
      * @param  null|Closure(GacelaConfig):void  $configFn
      */
     private static function processConfigFnIntoSetup(?Closure $configFn = null): SetupGacelaInterface
@@ -157,21 +178,6 @@ final class Gacela
         }
 
         return new SetupGacela();
-    }
-
-    private static function resetCache(): void
-    {
-        AnonymousGlobal::resetCache();
-        AbstractFacade::resetCache();
-        AbstractFactory::resetCache();
-        AbstractClassResolver::resetCache();
-        InMemoryCache::resetCache();
-        GacelaFileCache::resetCache();
-        DocBlockResolverCache::resetCache();
-        ClassResolverCache::resetCache();
-        ConfigFactory::resetCache();
-        Config::resetInstance();
-        Locator::resetInstance();
     }
 
     private static function runPlugins(Config $config): void

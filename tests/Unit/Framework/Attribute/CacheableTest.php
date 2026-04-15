@@ -200,6 +200,29 @@ final class CacheableTest extends TestCase
         self::assertSame($first, $second);
         self::assertSame(1, $facade->getCallCount());
     }
+
+    public function test_explicit_method_and_args_skip_backtrace_and_still_cache(): void
+    {
+        $facade = new TestFacadeWithExplicitCached();
+
+        $first = $facade->load(7);
+        $second = $facade->load(7);
+        $third = $facade->load(8);
+
+        self::assertSame($first, $second);
+        self::assertNotSame($first, $third);
+        self::assertSame(2, $facade->getCallCount());
+    }
+
+    public function test_explicit_method_works_when_cached_is_called_from_a_helper(): void
+    {
+        $facade = new TestFacadeWithHelperCached();
+
+        $facade->compute();
+        $facade->compute();
+
+        self::assertSame(1, $facade->getCallCount());
+    }
 }
 
 final class TestFacadeWithCache
@@ -336,6 +359,53 @@ final class TestFacadeWithStaticKey
     public function getCallCount(): int
     {
         return $this->callCount;
+    }
+}
+
+final class TestFacadeWithExplicitCached
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function load(int $id): string
+    {
+        return $this->cached(function () use ($id): string {
+            ++$this->callCount;
+            return 'loaded-' . $id;
+        }, __METHOD__, [$id]);
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class TestFacadeWithHelperCached
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function compute(): string
+    {
+        return $this->runCached('compute', []);
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+
+    private function runCached(string $method, array $args): string
+    {
+        return $this->cached(function (): string {
+            ++$this->callCount;
+            return 'computed-' . $this->callCount;
+        }, $method, $args);
     }
 }
 

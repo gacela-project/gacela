@@ -4,7 +4,7 @@
 
 ### Changed
 
-- `CacheableTrait::cached()` now infers the method name and arguments from the caller's stack frame; callers write `$this->cached(fn () => ...)` instead of `$this->cached(__METHOD__, [...], fn () => ...)`
+- `CacheableTrait::cached()` now infers the method name and arguments from the caller's stack frame; callers write `$this->cached(fn () => ...)` instead of `$this->cached(__METHOD__, [...], fn () => ...)`. Callers may still pass `$method` and `$args` explicitly (`$this->cached(fn () => ..., __METHOD__, [$id])`) to skip `debug_backtrace()` on hot paths or when `cached()` is invoked from a helper
 - `#[Cacheable]` storage is now pluggable via `CacheStorageInterface` (default: `InMemoryCacheStorage`); swap with `CacheableConfig::setStorage()`
 - Per-method TTL overrides via `CacheableConfig::setTtlOverrides(['Class::method' => $seconds])`
 - `Cacheable::$key` accepts `{N}` placeholders that interpolate the Nth caller argument (e.g. `key: 'user:{0}'`)

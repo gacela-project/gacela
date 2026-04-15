@@ -38,6 +38,14 @@ use function sprintf;
  *
  * The method name and arguments are inferred from the caller's stack frame;
  * the #[Cacheable] attribute supplies TTL and (optionally) a custom key template.
+ *
+ * For hot paths, very-large arguments, or when `cached()` is invoked from a
+ * helper (not the attributed method itself), pass `$method` and `$args`
+ * explicitly to skip the `debug_backtrace()` call:
+ *
+ * ```php
+ * return $this->cached(fn () => ..., __METHOD__, [$id]);
+ * ```
  */
 trait CacheableTrait
 {
@@ -51,16 +59,26 @@ trait CacheableTrait
         CacheableConfig::getStorage()->deleteByPrefix(sprintf('%s::%s::', static::class, $method));
     }
 
-    protected function cached(Closure $callback): mixed
+    /**
+     * @param list<mixed>|null $args
+     */
+    protected function cached(Closure $callback, ?string $method = null, ?array $args = null): mixed
     {
-        $frame = debug_backtrace(0, 2)[1] ?? null;
-        if ($frame === null || !isset($frame['function'])) {
-            return $callback();
+        if ($method === null) {
+            $frame = debug_backtrace(0, 2)[1] ?? null;
+            if ($frame === null || !isset($frame['function'])) {
+                return $callback();
+            }
+            $method = (string) $frame['function'];
+            /** @var list<mixed> $args */
+            $args ??= $frame['args'] ?? [];
+        } else {
+            if (str_contains($method, '::')) {
+                $parts = explode('::', $method);
+                $method = (string) end($parts);
+            }
+            $args ??= [];
         }
-
-        $method = (string) $frame['function'];
-        /** @var list<mixed> $args */
-        $args = $frame['args'] ?? [];
 
         $attribute = $this->resolveCacheableAttribute($method);
         if ($attribute === null) {

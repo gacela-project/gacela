@@ -10,6 +10,7 @@
 - `GacelaConfig::addHandlerRegistry($key, [...])` for Provider-registered dispatch tables (lazy, container-resolved, frozen after boot) replacing hand-rolled `match` blocks
 - `GacelaConfig::addHealthCheck()` for Provider-based registration of `ModuleHealthCheckInterface` implementations, surfaced by `doctor`
 - `ContainerFixture` trait (`Gacela\Framework\Testing`) with `resetContainer()`, `captureContainerState()` / `restoreContainerState()`, and `containerTempDir()` for PHPUnit test isolation
+- Documented constructor-parameter attribute `Gacela\Container\Attribute\Inject` with optional `implementation` override for disambiguating interface → concrete at the call site; `bin/gacela debug:dependencies` now tags `#[Inject]` parameters with an `inject` kind (and `inject -> <Concrete>` when an override is set)
 
 ### Changed
 

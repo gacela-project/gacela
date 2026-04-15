@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Gacela\Framework\Cache;
 
 use function array_filter;
-use function array_unique;
 use function array_values;
 use function in_array;
 use function is_array;
 use function is_file;
+use function is_string;
+use function unlink;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -35,10 +36,10 @@ final class ScopedCache
 {
     private const GRAPH_FILENAME = '.gacela-scoped-cache-graph.php';
 
-    /** @var array<string, list<string>> childKey => list of direct parents */
+    /** @var array<string, list<string>> childKey => direct parents (persisted) */
     private array $dependencies = [];
 
-    /** @var array<string, list<string>> parentKey => list of direct dependents */
+    /** @var array<string, list<string>> parentKey => direct dependents (derived from) */
     private array $dependents = [];
 
     /**
@@ -72,6 +73,21 @@ final class ScopedCache
     }
 
     /**
+     * Drop every cached value AND wipe the dependency graph (on disk too).
+     */
+    public function clear(): void
+    {
+        $this->cache->clear();
+        $this->dependencies = [];
+        $this->dependents = [];
+
+        $path = $this->graphPath();
+        if (is_file($path)) {
+            unlink($path);
+        }
+    }
+
+    /**
      * Declare that `$childKey`'s validity depends on `$parentKey`.
      * Invalidating `$parentKey` transitively invalidates `$childKey`.
      *
@@ -87,15 +103,11 @@ final class ScopedCache
             throw CycleDetectedException::between($childKey, $parentKey);
         }
 
-        if (!in_array($parentKey, $this->dependencies[$childKey] ?? [], true)) {
-            $this->dependencies[$childKey][] = $parentKey;
-        }
+        $added = $this->addEdge($childKey, $parentKey);
 
-        if (!in_array($childKey, $this->dependents[$parentKey] ?? [], true)) {
-            $this->dependents[$parentKey][] = $childKey;
+        if ($added) {
+            $this->persistGraph();
         }
-
-        $this->persistGraph();
     }
 
     /**
@@ -104,10 +116,10 @@ final class ScopedCache
      */
     public function invalidate(string $key): void
     {
-        $toForget = $this->collectDescendants($key);
-        $toForget[] = $key;
+        $targets = $this->collectDescendants($key);
+        $targets[] = $key;
 
-        foreach (array_unique($toForget) as $k) {
+        foreach ($targets as $k) {
             $this->cache->forget($k);
             $this->removeFromGraph($k);
         }
@@ -136,6 +148,54 @@ final class ScopedCache
     public function dependents(string $key): array
     {
         return $this->dependents[$key] ?? [];
+    }
+
+    /**
+     * @return bool true when a new edge was recorded, false when it was already present
+     */
+    private function addEdge(string $childKey, string $parentKey): bool
+    {
+        if (in_array($parentKey, $this->dependencies[$childKey] ?? [], true)) {
+            return false;
+        }
+
+        $this->dependencies[$childKey][] = $parentKey;
+        $this->dependents[$parentKey][] = $childKey;
+
+        return true;
+    }
+
+    private function removeFromGraph(string $key): void
+    {
+        foreach ($this->dependencies[$key] ?? [] as $parent) {
+            self::pruneEdge($this->dependents, $parent, $key);
+        }
+        foreach ($this->dependents[$key] ?? [] as $child) {
+            self::pruneEdge($this->dependencies, $child, $key);
+        }
+
+        unset($this->dependencies[$key], $this->dependents[$key]);
+    }
+
+    /**
+     * Remove `$neighbour` from `$graph[$node]`, collapsing the entry when empty.
+     *
+     * @param array<string, list<string>> $graph
+     */
+    private static function pruneEdge(array &$graph, string $node, string $neighbour): void
+    {
+        if (!isset($graph[$node])) {
+            return;
+        }
+
+        $graph[$node] = array_values(array_filter(
+            $graph[$node],
+            static fn (string $n): bool => $n !== $neighbour,
+        ));
+
+        if ($graph[$node] === []) {
+            unset($graph[$node]);
+        }
     }
 
     /**
@@ -189,36 +249,16 @@ final class ScopedCache
         return false;
     }
 
-    private function removeFromGraph(string $key): void
-    {
-        foreach ($this->dependencies[$key] ?? [] as $parent) {
-            $this->dependents[$parent] = array_values(array_filter(
-                $this->dependents[$parent] ?? [],
-                static fn (string $c): bool => $c !== $key,
-            ));
-            if ($this->dependents[$parent] === []) {
-                unset($this->dependents[$parent]);
-            }
-        }
-
-        foreach ($this->dependents[$key] ?? [] as $child) {
-            $this->dependencies[$child] = array_values(array_filter(
-                $this->dependencies[$child] ?? [],
-                static fn (string $p): bool => $p !== $key,
-            ));
-            if ($this->dependencies[$child] === []) {
-                unset($this->dependencies[$child]);
-            }
-        }
-
-        unset($this->dependencies[$key], $this->dependents[$key]);
-    }
-
     private function graphPath(): string
     {
         return $this->cache->directory . DIRECTORY_SEPARATOR . self::GRAPH_FILENAME;
     }
 
+    /**
+     * Load the forward graph from disk and derive the reverse adjacency
+     * in memory. Storing only one direction keeps the two views
+     * automatically consistent across restarts.
+     */
     private function loadGraph(): void
     {
         $path = $this->graphPath();
@@ -232,20 +272,23 @@ final class ScopedCache
             return;
         }
 
-        /** @var array<string, list<string>> $deps */
-        $deps = is_array($payload['dependencies'] ?? null) ? $payload['dependencies'] : [];
-        /** @var array<string, list<string>> $dependents */
-        $dependents = is_array($payload['dependents'] ?? null) ? $payload['dependents'] : [];
-
-        $this->dependencies = $deps;
-        $this->dependents = $dependents;
+        /** @var mixed $parents */
+        foreach ($payload as $child => $parents) {
+            if (!is_string($child) || !is_array($parents)) {
+                continue;
+            }
+            /** @var mixed $parent */
+            foreach ($parents as $parent) {
+                if (!is_string($parent)) {
+                    continue;
+                }
+                $this->addEdge($child, $parent);
+            }
+        }
     }
 
     private function persistGraph(): void
     {
-        FileCache::writeAtomically($this->graphPath(), [
-            'dependencies' => $this->dependencies,
-            'dependents' => $this->dependents,
-        ]);
+        FileCache::writeAtomically($this->graphPath(), $this->dependencies);
     }
 }

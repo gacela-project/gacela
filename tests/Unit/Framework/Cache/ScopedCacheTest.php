@@ -225,6 +225,37 @@ final class ScopedCacheTest extends TestCase
         self::assertFalse($this->cache->has('never-existed'));
     }
 
+    public function test_clear_drops_values_and_graph(): void
+    {
+        $this->cache->put('ns:X', 'env-x');
+        $this->cache->put('file:a.php', 'a');
+        $this->cache->dependsOn('file:a.php', 'ns:X');
+
+        $this->cache->clear();
+
+        self::assertFalse($this->cache->has('ns:X'));
+        self::assertFalse($this->cache->has('file:a.php'));
+        self::assertSame([], $this->cache->dependents('ns:X'));
+    }
+
+    public function test_clear_graph_is_gone_after_restart(): void
+    {
+        $this->cache->dependsOn('file:a.php', 'ns:X');
+        $this->cache->clear();
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame([], $reopened->dependents('ns:X'));
+    }
+
+    public function test_put_honors_ttl_passthrough(): void
+    {
+        $this->cache->put('short', 'lived', ttl: -1);
+
+        self::assertNull($this->cache->get('short'));
+        self::assertFalse($this->cache->has('short'));
+    }
+
     private function removeDir(string $dir): void
     {
         if (!is_dir($dir)) {

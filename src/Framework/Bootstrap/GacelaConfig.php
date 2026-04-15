@@ -12,6 +12,8 @@ use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\GacelaEventInterface;
+use Gacela\Framework\Health\HealthCheckRegistry;
+use Gacela\Framework\Health\ModuleHealthCheckInterface;
 
 final class GacelaConfig
 {
@@ -65,6 +67,9 @@ final class GacelaConfig
     /** @var array<string,array<string|int,class-string>> */
     private array $handlerRegistries = [];
 
+    /** @var list<class-string<ModuleHealthCheckInterface>|ModuleHealthCheckInterface> */
+    private array $healthChecks = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -73,6 +78,7 @@ final class GacelaConfig
         $this->appConfigBuilder = new AppConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
         $this->bindingsBuilder = new BindingsBuilder();
+        HealthCheckRegistry::reset();
     }
 
     /**
@@ -437,6 +443,19 @@ final class GacelaConfig
     }
 
     /**
+     * Register a module health check to be executed by the Doctor command.
+     *
+     * @param class-string<ModuleHealthCheckInterface>|ModuleHealthCheckInterface $check
+     */
+    public function addHealthCheck(string|ModuleHealthCheckInterface $check): self
+    {
+        $this->healthChecks[] = $check;
+        HealthCheckRegistry::register($check);
+
+        return $this;
+    }
+
+    /**
      * @internal
      */
     public function toTransfer(): GacelaConfigTransfer
@@ -462,6 +481,7 @@ final class GacelaConfig
             $this->aliases,
             $this->contextualBindings,
             $this->handlerRegistries,
+            $this->healthChecks,
         );
     }
 }

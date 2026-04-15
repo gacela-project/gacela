@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Bootstrap;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Health\HealthStatus;
+use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use PHPUnit\Framework\TestCase;
 
 final class GacelaConfigTest extends TestCase
@@ -36,5 +38,71 @@ final class GacelaConfigTest extends TestCase
             $a->toTransfer()->bindingsBuilder->build(),
             $b->toTransfer()->bindingsBuilder->build(),
         );
+    }
+
+    public function test_add_health_check_collects_class_string(): void
+    {
+        $config = new GacelaConfig();
+
+        $config->addHealthCheck(GacelaConfigTestFakeHealthCheck::class);
+
+        self::assertSame(
+            [GacelaConfigTestFakeHealthCheck::class],
+            $config->toTransfer()->healthChecks,
+        );
+    }
+
+    public function test_add_health_check_collects_instance(): void
+    {
+        $config = new GacelaConfig();
+        $instance = new GacelaConfigTestFakeHealthCheck();
+
+        $config->addHealthCheck($instance);
+
+        self::assertSame([$instance], $config->toTransfer()->healthChecks);
+    }
+
+    public function test_add_health_check_is_fluent(): void
+    {
+        $config = new GacelaConfig();
+
+        $result = $config->addHealthCheck(GacelaConfigTestFakeHealthCheck::class);
+
+        self::assertSame($config, $result);
+    }
+
+    public function test_add_health_check_preserves_registration_order(): void
+    {
+        $config = new GacelaConfig();
+        $instance = new GacelaConfigTestFakeHealthCheck();
+
+        $config
+            ->addHealthCheck(GacelaConfigTestFakeHealthCheck::class)
+            ->addHealthCheck($instance);
+
+        self::assertSame(
+            [GacelaConfigTestFakeHealthCheck::class, $instance],
+            $config->toTransfer()->healthChecks,
+        );
+    }
+
+    public function test_add_health_check_defaults_to_empty_list(): void
+    {
+        $config = new GacelaConfig();
+
+        self::assertSame([], $config->toTransfer()->healthChecks);
+    }
+}
+
+final class GacelaConfigTestFakeHealthCheck implements ModuleHealthCheckInterface
+{
+    public function checkHealth(): HealthStatus
+    {
+        return HealthStatus::healthy();
+    }
+
+    public function getModuleName(): string
+    {
+        return 'GacelaConfigTestFake';
     }
 }

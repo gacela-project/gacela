@@ -11,6 +11,7 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\AutowirableCollaborator;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundContract;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundImplementation;
+use GacelaTest\Feature\Console\DebugDependencies\Fixtures\InjectService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\MixedDependenciesService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NoConstructorService;
 use PHPUnit\Framework\TestCase;
@@ -79,5 +80,24 @@ final class ConstructorInspectorTest extends TestCase
         self::assertSame('$collaborator', $collaborator->name);
         self::assertSame(AutowirableCollaborator::class, $collaborator->renderedType);
         self::assertSame('autowirable', $collaborator->detail);
+    }
+
+    public function test_inject_parameter_is_flagged(): void
+    {
+        $inspection = $this->inspector->inspect(InjectService::class);
+
+        self::assertCount(2, $inspection->parameters);
+        self::assertSame(ParameterStatus::Inject, $inspection->parameters[0]->status);
+        self::assertSame('inject', $inspection->parameters[0]->detail);
+        self::assertTrue($inspection->parameters[0]->isResolvable());
+    }
+
+    public function test_inject_parameter_with_override_shows_implementation(): void
+    {
+        $inspection = $this->inspector->inspect(InjectService::class);
+
+        $override = $inspection->parameters[1];
+        self::assertSame(ParameterStatus::Inject, $override->status);
+        self::assertSame('inject -> ' . BoundImplementation::class, $override->detail);
     }
 }

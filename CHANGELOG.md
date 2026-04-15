@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.13.0](https://github.com/gacela-project/gacela/compare/1.12.0...1.13.0) - 2026-04-15
+
 ### Added
 
 #### Commands

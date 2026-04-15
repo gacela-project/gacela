@@ -15,6 +15,7 @@
 - Per-method TTL overrides via `CacheableConfig::setTtlOverrides(['Class::method' => $seconds])`
 - `Cacheable::$key` accepts `{N}` placeholders that interpolate the Nth caller argument (e.g. `key: 'user:{0}'`)
 - `clearMethodCacheFor($method)` now matches exact `Class::method::` prefixes rather than substrings, so `clearMethodCacheFor('get')` no longer clears every method containing "get"
+- `MergedConfigCache` now routes its write through `FileCache::writeAtomically()`, picking up atomic rename + opcache invalidation (previously used direct `file_put_contents` with `LOCK_EX`, which could tear under concurrent writes)
 
 ## [1.13.0](https://github.com/gacela-project/gacela/compare/1.12.0...1.13.0) - 2026-04-15
 

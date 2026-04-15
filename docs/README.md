@@ -7,4 +7,8 @@
 - [Cacheable methods](cacheable-methods.md) — cache facade method results with `#[Cacheable]`
 - [Opcache preload](opcache-preload.md) — production performance tuning
 
+## RFCs
+
+- [RFC-0001: `#[Inject]` + `#[ServiceMapTyped]` — Symfony DI interop](rfc/0001-inject-symfony-di-interop.md)
+
 Full reference: [gacela-project.com](https://gacela-project.com/)

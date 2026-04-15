@@ -11,6 +11,7 @@
 - `GacelaConfig::addHealthCheck()` for Provider-based registration of `ModuleHealthCheckInterface` implementations, surfaced by `doctor`
 - `ContainerFixture` trait (`Gacela\Framework\Testing`) with `resetContainer()`, `captureContainerState()` / `restoreContainerState()`, and `containerTempDir()` for PHPUnit test isolation
 - Documented constructor-parameter attribute `Gacela\Container\Attribute\Inject` with optional `implementation` override for disambiguating interface → concrete at the call site; `bin/gacela debug:dependencies` now tags `#[Inject]` parameters with an `inject` kind (and `inject -> <Concrete>` when an override is set)
+- `gacela/symfony-bridge` package (under `symfony-bridge/`): `GacelaInjectCompilerPass` rewrites Symfony service definitions so `#[Inject]`-annotated constructor parameters resolve through Gacela's container instead of Symfony's autowire, with build-time detection of Symfony-vs-Gacela argument conflicts
 
 ### Changed
 

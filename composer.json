@@ -41,6 +41,7 @@
         "psalm/plugin-phpunit": "^0.19.5",
         "rector/rector": "^1.2",
         "symfony/console": "^6.4",
+        "symfony/dependency-injection": "^6.4",
         "symfony/var-dumper": "^6.4",
         "vimeo/psalm": "^6.16"
     },
@@ -60,7 +61,9 @@
     "autoload-dev": {
         "psr-4": {
             "GacelaData\\": "data/",
-            "GacelaTest\\": "tests/"
+            "GacelaTest\\": "tests/",
+            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/",
+            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/"
         }
     },
     "bin": [

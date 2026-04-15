@@ -18,6 +18,7 @@
   <testsuites>
     <testsuite name="unit">
       <directory suffix="Test.php">tests/Unit</directory>
+      <directory suffix="Test.php">symfony-bridge/tests</directory>
     </testsuite>
     <testsuite name="integration">
       <directory suffix="Test.php">tests/Integration</directory>

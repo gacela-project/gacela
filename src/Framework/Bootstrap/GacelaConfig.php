@@ -67,9 +67,6 @@ final class GacelaConfig
     /** @var array<string,array<string|int,class-string>> */
     private array $handlerRegistries = [];
 
-    /** @var list<class-string<ModuleHealthCheckInterface>|ModuleHealthCheckInterface> */
-    private array $healthChecks = [];
-
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -449,7 +446,6 @@ final class GacelaConfig
      */
     public function addHealthCheck(string|ModuleHealthCheckInterface $check): self
     {
-        $this->healthChecks[] = $check;
         HealthCheckRegistry::register($check);
 
         return $this;
@@ -481,7 +477,6 @@ final class GacelaConfig
             $this->aliases,
             $this->contextualBindings,
             $this->handlerRegistries,
-            $this->healthChecks,
         );
     }
 }

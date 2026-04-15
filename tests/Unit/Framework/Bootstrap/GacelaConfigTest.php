@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Bootstrap;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use PHPUnit\Framework\TestCase;
@@ -48,7 +49,7 @@ final class GacelaConfigTest extends TestCase
 
         self::assertSame(
             [GacelaConfigTestFakeHealthCheck::class],
-            $config->toTransfer()->healthChecks,
+            HealthCheckRegistry::all(),
         );
     }
 
@@ -59,7 +60,7 @@ final class GacelaConfigTest extends TestCase
 
         $config->addHealthCheck($instance);
 
-        self::assertSame([$instance], $config->toTransfer()->healthChecks);
+        self::assertSame([$instance], HealthCheckRegistry::all());
     }
 
     public function test_add_health_check_is_fluent(): void
@@ -82,15 +83,15 @@ final class GacelaConfigTest extends TestCase
 
         self::assertSame(
             [GacelaConfigTestFakeHealthCheck::class, $instance],
-            $config->toTransfer()->healthChecks,
+            HealthCheckRegistry::all(),
         );
     }
 
     public function test_add_health_check_defaults_to_empty_list(): void
     {
-        $config = new GacelaConfig();
+        new GacelaConfig();
 
-        self::assertSame([], $config->toTransfer()->healthChecks);
+        self::assertSame([], HealthCheckRegistry::all());
     }
 }
 

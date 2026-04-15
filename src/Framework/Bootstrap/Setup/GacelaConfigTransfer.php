@@ -8,7 +8,6 @@ use Closure;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
-use Gacela\Framework\Health\ModuleHealthCheckInterface;
 
 final class GacelaConfigTransfer
 {
@@ -26,7 +25,6 @@ final class GacelaConfigTransfer
      * @param array<string,string> $aliases
      * @param array<string,array<class-string,class-string|callable|object>> $contextualBindings
      * @param array<string,array<string|int,class-string>> $handlerRegistries
-     * @param list<class-string<ModuleHealthCheckInterface>|ModuleHealthCheckInterface> $healthChecks
      */
     public function __construct(
         public readonly AppConfigBuilder $appConfigBuilder,
@@ -49,7 +47,6 @@ final class GacelaConfigTransfer
         public readonly array $aliases,
         public readonly array $contextualBindings,
         public readonly array $handlerRegistries = [],
-        public readonly array $healthChecks = [],
     ) {
     }
 }

@@ -6,6 +6,7 @@
 
 - `#[Provides('ID')]` attribute for declarative container registration in providers; `AbstractProvider::provideModuleDependencies()` is no longer abstract
 - `FileCache<T>` primitive — typed file-backed cache with TTL, batching, and atomic writes; `AbstractPhpFileCache` now delegates its write path to it
+- `ScopedCache` decorator over `FileCache` with `dependsOn`, cascading `invalidate`, `invalidateLeaf`, persisted dependency graph (survives process restart), and cycle detection at `dependsOn` time
 - `GacelaConfig::addHandlerRegistry($key, [...])` for Provider-registered dispatch tables (lazy, container-resolved, frozen after boot) replacing hand-rolled `match` blocks
 - `GacelaConfig::addHealthCheck()` for Provider-based registration of `ModuleHealthCheckInterface` implementations, surfaced by `doctor`
 - `ContainerFixture` trait (`Gacela\Framework\Testing`) with `resetContainer()`, `captureContainerState()` / `restoreContainerState()`, and `containerTempDir()` for PHPUnit test isolation

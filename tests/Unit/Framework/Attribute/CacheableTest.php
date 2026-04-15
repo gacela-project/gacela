@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Attribute;
 
 use Gacela\Framework\Attribute\Cacheable;
+use Gacela\Framework\Attribute\CacheableConfig;
 use Gacela\Framework\Attribute\CacheableTrait;
+use Gacela\Framework\Attribute\CacheStorageInterface;
+use Gacela\Framework\Attribute\InMemoryCacheStorage;
 use PHPUnit\Framework\TestCase;
-
-use ReflectionClass;
 
 use function sprintf;
 
@@ -16,7 +17,7 @@ final class CacheableTest extends TestCase
 {
     protected function tearDown(): void
     {
-        TestFacadeWithCache::clearMethodCache();
+        CacheableConfig::reset();
     }
 
     public function test_cacheable_attribute_can_be_instantiated(): void
@@ -50,10 +51,7 @@ final class CacheableTest extends TestCase
         $result1 = $facade->getExpensiveData();
         $result2 = $facade->getExpensiveData();
 
-        // Should return the same result without recalculating
         self::assertSame($result1, $result2);
-
-        // Call count should be 1, not 2, proving it's cached
         self::assertSame(1, $facade->getCallCount());
     }
 
@@ -63,12 +61,10 @@ final class CacheableTest extends TestCase
 
         $result1 = $facade->getDataWithArgs(1);
         $result2 = $facade->getDataWithArgs(2);
-        $result3 = $facade->getDataWithArgs(1); // Should use cache
+        $result3 = $facade->getDataWithArgs(1);
 
         self::assertNotSame($result1, $result2);
         self::assertSame($result1, $result3);
-
-        // Should be called 2 times (once for each unique argument)
         self::assertSame(2, $facade->getArgsCallCount());
     }
 
@@ -82,7 +78,6 @@ final class CacheableTest extends TestCase
         TestFacadeWithCache::clearMethodCache();
 
         $facade->getExpensiveData();
-        // Should be called again after clearing cache
         self::assertSame(2, $facade->getCallCount());
     }
 
@@ -96,9 +91,25 @@ final class CacheableTest extends TestCase
         TestFacadeWithCache::clearMethodCacheFor('getExpensiveData');
 
         $facade->getExpensiveData();
-        $facade->getDataWithArgs(1); // Should still be cached
+        $facade->getDataWithArgs(1);
 
         self::assertSame(2, $facade->getCallCount());
+        self::assertSame(1, $facade->getArgsCallCount());
+    }
+
+    public function test_clear_method_cache_for_substring_does_not_affect_other_methods(): void
+    {
+        $facade = new TestFacadeWithCache();
+
+        $facade->getExpensiveData();
+        $facade->getDataWithArgs(1);
+
+        TestFacadeWithCache::clearMethodCacheFor('get');
+
+        $facade->getExpensiveData();
+        $facade->getDataWithArgs(1);
+
+        self::assertSame(1, $facade->getCallCount());
         self::assertSame(1, $facade->getArgsCallCount());
     }
 
@@ -109,7 +120,6 @@ final class CacheableTest extends TestCase
         $facade->getNonCachedData();
         $facade->getNonCachedData();
 
-        // Should be called twice (not cached)
         self::assertSame(2, $facade->getNonCachedCallCount());
     }
 
@@ -120,33 +130,12 @@ final class CacheableTest extends TestCase
         $result1 = $facade->getDataWithShortTTL();
         self::assertSame(1, $facade->getCallCount());
 
-        // Wait for cache to expire (short TTL of 1 second)
         sleep(2);
 
         $result2 = $facade->getDataWithShortTTL();
 
-        // Should be called again after expiration
         self::assertSame(2, $facade->getCallCount());
         self::assertNotSame($result1, $result2);
-    }
-
-    public function test_cache_entry_with_expires_equal_to_current_time_is_considered_expired(): void
-    {
-        $facade = new TestFacadeWithCache();
-
-        $reflection = new ReflectionClass($facade);
-        $cacheProperty = $reflection->getProperty('methodCache');
-        $cacheProperty->setAccessible(true);
-
-        $cacheKey = TestFacadeWithCache::class . '::getExpensiveData::no-args';
-        $cacheProperty->setValue(null, [
-            $cacheKey => ['result' => 'stale', 'expires' => time()],
-        ]);
-
-        $result = $facade->getExpensiveData();
-
-        self::assertNotSame('stale', $result);
-        self::assertSame(1, $facade->getCallCount());
     }
 
     public function test_cached_method_is_accessible_from_subclass(): void
@@ -159,11 +148,60 @@ final class CacheableTest extends TestCase
         self::assertSame($result1, $result2);
         self::assertSame(1, $child->getChildCallCount());
     }
+
+    public function test_ttl_override_via_config_shortens_cache_lifetime(): void
+    {
+        CacheableConfig::setTtlOverrides([
+            TestFacadeWithCache::class . '::getExpensiveData' => 1,
+        ]);
+
+        $facade = new TestFacadeWithCache();
+
+        $facade->getExpensiveData();
+        self::assertSame(1, $facade->getCallCount());
+
+        sleep(2);
+
+        $facade->getExpensiveData();
+        self::assertSame(2, $facade->getCallCount());
+    }
+
+    public function test_custom_storage_backend_is_used(): void
+    {
+        $storage = new RecordingCacheStorage();
+        CacheableConfig::setStorage($storage);
+
+        $facade = new TestFacadeWithCache();
+        $facade->getExpensiveData();
+
+        self::assertCount(1, $storage->sets);
+        self::assertSame(3600, $storage->sets[0]['ttl']);
+    }
+
+    public function test_key_template_interpolates_scalar_args(): void
+    {
+        $facade = new TestFacadeWithTemplatedKey();
+
+        $facade->lookup(42);
+        $facade->lookup(42);
+
+        $storage = CacheableConfig::getStorage();
+        self::assertTrue($storage->has('user:42'));
+        self::assertSame(1, $facade->getCallCount());
+    }
+
+    public function test_bare_key_without_placeholders_is_shared_across_args(): void
+    {
+        $facade = new TestFacadeWithStaticKey();
+
+        $first = $facade->findBy(1);
+        $second = $facade->findBy(2);
+
+        self::assertSame($first, $second);
+        self::assertSame(1, $facade->getCallCount());
+    }
 }
 
-/**
- * Test facade that uses CacheableTrait.
- */
 final class TestFacadeWithCache
 {
     use CacheableTrait;
@@ -177,7 +215,7 @@ final class TestFacadeWithCache
     #[Cacheable(ttl: 3600)]
     public function getExpensiveData(): string
     {
-        return $this->cached(__METHOD__, [], function (): string {
+        return $this->cached(function (): string {
             ++$this->callCount;
             return 'expensive-result-' . $this->callCount;
         });
@@ -186,7 +224,7 @@ final class TestFacadeWithCache
     #[Cacheable(ttl: 3600)]
     public function getDataWithArgs(int $id): string
     {
-        return $this->cached(__METHOD__, [$id], function () use ($id): string {
+        return $this->cached(function () use ($id): string {
             ++$this->argsCallCount;
             return sprintf('result-%d-%d', $id, $this->argsCallCount);
         });
@@ -214,21 +252,18 @@ final class TestFacadeWithCache
     }
 }
 
-/**
- * Test facade with short TTL for testing expiration.
- */
 final class TestFacadeWithCacheShortTTL
 {
     use CacheableTrait;
 
     private int $callCount = 0;
 
-    #[Cacheable(ttl: 1)] // 1 second TTL
+    #[Cacheable(ttl: 1)]
     public function getDataWithShortTTL(): string
     {
-        return $this->cached(__METHOD__, [], function (): string {
+        return $this->cached(function (): string {
             ++$this->callCount;
-            return 'result-' . time();
+            return 'result-' . $this->callCount;
         });
     }
 
@@ -238,9 +273,6 @@ final class TestFacadeWithCacheShortTTL
     }
 }
 
-/**
- * Parent facade (non-final) so that protected visibility on cached() can be verified via inheritance.
- */
 class TestParentFacadeWithCache
 {
     use CacheableTrait;
@@ -253,7 +285,7 @@ final class TestChildFacadeWithCache extends TestParentFacadeWithCache
     #[Cacheable(ttl: 3600)]
     public function getChildData(): string
     {
-        return $this->cached(__METHOD__, [], function (): string {
+        return $this->cached(function (): string {
             ++$this->childCallCount;
             return 'child-result-' . $this->childCallCount;
         });
@@ -262,5 +294,91 @@ final class TestChildFacadeWithCache extends TestParentFacadeWithCache
     public function getChildCallCount(): int
     {
         return $this->childCallCount;
+    }
+}
+
+final class TestFacadeWithTemplatedKey
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600, key: 'user:{0}')]
+    public function lookup(int $id): string
+    {
+        return $this->cached(function () use ($id): string {
+            ++$this->callCount;
+            return 'user-' . $id;
+        });
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class TestFacadeWithStaticKey
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600, key: 'shared')]
+    public function findBy(int $id): string
+    {
+        return $this->cached(function () use ($id): string {
+            ++$this->callCount;
+            return 'item-' . $id;
+        });
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class RecordingCacheStorage implements CacheStorageInterface
+{
+    /** @var list<array{key:string,value:mixed,ttl:int}> */
+    public array $sets = [];
+
+    private InMemoryCacheStorage $delegate;
+
+    public function __construct()
+    {
+        $this->delegate = new InMemoryCacheStorage();
+    }
+
+    public function has(string $key): bool
+    {
+        return $this->delegate->has($key);
+    }
+
+    public function get(string $key): mixed
+    {
+        return $this->delegate->get($key);
+    }
+
+    public function set(string $key, mixed $value, int $ttl): void
+    {
+        $this->sets[] = ['key' => $key, 'value' => $value, 'ttl' => $ttl];
+        $this->delegate->set($key, $value, $ttl);
+    }
+
+    public function delete(string $key): void
+    {
+        $this->delegate->delete($key);
+    }
+
+    public function clear(): void
+    {
+        $this->delegate->clear();
+    }
+
+    public function deleteByPrefix(string $prefix): void
+    {
+        $this->delegate->deleteByPrefix($prefix);
     }
 }

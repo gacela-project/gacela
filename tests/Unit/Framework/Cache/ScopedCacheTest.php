@@ -9,6 +9,7 @@ use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\ScopedCache;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
 use function glob;
 use function is_dir;
 use function rmdir;
@@ -254,6 +255,148 @@ final class ScopedCacheTest extends TestCase
 
         self::assertNull($this->cache->get('short'));
         self::assertFalse($this->cache->has('short'));
+    }
+
+    public function test_invalidate_middle_of_chain_leaves_ancestors_alone(): void
+    {
+        // `a` depends on `b` depends on `c`. Invalidating `b` drops `b` and
+        // its dependent `a`, but leaves `c` (which `b` depends on) intact.
+        $this->cache->put('a', 'A');
+        $this->cache->put('b', 'B');
+        $this->cache->put('c', 'C');
+        $this->cache->dependsOn('a', 'b');
+        $this->cache->dependsOn('b', 'c');
+
+        $this->cache->invalidate('b');
+
+        self::assertFalse($this->cache->has('a'));
+        self::assertFalse($this->cache->has('b'));
+        self::assertSame('C', $this->cache->get('c'));
+    }
+
+    public function test_diamond_dependency_cascades_each_node_once(): void
+    {
+        // `a` depends on both `b` and `c`; both depend on `d`. Invalidating
+        // `d` must drop every node — and exercise the BFS `$seen` dedup,
+        // since `a` is otherwise reachable twice (via `b` and via `c`).
+        $this->cache->put('a', 'A');
+        $this->cache->put('b', 'B');
+        $this->cache->put('c', 'C');
+        $this->cache->put('d', 'D');
+
+        $this->cache->dependsOn('a', 'b');
+        $this->cache->dependsOn('a', 'c');
+        $this->cache->dependsOn('b', 'd');
+        $this->cache->dependsOn('c', 'd');
+
+        $this->cache->invalidate('d');
+
+        self::assertFalse($this->cache->has('a'));
+        self::assertFalse($this->cache->has('b'));
+        self::assertFalse($this->cache->has('c'));
+        self::assertFalse($this->cache->has('d'));
+    }
+
+    public function test_deep_chain_cascades_fully(): void
+    {
+        $depth = 20;
+        for ($i = 0; $i <= $depth; ++$i) {
+            $this->cache->put('n_' . $i, $i);
+        }
+        for ($i = 0; $i < $depth; ++$i) {
+            $this->cache->dependsOn('n_' . $i, 'n_' . ($i + 1));
+        }
+
+        $this->cache->invalidate('n_' . $depth);
+
+        for ($i = 0; $i <= $depth; ++$i) {
+            self::assertFalse($this->cache->has('n_' . $i));
+        }
+    }
+
+    public function test_partial_invalidate_keeps_siblings_and_parent(): void
+    {
+        $this->cache->put('ns:X', 'env');
+        $this->cache->put('file:a', 'a');
+        $this->cache->put('file:b', 'b');
+        $this->cache->dependsOn('file:a', 'ns:X');
+        $this->cache->dependsOn('file:b', 'ns:X');
+
+        $this->cache->invalidate('file:a');
+
+        self::assertFalse($this->cache->has('file:a'));
+        self::assertSame('b', $this->cache->get('file:b'));
+        self::assertSame('env', $this->cache->get('ns:X'));
+        self::assertSame(['file:b'], $this->cache->dependents('ns:X'));
+
+        // Parent still cascades to the remaining sibling.
+        $this->cache->invalidate('ns:X');
+        self::assertFalse($this->cache->has('file:b'));
+    }
+
+    public function test_dependson_declared_before_put_still_invalidates(): void
+    {
+        // Edges may be declared before the values exist.
+        $this->cache->dependsOn('file:a', 'ns:X');
+
+        $this->cache->put('ns:X', 'env');
+        $this->cache->put('file:a', 'a');
+
+        $this->cache->invalidate('ns:X');
+
+        self::assertFalse($this->cache->has('file:a'));
+    }
+
+    public function test_put_on_existing_key_preserves_edges(): void
+    {
+        $this->cache->put('ns:X', 'env');
+        $this->cache->put('file:a', 'first');
+        $this->cache->dependsOn('file:a', 'ns:X');
+
+        $this->cache->put('file:a', 'second');
+
+        self::assertSame(['file:a'], $this->cache->dependents('ns:X'));
+
+        $this->cache->invalidate('ns:X');
+        self::assertFalse($this->cache->has('file:a'));
+    }
+
+    public function test_loadgraph_ignores_non_array_payload(): void
+    {
+        file_put_contents(
+            $this->cacheDir . '/.gacela-scoped-cache-graph.php',
+            "<?php\n\nreturn 'not-a-graph';\n",
+        );
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame([], $reopened->dependents('ns:X'));
+        $reopened->put('ns:X', 'env');
+        self::assertSame('env', $reopened->get('ns:X'));
+    }
+
+    public function test_loadgraph_skips_malformed_entries_keeps_valid_ones(): void
+    {
+        file_put_contents(
+            $this->cacheDir . '/.gacela-scoped-cache-graph.php',
+            <<<'PHP'
+                <?php
+
+                return [
+                    'file:a' => ['ns:X'],
+                    123      => ['bad-int-key'],
+                    'file:b' => 'not-an-array',
+                    'file:c' => ['ns:Y', 456],
+                ];
+                PHP,
+        );
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame(['file:a'], $reopened->dependents('ns:X'));
+        self::assertSame(['file:c'], $reopened->dependents('ns:Y'));
+        self::assertSame([], $reopened->dependents('bad-int-key'));
+        self::assertSame([], $reopened->dependents('file:b'));
     }
 
     private function removeDir(string $dir): void

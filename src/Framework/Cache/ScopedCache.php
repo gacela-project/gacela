@@ -168,10 +168,11 @@ final class ScopedCache
     private function removeFromGraph(string $key): void
     {
         foreach ($this->dependencies[$key] ?? [] as $parent) {
-            self::pruneEdge($this->dependents, $parent, $key);
+            $this->pruneEdge($this->dependents, $parent, $key);
         }
+
         foreach ($this->dependents[$key] ?? [] as $child) {
-            self::pruneEdge($this->dependencies, $child, $key);
+            $this->pruneEdge($this->dependencies, $child, $key);
         }
 
         unset($this->dependencies[$key], $this->dependents[$key]);
@@ -182,7 +183,7 @@ final class ScopedCache
      *
      * @param array<string, list<string>> $graph
      */
-    private static function pruneEdge(array &$graph, string $node, string $neighbour): void
+    private function pruneEdge(array &$graph, string $node, string $neighbour): void
     {
         if (!isset($graph[$node])) {
             return;
@@ -213,6 +214,7 @@ final class ScopedCache
                 if (isset($seen[$child])) {
                     continue;
                 }
+
                 $seen[$child] = true;
                 $out[] = $child;
                 $queue[] = $child;
@@ -238,9 +240,11 @@ final class ScopedCache
                 if ($parent === $target) {
                     return true;
                 }
+
                 if (isset($seen[$parent])) {
                     continue;
                 }
+
                 $seen[$parent] = true;
                 $queue[] = $parent;
             }
@@ -274,14 +278,20 @@ final class ScopedCache
 
         /** @var mixed $parents */
         foreach ($payload as $child => $parents) {
-            if (!is_string($child) || !is_array($parents)) {
+            if (!is_string($child)) {
                 continue;
             }
+
+            if (!is_array($parents)) {
+                continue;
+            }
+
             /** @var mixed $parent */
             foreach ($parents as $parent) {
                 if (!is_string($parent)) {
                     continue;
                 }
+
                 $this->addEdge($child, $parent);
             }
         }

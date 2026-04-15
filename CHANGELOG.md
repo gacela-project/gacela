@@ -5,6 +5,7 @@
 ### Added
 
 - `#[Provides('ID')]` attribute for declarative container registration in providers. Annotated methods are wrapped in a lazy closure and registered under the given id; `Container` is auto-injected when declared in the signature. `AbstractProvider::provideModuleDependencies()` is no longer abstract, so providers can go attribute-only or mix both styles
+- `ContainerFixture` trait under `Gacela\Framework\Testing` that gives PHPUnit tests a one-liner (`$this->resetContainer()`) to reset Gacela's container and singletons between test methods, plus `captureContainerState()` / `restoreContainerState()` helpers around the new immutable `ContainerSnapshot` value object, and `containerTempDir()` for auto-cleaned scratch directories
 
 ### Changed
 

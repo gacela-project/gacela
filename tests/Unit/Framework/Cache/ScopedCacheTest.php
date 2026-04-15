@@ -303,6 +303,7 @@ final class ScopedCacheTest extends TestCase
         for ($i = 0; $i <= $depth; ++$i) {
             $this->cache->put('n_' . $i, $i);
         }
+
         for ($i = 0; $i < $depth; ++$i) {
             $this->cache->dependsOn('n_' . $i, 'n_' . ($i + 1));
         }

@@ -76,6 +76,9 @@ final class Properties
     /** @var ?list<class-string|callable> */
     public ?array $plugins = null;
 
+    /** @var ?array<string,array<string|int,class-string>> */
+    public ?array $handlerRegistries = null;
+
     public function __construct()
     {
         $emptyFn = static function (): void {};

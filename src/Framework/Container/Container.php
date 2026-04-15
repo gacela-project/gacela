@@ -7,6 +7,7 @@ namespace Gacela\Framework\Container;
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Plugins\LazyHandlerRegistry;
 
 /**
  * This is a decorator class to simplify the usage of the decoupled Container
@@ -38,28 +39,31 @@ final class Container extends GacelaContainer implements ContainerInterface
             $containerConfig->getServicesToExtend(),
         );
 
-        // Register factory services
         foreach ($containerConfig->getFactories() as $id => $factory) {
             $container->set($id, $container->factory($factory));
         }
 
-        // Register protected services
         foreach ($containerConfig->getProtectedServices() as $id => $service) {
             $container->set($id, $container->protect($service));
         }
 
-        // Register aliases
         foreach ($containerConfig->getAliases() as $alias => $id) {
             $container->alias($alias, $id);
         }
 
-        // Register contextual bindings
         foreach ($containerConfig->getContextualBindings() as $concrete => $needs) {
             foreach ($needs as $abstract => $implementation) {
                 /** @var class-string $concrete */
                 /** @var class-string $abstract */
                 $container->when($concrete)->needs($abstract)->give($implementation);
             }
+        }
+
+        foreach ($containerConfig->getHandlerRegistries() as $registryKey => $handlers) {
+            $container->set(
+                $registryKey,
+                static fn (): LazyHandlerRegistry => new LazyHandlerRegistry($handlers, $container),
+            );
         }
 
         return $container;

@@ -24,6 +24,7 @@ final class GacelaConfigTransfer
      * @param array<string,Closure> $protectedServices
      * @param array<string,string> $aliases
      * @param array<string,array<class-string,class-string|callable|object>> $contextualBindings
+     * @param array<string,array<string|int,class-string>> $handlerRegistries
      */
     public function __construct(
         public readonly AppConfigBuilder $appConfigBuilder,
@@ -45,6 +46,7 @@ final class GacelaConfigTransfer
         public readonly array $protectedServices,
         public readonly array $aliases,
         public readonly array $contextualBindings,
+        public readonly array $handlerRegistries = [],
     ) {
     }
 }

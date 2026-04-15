@@ -294,6 +294,14 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->contextualBindings ?? self::DEFAULT_CONTEXTUAL_BINDINGS;
     }
 
+    /**
+     * @return array<string,array<string|int,class-string>>
+     */
+    public function getHandlerRegistries(): array
+    {
+        return $this->properties->handlerRegistries ?? self::DEFAULT_HANDLER_REGISTRIES;
+    }
+
     public function setFileCacheEnabled(?bool $flag): self
     {
         $this->properties->fileCacheEnabled = $this->setPropertyWithTracking(
@@ -589,6 +597,30 @@ final class SetupGacela extends AbstractSetupGacela
         );
 
         return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?array<string,array<string|int,class-string>> $list
+     */
+    public function setHandlerRegistries(?array $list): self
+    {
+        $this->properties->handlerRegistries = $this->setPropertyWithTracking(
+            self::handlerRegistries,
+            $list,
+            self::DEFAULT_HANDLER_REGISTRIES,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param array<string,array<string|int,class-string>> $list
+     */
+    public function mergeHandlerRegistries(array $list): void
+    {
+        $this->propertyMerger->mergeHandlerRegistries($list);
     }
 
     /**

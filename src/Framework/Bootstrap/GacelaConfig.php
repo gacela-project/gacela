@@ -62,6 +62,9 @@ final class GacelaConfig
     /** @var array<string,array<class-string,class-string|callable|object>> */
     private array $contextualBindings = [];
 
+    /** @var array<string,array<string|int,class-string>> */
+    private array $handlerRegistries = [];
+
     /**
      * @param array<string,class-string|object|callable> $externalServices
      */
@@ -370,6 +373,23 @@ final class GacelaConfig
     }
 
     /**
+     * Declare a build-time dispatch table. The registry is resolvable from the
+     * container under `$registryKey` and returns a {@see \Gacela\Framework\Plugins\HandlerRegistry}
+     * that lazy-instantiates each handler through the container on first access.
+     *
+     * Registries are frozen after boot: there is no runtime `register()` method.
+     *
+     * @param string $registryKey identifier under which the registry is resolved (typically an interface/class name)
+     * @param array<string|int,class-string> $handlers map of dispatch key to handler class
+     */
+    public function addHandlerRegistry(string $registryKey, array $handlers): self
+    {
+        $this->handlerRegistries[$registryKey] = $handlers;
+
+        return $this;
+    }
+
+    /**
      * Add a new invokable class that can extend the GacelaConfig object.
      *
      * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
@@ -441,6 +461,7 @@ final class GacelaConfig
             $this->protectedServices,
             $this->aliases,
             $this->contextualBindings,
+            $this->handlerRegistries,
         );
     }
 }

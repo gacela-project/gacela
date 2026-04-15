@@ -51,4 +51,14 @@ interface ContainerConfigurationInterface
      * @return array<string,array<class-string,class-string|callable|object>>
      */
     public function getContextualBindings(): array;
+
+    /**
+     * Get handler registry declarations (build-time dispatch tables).
+     *
+     * Each entry maps a registry identifier to the declared handler classes.
+     * The registry is resolvable from the container under that identifier.
+     *
+     * @return array<string,array<string|int,class-string>>
+     */
+    public function getHandlerRegistries(): array;
 }

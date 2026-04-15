@@ -112,4 +112,23 @@ final class PropertyMerger
 
         $this->setup->setContextualBindings($merged);
     }
+
+    /**
+     * @param array<string,array<string|int,class-string>> $list
+     */
+    public function mergeHandlerRegistries(array $list): void
+    {
+        $current = $this->setup->getHandlerRegistries();
+        $merged = $current;
+
+        foreach ($list as $registryKey => $handlers) {
+            if (!isset($merged[$registryKey])) {
+                $merged[$registryKey] = [];
+            }
+
+            $merged[$registryKey] = array_merge($merged[$registryKey], $handlers);
+        }
+
+        $this->setup->setHandlerRegistries($merged);
+    }
 }

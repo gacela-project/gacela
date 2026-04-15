@@ -34,18 +34,6 @@
                 ]
             }
         ],
-        "PreToolUse": [
-            {
-                "matcher": "Edit|Write",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": ".claude/hooks/protect-files.sh",
-                        "timeout": 5
-                    }
-                ]
-            }
-        ],
         "SessionStart": [
             {
                 "matcher": "compact",

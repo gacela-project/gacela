@@ -6,13 +6,20 @@ namespace Gacela\Framework\Attribute;
 
 use Closure;
 use ReflectionMethod;
+use stdClass;
 
+use function count;
 use function debug_backtrace;
+use function end;
+use function explode;
+use function is_int;
 use function is_scalar;
+use function is_string;
 use function md5;
 use function preg_replace_callback;
 use function serialize;
 use function sprintf;
+use function str_contains;
 
 /**
  * Enables #[Cacheable] support for facade methods.
@@ -49,6 +56,11 @@ use function sprintf;
  */
 trait CacheableTrait
 {
+    /** @var array<string, Cacheable|false> */
+    private static array $attributeCache = [];
+
+    private static ?stdClass $cacheMissSentinel = null;
+
     public static function clearMethodCache(): void
     {
         CacheableConfig::getStorage()->clear();
@@ -88,8 +100,10 @@ trait CacheableTrait
         $storage = CacheableConfig::getStorage();
         $cacheKey = $this->buildCacheKey($method, $args, $attribute);
 
-        if ($storage->has($cacheKey)) {
-            return $storage->get($cacheKey);
+        $miss = self::$cacheMissSentinel ??= new stdClass();
+        $cached = $storage->get($cacheKey, $miss);
+        if ($cached !== $miss) {
+            return $cached;
         }
 
         $result = $callback();
@@ -101,12 +115,14 @@ trait CacheableTrait
 
     private function resolveCacheableAttribute(string $method): ?Cacheable
     {
-        $attributes = (new ReflectionMethod($this, $method))->getAttributes(Cacheable::class);
-        if ($attributes === []) {
-            return null;
+        $cacheKey = static::class . '::' . $method;
+        if (!isset(self::$attributeCache[$cacheKey])) {
+            $attributes = (new ReflectionMethod($this, $method))->getAttributes(Cacheable::class);
+            self::$attributeCache[$cacheKey] = $attributes === [] ? false : $attributes[0]->newInstance();
         }
 
-        return $attributes[0]->newInstance();
+        $entry = self::$attributeCache[$cacheKey];
+        return $entry === false ? null : $entry;
     }
 
     /**
@@ -118,8 +134,24 @@ trait CacheableTrait
             return $this->interpolateKey($attribute->key, $args);
         }
 
-        $argsKey = $args !== [] ? md5(serialize($args)) : 'no-args';
-        return sprintf('%s::%s::%s', static::class, $method, $argsKey);
+        return sprintf('%s::%s::%s', static::class, $method, $this->hashArgs($args));
+    }
+
+    /**
+     * @param list<mixed> $args
+     */
+    private function hashArgs(array $args): string
+    {
+        if ($args === []) {
+            return 'no-args';
+        }
+        if (count($args) === 1) {
+            $first = $args[0];
+            if (is_int($first) || is_string($first)) {
+                return (string) $first;
+            }
+        }
+        return md5(serialize($args));
     }
 
     /**

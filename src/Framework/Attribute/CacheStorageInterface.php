@@ -14,7 +14,12 @@ interface CacheStorageInterface
 {
     public function has(string $key): bool;
 
-    public function get(string $key): mixed;
+    /**
+     * Returns $default when $key is not present or has expired.
+     * The default is used as a miss-sentinel by CacheableTrait to avoid a
+     * separate has()+get() round-trip on the hot path.
+     */
+    public function get(string $key, mixed $default = null): mixed;
 
     public function set(string $key, mixed $value, int $ttl): void;
 

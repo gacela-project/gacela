@@ -223,6 +223,15 @@ final class CacheableTest extends TestCase
 
         self::assertSame(1, $facade->getCallCount());
     }
+
+    public function test_cached_null_value_is_treated_as_a_hit(): void
+    {
+        $facade = new TestFacadeReturningNull();
+
+        self::assertNull($facade->maybeFind());
+        self::assertNull($facade->maybeFind());
+        self::assertSame(1, $facade->getCallCount());
+    }
 }
 
 final class TestFacadeWithCache
@@ -409,6 +418,27 @@ final class TestFacadeWithHelperCached
     }
 }
 
+final class TestFacadeReturningNull
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function maybeFind(): ?string
+    {
+        return $this->cached(function (): ?string {
+            ++$this->callCount;
+            return null;
+        });
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
 final class RecordingCacheStorage implements CacheStorageInterface
 {
     /** @var list<array{key:string,value:mixed,ttl:int}> */
@@ -426,9 +456,9 @@ final class RecordingCacheStorage implements CacheStorageInterface
         return $this->delegate->has($key);
     }
 
-    public function get(string $key): mixed
+    public function get(string $key, mixed $default = null): mixed
     {
-        return $this->delegate->get($key);
+        return $this->delegate->get($key, $default);
     }
 
     public function set(string $key, mixed $value, int $ttl): void

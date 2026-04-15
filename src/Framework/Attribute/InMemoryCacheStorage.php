@@ -28,9 +28,9 @@ final class InMemoryCacheStorage implements CacheStorageInterface
         return false;
     }
 
-    public function get(string $key): mixed
+    public function get(string $key, mixed $default = null): mixed
     {
-        return $this->has($key) ? $this->cache[$key]['result'] : null;
+        return $this->has($key) ? $this->cache[$key]['result'] : $default;
     }
 
     public function set(string $key, mixed $value, int $ttl): void

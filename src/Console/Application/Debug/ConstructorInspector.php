@@ -52,6 +52,11 @@ final class ConstructorInspector
         $name = '$' . $parameter->getName();
         $renderedType = $this->renderType($type);
 
+        $inject = $this->readInject($parameter);
+        if ($inject !== null) {
+            return new ParameterInspection($name, $renderedType, ParameterStatus::Inject, $inject);
+        }
+
         if ($type === null) {
             return $parameter->isDefaultValueAvailable()
                 ? new ParameterInspection($name, $renderedType, ParameterStatus::HasDefault, $this->defaultDetail($parameter))
@@ -138,5 +143,18 @@ final class ConstructorInspector
         } catch (Throwable) {
             return [];
         }
+    }
+
+    private function readInject(ReflectionParameter $parameter): ?string
+    {
+        $attributes = $parameter->getAttributes(\Gacela\Container\Attribute\Inject::class);
+        if ($attributes === []) {
+            return null;
+        }
+
+        $inject = $attributes[0]->newInstance();
+        return $inject->implementation !== null
+            ? sprintf('inject -> %s', $inject->implementation)
+            : 'inject';
     }
 }

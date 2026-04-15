@@ -258,6 +258,7 @@ declares the target class.
   <fg=green>✓ bound</fg=green>        a binding in gacela.php maps the type to a concrete implementation
   <fg=green>✓ autowirable</fg=green>  concrete class exists and will be constructed automatically
   <fg=green>✓ default</fg=green>      the parameter has a default value
+  <fg=green>✓ inject</fg=green>       parameter is annotated with #[Inject] (optionally with an implementation override)
   <fg=red>✗ scalar</fg=red>       built-in type (string, int, ...) with no default
   <fg=red>✗ interface</fg=red>    interface type with no binding
   <fg=red>✗ missing</fg=red>      type does not exist

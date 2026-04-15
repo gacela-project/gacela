@@ -1,7 +1,21 @@
 # RFC-0001: `#[Inject]` and Symfony DI interop
 
-- Status: **Accepted** (2026-04-15).
+- Status: **Accepted** (2026-04-15, amended 2026-04-15).
 - Blocks: `feat/inject-attribute` (PR #8 in `local/pr-plan.md`).
+- Revision log:
+  - 2026-04-15 (amendment) — drop the `Gacela\Framework\Attribute\Inject`
+    bootstrap alias from PR #8a. Runtime probe showed that
+    `ReflectionParameter::getAttributes()` with exact-FQN match (how the
+    vendor container reads `#[Inject]`) does not propagate through
+    `class_alias`, so a user annotating with the aliased FQN would be
+    silently ignored. The alias is deferred to a coordinated follow-up
+    once the vendor container migrates to `ReflectionAttribute::IS_INSTANCEOF`
+    on its `getAttributes()` calls. See §3.1 and §5.
+  - 2026-04-15 (amendment) — drop `ConstructorInjectionsCache` from
+    PR #8a. Audit showed no existing code scans constructor attributes
+    at boot or in `cache:warm`, so the cache would have neither
+    producer nor consumer — speculative infrastructure. Add it later
+    only when a concrete consumer appears. See §3.6 and §5.
 
 ## 1. Context
 
@@ -43,9 +57,10 @@ both containers claim the same parameter. May live in a
 The proposed `#[ServiceMapTyped]` is dropped — no concrete consumer for
 property injection, and constructor injection interoperates cleanly
 with `readonly`. A follow-up RFC can extend `TARGET_PROPERTY` later
-without breaking this one. PR #8 adds docs, a Gacela-namespace alias,
-static-analysis upgrade, `debug:dependencies` surfacing, and migration
-examples around the existing attribute.
+without breaking this one. PR #8 adds docs, static-analysis upgrade,
+`debug:dependencies` surfacing, and migration examples around the
+existing attribute. The canonical user-facing FQCN is
+`Gacela\Container\Attribute\Inject` (see §3.1 amendment).
 
 ### Q3. `debug:dependencies` output? → One unified view with a `kind` column.
 
@@ -70,9 +85,20 @@ final class Inject
 }
 ```
 
-PR #8 adds a bootstrap `class_alias` so `Gacela\Framework\Attribute\Inject`
-resolves to the same class — consistent with `#[Cacheable]` and the rest
-of `Gacela\Framework\Attribute\`.
+The canonical user-facing FQCN is `Gacela\Container\Attribute\Inject`.
+
+The prior draft proposed a bootstrap `class_alias` to expose this as
+`Gacela\Framework\Attribute\Inject` for namespace consistency with
+`#[Cacheable]`. That alias is **deferred**: PHP's
+`ReflectionParameter::getAttributes()` with exact-FQN match (as used in
+`DependencyResolver::resolveDependenciesRecursively()`) does not treat
+`class_alias` targets as equivalent to the original class, so user code
+written against the aliased FQN would be silently ignored at runtime.
+
+The alias becomes viable once the vendor container
+(`gacela-project/container`) switches its `getAttributes()` calls to
+pass `ReflectionAttribute::IS_INSTANCEOF`. That is a separate,
+coordinated PR and out of scope for #8a.
 
 ### 3.2 Resolution order
 
@@ -119,10 +145,14 @@ without the plugin.
 ### 3.6 Caching
 
 `DependencyResolver::constructorCache` already memoizes reflection
-per-process. Cross-process: a new `ConstructorInjectionsCache` (follows
-`AbstractPhpFileCache`) stores per-class `#[Inject]` metadata so boot
-reflection is O(changed classes). Participates in `cache:clear` /
-`cache:warm`.
+per-process — no change needed. A cross-process `ConstructorInjectionsCache`
+was originally scoped for PR #8 but **dropped**: nothing in the
+codebase scans constructor attributes at boot or during `cache:warm`,
+so the cache would have no producer or consumer. It is carrying
+capacity, not value. Add it in a follow-up only if and when a concrete
+consumer appears (e.g., a future `cache:warm` scanner or a
+`debug:injected` command that lists every `#[Inject]` usage
+repo-wide).
 
 ### 3.7 Symfony bridge (`gacela/symfony-bridge`)
 
@@ -155,6 +185,8 @@ final class PhelRunCommand extends Command
 After (bridge installed + pass registered):
 
 ```php
+use Gacela\Container\Attribute\Inject;
+
 final class PhelRunCommand extends Command
 {
     public function __construct(
@@ -179,17 +211,19 @@ Budget **M** (not L — the attribute already exists).
 
 In scope:
 
-1. Bootstrap `class_alias(Gacela\Container\Attribute\Inject::class, Gacela\Framework\Attribute\Inject::class)`.
-2. `ConstructorInjectionsCache`.
-3. PHPStan rule for `#[Inject(Concrete::class)]` type upgrade.
-4. `debug:dependencies` `kind` column + extended `ParameterStatus`.
-5. `docs/container-configuration.md` section with the migration example.
-6. `gacela/symfony-bridge` package with `GacelaInjectCompilerPass`,
+1. PHPStan rule for `#[Inject(Concrete::class)]` type upgrade.
+2. `debug:dependencies` `kind` column + extended `ParameterStatus`.
+3. `docs/container-configuration.md` section with the migration example
+   (canonical import: `use Gacela\Container\Attribute\Inject;`).
+4. `gacela/symfony-bridge` package with `GacelaInjectCompilerPass`,
    bundle glue, tests against a minimal Symfony kernel.
-7. CHANGELOG under `Unreleased > Added`.
+5. CHANGELOG under `Unreleased > Added`.
 
-Out of scope (future RFCs if a consumer emerges): property-level
-`#[Inject]`, non-Symfony bridges, runtime proxies for unbound interfaces.
+Out of scope (future coordinated PRs): `Gacela\Framework\Attribute\Inject`
+alias (gated on vendor container migrating to `IS_INSTANCEOF` — see §3.1),
+`ConstructorInjectionsCache` (deferred until a concrete consumer exists
+— see §3.6), property-level `#[Inject]`, non-Symfony bridges, runtime
+proxies for unbound interfaces.
 
 ## 6. Consequences
 

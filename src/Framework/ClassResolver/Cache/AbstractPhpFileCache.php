@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Cache;
 
+use Gacela\Framework\Cache\FileCache;
 use RuntimeException;
 
-use function bin2hex;
-use function random_bytes;
+use function array_keys;
+use function file_exists;
+use function is_dir;
+use function mkdir;
 use function sprintf;
 
-use const LOCK_EX;
+use const DIRECTORY_SEPARATOR;
 
 abstract class AbstractPhpFileCache implements CacheInterface
 {
@@ -94,7 +97,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
                 continue;
             }
 
-            self::writeAtomic($filename, self::$cache[$class] ?? []);
+            FileCache::writeAtomically($filename, self::$cache[$class] ?? []);
         }
 
         self::$dirty = [];
@@ -138,7 +141,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
             return;
         }
 
-        self::writeAtomic(self::$filenames[static::class], self::$cache[static::class]);
+        FileCache::writeAtomically(self::$filenames[static::class], self::$cache[static::class]);
     }
 
     abstract protected function getCacheFilename(): string;
@@ -170,20 +173,5 @@ abstract class AbstractPhpFileCache implements CacheInterface
         }
 
         return $this->cacheDir . DIRECTORY_SEPARATOR . $this->getCacheFilename();
-    }
-
-    /**
-     * Write atomically: stage to a sibling .tmp file then rename. rename() is
-     * atomic on POSIX filesystems, so readers never see a half-written cache.
-     *
-     * @param array<string,string> $entries
-     */
-    private static function writeAtomic(string $filename, array $entries): void
-    {
-        $fileContent = sprintf('<?php return %s;', var_export($entries, true));
-        $tmp = $filename . '.' . bin2hex(random_bytes(4)) . '.tmp';
-
-        file_put_contents($tmp, $fileContent, LOCK_EX);
-        rename($tmp, $filename);
     }
 }

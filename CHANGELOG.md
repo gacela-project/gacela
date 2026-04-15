@@ -6,6 +6,7 @@
 
 - `#[Provides('ID')]` attribute for declarative container registration in providers. Annotated methods are wrapped in a lazy closure and registered under the given id; `Container` is auto-injected when declared in the signature. `AbstractProvider::provideModuleDependencies()` is no longer abstract, so providers can go attribute-only or mix both styles
 - `ContainerFixture` trait under `Gacela\Framework\Testing` that gives PHPUnit tests a one-liner (`$this->resetContainer()`) to reset Gacela's container and singletons between test methods, plus `captureContainerState()` / `restoreContainerState()` helpers around the new immutable `ContainerSnapshot` value object, and `containerTempDir()` for auto-cleaned scratch directories
+- `FileCache<T>` primitive (`Gacela\Framework\Cache\FileCache`) — a small typed, file-backed cache with `get/put/has/forget/clear`, per-entry TTL, `beginBatch()/commitBatch()`, and `stats()` returning a `FileCacheStats` snapshot. Fixed behaviour: `var_export` serialization, atomic write via sibling `.tmp` + `rename()`, `flock`-serialized batch commits, `sha1` key hashing, `opcache_invalidate()` on write when available. `AbstractPhpFileCache` now delegates its atomic-write path to `FileCache::writeAtomically()`.
 
 ### Changed
 

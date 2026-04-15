@@ -27,44 +27,24 @@ final class GacelaInjectCompilerPassTest extends TestCase
         $this->container = new ContainerBuilder();
     }
 
-    public function test_inject_without_override_routes_to_gacela_using_declared_type(): void
+    public function test_inject_rewrites_arguments_to_gacela_factory_definitions(): void
     {
         $this->container->register('app.service', ServiceWithInject::class);
 
         $this->pass->process($this->container);
 
-        $argument = $this->argumentFor('app.service', '$foo');
-        self::assertInstanceOf(Definition::class, $argument);
-        self::assertSame(FooInterface::class, $argument->getClass());
-        self::assertSame([FooInterface::class], $argument->getArguments());
-    }
+        // Plain #[Inject] → routes the declared interface through Gacela.
+        $foo = $this->argumentFor('app.service', '$foo');
+        self::assertInstanceOf(Definition::class, $foo);
+        self::assertSame(FooInterface::class, $foo->getClass());
+        self::assertSame([FooInterface::class], $foo->getArguments());
+        self::assertFactoryRoutesTo($foo, 'gacela.container');
 
-    public function test_inject_with_implementation_override_routes_to_concrete(): void
-    {
-        $this->container->register('app.service', ServiceWithInject::class);
-
-        $this->pass->process($this->container);
-
-        $argument = $this->argumentFor('app.service', '$bar');
-        self::assertInstanceOf(Definition::class, $argument);
-        self::assertSame(ConcreteBar::class, $argument->getClass());
-        self::assertSame([ConcreteBar::class], $argument->getArguments());
-    }
-
-    public function test_gacela_resolution_argument_uses_gacela_container_factory(): void
-    {
-        $this->container->register('app.service', ServiceWithInject::class);
-
-        $this->pass->process($this->container);
-
-        $argument = $this->argumentFor('app.service', '$foo');
-        self::assertInstanceOf(Definition::class, $argument);
-
-        $factory = $argument->getFactory();
-        self::assertIsArray($factory);
-        self::assertInstanceOf(Reference::class, $factory[0]);
-        self::assertSame('gacela.container', (string) $factory[0]);
-        self::assertSame('get', $factory[1]);
+        // #[Inject(Concrete::class)] → routes the override instead.
+        $bar = $this->argumentFor('app.service', '$bar');
+        self::assertInstanceOf(Definition::class, $bar);
+        self::assertSame(ConcreteBar::class, $bar->getClass());
+        self::assertSame([ConcreteBar::class], $bar->getArguments());
     }
 
     public function test_service_without_inject_is_left_untouched(): void
@@ -134,13 +114,19 @@ final class GacelaInjectCompilerPassTest extends TestCase
 
         $argument = $this->argumentFor('app.service', '$foo');
         self::assertInstanceOf(Definition::class, $argument);
-        /** @var array{0: Reference, 1: string} $factory */
-        $factory = $argument->getFactory();
-        self::assertSame('custom.gacela.container', (string) $factory[0]);
+        self::assertFactoryRoutesTo($argument, 'custom.gacela.container');
     }
 
     private function argumentFor(string $serviceId, string $namedKey): mixed
     {
         return $this->container->getDefinition($serviceId)->getArgument($namedKey);
+    }
+
+    private static function assertFactoryRoutesTo(Definition $argument, string $expectedServiceId): void
+    {
+        /** @var array{0: Reference, 1: string} $factory */
+        $factory = $argument->getFactory();
+        self::assertSame($expectedServiceId, (string) $factory[0]);
+        self::assertSame('get', $factory[1]);
     }
 }

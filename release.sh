@@ -361,7 +361,9 @@ main() {
   create_gh_release
 
   log_success "Release $VERSION complete."
-  [[ "$DRY_RUN" == true ]] && log_warn "This was a DRY-RUN. No files or remote state changed."
+  if [[ "$DRY_RUN" == true ]]; then
+    log_warn "This was a DRY-RUN. No files or remote state changed."
+  fi
 }
 
 main "$@"

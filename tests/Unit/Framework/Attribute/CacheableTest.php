@@ -11,7 +11,11 @@ use Gacela\Framework\Attribute\CacheStorageInterface;
 use Gacela\Framework\Attribute\InMemoryCacheStorage;
 use PHPUnit\Framework\TestCase;
 
+use function count;
 use function sprintf;
+use function strlen;
+use function strrpos;
+use function substr;
 
 final class CacheableTest extends TestCase
 {
@@ -232,6 +236,123 @@ final class CacheableTest extends TestCase
         self::assertNull($facade->maybeFind());
         self::assertSame(1, $facade->getCallCount());
     }
+
+    public function test_single_string_arg_is_hashed_directly(): void
+    {
+        $storage = new RecordingCacheStorage();
+        CacheableConfig::setStorage($storage);
+
+        $facade = new TestFacadeWithAdvancedArgs();
+        $facade->byName('alice');
+
+        self::assertSame(
+            TestFacadeWithAdvancedArgs::class . '::byName::alice',
+            $storage->sets[0]['key'],
+        );
+    }
+
+    public function test_non_scalar_arg_falls_back_to_serialized_hash(): void
+    {
+        $storage = new RecordingCacheStorage();
+        CacheableConfig::setStorage($storage);
+
+        $facade = new TestFacadeWithAdvancedArgs();
+        $facade->byArray(['a', 'b']);
+
+        $key = $storage->sets[0]['key'];
+        self::assertStringStartsWith(TestFacadeWithAdvancedArgs::class . '::byArray::', $key);
+        self::assertSame(32, strlen(substr($key, strrpos($key, '::') + 2)));
+    }
+
+    public function test_multi_arg_cache_distinguishes_argument_combinations(): void
+    {
+        $facade = new TestFacadeWithAdvancedArgs();
+
+        $facade->byNameAndAge('alice', 30);
+        $facade->byNameAndAge('alice', 30);
+        $facade->byNameAndAge('alice', 31);
+        $facade->byNameAndAge('bob', 30);
+
+        self::assertSame(3, $facade->getMultiArgCalls());
+    }
+
+    public function test_template_with_missing_index_renders_empty_string(): void
+    {
+        $facade = new TestFacadeWithTemplateEdgeCases();
+
+        $facade->sparseKey(7);
+
+        self::assertTrue(CacheableConfig::getStorage()->has('sparse:'));
+    }
+
+    public function test_template_with_non_scalar_arg_uses_serialized_hash(): void
+    {
+        $facade = new TestFacadeWithTemplateEdgeCases();
+
+        $facade->objectKey(new ValueHolder('alpha'));
+        $facade->objectKey(new ValueHolder('alpha'));
+        $facade->objectKey(new ValueHolder('beta'));
+
+        self::assertSame(2, $facade->getObjectKeyCalls());
+    }
+
+    public function test_explicit_method_accepts_plain_name_without_class_prefix(): void
+    {
+        $facade = new TestFacadeWithPlainExplicit();
+
+        $facade->fetch();
+        $facade->fetch();
+
+        self::assertSame(1, $facade->getCallCount());
+    }
+
+    public function test_cache_is_shared_across_instances_of_same_class(): void
+    {
+        $first = new TestFacadeWithCache();
+        $second = new TestFacadeWithCache();
+
+        $first->getExpensiveData();
+        $second->getExpensiveData();
+
+        self::assertSame(1, $first->getCallCount());
+        self::assertSame(0, $second->getCallCount());
+    }
+
+    public function test_repeated_calls_reuse_memoized_attribute(): void
+    {
+        $facade = new TestFacadeWithCache();
+
+        for ($i = 0; $i < 5; ++$i) {
+            $facade->getExpensiveData();
+        }
+
+        self::assertSame(1, $facade->getCallCount());
+    }
+
+    public function test_same_method_name_across_different_classes_uses_isolated_cache(): void
+    {
+        $first = new TestFacadeAlphaShared();
+        $second = new TestFacadeBetaShared();
+
+        $alphaResult = $first->compute(1);
+        $betaResult = $second->compute(1);
+
+        self::assertSame('alpha-1', $alphaResult);
+        self::assertSame('beta-1', $betaResult);
+        self::assertSame(1, $first->getCallCount());
+        self::assertSame(1, $second->getCallCount());
+    }
+
+    public function test_cached_called_on_method_without_attribute_invokes_callback_every_time(): void
+    {
+        $facade = new TestFacadeWithCachedButNoAttribute();
+
+        $facade->plain();
+        $facade->plain();
+        $facade->plain();
+
+        self::assertSame(3, $facade->getCallCount());
+    }
 }
 
 final class TestFacadeWithCache
@@ -430,6 +551,160 @@ final class TestFacadeReturningNull
         return $this->cached(function (): ?string {
             ++$this->callCount;
             return null;
+        });
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class TestFacadeWithAdvancedArgs
+{
+    use CacheableTrait;
+
+    private int $multiArgCalls = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function byName(string $name): string
+    {
+        return $this->cached(static fn (): string => 'name-' . $name);
+    }
+
+    /**
+     * @param list<string> $items
+     */
+    #[Cacheable(ttl: 3600)]
+    public function byArray(array $items): int
+    {
+        return $this->cached(static fn (): int => count($items));
+    }
+
+    #[Cacheable(ttl: 3600)]
+    public function byNameAndAge(string $name, int $age): string
+    {
+        return $this->cached(function () use ($name, $age): string {
+            ++$this->multiArgCalls;
+            return sprintf('%s-%d', $name, $age);
+        });
+    }
+
+    public function getMultiArgCalls(): int
+    {
+        return $this->multiArgCalls;
+    }
+}
+
+final class ValueHolder
+{
+    public function __construct(
+        public readonly string $value,
+    ) {
+    }
+}
+
+final class TestFacadeWithTemplateEdgeCases
+{
+    use CacheableTrait;
+
+    private int $objectKeyCalls = 0;
+
+    #[Cacheable(ttl: 3600, key: 'sparse:{5}')]
+    public function sparseKey(int $id): string
+    {
+        return $this->cached(static fn (): string => 'sparse-' . $id);
+    }
+
+    #[Cacheable(ttl: 3600, key: 'obj:{0}')]
+    public function objectKey(ValueHolder $holder): string
+    {
+        return $this->cached(function () use ($holder): string {
+            ++$this->objectKeyCalls;
+            return 'obj-' . $holder->value;
+        });
+    }
+
+    public function getObjectKeyCalls(): int
+    {
+        return $this->objectKeyCalls;
+    }
+}
+
+final class TestFacadeWithPlainExplicit
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function fetch(): string
+    {
+        return $this->cached(function (): string {
+            ++$this->callCount;
+            return 'fetched-' . $this->callCount;
+        }, 'fetch');
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class TestFacadeAlphaShared
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600, key: 'alpha-{0}')]
+    public function compute(int $id): string
+    {
+        return $this->cached(function () use ($id): string {
+            ++$this->callCount;
+            return 'alpha-' . $id;
+        });
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class TestFacadeBetaShared
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600, key: 'beta-{0}')]
+    public function compute(int $id): string
+    {
+        return $this->cached(function () use ($id): string {
+            ++$this->callCount;
+            return 'beta-' . $id;
+        });
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class TestFacadeWithCachedButNoAttribute
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    public function plain(): string
+    {
+        return $this->cached(function (): string {
+            ++$this->callCount;
+            return 'plain-' . $this->callCount;
         });
     }
 

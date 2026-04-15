@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\Cache\FileCache;
 use RuntimeException;
 
 use function sprintf;
-
-use const LOCK_EX;
 
 final class MergedConfigCache
 {
@@ -48,9 +47,7 @@ final class MergedConfigCache
     public function write(array $data): void
     {
         $this->ensureCacheDir();
-
-        $content = sprintf('<?php return %s;', var_export($data, true));
-        file_put_contents($this->filename(), $content, LOCK_EX);
+        FileCache::writeAtomically($this->filename(), $data);
     }
 
     public function clear(): void
@@ -77,8 +74,8 @@ final class MergedConfigCache
             return;
         }
 
-        if (!mkdir($concurrentDirectory = $this->cacheDir, recursive: true) && !is_dir($concurrentDirectory)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+        if (!mkdir($this->cacheDir, recursive: true) && !is_dir($this->cacheDir)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $this->cacheDir));
         }
     }
 }

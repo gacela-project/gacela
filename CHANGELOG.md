@@ -4,18 +4,24 @@
 
 ### Added
 
-- `#[Provides('ID')]` attribute for declarative container registration in providers. Annotated methods are wrapped in a lazy closure and registered under the given id; `Container` is auto-injected when declared in the signature. `AbstractProvider::provideModuleDependencies()` is no longer abstract, so providers can go attribute-only or mix both styles
-- `ContainerFixture` trait under `Gacela\Framework\Testing` that gives PHPUnit tests a one-liner (`$this->resetContainer()`) to reset Gacela's container and singletons between test methods, plus `captureContainerState()` / `restoreContainerState()` helpers around the new immutable `ContainerSnapshot` value object, and `containerTempDir()` for auto-cleaned scratch directories
-- `FileCache<T>` primitive (`Gacela\Framework\Cache\FileCache`) — a small typed, file-backed cache with `get/put/has/forget/clear`, per-entry TTL, `beginBatch()/commitBatch()`, and `stats()` returning a `FileCacheStats` snapshot. Fixed behaviour: `var_export` serialization, atomic write via sibling `.tmp` + `rename()`, `flock`-serialized batch commits, `sha1` key hashing, `opcache_invalidate()` on write when available. `AbstractPhpFileCache` now delegates its atomic-write path to `FileCache::writeAtomically()`.
+- `#[Provides('ID')]` attribute for declarative container registration in providers; `AbstractProvider::provideModuleDependencies()` is no longer abstract
+- `FileCache<T>` primitive — typed file-backed cache with TTL, batching, and atomic writes; `AbstractPhpFileCache` now delegates its write path to it
+- `GacelaConfig::addHandlerRegistry($key, [...])` for Provider-registered dispatch tables (lazy, container-resolved, frozen after boot) replacing hand-rolled `match` blocks
+- `GacelaConfig::addHealthCheck()` for Provider-based registration of `ModuleHealthCheckInterface` implementations, surfaced by `doctor`
+- `ContainerFixture` trait (`Gacela\Framework\Testing`) with `resetContainer()`, `captureContainerState()` / `restoreContainerState()`, and `containerTempDir()` for PHPUnit test isolation
 
 ### Changed
 
-- `CacheableTrait::cached()` now infers the method name and arguments from the caller's stack frame; callers write `$this->cached(fn () => ...)` instead of `$this->cached(__METHOD__, [...], fn () => ...)`. Callers may still pass `$method` and `$args` explicitly (`$this->cached(fn () => ..., __METHOD__, [$id])`) to skip `debug_backtrace()` on hot paths or when `cached()` is invoked from a helper
-- `#[Cacheable]` storage is now pluggable via `CacheStorageInterface` (default: `InMemoryCacheStorage`); swap with `CacheableConfig::setStorage()`
+- `CacheableTrait::cached()` infers method and args from the caller; callers write `$this->cached(fn () => ...)` (explicit `$method`/`$args` still accepted to skip `debug_backtrace()`)
+- `#[Cacheable]` storage is pluggable via `CacheStorageInterface` (default: `InMemoryCacheStorage`)
 - Per-method TTL overrides via `CacheableConfig::setTtlOverrides(['Class::method' => $seconds])`
 - `Cacheable::$key` accepts `{N}` placeholders that interpolate the Nth caller argument (e.g. `key: 'user:{0}'`)
-- `clearMethodCacheFor($method)` now matches exact `Class::method::` prefixes rather than substrings, so `clearMethodCacheFor('get')` no longer clears every method containing "get"
-- `MergedConfigCache` now routes its write through `FileCache::writeAtomically()`, picking up atomic rename + opcache invalidation (previously used direct `file_put_contents` with `LOCK_EX`, which could tear under concurrent writes)
+- `clearMethodCacheFor($method)` matches exact `Class::method::` prefixes instead of substrings
+- `MergedConfigCache` routes its write through `FileCache::writeAtomically()` for atomic rename + opcache invalidation
+
+### Performance
+
+- `#[Cacheable]` hot path: memoized attribute reflection, single-lookup miss sentinel, and scalar-key fast-path (`Facade::method::42` instead of `md5(serialize())`)
 
 ## [1.13.0](https://github.com/gacela-project/gacela/compare/1.12.0...1.13.0) - 2026-04-15
 

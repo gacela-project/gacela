@@ -60,10 +60,10 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/",
             "GacelaData\\": "data/",
             "GacelaTest\\": "tests/",
-            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/"
+            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/",
+            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/"
         }
     },
     "bin": [

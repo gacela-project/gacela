@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\CacheWarm;
 
+use Exception;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
@@ -47,7 +48,7 @@ final class CacheWarmService
         foreach ($this->classResolvers() as $resolver) {
             try {
                 $resolver->resolve($facadeClass);
-            } catch (Throwable) {
+            } catch (Exception) {
                 // A module may legitimately lack a Factory/Config/Provider, or
                 // its dependencies may not be constructible during warm; skip.
             }

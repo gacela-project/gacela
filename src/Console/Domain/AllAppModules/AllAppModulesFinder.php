@@ -78,7 +78,10 @@ final class AllAppModulesFinder
 
     private function getNamespace(SplFileInfo $fileInfo): string
     {
-        $fileContent = (string)file_get_contents($fileInfo->getRealPath());
+        $fileContent = file_get_contents($fileInfo->getRealPath());
+        if ($fileContent === false) {
+            return '';
+        }
 
         preg_match('#namespace (.*);#', $fileContent, $matches);
 

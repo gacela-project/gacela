@@ -78,17 +78,18 @@ trait CacheableTrait
     {
         if ($method === null) {
             $frame = debug_backtrace(0, 2)[1] ?? null;
-            if ($frame === null || !isset($frame['function'])) {
+            if ($frame === null) {
                 return $callback();
             }
 
             $method = $frame['function'];
-            /** @var list<mixed> $args */
-            $args ??= $frame['args'] ?? [];
+            /** @var list<mixed> $frameArgs */
+            $frameArgs = $frame['args'] ?? [];
+            $args = $args ?? $frameArgs;
         } else {
             if (str_contains($method, '::')) {
                 $parts = explode('::', $method);
-                $method = (string) end($parts);
+                $method = end($parts);
             }
 
             $args ??= [];
@@ -103,11 +104,13 @@ trait CacheableTrait
         $cacheKey = $this->buildCacheKey($method, $args, $attribute);
 
         $miss = self::$cacheMissSentinel ??= new stdClass();
+        /** @var mixed $cached */
         $cached = $storage->get($cacheKey, $miss);
         if ($cached !== $miss) {
             return $cached;
         }
 
+        /** @var mixed $result */
         $result = $callback();
         $ttl = CacheableConfig::resolveTtl(sprintf('%s::%s', static::class, $method), $attribute->ttl);
         $storage->set($cacheKey, $result, $ttl);
@@ -149,6 +152,7 @@ trait CacheableTrait
         }
 
         if (count($args) === 1) {
+            /** @var mixed $first */
             $first = $args[0];
             if (is_int($first) || is_string($first)) {
                 return (string) $first;
@@ -169,6 +173,7 @@ trait CacheableTrait
             '/\{(\d+)\}/',
             static function (array $match) use ($args): string {
                 $index = (int) $match[1];
+                /** @var mixed $value */
                 $value = $args[$index] ?? '';
                 if ($value === null || is_scalar($value)) {
                     return (string) $value;

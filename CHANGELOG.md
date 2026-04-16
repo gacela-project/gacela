@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [1.14.1](https://github.com/gacela-project/gacela/compare/1.14.0...1.14.1) - 2026-04-16
+
+### Fixed
+
+- Correct CLI version in `bin/gacela` (was still showing 1.13.0 in 1.14.0 tag)
+
 ## [1.14.0](https://github.com/gacela-project/gacela/compare/1.13.0...1.14.0) - 2026-04-16
 
 ### Added

@@ -50,9 +50,11 @@ final class ScopedCacheBench
             if ($entry === '.') {
                 continue;
             }
+
             if ($entry === '..') {
                 continue;
             }
+
             $path = $this->cacheDir . '/' . $entry;
             if (is_file($path)) {
                 unlink($path);

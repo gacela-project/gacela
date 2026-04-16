@@ -32,6 +32,7 @@ final class DocBlockParser
             $lineSplit = explode(' ', $firstLine);
             $classFromMethod = $lineSplit[3] ?? '';
         }
+
         if ($classFromMethod !== '') {
             return $classFromMethod;
         }

@@ -85,7 +85,7 @@ trait CacheableTrait
             $method = $frame['function'];
             /** @var list<mixed> $frameArgs */
             $frameArgs = $frame['args'] ?? [];
-            $args = $args ?? $frameArgs;
+            $args ??= $frameArgs;
         } else {
             if (str_contains($method, '::')) {
                 $parts = explode('::', $method);

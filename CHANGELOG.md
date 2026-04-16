@@ -4,6 +4,7 @@
 
 ### Added
 
+- `CacheableTrait` in `AbstractFacade` — facades can now use `#[Cacheable]` out of the box
 - `#[Inject]` constructor-parameter attribute with optional `implementation` override; `debug:dependencies` surfaces it
 - `gacela/symfony-bridge`: `GacelaInjectCompilerPass` routes `#[Inject]` parameters through Gacela's container in Symfony apps
 - `#[Provides('ID')]` attribute for declarative provider registration

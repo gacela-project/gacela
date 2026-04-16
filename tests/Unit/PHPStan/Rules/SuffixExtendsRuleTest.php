@@ -114,7 +114,7 @@ final class SuffixExtendsRuleTest extends TestCase
         self::assertCount(1, $result);
         self::assertSame(
             'Class App\Module\UserFacade should extend ' . AbstractFacade::class,
-            $result[0]->getMessage(),
+            $result[0],
         );
     }
 
@@ -134,7 +134,7 @@ final class SuffixExtendsRuleTest extends TestCase
         $result = $rule->processNode($node, $scope);
 
         self::assertCount(1, $result);
-        self::assertStringContainsString('should extend', $result[0]->getMessage());
+        self::assertStringContainsString('should extend', $result[0]);
     }
 
     public function test_factory_suffix_rule(): void
@@ -153,8 +153,8 @@ final class SuffixExtendsRuleTest extends TestCase
         $result = $rule->processNode($node, $scope);
 
         self::assertCount(1, $result);
-        self::assertStringContainsString('InvalidFactory', $result[0]->getMessage());
-        self::assertStringContainsString(AbstractFactory::class, $result[0]->getMessage());
+        self::assertStringContainsString('InvalidFactory', $result[0]);
+        self::assertStringContainsString(AbstractFactory::class, $result[0]);
     }
 
     public function test_provider_suffix_rule(): void
@@ -173,8 +173,8 @@ final class SuffixExtendsRuleTest extends TestCase
         $result = $rule->processNode($node, $scope);
 
         self::assertCount(1, $result);
-        self::assertStringContainsString('InvalidProvider', $result[0]->getMessage());
-        self::assertStringContainsString(AbstractProvider::class, $result[0]->getMessage());
+        self::assertStringContainsString('InvalidProvider', $result[0]);
+        self::assertStringContainsString(AbstractProvider::class, $result[0]);
     }
 
     public function test_config_suffix_rule(): void
@@ -193,8 +193,8 @@ final class SuffixExtendsRuleTest extends TestCase
         $result = $rule->processNode($node, $scope);
 
         self::assertCount(1, $result);
-        self::assertStringContainsString('InvalidConfig', $result[0]->getMessage());
-        self::assertStringContainsString(AbstractConfig::class, $result[0]->getMessage());
+        self::assertStringContainsString('InvalidConfig', $result[0]);
+        self::assertStringContainsString(AbstractConfig::class, $result[0]);
     }
 
     public function test_handles_namespace_extraction_correctly(): void
@@ -213,7 +213,7 @@ final class SuffixExtendsRuleTest extends TestCase
         $result = $rule->processNode($node, $scope);
 
         self::assertCount(1, $result);
-        self::assertStringContainsString('Very\Long\Namespace\Path\UserFacade', $result[0]->getMessage());
+        self::assertStringContainsString('Very\Long\Namespace\Path\UserFacade', $result[0]);
     }
 
     public function test_get_node_type_returns_class(): void
@@ -242,7 +242,7 @@ final class SuffixExtendsRuleTest extends TestCase
         $result = $rule->processNode($node, $scope);
 
         self::assertCount(1, $result);
-        self::assertStringContainsString('Facade', $result[0]->getMessage());
+        self::assertStringContainsString('Facade', $result[0]);
     }
 
     public function test_short_name_includes_first_character_after_the_namespace_separator(): void
@@ -264,6 +264,6 @@ final class SuffixExtendsRuleTest extends TestCase
         $result = $rule->processNode($node, $scope);
 
         self::assertCount(1, $result);
-        self::assertStringContainsString('App\Facade', $result[0]->getMessage());
+        self::assertStringContainsString('App\Facade', $result[0]);
     }
 }

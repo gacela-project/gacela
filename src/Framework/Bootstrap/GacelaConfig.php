@@ -14,6 +14,10 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
+use InvalidArgumentException;
+
+use function array_key_exists;
+use function sprintf;
 
 final class GacelaConfig
 {
@@ -190,6 +194,10 @@ final class GacelaConfig
      */
     public function getExternalService(string $key)
     {
+        if (!array_key_exists($key, $this->externalServices)) {
+            throw new InvalidArgumentException(sprintf('External service "%s" not found. Available keys: %s', $key, implode(', ', array_keys($this->externalServices)) ?: 'none'));
+        }
+
         return $this->externalServices[$key];
     }
 

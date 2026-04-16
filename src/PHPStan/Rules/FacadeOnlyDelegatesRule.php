@@ -93,7 +93,11 @@ final class FacadeOnlyDelegatesRule implements Rule
             default => null,
         };
 
-        return $expr !== null && $this->isDelegateChain($expr);
+        if ($expr === null) {
+            return false;
+        }
+
+        return $this->isDelegateChain($expr) || $this->isCachedDelegation($expr);
     }
 
     private function isDelegateChain(Expr $expr): bool
@@ -121,5 +125,45 @@ final class FacadeOnlyDelegatesRule implements Rule
 
             return false;
         }
+    }
+
+    /**
+     * Recognise $this->cached(fn () => <delegation>) as a valid pattern.
+     */
+    private function isCachedDelegation(Expr $expr): bool
+    {
+        if (!$expr instanceof MethodCall) {
+            return false;
+        }
+
+        if (
+            !$expr->var instanceof Variable
+            || $expr->var->name !== 'this'
+            || !$expr->name instanceof Identifier
+            || $expr->name->toString() !== 'cached'
+        ) {
+            return false;
+        }
+
+        $args = $expr->getArgs();
+        if ($args === []) {
+            return false;
+        }
+
+        $callback = $args[0]->value;
+
+        if ($callback instanceof Expr\ArrowFunction) {
+            return $this->isDelegateChain($callback->expr);
+        }
+
+        if ($callback instanceof Expr\Closure) {
+            if (count($callback->stmts) !== 1) {
+                return false;
+            }
+
+            return $this->isDelegateStatement($callback->stmts[0]);
+        }
+
+        return false;
     }
 }

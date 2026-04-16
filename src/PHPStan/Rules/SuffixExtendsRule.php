@@ -9,6 +9,7 @@ use PhpParser\Node\Stmt\Class_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\Rule;
+use PHPStan\Rules\RuleErrorBuilder;
 
 use function sprintf;
 
@@ -52,7 +53,15 @@ final class SuffixExtendsRule implements Rule
             $className !== $this->expectedParent &&
             !$classReflection->isSubclassOf($this->expectedParent)
         ) {
-            return [sprintf('Class %s should extend %s', $className, $this->expectedParent)];
+            return [
+                RuleErrorBuilder::message(sprintf(
+                    'Class %s should extend %s',
+                    $className,
+                    $this->expectedParent,
+                ))
+                    ->identifier('gacela.suffixMustExtend')
+                    ->build(),
+            ];
         }
 
         return [];

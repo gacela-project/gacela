@@ -236,6 +236,75 @@ final class FacadeOnlyDelegatesRuleTest extends TestCase
         }
     }
 
+    public function test_returns_no_error_for_cached_arrow_function_delegating_to_factory(): void
+    {
+        $method = $this->parseMethod('
+            public function getExpensiveData(int $id): array
+            {
+                return $this->cached(fn () => $this->getFactory()->createRepository()->fetchData($id));
+            }
+        ');
+
+        self::assertSame([], $this->runRule($method, isFacade: true));
+    }
+
+    public function test_returns_no_error_for_cached_closure_delegating_to_factory(): void
+    {
+        $method = $this->parseMethod('
+            public function getExpensiveData(int $id): array
+            {
+                return $this->cached(function () use ($id) {
+                    return $this->getFactory()->createRepository()->fetchData($id);
+                });
+            }
+        ');
+
+        self::assertSame([], $this->runRule($method, isFacade: true));
+    }
+
+    public function test_returns_no_error_for_cached_delegation_to_config(): void
+    {
+        $method = $this->parseMethod('
+            public function getCachedEndpoint(): string
+            {
+                return $this->cached(fn () => $this->getConfig()->getEndpoint());
+            }
+        ');
+
+        self::assertSame([], $this->runRule($method, isFacade: true));
+    }
+
+    public function test_reports_error_for_cached_with_non_delegation_closure(): void
+    {
+        $method = $this->parseMethod('
+            public function compute(int $x): int
+            {
+                return $this->cached(fn () => $x + 1);
+            }
+        ');
+
+        $errors = $this->runRule($method, isFacade: true);
+
+        self::assertCount(1, $errors);
+    }
+
+    public function test_reports_error_for_cached_closure_with_multiple_statements(): void
+    {
+        $method = $this->parseMethod('
+            public function compute(): int
+            {
+                return $this->cached(function () {
+                    $value = $this->getFactory()->createService()->run();
+                    return $value;
+                });
+            }
+        ');
+
+        $errors = $this->runRule($method, isFacade: true);
+
+        self::assertCount(1, $errors);
+    }
+
     public function test_get_node_type_returns_class_method(): void
     {
         $rule = new FacadeOnlyDelegatesRule();

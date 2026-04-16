@@ -4,27 +4,24 @@
 
 ### Added
 
-- `#[Provides('ID')]` attribute for declarative container registration in providers; `AbstractProvider::provideModuleDependencies()` is no longer abstract
-- `FileCache<T>` primitive — typed file-backed cache with TTL, batching, and atomic writes; `AbstractPhpFileCache` now delegates its write path to it
-- `ScopedCache` decorator over `FileCache` with `dependsOn`, cascading `invalidate`, `invalidateLeaf`, persisted dependency graph (survives process restart), and cycle detection at `dependsOn` time
-- `GacelaConfig::addHandlerRegistry($key, [...])` for Provider-registered dispatch tables (lazy, container-resolved, frozen after boot) replacing hand-rolled `match` blocks
-- `GacelaConfig::addHealthCheck()` for Provider-based registration of `ModuleHealthCheckInterface` implementations, surfaced by `doctor`
-- `ContainerFixture` trait (`Gacela\Framework\Testing`) with `resetContainer()`, `captureContainerState()` / `restoreContainerState()`, and `containerTempDir()` for PHPUnit test isolation
-- Documented constructor-parameter attribute `Gacela\Container\Attribute\Inject` with optional `implementation` override for disambiguating interface → concrete at the call site; `bin/gacela debug:dependencies` now tags `#[Inject]` parameters with an `inject` kind (and `inject -> <Concrete>` when an override is set)
-- `gacela/symfony-bridge` package (under `symfony-bridge/`): `GacelaInjectCompilerPass` rewrites Symfony service definitions so `#[Inject]`-annotated constructor parameters resolve through Gacela's container instead of Symfony's autowire, with build-time detection of Symfony-vs-Gacela argument conflicts
+- `#[Inject]` constructor-parameter attribute with optional `implementation` override; `debug:dependencies` surfaces it
+- `gacela/symfony-bridge`: `GacelaInjectCompilerPass` routes `#[Inject]` parameters through Gacela's container in Symfony apps
+- `#[Provides('ID')]` attribute for declarative provider registration
+- `FileCache<T>` typed file-backed cache with TTL, batching, and atomic writes
+- `ScopedCache` decorator with dependency graph, cascading invalidation, and cycle detection
+- `GacelaConfig::addHandlerRegistry()` for provider-registered dispatch tables
+- `GacelaConfig::addHealthCheck()` for provider-based health checks
+- `ContainerFixture` testing trait for PHPUnit container isolation
 
 ### Changed
 
-- `CacheableTrait::cached()` infers method and args from the caller; callers write `$this->cached(fn () => ...)` (explicit `$method`/`$args` still accepted to skip `debug_backtrace()`)
-- `#[Cacheable]` storage is pluggable via `CacheStorageInterface` (default: `InMemoryCacheStorage`)
-- Per-method TTL overrides via `CacheableConfig::setTtlOverrides(['Class::method' => $seconds])`
-- `Cacheable::$key` accepts `{N}` placeholders that interpolate the Nth caller argument (e.g. `key: 'user:{0}'`)
-- `clearMethodCacheFor($method)` matches exact `Class::method::` prefixes instead of substrings
-- `MergedConfigCache` routes its write through `FileCache::writeAtomically()` for atomic rename + opcache invalidation
+- `CacheableTrait::cached()` infers method and args from the caller automatically
+- `#[Cacheable]` storage is pluggable via `CacheStorageInterface`; supports per-method TTL overrides and `{N}` key placeholders
+- `MergedConfigCache` uses `FileCache::writeAtomically()` for atomic writes
 
 ### Performance
 
-- `#[Cacheable]` hot path: memoized attribute reflection, single-lookup miss sentinel, and scalar-key fast-path (`Facade::method::42` instead of `md5(serialize())`)
+- `#[Cacheable]` hot path: memoized reflection, miss sentinel, scalar-key fast-path
 
 ## [1.13.0](https://github.com/gacela-project/gacela/compare/1.12.0...1.13.0) - 2026-04-15
 

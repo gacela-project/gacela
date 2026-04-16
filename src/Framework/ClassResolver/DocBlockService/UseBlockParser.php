@@ -37,8 +37,12 @@ final class UseBlockParser
             static fn (string $l): bool => str_starts_with($l, 'use ') && str_contains($l, $needle),
         );
 
-        /** @psalm-suppress RedundantCast */
-        $lineSplit = explode(' ', (string)reset($lines));
+        $firstLine = reset($lines);
+        if ($firstLine === false) {
+            return '';
+        }
+
+        $lineSplit = explode(' ', $firstLine);
 
         return rtrim($lineSplit[1] ?? '', ';');
     }
@@ -53,8 +57,13 @@ final class UseBlockParser
             explode(PHP_EOL, $phpCode),
             static fn (string $l): bool => str_starts_with($l, 'namespace '),
         );
-        /** @psalm-suppress RedundantCast */
-        $lineSplit = explode(' ', (string)reset($lines));
+
+        $firstLine = reset($lines);
+        if ($firstLine === false) {
+            return '';
+        }
+
+        $lineSplit = explode(' ', $firstLine);
 
         return rtrim($lineSplit[1] ?? '', ';');
     }

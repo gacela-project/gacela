@@ -248,6 +248,7 @@ final class GacelaConfig
      */
     public function addAppConfigKeyValue(string $key, mixed $value): self
     {
+        $this->configKeyValues ??= [];
         $this->configKeyValues[$key] = $value;
 
         return $this;
@@ -412,6 +413,7 @@ final class GacelaConfig
      */
     public function extendGacelaConfig(string $className): self
     {
+        $this->gacelaConfigsToExtend ??= [];
         $this->gacelaConfigsToExtend[] = $className;
 
         return $this;
@@ -432,6 +434,7 @@ final class GacelaConfig
      */
     public function addPlugin(string|callable $plugin): self
     {
+        $this->plugins ??= [];
         $this->plugins[] = $plugin;
 
         return $this;

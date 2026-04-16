@@ -78,7 +78,10 @@ final class AllAppModulesFinder
 
     private function getNamespace(SplFileInfo $fileInfo): string
     {
-        $fileContent = (string)file_get_contents($fileInfo->getRealPath());
+        $fileContent = file_get_contents($fileInfo->getRealPath());
+        if ($fileContent === false) {
+            return '';
+        }
 
         preg_match('#namespace (.*);#', $fileContent, $matches);
 
@@ -90,7 +93,9 @@ final class AllAppModulesFinder
         $pieces = explode(DIRECTORY_SEPARATOR, $fileInfo->getFilename());
         $filename = end($pieces);
 
-        return substr($filename, 0, strpos($filename, '.') ?: 1);
+        $dotPos = strpos($filename, '.');
+
+        return $dotPos !== false ? substr($filename, 0, $dotPos) : $filename;
     }
 
     private function isFacade(AppModule $appModule): bool

@@ -27,7 +27,7 @@ final class ResolvableType
     public static function fromClassName(string $className): self
     {
         foreach (self::DEFAULT_ALLOWED_TYPES as $resolvableType) {
-            if (str_contains($className, $resolvableType)) {
+            if (str_ends_with($className, $resolvableType)) {
                 $moduleName = substr($className, 0, strlen($className) - strlen($resolvableType));
                 return new self($resolvableType, $moduleName);
             }

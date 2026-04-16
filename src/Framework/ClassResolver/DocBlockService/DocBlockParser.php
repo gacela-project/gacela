@@ -24,10 +24,14 @@ final class DocBlockParser
             static fn (string $l): bool => str_contains($l, $method),
         );
 
-        /** @var array<int, string> $lineSplit */
-        $lineSplit = explode(' ', (string)reset($lines));
+        $firstLine = reset($lines);
+        $classFromMethod = '';
 
-        $classFromMethod = $lineSplit[3] ?? '';
+        if ($firstLine !== false) {
+            /** @var array<int, string> $lineSplit */
+            $lineSplit = explode(' ', $firstLine);
+            $classFromMethod = $lineSplit[3] ?? '';
+        }
         if ($classFromMethod !== '') {
             return $classFromMethod;
         }

@@ -20,6 +20,12 @@
 - `#[Cacheable]` storage is pluggable via `CacheStorageInterface`; supports per-method TTL overrides and `{N}` key placeholders
 - `MergedConfigCache` uses `FileCache::writeAtomically()` for atomic writes
 
+### Fixed
+
+- `ResolvableType::fromClassName()` now uses `str_ends_with` to correctly match suffix types (e.g. `FacadeFactory` no longer misresolves as `Facade`)
+- `AllAppModulesFinder::buildClassName()` handles filenames with a leading dot correctly
+- `GacelaConfig::getExternalService()` throws `InvalidArgumentException` on missing key instead of silently returning null
+
 ### Performance
 
 - `#[Cacheable]` hot path: memoized reflection, miss sentinel, scalar-key fast-path

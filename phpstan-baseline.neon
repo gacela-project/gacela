@@ -41,11 +41,6 @@ parameters:
 			path: src/Console/Infrastructure/Command/CacheWarmCommand.php
 
 		-
-			message: "#^Trait Gacela\\\\Framework\\\\Attribute\\\\CacheableTrait is used zero times and is not analysed\\.$#"
-			count: 1
-			path: src/Framework/Attribute/CacheableTrait.php
-
-		-
 			message: "#^Trait Gacela\\\\Framework\\\\Testing\\\\ContainerFixture is used zero times and is not analysed\\.$#"
 			count: 1
 			path: src/Framework/Testing/ContainerFixture.php

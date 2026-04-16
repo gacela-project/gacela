@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Attribute\CacheableTrait;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 
 /**
@@ -11,12 +12,15 @@ use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
  */
 abstract class AbstractFacade
 {
+    use CacheableTrait;
+
     /** @var array<string, AbstractFactory> */
     private static array $factories = [];
 
     public static function resetCache(): void
     {
         self::$factories = [];
+        self::clearMethodCache();
     }
 
     /**

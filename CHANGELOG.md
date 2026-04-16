@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.14.0](https://github.com/gacela-project/gacela/compare/1.13.0...1.14.0) - 2026-04-16
+
 ### Added
 
 - `CacheableTrait` in `AbstractFacade` — facades can now use `#[Cacheable]` out of the box

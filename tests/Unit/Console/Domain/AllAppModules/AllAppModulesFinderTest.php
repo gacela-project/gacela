@@ -16,6 +16,8 @@ use IteratorIterator;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use RuntimeException;
+
 use SplFileInfo;
 
 use function dirname;
@@ -68,6 +70,31 @@ final class AllAppModulesFinderTest extends TestCase
             self::assertCount(1, $modules);
             self::assertSame($className, $modules[0]->facadeClass());
         } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    public function test_skips_dotfile_php_configs(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('dotfile');
+        $filePath = $tempDir . '/.php-cs-fixer.dist.php';
+        file_put_contents($filePath, "<?php\n\nreturn [];\n");
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($tempDir, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY,
+        );
+
+        $finder = new AllAppModulesFinder($iterator, $this->createAppModuleCreator());
+
+        set_error_handler(static function (int $errno, string $errstr): bool {
+            throw new RuntimeException("PHP error: {$errstr}");
+        });
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            restore_error_handler();
             $this->removeDirectory($tempDir);
         }
     }

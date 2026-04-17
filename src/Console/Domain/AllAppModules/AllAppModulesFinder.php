@@ -48,6 +48,7 @@ final class AllAppModulesFinder
     {
         if (!$fileInfo->isFile()
             || $fileInfo->getExtension() !== 'php'
+            || str_starts_with($fileInfo->getFilename(), '.')
             || str_contains($fileInfo->getRealPath(), 'vendor' . DIRECTORY_SEPARATOR)
         ) {
             return null;
@@ -55,6 +56,10 @@ final class AllAppModulesFinder
 
         $namespace = $this->getNamespace($fileInfo);
         $className = $this->buildClassName($fileInfo);
+
+        if ($className === '' || $namespace === '') {
+            return null;
+        }
 
         $fullyQualifiedClassName = sprintf(
             '%s\\%s',

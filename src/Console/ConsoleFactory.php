@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console;
 
+use AppendIterator;
 use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
@@ -19,11 +20,20 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
+use OuterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
+
+use function is_dir;
+use function sprintf;
+use function str_starts_with;
+use function strlen;
+use function trigger_error;
 
 /**
  * @extends AbstractFactory<ConsoleConfig>
@@ -63,7 +73,7 @@ final class ConsoleFactory extends AbstractFactory
     public function createAllAppModulesFinder(): AllAppModulesFinder
     {
         return new AllAppModulesFinder(
-            $this->createRecursiveIterator(),
+            $this->createModuleScanIterator(),
             $this->createAppModuleCreator(),
         );
     }
@@ -103,14 +113,57 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
+     * @psalm-suppress MixedReturnTypeCoercion
+     *
+     * @return OuterIterator<array-key, SplFileInfo>
+     */
+    private function createModuleScanIterator(): OuterIterator
+    {
+        $paths = Config::getInstance()->getSetupGacela()->getAppModulePaths();
+        $rootDir = Gacela::rootDir();
+
+        if ($paths === []) {
+            return $this->createRecursiveIteratorFor($rootDir);
+        }
+
+        $append = new AppendIterator();
+        foreach ($paths as $path) {
+            $resolved = $this->resolveScanPath($path, $rootDir);
+            if (!is_dir($resolved)) {
+                trigger_error(
+                    sprintf('Gacela: appModulePaths entry "%s" is not a directory, skipping.', $path),
+                    E_USER_WARNING,
+                );
+                continue;
+            }
+            $append->append($this->createRecursiveIteratorFor($resolved));
+        }
+
+        /** @var OuterIterator<array-key, SplFileInfo> $append */
+        return $append;
+    }
+
+    /**
      * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
      */
-    private function createRecursiveIterator(): RecursiveIteratorIterator
+    private function createRecursiveIteratorFor(string $dir): RecursiveIteratorIterator
     {
         return new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(Gacela::rootDir(), FilesystemIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::LEAVES_ONLY,
         );
+    }
+
+    private function resolveScanPath(string $path, string $rootDir): string
+    {
+        if ($path === '') {
+            return $rootDir;
+        }
+        if (str_starts_with($path, '/') || (strlen($path) > 1 && $path[1] === ':')) {
+            return $path;
+        }
+
+        return rtrim($rootDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($path, '/\\');
     }
 
     private function createFileContentIo(): FileContentIoInterface

@@ -28,6 +28,7 @@ final class SetupInitializer
             ->setFileCacheEnabled($dto->fileCacheEnabled)
             ->setFileCacheDirectory($dto->fileCacheDirectory)
             ->setProjectNamespaces($dto->projectNamespaces)
+            ->setAppModulePaths($dto->appModulePaths)
             ->setConfigKeyValues($dto->configKeyValues)
             ->setAreEventListenersEnabled($dto->areEventListenersEnabled)
             ->setGenericListeners($dto->genericListeners)

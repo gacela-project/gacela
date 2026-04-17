@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- `GacelaConfig::setAppModulePaths()` to scope module discovery to specific directories
+
 ### Fixed
 
-- `list:modules` / `debug:modules` no longer emit PHP warning when repo contains top-level dotfile PHP configs (e.g. `.php-cs-fixer.dist.php`)
+- `list:modules` / `debug:modules` no longer warn on top-level dotfile PHP configs
 
 ## [1.14.1](https://github.com/gacela-project/gacela/compare/1.14.0...1.14.1) - 2026-04-16
 

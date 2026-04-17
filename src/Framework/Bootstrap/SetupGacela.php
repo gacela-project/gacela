@@ -242,6 +242,28 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @param ?list<string> $paths
+     */
+    public function setAppModulePaths(?array $paths): self
+    {
+        $this->properties->appModulePaths = $this->setPropertyWithTracking(
+            self::appModulePaths,
+            $paths,
+            self::DEFAULT_APP_MODULE_PATHS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getAppModulePaths(): array
+    {
+        return $this->properties->appModulePaths ?? self::DEFAULT_APP_MODULE_PATHS;
+    }
+
+    /**
      * @return array<string,mixed>
      */
     public function getConfigKeyValues(): array

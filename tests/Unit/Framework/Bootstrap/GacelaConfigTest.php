@@ -27,6 +27,23 @@ final class GacelaConfigTest extends TestCase
         self::assertSame('config/local.php', $paths[0]->pathLocal());
     }
 
+    public function test_app_module_paths_default_to_null_in_transfer(): void
+    {
+        $config = new GacelaConfig();
+
+        self::assertNull($config->toTransfer()->appModulePaths);
+    }
+
+    public function test_set_app_module_paths_exposes_list_on_transfer(): void
+    {
+        $config = new GacelaConfig();
+
+        $returned = $config->setAppModulePaths(['src/php', '/abs/path']);
+
+        self::assertSame($config, $returned);
+        self::assertSame(['src/php', '/abs/path'], $config->toTransfer()->appModulePaths);
+    }
+
     public function test_add_mapping_interface_is_an_alias_of_add_binding(): void
     {
         $a = new GacelaConfig();

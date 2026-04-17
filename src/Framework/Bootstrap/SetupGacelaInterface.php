@@ -22,6 +22,14 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
     public function getProjectNamespaces(): array;
 
     /**
+     * Get the list of paths scanned when discovering application modules.
+     * Empty array means scan the application root directory.
+     *
+     * @return list<string>
+     */
+    public function getAppModulePaths(): array;
+
+    /**
      * Get the list of key:value configuration.
      *
      * @return array<string,mixed>

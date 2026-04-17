@@ -1,10 +1,12 @@
 ---
-description: Create a new versioned release with changelog and GitHub release
+description: Create a new versioned Gacela release via release.sh (canonical automation)
 argument-hint: "[version]"
 disable-model-invocation: true
 ---
 
 # Release
+
+Canonical release automation lives in [`release.sh`](../../../release.sh). Always delegate to it — do not perform release steps manually. See [`.github/RELEASE.md`](../../../.github/RELEASE.md) for full reference.
 
 ## Context
 
@@ -14,46 +16,52 @@ disable-model-invocation: true
 
 ## Instructions
 
-### Phase 1: Pre-flight Checks
+### Phase 1: Pre-flight
 
-1. Abort if not on `main` or if there are uncommitted changes (see context above).
-
-2. **Check CHANGELOG.md has Unreleased content**:
+1. Abort if not on `main`. Must be clean tree (in-sync with `origin/main`).
+2. Confirm `gh` CLI authenticated: `gh auth status`.
+3. Confirm `## Unreleased` section in `CHANGELOG.md` has content:
    ```bash
-   git diff $(git describe --tags --abbrev=0)..HEAD -- CHANGELOG.md
+   awk '/^## Unreleased/{flag=1;next} /^## /{flag=0} flag' CHANGELOG.md
    ```
-   Warn if `## Unreleased` section is empty.
+   Abort if empty.
+4. Determine version:
+   - If `$ARGUMENTS` provides `X.Y.Z`, validate format.
+   - Otherwise, suggest bump based on Unreleased content (breaking → major, feat → minor, fix only → patch).
 
-3. **Determine next version**:
-   - If `$ARGUMENTS` provides a version, validate format (X.Y.Z)
-   - Otherwise, suggest based on changes (major for breaking, minor for features, patch for fixes)
+### Phase 2: Dry-run preview
 
-### Phase 2: Release
-
-4. **Update CHANGELOG.md** — rename `## Unreleased` to `## [X.Y.Z](https://github.com/gacela-project/gacela/compare/PREV...X.Y.Z) - YYYY-MM-DD`, add new empty `## Unreleased` section above it.
-
-5. **Commit and tag**:
+5. Show planned changes first:
    ```bash
-   git add CHANGELOG.md
-   git commit -m "chore: release vX.Y.Z"
-   git tag vX.Y.Z
+   ./release.sh X.Y.Z --dry-run
    ```
+   Confirm output with user before proceeding.
 
-6. **Push**:
+### Phase 3: Release
+
+6. Execute:
    ```bash
-   git push origin main --tags
+   ./release.sh X.Y.Z
    ```
+   Script handles: bump `bin/gacela`, rewrite `CHANGELOG.md`, run `composer quality && composer test`, commit `chore(release): X.Y.Z`, tag `X.Y.Z` (unprefixed), push `main` + tag, create GitHub release with notes from CHANGELOG section.
 
-7. **Create GitHub release**:
+7. On failure mid-script, run:
    ```bash
-   gh release create vX.Y.Z --title "vX.Y.Z" --notes-from-tag
-   ```
-
-### Phase 3: Verify
-
-8. **Confirm release was created**:
-   ```bash
-   gh release view vX.Y.Z
+   ./release.sh --rollback
    ```
 
-9. **Report the release URL** to the user.
+### Phase 4: Verify
+
+8. Confirm release:
+   ```bash
+   gh release view X.Y.Z
+   ```
+9. Report release URL to user.
+
+## Rules
+
+- **Tags unprefixed**: `1.14.2`, never `v1.14.2`.
+- **Commit format**: `chore(release): X.Y.Z`.
+- **Never** run manual `git tag` / `gh release create` when `release.sh` available.
+- **Never** skip `composer quality && composer test` unless user explicitly passes `--skip-tests`.
+- See `./release.sh --help` for all flags (`--dry-run`, `--force`, `--skip-tests`, `--without-gh-release`).

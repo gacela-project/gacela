@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.14.2](https://github.com/gacela-project/gacela/compare/1.14.1...1.14.2) - 2026-04-17
+
 ### Added
 
 - `GacelaConfig::setAppModulePaths()` to scope module discovery to specific directories

@@ -39,14 +39,9 @@ final class ValidateConfigCommand extends Command
         $hasErrors = false;
         $hasWarnings = false;
 
-        // Check if gacela.php exists
+        // Check if gacela.php exists (optional — silent when missing)
         $gacelaConfigPath = Gacela::rootDir() . '/gacela.php';
-        if (!file_exists($gacelaConfigPath)) {
-            $output->writeln('<fg=yellow>⚠ Warning:</> No gacela.php configuration file found');
-            $output->writeln(sprintf('  Expected at: %s', $gacelaConfigPath));
-            $output->writeln('');
-            $hasWarnings = true;
-        } else {
+        if (file_exists($gacelaConfigPath)) {
             $output->writeln(sprintf('<fg=green>✓</> Configuration file found: %s', $gacelaConfigPath));
             $output->writeln('');
         }

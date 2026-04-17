@@ -9,6 +9,7 @@
 ### Fixed
 
 - `list:modules` / `debug:modules` no longer warn on top-level dotfile PHP configs
+- `validate:config` stays silent when `gacela.php` is missing (file is optional)
 
 ## [1.14.1](https://github.com/gacela-project/gacela/compare/1.14.0...1.14.1) - 2026-04-16
 

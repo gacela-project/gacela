@@ -35,14 +35,14 @@ final class ValidateConfigCommandTest extends TestCase
         self::assertStringContainsString('Checking bindings...', $output);
     }
 
-    public function test_validate_config_shows_warnings_if_no_gacela_php(): void
+    public function test_validate_config_is_silent_when_gacela_php_missing(): void
     {
         $this->command->execute([]);
 
         $output = $this->command->getDisplay();
 
-        // This test directory doesn't have a gacela.php, so we should see a warning
-        self::assertStringContainsString('Checking bindings...', $output);
+        // Missing gacela.php is optional; command must not mention it at all
+        self::assertStringNotContainsString('gacela.php', $output);
     }
 
     public function test_validate_config_exit_code_success(): void

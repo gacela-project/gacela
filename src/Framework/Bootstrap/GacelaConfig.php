@@ -37,6 +37,9 @@ final class GacelaConfig
     /** @var list<string> */
     private ?array $projectNamespaces = null;
 
+    /** @var list<string> */
+    private ?array $appModulePaths = null;
+
     /** @var array<string,mixed> */
     private ?array $configKeyValues = null;
 
@@ -240,6 +243,23 @@ final class GacelaConfig
     public function setProjectNamespaces(array $list): self
     {
         $this->projectNamespaces = $list;
+
+        return $this;
+    }
+
+    /**
+     * Restrict which directories are scanned when discovering application modules
+     * (used by console commands: list:modules, debug:modules, cache:warm, doctor).
+     *
+     * Paths can be absolute or relative to the application root. Missing paths are
+     * skipped with a warning at scan time. When unset, scanning walks the entire
+     * application root directory.
+     *
+     * @param list<string> $paths
+     */
+    public function setAppModulePaths(array $paths): self
+    {
+        $this->appModulePaths = $paths;
 
         return $this;
     }
@@ -477,6 +497,7 @@ final class GacelaConfig
             $this->fileCacheEnabled,
             $this->fileCacheDirectory,
             $this->projectNamespaces,
+            $this->appModulePaths,
             $this->configKeyValues,
             $this->genericListeners,
             $this->specificListeners,

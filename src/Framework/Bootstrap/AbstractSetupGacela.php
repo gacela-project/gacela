@@ -21,6 +21,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const projectNamespaces = 'projectNamespaces';
 
+    public const appModulePaths = 'appModulePaths';
+
     public const configKeyValues = 'configKeyValues';
 
     public const servicesToExtend = 'servicesToExtend';
@@ -48,6 +50,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const DEFAULT_FILE_CACHE_DIRECTORY = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
 
     protected const DEFAULT_PROJECT_NAMESPACES = [];
+
+    protected const DEFAULT_APP_MODULE_PATHS = [];
 
     protected const DEFAULT_CONFIG_KEY_VALUES = [];
 

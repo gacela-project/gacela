@@ -42,6 +42,9 @@ final class Properties
     /** @var ?list<string> */
     public ?array $projectNamespaces = null;
 
+    /** @var ?list<string> */
+    public ?array $appModulePaths = null;
+
     /** @var ?array<string,mixed> */
     public ?array $configKeyValues = null;
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `GacelaConfig::setAppModulePaths(array $paths)` — restrict directories scanned when discovering app modules (`list:modules`, `debug:modules`, `cache:warm`, `doctor`). Accepts absolute or root-relative paths. Missing paths are skipped with an `E_USER_WARNING`. Empty/unset preserves the previous behavior of walking the application root.
+
 ### Fixed
 
 - `list:modules` / `debug:modules` no longer emit PHP warning when repo contains top-level dotfile PHP configs (e.g. `.php-cs-fixer.dist.php`)

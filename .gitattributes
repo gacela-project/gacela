@@ -1,12 +1,31 @@
-/.github                export-ignore
-/tests                  export-ignore
-/tools                  export-ignore
-/.editorconfig          export-ignore
-/.gitattributes         export-ignore
-/.gitignore             export-ignore
-/.php-cs-fixer.dist.php export-ignore
-/phpbench.json          export-ignore
-/phpmetrics-config.json export-ignore
-/phpstan.neon           export-ignore
-/phpunit.xml            export-ignore
-/psalm.xml              export-ignore
+# Normalize line endings
+* text=auto eol=lf
+
+# Language stats
+/docs      linguist-documentation
+*.md       linguist-documentation
+
+# Exclude dev/CI assets from `composer archive` / GitHub release tarball
+/.github                 export-ignore
+/.claude                 export-ignore
+/tests                   export-ignore
+/tools                   export-ignore
+/symfony-bridge          export-ignore
+/.editorconfig           export-ignore
+/.gitattributes          export-ignore
+/.gitignore              export-ignore
+/.php-cs-fixer.dist.php  export-ignore
+/AGENTS.md               export-ignore
+/infection.json5         export-ignore
+/phpbench.json           export-ignore
+/phpmetrics-config.json  export-ignore
+/phpstan.neon            export-ignore
+/phpstan-baseline.neon   export-ignore
+/phpstan-gacela.neon     export-ignore
+/phpstan-tests.neon      export-ignore
+/phpunit.xml             export-ignore
+/psalm.xml               export-ignore
+/psalm-baseline.xml      export-ignore
+/psalm-gacela.xml        export-ignore
+/rector.php              export-ignore
+/release.sh              export-ignore

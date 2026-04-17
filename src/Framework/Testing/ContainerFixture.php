@@ -214,7 +214,6 @@ trait ContainerFixture
         }
 
         $prop = $reflection->getProperty($property);
-        $prop->setAccessible(true);
 
         return $prop->getValue($object);
     }
@@ -230,7 +229,6 @@ trait ContainerFixture
         }
 
         $prop = $reflection->getProperty($property);
-        $prop->setAccessible(true);
 
         return $prop->getValue();
     }

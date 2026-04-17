@@ -39,7 +39,7 @@ final class ConfigLoaderTest extends TestCase
         $normalizer->method('normalizePathLocal')->willReturn('/project/config/local.php');
 
         $pathFinder = $this->createMock(PathFinderInterface::class);
-        $pathFinder->method('matchingPattern')->willReturnMap([
+        $pathFinder->expects($this->exactly(2))->method('matchingPattern')->willReturnMap([
             ['pattern', ['/project/config/default.php', '/project/config/local.php']],
             ['pattern-env', []],
         ]);

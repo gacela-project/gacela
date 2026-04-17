@@ -61,7 +61,7 @@ final class FacadeOnlyDelegatesRule implements Rule
             return [];
         }
 
-        if (!$classReflection->isSubclassOf(AbstractFacade::class)) {
+        if (!$this->extendsClass($classReflection, AbstractFacade::class)) {
             return [];
         }
 
@@ -85,6 +85,17 @@ final class FacadeOnlyDelegatesRule implements Rule
         return [];
     }
 
+    private function extendsClass(ClassReflection $classReflection, string $parent): bool
+    {
+        foreach ($classReflection->getParents() as $p) {
+            if ($p->getName() === $parent) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function isDelegateStatement(Node $stmt): bool
     {
         $expr = match (true) {
@@ -93,11 +104,15 @@ final class FacadeOnlyDelegatesRule implements Rule
             default => null,
         };
 
-        if ($expr === null) {
+        if (!$expr instanceof \PhpParser\Node\Expr) {
             return false;
         }
 
-        return $this->isDelegateChain($expr) || $this->isCachedDelegation($expr);
+        if ($this->isDelegateChain($expr)) {
+            return true;
+        }
+
+        return $this->isCachedDelegation($expr);
     }
 
     private function isDelegateChain(Expr $expr): bool

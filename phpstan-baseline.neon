@@ -1,47 +1,80 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Call to an undefined static method Gacela\\\\Framework\\\\ServiceResolver\\\\DocBlockResolver\\:\\:fromClassName\\(\\)\\.$#"
+			rawMessage: 'Call to an undefined static method Gacela\Framework\ServiceResolver\DocBlockResolver::fromClassName().'
+			identifier: staticMethod.notFound
 			count: 1
 			path: src/Console/Application/CacheWarm/CacheWarmService.php
 
 		-
-			message: "#^Binary operation \"\\+\\=\" between \\(float\\|int\\) and mixed results in an error\\.$#"
+			rawMessage: 'Cannot call method getDocBlockResolvable() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: src/Console/Application/CacheWarm/CacheWarmService.php
+
+		-
+			rawMessage: 'Binary operation "+=" between (float|int) and mixed results in an error.'
+			identifier: assignOp.invalid
 			count: 2
 			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
 
 		-
-			message: "#^Cannot use array destructuring on mixed\\.$#"
+			rawMessage: Cannot use array destructuring on mixed.
+			identifier: offsetAccess.nonArray
 			count: 1
 			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
 
 		-
-			message: "#^Parameter \\#1 \\$array \\(list\\<Fiber\\>\\) of array_values is already a list, call has no effect\\.$#"
+			rawMessage: 'Parameter #1 $className of method Gacela\Console\Application\CacheWarm\CacheWarmService::warmAttributeCache() expects class-string, string given.'
+			identifier: argument.type
 			count: 1
 			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
 
 		-
-			message: "#^Parameter \\#1 \\$className of method Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\CacheWarmService\\:\\:warmAttributeCache\\(\\) expects class\\-string, string given\\.$#"
+			rawMessage: 'Property Gacela\Console\Application\CacheWarm\ParallelModuleWarmer::$activeFibers (list<Fiber>) does not accept array<int<0, max>, Fiber>.'
+			identifier: assign.propertyType
 			count: 1
 			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
 
 		-
-			message: "#^Property Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\ParallelModuleWarmer\\:\\:\\$activeFibers \\(list\\<Fiber\\>\\) does not accept array\\<int\\<0, max\\>, Fiber\\>\\.$#"
+			rawMessage: 'Property Gacela\Console\Application\CacheWarm\ParallelModuleWarmer::$activeFibers with generic class Fiber does not specify its types: TStart, TResume, TReturn, TSuspend'
+			identifier: missingType.generics
 			count: 1
 			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
 
 		-
-			message: "#^Property Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\ParallelModuleWarmer\\:\\:\\$activeFibers with generic class Fiber does not specify its types\\: TStart, TResume, TReturn, TSuspend$#"
+			rawMessage: 'Property Gacela\Console\Domain\CommandArguments\CommandArgumentsParser::$composerJson in isset() is not nullable nor uninitialized.'
+			identifier: isset.initializedProperty
 			count: 1
-			path: src/Console/Application/CacheWarm/ParallelModuleWarmer.php
+			path: src/Console/Domain/CommandArguments/CommandArgumentsParser.php
 
 		-
-			message: "#^Parameter \\#1 \\$className of method Gacela\\\\Console\\\\Application\\\\CacheWarm\\\\CacheWarmService\\:\\:warmAttributeCache\\(\\) expects class\\-string, string given\\.$#"
+			rawMessage: 'Parameter #1 $className of method Gacela\Console\Application\CacheWarm\CacheWarmService::warmAttributeCache() expects class-string, string given.'
+			identifier: argument.type
 			count: 1
 			path: src/Console/Infrastructure/Command/CacheWarmCommand.php
 
 		-
-			message: "#^Trait Gacela\\\\Framework\\\\Testing\\\\ContainerFixture is used zero times and is not analysed\\.$#"
+			rawMessage: Possibly invalid array key type string|null.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Console/Infrastructure/ConsoleBootstrap.php
+
+		-
+			rawMessage: 'Method Gacela\Framework\ClassResolver\ClassResolverCache::getCache() should return Gacela\Framework\ClassResolver\Cache\CacheInterface but returns Gacela\Framework\ClassResolver\Cache\CacheInterface|null.'
+			identifier: return.type
+			count: 1
+			path: src/Framework/ClassResolver/ClassResolverCache.php
+
+		-
+			rawMessage: 'Method Gacela\Framework\ServiceResolver\DocBlockResolverCache::getCacheInstance() should return Gacela\Framework\ClassResolver\Cache\CacheInterface but returns Gacela\Framework\ClassResolver\Cache\CacheInterface|null.'
+			identifier: return.type
+			count: 1
+			path: src/Framework/ServiceResolver/DocBlockResolverCache.php
+
+		-
+			rawMessage: Trait Gacela\Framework\Testing\ContainerFixture is used zero times and is not analysed.
+			identifier: trait.unused
 			count: 1
 			path: src/Framework/Testing/ContainerFixture.php
 

@@ -9,261 +9,115 @@ use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
 use Gacela\PHPStan\Rules\SuffixExtendsRule;
-use PhpParser\Node\Stmt\Class_;
-use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\ClassReflection;
-use PHPUnit\Framework\TestCase;
+use PHPStan\Rules\Rule;
+use PHPStan\Testing\RuleTestCase;
 
-final class SuffixExtendsRuleTest extends TestCase
+/**
+ * @extends RuleTestCase<SuffixExtendsRule>
+ */
+final class SuffixExtendsRuleTest extends RuleTestCase
 {
-    public function test_returns_empty_array_for_anonymous_class(): void
+    private string $suffix = 'Facade';
+
+    private string $expectedParent = AbstractFacade::class;
+
+    public function test_reports_bad_facade_suffix_not_extending_abstract_facade(): void
     {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(true);
-
-        $scope = self::createStub(Scope::class);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertSame([], $result);
-    }
-
-    public function test_returns_empty_array_when_class_reflection_is_null(): void
-    {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn(null);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertSame([], $result);
-    }
-
-    public function test_returns_empty_array_when_class_does_not_have_suffix(): void
-    {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
-
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('App\Module\Service');
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertSame([], $result);
-    }
-
-    public function test_returns_empty_array_when_class_with_suffix_extends_expected_parent(): void
-    {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
-
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('App\Module\UserFacade');
-        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(true);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertSame([], $result);
-    }
-
-    public function test_returns_empty_array_when_class_is_the_expected_parent_itself(): void
-    {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
-
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn(AbstractFacade::class);
-        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertSame([], $result);
-    }
-
-    public function test_returns_error_when_class_with_suffix_does_not_extend_expected_parent(): void
-    {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
-
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('App\Module\UserFacade');
-        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertSame(
-            'Class App\Module\UserFacade should extend ' . AbstractFacade::class,
-            $result[0],
+        $this->analyse(
+            [__DIR__ . '/Fixture/SuffixFacade/BadFacade.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixFacade\BadFacade should extend ' . AbstractFacade::class,
+                    7,
+                ],
+            ],
         );
     }
 
-    public function test_facade_suffix_rule(): void
+    public function test_allows_user_facade_extending_abstract_facade(): void
     {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
-
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('InvalidFacade');
-        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertStringContainsString('should extend', $result[0]);
+        $this->analyse([__DIR__ . '/Fixture/SuffixFacade/UserFacade.php'], []);
     }
 
-    public function test_factory_suffix_rule(): void
+    public function test_ignores_class_without_facade_suffix(): void
     {
-        $rule = new SuffixExtendsRule('Factory', AbstractFactory::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
-
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('InvalidFactory');
-        $classReflection->method('isSubclassOf')->with(AbstractFactory::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertStringContainsString('InvalidFactory', $result[0]);
-        self::assertStringContainsString(AbstractFactory::class, $result[0]);
+        $this->analyse([__DIR__ . '/Fixture/SuffixFacade/Service.php'], []);
     }
 
-    public function test_provider_suffix_rule(): void
+    public function test_reports_bad_factory_suffix(): void
     {
-        $rule = new SuffixExtendsRule('Provider', AbstractProvider::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
+        $this->suffix = 'Factory';
+        $this->expectedParent = AbstractFactory::class;
 
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('InvalidProvider');
-        $classReflection->method('isSubclassOf')->with(AbstractProvider::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertStringContainsString('InvalidProvider', $result[0]);
-        self::assertStringContainsString(AbstractProvider::class, $result[0]);
+        $this->analyse(
+            [__DIR__ . '/Fixture/SuffixFactory/InvalidFactory.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixFactory\InvalidFactory should extend ' . AbstractFactory::class,
+                    7,
+                ],
+            ],
+        );
     }
 
-    public function test_config_suffix_rule(): void
+    public function test_allows_user_factory_extending_abstract_factory(): void
     {
-        $rule = new SuffixExtendsRule('Config', AbstractConfig::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
+        $this->suffix = 'Factory';
+        $this->expectedParent = AbstractFactory::class;
 
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('InvalidConfig');
-        $classReflection->method('isSubclassOf')->with(AbstractConfig::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertStringContainsString('InvalidConfig', $result[0]);
-        self::assertStringContainsString(AbstractConfig::class, $result[0]);
+        $this->analyse([__DIR__ . '/Fixture/SuffixFactory/UserFactory.php'], []);
     }
 
-    public function test_handles_namespace_extraction_correctly(): void
+    public function test_reports_bad_provider_suffix(): void
     {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
+        $this->suffix = 'Provider';
+        $this->expectedParent = AbstractProvider::class;
 
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('Very\Long\Namespace\Path\UserFacade');
-        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertStringContainsString('Very\Long\Namespace\Path\UserFacade', $result[0]);
+        $this->analyse(
+            [__DIR__ . '/Fixture/SuffixProvider/InvalidProvider.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixProvider\InvalidProvider should extend ' . AbstractProvider::class,
+                    7,
+                ],
+            ],
+        );
     }
 
-    public function test_get_node_type_returns_class(): void
+    public function test_allows_user_provider_extending_abstract_provider(): void
     {
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
+        $this->suffix = 'Provider';
+        $this->expectedParent = AbstractProvider::class;
 
-        self::assertSame(Class_::class, $rule->getNodeType());
+        $this->analyse([__DIR__ . '/Fixture/SuffixProvider/UserProvider.php'], []);
     }
 
-    public function test_short_name_is_the_full_class_when_there_is_no_namespace_separator(): void
+    public function test_reports_bad_config_suffix(): void
     {
-        // Class name without any backslash takes the `$pos === false` branch.
-        // This specifically exercises the identity check and ternary direction
-        // in `$shortName = $pos === false ? $className : substr(...)`.
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
+        $this->suffix = 'Config';
+        $this->expectedParent = AbstractConfig::class;
 
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('Facade');
-        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
-
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertStringContainsString('Facade', $result[0]);
+        $this->analyse(
+            [__DIR__ . '/Fixture/SuffixConfig/InvalidConfig.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixConfig\InvalidConfig should extend ' . AbstractConfig::class,
+                    7,
+                ],
+            ],
+        );
     }
 
-    public function test_short_name_includes_first_character_after_the_namespace_separator(): void
+    public function test_allows_user_config_extending_abstract_config(): void
     {
-        // Class `App\Facade` must be short-named `Facade`, not `acade`. This
-        // guards against `+ 1` being mutated to `+ 2` (which would skip the
-        // `F` and make str_ends_with('acade', 'Facade') fail).
-        $rule = new SuffixExtendsRule('Facade', AbstractFacade::class);
-        $node = self::createStub(Class_::class);
-        $node->method('isAnonymous')->willReturn(false);
+        $this->suffix = 'Config';
+        $this->expectedParent = AbstractConfig::class;
 
-        $classReflection = $this->createMock(ClassReflection::class);
-        $classReflection->method('getName')->willReturn('App\Facade');
-        $classReflection->method('isSubclassOf')->with(AbstractFacade::class)->willReturn(false);
+        $this->analyse([__DIR__ . '/Fixture/SuffixConfig/UserConfig.php'], []);
+    }
 
-        $scope = self::createStub(Scope::class);
-        $scope->method('getClassReflection')->willReturn($classReflection);
-
-        $result = $rule->processNode($node, $scope);
-
-        self::assertCount(1, $result);
-        self::assertStringContainsString('App\Facade', $result[0]);
+    protected function getRule(): Rule
+    {
+        return new SuffixExtendsRule($this->suffix, $this->expectedParent);
     }
 }

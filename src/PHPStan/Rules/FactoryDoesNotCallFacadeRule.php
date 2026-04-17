@@ -40,7 +40,7 @@ final class FactoryDoesNotCallFacadeRule implements Rule
             return [];
         }
 
-        if (!$classReflection->isSubclassOf(AbstractFactory::class)) {
+        if (!$this->extendsClass($classReflection, AbstractFactory::class)) {
             return [];
         }
 
@@ -103,5 +103,16 @@ final class FactoryDoesNotCallFacadeRule implements Rule
     {
         $pos = strrpos($className, '\\');
         return $pos === false ? $className : substr($className, $pos + 1);
+    }
+
+    private function extendsClass(ClassReflection $classReflection, string $parent): bool
+    {
+        foreach ($classReflection->getParents() as $p) {
+            if ($p->getName() === $parent) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

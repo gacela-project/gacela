@@ -7,6 +7,7 @@ use Rector\CodingStyle\Rector\Encapsed\EncapsedStringsToSprintfRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
 use Rector\DeadCode\Rector\Node\RemoveNonExistingVarAnnotationRector;
+use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\PHPUnit\CodeQuality\Rector\Class_\PreferPHPUnitThisCallRector;
 use Rector\PHPUnit\Set\PHPUnitSetList;
@@ -21,6 +22,10 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     $rectorConfig->skip([
+        __DIR__ . '/tests/Unit/PHPStan/Rules/Fixture',
+        // assert() inside an anonymous class extending a non-TestCase parent
+        // must not be rewritten to $this->assertSame().
+        __DIR__ . '/tests/Feature/Framework/OverrideExistingResolvedClass/FeatureTest.php',
         PreferPHPUnitThisCallRector::class,
         StringClassNameToClassConstantRector::class => [
             __DIR__ . '/tests/Feature/Framework/ListeningEvents/ClassResolver/GacelaClassResolverGeneralListenerTest.php',
@@ -33,6 +38,14 @@ return static function (RectorConfig $rectorConfig): void {
         // does not understand class-level `@template` parameters.
         RemoveNonExistingVarAnnotationRector::class => [
             __DIR__ . '/src/Framework/Plugins/LazyHandlerRegistry.php',
+        ],
+        // `@var mixed` annotations suppress Psalm's MixedAssignment warnings
+        // on values whose type is genuinely unknown at the call site.
+        RemoveUselessVarTagRector::class => [
+            __DIR__ . '/src/Console/Application/Debug/ConstructorInspector.php',
+            __DIR__ . '/src/Console/Infrastructure/Command/DebugContainerCommand.php',
+            __DIR__ . '/src/Framework/Attribute/CacheableTrait.php',
+            __DIR__ . '/src/Framework/Health/HealthCheckRegistry.php',
         ],
         // These tests embed PHP source inside heredocs; keeping interpolation makes
         // the embedded snippets readable. sprintf() obscures them for no benefit.

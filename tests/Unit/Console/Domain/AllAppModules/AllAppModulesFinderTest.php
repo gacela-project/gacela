@@ -88,7 +88,7 @@ final class AllAppModulesFinderTest extends TestCase
         $finder = new AllAppModulesFinder($iterator, $this->createAppModuleCreator());
 
         set_error_handler(static function (int $errno, string $errstr): bool {
-            throw new RuntimeException("PHP error: {$errstr}");
+            throw new RuntimeException('PHP error: ' . $errstr);
         });
 
         try {

@@ -136,6 +136,7 @@ final class ConsoleFactory extends AbstractFactory
                 );
                 continue;
             }
+
             $append->append($this->createRecursiveIteratorFor($resolved));
         }
 
@@ -159,6 +160,7 @@ final class ConsoleFactory extends AbstractFactory
         if ($path === '') {
             return $rootDir;
         }
+
         if (str_starts_with($path, '/') || (strlen($path) > 1 && $path[1] === ':')) {
             return $path;
         }

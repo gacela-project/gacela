@@ -79,7 +79,6 @@ final class ContainerFixtureTest extends TestCase
     {
         $reflection = new ReflectionClass(AbstractClassResolver::class);
         $prop = $reflection->getProperty('cachedInstances');
-        $prop->setAccessible(true);
         $prop->setValue(null, ['some-key' => new stdClass()]);
 
         /** @var array<string, mixed> $before */
@@ -98,7 +97,6 @@ final class ContainerFixtureTest extends TestCase
         Locator::getInstance();
         $reflection = new ReflectionClass(Locator::class);
         $prop = $reflection->getProperty('instance');
-        $prop->setAccessible(true);
 
         self::assertNotNull($prop->getValue());
 
@@ -111,7 +109,6 @@ final class ContainerFixtureTest extends TestCase
     {
         $reflection = new ReflectionClass(AbstractFacade::class);
         $prop = $reflection->getProperty('factories');
-        $prop->setAccessible(true);
         $prop->setValue(null, [AbstractFacade::class => new class() extends \Gacela\Framework\AbstractFactory {
         }]);
 
@@ -223,7 +220,6 @@ final class ContainerFixtureTest extends TestCase
     {
         $reflection = new ReflectionClass(Config::class);
         $prop = $reflection->getProperty('instance');
-        $prop->setAccessible(true);
 
         /** @var Config|null $value */
         $value = $prop->getValue();

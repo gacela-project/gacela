@@ -69,7 +69,7 @@ final class MakeModuleCommandTest extends TestCase
 Module 'TestModule' created successfully
 OUT;
 
-        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') == 0) {
+        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') === 0) {
             $expectedOutput = str_replace("\n", PHP_EOL, $expectedOutput);
         }
 

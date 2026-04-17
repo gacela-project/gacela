@@ -27,9 +27,9 @@ final class ClassNameFinderTest extends TestCase
     public function test_no_rules(): void
     {
         $classNameFinder = new ClassNameFinder(
-            $this->createMock(ClassValidatorInterface::class),
+            $this->createStub(ClassValidatorInterface::class),
             [],
-            $this->createMock(CacheInterface::class),
+            $this->createStub(CacheInterface::class),
             [],
         );
 
@@ -53,7 +53,7 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            $this->createMock(CacheInterface::class),
+            $this->createStub(CacheInterface::class),
             [],
         );
 
@@ -77,7 +77,7 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            $this->createMock(CacheInterface::class),
+            $this->createStub(CacheInterface::class),
             [],
         );
 
@@ -101,7 +101,7 @@ final class ClassNameFinderTest extends TestCase
         $classNameFinder = new ClassNameFinder(
             $classValidator,
             [$finderRule],
-            $this->createMock(CacheInterface::class),
+            $this->createStub(CacheInterface::class),
             [],
         );
 
@@ -152,7 +152,7 @@ final class ClassNameFinderTest extends TestCase
         $cache->put('cacheKey', '\cached\class');
 
         $classNameFinder = new ClassNameFinder(
-            $this->createMock(ClassValidatorInterface::class),
+            $this->createStub(ClassValidatorInterface::class),
             [],
             $cache,
             [],
@@ -164,7 +164,7 @@ final class ClassNameFinderTest extends TestCase
 
         $cachedFoundEvents = array_filter(
             $events,
-            static fn ($event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameCachedFoundEvent,
+            static fn (\Gacela\Framework\Event\GacelaEventInterface $event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameCachedFoundEvent,
         );
         self::assertCount(1, $cachedFoundEvents);
     }

@@ -171,7 +171,7 @@ final class ClassResolverCacheTest extends TestCase
 
         $cachedEvents = array_filter(
             $events,
-            static fn ($event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\Cache\ClassNameCacheCachedEvent,
+            static fn (\Gacela\Framework\Event\GacelaEventInterface $event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\Cache\ClassNameCacheCachedEvent,
         );
         self::assertGreaterThanOrEqual(1, count($cachedEvents));
     }
@@ -194,7 +194,7 @@ final class ClassResolverCacheTest extends TestCase
 
         $created = array_filter(
             $events,
-            static fn ($event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent,
+            static fn (\Gacela\Framework\Event\GacelaEventInterface $event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\Cache\ClassNamePhpCacheCreatedEvent,
         );
         self::assertCount(1, $created, 'file-cache branch must dispatch ClassNamePhpCacheCreatedEvent');
     }

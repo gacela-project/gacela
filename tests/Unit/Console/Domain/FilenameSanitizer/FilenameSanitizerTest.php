@@ -48,9 +48,7 @@ final class FilenameSanitizerTest extends TestCase
         yield ['cade'];
     }
 
-    /**
-     * @dataProvider providerFactory
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerFactory')]
     public function test_factory(string $filename): void
     {
         self::assertSame(
@@ -69,9 +67,7 @@ final class FilenameSanitizerTest extends TestCase
         yield ['tory'];
     }
 
-    /**
-     * @dataProvider providerConfig
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerConfig')]
     public function test_config(string $filename): void
     {
         self::assertSame(
@@ -89,9 +85,7 @@ final class FilenameSanitizerTest extends TestCase
         yield ['fig'];
     }
 
-    /**
-     * @dataProvider provideProvider
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideProvider')]
     public function test_dependency_provider(string $filename): void
     {
         self::assertSame(

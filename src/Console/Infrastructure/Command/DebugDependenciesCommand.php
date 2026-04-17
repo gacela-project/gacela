@@ -17,6 +17,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use function class_exists;
 use function count;
 use function defined;
+use function in_array;
 use function interface_exists;
 use function is_array;
 use function ltrim;
@@ -192,7 +193,7 @@ final class DebugDependenciesCommand extends Command
                 continue;
             }
 
-            if ($token[0] === T_STRING || $token[0] === T_NS_SEPARATOR || $token[0] === T_NAME_QUALIFIED) {
+            if (in_array($token[0], [T_STRING, T_NS_SEPARATOR, T_NAME_QUALIFIED], true)) {
                 $name .= $token[1];
             }
         }
@@ -202,7 +203,7 @@ final class DebugDependenciesCommand extends Command
 
     private function isClassLikeDeclaration(int $tokenType): bool
     {
-        if ($tokenType === T_CLASS || $tokenType === T_INTERFACE || $tokenType === T_TRAIT) {
+        if (in_array($tokenType, [T_CLASS, T_INTERFACE, T_TRAIT], true)) {
             return true;
         }
 

@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Gacela\PHPStan\Rules;
 
 use PhpParser\Node;
-use PhpParser\Node\Stmt\Class_;
 use PHPStan\Analyser\Scope;
+use PHPStan\Node\InClassNode;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\Rule;
+use PHPStan\Rules\RuleErrorBuilder;
 
 use function sprintf;
 
 /**
- * @implements Rule<Class_>
+ * @implements Rule<InClassNode>
  */
 final class SuffixExtendsRule implements Rule
 {
@@ -25,17 +26,17 @@ final class SuffixExtendsRule implements Rule
 
     public function getNodeType(): string
     {
-        return Class_::class;
+        return InClassNode::class;
     }
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if ($node->isAnonymous()) {
+        $classReflection = $scope->getClassReflection();
+        if (!$classReflection instanceof ClassReflection) {
             return [];
         }
 
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof ClassReflection) {
+        if ($classReflection->isAnonymous()) {
             return [];
         }
 
@@ -49,12 +50,27 @@ final class SuffixExtendsRule implements Rule
         }
 
         if (
-            $className !== $this->expectedParent &&
-            !$classReflection->isSubclassOf($this->expectedParent)
+            $className !== $this->expectedParent
+            && !$this->extendsExpectedParent($classReflection)
         ) {
-            return [sprintf('Class %s should extend %s', $className, $this->expectedParent)];
+            return [
+                RuleErrorBuilder::message(sprintf('Class %s should extend %s', $className, $this->expectedParent))
+                    ->identifier('gacela.suffixExtends')
+                    ->build(),
+            ];
         }
 
         return [];
+    }
+
+    private function extendsExpectedParent(ClassReflection $classReflection): bool
+    {
+        foreach ($classReflection->getParents() as $parent) {
+            if ($parent->getName() === $this->expectedParent) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

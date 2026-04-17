@@ -5,6 +5,8 @@ parameters:
     level: 0
     paths:
         - %currentWorkingDirectory%/tests/
+    excludePaths:
+        - %currentWorkingDirectory%/tests/Unit/PHPStan/Rules/Fixture/*
     ignoreErrors:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
-        - '#Creating new PHPStan\\Node\\InClassNode is not covered by backward compatibility promise#'
+        - '#Access to constant on internal class Gacela\\Framework\\Container\\Locator.#'

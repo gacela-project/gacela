@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Upgrade to PHPStan 2.x (`phpstan/phpstan ^2.0`, `phpstan/phpstan-strict-rules ^2.0`) and Rector 2.x. Built-in Gacela PHPStan rules migrated to the 2.x rule API (`RuleErrorBuilder`, `getParents()`).
+
 ## [1.14.2](https://github.com/gacela-project/gacela/compare/1.14.1...1.14.2) - 2026-04-17
 
 ### Added

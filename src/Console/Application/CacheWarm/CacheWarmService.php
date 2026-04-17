@@ -74,7 +74,7 @@ final class CacheWarmService
      */
     public function filterProductionModules(array $modules): array
     {
-        return array_filter($modules, static function ($module): bool {
+        return array_filter($modules, static function (\Gacela\Console\Domain\AllAppModules\AppModule $module): bool {
             $className = $module->facadeClass();
             return !str_contains($className, 'Test')
                 && !str_contains($className, '\\Fixtures\\')

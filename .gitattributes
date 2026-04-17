@@ -21,11 +21,9 @@
 /phpmetrics-config.json  export-ignore
 /phpstan.neon            export-ignore
 /phpstan-baseline.neon   export-ignore
-/phpstan-gacela.neon     export-ignore
 /phpstan-tests.neon      export-ignore
 /phpunit.xml             export-ignore
 /psalm.xml               export-ignore
 /psalm-baseline.xml      export-ignore
-/psalm-gacela.xml        export-ignore
 /rector.php              export-ignore
 /release.sh              export-ignore

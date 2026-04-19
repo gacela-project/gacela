@@ -2,12 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- Full Windows support: `windows-latest` included in the CI matrix alongside `ubuntu-latest`
+- `tools/git-hooks/init.php` cross-platform git-hook installer (symlink on Unix, copy on Windows; no-op when `.git` is absent)
+- `tools/clear-cache-gacela.php` cross-platform replacement for the old `find … -exec rm` cache cleaner
+
 ### Changed
 
-- Full Windows support: `windows-latest` added to the CI matrix alongside `ubuntu-latest`
-- Replace the Unix-only `tools/git-hooks/init.sh` post-install hook with a cross-platform `tools/git-hooks/init.php` (symlink on Unix, copy on Windows)
-- Replace the Unix-only `clear-cache-gacela` composer script (`find`/`rm -rf`) with a cross-platform PHP iterator at `tools/clear-cache-gacela.php`
-- `Config::getCacheDir()` now trims both `/` and `\\` trailing separators, and treats paths starting with either separator as absolute, so Unix-style absolute paths resolve consistently on Windows
+- `composer.json`: `post-install-cmd` now runs `@php tools/git-hooks/init.php`; `clear-cache-gacela` runs `@php tools/clear-cache-gacela.php`
+- `Config::getCacheDir()` trims both `/` and `\\` trailing separators and treats paths starting with either separator as absolute, so Unix-style absolute paths resolve consistently on Windows
+
+### Removed
+
+- `tools/git-hooks/init.sh` (superseded by the PHP installer)
 
 ## [1.14.3](https://github.com/gacela-project/gacela/compare/1.14.2...1.14.3) - 2026-04-17
 

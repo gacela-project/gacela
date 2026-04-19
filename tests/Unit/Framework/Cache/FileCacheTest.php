@@ -164,7 +164,7 @@ final class FileCacheTest extends TestCase
 
     public function test_constructor_trims_whitespace_from_directory(): void
     {
-        $dir = sys_get_temp_dir() . '/gacela-filecache-trim-' . uniqid('', true);
+        $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-filecache-trim-' . uniqid('', true);
         $cache = new FileCache('  ' . $dir . '  ');
 
         self::assertSame($dir, $cache->directory);

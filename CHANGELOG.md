@@ -4,24 +4,12 @@
 
 ### Added
 
-- Full Windows support: `windows-latest` included in the CI matrix alongside `ubuntu-latest`
-- `tools/git-hooks/init.php` cross-platform git-hook installer (symlink on Unix, copy on Windows; no-op when `.git` is absent)
-- `tools/clear-cache-gacela.php` cross-platform replacement for the old `find … -exec rm` cache cleaner
-
-### Changed
-
-- `composer.json`: `post-install-cmd` now runs `@php tools/git-hooks/init.php`; `clear-cache-gacela` runs `@php tools/clear-cache-gacela.php`
-- `Config::getCacheDir()` trims both `/` and `\\` trailing separators and treats paths starting with either separator as absolute, so Unix-style absolute paths resolve consistently on Windows
-- `Config::getDefaultCacheDir()` Windows drive-letter detection regex now matches both `C:\\` and `C:/` (previously only `C:/`), fixing cache-dir resolution on Windows
+- Windows support: `windows-latest` now part of the CI matrix
 
 ### Fixed
 
-- `ClassResolverExceptionTrait` builds exception messages with literal `"\n"` instead of `PHP_EOL`, keeping messages identical across Linux and Windows
-- `tools/git-hooks/init.php` now skips when the `CI` environment variable is set (hooks only help local devs)
-
-### Removed
-
-- `tools/git-hooks/init.sh` (superseded by the PHP installer)
+- Cache-dir resolution on Windows (drive-letter regex, separator handling)
+- Exception messages produced by `ClassResolverExceptionTrait` are now platform-independent
 
 ## [1.14.3](https://github.com/gacela-project/gacela/compare/1.14.2...1.14.3) - 2026-04-17
 

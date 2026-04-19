@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+// Skip on CI: hooks only help devs running `git commit` locally.
+if (getenv('CI') !== false) {
+    exit(0);
+}
+
 $cwd = getcwd();
 if ($cwd === false) {
     fwrite(STDERR, "Cannot determine working directory\n");

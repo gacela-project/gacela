@@ -221,7 +221,7 @@ final class Config implements ConfigInterface
 
         $appRoot = $this->getAppRootDir();
 
-        if (preg_match('#^[A-Za-z]:[\\/]#', $cacheDir) === 1) {
+        if (preg_match('#^[A-Za-z]:[\\\\/]#', $cacheDir) === 1) {
             return $cacheDir;
         }
 

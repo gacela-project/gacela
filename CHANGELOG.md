@@ -12,6 +12,12 @@
 
 - `composer.json`: `post-install-cmd` now runs `@php tools/git-hooks/init.php`; `clear-cache-gacela` runs `@php tools/clear-cache-gacela.php`
 - `Config::getCacheDir()` trims both `/` and `\\` trailing separators and treats paths starting with either separator as absolute, so Unix-style absolute paths resolve consistently on Windows
+- `Config::getDefaultCacheDir()` Windows drive-letter detection regex now matches both `C:\\` and `C:/` (previously only `C:/`), fixing cache-dir resolution on Windows
+
+### Fixed
+
+- `ClassResolverExceptionTrait` builds exception messages with literal `"\n"` instead of `PHP_EOL`, keeping messages identical across Linux and Windows
+- `tools/git-hooks/init.php` now skips when the `CI` environment variable is set (hooks only help local devs)
 
 ### Removed
 

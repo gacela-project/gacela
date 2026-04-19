@@ -38,7 +38,7 @@ final class ListModulesCommandTest extends TestCase
 └────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴──────────┘
 
 TXT;
-        self::assertSame($expected, $this->command->getDisplay());
+        self::assertSame($expected, str_replace("\r\n", "\n", $this->command->getDisplay()));
     }
 
     public function test_list_modules_detailed(): void

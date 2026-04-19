@@ -158,7 +158,7 @@ final class Config implements ConfigInterface
 
         $this->cacheDir = getenv('GACELA_CACHE_DIR') ?: $this->getDefaultCacheDir();
 
-        return rtrim($this->cacheDir, DIRECTORY_SEPARATOR);
+        return rtrim($this->cacheDir, '/\\');
     }
 
     /**
@@ -221,12 +221,14 @@ final class Config implements ConfigInterface
 
         $appRoot = $this->getAppRootDir();
 
-        if (preg_match('#^[A-Za-z]:[\\/]#', $cacheDir) === 1) {
+        if (preg_match('#^[A-Za-z]:[\\\\/]#', $cacheDir) === 1) {
             return $cacheDir;
         }
 
-        if ($cacheDir[0] === DIRECTORY_SEPARATOR) {
-            if (str_starts_with($cacheDir, $appRoot . DIRECTORY_SEPARATOR)) {
+        if ($cacheDir[0] === '/' || $cacheDir[0] === '\\') {
+            if (str_starts_with($cacheDir, $appRoot . '/')
+                || str_starts_with($cacheDir, $appRoot . '\\')
+            ) {
                 return $cacheDir;
             }
 

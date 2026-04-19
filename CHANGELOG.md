@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Windows support: `windows-latest` now part of the CI matrix
+
+### Fixed
+
+- Cache-dir resolution on Windows (drive-letter regex, separator handling)
+- Exception messages produced by `ClassResolverExceptionTrait` are now platform-independent
+
 ## [1.14.3](https://github.com/gacela-project/gacela/compare/1.14.2...1.14.3) - 2026-04-17
 
 ### Changed

@@ -17,22 +17,22 @@ trait ClassResolverExceptionTrait
     {
         $callerClassInfo = ClassInfo::from($caller, $resolvableType);
 
-        $message = 'ClassResolver Exception' . PHP_EOL;
+        $message = 'ClassResolver Exception' . "\n";
         $message .= sprintf(
             'Cannot resolve the `%s` for your module `%s`',
             $resolvableType,
             $callerClassInfo->getModuleName(),
-        ) . PHP_EOL;
+        ) . "\n";
 
         $message .= sprintf(
             'You can fix this by adding the missing `%s` to your module.',
             $resolvableType,
-        ) . PHP_EOL;
+        ) . "\n";
 
         $message .= sprintf(
             'E.g. `%s`',
             $this->findClassNameExample($callerClassInfo, $resolvableType),
-        ) . PHP_EOL;
+        ) . "\n";
 
         return $message . ErrorSuggestionHelper::addHelpfulTip('facade_not_found');
     }

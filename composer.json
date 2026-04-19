@@ -81,11 +81,8 @@
         "sort-packages": true
     },
     "scripts": {
-        "post-install-cmd": "tools/git-hooks/init.sh",
-        "clear-cache-gacela": [
-            "find tests -type f -name 'gacela-custom-services.php' -exec rm -rf {} \\;",
-            "find tests -type f -name 'gacela-class-names.php' -exec rm -rf {} \\;"
-        ],
+        "post-install-cmd": "@php tools/git-hooks/init.php",
+        "clear-cache-gacela": "@php tools/clear-cache-gacela.php",
         "clear-cache-phpstan": "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache",
         "clear-cache-psalm": "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
         "csfix": "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix",

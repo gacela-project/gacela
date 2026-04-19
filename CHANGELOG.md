@@ -10,6 +10,7 @@
 
 - Cache-dir resolution on Windows (drive-letter regex, separator handling)
 - Exception messages produced by `ClassResolverExceptionTrait` are now platform-independent
+- `FileCache` hardens its directory input: trims whitespace, folds mixed `/` and `\` to `DIRECTORY_SEPARATOR`, preserves UNC prefix, and strips an embedded Windows absolute path when a caller accidentally concatenates it onto a cwd (defensive fix for [phel-lang/phel-lang#1459](https://github.com/phel-lang/phel-lang/issues/1459)). The `RuntimeException` on failure now includes the original input and platform.
 
 ## [1.14.3](https://github.com/gacela-project/gacela/compare/1.14.2...1.14.3) - 2026-04-17
 

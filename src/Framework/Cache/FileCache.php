@@ -19,17 +19,27 @@ use function glob;
 use function is_dir;
 use function is_file;
 use function mkdir;
+use function preg_match_all;
+use function preg_quote;
+use function preg_replace;
 use function random_bytes;
 use function rename;
+use function rtrim;
 use function sha1;
 use function sprintf;
+use function str_replace;
+use function str_starts_with;
+use function substr;
 use function time;
+use function trim;
 use function unlink;
 use function var_export;
 
 use const DIRECTORY_SEPARATOR;
 use const LOCK_EX;
 use const LOCK_UN;
+use const PHP_OS_FAMILY;
+use const PREG_OFFSET_CAPTURE;
 
 /**
  * Small, typed, file-backed cache primitive.
@@ -48,6 +58,8 @@ final class FileCache
 {
     private const INDEX_FILENAME = '.gacela-filecache.lock';
 
+    public readonly string $directory;
+
     /** @var array<string, array{value: T, expiresAt: int|null}> */
     private array $memory = [];
 
@@ -57,10 +69,11 @@ final class FileCache
     private array $batchPending = [];
 
     public function __construct(
-        public readonly string $directory,
+        string $directory,
         public readonly int $defaultTtl = 0,
     ) {
-        $this->ensureDirectory();
+        $this->directory = self::normalizeDirectory($directory);
+        $this->ensureDirectory($directory);
     }
 
     /**
@@ -310,14 +323,62 @@ final class FileCache
         }
     }
 
-    private function ensureDirectory(): void
+    private function ensureDirectory(string $originalInput): void
     {
         if (is_dir($this->directory)) {
             return;
         }
 
         if (!mkdir($this->directory, recursive: true) && !is_dir($this->directory)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $this->directory));
+            throw new RuntimeException(sprintf(
+                'Directory "%s" was not created (normalized from "%s" on %s)',
+                $this->directory,
+                $originalInput,
+                PHP_OS_FAMILY,
+            ));
         }
+    }
+
+    /**
+     * Defensive normalization of the cache directory input:
+     *
+     *   - trim surrounding whitespace
+     *   - if a Windows-style absolute path (e.g. `C:\...`) is embedded mid-string,
+     *     keep only the substring from the last such occurrence. This protects against
+     *     callers that accidentally concatenate `getcwd()` with an already-absolute
+     *     path such as `sys_get_temp_dir()` on Windows
+     *   - fold both `/` and `\` to `DIRECTORY_SEPARATOR`, preserving a leading
+     *     `\\` UNC prefix on Windows
+     *   - collapse runs of the separator and trim trailing separators
+     */
+    private static function normalizeDirectory(string $dir): string
+    {
+        $dir = trim($dir);
+
+        $count = preg_match_all('#[A-Za-z]:[\\\\/]#', $dir, $matches, PREG_OFFSET_CAPTURE);
+        if ($count !== false && $count > 1) {
+            $positions = $matches[0];
+            $lastOffset = $positions[$count - 1][1];
+            if ($lastOffset > 0) {
+                $dir = substr($dir, $lastOffset);
+            }
+        }
+
+        $dir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dir);
+
+        $uncPrefix = '';
+        if (DIRECTORY_SEPARATOR === '\\' && str_starts_with($dir, '\\\\')) {
+            $uncPrefix = '\\\\';
+            $dir = substr($dir, 2);
+        }
+
+        $collapsed = preg_replace(
+            '#' . preg_quote(DIRECTORY_SEPARATOR, '#') . '{2,}#',
+            DIRECTORY_SEPARATOR,
+            $dir,
+        );
+        $dir = $collapsed ?? $dir;
+
+        return $uncPrefix . rtrim($dir, '/\\');
     }
 }

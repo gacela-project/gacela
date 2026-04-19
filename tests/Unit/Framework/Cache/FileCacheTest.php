@@ -8,6 +8,8 @@ use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\FileCacheStats;
 use PHPUnit\Framework\TestCase;
 
+use ReflectionMethod;
+
 use function count;
 use function filesize;
 use function glob;
@@ -158,6 +160,49 @@ final class FileCacheTest extends TestCase
 
         self::assertDirectoryExists($dir);
         $this->removeDir($dir);
+    }
+
+    public function test_constructor_trims_whitespace_from_directory(): void
+    {
+        $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-filecache-trim-' . uniqid('', true);
+        $cache = new FileCache('  ' . $dir . '  ');
+
+        self::assertSame($dir, $cache->directory);
+        self::assertDirectoryExists($dir);
+        $this->removeDir($dir);
+    }
+
+    public function test_constructor_collapses_duplicate_separators(): void
+    {
+        $dir = sys_get_temp_dir() . '/gacela-filecache-dup-' . uniqid('', true);
+        $cache = new FileCache($dir . '//nested///deep/');
+
+        self::assertStringNotContainsString('//', $cache->directory);
+        self::assertDirectoryExists($cache->directory);
+        $this->removeDir($cache->directory);
+    }
+
+    public function test_normalize_strips_prefix_when_windows_absolute_path_is_embedded(): void
+    {
+        // Regression: caller concats getcwd() with an already-absolute
+        // `sys_get_temp_dir()` via a POSIX separator on Windows (phel-lang #1459).
+        $bogus = 'C:\\demo\\example-app/C:\\Users\\u\\AppData\\Local\\Temp/phel/cache';
+        $normalized = $this->invokeNormalize($bogus);
+
+        self::assertStringStartsWith('C:', $normalized);
+        self::assertStringNotContainsString('example-app', $normalized);
+        self::assertStringNotContainsString('demo', $normalized);
+    }
+
+    public function test_normalize_preserves_windows_unc_prefix(): void
+    {
+        if (DIRECTORY_SEPARATOR !== '\\') {
+            self::markTestSkipped('UNC semantics only apply on Windows.');
+        }
+
+        $result = $this->invokeNormalize('\\\\server\\share\\gacela');
+
+        self::assertStringStartsWith('\\\\', $result);
     }
 
     public function test_ttl_zero_means_forever(): void
@@ -351,6 +396,13 @@ final class FileCacheTest extends TestCase
 
         self::assertFileExists($path);
         self::assertSame(['a' => 1, 'b' => [2, 3]], require $path);
+    }
+
+    private function invokeNormalize(string $dir): string
+    {
+        $method = new ReflectionMethod(FileCache::class, 'normalizeDirectory');
+
+        return (string) $method->invoke(null, $dir);
     }
 
     private function removeDir(string $dir): void

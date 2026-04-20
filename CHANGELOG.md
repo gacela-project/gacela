@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.14.4](https://github.com/gacela-project/gacela/compare/1.14.3...1.14.4) - 2026-04-20
+
 ### Added
 
 - Windows support: `windows-latest` now part of the CI matrix

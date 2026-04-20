@@ -23,7 +23,7 @@ use Symfony\Component\Console\Application;
 
     Gacela::bootstrap($cwd);
 
-    $bootstrap = new ConsoleBootstrap(name: 'Gacela', version: '1.14.3');
+    $bootstrap = new ConsoleBootstrap(name: 'Gacela', version: '1.14.4');
     try {
         $bootstrap->run();
     } catch (Exception $e) {

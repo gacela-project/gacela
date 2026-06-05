@@ -5,11 +5,20 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\ClassResolver\DocBlockService;
 
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceNotFoundException;
+use Gacela\Framework\Config\Config;
 use GacelaTest\Unit\FakeModule\FakeFacade;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockServiceNotFoundExceptionTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        // Without a bootstrapped Config the candidate list is omitted, keeping
+        // this a deterministic message-format assertion. The with-candidates
+        // path is covered by ResolutionCandidatesTest.
+        Config::resetInstance();
+    }
+
     public function test_exception_message(): void
     {
         $facade = new FakeFacade();

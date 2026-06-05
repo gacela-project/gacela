@@ -61,4 +61,14 @@ interface ContainerConfigurationInterface
      * @return array<string,array<string|int,class-string>>
      */
     public function getHandlerRegistries(): array;
+
+    /**
+     * Get lazy-loaded service definitions.
+     *
+     * Lazy services are only instantiated when first accessed,
+     * improving startup performance for expensive services.
+     *
+     * @return array<string,Closure>
+     */
+    public function getLazyServices(): array;
 }

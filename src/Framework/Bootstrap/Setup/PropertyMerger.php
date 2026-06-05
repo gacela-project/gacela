@@ -131,4 +131,13 @@ final class PropertyMerger
 
         $this->setup->setHandlerRegistries($merged);
     }
+
+    /**
+     * @param array<string,Closure> $list
+     */
+    public function mergeLazyServices(array $list): void
+    {
+        $current = $this->setup->getLazyServices();
+        $this->setup->setLazyServices(array_merge($current, $list));
+    }
 }

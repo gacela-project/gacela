@@ -37,6 +37,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const handlerRegistries = 'handlerRegistries';
 
+    public const lazyServices = 'lazyServices';
+
     public const plugins = 'plugins';
 
     public const gacelaConfigsToExtend = 'gacelaConfigsToExtend';
@@ -70,6 +72,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const DEFAULT_CONTEXTUAL_BINDINGS = [];
 
     protected const DEFAULT_HANDLER_REGISTRIES = [];
+
+    protected const DEFAULT_LAZY_SERVICES = [];
 
     protected const DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
 

@@ -40,6 +40,7 @@ final class SetupInitializer
             ->setProtectedServices($dto->protectedServices)
             ->setAliases($dto->aliases)
             ->setContextualBindings($dto->contextualBindings)
-            ->setHandlerRegistries($dto->handlerRegistries);
+            ->setHandlerRegistries($dto->handlerRegistries)
+            ->setLazyServices($dto->lazyServices);
     }
 }

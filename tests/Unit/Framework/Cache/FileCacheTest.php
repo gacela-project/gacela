@@ -8,6 +8,7 @@ use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\FileCacheStats;
 use PHPUnit\Framework\TestCase;
 
+use ReflectionClass;
 use ReflectionMethod;
 
 use function count;
@@ -401,8 +402,9 @@ final class FileCacheTest extends TestCase
     private function invokeNormalize(string $dir): string
     {
         $method = new ReflectionMethod(FileCache::class, 'normalizeDirectory');
+        $instance = (new ReflectionClass(FileCache::class))->newInstanceWithoutConstructor();
 
-        return (string) $method->invoke(null, $dir);
+        return (string) $method->invoke($instance, $dir);
     }
 
     private function removeDir(string $dir): void

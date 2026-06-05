@@ -72,7 +72,7 @@ final class FileCache
         string $directory,
         public readonly int $defaultTtl = 0,
     ) {
-        $this->directory = self::normalizeDirectory($directory);
+        $this->directory = $this->normalizeDirectory($directory);
         $this->ensureDirectory($directory);
     }
 
@@ -351,7 +351,7 @@ final class FileCache
      *     `\\` UNC prefix on Windows
      *   - collapse runs of the separator and trim trailing separators
      */
-    private static function normalizeDirectory(string $dir): string
+    private function normalizeDirectory(string $dir): string
     {
         $dir = trim($dir);
 

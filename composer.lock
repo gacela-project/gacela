@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "gacela-project/container",
-            "version": "0.8.0",
+            "version": "0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gacela-project/container.git",
-                "reference": "62a409c918fe0e301b909da1c54aea189bd6e76a"
+                "reference": "6251aaf6973ab7ddc41f596a18a8ea9334582a1b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gacela-project/container/zipball/62a409c918fe0e301b909da1c54aea189bd6e76a",
-                "reference": "62a409c918fe0e301b909da1c54aea189bd6e76a",
+                "url": "https://api.github.com/repos/gacela-project/container/zipball/6251aaf6973ab7ddc41f596a18a8ea9334582a1b",
+                "reference": "6251aaf6973ab7ddc41f596a18a8ea9334582a1b",
                 "shasum": ""
             },
             "require": {
@@ -64,7 +64,7 @@
             ],
             "support": {
                 "issues": "https://github.com/gacela-project/resolver/issues",
-                "source": "https://github.com/gacela-project/container/tree/0.8.0"
+                "source": "https://github.com/gacela-project/container/tree/0.8.1"
             },
             "funding": [
                 {
@@ -72,7 +72,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2025-11-08T22:36:48+00:00"
+            "time": "2026-06-05T11:50:32+00:00"
         },
         {
             "name": "psr/container",
@@ -8812,5 +8812,5 @@
     "platform-overrides": {
         "php": "8.1.31"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

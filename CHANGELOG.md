@@ -6,6 +6,10 @@
 
 - `GacelaConfig::addLazy()` registers lazy-loaded services that are only instantiated on first access, deferring expensive service creation to improve startup performance
 
+### Changed
+
+- Merged config cache now auto-warms on miss: when file cache is enabled (`GacelaConfig::enableFileCache()`), the first bootstrap persists the merged config so subsequent bootstraps skip globbing and parsing configuration files — no manual `cache:warm` required
+
 ## [1.14.4](https://github.com/gacela-project/gacela/compare/1.14.3...1.14.4) - 2026-04-20
 
 ### Added

@@ -193,13 +193,25 @@ final class Config implements ConfigInterface
      */
     private function loadMergedConfigValues(): array
     {
+        if (!$this->setup->isFileCacheEnabled()) {
+            return $this->loadAllConfigValues();
+        }
+
         $cache = $this->createMergedConfigCache();
 
-        if ($this->setup->isFileCacheEnabled() && $cache->exists()) {
+        if ($cache->exists()) {
             return $cache->load();
         }
 
-        return $this->loadAllConfigValues();
+        // Auto-warm on miss: persist the merged config so subsequent bootstraps
+        // skip globbing and parsing configuration files. Skip empty results;
+        // there is nothing worth caching and writing would only create noise.
+        $merged = $this->loadAllConfigValues();
+        if ($merged !== []) {
+            $cache->write($merged);
+        }
+
+        return $merged;
     }
 
     private function createMergedConfigCache(): MergedConfigCache

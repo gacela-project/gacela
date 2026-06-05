@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\Config;
 
+use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\MergedConfigCache;
@@ -25,11 +26,14 @@ final class MergedConfigCacheIntegrationTest extends TestCase
 {
     private string $cacheDir;
 
+    private string $fixtureDir;
+
     private ?string $originalAppEnv = null;
 
     protected function setUp(): void
     {
         $this->cacheDir = __DIR__ . DIRECTORY_SEPARATOR . '.gacela-cache-' . uniqid('', true);
+        $this->fixtureDir = __DIR__ . DIRECTORY_SEPARATOR . 'AutoWarmFixtures';
 
         $env = getenv('APP_ENV');
         $this->originalAppEnv = $env === false ? null : $env;
@@ -67,6 +71,59 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         });
 
         self::assertSame('default', Config::getInstance()->get('from_cache', 'default'));
+    }
+
+    public function test_auto_warms_merged_config_cache_on_miss_when_file_cache_enabled(): void
+    {
+        Gacela::bootstrap($this->fixtureDir, $this->autoWarmConfig());
+
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
+
+        self::assertTrue(is_file($filename), 'merged config cache should be auto-warmed on miss');
+        self::assertSame('warm_value', Config::getInstance()->get('warm_key'));
+    }
+
+    public function test_does_not_auto_warm_when_file_cache_disabled(): void
+    {
+        $cacheDir = $this->cacheDir;
+        Gacela::bootstrap($this->fixtureDir, static function (GacelaConfig $config) use ($cacheDir): void {
+            $config->setFileCache(false, $cacheDir);
+            $config->resetInMemoryCache();
+            $config->addAppConfig('config/*.php');
+        });
+
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
+
+        self::assertFalse(is_file($filename));
+    }
+
+    public function test_does_not_auto_warm_when_merged_config_is_empty(): void
+    {
+        $cacheDir = $this->cacheDir;
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheDir): void {
+            $config->setFileCache(true, $cacheDir);
+            $config->resetInMemoryCache();
+        });
+
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
+
+        self::assertFalse(is_file($filename), 'an empty merged config is not worth caching');
+    }
+
+    public function test_auto_warmed_cache_is_reused_on_next_bootstrap(): void
+    {
+        // First bootstrap auto-warms the cache from the fixture config files.
+        Gacela::bootstrap($this->fixtureDir, $this->autoWarmConfig());
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
+        self::assertTrue(is_file($filename));
+
+        // Tamper the warmed file to prove the next bootstrap reads from it
+        // instead of re-globbing the configuration files.
+        file_put_contents($filename, sprintf('<?php return %s;', var_export(['warm_key' => 'from_cache'], true)));
+
+        Gacela::bootstrap($this->fixtureDir, $this->autoWarmConfig());
+
+        self::assertSame('from_cache', Config::getInstance()->get('warm_key'));
     }
 
     public function test_setup_config_values_override_cached_values(): void
@@ -139,6 +196,17 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         });
 
         self::assertSame('missing', Config::getInstance()->get('env_marker', 'missing'));
+    }
+
+    private function autoWarmConfig(): Closure
+    {
+        $cacheDir = $this->cacheDir;
+
+        return static function (GacelaConfig $config) use ($cacheDir): void {
+            $config->setFileCache(true, $cacheDir);
+            $config->resetInMemoryCache();
+            $config->addAppConfig('config/*.php');
+        };
     }
 
     /**

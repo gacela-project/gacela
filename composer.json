@@ -11,8 +11,8 @@
     ],
     "authors": [
         {
-            "name": "Jose Maria Valera Reales",
-            "email": "chemaclass@outlook.es",
+            "name": "Jose M. Valera Reales",
+            "email": "gacela@chemaclass.com",
             "homepage": "https://chemaclass.com"
         },
         {
@@ -27,7 +27,7 @@
     },
     "require": {
         "php": ">=8.1",
-        "gacela-project/container": "^0.8"
+        "gacela-project/container": "^0.8.1"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.50",

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.15.0](https://github.com/gacela-project/gacela/compare/1.14.4...1.15.0) - 2026-06-05
 
 ### Added
 
@@ -11,6 +11,7 @@
 ### Changed
 
 - Merged config cache now auto-warms on miss: when file cache is enabled (`GacelaConfig::enableFileCache()`), the first bootstrap persists the merged config so subsequent bootstraps skip globbing and parsing configuration files — no manual `cache:warm` required
+- Bump `gacela-project/container` to `^0.8.1` for PHP 8.5 compatibility (removes deprecated `SplObjectStorage::attach()`/`detach()` usage)
 
 ## [1.14.4](https://github.com/gacela-project/gacela/compare/1.14.3...1.14.4) - 2026-04-20
 

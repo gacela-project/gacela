@@ -5,6 +5,8 @@
 ### Added
 
 - `GacelaConfig::addLazy()` registers lazy-loaded services that are only instantiated on first access, deferring expensive service creation to improve startup performance
+- `debug:config` console command prints the effective merged configuration (optionally filtered by a key substring), plus a `Config::getAllValues()` accessor
+- Class-resolution failures now list the exact class-name candidates that were tried, making naming-convention and namespace mismatches easier to diagnose
 
 ### Changed
 

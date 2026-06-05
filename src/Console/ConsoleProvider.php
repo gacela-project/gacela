@@ -6,6 +6,7 @@ namespace Gacela\Console;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
+use Gacela\Console\Infrastructure\Command\DebugConfigCommand;
 use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
 use Gacela\Console\Infrastructure\Command\DebugDependenciesCommand;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
@@ -37,6 +38,7 @@ final class ConsoleProvider extends AbstractProvider
             new MakeFileCommand(),
             new MakeModuleCommand(),
             new ListModulesCommand(),
+            new DebugConfigCommand(),
             new DebugContainerCommand(),
             new DebugDependenciesCommand(),
             new DebugModulesCommand(),

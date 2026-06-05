@@ -89,6 +89,22 @@ final class Config implements ConfigInterface
     }
 
     /**
+     * Return the effective merged configuration (all sources combined).
+     *
+     * @throws ConfigException
+     *
+     * @return array<string,mixed>
+     */
+    public function getAllValues(): array
+    {
+        if ($this->config === []) {
+            $this->init();
+        }
+
+        return $this->config;
+    }
+
+    /**
      * Force loading all config values in memory.
      *
      * @throws ConfigException

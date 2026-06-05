@@ -18,6 +18,15 @@ interface ConfigInterface
      */
     public function get(string $key, mixed $default = self::DEFAULT_CONFIG_VALUE);
 
+    /**
+     * Return the effective merged configuration (all sources combined).
+     *
+     * @throws ConfigException
+     *
+     * @return array<string,mixed>
+     */
+    public function getAllValues(): array;
+
     public function getSetupGacela(): SetupGacelaInterface;
 
     public function hasKey(string $key): bool;

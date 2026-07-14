@@ -7,7 +7,6 @@ namespace GacelaTest\Fixtures;
 use function array_diff;
 use function chmod;
 use function is_dir;
-use function is_writable;
 use function mkdir;
 use function rmdir;
 use function scandir;
@@ -44,7 +43,13 @@ trait ReadOnlyDirTrait
 
         chmod($dir, 0o555);
 
-        if (is_writable($dir)) {
+        // Probe the capability the scenarios rely on (creating a child entry)
+        // instead of is_writable(): as root chmod is ineffective, and on
+        // Windows the read-only attribute neither blocks writes inside the
+        // directory nor is reported correctly by is_writable().
+        $probe = $dir . DIRECTORY_SEPARATOR . 'gacela-write-probe';
+        if (@mkdir($probe)) {
+            rmdir($probe);
             self::markTestSkipped('chmod(0555) does not make the directory unwritable in this environment');
         }
 

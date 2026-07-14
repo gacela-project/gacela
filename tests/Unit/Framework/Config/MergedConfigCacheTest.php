@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Config;
 
+use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\Config\MergedConfigCache;
+use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -16,6 +18,8 @@ use function unlink;
 
 final class MergedConfigCacheTest extends TestCase
 {
+    use ReadOnlyDirTrait;
+
     private string $cacheDir;
 
     /** @var list<string> */
@@ -24,10 +28,13 @@ final class MergedConfigCacheTest extends TestCase
     protected function setUp(): void
     {
         $this->cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-merged-config-test-' . uniqid('', true);
+        WritableDirectory::resetCache();
     }
 
     protected function tearDown(): void
     {
+        WritableDirectory::resetCache();
+        $this->restoreReadOnlyDirs();
         $this->removeCacheDirIfExists();
 
         foreach ($this->blockerFiles as $blocker) {
@@ -47,16 +54,22 @@ final class MergedConfigCacheTest extends TestCase
 
         $cache = new MergedConfigCache($blocker . '/subdir');
 
-        set_error_handler(static fn (): bool => true, E_WARNING);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('was not created');
 
-        try {
-            $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('was not created');
+        $cache->write(['key' => 'value']);
+    }
 
-            $cache->write(['key' => 'value']);
-        } finally {
-            restore_error_handler();
-        }
+    public function test_write_throws_when_the_cache_directory_is_read_only(): void
+    {
+        $readOnlyDir = $this->createReadOnlyDirOrSkip('merged-config-readonly');
+
+        $cache = new MergedConfigCache($readOnlyDir);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('was not written');
+
+        $cache->write(['key' => 'value']);
     }
 
     public function test_exists_is_false_when_file_not_written(): void

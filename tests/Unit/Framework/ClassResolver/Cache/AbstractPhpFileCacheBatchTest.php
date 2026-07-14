@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\ClassResolver\Cache;
 
+use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
+use GacelaTest\Fixtures\ReadOnlyDirTrait;
+use GacelaTest\Fixtures\WarningCollectorTrait;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 use function file_put_contents;
 use function glob;
 use function is_dir;
+use function sprintf;
 use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
+use function var_export;
 
 final class AbstractPhpFileCacheBatchTest extends TestCase
 {
+    use ReadOnlyDirTrait;
+    use WarningCollectorTrait;
+
     private string $cacheDir;
 
     /** @var list<string> */
@@ -26,14 +33,17 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
     protected function setUp(): void
     {
         $this->cacheDir = sys_get_temp_dir() . '/gacela-cache-batch-' . uniqid('', true);
+        WritableDirectory::resetCache();
         TestPhpFileCache::clearStaticCache();
         ClassNamePhpCache::clearStaticCache();
     }
 
     protected function tearDown(): void
     {
+        WritableDirectory::resetCache();
         TestPhpFileCache::clearStaticCache();
         ClassNamePhpCache::clearStaticCache();
+        $this->restoreReadOnlyDirs();
         $this->removeDir($this->cacheDir);
 
         foreach ($this->blockerFiles as $blocker) {
@@ -113,25 +123,43 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         );
     }
 
-    public function test_constructor_throws_when_cache_directory_cannot_be_created(): void
+    public function test_uncreatable_cache_directory_degrades_to_memory_only(): void
     {
         $blocker = sys_get_temp_dir() . '/gacela-blocker-' . uniqid('', true);
         file_put_contents($blocker, 'blocked');
         $this->blockerFiles[] = $blocker;
+        $dir = $blocker . '/subdir';
 
-        // mkdir() emits an E_WARNING when the parent exists as a file; PHPUnit
-        // turns that into a test warning. Suppress it so only the thrown
-        // RuntimeException reaches the assertions.
-        set_error_handler(static fn (): bool => true, E_WARNING);
+        $warnings = $this->collectWarnings(static function () use ($dir): TestPhpFileCache {
+            $cache = new TestPhpFileCache($dir);
+            $cache->put('key', 'ClassA');
 
-        try {
-            $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('was not created');
+            return $cache;
+        }, $cache);
 
-            new TestPhpFileCache($blocker . '/subdir');
-        } finally {
-            restore_error_handler();
-        }
+        self::assertSame([], $warnings);
+        self::assertSame('ClassA', $cache->get('key'));
+        self::assertDirectoryDoesNotExist($dir);
+    }
+
+    public function test_reads_pre_warmed_entries_from_read_only_directory(): void
+    {
+        $dir = $this->createReadOnlyDirOrSkip('phpfilecache-readonly', static function (string $dir): void {
+            file_put_contents(
+                $dir . '/' . TestPhpFileCache::FILENAME,
+                sprintf('<?php return %s;', var_export(['warm' => 'ClassW'], true)),
+            );
+        });
+
+        $cache = new TestPhpFileCache($dir);
+
+        self::assertSame(['warm' => 'ClassW'], $cache->getAll());
+
+        $warnings = $this->collectWarnings(static fn () => $cache->put('fresh', 'ClassF'));
+
+        self::assertSame([], $warnings);
+        self::assertSame('ClassF', $cache->get('fresh'));
+        self::assertSame(['warm' => 'ClassW'], require $dir . '/' . TestPhpFileCache::FILENAME);
     }
 
     public function test_put_outside_batch_writes_immediately(): void

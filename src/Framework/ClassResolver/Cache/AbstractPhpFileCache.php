@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver\Cache;
 
 use Gacela\Framework\Cache\FileCache;
-use RuntimeException;
 
 use function array_keys;
 use function file_exists;
-use function is_dir;
-use function mkdir;
-use function sprintf;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -165,13 +161,10 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
     private function computeAbsoluteFilename(): string
     {
-        if (!is_dir($this->cacheDir)
-            && !mkdir($concurrentDirectory = $this->cacheDir, recursive: true)
-            && !is_dir($concurrentDirectory)
-        ) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-        }
-
+        // Directory creation is deferred to FileCache::writeAtomically(): an
+        // unusable cache directory must degrade to memory-only resolution
+        // instead of fataling the bootstrap, while a pre-warmed cache file in
+        // a read-only directory stays readable.
         return $this->cacheDir . DIRECTORY_SEPARATOR . $this->getCacheFilename();
     }
 }

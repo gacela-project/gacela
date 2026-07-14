@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
@@ -223,11 +224,27 @@ final class Config implements ConfigInterface
         // skip globbing and parsing configuration files. Skip empty results;
         // there is nothing worth caching and writing would only create noise.
         $merged = $this->loadAllConfigValues();
-        if ($merged !== []) {
+        if ($merged !== [] && $this->canAutoWarmMergedConfigCache()) {
             $cache->write($merged);
         }
 
         return $merged;
+    }
+
+    /**
+     * The auto-warm is an optimization, so an unusable cache directory (e.g.
+     * a read-only project root) skips it instead of fataling the bootstrap.
+     * An explicit GACELA_CACHE_DIR is trusted as-is: a misconfigured override
+     * should stay loud rather than be silently ignored.
+     */
+    private function canAutoWarmMergedConfigCache(): bool
+    {
+        $explicitCacheDir = getenv('GACELA_CACHE_DIR');
+        if ($explicitCacheDir !== false && $explicitCacheDir !== '') {
+            return true;
+        }
+
+        return WritableDirectory::isUsable($this->getCacheDir());
     }
 
     private function createMergedConfigCache(): MergedConfigCache

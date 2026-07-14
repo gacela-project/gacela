@@ -42,12 +42,22 @@ final class MergedConfigCache
     }
 
     /**
+     * Persist the merged config, failing loud: callers that must not fatal on
+     * an unusable cache directory (the bootstrap auto-warm) gate on
+     * {@see \Gacela\Framework\Cache\WritableDirectory::isUsable()} before
+     * calling this, while the explicit `cache:warm` command keeps the error.
+     *
      * @param array<string,mixed> $data
+     *
+     * @throws RuntimeException when the cache directory or file cannot be written
      */
     public function write(array $data): void
     {
         $this->ensureCacheDir();
-        FileCache::writeAtomically($this->filename(), $data);
+
+        if (!FileCache::writeAtomically($this->filename(), $data)) {
+            throw new RuntimeException(sprintf('Cache file "%s" was not written', $this->filename()));
+        }
     }
 
     public function clear(): void
@@ -74,7 +84,9 @@ final class MergedConfigCache
             return;
         }
 
-        if (!mkdir($this->cacheDir, recursive: true) && !is_dir($this->cacheDir)) {
+        // Suppressed: the thrown exception already carries the failure; the
+        // raw mkdir() warning would only add noise on the CLI.
+        if (!@mkdir($this->cacheDir, recursive: true) && !is_dir($this->cacheDir)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $this->cacheDir));
         }
     }

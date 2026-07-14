@@ -8,6 +8,7 @@ use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
@@ -150,6 +151,7 @@ final class Gacela
         AbstractClassResolver::resetCache();
         InMemoryCache::resetCache();
         GacelaFileCache::resetCache();
+        WritableDirectory::resetCache();
         DocBlockResolverCache::resetCache();
         ClassResolverCache::resetCache();
         ConfigFactory::resetCache();

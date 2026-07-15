@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.16.0](https://github.com/gacela-project/gacela/compare/1.15.0...1.16.0) - 2026-07-15
 
 ### Fixed
 

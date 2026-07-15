@@ -219,9 +219,8 @@ final class Config implements ConfigInterface
             return $cache->load();
         }
 
-        // Auto-warm on miss: persist the merged config so subsequent bootstraps
-        // skip globbing and parsing configuration files. Skip empty results;
-        // there is nothing worth caching and writing would only create noise.
+        // Auto-warm on miss so later bootstraps skip re-globbing config files;
+        // best-effort, and an empty merged config is not worth caching.
         $merged = $this->loadAllConfigValues();
         if ($merged !== []) {
             $cache->write($merged);

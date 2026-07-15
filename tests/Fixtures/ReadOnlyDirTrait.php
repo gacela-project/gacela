@@ -1,0 +1,97 @@
+<?php
+
+declare(strict_types=1);
+
+namespace GacelaTest\Fixtures;
+
+use function array_diff;
+use function chmod;
+use function file_put_contents;
+use function is_dir;
+use function mkdir;
+use function rmdir;
+use function scandir;
+use function sys_get_temp_dir;
+use function uniqid;
+use function unlink;
+
+/**
+ * Read-only and uncreatable directory scenarios for cache-degradation tests.
+ *
+ * Call {@see restoreReadOnlyDirs()} from tearDown().
+ */
+trait ReadOnlyDirTrait
+{
+    /** @var list<string> */
+    private array $readOnlyDirs = [];
+
+    /**
+     * A fresh temp directory chmod'ed to 0555. Skips the test when the
+     * environment cannot produce an unwritable directory (running as root,
+     * or a filesystem that ignores permissions, e.g. on Windows).
+     *
+     * @param null|callable(string):void $seed populate the directory before it turns read-only
+     */
+    private function createReadOnlyDirOrSkip(string $prefix, ?callable $seed = null): string
+    {
+        $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-' . $prefix . '-' . uniqid('', true);
+        mkdir($dir, 0o755, true);
+        $this->readOnlyDirs[] = $dir;
+
+        if ($seed !== null) {
+            $seed($dir);
+        }
+
+        chmod($dir, 0o555);
+
+        // Probe by creating a child, not is_writable(): as root chmod is a
+        // no-op, and on Windows the read-only attribute neither blocks writes
+        // inside the directory nor is reflected by is_writable().
+        $probe = $dir . DIRECTORY_SEPARATOR . 'gacela-write-probe';
+        if (@mkdir($probe)) {
+            rmdir($probe);
+            self::markTestSkipped('chmod(0555) does not make the directory unwritable in this environment');
+        }
+
+        return $dir;
+    }
+
+    /**
+     * A path whose parent is a regular file, so mkdir() of it can never succeed.
+     */
+    private function uncreatableDir(string $prefix = 'uncreatable'): string
+    {
+        $blocker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-' . $prefix . '-' . uniqid('', true);
+        file_put_contents($blocker, 'blocked');
+        $this->readOnlyDirs[] = $blocker;
+
+        return $blocker . DIRECTORY_SEPARATOR . 'subdir';
+    }
+
+    private function restoreReadOnlyDirs(): void
+    {
+        foreach ($this->readOnlyDirs as $dir) {
+            $this->removeRestoringPermissions($dir);
+        }
+
+        $this->readOnlyDirs = [];
+    }
+
+    private function removeRestoringPermissions(string $path): void
+    {
+        if (!is_dir($path)) {
+            @unlink($path);
+
+            return;
+        }
+
+        @chmod($path, 0o755);
+
+        // scandir, not glob: dot-prefixed children (e.g. `.gacela`) must go too.
+        foreach (array_diff(scandir($path) ?: [], ['.', '..']) as $child) {
+            $this->removeRestoringPermissions($path . DIRECTORY_SEPARATOR . $child);
+        }
+
+        @rmdir($path);
+    }
+}

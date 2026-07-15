@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Cache\FileCache;
-use RuntimeException;
-
-use function sprintf;
 
 final class MergedConfigCache
 {
@@ -46,14 +43,13 @@ final class MergedConfigCache
      */
     public function write(array $data): void
     {
-        $this->ensureCacheDir();
         FileCache::writeAtomically($this->filename(), $data);
     }
 
     public function clear(): void
     {
         if ($this->exists()) {
-            unlink($this->filename());
+            @unlink($this->filename());
         }
     }
 
@@ -66,16 +62,5 @@ final class MergedConfigCache
             . self::FILENAME_PREFIX
             . $suffix
             . self::FILENAME_EXTENSION;
-    }
-
-    private function ensureCacheDir(): void
-    {
-        if (is_dir($this->cacheDir)) {
-            return;
-        }
-
-        if (!mkdir($this->cacheDir, recursive: true) && !is_dir($this->cacheDir)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $this->cacheDir));
-        }
     }
 }

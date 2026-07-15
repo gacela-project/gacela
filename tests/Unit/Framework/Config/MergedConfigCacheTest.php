@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Config;
 
+use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\Config\MergedConfigCache;
+use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
-use function file_put_contents;
 use function rmdir;
 use function sys_get_temp_dir;
 use function uniqid;
@@ -16,47 +16,39 @@ use function unlink;
 
 final class MergedConfigCacheTest extends TestCase
 {
-    private string $cacheDir;
+    use ReadOnlyDirTrait;
 
-    /** @var list<string> */
-    private array $blockerFiles = [];
+    private string $cacheDir;
 
     protected function setUp(): void
     {
         $this->cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-merged-config-test-' . uniqid('', true);
+        WritableDirectory::resetCache();
     }
 
     protected function tearDown(): void
     {
+        WritableDirectory::resetCache();
+        $this->restoreReadOnlyDirs();
         $this->removeCacheDirIfExists();
-
-        foreach ($this->blockerFiles as $blocker) {
-            if (is_file($blocker)) {
-                unlink($blocker);
-            }
-        }
-
-        $this->blockerFiles = [];
     }
 
-    public function test_write_throws_when_the_cache_directory_cannot_be_created(): void
+    public function test_write_is_best_effort_when_the_cache_directory_cannot_be_created(): void
     {
-        $blocker = sys_get_temp_dir() . '/gacela-merged-blocker-' . uniqid('', true);
-        file_put_contents($blocker, 'blocked');
-        $this->blockerFiles[] = $blocker;
+        $cache = new MergedConfigCache($this->uncreatableDir());
 
-        $cache = new MergedConfigCache($blocker . '/subdir');
+        $cache->write(['key' => 'value']);
 
-        set_error_handler(static fn (): bool => true, E_WARNING);
+        self::assertFalse($cache->exists());
+    }
 
-        try {
-            $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('was not created');
+    public function test_write_is_best_effort_when_the_cache_directory_is_read_only(): void
+    {
+        $cache = new MergedConfigCache($this->createReadOnlyDirOrSkip('merged-config-readonly'));
 
-            $cache->write(['key' => 'value']);
-        } finally {
-            restore_error_handler();
-        }
+        $cache->write(['key' => 'value']);
+
+        self::assertFalse($cache->exists());
     }
 
     public function test_exists_is_false_when_file_not_written(): void

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- File caches degrade gracefully in read-only environments (e.g. a read-only project root inside a build sandbox) instead of fataling the bootstrap with `Directory "..." was not created`: the class-resolver caches fall back to in-memory resolution, the merged-config auto-warm becomes a no-op, and cache writes never throw or emit raw PHP warnings. Pre-warmed cache files inside a read-only directory remain readable, so warm-at-build/run-read-only deployments keep their cache hits.
+
+### Added
+
+- `WritableDirectory::isUsable()` answers whether a directory can hold cache files (creating it when missing), memoized per directory
+- `FileCache::isPersistent()` reports whether entries reach disk or only live in memory; `FileCache::writeAtomically()` returns whether the file was written
+
 ## [1.15.0](https://github.com/gacela-project/gacela/compare/1.14.4...1.15.0) - 2026-06-05
 
 ### Added

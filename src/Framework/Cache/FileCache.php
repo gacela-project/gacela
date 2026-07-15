@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Cache;
 
-use RuntimeException;
-
 use function bin2hex;
 use function count;
+use function dirname;
 use function fclose;
 use function file_put_contents;
 use function filemtime;
@@ -16,9 +15,7 @@ use function flock;
 use function fopen;
 use function function_exists;
 use function glob;
-use function is_dir;
 use function is_file;
-use function mkdir;
 use function preg_match_all;
 use function preg_quote;
 use function preg_replace;
@@ -29,16 +26,17 @@ use function sha1;
 use function sprintf;
 use function str_replace;
 use function str_starts_with;
+use function strlen;
 use function substr;
 use function time;
 use function trim;
 use function unlink;
+
 use function var_export;
 
 use const DIRECTORY_SEPARATOR;
 use const LOCK_EX;
 use const LOCK_UN;
-use const PHP_OS_FAMILY;
 use const PREG_OFFSET_CAPTURE;
 
 /**
@@ -51,6 +49,8 @@ use const PREG_OFFSET_CAPTURE;
  *   - Eviction: none. Entries live until TTL expiry or explicit {@see clear}.
  *   - Concurrency: per-file atomic rename + an index-file `flock` for batch commits.
  *   - Opcode cache: {@see opcache_invalidate} invoked on write when available.
+ *   - Degradation: an unusable directory disables persistence; entries then
+ *     live only in memory (see {@see isPersistent}).
  *
  * @template T
  */
@@ -73,7 +73,13 @@ final class FileCache
         public readonly int $defaultTtl = 0,
     ) {
         $this->directory = $this->normalizeDirectory($directory);
-        $this->ensureDirectory($directory);
+        // Probe eagerly so a usable directory exists right after construction.
+        WritableDirectory::isUsable($this->directory);
+    }
+
+    public function isPersistent(): bool
+    {
+        return WritableDirectory::isUsable($this->directory);
     }
 
     /**
@@ -129,7 +135,7 @@ final class FileCache
 
         $files = glob($this->directory . '/*.php') ?: [];
         foreach ($files as $file) {
-            unlink($file);
+            @unlink($file);
             self::invalidateOpcacheFor($file);
         }
     }
@@ -159,7 +165,7 @@ final class FileCache
         $this->batchPending = [];
 
         $indexPath = $this->directory . DIRECTORY_SEPARATOR . self::INDEX_FILENAME;
-        $handle = fopen($indexPath, 'c');
+        $handle = @fopen($indexPath, 'c');
 
         if ($handle === false) {
             foreach ($pending as $key => $entry) {
@@ -210,26 +216,36 @@ final class FileCache
     }
 
     /**
-     * Atomically write a PHP-returning file: stage to a sibling `.tmp`, then
-     * {@see rename}. `rename()` is atomic on POSIX filesystems, so readers
-     * never observe a half-written payload. `opcache_invalidate()` is called
-     * when available so readers see fresh bytes even under a warm opcode cache.
-     *
-     * Exposed so other file-backed caches in the framework (e.g.
-     * {@see \Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache}) can
-     * share exactly one write path.
+     * Atomically write a PHP-returning file, staging to a sibling `.tmp` then
+     * renaming. Returns false instead of throwing or warning when the directory
+     * is unusable or the write fails, so callers can degrade gracefully.
      *
      * @param mixed $value any `var_export`-safe payload
      */
-    public static function writeAtomically(string $file, mixed $value): void
+    public static function writeAtomically(string $file, mixed $value): bool
     {
+        if (!WritableDirectory::isUsable(dirname($file))) {
+            return false;
+        }
+
         $content = sprintf('<?php return %s;', var_export($value, true));
         $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
 
-        file_put_contents($tmp, $content, LOCK_EX);
-        rename($tmp, $file);
+        if (@file_put_contents($tmp, $content, LOCK_EX) !== strlen($content)) {
+            @unlink($tmp);
+
+            return false;
+        }
+
+        if (!@rename($tmp, $file)) {
+            @unlink($tmp);
+
+            return false;
+        }
 
         self::invalidateOpcacheFor($file);
+
+        return true;
     }
 
     /**
@@ -302,7 +318,7 @@ final class FileCache
     {
         $file = $this->entryPath($key);
         if (is_file($file)) {
-            unlink($file);
+            @unlink($file);
             self::invalidateOpcacheFor($file);
         }
     }
@@ -320,22 +336,6 @@ final class FileCache
         if (function_exists('opcache_invalidate')) {
             /** @psalm-suppress UndefinedFunction */
             opcache_invalidate($file, true);
-        }
-    }
-
-    private function ensureDirectory(string $originalInput): void
-    {
-        if (is_dir($this->directory)) {
-            return;
-        }
-
-        if (!mkdir($this->directory, recursive: true) && !is_dir($this->directory)) {
-            throw new RuntimeException(sprintf(
-                'Directory "%s" was not created (normalized from "%s" on %s)',
-                $this->directory,
-                $originalInput,
-                PHP_OS_FAMILY,
-            ));
         }
     }
 

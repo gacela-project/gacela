@@ -6,6 +6,7 @@ namespace GacelaTest\Fixtures;
 
 use function array_diff;
 use function chmod;
+use function file_put_contents;
 use function is_dir;
 use function mkdir;
 use function rmdir;
@@ -15,7 +16,7 @@ use function uniqid;
 use function unlink;
 
 /**
- * Read-only directory scenarios for cache-degradation tests.
+ * Read-only and uncreatable directory scenarios for cache-degradation tests.
  *
  * Call {@see restoreReadOnlyDirs()} from tearDown().
  */
@@ -29,7 +30,7 @@ trait ReadOnlyDirTrait
      * environment cannot produce an unwritable directory (running as root,
      * or a filesystem that ignores permissions, e.g. on Windows).
      *
-     * @param callable(string):void|null $seed populate the directory before it turns read-only
+     * @param null|callable(string):void $seed populate the directory before it turns read-only
      */
     private function createReadOnlyDirOrSkip(string $prefix, ?callable $seed = null): string
     {
@@ -43,10 +44,9 @@ trait ReadOnlyDirTrait
 
         chmod($dir, 0o555);
 
-        // Probe the capability the scenarios rely on (creating a child entry)
-        // instead of is_writable(): as root chmod is ineffective, and on
-        // Windows the read-only attribute neither blocks writes inside the
-        // directory nor is reported correctly by is_writable().
+        // Probe by creating a child, not is_writable(): as root chmod is a
+        // no-op, and on Windows the read-only attribute neither blocks writes
+        // inside the directory nor is reflected by is_writable().
         $probe = $dir . DIRECTORY_SEPARATOR . 'gacela-write-probe';
         if (@mkdir($probe)) {
             rmdir($probe);
@@ -54,6 +54,18 @@ trait ReadOnlyDirTrait
         }
 
         return $dir;
+    }
+
+    /**
+     * A path whose parent is a regular file, so mkdir() of it can never succeed.
+     */
+    private function uncreatableDir(string $prefix = 'uncreatable'): string
+    {
+        $blocker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-' . $prefix . '-' . uniqid('', true);
+        file_put_contents($blocker, 'blocked');
+        $this->readOnlyDirs[] = $blocker;
+
+        return $blocker . DIRECTORY_SEPARATOR . 'subdir';
     }
 
     private function restoreReadOnlyDirs(): void
@@ -75,8 +87,7 @@ trait ReadOnlyDirTrait
 
         @chmod($path, 0o755);
 
-        // scandir instead of glob: dot-prefixed children (e.g. `.gacela`)
-        // must be removed too.
+        // scandir, not glob: dot-prefixed children (e.g. `.gacela`) must go too.
         foreach (array_diff(scandir($path) ?: [], ['.', '..']) as $child) {
             $this->removeRestoringPermissions($path . DIRECTORY_SEPARATOR . $child);
         }

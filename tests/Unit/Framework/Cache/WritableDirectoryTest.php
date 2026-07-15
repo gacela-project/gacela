@@ -10,22 +10,14 @@ use GacelaTest\Fixtures\WarningCollectorTrait;
 use PHPUnit\Framework\TestCase;
 
 use function chmod;
-use function file_put_contents;
-use function is_dir;
-use function is_file;
 use function mkdir;
-use function rmdir;
 use function sys_get_temp_dir;
 use function uniqid;
-use function unlink;
 
 final class WritableDirectoryTest extends TestCase
 {
     use ReadOnlyDirTrait;
     use WarningCollectorTrait;
-
-    /** @var list<string> */
-    private array $pathsToRemove = [];
 
     protected function setUp(): void
     {
@@ -36,16 +28,6 @@ final class WritableDirectoryTest extends TestCase
     {
         WritableDirectory::resetCache();
         $this->restoreReadOnlyDirs();
-
-        foreach ($this->pathsToRemove as $path) {
-            if (is_dir($path)) {
-                @rmdir($path);
-            } elseif (is_file($path)) {
-                @unlink($path);
-            }
-        }
-
-        $this->pathsToRemove = [];
     }
 
     public function test_creates_missing_directory_and_reports_usable(): void
@@ -66,11 +48,10 @@ final class WritableDirectoryTest extends TestCase
 
     public function test_uncreatable_directory_is_not_usable_and_emits_no_warning(): void
     {
-        $blocker = $this->tempPath('writable-dir-blocker');
-        file_put_contents($blocker, 'blocked');
+        $dir = $this->uncreatableDir();
 
         $warnings = $this->collectWarnings(
-            static fn (): bool => WritableDirectory::isUsable($blocker . '/subdir'),
+            static fn (): bool => WritableDirectory::isUsable($dir),
             $usable,
         );
 
@@ -101,7 +82,7 @@ final class WritableDirectoryTest extends TestCase
     private function tempPath(string $prefix): string
     {
         $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-' . $prefix . '-' . uniqid('', true);
-        $this->pathsToRemove[] = $path;
+        $this->readOnlyDirs[] = $path;
 
         return $path;
     }

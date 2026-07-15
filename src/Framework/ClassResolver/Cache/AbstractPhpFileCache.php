@@ -161,10 +161,6 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
     private function computeAbsoluteFilename(): string
     {
-        // Directory creation is deferred to FileCache::writeAtomically(): an
-        // unusable cache directory must degrade to memory-only resolution
-        // instead of fataling the bootstrap, while a pre-warmed cache file in
-        // a read-only directory stays readable.
         return $this->cacheDir . DIRECTORY_SEPARATOR . $this->getCacheFilename();
     }
 }

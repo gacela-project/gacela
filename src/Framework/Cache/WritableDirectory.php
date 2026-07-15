@@ -10,10 +10,7 @@ use function mkdir;
 
 /**
  * Answers whether a directory can hold cache files, creating it when missing.
- *
- * The verdict is memoized per directory for the process lifetime: cache write
- * paths consult it on every write, and re-probing the filesystem each time
- * would defeat the point of caching.
+ * The verdict is memoized per directory for the process lifetime.
  */
 final class WritableDirectory
 {
@@ -35,7 +32,6 @@ final class WritableDirectory
 
     private static function probe(string $directory): bool
     {
-        // Suppressed: an uncreatable directory means "not usable", not a warning.
         if (!is_dir($directory) && !@mkdir($directory, recursive: true) && !is_dir($directory)) {
             return false;
         }

@@ -27,9 +27,6 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
 
     private string $cacheDir;
 
-    /** @var list<string> */
-    private array $blockerFiles = [];
-
     protected function setUp(): void
     {
         $this->cacheDir = sys_get_temp_dir() . '/gacela-cache-batch-' . uniqid('', true);
@@ -45,14 +42,6 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         ClassNamePhpCache::clearStaticCache();
         $this->restoreReadOnlyDirs();
         $this->removeDir($this->cacheDir);
-
-        foreach ($this->blockerFiles as $blocker) {
-            if (is_file($blocker)) {
-                unlink($blocker);
-            }
-        }
-
-        $this->blockerFiles = [];
     }
 
     public function test_is_batching_reflects_current_batch_state(): void
@@ -125,10 +114,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
 
     public function test_uncreatable_cache_directory_degrades_to_memory_only(): void
     {
-        $blocker = sys_get_temp_dir() . '/gacela-blocker-' . uniqid('', true);
-        file_put_contents($blocker, 'blocked');
-        $this->blockerFiles[] = $blocker;
-        $dir = $blocker . '/subdir';
+        $dir = $this->uncreatableDir();
 
         $warnings = $this->collectWarnings(static function () use ($dir): TestPhpFileCache {
             $cache = new TestPhpFileCache($dir);

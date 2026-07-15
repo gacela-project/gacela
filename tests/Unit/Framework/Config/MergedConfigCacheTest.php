@@ -8,9 +8,7 @@ use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\Config\MergedConfigCache;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
-use function file_put_contents;
 use function rmdir;
 use function sys_get_temp_dir;
 use function uniqid;
@@ -21,9 +19,6 @@ final class MergedConfigCacheTest extends TestCase
     use ReadOnlyDirTrait;
 
     private string $cacheDir;
-
-    /** @var list<string> */
-    private array $blockerFiles = [];
 
     protected function setUp(): void
     {
@@ -36,40 +31,24 @@ final class MergedConfigCacheTest extends TestCase
         WritableDirectory::resetCache();
         $this->restoreReadOnlyDirs();
         $this->removeCacheDirIfExists();
-
-        foreach ($this->blockerFiles as $blocker) {
-            if (is_file($blocker)) {
-                unlink($blocker);
-            }
-        }
-
-        $this->blockerFiles = [];
     }
 
-    public function test_write_throws_when_the_cache_directory_cannot_be_created(): void
+    public function test_write_is_best_effort_when_the_cache_directory_cannot_be_created(): void
     {
-        $blocker = sys_get_temp_dir() . '/gacela-merged-blocker-' . uniqid('', true);
-        file_put_contents($blocker, 'blocked');
-        $this->blockerFiles[] = $blocker;
-
-        $cache = new MergedConfigCache($blocker . '/subdir');
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('was not created');
+        $cache = new MergedConfigCache($this->uncreatableDir());
 
         $cache->write(['key' => 'value']);
+
+        self::assertFalse($cache->exists());
     }
 
-    public function test_write_throws_when_the_cache_directory_is_read_only(): void
+    public function test_write_is_best_effort_when_the_cache_directory_is_read_only(): void
     {
-        $readOnlyDir = $this->createReadOnlyDirOrSkip('merged-config-readonly');
-
-        $cache = new MergedConfigCache($readOnlyDir);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('was not written');
+        $cache = new MergedConfigCache($this->createReadOnlyDirOrSkip('merged-config-readonly'));
 
         $cache->write(['key' => 'value']);
+
+        self::assertFalse($cache->exists());
     }
 
     public function test_exists_is_false_when_file_not_written(): void

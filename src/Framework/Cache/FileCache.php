@@ -26,10 +26,12 @@ use function sha1;
 use function sprintf;
 use function str_replace;
 use function str_starts_with;
+use function strlen;
 use function substr;
 use function time;
 use function trim;
 use function unlink;
+
 use function var_export;
 
 use const DIRECTORY_SEPARATOR;
@@ -47,10 +49,8 @@ use const PREG_OFFSET_CAPTURE;
  *   - Eviction: none. Entries live until TTL expiry or explicit {@see clear}.
  *   - Concurrency: per-file atomic rename + an index-file `flock` for batch commits.
  *   - Opcode cache: {@see opcache_invalidate} invoked on write when available.
- *   - Degradation: an unusable cache directory disables persistence instead of
- *     throwing — entries then live only in this instance's memory (see
- *     {@see isPersistent}), and reads from a pre-warmed read-only directory
- *     keep working.
+ *   - Degradation: an unusable directory disables persistence; entries then
+ *     live only in memory (see {@see isPersistent}).
  *
  * @template T
  */
@@ -73,15 +73,10 @@ final class FileCache
         public readonly int $defaultTtl = 0,
     ) {
         $this->directory = $this->normalizeDirectory($directory);
-        // Eager probe keeps the historical post-condition "directory exists
-        // after construction" whenever the filesystem allows it.
+        // Probe eagerly so a usable directory exists right after construction.
         WritableDirectory::isUsable($this->directory);
     }
 
-    /**
-     * False when the cache directory is unusable: entries then live only in
-     * this instance's memory and are lost when the process ends.
-     */
     public function isPersistent(): bool
     {
         return WritableDirectory::isUsable($this->directory);
@@ -140,8 +135,6 @@ final class FileCache
 
         $files = glob($this->directory . '/*.php') ?: [];
         foreach ($files as $file) {
-            // Suppressed: entries in a read-only directory cannot be removed
-            // from disk; the in-memory eviction above already took effect.
             @unlink($file);
             self::invalidateOpcacheFor($file);
         }
@@ -172,8 +165,6 @@ final class FileCache
         $this->batchPending = [];
 
         $indexPath = $this->directory . DIRECTORY_SEPARATOR . self::INDEX_FILENAME;
-        // Suppressed: in an unusable directory the lock file cannot exist and
-        // the per-entry writes below degrade to no-ops on their own.
         $handle = @fopen($indexPath, 'c');
 
         if ($handle === false) {
@@ -225,23 +216,11 @@ final class FileCache
     }
 
     /**
-     * Atomically write a PHP-returning file: stage to a sibling `.tmp`, then
-     * {@see rename}. `rename()` is atomic on POSIX filesystems, so readers
-     * never observe a half-written payload. `opcache_invalidate()` is called
-     * when available so readers see fresh bytes even under a warm opcode cache.
-     *
-     * Persistence is an optimization: when the target directory is unusable
-     * (read-only filesystem, unwritable parent) or staging fails, this returns
-     * false instead of throwing or emitting warnings, so cache writes on the
-     * bootstrap path can never fatal the application.
-     *
-     * Exposed so other file-backed caches in the framework (e.g.
-     * {@see \Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache}) can
-     * share exactly one write path.
+     * Atomically write a PHP-returning file, staging to a sibling `.tmp` then
+     * renaming. Returns false instead of throwing or warning when the directory
+     * is unusable or the write fails, so callers can degrade gracefully.
      *
      * @param mixed $value any `var_export`-safe payload
-     *
-     * @return bool whether the file was written
      */
     public static function writeAtomically(string $file, mixed $value): bool
     {
@@ -252,8 +231,9 @@ final class FileCache
         $content = sprintf('<?php return %s;', var_export($value, true));
         $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
 
-        // Suppressed: a failed write degrades to "not persisted", not a warning.
-        if (@file_put_contents($tmp, $content, LOCK_EX) === false) {
+        if (@file_put_contents($tmp, $content, LOCK_EX) !== strlen($content)) {
+            @unlink($tmp);
+
             return false;
         }
 
@@ -338,8 +318,6 @@ final class FileCache
     {
         $file = $this->entryPath($key);
         if (is_file($file)) {
-            // Suppressed: a TTL-expired entry in a read-only directory is
-            // evicted from memory on the read path; disk removal is best-effort.
             @unlink($file);
             self::invalidateOpcacheFor($file);
         }

@@ -13,7 +13,6 @@ use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\WarningCollectorTrait;
 use GacelaTest\Integration\Framework\Bootstrap\ReadOnlyAppRoot\Facade as GreeterFacade;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 use function chmod;
 use function file_put_contents;
@@ -46,7 +45,6 @@ final class ReadOnlyAppRootTest extends TestCase
 
     protected function tearDown(): void
     {
-        putenv('GACELA_CACHE_DIR');
         putenv($this->originalAppEnv === null ? 'APP_ENV' : 'APP_ENV=' . $this->originalAppEnv);
         $this->restoreReadOnlyDirs();
         Gacela::resetCache();
@@ -100,23 +98,6 @@ final class ReadOnlyAppRootTest extends TestCase
 
         self::assertSame([], $warnings);
         self::assertSame('from_prewarmed_cache', $observed);
-    }
-
-    public function test_explicit_cache_dir_env_override_stays_loud_when_unusable(): void
-    {
-        $appRoot = $this->createReadOnlyDirOrSkip('ro-env-override', static function (string $dir): void {
-            mkdir($dir . '/config', 0o755, true);
-            file_put_contents($dir . '/config/config.php', '<?php return ["ro_key" => "ro_value"];');
-        });
-
-        putenv('GACELA_CACHE_DIR=' . $appRoot . '/.gacela/cache');
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('was not created');
-
-        // The merged-config auto-warm runs while bootstrapping.
-        Gacela::bootstrap($appRoot, self::fileCacheConfigFn());
-        Config::getInstance()->get('ro_key');
     }
 
     private static function fileCacheConfigFn(): Closure

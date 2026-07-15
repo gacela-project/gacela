@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- File caches degrade gracefully in read-only environments (e.g. a read-only project root inside a build sandbox) instead of fataling the bootstrap with `Directory "..." was not created`: the class-resolver caches fall back to in-memory resolution, the merged-config auto-warm is skipped, and cache write failures no longer emit raw PHP warnings. Pre-warmed cache files inside a read-only directory remain readable, so warm-at-build/run-read-only deployments keep their cache hits. An explicit `GACELA_CACHE_DIR` override is still trusted as-is and fails loud, as does the explicit `cache:warm` command.
+- File caches degrade gracefully in read-only environments (e.g. a read-only project root inside a build sandbox) instead of fataling the bootstrap with `Directory "..." was not created`: the class-resolver caches fall back to in-memory resolution, the merged-config auto-warm becomes a no-op, and cache writes never throw or emit raw PHP warnings. Pre-warmed cache files inside a read-only directory remain readable, so warm-at-build/run-read-only deployments keep their cache hits.
 
 ### Added
 

@@ -12,25 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 use function file_put_contents;
 use function glob;
-use function is_file;
-use function rmdir;
 use function sha1;
 use function sprintf;
 use function sys_get_temp_dir;
 use function uniqid;
-use function unlink;
 use function var_export;
 
 final class FileCacheDegradationTest extends TestCase
 {
     use ReadOnlyDirTrait;
     use WarningCollectorTrait;
-
-    /** @var list<string> */
-    private array $blockerFiles = [];
-
-    /** @var list<string> */
-    private array $dirsToRemove = [];
 
     protected function setUp(): void
     {
@@ -41,24 +32,6 @@ final class FileCacheDegradationTest extends TestCase
     {
         WritableDirectory::resetCache();
         $this->restoreReadOnlyDirs();
-
-        foreach ($this->blockerFiles as $blocker) {
-            if (is_file($blocker)) {
-                unlink($blocker);
-            }
-        }
-
-        $this->blockerFiles = [];
-
-        foreach ($this->dirsToRemove as $dir) {
-            foreach (glob($dir . '/*') ?: [] as $file) {
-                @unlink($file);
-            }
-
-            @rmdir($dir);
-        }
-
-        $this->dirsToRemove = [];
     }
 
     public function test_uncreatable_directory_degrades_to_memory_only(): void
@@ -82,11 +55,8 @@ final class FileCacheDegradationTest extends TestCase
 
     public function test_is_persistent_when_directory_is_writable(): void
     {
-        $dir = sys_get_temp_dir() . '/gacela-degradation-' . uniqid('', true);
-        $this->dirsToRemove[] = $dir;
-
         /** @var FileCache<string> $cache */
-        $cache = new FileCache($dir);
+        $cache = new FileCache($this->writableDir());
 
         self::assertTrue($cache->isPersistent());
     }
@@ -158,21 +128,18 @@ final class FileCacheDegradationTest extends TestCase
 
     public function test_write_atomically_returns_true_on_success(): void
     {
-        $dir = sys_get_temp_dir() . '/gacela-degradation-' . uniqid('', true);
-        $this->dirsToRemove[] = $dir;
-        $file = $dir . '/entry.php';
+        $file = $this->writableDir() . '/entry.php';
 
         self::assertTrue(FileCache::writeAtomically($file, ['k' => 'v']));
         self::assertSame(['k' => 'v'], require $file);
     }
 
-    private function uncreatableDir(): string
+    private function writableDir(): string
     {
-        $blocker = sys_get_temp_dir() . '/gacela-degradation-blocker-' . uniqid('', true);
-        file_put_contents($blocker, 'blocked');
-        $this->blockerFiles[] = $blocker;
+        $dir = sys_get_temp_dir() . '/gacela-degradation-' . uniqid('', true);
+        $this->readOnlyDirs[] = $dir;
 
-        return $blocker . '/subdir';
+        return $dir;
     }
 
     private static function seedEntryFile(string $dir, string $key, string $value): void

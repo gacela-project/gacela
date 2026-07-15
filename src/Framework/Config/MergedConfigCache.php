@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Cache\FileCache;
-use RuntimeException;
-
-use function sprintf;
 
 final class MergedConfigCache
 {
@@ -42,28 +39,17 @@ final class MergedConfigCache
     }
 
     /**
-     * Persist the merged config, failing loud: callers that must not fatal on
-     * an unusable cache directory (the bootstrap auto-warm) gate on
-     * {@see \Gacela\Framework\Cache\WritableDirectory::isUsable()} before
-     * calling this, while the explicit `cache:warm` command keeps the error.
-     *
      * @param array<string,mixed> $data
-     *
-     * @throws RuntimeException when the cache directory or file cannot be written
      */
     public function write(array $data): void
     {
-        $this->ensureCacheDir();
-
-        if (!FileCache::writeAtomically($this->filename(), $data)) {
-            throw new RuntimeException(sprintf('Cache file "%s" was not written', $this->filename()));
-        }
+        FileCache::writeAtomically($this->filename(), $data);
     }
 
     public function clear(): void
     {
         if ($this->exists()) {
-            unlink($this->filename());
+            @unlink($this->filename());
         }
     }
 
@@ -76,18 +62,5 @@ final class MergedConfigCache
             . self::FILENAME_PREFIX
             . $suffix
             . self::FILENAME_EXTENSION;
-    }
-
-    private function ensureCacheDir(): void
-    {
-        if (is_dir($this->cacheDir)) {
-            return;
-        }
-
-        // Suppressed: the thrown exception already carries the failure; the
-        // raw mkdir() warning would only add noise on the CLI.
-        if (!@mkdir($this->cacheDir, recursive: true) && !is_dir($this->cacheDir)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $this->cacheDir));
-        }
     }
 }

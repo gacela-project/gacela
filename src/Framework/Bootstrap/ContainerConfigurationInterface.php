@@ -5,19 +5,25 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Closure;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 /**
  * Provides configuration for the dependency injection container.
  *
  * This interface defines the contract for configuring services, factories,
  * aliases, and contextual bindings within the DI container.
+ *
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ *
+ * @psalm-type ServicesToExtendMap = array<string, list<Closure>>
+ * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
  */
 interface ContainerConfigurationInterface
 {
     /**
      * Get services that should be extended with decorators.
      *
-     * @return array<string,list<Closure>>
+     * @return ServicesToExtendMap
      */
     public function getServicesToExtend(): array;
 
@@ -48,7 +54,7 @@ interface ContainerConfigurationInterface
      * Contextual bindings allow different implementations to be injected
      * based on the context (which class is requesting the dependency).
      *
-     * @return array<string,array<class-string,class-string|callable|object>>
+     * @return array<string,BindingsMap>
      */
     public function getContextualBindings(): array;
 
@@ -58,7 +64,7 @@ interface ContainerConfigurationInterface
      * Each entry maps a registry identifier to the declared handler classes.
      * The registry is resolvable from the container under that identifier.
      *
-     * @return array<string,array<string|int,class-string>>
+     * @return HandlerRegistriesMap
      */
     public function getHandlerRegistries(): array;
 

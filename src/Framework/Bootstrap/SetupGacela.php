@@ -15,6 +15,7 @@ use Gacela\Framework\Bootstrap\Setup\SetupMerger;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use RuntimeException;
 
@@ -23,6 +24,12 @@ use function sprintf;
 
 /**
  * @psalm-suppress ArgumentTypeCoercion,MixedArgumentTypeCoercion
+ *
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
+ * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
 final class SetupGacela extends AbstractSetupGacela
 {
@@ -82,7 +89,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,class-string|object|callable> $array
+     * @param ExternalServicesMap $array
      */
     public function setExternalServices(?array $array): self
     {
@@ -143,7 +150,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
-     * @param array<string,class-string|object|callable> $externalServices
+     * @param ExternalServicesMap $externalServices
      */
     public function buildBindings(
         BindingsBuilder $builder,
@@ -175,7 +182,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string, class-string|object|callable>
+     * @return ExternalServicesMap
      */
     public function externalServices(): array
     {
@@ -277,7 +284,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,list<Closure>>
+     * @return ServicesToExtendMap
      */
     public function getServicesToExtend(): array
     {
@@ -309,7 +316,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,array<class-string,class-string|callable|object>>
+     * @return array<string,BindingsMap>
      */
     public function getContextualBindings(): array
     {
@@ -317,7 +324,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,array<string|int,class-string>>
+     * @return HandlerRegistriesMap
      */
     public function getHandlerRegistries(): array
     {
@@ -364,7 +371,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<class-string,list<callable>>|null
+     * @return SpecificListenersMap|null
      */
     public function getSpecificListeners(): ?array
     {
@@ -408,7 +415,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,class-string|object|callable> $list
+     * @param ExternalServicesMap $list
      */
     public function mergeExternalServices(array $list): void
     {
@@ -472,7 +479,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,array<class-string,class-string|callable|object>> $list
+     * @param array<string,BindingsMap> $list
      */
     public function mergeContextualBindings(array $list): void
     {
@@ -560,7 +567,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,list<Closure>> $list
+     * @param ?ServicesToExtendMap $list
      */
     public function setServicesToExtend(?array $list): self
     {
@@ -624,7 +631,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,array<class-string,class-string|callable|object>> $list
+     * @param ?array<string,BindingsMap> $list
      */
     public function setContextualBindings(?array $list): self
     {
@@ -640,7 +647,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,array<string|int,class-string>> $list
+     * @param ?HandlerRegistriesMap $list
      */
     public function setHandlerRegistries(?array $list): self
     {
@@ -670,7 +677,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,array<string|int,class-string>> $list
+     * @param HandlerRegistriesMap $list
      */
     public function mergeHandlerRegistries(array $list): void
     {
@@ -680,7 +687,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<class-string,list<callable>> $listeners
+     * @param ?SpecificListenersMap $listeners
      */
     public function setSpecificListeners(?array $listeners): self
     {

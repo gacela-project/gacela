@@ -13,6 +13,8 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
  *
  * This interface defines the contract for building application configuration,
  * service bindings, and suffix types used by the class resolver.
+ *
+ * @psalm-type ExternalServicesMap = array<string, class-string|object|callable>
  */
 interface BuilderConfigurationInterface
 {
@@ -31,7 +33,7 @@ interface BuilderConfigurationInterface
      * This allows Gacela services to auto-resolve dependencies automatically
      * by binding interfaces to their concrete implementations.
      *
-     * @param array<string,class-string|object|callable> $externalServices
+     * @param ExternalServicesMap $externalServices
      */
     public function buildBindings(
         BindingsBuilder $builder,
@@ -52,7 +54,7 @@ interface BuilderConfigurationInterface
      * External services are objects or class names that can be injected
      * into Gacela managed classes.
      *
-     * @return array<string,class-string|object|callable>
+     * @return ExternalServicesMap
      */
     public function externalServices(): array;
 }

@@ -5,13 +5,23 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Setup;
 
 use Closure;
+use Gacela\Framework\Bootstrap\BuilderConfigurationInterface;
+use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
  * Value object that holds all SetupGacela properties.
+ *
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
+ * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
  */
 final class Properties
 {
@@ -24,7 +34,7 @@ final class Properties
     /** @var callable(SuffixTypesBuilder):void */
     public $suffixTypesFn;
 
-    /** @var ?array<string,class-string|object|callable> */
+    /** @var ?ExternalServicesMap */
     public ?array $externalServices = null;
 
     public ?AppConfigBuilder $appConfigBuilder = null;
@@ -53,12 +63,12 @@ final class Properties
     /** @var ?list<callable> */
     public ?array $genericListeners = null;
 
-    /** @var ?array<class-string,list<callable>> */
+    /** @var ?SpecificListenersMap */
     public ?array $specificListeners = null;
 
     public ?EventDispatcherInterface $eventDispatcher = null;
 
-    /** @var ?array<string,list<Closure>> */
+    /** @var ?ServicesToExtendMap */
     public ?array $servicesToExtend = null;
 
     /** @var ?array<string,Closure> */
@@ -70,7 +80,7 @@ final class Properties
     /** @var ?array<string,string> */
     public ?array $aliases = null;
 
-    /** @var ?array<string,array<class-string,class-string|callable|object>> */
+    /** @var ?array<string,BindingsMap> */
     public ?array $contextualBindings = null;
 
     /** @var ?array<string,Closure> */
@@ -82,7 +92,7 @@ final class Properties
     /** @var ?list<class-string|callable> */
     public ?array $plugins = null;
 
-    /** @var ?array<string,array<string|int,class-string>> */
+    /** @var ?HandlerRegistriesMap */
     public ?array $handlerRegistries = null;
 
     public function __construct()

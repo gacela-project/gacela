@@ -5,13 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver;
 
 use Gacela\Container\Container;
-use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractFacade;
-use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
-use Gacela\Framework\ClassResolver\Config\ConfigResolver;
-use Gacela\Framework\ClassResolver\Facade\FacadeResolver;
-use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
@@ -91,6 +85,15 @@ abstract class AbstractClassResolver
         return self::$cachedInstances[$cacheKey];
     }
 
+    /**
+     * Fallback instance used when no class could be resolved for the caller.
+     * Concrete resolvers may override this to provide a default implementation.
+     */
+    protected function createDefaultGacelaClass(): ?object
+    {
+        return null;
+    }
+
     private function resolveCached(string $cacheKey): ?object
     {
         return AnonymousGlobal::getByKey($cacheKey)
@@ -144,7 +147,6 @@ abstract class AbstractClassResolver
                 $this->getGacelaConfigFile()->getBindings(),
             );
 
-            // Apply contextual bindings
             foreach (Config::getInstance()->getSetupGacela()->getContextualBindings() as $concrete => $needs) {
                 foreach ($needs as $abstract => $implementation) {
                     /** @var class-string $concrete */
@@ -169,19 +171,5 @@ abstract class AbstractClassResolver
         }
 
         return $this->gacelaFileConfig;
-    }
-
-    private function createDefaultGacelaClass(): ?object
-    {
-        return match ($this->getResolvableType()) {
-            FacadeResolver::TYPE => new /**
-             * @extends AbstractFacade<AbstractFactory>
-             */ class() extends AbstractFacade {},
-            FactoryResolver::TYPE => new /**
-             * @extends AbstractFactory<AbstractConfig>
-             */ class() extends AbstractFactory {},
-            ConfigResolver::TYPE => new class() extends AbstractConfig {},
-            default => null,
-        };
     }
 }

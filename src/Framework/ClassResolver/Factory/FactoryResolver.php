@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\Factory;
 
+use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
@@ -25,5 +26,12 @@ final class FactoryResolver extends AbstractClassResolver
     protected function getResolvableType(): string
     {
         return self::TYPE;
+    }
+
+    protected function createDefaultGacelaClass(): AbstractFactory
+    {
+        return new /**
+         * @extends AbstractFactory<AbstractConfig>
+         */ class() extends AbstractFactory {};
     }
 }

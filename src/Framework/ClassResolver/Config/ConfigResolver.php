@@ -26,4 +26,9 @@ final class ConfigResolver extends AbstractClassResolver
     {
         return self::TYPE;
     }
+
+    protected function createDefaultGacelaClass(): AbstractConfig
+    {
+        return new class() extends AbstractConfig {};
+    }
 }

@@ -6,6 +6,7 @@ namespace GacelaTest\Integration\Console\CacheWarm;
 
 use Gacela\Console\Application\CacheWarm\CacheWarmService;
 use Gacela\Console\ConsoleFacade;
+use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Gacela;
@@ -78,6 +79,35 @@ final class CacheWarmServiceTest extends TestCase
         $service->warmClassResolution($fake);
 
         self::assertSame([], ClassNamePhpCache::all());
+    }
+
+    public function test_filter_production_modules_only_drops_test_fixture_and_benchmark_namespace_segments(): void
+    {
+        $service = new CacheWarmService(new ConsoleFacade());
+
+        $modules = array_map(
+            static fn (string $facade): AppModule => new AppModule($facade, 'name', $facade),
+            [
+                'App\\Testimonial\\TestimonialFacade',
+                'App\\Testament\\TestamentFacade',
+                'App\\Test\\SomeFacade',
+                'App\\Tests\\SomeFacade',
+                'App\\Fixtures\\SomeFacade',
+                'App\\Benchmark\\SomeFacade',
+            ],
+        );
+
+        $kept = array_map(
+            static fn (AppModule $module): string => $module->facadeClass(),
+            array_values($service->filterProductionModules($modules)),
+        );
+
+        // 'Test' as a substring of a real word (Testimonial, Testament) must survive;
+        // only the \Test\, \Tests\, \Fixtures\, \Benchmark\ namespace segments are dropped.
+        self::assertSame([
+            'App\\Testimonial\\TestimonialFacade',
+            'App\\Testament\\TestamentFacade',
+        ], $kept);
     }
 
     private function removeCacheDir(): void

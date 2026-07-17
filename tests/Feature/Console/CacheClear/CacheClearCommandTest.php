@@ -8,6 +8,7 @@ use Gacela\Console\Infrastructure\Command\CacheClearCommand;
 use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
+use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
@@ -25,6 +26,8 @@ final class CacheClearCommandTest extends TestCase
 {
     private string $cacheFile;
 
+    private string $customServicesCacheFile;
+
     private string $mergedConfigCacheFile;
 
     protected function setUp(): void
@@ -34,7 +37,9 @@ final class CacheClearCommandTest extends TestCase
             $config->enableFileCache(__DIR__ . '/cache');
         });
 
-        $this->cacheFile = Config::getInstance()->getCacheDir() . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
+        $cacheDir = Config::getInstance()->getCacheDir();
+        $this->cacheFile = $cacheDir . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
+        $this->customServicesCacheFile = $cacheDir . DIRECTORY_SEPARATOR . CustomServicesPhpCache::FILENAME;
         $this->mergedConfigCacheFile = Config::getInstance()->mergedConfigCacheFilename();
 
         $this->removeGeneratedCaches();
@@ -70,6 +75,23 @@ final class CacheClearCommandTest extends TestCase
         self::assertFileDoesNotExist($this->cacheFile);
     }
 
+    public function test_cache_clear_removes_the_custom_services_cache_file(): void
+    {
+        $cacheDir = dirname($this->customServicesCacheFile);
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0777, true);
+        }
+        file_put_contents($this->customServicesCacheFile, '<?php return [];');
+
+        $command = new CommandTester(new CacheClearCommand());
+        $exitCode = $command->execute([]);
+
+        self::assertSame(0, $exitCode);
+        self::assertStringContainsString('Cleared cache file', $command->getDisplay());
+        self::assertStringContainsString('Cache cleared successfully!', $command->getDisplay());
+        self::assertFileDoesNotExist($this->customServicesCacheFile);
+    }
+
     public function test_cache_clear_reports_when_no_cache_is_present(): void
     {
         $command = new CommandTester(new CacheClearCommand());
@@ -83,6 +105,10 @@ final class CacheClearCommandTest extends TestCase
     {
         if (file_exists($this->cacheFile)) {
             unlink($this->cacheFile);
+        }
+
+        if (file_exists($this->customServicesCacheFile)) {
+            unlink($this->customServicesCacheFile);
         }
 
         if (file_exists($this->mergedConfigCacheFile)) {

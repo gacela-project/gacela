@@ -71,7 +71,10 @@ final class CacheWarmService
     {
         return array_filter($modules, static function (\Gacela\Console\Domain\AllAppModules\AppModule $module): bool {
             $className = $module->facadeClass();
-            return !str_contains($className, 'Test')
+            // Anchor to whole namespace segments (like \Fixtures\ / \Benchmark\); an unanchored
+            // 'Test' substring dropped legitimate modules such as App\Testimonial\TestimonialFacade.
+            return !str_contains($className, '\\Test\\')
+                && !str_contains($className, '\\Tests\\')
                 && !str_contains($className, '\\Fixtures\\')
                 && !str_contains($className, '\\Benchmark\\');
         });

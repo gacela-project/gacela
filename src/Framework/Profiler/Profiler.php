@@ -116,7 +116,6 @@ final class Profiler
     {
         $totalDuration = 0.0;
         $peakMemory = 0;
-        $byOperation = [];
 
         /** @var array<string, array{count: int, total_duration: float}> $tally */
         $tally = [];
@@ -173,6 +172,6 @@ final class Profiler
 
     private function getCurrentTime(): float
     {
-        return hrtime(true) / 1e9; // Convert nanoseconds to seconds
+        return (float)hrtime(true) / 1e9; // Convert nanoseconds to seconds
     }
 }

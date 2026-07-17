@@ -14,7 +14,7 @@ final class DocBlockServiceNotFoundException extends RuntimeException
     /**
      * @param object|class-string $caller
      */
-    public function __construct($caller, string $resolvableType)
+    public function __construct(object|string $caller, string $resolvableType)
     {
         parent::__construct($this->buildMessage($caller, $resolvableType));
     }

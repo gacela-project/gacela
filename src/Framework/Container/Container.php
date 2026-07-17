@@ -7,10 +7,13 @@ namespace Gacela\Framework\Container;
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 
 /**
  * This is a decorator class to simplify the usage of the decoupled Container
+ *
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  */
 final class Container extends GacelaContainer implements ContainerInterface
 {
@@ -28,7 +31,7 @@ final class Container extends GacelaContainer implements ContainerInterface
     }
 
     /**
-     * @param array<class-string,class-string|object|callable> $bindings
+     * @param BindingsMap $bindings
      */
     private static function withContainerConfiguration(
         ContainerConfigurationInterface $containerConfig,

@@ -37,13 +37,10 @@ final class LazyServicesTest extends TestCase
 
         $container = Container::withConfig(\Gacela\Framework\Config\Config::getInstance());
 
-        // Service should not be instantiated yet
         self::assertFalse($instantiated, 'Lazy service should not be instantiated until accessed');
 
-        // Access the service
         $service = $container->get('expensive-service');
 
-        // Now it should be instantiated
         self::assertTrue($instantiated, 'Lazy service should be instantiated after first access');
         self::assertInstanceOf(stdClass::class, $service);
     }
@@ -110,14 +107,12 @@ final class LazyServicesTest extends TestCase
 
         $container = Container::withConfig(\Gacela\Framework\Config\Config::getInstance());
 
-        // Access only service A
         $serviceA = $container->get('service-a');
 
         self::assertTrue($instantiatedA, 'Service A should be instantiated');
         self::assertFalse($instantiatedB, 'Service B should not be instantiated yet');
         self::assertSame('A', $serviceA->type);
 
-        // Now access service B
         $serviceB = $container->get('service-b');
 
         self::assertTrue($instantiatedB, 'Service B should now be instantiated');

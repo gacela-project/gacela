@@ -32,7 +32,7 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
             $config->enableFileCache(self::CACHE_DIR);
             $config->addAppConfigKeyValue(GacelaFileCache::KEY_ENABLED, true);
             $config->registerGenericListener(static function (GacelaEventInterface $event): void {
-                // dump('Triggered -> ' . \get_class($event)); # useful for debugging
+                // no-op: registering the listener is enough to exercise event dispatch
             });
         });
     }

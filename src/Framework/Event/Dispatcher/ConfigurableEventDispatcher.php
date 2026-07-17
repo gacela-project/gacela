@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Event\Dispatcher;
 
+/**
+ * @psalm-type SpecificListenersMap = array<class-string, list<callable>>
+ */
 final class ConfigurableEventDispatcher implements EventDispatcherInterface
 {
     /** @var array<callable> */
     private array $genericListeners = [];
 
-    /** @var array<class-string,list<callable>> */
+    /** @var SpecificListenersMap */
     private array $specificListeners = [];
 
     /**

@@ -6,22 +6,19 @@ namespace Gacela\Framework\Config\GacelaFileConfig;
 
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
+/**
+ * @psalm-import-type SuffixTypes from SuffixTypesBuilder
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ */
 final class GacelaConfigFile implements GacelaConfigFileInterface
 {
     /** @var list<GacelaConfigItem> */
     private array $configItems = [];
 
-    /** @var array<class-string,class-string|callable|object> */
+    /** @var BindingsMap */
     private array $bindings = [];
 
-    /**
-     * @var array{
-     *     Facade: list<string>,
-     *     Factory: list<string>,
-     *     Config: list<string>,
-     *     Provider: list<string>,
-     * }
-     */
+    /** @var SuffixTypes */
     private array $suffixTypes = SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES;
 
     /**
@@ -43,7 +40,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
-     * @param array<class-string,class-string|callable|object> $bindings
+     * @param BindingsMap $bindings
      */
     public function setBindings(array $bindings): self
     {
@@ -56,7 +53,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
      * Map interfaces to concrete classes or callable (which will be resolved on runtime).
      * This is util to inject dependencies to Gacela services (such as Factories, for example) via their constructor.
      *
-     * @return array<class-string,class-string|callable|object>
+     * @return BindingsMap
      */
     public function getBindings(): array
     {
@@ -64,12 +61,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
-     * @param array{
-     *     Facade: list<string>,
-     *     Factory: list<string>,
-     *     Config: list<string>,
-     *     Provider: list<string>,
-     * } $suffixTypes
+     * @param SuffixTypes $suffixTypes
      */
     public function setSuffixTypes(array $suffixTypes): self
     {
@@ -79,14 +71,7 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
-     * @psalm-suppress ImplementedReturnTypeMismatch
-     *
-     * @return array{
-     *     Facade: list<string>,
-     *     Factory: list<string>,
-     *     Config: list<string>,
-     *     Provider: list<string>,
-     * }
+     * @return SuffixTypes
      */
     public function getSuffixTypes(): array
     {
@@ -110,11 +95,13 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
+     * @param 'Facade'|'Factory'|'Config'|'Provider' $key
+     *
      * @return list<string>
      */
     private function filterList(GacelaConfigFileInterface $other, string $key): array
     {
-        $merged = array_merge($this->suffixTypes[$key], $other->getSuffixTypes()[$key]); // @phpstan-ignore-line
+        $merged = array_merge($this->suffixTypes[$key], $other->getSuffixTypes()[$key]);
         $filtered = array_filter(array_unique($merged), static fn (string $str): bool => $str !== '');
         /** @var list<non-empty-string> $values */
         $values = array_values($filtered);

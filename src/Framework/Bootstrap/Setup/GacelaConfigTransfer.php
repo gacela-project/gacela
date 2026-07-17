@@ -5,27 +5,38 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Setup;
 
 use Closure;
+use Gacela\Framework\Bootstrap\BuilderConfigurationInterface;
+use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
+/**
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
+ * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
+ */
 final class GacelaConfigTransfer
 {
     /**
-     * @param ?array<string, class-string|object|callable> $externalServices
+     * @param ?ExternalServicesMap $externalServices
      * @param ?list<string> $projectNamespaces
      * @param ?list<string> $appModulePaths
      * @param ?array<string,mixed> $configKeyValues
      * @param ?list<callable> $genericListeners
-     * @param ?array<class-string,list<callable>> $specificListeners
+     * @param ?SpecificListenersMap $specificListeners
      * @param ?list<class-string> $gacelaConfigsToExtend
      * @param ?list<class-string|callable> $plugins
-     * @param ?array<string,list<Closure>> $servicesToExtend
+     * @param ?ServicesToExtendMap $servicesToExtend
      * @param array<string,Closure> $factories
      * @param array<string,Closure> $protectedServices
      * @param array<string,string> $aliases
-     * @param array<string,array<class-string,class-string|callable|object>> $contextualBindings
-     * @param array<string,array<string|int,class-string>> $handlerRegistries
+     * @param array<string,BindingsMap> $contextualBindings
+     * @param HandlerRegistriesMap $handlerRegistries
      * @param array<string,Closure> $lazyServices
      */
     public function __construct(

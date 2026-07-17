@@ -37,19 +37,6 @@ final class PerformanceMetrics
 
     public function formatMemoryUsed(): string
     {
-        return $this->formatBytes($this->getMemoryUsed());
-    }
-
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes < 1024) {
-            return sprintf('%d B', $bytes);
-        }
-
-        if ($bytes < 1048576) {
-            return sprintf('%.2f KB', $bytes / 1024);
-        }
-
-        return sprintf('%.2f MB', $bytes / 1048576);
+        return BytesFormatter::format($this->getMemoryUsed());
     }
 }

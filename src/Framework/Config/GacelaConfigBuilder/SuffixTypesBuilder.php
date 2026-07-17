@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaConfigBuilder;
 
+/**
+ * @psalm-type SuffixTypes = array{
+ *     Facade: list<string>,
+ *     Factory: list<string>,
+ *     Config: list<string>,
+ *     Provider: list<string>,
+ * }
+ */
 final class SuffixTypesBuilder
 {
     public const DEFAULT_SUFFIX_TYPES = [
@@ -62,12 +70,7 @@ final class SuffixTypesBuilder
     }
 
     /**
-     * @return array{
-     *     Facade: list<string>,
-     *     Factory: list<string>,
-     *     Config: list<string>,
-     *     Provider: list<string>,
-     * }
+     * @return SuffixTypes
      */
     public function build(): array
     {

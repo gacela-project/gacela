@@ -6,6 +6,8 @@ namespace Gacela\Framework\Health;
 
 /**
  * Value object representing the health status of a module.
+ *
+ * @psalm-type HealthStatusArray = array{level: string, message: string, metadata: array<string,mixed>}
  */
 final class HealthStatus
 {
@@ -69,7 +71,7 @@ final class HealthStatus
     /**
      * Convert to array for serialization.
      *
-     * @return array{level: string, message: string, metadata: array<string,mixed>}
+     * @return HealthStatusArray
      */
     public function toArray(): array
     {

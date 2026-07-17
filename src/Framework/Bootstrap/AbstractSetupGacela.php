@@ -9,6 +9,9 @@ use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
+/**
+ * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ */
 abstract class AbstractSetupGacela implements SetupGacelaInterface
 {
     public const shouldResetInMemoryCache = 'shouldResetInMemoryCache';
@@ -90,7 +93,7 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     /**
      * Define the mapping between interfaces and concretions, so Gacela services will auto-resolve them automatically.
      *
-     * @param array<string, class-string|object|callable> $externalServices
+     * @param ExternalServicesMap $externalServices
      */
     public function buildBindings(BindingsBuilder $builder, array $externalServices): BindingsBuilder
     {
@@ -106,7 +109,7 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     }
 
     /**
-     * @return array<string, class-string|object|callable>
+     * @return ExternalServicesMap
      */
     public function externalServices(): array
     {

@@ -14,7 +14,7 @@ final class ProviderNotFoundException extends RuntimeException
     /**
      * @param object|class-string $caller
      */
-    public function __construct($caller)
+    public function __construct(object|string $caller)
     {
         parent::__construct($this->buildMessage($caller, 'Provider'));
     }

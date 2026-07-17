@@ -28,7 +28,6 @@ Learn more: https://gacela-project.com/docs/service-resolution
     {
         $suggestions = [];
 
-        // Add suggestion for using ServiceMap attribute
         $suggestions[] = "1. Use the #[ServiceMap] attribute (recommended - fastest):
 
    use Gacela\Framework\ClassResolver\Attribute\ServiceMap;
@@ -42,7 +41,6 @@ Learn more: https://gacela-project.com/docs/service-resolution
        }
    }";
 
-        // Add suggestion for DocBlock
         $suggestions[] = "2. Add a DocBlock with the return type:
 
    /**
@@ -52,7 +50,6 @@ Learn more: https://gacela-project.com/docs/service-resolution
    {
    }";
 
-        // Add suggestion for inline type hint
         $suggestions[] = "3. Add an inline return type hint:
 
    final class YourFacade extends AbstractFacade

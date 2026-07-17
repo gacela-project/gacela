@@ -6,7 +6,6 @@ namespace Gacela\Console\Application\CacheWarm;
 
 use Fiber;
 use Gacela\Console\Domain\AllAppModules\AppModule;
-use Throwable;
 
 use function count;
 
@@ -15,17 +14,28 @@ use function count;
  *
  * This provides significant performance improvements for large projects
  * by processing multiple modules concurrently.
+ *
+ * @psalm-import-type WarmStats from ModuleWarmer
+ *
+ * @psalm-suppress TooManyTemplateParams Psalm's Fiber stub is not generic; the Fiber template params are for phpstan.
  */
 final class ParallelModuleWarmer
 {
-    /** @var list<Fiber> */
+    private readonly ModuleWarmer $moduleWarmer;
+
+    /**
+     * @psalm-suppress TooManyTemplateParams
+     *
+     * @var list<Fiber<null, null, WarmStats, null>>
+     */
     private array $activeFibers = [];
 
     public function __construct(
-        private readonly CacheWarmService $cacheWarmService,
-        private readonly CacheWarmOutputFormatter $formatter,
+        CacheWarmService $cacheWarmService,
+        CacheWarmOutputFormatter $formatter,
         private readonly int $maxConcurrency = 5,
     ) {
+        $this->moduleWarmer = new ModuleWarmer($cacheWarmService, $formatter);
     }
 
     /**
@@ -34,7 +44,7 @@ final class ParallelModuleWarmer
      * @param list<AppModule> $modules
      * @param bool $warmAttributes Whether to pre-warm attribute cache
      *
-     * @return array{int, int} [resolvedCount, skippedCount]
+     * @return WarmStats [resolvedCount, skippedCount]
      */
     public function warmModules(array $modules, bool $warmAttributes): array
     {
@@ -49,14 +59,13 @@ final class ParallelModuleWarmer
                 $skippedCount += $skipped;
             }
 
-            // Create a new fiber for this module
-            $fiber = new Fiber(fn (): array => $this->warmModule($module, $warmAttributes));
+            $fiber = new Fiber(fn (): array => $this->moduleWarmer->warmModule($module, $warmAttributes));
 
             $fiber->start();
             $this->activeFibers[] = $fiber;
         }
 
-        // Process any remaining fibers
+        // Drain the remaining fibers.
         while ($this->activeFibers !== []) {
             [$resolved, $skipped] = $this->processCompletedFibers();
             $resolvedCount += $resolved;
@@ -69,75 +78,36 @@ final class ParallelModuleWarmer
     /**
      * Process completed fibers and remove them from the active list.
      *
-     * @return array{int, int} [resolvedCount, skippedCount]
+     * @return WarmStats [resolvedCount, skippedCount]
      */
     private function processCompletedFibers(): array
     {
         $resolvedCount = 0;
         $skippedCount = 0;
 
-        foreach ($this->activeFibers as $index => $fiber) {
-            if ($fiber->isTerminated()) {
-                try {
-                    [$resolved, $skipped] = $fiber->getReturn();
-                    $resolvedCount += $resolved;
-                    $skippedCount += $skipped;
-                } catch (Throwable) {
-                    // Fiber failed, count as skipped
-                    ++$skippedCount;
-                }
-
-                unset($this->activeFibers[$index]);
+        $stillActive = [];
+        foreach ($this->activeFibers as $fiber) {
+            if (!$fiber->isTerminated()) {
+                $stillActive[] = $fiber;
+                continue;
             }
+
+            // These fibers never suspend, so a fiber that threw would have
+            // propagated its exception at start(); a terminated fiber here
+            // always has a return value.
+            /** @var WarmStats $warmStats */
+            $warmStats = $fiber->getReturn();
+            [$resolved, $skipped] = $warmStats;
+            $resolvedCount += $resolved;
+            $skippedCount += $skipped;
         }
 
-        // Re-index the array
-        $this->activeFibers = array_values($this->activeFibers);
+        $this->activeFibers = $stillActive;
 
         // Give other fibers a chance to complete
         if ($this->activeFibers !== []) {
             usleep(1000); // 1ms
         }
-
-        return [$resolvedCount, $skippedCount];
-    }
-
-    /**
-     * Warm a single module's cache.
-     *
-     * @return array{int, int} [resolvedCount, skippedCount]
-     */
-    private function warmModule(AppModule $module, bool $warmAttributes): array
-    {
-        $resolvedCount = 0;
-        $skippedCount = 0;
-
-        $this->formatter->writeModuleName($module->moduleName());
-
-        $moduleClasses = $this->cacheWarmService->getModuleClasses($module);
-
-        foreach ($moduleClasses as $classInfo) {
-            try {
-                $this->cacheWarmService->resolveClass($classInfo['className']);
-
-                if ($warmAttributes) {
-                    $this->cacheWarmService->warmAttributeCache($classInfo['className']);
-                }
-
-                $this->formatter->writeClassResolved($classInfo['type'], $classInfo['className']);
-                ++$resolvedCount;
-            } catch (ClassNotFoundException) {
-                $this->formatter->writeClassSkipped($classInfo['type'], $classInfo['className']);
-                ++$skippedCount;
-            } catch (Throwable $e) {
-                $this->formatter->writeClassFailed($classInfo['type'], $classInfo['className'], $e->getMessage());
-                ++$skippedCount;
-            }
-        }
-
-        $this->cacheWarmService->warmClassResolution($module->facadeClass());
-
-        $this->formatter->writeEmptyLine();
 
         return [$resolvedCount, $skippedCount];
     }

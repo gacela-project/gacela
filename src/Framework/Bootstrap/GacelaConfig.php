@@ -11,6 +11,7 @@ use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
@@ -20,6 +21,13 @@ use function array_key_exists;
 use function in_array;
 use function sprintf;
 
+/**
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
+ * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
+ */
 final class GacelaConfig
 {
     private readonly AppConfigBuilder $appConfigBuilder;
@@ -48,7 +56,7 @@ final class GacelaConfig
     /** @var list<callable> */
     private ?array $genericListeners = null;
 
-    /** @var array<class-string,list<callable>> */
+    /** @var SpecificListenersMap */
     private ?array $specificListeners = null;
 
     /** @var list<class-string> */
@@ -57,7 +65,7 @@ final class GacelaConfig
     /** @var list<class-string|callable> */
     private ?array $plugins = null;
 
-    /** @var array<string,list<Closure>> */
+    /** @var ServicesToExtendMap */
     private array $servicesToExtend = [];
 
     /** @var array<string,Closure> */
@@ -69,17 +77,17 @@ final class GacelaConfig
     /** @var array<string,string> */
     private array $aliases = [];
 
-    /** @var array<string,array<class-string,class-string|callable|object>> */
+    /** @var array<string,BindingsMap> */
     private array $contextualBindings = [];
 
-    /** @var array<string,array<string|int,class-string>> */
+    /** @var HandlerRegistriesMap */
     private array $handlerRegistries = [];
 
     /** @var array<string,Closure> */
     private array $lazyServices = [];
 
     /**
-     * @param array<string,class-string|object|callable> $externalServices
+     * @param ExternalServicesMap $externalServices
      */
     public function __construct(private array $externalServices = [])
     {
@@ -159,7 +167,7 @@ final class GacelaConfig
 
     /**
      * @deprecated in favor of `$this->addBinding(key, value)`
-     * It will be removed in the next release
+     * It will be removed in version 2.0
      *
      * @param class-string $key
      * @param class-string|object|callable $value
@@ -187,7 +195,7 @@ final class GacelaConfig
      *
      * @param class-string|object|callable $value
      */
-    public function addExternalService(string $key, $value): self
+    public function addExternalService(string $key, string|object|callable $value): self
     {
         $this->externalServices[$key] = $value;
 

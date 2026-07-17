@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\ClassResolver\Facade;
 
 use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 
 final class FacadeResolver extends AbstractClassResolver
@@ -25,5 +26,12 @@ final class FacadeResolver extends AbstractClassResolver
     protected function getResolvableType(): string
     {
         return self::TYPE;
+    }
+
+    protected function createDefaultGacelaClass(): AbstractFacade
+    {
+        return new /**
+         * @extends AbstractFacade<AbstractFactory>
+         */ class() extends AbstractFacade {};
     }
 }

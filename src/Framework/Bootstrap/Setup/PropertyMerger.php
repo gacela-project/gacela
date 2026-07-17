@@ -5,13 +5,20 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Setup;
 
 use Closure;
+use Gacela\Framework\Bootstrap\BuilderConfigurationInterface;
+use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 use function array_merge;
 use function array_unique;
 
 /**
  * Merges individual properties into a SetupGacela instance.
+ *
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  */
 final class PropertyMerger
 {
@@ -21,7 +28,7 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,class-string|object|callable> $list
+     * @param ExternalServicesMap $list
      */
     public function mergeExternalServices(array $list): void
     {
@@ -95,41 +102,23 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,array<class-string,class-string|callable|object>> $list
+     * @param array<string,BindingsMap> $list
      */
     public function mergeContextualBindings(array $list): void
     {
-        $current = $this->setup->getContextualBindings();
-        $merged = $current;
-
-        foreach ($list as $concrete => $bindings) {
-            if (!isset($merged[$concrete])) {
-                $merged[$concrete] = [];
-            }
-
-            $merged[$concrete] = array_merge($merged[$concrete], $bindings);
-        }
-
-        $this->setup->setContextualBindings($merged);
+        $this->setup->setContextualBindings(
+            $this->mergeNested($this->setup->getContextualBindings(), $list),
+        );
     }
 
     /**
-     * @param array<string,array<string|int,class-string>> $list
+     * @param HandlerRegistriesMap $list
      */
     public function mergeHandlerRegistries(array $list): void
     {
-        $current = $this->setup->getHandlerRegistries();
-        $merged = $current;
-
-        foreach ($list as $registryKey => $handlers) {
-            if (!isset($merged[$registryKey])) {
-                $merged[$registryKey] = [];
-            }
-
-            $merged[$registryKey] = array_merge($merged[$registryKey], $handlers);
-        }
-
-        $this->setup->setHandlerRegistries($merged);
+        $this->setup->setHandlerRegistries(
+            $this->mergeNested($this->setup->getHandlerRegistries(), $list),
+        );
     }
 
     /**
@@ -139,5 +128,28 @@ final class PropertyMerger
     {
         $current = $this->setup->getLazyServices();
         $this->setup->setLazyServices(array_merge($current, $list));
+    }
+
+    /**
+     * Merge a two-level map, combining the inner maps key by key.
+     *
+     * @template TInner of array
+     *
+     * @param array<string,TInner> $current
+     * @param array<string,TInner> $list
+     *
+     * @return array<string,TInner>
+     */
+    private function mergeNested(array $current, array $list): array
+    {
+        $merged = $current;
+
+        foreach ($list as $key => $inner) {
+            /** @var TInner $mergedInner */
+            $mergedInner = array_merge($merged[$key] ?? [], $inner);
+            $merged[$key] = $mergedInner;
+        }
+
+        return $merged;
     }
 }

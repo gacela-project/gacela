@@ -12,6 +12,7 @@ use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use IteratorIterator;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -141,25 +142,8 @@ PHP;
 
     private function removeDirectory(string $directory): void
     {
-        if (!is_dir($directory)) {
-            return;
-        }
-
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(dirname($directory), FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST,
-        );
-
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                rmdir($file->getPathname());
-            } else {
-                unlink($file->getPathname());
-            }
-        }
-
-        @rmdir($directory);
-        @rmdir(dirname($directory));
+        // The temp module dir lives inside a uniquely named parent; remove the whole parent.
+        DirectoryUtil::removeDir(dirname($directory));
     }
 
     private function createAppModuleCreator(): AppModuleCreator

@@ -35,7 +35,10 @@ final class ConsoleConfig extends AbstractConfig
      *
      * @throws ConsoleException|JsonException
      *
-     * @return array{autoload: array{"psr-4": array<string,string>}}
+     * @return array{
+     *     autoload?: array{"psr-4"?: array<string,string>},
+     *     autoload-dev?: array{"psr-4"?: array<string,string>},
+     * }
      */
     public function getComposerJsonContentAsArray(): array
     {
@@ -47,7 +50,12 @@ final class ConsoleConfig extends AbstractConfig
         /** @var string $content */
         $content = file_get_contents($filename);
 
-        /** @var array{autoload: array{"psr-4": array<string,string>}} $jsonDecode */
+        /**
+         * @var array{
+         *     autoload?: array{"psr-4"?: array<string,string>},
+         *     autoload-dev?: array{"psr-4"?: array<string,string>},
+         * } $jsonDecode
+         */
         $jsonDecode = json_decode(json: $content, associative: true, flags: JSON_THROW_ON_ERROR);
 
         return $jsonDecode;

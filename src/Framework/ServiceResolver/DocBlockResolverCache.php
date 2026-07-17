@@ -27,21 +27,24 @@ final class DocBlockResolverCache
 
     public static function getCacheInstance(): CacheInterface
     {
-        if (self::$cache instanceof CacheInterface) {
+        $cache = self::$cache;
+        if ($cache instanceof CacheInterface) {
             self::dispatchEvent(new CustomServicesCacheCachedEvent());
 
-            return self::$cache;
+            return $cache;
         }
 
         if (self::isProjectCacheEnabled()) {
             self::dispatchEvent(new CustomServicesPhpCacheCreatedEvent());
-            self::$cache = new CustomServicesPhpCache(Config::getInstance()->getCacheDir());
+            $cache = new CustomServicesPhpCache(Config::getInstance()->getCacheDir());
         } else {
             self::dispatchEvent(new CustomServicesInMemoryCacheCreatedEvent());
-            self::$cache = new InMemoryCache(CustomServicesPhpCache::class);
+            $cache = new InMemoryCache(CustomServicesPhpCache::class);
         }
 
-        return self::$cache;
+        self::$cache = $cache;
+
+        return $cache;
     }
 
     private static function isProjectCacheEnabled(): bool

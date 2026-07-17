@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `cache:clear` command is now registered in the console application; it was shipped in 1.13.0 but never wired into the command list, so `bin/gacela cache:clear` was unavailable
+- `cache:warm` attribute pre-warming now works: it called the non-existent `DocBlockResolver::fromClassName()`, so the resulting `Error` was silently swallowed and the attribute cache was never warmed; the named constructor now exists
+- `cache:warm` no longer hides errors: a module-discovery failure now prints a warning instead of silently warming zero modules, and a PHP `Error` during attribute pre-warming is reported per class instead of being swallowed
+- `bin/gacela` now exits with status 1 on failure (missing `vendor/autoload.php` or an exception escaping the console runner) and writes the error to STDERR; both paths previously reported exit code 0
+- Resolving a deprecated `AbstractDependencyProvider` no longer fatals in projects without `symfony/deprecation-contracts`: the `trigger_deprecation()` call is now guarded, since that function is not part of Gacela's runtime dependencies
+
+### Changed
+
+- `AbstractFactory::singleton()` and `CacheableTrait::cached()` are now generic (`@template T`): static analysis infers the creator/callback return type instead of `mixed`
+- `validate:config` no longer prints the "Checking configuration paths..." section; it was a placeholder that performed no validation
+
+### Removed
+
+- `Gacela\Framework\Event\ClassResolver\GenericEvent` — dead code; the event was never dispatched
+- `GacelaFileCache::isEnabledFromCacheConfig()` — dead code with no callers; use `GacelaFileCache::isEnabled()`
+
 ## [1.16.0](https://github.com/gacela-project/gacela/compare/1.15.0...1.16.0) - 2026-07-15
 
 ### Fixed

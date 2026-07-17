@@ -82,7 +82,6 @@ final class ErrorSuggestionHelper
             }
         }
 
-        // Sort by similarity (highest first)
         arsort($similarities);
 
         return array_slice(array_keys($similarities), 0, self::MAX_SUGGESTIONS);

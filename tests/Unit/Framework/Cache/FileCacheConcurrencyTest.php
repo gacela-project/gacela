@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Cache;
 
 use Gacela\Framework\Cache\FileCache;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
@@ -14,11 +15,9 @@ use function glob;
 use function is_dir;
 use function proc_close;
 use function proc_open;
-use function rmdir;
 use function stream_get_contents;
 use function sys_get_temp_dir;
 use function uniqid;
-use function unlink;
 
 use const PHP_BINARY;
 
@@ -40,8 +39,8 @@ final class FileCacheConcurrencyTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->removeDir($this->cacheDir);
-        $this->removeDir($this->scriptDir);
+        DirectoryUtil::removeDir($this->cacheDir);
+        DirectoryUtil::removeDir($this->scriptDir);
     }
 
     public function test_two_processes_writing_different_keys_both_persist(): void
@@ -171,31 +170,5 @@ final class FileCacheConcurrencyTest extends TestCase
         proc_close($process);
 
         return (string) $stdout;
-    }
-
-    private function removeDir(string $dir): void
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $entries = glob($dir . '/*') ?: [];
-        foreach ($entries as $entry) {
-            if (is_dir($entry)) {
-                $this->removeDir($entry);
-            } else {
-                unlink($entry);
-            }
-        }
-
-        foreach (glob($dir . '/.[!.]*') ?: [] as $dotfile) {
-            if (is_dir($dotfile)) {
-                $this->removeDir($dotfile);
-            } else {
-                unlink($dotfile);
-            }
-        }
-
-        rmdir($dir);
     }
 }

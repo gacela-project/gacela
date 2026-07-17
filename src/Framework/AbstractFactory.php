@@ -32,9 +32,19 @@ abstract class AbstractFactory
         self::$containers = [];
     }
 
+    /**
+     * @template T
+     *
+     * @param callable():T $creator
+     *
+     * @return T
+     */
     protected function singleton(string $key, callable $creator): mixed
     {
-        return $this->instances[$key] ??= $creator();
+        /** @var T $instance */
+        $instance = $this->instances[$key] ??= $creator();
+
+        return $instance;
     }
 
     protected function getProvidedDependency(string $key): mixed

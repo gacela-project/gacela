@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Console\Application\CacheWarm\BytesFormatter;
 use Gacela\Console\Application\CacheWarm\CacheManager;
 use Gacela\Console\Application\CacheWarm\CacheWarmOutputFormatter;
 use Gacela\Console\Application\CacheWarm\CacheWarmService;
-use Gacela\Console\Application\CacheWarm\ClassNotFoundException;
+use Gacela\Console\Application\CacheWarm\ModuleWarmer;
 use Gacela\Console\Application\CacheWarm\ParallelModuleWarmer;
 use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
@@ -25,7 +26,6 @@ use Throwable;
 use function count;
 use function file_exists;
 use function filesize;
-use function sprintf;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -75,7 +75,8 @@ final class CacheWarmCommand extends Command
                 $parallelWarmer = new ParallelModuleWarmer($cacheWarmService, $formatter);
                 [$resolvedCount, $skippedCount] = $parallelWarmer->warmModules($modules, $warmAttributes);
             } else {
-                [$resolvedCount, $skippedCount] = $this->warmModulesCache($modules, $cacheWarmService, $formatter, $warmAttributes);
+                $moduleWarmer = new ModuleWarmer($cacheWarmService, $formatter);
+                [$resolvedCount, $skippedCount] = $moduleWarmer->warmModules($modules, $warmAttributes);
             }
         } finally {
             AbstractPhpFileCache::commitBatch();
@@ -103,20 +104,7 @@ final class CacheWarmCommand extends Command
             return;
         }
 
-        $formatter->writeMergedConfigCacheInfo($filename, $this->formatBytes((int) filesize($filename)));
-    }
-
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes < 1024) {
-            return sprintf('%d B', $bytes);
-        }
-
-        if ($bytes < 1048576) {
-            return sprintf('%.2f KB', $bytes / 1024);
-        }
-
-        return sprintf('%.2f MB', $bytes / 1048576);
+        $formatter->writeMergedConfigCacheInfo($filename, BytesFormatter::format((int) filesize($filename)));
     }
 
     /**
@@ -132,52 +120,6 @@ final class CacheWarmCommand extends Command
             $formatter->writeModuleDiscoveryWarning($throwable->getMessage());
             return [];
         }
-    }
-
-    /**
-     * @param list<AppModule> $modules
-     *
-     * @return array{int, int}
-     */
-    private function warmModulesCache(
-        array $modules,
-        CacheWarmService $cacheWarmService,
-        CacheWarmOutputFormatter $formatter,
-        bool $warmAttributes,
-    ): array {
-        $resolvedCount = 0;
-        $skippedCount = 0;
-
-        foreach ($modules as $module) {
-            $formatter->writeModuleName($module->moduleName());
-
-            $moduleClasses = $cacheWarmService->getModuleClasses($module);
-
-            foreach ($moduleClasses as $classInfo) {
-                try {
-                    $cacheWarmService->resolveClass($classInfo['className']);
-
-                    if ($warmAttributes) {
-                        $cacheWarmService->warmAttributeCache($classInfo['className']);
-                    }
-
-                    $formatter->writeClassResolved($classInfo['type'], $classInfo['className']);
-                    ++$resolvedCount;
-                } catch (ClassNotFoundException) {
-                    $formatter->writeClassSkipped($classInfo['type'], $classInfo['className']);
-                    ++$skippedCount;
-                } catch (Throwable $e) {
-                    $formatter->writeClassFailed($classInfo['type'], $classInfo['className'], $e->getMessage());
-                    ++$skippedCount;
-                }
-            }
-
-            $cacheWarmService->warmClassResolution($module->facadeClass());
-
-            $formatter->writeEmptyLine();
-        }
-
-        return [$resolvedCount, $skippedCount];
     }
 
     private function displayCacheInfo(

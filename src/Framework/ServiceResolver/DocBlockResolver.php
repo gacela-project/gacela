@@ -33,6 +33,14 @@ final class DocBlockResolver
         return new self($caller::class);
     }
 
+    /**
+     * @param class-string $callerClass
+     */
+    public static function fromClassName(string $callerClass): self
+    {
+        return new self($callerClass);
+    }
+
     public function getDocBlockResolvable(string $method): DocBlockResolvable
     {
         $className = $this->getClassName($method);

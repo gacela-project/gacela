@@ -15,7 +15,6 @@ use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use Gacela\Framework\ServiceResolver\ReflectionClassPool;
 use ReflectionMethod;
-use Throwable;
 
 use function array_filter;
 use function class_exists;
@@ -60,11 +59,7 @@ final class CacheWarmService
      */
     public function discoverModules(): array
     {
-        try {
-            return $this->facade->findAllAppModules();
-        } catch (Throwable) {
-            return [];
-        }
+        return $this->facade->findAllAppModules();
     }
 
     /**
@@ -83,7 +78,7 @@ final class CacheWarmService
     }
 
     /**
-     * @return array{type: string, className: string}[]
+     * @return list<array{type: string, className: class-string}>
      */
     public function getModuleClasses(AppModule $module): array
     {
@@ -130,31 +125,29 @@ final class CacheWarmService
             $reflectionClass = ReflectionClassPool::get($className);
             $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
 
-            // Create a DocBlockResolver instance to cache attribute resolutions
             $docBlockResolver = DocBlockResolver::fromClassName($className);
 
-            // Common method patterns that typically use ServiceMap
             $commonMethodPrefixes = ['get', 'create', 'find', 'build'];
 
             foreach ($methods as $method) {
                 $methodName = $method->getName();
 
-                // Skip magic methods and constructors
                 if (str_starts_with($methodName, '__')) {
                     continue;
                 }
 
-                // Check if method matches common service retrieval patterns
                 foreach ($commonMethodPrefixes as $prefix) {
                     if (str_starts_with($methodName, $prefix)) {
-                        // This will trigger attribute resolution and caching
+                        // Called for its side effect: resolving populates the attribute cache.
                         $docBlockResolver->getDocBlockResolvable($methodName);
                         break;
                     }
                 }
             }
-        } catch (Throwable) {
-            // Silently skip classes that can't be reflected or resolved
+        } catch (Exception) {
+            // Skip classes whose attributes/doc-blocks cannot be resolved during
+            // warm (user code may be un-constructible here). Errors (i.e. actual
+            // programming bugs) intentionally propagate so they are not hidden.
         }
     }
 

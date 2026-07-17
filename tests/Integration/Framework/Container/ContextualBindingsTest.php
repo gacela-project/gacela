@@ -32,7 +32,6 @@ final class ContextualBindingsTest extends TestCase
 
         Container::withConfig(Config::getInstance());
 
-        // Verify the contextual binding was registered
         $contextualBindings = Config::getInstance()
             ->getSetupGacela()
             ->getContextualBindings();
@@ -123,7 +122,6 @@ final class ContextualBindingsTest extends TestCase
             ->getSetupGacela()
             ->getContextualBindings();
 
-        // Both bindings should be present
         self::assertArrayHasKey('ClassA', $contextualBindings);
         self::assertArrayHasKey('ClassB', $contextualBindings);
         self::assertSame('FileLogger', $contextualBindings['ClassA']['LoggerInterface']);
@@ -147,7 +145,6 @@ final class ContextualBindingsTest extends TestCase
             ->getSetupGacela()
             ->getContextualBindings();
 
-        // Verify that the concrete class was properly set in the builder
         self::assertArrayHasKey('ConcreteClass', $contextualBindings);
         self::assertSame('Implementation', $contextualBindings['ConcreteClass']['DependencyInterface']);
     }

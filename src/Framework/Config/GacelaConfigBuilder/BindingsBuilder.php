@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaConfigBuilder;
 
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+
+/**
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ */
 final class BindingsBuilder
 {
-    /** @var array<class-string,class-string|object|callable> */
+    /** @var BindingsMap */
     private array $mapping = [];
 
     /**
@@ -21,7 +26,7 @@ final class BindingsBuilder
     }
 
     /**
-     * @return array<class-string,class-string|object|callable>
+     * @return BindingsMap
      */
     public function build(): array
     {

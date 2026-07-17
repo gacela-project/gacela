@@ -25,7 +25,6 @@ use function sprintf;
 use function str_ends_with;
 use function str_starts_with;
 use function strlen;
-use function strrpos;
 use function substr;
 
 /**
@@ -33,6 +32,8 @@ use function substr;
  */
 final class CrossModuleViaFacadeRule implements Rule
 {
+    use ClassReflectionHelperTrait;
+
     public function __construct(
         private readonly string $rootNamespace,
         private readonly int $modulePathSegments = 1,
@@ -86,7 +87,7 @@ final class CrossModuleViaFacadeRule implements Rule
                 continue;
             }
 
-            if (str_ends_with($this->shortName($referenced), 'Facade')) {
+            if (str_ends_with($this->shortClassName($referenced), 'Facade')) {
                 continue;
             }
 
@@ -123,11 +124,5 @@ final class CrossModuleViaFacadeRule implements Rule
         }
 
         return $this->rootNamespace . '\\' . implode('\\', array_slice($segments, 0, $this->modulePathSegments));
-    }
-
-    private function shortName(string $className): string
-    {
-        $pos = strrpos($className, '\\');
-        return $pos === false ? $className : substr($className, $pos + 1);
     }
 }

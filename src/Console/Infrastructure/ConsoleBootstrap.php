@@ -17,16 +17,17 @@ final class ConsoleBootstrap extends Application
     use ServiceResolverAwareTrait;
 
     /**
-     * @return array<string,Command>
-     *
-     * @psalm-suppress MixedReturnTypeCoercion,PossiblyNullArrayOffset
+     * @return array<array-key,Command>
      */
     protected function getDefaultCommands(): array
     {
         $commands = parent::getDefaultCommands();
 
         foreach ($this->getFactory()->getConsoleCommands() as $command) {
-            $commands[$command->getName()] = $command;
+            $name = $command->getName();
+            if ($name !== null) {
+                $commands[$name] = $command;
+            }
         }
 
         return $commands;

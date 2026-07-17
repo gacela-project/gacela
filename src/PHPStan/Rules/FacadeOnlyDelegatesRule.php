@@ -30,6 +30,8 @@ use function sprintf;
  */
 final class FacadeOnlyDelegatesRule implements Rule
 {
+    use ClassReflectionHelperTrait;
+
     private const ALLOWED_ROOTS = ['getFactory', 'getConfig', 'getProvider'];
 
     private const IGNORED_METHODS = [
@@ -83,17 +85,6 @@ final class FacadeOnlyDelegatesRule implements Rule
         }
 
         return [];
-    }
-
-    private function extendsClass(ClassReflection $classReflection, string $parent): bool
-    {
-        foreach ($classReflection->getParents() as $p) {
-            if ($p->getName() === $parent) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function isDelegateStatement(Node $stmt): bool

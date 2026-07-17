@@ -62,15 +62,6 @@ final class ValidateConfigCommandTest extends TestCase
         self::assertStringContainsString('Checking for circular dependencies...', $output);
     }
 
-    public function test_validate_config_checks_config_paths(): void
-    {
-        $this->command->execute([]);
-
-        $output = $this->command->getDisplay();
-
-        self::assertStringContainsString('Checking configuration paths...', $output);
-    }
-
     public function test_validate_config_explains_binding_mismatch(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {

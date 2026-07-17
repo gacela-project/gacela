@@ -4,30 +4,29 @@
 
 ### Fixed
 
-- `cache:warm` no longer skips legitimate modules whose name merely contains the substring `Test` (e.g. `App\Testimonial\TestimonialFacade`). The production-module filter now anchors on whole namespace segments (`\Test\`, `\Tests\`), consistent with the existing `\Fixtures\` and `\Benchmark\` checks, instead of an unanchored `Test` substring match
-- All cache-clear paths now delete files through a single guarded helper (`FileCache::delete()`) that tolerates an already-absent file and invalidates the opcode cache. Previously `cache:clear` / `cache:warm --clear` (`CacheManager`), the scoped-cache dependency graph (`ScopedCache::clear()`), and the merged-config cache (`MergedConfigCache::clear()`) used bare/unguarded `unlink()` and skipped `opcache_invalidate()`, so a stale compiled cache file could survive a clear — inconsistent with `FileCache`'s write path
-- `Config::get()` and `Config::getAllValues()` no longer re-run the full `init()` (re-globbing and re-parsing every config source) on every access when the merged configuration is legitimately empty; initialization is now tracked with a dedicated flag instead of treating an empty config array as "not initialized"
-- `cache:warm` no longer aborts the whole run when one module's facade resolution raises a PHP `Error`/`TypeError` (e.g. a Factory/Config/Provider that is not constructible during warm). The per-module facade-resolution step is now guarded like the per-class loop — the failing module is reported and skipped and warming continues for the rest — on both the sequential and parallel (Fiber) paths, since both go through `ModuleWarmer::warmModule`
-- `cache:clear` now also removes the custom-services cache file (`gacela-custom-services.php`); previously only `gacela-class-names.php` and the merged-config cache were cleared, so stale custom-service resolutions survived an explicit clear even though the command's help promised it clears the custom services cache. The "no cache files found" guard and the per-file size report now cover both cache files
-- `cache:clear` command is now registered in the console application; it was shipped in 1.13.0 but never wired into the command list, so `bin/gacela cache:clear` was unavailable
-- `cache:warm` attribute pre-warming now works: it called the non-existent `DocBlockResolver::fromClassName()`, so the resulting `Error` was silently swallowed and the attribute cache was never warmed; the named constructor now exists
-- `cache:warm` no longer hides errors: a module-discovery failure now prints a warning instead of silently warming zero modules, and a PHP `Error` during attribute pre-warming is reported per class instead of being swallowed
-- `bin/gacela` now honors its exit-1/STDERR failure contract for every failure path: a missing `symfony/console`, a failure inside `Gacela::bootstrap()`, and a PHP `Error`/`TypeError` (not only `Exception`) escaping the console runner previously escaped the handler and exited 255 with a raw stack trace. The guarded block now wraps the class check, bootstrap, and run, and catches `Throwable`
-- `bin/gacela` now exits with status 1 on failure (missing `vendor/autoload.php` or an exception escaping the console runner) and writes the error to STDERR; both paths previously reported exit code 0
-- Resolving a deprecated `AbstractDependencyProvider` no longer fatals in projects without `symfony/deprecation-contracts`: the `trigger_deprecation()` call is now guarded, since that function is not part of Gacela's runtime dependencies
+- `bin/gacela` now exits 1 and writes to STDERR on every failure path — missing `vendor/autoload.php`, missing `symfony/console`, a `Gacela::bootstrap()` failure, or any `Throwable` (incl. `Error`/`TypeError`) from the runner — instead of exiting 0 or 255 with a raw stack trace
+- `cache:clear` is now registered in the console; it shipped in 1.13.0 but was never wired in, so `bin/gacela cache:clear` was unavailable
+- `cache:clear` now also removes the custom-services cache file (`gacela-custom-services.php`); the no-cache-found guard and size report cover both cache files
+- `cache:warm` attribute pre-warming now works; it called a non-existent `DocBlockResolver::fromClassName()`, silently swallowing the resulting `Error`
+- `cache:warm` no longer hides errors: a module-discovery failure prints a warning instead of silently warming zero modules, and per-class attribute-warm `Error`s are reported instead of swallowed
+- `cache:warm` no longer aborts the whole run when one module's facade resolution throws a PHP `Error`/`TypeError`; the failing module is reported and skipped so warming continues
+- `cache:warm` no longer skips modules whose name merely contains `Test` (e.g. `App\Testimonial\TestimonialFacade`); the production-module filter now anchors on `\Test\`/`\Tests\` segments, like the existing `\Fixtures\`/`\Benchmark\` checks
+- All cache-clear paths (`cache:clear`, `cache:warm --clear`, `ScopedCache`, merged-config) now delete through a single guarded helper that tolerates a missing file and invalidates opcache, so stale compiled cache files no longer survive a clear
+- `Config` no longer re-runs the full `init()` (re-globbing and re-parsing config) on every access when the merged config is empty; initialization is tracked with a flag instead of an empty-array sentinel
+- Resolving a deprecated `AbstractDependencyProvider` no longer fatals without `symfony/deprecation-contracts`; the `trigger_deprecation()` call is now guarded
 
 ### Added
 
-- `FileCache::writeContentsAtomically(string $file, string $content): bool` atomically writes pre-rendered file contents (compiled PHP source, reports, text artifacts) through the same writability short-circuit, stage-to-`.tmp` + `rename`, and false-on-failure guarantees as `writeAtomically()`, which is now a thin wrapper over it. Downstream caches that write raw content can reuse this primitive instead of duplicating the staging/rename logic
+- `FileCache::writeContentsAtomically(string $file, string $content): bool` atomically writes pre-rendered content (compiled PHP, reports, artifacts) with the same writability short-circuit, `.tmp`-stage + `rename`, and false-on-failure guarantees as `writeAtomically()`, which now wraps it
 
 ### Changed
 
 - `AbstractFactory::singleton()` and `CacheableTrait::cached()` are now generic (`@template T`): static analysis infers the creator/callback return type instead of `mixed`
-- `validate:config` no longer prints the "Checking configuration paths..." section; it was a placeholder that performed no validation
+- `validate:config` no longer prints the "Checking configuration paths..." placeholder section, which performed no validation
 
 ### Removed
 
-- `cache:warm --parallel` option and the `ParallelModuleWarmer` class — the flag provided no real concurrency: cache warming is CPU-bound and the Fibers never suspended, so `--parallel` ran identically to sequential warming while advertising a speedup. Use `cache:warm` (optionally with `--attributes`) instead
+- `cache:warm --parallel` option and `ParallelModuleWarmer` — provided no real concurrency (warming is CPU-bound and the Fibers never suspended), so it matched sequential warming while advertising a speedup; use `cache:warm` (optionally `--attributes`)
 - `Gacela\Framework\Event\ClassResolver\GenericEvent` — dead code; the event was never dispatched
 - `GacelaFileCache::isEnabledFromCacheConfig()` — dead code with no callers; use `GacelaFileCache::isEnabled()`
 

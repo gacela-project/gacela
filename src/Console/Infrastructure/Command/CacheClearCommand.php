@@ -39,17 +39,16 @@ final class CacheClearCommand extends Command
         $output->writeln('<info>Clearing Gacela cache...</info>');
         $output->writeln('');
 
-        if (!$cacheManager->cacheFileExists() && !$mergedConfigCacheExists) {
+        $clearedFiles = $cacheManager->getExistingCacheFilesWithSize();
+
+        if ($clearedFiles === [] && !$mergedConfigCacheExists) {
             $output->writeln('<comment>No cache files found.</comment>');
             return Command::SUCCESS;
         }
 
-        if ($cacheManager->cacheFileExists()) {
-            $cacheFile = $cacheManager->getCacheFilePath();
-            $cacheSize = $cacheManager->getFormattedCacheFileSize();
+        $cacheManager->clearCache();
 
-            $cacheManager->clearCache();
-
+        foreach ($clearedFiles as $cacheFile => $cacheSize) {
             $output->writeln(sprintf(
                 '<info>✓</info> Cleared cache file: <comment>%s</comment> (<comment>%s</comment>)',
                 $cacheFile,

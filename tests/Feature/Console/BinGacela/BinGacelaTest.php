@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 use function dirname;
 use function fclose;
+use function file_put_contents;
 use function mkdir;
 use function proc_close;
 use function proc_open;
@@ -15,6 +16,7 @@ use function rmdir;
 use function stream_get_contents;
 use function sys_get_temp_dir;
 use function uniqid;
+use function unlink;
 
 use const PHP_BINARY;
 
@@ -22,9 +24,56 @@ final class BinGacelaTest extends TestCase
 {
     public function test_it_exits_non_zero_and_writes_to_stderr_when_autoload_is_missing(): void
     {
+        [$exitCode, $stdout, $stderr] = $this->runBinGacela(autoloadStub: null);
+
+        self::assertSame(1, $exitCode, 'bin/gacela must exit 1 when it cannot load the autoloader');
+        self::assertStringContainsString("Cannot load composer's autoload file", $stderr);
+        self::assertStringNotContainsString(
+            "Cannot load composer's autoload file",
+            $stdout,
+            'the error must be written to STDERR, not STDOUT',
+        );
+    }
+
+    public function test_it_exits_1_and_writes_to_stderr_when_symfony_console_is_missing(): void
+    {
+        // Autoloader that resolves nothing, so Symfony's Application class is absent.
+        [$exitCode, $stdout, $stderr] = $this->runBinGacela(autoloadStub: '<?php');
+
+        self::assertSame(1, $exitCode, 'bin/gacela must exit 1 when symfony/console is not installed');
+        self::assertStringContainsString('gacela script failed', $stderr);
+        self::assertStringNotContainsString('gacela script failed', $stdout);
+    }
+
+    public function test_it_exits_1_when_a_php_error_escapes_bootstrap(): void
+    {
+        // Symfony's Application exists (passes the class check) but Gacela's classes do not,
+        // so Gacela::bootstrap() raises a PHP Error (not an Exception) that must still be caught.
+        $stub = '<?php namespace Symfony\Component\Console; class Application {}';
+
+        [$exitCode, $stdout, $stderr] = $this->runBinGacela(autoloadStub: $stub);
+
+        self::assertSame(1, $exitCode, 'a PHP Error escaping bootstrap must still exit 1');
+        self::assertStringContainsString('gacela script failed', $stderr);
+        self::assertStringNotContainsString('gacela script failed', $stdout);
+    }
+
+    /**
+     * Runs bin/gacela in a throwaway working directory. When $autoloadStub is null the directory
+     * has no vendor/autoload.php; otherwise the stub is written there as the autoloader.
+     *
+     * @return array{int, string, string} exit code, stdout, stderr
+     */
+    private function runBinGacela(?string $autoloadStub): array
+    {
         $binGacela = dirname(__DIR__, 4) . '/bin/gacela';
-        $cwdWithoutVendor = sys_get_temp_dir() . '/gacela-bin-' . uniqid('', true);
-        mkdir($cwdWithoutVendor);
+        $cwd = sys_get_temp_dir() . '/gacela-bin-' . uniqid('', true);
+        mkdir($cwd);
+
+        if ($autoloadStub !== null) {
+            mkdir($cwd . '/vendor');
+            file_put_contents($cwd . '/vendor/autoload.php', $autoloadStub);
+        }
 
         try {
             $descriptors = [
@@ -33,7 +82,7 @@ final class BinGacelaTest extends TestCase
                 2 => ['pipe', 'w'],
             ];
 
-            $process = proc_open([PHP_BINARY, $binGacela], $descriptors, $pipes, $cwdWithoutVendor);
+            $process = proc_open([PHP_BINARY, $binGacela], $descriptors, $pipes, $cwd);
             self::assertIsResource($process);
 
             fclose($pipes[0]);
@@ -43,15 +92,13 @@ final class BinGacelaTest extends TestCase
             fclose($pipes[2]);
             $exitCode = proc_close($process);
 
-            self::assertSame(1, $exitCode, 'bin/gacela must exit 1 when it cannot load the autoloader');
-            self::assertStringContainsString("Cannot load composer's autoload file", $stderr);
-            self::assertStringNotContainsString(
-                "Cannot load composer's autoload file",
-                $stdout,
-                'the error must be written to STDERR, not STDOUT',
-            );
+            return [$exitCode, $stdout, $stderr];
         } finally {
-            rmdir($cwdWithoutVendor);
+            if ($autoloadStub !== null) {
+                unlink($cwd . '/vendor/autoload.php');
+                rmdir($cwd . '/vendor');
+            }
+            rmdir($cwd);
         }
     }
 }

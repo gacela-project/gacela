@@ -30,21 +30,24 @@ final class ClassResolverCache
 
     public static function getCache(): CacheInterface
     {
-        if (self::$cache instanceof CacheInterface) {
+        $cache = self::$cache;
+        if ($cache instanceof CacheInterface) {
             self::dispatchEvent(new ClassNameCacheCachedEvent());
-            return self::$cache;
+            return $cache;
         }
 
         if (self::isEnabled()) {
             $cacheDir = Config::getInstance()->getCacheDir();
             self::dispatchEvent(new ClassNamePhpCacheCreatedEvent($cacheDir));
-            self::$cache = new ClassNamePhpCache($cacheDir);
+            $cache = new ClassNamePhpCache($cacheDir);
         } else {
             self::dispatchEvent(new ClassNameInMemoryCacheCreatedEvent());
-            self::$cache = new InMemoryCache(ClassNamePhpCache::class);
+            $cache = new InMemoryCache(ClassNamePhpCache::class);
         }
 
-        return self::$cache;
+        self::$cache = $cache;
+
+        return $cache;
     }
 
     private static function isEnabled(): bool

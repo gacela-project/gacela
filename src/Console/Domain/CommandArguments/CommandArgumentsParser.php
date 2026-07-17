@@ -12,7 +12,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {
     /**
      * @param array{
-     *     autoload: array{"psr-4"?:array<string,string>},
+     *     autoload?: array{"psr-4"?:array<string,string>},
      *     autoload-dev?: array{"psr-4"?:array<string,string>},
      * } $composerJson
      */

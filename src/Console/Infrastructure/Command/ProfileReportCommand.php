@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Framework\Profiler\Profiler;
+use Gacela\Framework\Profiler\TProfileEntry;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
@@ -60,7 +61,6 @@ final class ProfileReportCommand extends Command
         $format = (string)$input->getOption('format');
         $sortBy = (string)$input->getOption('sort');
 
-        // Sort entries
         $entries = $this->sortEntries($entries, $sortBy);
 
         match ($format) {
@@ -79,7 +79,7 @@ final class ProfileReportCommand extends Command
      */
     private function sortEntries(array $entries, string $sortBy): array
     {
-        usort($entries, static fn ($a, $b): int => match ($sortBy) {
+        usort($entries, static fn (TProfileEntry $a, TProfileEntry $b): int => match ($sortBy) {
             'memory' => $b->memoryUsage <=> $a->memoryUsage,
             'operation' => $a->operation <=> $b->operation,
             default => $b->duration <=> $a->duration,
@@ -106,7 +106,7 @@ final class ProfileReportCommand extends Command
             $table->addRow([
                 $entry->operation,
                 $entry->subject,
-                sprintf('%.3f', $entry->duration * 1000),
+                sprintf('%.3f', $entry->duration * 1000.0),
                 sprintf('%.2f', $entry->memoryUsage / 1024),
             ]);
         }
@@ -148,8 +148,8 @@ final class ProfileReportCommand extends Command
 
         $output->writeln('<comment>Summary Statistics</comment>');
         $output->writeln(sprintf('Total Operations: <info>%d</info>', $stats['total_operations']));
-        $output->writeln(sprintf('Total Duration: <info>%.3f ms</info>', $stats['total_duration'] * 1000));
-        $output->writeln(sprintf('Average Duration: <info>%.3f ms</info>', $stats['avg_duration'] * 1000));
+        $output->writeln(sprintf('Total Duration: <info>%.3f ms</info>', $stats['total_duration'] * 1000.0));
+        $output->writeln(sprintf('Average Duration: <info>%.3f ms</info>', $stats['avg_duration'] * 1000.0));
         $output->writeln(sprintf('Peak Memory: <info>%.2f KB</info>', $stats['peak_memory'] / 1024));
         $output->writeln('');
 
@@ -163,8 +163,8 @@ final class ProfileReportCommand extends Command
                 $table->addRow([
                     $operation,
                     $opStats['count'],
-                    sprintf('%.3f', $opStats['total_duration'] * 1000),
-                    sprintf('%.3f', $opStats['avg_duration'] * 1000),
+                    sprintf('%.3f', $opStats['total_duration'] * 1000.0),
+                    sprintf('%.3f', $opStats['avg_duration'] * 1000.0),
                 ]);
             }
 

@@ -25,6 +25,10 @@ final class Config implements ConfigInterface
     /** @var array<string,mixed> */
     private array $config = [];
 
+    // A separate flag, because a legitimately empty merged config is still "initialized";
+    // keying off $config === [] re-ran the full init() on every access in that case.
+    private bool $initialized = false;
+
     private ?string $cacheDir = null;
 
     private function __construct(
@@ -73,7 +77,7 @@ final class Config implements ConfigInterface
      */
     public function get(string $key, mixed $default = self::DEFAULT_CONFIG_VALUE): mixed
     {
-        if ($this->config === []) {
+        if (!$this->initialized) {
             $this->init();
         }
 
@@ -97,7 +101,7 @@ final class Config implements ConfigInterface
      */
     public function getAllValues(): array
     {
-        if ($this->config === []) {
+        if (!$this->initialized) {
             $this->init();
         }
 
@@ -118,6 +122,8 @@ final class Config implements ConfigInterface
             ...$this->loadMergedConfigValues(),
             ...$this->setup->getConfigKeyValues(),
         ];
+
+        $this->initialized = true;
     }
 
     /**

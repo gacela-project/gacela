@@ -211,4 +211,19 @@ final class ConfigTest extends TestCase
 
         self::assertSame('lazy_value', $config->get('lazy_key'));
     }
+
+    public function test_does_not_reinitialize_on_every_access_when_merged_config_is_empty(): void
+    {
+        $config = Config::getInstance();
+
+        // First access initialises and builds the internal ConfigFactory.
+        $config->getAllValues();
+        $firstFactory = $config->getFactory();
+
+        // A second access on an empty merged config must not re-run init(),
+        // which nulls and rebuilds the ConfigFactory on every call.
+        $config->getAllValues();
+
+        self::assertSame($firstFactory, $config->getFactory());
+    }
 }

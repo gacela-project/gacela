@@ -10,6 +10,10 @@
 - `bin/gacela` now exits with status 1 on failure (missing `vendor/autoload.php` or an exception escaping the console runner) and writes the error to STDERR; both paths previously reported exit code 0
 - Resolving a deprecated `AbstractDependencyProvider` no longer fatals in projects without `symfony/deprecation-contracts`: the `trigger_deprecation()` call is now guarded, since that function is not part of Gacela's runtime dependencies
 
+### Added
+
+- `FileCache::writeContentsAtomically(string $file, string $content): bool` atomically writes pre-rendered file contents (compiled PHP source, reports, text artifacts) through the same writability short-circuit, stage-to-`.tmp` + `rename`, and false-on-failure guarantees as `writeAtomically()`, which is now a thin wrapper over it. Downstream caches that write raw content can reuse this primitive instead of duplicating the staging/rename logic
+
 ### Changed
 
 - `AbstractFactory::singleton()` and `CacheableTrait::cached()` are now generic (`@template T`): static analysis infers the creator/callback return type instead of `mixed`

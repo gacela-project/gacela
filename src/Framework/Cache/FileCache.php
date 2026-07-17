@@ -224,11 +224,22 @@ final class FileCache
      */
     public static function writeAtomically(string $file, mixed $value): bool
     {
+        return self::writeContentsAtomically($file, sprintf('<?php return %s;', var_export($value, true)));
+    }
+
+    /**
+     * Atomically write pre-rendered file contents, staging to a sibling `.tmp`
+     * then renaming. Shares the writability short-circuit and false-on-failure
+     * guarantees of {@see writeAtomically}, without wrapping/serializing the
+     * payload, so callers can persist raw content (compiled PHP source, reports,
+     * text artifacts) through the same primitive.
+     */
+    public static function writeContentsAtomically(string $file, string $content): bool
+    {
         if (!WritableDirectory::isUsable(dirname($file))) {
             return false;
         }
 
-        $content = sprintf('<?php return %s;', var_export($value, true));
         $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
 
         if (@file_put_contents($tmp, $content, LOCK_EX) !== strlen($content)) {

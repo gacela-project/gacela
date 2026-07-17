@@ -10,6 +10,7 @@ use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\WarningCollectorTrait;
 use PHPUnit\Framework\TestCase;
 
+use function file_get_contents;
 use function file_put_contents;
 use function glob;
 use function sha1;
@@ -132,6 +133,27 @@ final class FileCacheDegradationTest extends TestCase
 
         self::assertTrue(FileCache::writeAtomically($file, ['k' => 'v']));
         self::assertSame(['k' => 'v'], require $file);
+    }
+
+    public function test_write_contents_atomically_returns_false_for_unusable_directory(): void
+    {
+        $dir = $this->uncreatableDir();
+
+        $warnings = $this->collectWarnings(
+            static fn (): bool => FileCache::writeContentsAtomically($dir . '/raw.php', 'content'),
+            $written,
+        );
+
+        self::assertSame([], $warnings);
+        self::assertFalse($written);
+    }
+
+    public function test_write_contents_atomically_returns_true_on_success(): void
+    {
+        $file = $this->writableDir() . '/raw.php';
+
+        self::assertTrue(FileCache::writeContentsAtomically($file, 'raw content'));
+        self::assertSame('raw content', file_get_contents($file));
     }
 
     private function writableDir(): string

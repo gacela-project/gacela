@@ -20,14 +20,14 @@ use PHPStan\Rules\RuleErrorBuilder;
 
 use function sprintf;
 use function str_ends_with;
-use function strrpos;
-use function substr;
 
 /**
  * @implements Rule<InClassNode>
  */
 final class FactoryDoesNotCallFacadeRule implements Rule
 {
+    use ClassReflectionHelperTrait;
+
     public function getNodeType(): string
     {
         return InClassNode::class;
@@ -56,7 +56,7 @@ final class FactoryDoesNotCallFacadeRule implements Rule
             }
 
             $className = $new->class->toString();
-            if (!str_ends_with($this->shortName($className), 'Facade')) {
+            if (!str_ends_with($this->shortClassName($className), 'Facade')) {
                 continue;
             }
 
@@ -97,22 +97,5 @@ final class FactoryDoesNotCallFacadeRule implements Rule
         }
 
         return $errors;
-    }
-
-    private function shortName(string $className): string
-    {
-        $pos = strrpos($className, '\\');
-        return $pos === false ? $className : substr($className, $pos + 1);
-    }
-
-    private function extendsClass(ClassReflection $classReflection, string $parent): bool
-    {
-        foreach ($classReflection->getParents() as $p) {
-            if ($p->getName() === $parent) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

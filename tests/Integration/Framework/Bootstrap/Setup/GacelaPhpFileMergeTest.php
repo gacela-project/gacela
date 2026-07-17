@@ -7,6 +7,7 @@ namespace GacelaTest\Integration\Framework\Bootstrap\Setup;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use stdClass;
@@ -23,9 +24,7 @@ final class GacelaPhpFileMergeTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (is_dir($this->tempDir)) {
-            $this->removeDirectory($this->tempDir);
-        }
+        DirectoryUtil::removeDir($this->tempDir);
 
         $reflection = new ReflectionClass(Gacela::class);
         $method = $reflection->getMethod('resetCache');
@@ -110,20 +109,5 @@ PHP;
         // Test alias
         $aliased = $container->get('my-alias');
         self::assertInstanceOf(stdClass::class, $aliased);
-    }
-
-    private function removeDirectory(string $dir): void
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $files = array_diff(scandir($dir), ['.', '..']);
-        foreach ($files as $file) {
-            $path = $dir . '/' . $file;
-            is_dir($path) ? $this->removeDirectory($path) : unlink($path);
-        }
-
-        rmdir($dir);
     }
 }

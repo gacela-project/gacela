@@ -37,6 +37,15 @@ use function trigger_error;
 
 /**
  * @extends AbstractFactory<ConsoleConfig>
+ *
+ * @psalm-type ContainerStats = array{
+ *     registered_services: int,
+ *     frozen_services: int,
+ *     factory_services: int,
+ *     bindings: int,
+ *     cached_dependencies: int,
+ *     memory_usage: string,
+ * }
  */
 final class ConsoleFactory extends AbstractFactory
 {
@@ -88,14 +97,7 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
-     * @return array{
-     *     registered_services: int,
-     *     frozen_services: int,
-     *     factory_services: int,
-     *     bindings: int,
-     *     cached_dependencies: int,
-     *     memory_usage: string
-     * }
+     * @return ContainerStats
      */
     public function getContainerStats(): array
     {

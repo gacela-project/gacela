@@ -10,7 +10,6 @@ use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use ReflectionClass;
-use ReflectionException;
 
 use function sprintf;
 
@@ -31,11 +30,7 @@ final class CacheStalenessCheck implements HealthCheck
                 return null;
             }
 
-            try {
-                $file = (new ReflectionClass($className))->getFileName();
-            } catch (ReflectionException) {
-                return null;
-            }
+            $file = (new ReflectionClass($className))->getFileName();
 
             return $file === false ? null : $file;
         };

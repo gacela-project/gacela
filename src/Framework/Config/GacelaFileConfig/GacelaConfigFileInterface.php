@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\GacelaFileConfig;
 
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+
+/**
+ * @psalm-type BindingsMap = array<class-string, class-string|callable|object>
+ *
+ * @psalm-import-type SuffixTypes from SuffixTypesBuilder
+ */
 interface GacelaConfigFileInterface
 {
     /**
@@ -15,16 +22,12 @@ interface GacelaConfigFileInterface
      * Map interfaces to concrete classes or callable (which will be resolved on runtime).
      * This is util to inject dependencies to Gacela services (such as Factories, for example) via their constructor.
      *
-     * @return array<class-string, class-string|callable|object>
+     * @return BindingsMap
      */
     public function getBindings(): array;
 
     /**
-     * @return array{
-     *     Factory?:list<string>,
-     *     Config?:list<string>,
-     *     Provider?:list<string>
-     * }
+     * @return SuffixTypes
      */
     public function getSuffixTypes(): array;
 

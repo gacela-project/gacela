@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Framework\Cache;
 
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\FileCacheStats;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
 use ReflectionClass;
@@ -14,11 +15,8 @@ use ReflectionMethod;
 use function count;
 use function filesize;
 use function glob;
-use function is_dir;
-use function rmdir;
 use function sys_get_temp_dir;
 use function uniqid;
-use function unlink;
 
 final class FileCacheTest extends TestCase
 {
@@ -35,7 +33,7 @@ final class FileCacheTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->removeDir($this->cacheDir);
+        DirectoryUtil::removeDir($this->cacheDir);
     }
 
     public function test_has_returns_false_for_missing_key(): void
@@ -160,7 +158,7 @@ final class FileCacheTest extends TestCase
         new FileCache($dir);
 
         self::assertDirectoryExists($dir);
-        $this->removeDir($dir);
+        DirectoryUtil::removeDir($dir);
     }
 
     public function test_constructor_trims_whitespace_from_directory(): void
@@ -170,7 +168,7 @@ final class FileCacheTest extends TestCase
 
         self::assertSame($dir, $cache->directory);
         self::assertDirectoryExists($dir);
-        $this->removeDir($dir);
+        DirectoryUtil::removeDir($dir);
     }
 
     public function test_constructor_collapses_duplicate_separators(): void
@@ -180,7 +178,7 @@ final class FileCacheTest extends TestCase
 
         self::assertStringNotContainsString('//', $cache->directory);
         self::assertDirectoryExists($cache->directory);
-        $this->removeDir($cache->directory);
+        DirectoryUtil::removeDir($cache->directory);
     }
 
     public function test_normalize_strips_prefix_when_windows_absolute_path_is_embedded(): void
@@ -405,32 +403,5 @@ final class FileCacheTest extends TestCase
         $instance = (new ReflectionClass(FileCache::class))->newInstanceWithoutConstructor();
 
         return (string) $method->invoke($instance, $dir);
-    }
-
-    private function removeDir(string $dir): void
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $entries = glob($dir . '/*') ?: [];
-        foreach ($entries as $entry) {
-            if (is_dir($entry)) {
-                $this->removeDir($entry);
-            } else {
-                unlink($entry);
-            }
-        }
-
-        // Also clean up dotfiles like the batch lockfile.
-        foreach (glob($dir . '/.[!.]*') ?: [] as $dotfile) {
-            if (is_dir($dotfile)) {
-                $this->removeDir($dotfile);
-            } else {
-                unlink($dotfile);
-            }
-        }
-
-        rmdir($dir);
     }
 }

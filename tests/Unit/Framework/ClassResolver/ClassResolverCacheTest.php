@@ -31,7 +31,6 @@ final class ClassResolverCacheTest extends TestCase
 
     public function test_get_cache_returns_in_memory_cache_when_file_cache_is_disabled(): void
     {
-        // Bootstrap with file cache disabled
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
@@ -50,7 +49,6 @@ final class ClassResolverCacheTest extends TestCase
         $cache1 = ClassResolverCache::getCache();
         $cache2 = ClassResolverCache::getCache();
 
-        // Should return the same cached instance
         self::assertSame($cache1, $cache2);
     }
 
@@ -66,7 +64,6 @@ final class ClassResolverCacheTest extends TestCase
 
         $cache2 = ClassResolverCache::getCache();
 
-        // After reset, should create a new instance (not the same object)
         self::assertNotSame($cache1, $cache2);
         self::assertInstanceOf(InMemoryCache::class, $cache2);
     }
@@ -104,12 +101,10 @@ final class ClassResolverCacheTest extends TestCase
 
         $cache = ClassResolverCache::getCache();
 
-        // Store multiple values
         $cache->put('key1', 'ClassName1');
         $cache->put('key2', 'ClassName2');
         $cache->put('key3', 'ClassName3');
 
-        // Verify all values
         self::assertTrue($cache->has('key1'));
         self::assertTrue($cache->has('key2'));
         self::assertTrue($cache->has('key3'));
@@ -127,10 +122,8 @@ final class ClassResolverCacheTest extends TestCase
         $cache1 = ClassResolverCache::getCache();
         $cache1->put('persistent-key', 'PersistentClass');
 
-        // Get cache again (should be same instance)
         $cache2 = ClassResolverCache::getCache();
 
-        // Value should still be there
         self::assertTrue($cache2->has('persistent-key'));
         self::assertSame('PersistentClass', $cache2->get('persistent-key'));
     }
@@ -146,13 +139,11 @@ final class ClassResolverCacheTest extends TestCase
 
         self::assertTrue($cache->has('temp-key'));
 
-        // Reset should clear everything
         ClassResolverCache::resetCache();
         InMemoryCache::resetCache();
 
         $newCache = ClassResolverCache::getCache();
 
-        // Old key should not exist in new cache
         self::assertFalse($newCache->has('temp-key'));
     }
 

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\Debug;
 
+use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Gacela;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionType;
-
-use Throwable;
 
 use function class_exists;
 use function interface_exists;
@@ -19,6 +19,9 @@ use function is_object;
 use function sprintf;
 use function var_export;
 
+/**
+ * @psalm-import-type BindingsMap from GacelaConfigFileInterface
+ */
 final class ConstructorInspector
 {
     /**
@@ -44,7 +47,7 @@ final class ConstructorInspector
     }
 
     /**
-     * @param array<class-string, class-string|callable|object> $bindings
+     * @param BindingsMap $bindings
      */
     private function inspectParameter(ReflectionParameter $parameter, array $bindings): ParameterInspection
     {
@@ -120,7 +123,7 @@ final class ConstructorInspector
     /**
      * @param class-string|callable|object $target
      */
-    private function renderBindingTarget(mixed $target): string
+    private function renderBindingTarget(string|object|callable $target): string
     {
         if (is_object($target)) {
             return $target::class . ' instance';
@@ -134,13 +137,13 @@ final class ConstructorInspector
     }
 
     /**
-     * @return array<class-string, class-string|callable|object>
+     * @return BindingsMap
      */
     private function containerBindings(): array
     {
         try {
             return Gacela::container()->getBindings();
-        } catch (Throwable) {
+        } catch (GacelaNotBootstrappedException) {
             return [];
         }
     }

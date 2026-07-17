@@ -41,7 +41,6 @@ final class DebugContainerCommand extends Command
         /** @var bool $showTree */
         $showTree = (bool) $input->getOption('tree');
 
-        // Validate arguments
         if ($showTree && $className === null) {
             $output->writeln('<error>The --tree option requires a class name argument</error>');
             return Command::FAILURE;
@@ -52,7 +51,6 @@ final class DebugContainerCommand extends Command
             return $this->displayDependencyTree($output, $className);
         }
 
-        // Default to showing stats if no arguments
         return $this->displayStats($output);
     }
 

@@ -18,6 +18,8 @@ use function sprintf;
  */
 final class SuffixExtendsRule implements Rule
 {
+    use ClassReflectionHelperTrait;
+
     public function __construct(
         private readonly string $suffix,
         private readonly string $expectedParent,
@@ -51,7 +53,7 @@ final class SuffixExtendsRule implements Rule
 
         if (
             $className !== $this->expectedParent
-            && !$this->extendsExpectedParent($classReflection)
+            && !$this->extendsClass($classReflection, $this->expectedParent)
         ) {
             return [
                 RuleErrorBuilder::message(sprintf('Class %s should extend %s', $className, $this->expectedParent))
@@ -61,16 +63,5 @@ final class SuffixExtendsRule implements Rule
         }
 
         return [];
-    }
-
-    private function extendsExpectedParent(ClassReflection $classReflection): bool
-    {
-        foreach ($classReflection->getParents() as $parent) {
-            if ($parent->getName() === $this->expectedParent) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

@@ -16,7 +16,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function class_exists;
 use function count;
-use function defined;
 use function in_array;
 use function interface_exists;
 use function is_array;
@@ -24,6 +23,9 @@ use function ltrim;
 use function sprintf;
 use function str_repeat;
 
+/**
+ * @psalm-type TokenList = list<array{0: int, 1: string, 2: int}|string>
+ */
 final class DebugDependenciesCommand extends Command
 {
     protected function configure(): void
@@ -175,7 +177,7 @@ final class DebugDependenciesCommand extends Command
     }
 
     /**
-     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     * @param TokenList $tokens
      */
     private function readNamespaceName(array $tokens, int $from): string
     {
@@ -203,15 +205,11 @@ final class DebugDependenciesCommand extends Command
 
     private function isClassLikeDeclaration(int $tokenType): bool
     {
-        if (in_array($tokenType, [T_CLASS, T_INTERFACE, T_TRAIT], true)) {
-            return true;
-        }
-
-        return defined('T_ENUM') && $tokenType === T_ENUM;
+        return in_array($tokenType, [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true);
     }
 
     /**
-     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     * @param TokenList $tokens
      */
     private function isAnonymousClass(array $tokens, int $index): bool
     {
@@ -229,7 +227,7 @@ final class DebugDependenciesCommand extends Command
     }
 
     /**
-     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     * @param TokenList $tokens
      */
     private function readNextIdentifier(array $tokens, int $from): ?string
     {

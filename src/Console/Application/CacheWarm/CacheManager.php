@@ -8,7 +8,6 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Config\Config;
 
 use function file_exists;
-use function sprintf;
 
 final class CacheManager
 {
@@ -45,16 +44,6 @@ final class CacheManager
 
     public function getFormattedCacheFileSize(): string
     {
-        $bytes = $this->getCacheFileSize();
-
-        if ($bytes < 1024) {
-            return sprintf('%d B', $bytes);
-        }
-
-        if ($bytes < 1048576) {
-            return sprintf('%.2f KB', $bytes / 1024);
-        }
-
-        return sprintf('%.2f MB', $bytes / 1048576);
+        return BytesFormatter::format($this->getCacheFileSize());
     }
 }

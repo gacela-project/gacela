@@ -7,15 +7,12 @@ namespace GacelaTest\Unit\Framework\Cache;
 use Gacela\Framework\Cache\CycleDetectedException;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\ScopedCache;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 
 use function file_put_contents;
-use function glob;
-use function is_dir;
-use function rmdir;
 use function sys_get_temp_dir;
 use function uniqid;
-use function unlink;
 
 final class ScopedCacheTest extends TestCase
 {
@@ -32,7 +29,7 @@ final class ScopedCacheTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->removeDir($this->cacheDir);
+        DirectoryUtil::removeDir($this->cacheDir);
     }
 
     public function test_put_and_get_round_trip(): void
@@ -398,30 +395,5 @@ final class ScopedCacheTest extends TestCase
         self::assertSame(['file:c'], $reopened->dependents('ns:Y'));
         self::assertSame([], $reopened->dependents('bad-int-key'));
         self::assertSame([], $reopened->dependents('file:b'));
-    }
-
-    private function removeDir(string $dir): void
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        foreach (glob($dir . '/*') ?: [] as $entry) {
-            if (is_dir($entry)) {
-                $this->removeDir($entry);
-            } else {
-                unlink($entry);
-            }
-        }
-
-        foreach (glob($dir . '/.[!.]*') ?: [] as $dotfile) {
-            if (is_dir($dotfile)) {
-                $this->removeDir($dotfile);
-            } else {
-                unlink($dotfile);
-            }
-        }
-
-        rmdir($dir);
     }
 }

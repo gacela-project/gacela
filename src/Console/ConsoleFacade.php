@@ -10,6 +10,8 @@ use Gacela\Framework\AbstractFacade;
 
 /**
  * @extends AbstractFacade<ConsoleFactory>
+ *
+ * @psalm-import-type ContainerStats from ConsoleFactory
  */
 final class ConsoleFacade extends AbstractFacade
 {
@@ -48,14 +50,7 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
-     * @return array{
-     *     registered_services: int,
-     *     frozen_services: int,
-     *     factory_services: int,
-     *     bindings: int,
-     *     cached_dependencies: int,
-     *     memory_usage: string
-     * }
+     * @return ContainerStats
      */
     public function getContainerStats(): array
     {

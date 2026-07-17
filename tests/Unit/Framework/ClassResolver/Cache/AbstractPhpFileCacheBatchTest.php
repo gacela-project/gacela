@@ -7,17 +7,16 @@ namespace GacelaTest\Unit\Framework\ClassResolver\Cache;
 use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\WarningCollectorTrait;
 use PHPUnit\Framework\TestCase;
 
 use function file_put_contents;
 use function glob;
-use function is_dir;
 use function sprintf;
 use function sys_get_temp_dir;
 use function uniqid;
-use function unlink;
 use function var_export;
 
 final class AbstractPhpFileCacheBatchTest extends TestCase
@@ -41,7 +40,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         TestPhpFileCache::clearStaticCache();
         ClassNamePhpCache::clearStaticCache();
         $this->restoreReadOnlyDirs();
-        $this->removeDir($this->cacheDir);
+        DirectoryUtil::removeDir($this->cacheDir);
     }
 
     public function test_is_batching_reflects_current_batch_state(): void
@@ -255,25 +254,5 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
     private function classNameFile(): string
     {
         return $this->cacheDir . '/' . ClassNamePhpCache::FILENAME;
-    }
-
-    private function removeDir(string $dir): void
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $entries = glob($dir . '/*') ?: [];
-        foreach ($entries as $entry) {
-            if (is_dir($entry)) {
-                $this->removeDir($entry);
-            } else {
-                unlink($entry);
-            }
-        }
-
-        if ((glob($dir . '/*') ?: []) === []) {
-            rmdir($dir);
-        }
     }
 }

@@ -20,6 +20,9 @@ use function is_object;
 use function is_string;
 use function sprintf;
 
+/**
+ * @psalm-type ValidationResult = array{errors: bool, warnings: bool}
+ */
 final class ValidateConfigCommand extends Command
 {
     protected function configure(): void
@@ -36,33 +39,22 @@ final class ValidateConfigCommand extends Command
         $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
         $output->writeln('');
 
-        $hasErrors = false;
-        $hasWarnings = false;
-
-        // Check if gacela.php exists (optional — silent when missing)
+        // gacela.php is optional: report it when present, stay silent when missing.
         $gacelaConfigPath = Gacela::rootDir() . '/gacela.php';
         if (file_exists($gacelaConfigPath)) {
             $output->writeln(sprintf('<fg=green>✓</> Configuration file found: %s', $gacelaConfigPath));
             $output->writeln('');
         }
 
-        // Validate bindings
         $container = Gacela::container();
         $bindingsValidation = $this->validateBindings($container, $output);
         $hasErrors = $bindingsValidation['errors'];
         $hasWarnings = $bindingsValidation['warnings'];
 
-        // Validate config paths
-        $configValidation = $this->validateConfigPaths($output);
-        $hasErrors = $hasErrors || $configValidation['errors'];
-        $hasWarnings = $hasWarnings || $configValidation['warnings'];
-
-        // Check for circular dependencies (basic check)
         $circularDepsValidation = $this->checkCircularDependencies($container, $output);
         $hasErrors = $hasErrors || $circularDepsValidation['errors'];
         $hasWarnings = $hasWarnings || $circularDepsValidation['warnings'];
 
-        // Summary
         $output->writeln('');
         $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
 
@@ -85,7 +77,7 @@ final class ValidateConfigCommand extends Command
     }
 
     /**
-     * @return array{errors: bool, warnings: bool}
+     * @return ValidationResult
      */
     private function validateBindings(Container $container, OutputInterface $output): array
     {
@@ -107,14 +99,12 @@ final class ValidateConfigCommand extends Command
             $output->writeln('');
 
             foreach ($bindings as $key => $value) {
-                // Validate key exists as class or interface
                 if (!class_exists($key) && !interface_exists($key)) {
                     $output->writeln(sprintf('  <error>✗ Binding key does not exist:</> %s', $key));
                     $hasErrors = true;
                     continue;
                 }
 
-                // Validate value
                 if (is_string($value)) {
                     if (!class_exists($value)) {
                         $output->writeln(sprintf('  <error>✗ Binding value class does not exist:</> %s -> %s', $key, $value));
@@ -122,7 +112,6 @@ final class ValidateConfigCommand extends Command
                         continue;
                     }
 
-                    // Check if value is assignable to key (basic check)
                     if (!is_subclass_of($value, $key) && $value !== $key) {
                         $expectedKind = interface_exists($key) ? 'interface' : 'class';
                         $valueParents = $this->describeTypeChain($value);
@@ -138,14 +127,12 @@ final class ValidateConfigCommand extends Command
                         $hasWarnings = true;
                     }
                 } elseif (is_object($value)) {
-                    // Object binding (including callables) - check if it's assignable to key
+                    // Callable objects (factories) are always valid; other objects must be instances of the key.
                     if (!is_callable($value) && class_exists($key) && !($value instanceof $key)) {
                         $output->writeln(sprintf('  <error>✗ Binding object is not instance of key:</> %s', $key));
                         $hasErrors = true;
                         continue;
                     }
-
-                    // Callable objects are valid - no further validation needed
                 }
 
                 $output->writeln(sprintf('  <fg=green>✓</> %s', $key));
@@ -161,22 +148,7 @@ final class ValidateConfigCommand extends Command
     }
 
     /**
-     * @return array{errors: bool, warnings: bool}
-     */
-    private function validateConfigPaths(OutputInterface $output): array
-    {
-        $output->writeln('<comment>Checking configuration paths...</comment>');
-
-        // Note: We can't easily access the config paths from the current API
-        // This is a placeholder for future enhancement
-        $output->writeln('  <fg=cyan>Config path validation requires runtime configuration access</fg=cyan>');
-        $output->writeln('');
-
-        return ['errors' => false, 'warnings' => false];
-    }
-
-    /**
-     * @return array{errors: bool, warnings: bool}
+     * @return ValidationResult
      */
     private function checkCircularDependencies(Container $container, OutputInterface $output): array
     {
@@ -193,15 +165,10 @@ final class ValidateConfigCommand extends Command
                     continue;
                 }
 
-                // Check if value class depends back on key (simple check)
                 if (class_exists($value)) {
                     try {
-                        /**
-                         * @psalm-suppress UnusedVariable
-                         * @psalm-suppress MixedAssignment
-                         */
-                        $resolved = $container->get($key);
-                        // If we can resolve it without errors, it's likely fine
+                        // Resolving the binding surfaces circular/recursive dependency errors.
+                        $container->get($key);
                     } catch (Throwable $throwable) {
                         if (str_contains($throwable->getMessage(), 'circular') || str_contains($throwable->getMessage(), 'recursive')) {
                             $output->writeln(sprintf('  <error>✗ Circular dependency detected:</> %s', $key));
@@ -257,7 +224,6 @@ This command validates your Gacela configuration for common errors and potential
     - Validates that binding values (classes) exist
     - Checks type compatibility between keys and values
   - Circular dependency detection (basic check)
-  - Configuration file paths
 
 <info>Validation levels:</info>
   <error>Errors</error> - Critical issues that will cause runtime failures

@@ -11,6 +11,7 @@ use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use ReflectionClass;
+use ReflectionException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -136,7 +137,7 @@ final class DebugModulesCommand extends Command
     {
         try {
             $file = (new ReflectionClass($className))->getFileName();
-        } catch (Throwable) {
+        } catch (ReflectionException) {
             return null;
         }
 

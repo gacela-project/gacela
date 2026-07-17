@@ -28,35 +28,30 @@ final class UseBlockParser
     {
         $needle = $className . ';';
 
-        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') === 0) {
-            $phpCode = str_replace("\n", PHP_EOL, $phpCode);
-        }
-
-        $lines = array_filter(
-            explode(PHP_EOL, $phpCode),
+        return $this->secondTokenOfFirstMatchingLine(
+            $phpCode,
             static fn (string $l): bool => str_starts_with($l, 'use ') && str_contains($l, $needle),
         );
-
-        $firstLine = reset($lines);
-        if ($firstLine === false) {
-            return '';
-        }
-
-        $lineSplit = explode(' ', $firstLine);
-
-        return rtrim($lineSplit[1] ?? '', ';');
     }
 
     private function lookInCurrentNamespace(string $phpCode): string
+    {
+        return $this->secondTokenOfFirstMatchingLine(
+            $phpCode,
+            static fn (string $l): bool => str_starts_with($l, 'namespace '),
+        );
+    }
+
+    /**
+     * @param callable(string):bool $matcher
+     */
+    private function secondTokenOfFirstMatchingLine(string $phpCode, callable $matcher): string
     {
         if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') === 0) {
             $phpCode = str_replace("\n", PHP_EOL, $phpCode);
         }
 
-        $lines = array_filter(
-            explode(PHP_EOL, $phpCode),
-            static fn (string $l): bool => str_starts_with($l, 'namespace '),
-        );
+        $lines = array_filter(explode(PHP_EOL, $phpCode), $matcher);
 
         $firstLine = reset($lines);
         if ($firstLine === false) {

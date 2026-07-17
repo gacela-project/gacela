@@ -72,7 +72,12 @@ trait CacheableTrait
     }
 
     /**
+     * @template T
+     *
+     * @param Closure():T $callback
      * @param list<mixed>|null $args
+     *
+     * @return T
      */
     protected function cached(Closure $callback, ?string $method = null, ?array $args = null): mixed
     {
@@ -107,10 +112,12 @@ trait CacheableTrait
         /** @var mixed $cached */
         $cached = $storage->get($cacheKey, $miss);
         if ($cached !== $miss) {
-            return $cached;
+            /** @var T $hit */
+            $hit = $cached;
+
+            return $hit;
         }
 
-        /** @var mixed $result */
         $result = $callback();
         $ttl = CacheableConfig::resolveTtl(sprintf('%s::%s', static::class, $method), $attribute->ttl);
         $storage->set($cacheKey, $result, $ttl);

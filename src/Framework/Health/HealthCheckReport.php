@@ -6,6 +6,8 @@ namespace Gacela\Framework\Health;
 
 /**
  * Aggregated report of all module health checks.
+ *
+ * @psalm-import-type HealthStatusArray from HealthStatus
  */
 final class HealthCheckReport
 {
@@ -89,7 +91,7 @@ final class HealthCheckReport
     /**
      * Convert to array for serialization.
      *
-     * @return array{overall: string, modules: array<string,array{level: string, message: string, metadata: array<string,mixed>}>}
+     * @return array{overall: string, modules: array<string,HealthStatusArray>}
      */
     public function toArray(): array
     {

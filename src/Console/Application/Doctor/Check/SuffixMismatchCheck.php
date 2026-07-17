@@ -7,13 +7,17 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 use function count;
 use function sprintf;
 
+/**
+ * @psalm-import-type SuffixTypes from SuffixTypesBuilder
+ */
 final class SuffixMismatchCheck implements HealthCheck
 {
-    /** @var array{Facade: list<string>, Factory: list<string>, Config: list<string>, Provider: list<string>} */
+    /** @var SuffixTypes */
     private readonly array $suffixTypes;
 
     /**

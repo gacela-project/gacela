@@ -8,7 +8,6 @@ use Gacela\Framework\Bootstrap\SetupGacela;
 
 /**
  * Initializes a SetupGacela instance from a GacelaConfigTransfer DTO.
- * This class encapsulates the logic for populating all properties from the transfer object.
  */
 final class SetupInitializer
 {

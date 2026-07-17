@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\AllAppModules;
 
-use Gacela\Framework\AbstractProvider;
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
@@ -64,17 +64,7 @@ final class AppModuleCreator
      */
     private function findFactory(string $facadeClass): ?string
     {
-        try {
-            $resolver = $this->factoryResolver->resolve($facadeClass);
-        } catch (Throwable) {
-            return null;
-        }
-
-        if ((new ReflectionClass($resolver))->isAnonymous()) {
-            return null;
-        }
-
-        return $resolver::class;
+        return $this->resolveClassName($this->factoryResolver, $facadeClass);
     }
 
     /**
@@ -82,17 +72,7 @@ final class AppModuleCreator
      */
     private function findConfig(string $facadeClass): ?string
     {
-        try {
-            $resolver = $this->configResolver->resolve($facadeClass);
-        } catch (Throwable) {
-            return null;
-        }
-
-        if ((new ReflectionClass($resolver))->isAnonymous()) {
-            return null;
-        }
-
-        return $resolver::class;
+        return $this->resolveClassName($this->configResolver, $facadeClass);
     }
 
     /**
@@ -100,20 +80,28 @@ final class AppModuleCreator
      */
     private function findProvider(string $facadeClass): ?string
     {
+        return $this->resolveClassName($this->providerResolver, $facadeClass);
+    }
+
+    /**
+     * Resolve the concrete class name behind a facade for the given resolver,
+     * or null when the module has none (resolution fails, resolves to null,
+     * or falls back to an anonymous default class).
+     *
+     * @param class-string $facadeClass
+     */
+    private function resolveClassName(AbstractClassResolver $resolver, string $facadeClass): ?string
+    {
         try {
-            $resolver = $this->providerResolver->resolve($facadeClass);
+            $resolved = $resolver->resolve($facadeClass);
         } catch (Throwable) {
             return null;
         }
 
-        if (!$resolver instanceof AbstractProvider) {
+        if ($resolved === null || (new ReflectionClass($resolved))->isAnonymous()) {
             return null;
         }
 
-        if ((new ReflectionClass($resolver))->isAnonymous()) {
-            return null;
-        }
-
-        return $resolver::class;
+        return $resolved::class;
     }
 }

@@ -13,6 +13,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 use function count;
+use function file_get_contents;
 use function filesize;
 use function glob;
 use function sys_get_temp_dir;
@@ -395,6 +396,24 @@ final class FileCacheTest extends TestCase
 
         self::assertFileExists($path);
         self::assertSame(['a' => 1, 'b' => [2, 3]], require $path);
+    }
+
+    public function test_write_contents_atomically_writes_raw_content_verbatim(): void
+    {
+        $path = $this->cacheDir . '/report.txt';
+        $content = "<?php\n// compiled\nnamespace Acme;\n";
+
+        self::assertTrue(FileCache::writeContentsAtomically($path, $content));
+        self::assertFileExists($path);
+        self::assertSame($content, file_get_contents($path));
+    }
+
+    public function test_write_contents_atomically_leaves_no_tmp_files_behind(): void
+    {
+        FileCache::writeContentsAtomically($this->cacheDir . '/raw.php', 'hello');
+
+        $leftovers = glob($this->cacheDir . '/*.tmp') ?: [];
+        self::assertCount(0, $leftovers);
     }
 
     private function invokeNormalize(string $dir): string

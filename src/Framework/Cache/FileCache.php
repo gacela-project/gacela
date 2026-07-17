@@ -135,8 +135,7 @@ final class FileCache
 
         $files = glob($this->directory . '/*.php') ?: [];
         foreach ($files as $file) {
-            @unlink($file);
-            self::invalidateOpcacheFor($file);
+            self::delete($file);
         }
     }
 
@@ -260,6 +259,20 @@ final class FileCache
     }
 
     /**
+     * Remove a cache file the same way this class writes one: tolerate an
+     * already-absent file (read-only dir, race) and invalidate any compiled
+     * opcode so a stale bytecode copy is not served after the file is gone.
+     * Shared by every Gacela cache-clear path so they stay consistent.
+     */
+    public static function delete(string $file): void
+    {
+        if (is_file($file)) {
+            @unlink($file);
+            self::invalidateOpcacheFor($file);
+        }
+    }
+
+    /**
      * Resolve an entry from memory or disk, transparently evicting anything past TTL.
      *
      * @return array{value: T, expiresAt: int|null}|null
@@ -327,11 +340,7 @@ final class FileCache
 
     private function deleteEntryFile(string $key): void
     {
-        $file = $this->entryPath($key);
-        if (is_file($file)) {
-            @unlink($file);
-            self::invalidateOpcacheFor($file);
-        }
+        self::delete($this->entryPath($key));
     }
 
     /**

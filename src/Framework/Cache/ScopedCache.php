@@ -10,7 +10,6 @@ use function in_array;
 use function is_array;
 use function is_file;
 use function is_string;
-use function unlink;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -81,10 +80,7 @@ final class ScopedCache
         $this->dependencies = [];
         $this->dependents = [];
 
-        $path = $this->graphPath();
-        if (is_file($path)) {
-            unlink($path);
-        }
+        FileCache::delete($this->graphPath());
     }
 
     /**

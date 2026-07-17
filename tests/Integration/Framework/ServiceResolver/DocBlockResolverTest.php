@@ -80,6 +80,21 @@ final class DocBlockResolverTest extends TestCase
     }
 
     /**
+     * fromClassName() must build a resolver that resolves identically to fromCaller();
+     * its earlier absence made cache:warm attribute pre-warming a silent no-op.
+     */
+    public function test_from_class_name_resolves_equivalently_to_from_caller(): void
+    {
+        $fromCaller = DocBlockResolver::fromCaller(new FakeFacade())
+            ->getDocBlockResolvable('getFactory');
+        $fromClassName = DocBlockResolver::fromClassName(FakeFacade::class)
+            ->getDocBlockResolvable('getFactory');
+
+        self::assertEquals(new DocBlockResolvable(FakeFactory::class, 'Factory'), $fromClassName);
+        self::assertEquals($fromCaller, $fromClassName);
+    }
+
+    /**
      * Provides test cases for service resolution from different callers.
      *
      * @return iterable<string, array{object, string, class-string, string}>

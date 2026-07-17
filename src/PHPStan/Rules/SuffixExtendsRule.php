@@ -43,11 +43,8 @@ final class SuffixExtendsRule implements Rule
         }
 
         $className = $classReflection->getName();
-        $parts = explode('\\', $className);
-        /** @var string $shortName */
-        $shortName = end($parts);
 
-        if (!str_ends_with($shortName, $this->suffix)) {
+        if (!str_ends_with($this->shortClassName($className), $this->suffix)) {
             return [];
         }
 

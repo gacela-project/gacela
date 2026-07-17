@@ -15,6 +15,11 @@
 - `AbstractFactory::singleton()` and `CacheableTrait::cached()` are now generic (`@template T`): static analysis infers the creator/callback return type instead of `mixed`
 - `validate:config` no longer prints the "Checking configuration paths..." section; it was a placeholder that performed no validation
 
+### Removed
+
+- `Gacela\Framework\Event\ClassResolver\GenericEvent` — dead code; the event was never dispatched
+- `GacelaFileCache::isEnabledFromCacheConfig()` — dead code with no callers; use `GacelaFileCache::isEnabled()`
+
 ## [1.16.0](https://github.com/gacela-project/gacela/compare/1.15.0...1.16.0) - 2026-07-15
 
 ### Fixed

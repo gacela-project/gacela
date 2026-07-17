@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `cache:warm` no longer aborts the whole run when one module's facade resolution raises a PHP `Error`/`TypeError` (e.g. a Factory/Config/Provider that is not constructible during warm). The per-module facade-resolution step is now guarded like the per-class loop — the failing module is reported and skipped and warming continues for the rest — on both the sequential and parallel (Fiber) paths, since both go through `ModuleWarmer::warmModule`
 - `cache:clear` now also removes the custom-services cache file (`gacela-custom-services.php`); previously only `gacela-class-names.php` and the merged-config cache were cleared, so stale custom-service resolutions survived an explicit clear even though the command's help promised it clears the custom services cache. The "no cache files found" guard and the per-file size report now cover both cache files
 - `cache:clear` command is now registered in the console application; it was shipped in 1.13.0 but never wired into the command list, so `bin/gacela cache:clear` was unavailable
 - `cache:warm` attribute pre-warming now works: it called the non-existent `DocBlockResolver::fromClassName()`, so the resulting `Error` was silently swallowed and the attribute cache was never warmed; the named constructor now exists

@@ -24,6 +24,7 @@
 
 ### Removed
 
+- `cache:warm --parallel` option and the `ParallelModuleWarmer` class — the flag provided no real concurrency: cache warming is CPU-bound and the Fibers never suspended, so `--parallel` ran identically to sequential warming while advertising a speedup. Use `cache:warm` (optionally with `--attributes`) instead
 - `Gacela\Framework\Event\ClassResolver\GenericEvent` — dead code; the event was never dispatched
 - `GacelaFileCache::isEnabledFromCacheConfig()` — dead code with no callers; use `GacelaFileCache::isEnabled()`
 

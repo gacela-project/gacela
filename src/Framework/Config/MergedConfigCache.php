@@ -48,9 +48,7 @@ final class MergedConfigCache
 
     public function clear(): void
     {
-        if ($this->exists()) {
-            @unlink($this->filename());
-        }
+        FileCache::delete($this->filename());
     }
 
     public function filename(): string

@@ -8,14 +8,20 @@ use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\FileCacheStats;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
-
 use ReflectionClass;
+
 use ReflectionMethod;
+use RuntimeException;
 
 use function count;
 use function file_get_contents;
+use function file_put_contents;
 use function filesize;
 use function glob;
+use function is_dir;
+use function mkdir;
+use function restore_error_handler;
+use function set_error_handler;
 use function sys_get_temp_dir;
 use function uniqid;
 
@@ -53,6 +59,38 @@ final class FileCacheTest extends TestCase
 
         self::assertTrue($this->cache->has('key'));
         self::assertSame('value', $this->cache->get('key'));
+    }
+
+    public function test_delete_removes_an_existing_cache_file(): void
+    {
+        if (!is_dir($this->cacheDir)) {
+            mkdir($this->cacheDir, 0777, true);
+        }
+        $file = $this->cacheDir . '/some-cache.php';
+        file_put_contents($file, '<?php return [];');
+
+        FileCache::delete($file);
+
+        self::assertFileDoesNotExist($file);
+    }
+
+    public function test_delete_is_silent_when_the_file_is_absent(): void
+    {
+        $missing = $this->cacheDir . '/never-created.php';
+
+        // Clearing an already-gone cache file must not emit a PHP warning.
+        set_error_handler(static function (int $errno, string $errstr): bool {
+            throw new RuntimeException($errstr);
+        });
+
+        try {
+            FileCache::delete($missing);
+            $this->addToAssertionCount(1);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertFileDoesNotExist($missing);
     }
 
     public function test_put_stores_array_value(): void

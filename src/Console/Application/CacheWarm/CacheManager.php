@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\CacheWarm;
 
+use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\Config;
@@ -24,7 +25,7 @@ final class CacheManager
     public function clearCache(): void
     {
         foreach ($this->existingCacheFiles() as $cacheFile) {
-            unlink($cacheFile);
+            FileCache::delete($cacheFile);
         }
     }
 

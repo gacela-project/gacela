@@ -9,6 +9,8 @@ use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\ClassInfo;
 
+use function function_exists;
+
 /**
  * @psalm-suppress DeprecatedClass
  */
@@ -24,7 +26,9 @@ final class DependencyProviderResolver extends AbstractClassResolver
         /** @var ?AbstractDependencyProvider $resolved */
         $resolved = $this->doResolve($caller);
 
-        if ($resolved instanceof AbstractDependencyProvider) {
+        // `trigger_deprecation()` comes from symfony/deprecation-contracts, which is not a
+        // runtime dependency of gacela; skip the notice when the function is unavailable.
+        if ($resolved instanceof AbstractDependencyProvider && function_exists('trigger_deprecation')) {
             trigger_deprecation(
                 'gacela-project/gacela',
                 '1.8',

@@ -8,6 +8,7 @@
 - `cache:warm` attribute pre-warming now works: it called the non-existent `DocBlockResolver::fromClassName()`, so the resulting `Error` was silently swallowed and the attribute cache was never warmed; the named constructor now exists
 - `cache:warm` no longer hides errors: a module-discovery failure now prints a warning instead of silently warming zero modules, and a PHP `Error` during attribute pre-warming is reported per class instead of being swallowed
 - `bin/gacela` now exits with status 1 on failure (missing `vendor/autoload.php` or an exception escaping the console runner) and writes the error to STDERR; both paths previously reported exit code 0
+- Resolving a deprecated `AbstractDependencyProvider` no longer fatals in projects without `symfony/deprecation-contracts`: the `trigger_deprecation()` call is now guarded, since that function is not part of Gacela's runtime dependencies
 
 ### Changed
 

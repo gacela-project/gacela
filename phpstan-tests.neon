@@ -9,4 +9,5 @@ parameters:
         - %currentWorkingDirectory%/tests/Unit/PHPStan/Rules/Fixture/*
     ignoreErrors:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
+        - '#has invalid type Totally\\Missing\\Type#'
         - '#Access to constant on internal class Gacela\\Framework\\Container\\Locator.#'

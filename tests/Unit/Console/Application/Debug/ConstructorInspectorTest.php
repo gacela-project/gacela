@@ -14,6 +14,7 @@ use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundImplementation;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\InjectService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\MixedDependenciesService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NoConstructorService;
+use GacelaTest\Feature\Console\DebugDependencies\Fixtures\UntypedAndUnionService;
 use PHPUnit\Framework\TestCase;
 
 final class ConstructorInspectorTest extends TestCase
@@ -37,6 +38,18 @@ final class ConstructorInspectorTest extends TestCase
         self::assertFalse($inspection->hasConstructor);
         self::assertSame([], $inspection->parameters);
         self::assertTrue($inspection->isFullyResolvable());
+    }
+
+    public function test_untyped_union_and_missing_types_are_categorized(): void
+    {
+        $inspection = $this->inspector->inspect(UntypedAndUnionService::class);
+
+        self::assertTrue($inspection->hasConstructor);
+        self::assertCount(3, $inspection->parameters);
+
+        self::assertSame(ParameterStatus::NoTypeHint, $inspection->parameters[0]->status);
+        self::assertSame(ParameterStatus::UnsupportedType, $inspection->parameters[1]->status);
+        self::assertSame(ParameterStatus::MissingType, $inspection->parameters[2]->status);
     }
 
     public function test_mixed_dependencies_are_categorized(): void

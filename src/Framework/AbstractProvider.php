@@ -22,7 +22,7 @@ abstract class AbstractProvider
     /**
      * @internal
      */
-    public function register(Container $container): void
+    final public function register(Container $container): void
     {
         ProvidesScanner::scan($this, $container);
         $this->provideModuleDependencies($container);

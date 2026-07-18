@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Attribute;
 
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Attribute\ProvidesScanner;
 use Gacela\Framework\Container\Container;
 use GacelaTest\Unit\Framework\Attribute\Providers\CallCounter;
@@ -14,6 +15,7 @@ use GacelaTest\Unit\Framework\Attribute\Providers\ProviderWithMixedStyles;
 use GacelaTest\Unit\Framework\Attribute\Providers\ProviderWithoutAttributes;
 use GacelaTest\Unit\Framework\Attribute\Providers\ProviderWithPrivateAttribute;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 final class ProvidesScannerTest extends TestCase
 {
@@ -91,6 +93,15 @@ final class ProvidesScannerTest extends TestCase
 
         self::assertSame('hello', $containerA->get('string_service'));
         self::assertSame('hello', $containerB->get('string_service'));
+    }
+
+    public function test_register_is_final_to_protect_the_provides_scan(): void
+    {
+        // register() runs ProvidesScanner::scan(); overriding it would silently
+        // disable #[Provides] scanning, so it must be final.
+        self::assertTrue(
+            (new ReflectionMethod(AbstractProvider::class, 'register'))->isFinal(),
+        );
     }
 
     public function test_register_combines_attributes_with_manual_provides(): void

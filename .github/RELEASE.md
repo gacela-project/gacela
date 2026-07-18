@@ -29,7 +29,7 @@ The script (and a manual release) assume:
    - Rename the current `## Unreleased` header to
      `## [X.Y.Z](https://github.com/gacela-project/gacela/compare/<prev>...<X.Y.Z>) - YYYY-MM-DD`
    - Insert a fresh empty `## Unreleased` section at the top.
-3. **Run quality + tests**: `composer quality && composer test`
+3. **Confirm CI is green** for the current `main` HEAD (the script checks GitHub check-runs). Locally you can still run `composer quality && composer test` if you want extra assurance.
 4. **Commit, tag, push**:
    ```bash
    git add CHANGELOG.md

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Bumped `gacela-project/container` to `^0.9.0`
+
 ## [1.17.0](https://github.com/gacela-project/gacela/compare/1.16.0...1.17.0) - 2026-07-18
 
 ### Fixed

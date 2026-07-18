@@ -10,7 +10,7 @@ final class UseBlockParser
 {
     public function getUseStatement(string $className, string $phpCode): string
     {
-        if ($phpCode === '') {
+        if ($className === '' || $phpCode === '') {
             return '';
         }
 

@@ -12,6 +12,7 @@ use Gacela\Framework\Gacela;
 use Gacela\Framework\ServiceResolver\DocBlockResolvable;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommandWithUnrelatedImport;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeConfig;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFacade;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFactory;
@@ -38,6 +39,18 @@ final class DocBlockResolverTest extends TestCase
         $this->expectException(MissingClassDefinitionException::class);
 
         (new FakeCommand())->getUnknown();
+    }
+
+    /**
+     * An undocumented method on a class that has a docblock for a different
+     * method plus unrelated `use` imports must throw, not silently resolve to
+     * the first imported class.
+     */
+    public function test_throws_exception_for_undocumented_method_with_unrelated_import(): void
+    {
+        $this->expectException(MissingClassDefinitionException::class);
+
+        (new FakeCommandWithUnrelatedImport())->getSomethingUndocumented();
     }
 
     /**

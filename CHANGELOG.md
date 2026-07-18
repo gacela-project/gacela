@@ -4,47 +4,47 @@
 
 ### Fixed
 
-- Contextual bindings (`$config->when(X)->needs(Y)->give(Z)`) now apply when resolving Gacela classes (factories, configs, providers): the class resolver passed a `\`-prefixed class name to the container, which never matched the `X::class`-keyed contextual bindings, so the global binding always won
-- Health checks registered in `gacela.php` are no longer wiped when a project also ships `gacela-{APP_ENV}.php`: `GacelaConfig::__construct()` no longer resets the shared `HealthCheckRegistry` on every instantiation. The registry is now cleared exactly once per `Gacela::bootstrap()`, so checks from the default and env config files accumulate together without leaking across bootstraps
-- `bin/gacela` now exits 1 and writes to STDERR on every failure path — missing `vendor/autoload.php`, missing `symfony/console`, a `Gacela::bootstrap()` failure, or any `Throwable` (incl. `Error`/`TypeError`) from the runner — instead of exiting 0 or 255 with a raw stack trace
-- `cache:clear` is now registered in the console; it shipped in 1.13.0 but was never wired in, so `bin/gacela cache:clear` was unavailable
-- `cache:clear` now also removes the custom-services cache file (`gacela-custom-services.php`); the no-cache-found guard and size report cover both cache files
-- `cache:warm` attribute pre-warming now works; it called a non-existent `DocBlockResolver::fromClassName()`, silently swallowing the resulting `Error`
-- `cache:warm` no longer hides errors: a module-discovery failure prints a warning instead of silently warming zero modules, and per-class attribute-warm `Error`s are reported instead of swallowed
-- `cache:warm` no longer aborts the whole run when one module's facade resolution throws a PHP `Error`/`TypeError`; the failing module is reported and skipped so warming continues
-- `cache:warm` no longer skips modules whose name merely contains `Test` (e.g. `App\Testimonial\TestimonialFacade`); the production-module filter now anchors on `\Test\`/`\Tests\` segments, like the existing `\Fixtures\`/`\Benchmark\` checks
-- All cache-clear paths (`cache:clear`, `cache:warm --clear`, `ScopedCache`, merged-config) now delete through a single guarded helper that tolerates a missing file and invalidates opcache, so stale compiled cache files no longer survive a clear
-- `Config` no longer re-runs the full `init()` (re-globbing and re-parsing config) on every access when the merged config is empty; initialization is tracked with a flag instead of an empty-array sentinel
+- Contextual bindings (`$config->when(X)->needs(Y)->give(Z)`) now apply when resolving Gacela classes (factories, configs, providers); previously the global binding always won
+- Health checks registered in `gacela.php` are no longer wiped when a project also ships `gacela-{APP_ENV}.php`; checks from the default and env config files now accumulate
+- `bin/gacela` now exits 1 and writes to STDERR on every failure path (missing autoload, missing `symfony/console`, bootstrap failure, or any `Throwable`), instead of exiting 0/255 with a raw stack trace
+- `cache:clear` is now registered in the console; it shipped in 1.13.0 but was never wired in
+- `cache:clear` now also removes the custom-services cache file (`gacela-custom-services.php`)
+- `cache:warm` attribute pre-warming now works; it called a non-existent method and silently swallowed the `Error`
+- `cache:warm` no longer hides errors: module-discovery failures and per-class attribute-warm `Error`s are now reported instead of swallowed
+- `cache:warm` no longer aborts the whole run when one module's facade resolution throws; the failing module is reported and skipped
+- `cache:warm` no longer skips modules whose name merely contains `Test` (e.g. `TestimonialFacade`); the filter now anchors on `\Test\`/`\Tests\` segments
+- All cache-clear paths now delete through a single guarded helper that tolerates a missing file and invalidates opcache, so stale cache files no longer survive a clear
+- `Config` no longer re-runs the full `init()` on every access when the merged config is empty; initialization is tracked with a flag
 - Resolving a deprecated `AbstractDependencyProvider` no longer fatals without `symfony/deprecation-contracts`; the `trigger_deprecation()` call is now guarded
-- `bin/gacela --version` no longer drifts after releases: the CLI version is derived at runtime from Composer's installed-package metadata via the new `Gacela::version()` instead of a hardcoded string
-- Calling an undocumented method through the resolver traits now throws `MissingClassDefinitionException` as intended, instead of silently resolving to the first `use` import of the caller's file (an empty class name matched every `use ...;` line)
-- `debug:container --stats` now shows container statistics even when combined with a class argument; the flag was registered but never read, so the dependency tree always won
-- `list:modules` now prints `No modules match filter "..."` when a filter matches nothing, instead of an empty table (default view) or no output at all (`--detailed`)
-- `getExternalService()` no longer misreports a service registered under the key `'0'` as `Available keys: none` in its not-found error message
+- `bin/gacela --version` no longer drifts after releases; the version is derived at runtime from Composer metadata via `Gacela::version()`
+- Calling an undocumented method through the resolver traits now throws `MissingClassDefinitionException`, instead of silently resolving to the caller's first `use` import
+- `debug:container --stats` now shows statistics when combined with a class argument; the flag was registered but never read
+- `list:modules` now prints `No modules match filter "..."` when nothing matches, instead of an empty table or no output
+- `getExternalService()` no longer misreports a service registered under the key `'0'` as `Available keys: none`
 
 ### Added
 
-- `FileCache::writeContentsAtomically(string $file, string $content): bool` atomically writes pre-rendered content (compiled PHP, reports, artifacts) with the same writability short-circuit, `.tmp`-stage + `rename`, and false-on-failure guarantees as `writeAtomically()`, which now wraps it
+- `FileCache::writeContentsAtomically(string $file, string $content): bool` atomically writes pre-rendered content with the same guarantees as `writeAtomically()`, which now wraps it
 
 ### Changed
 
-- `AbstractFactory::singleton()` and `CacheableTrait::cached()` are now generic (`@template T`): static analysis infers the creator/callback return type instead of `mixed`
-- `validate:config` no longer prints the "Checking configuration paths..." placeholder section, which performed no validation
-- `AbstractProvider::register()` is now `final`, enforcing its `@internal` contract; overriding it by mistake silently disabled `#[Provides]` attribute scanning — `provideModuleDependencies()` is the supported extension point
-- Class resolvers now share one `Container` built once from the process-global bindings, instead of rebuilding an identical one per resolver type; it is reset with the other caches in `Gacela::resetCache()`
-- `Gacela::bootstrap()` now batches file-cache writes produced while resolving classes into a single atomic write per cache file (like `cache:warm`), instead of one full-file rewrite per newly discovered key
+- `AbstractFactory::singleton()` and `CacheableTrait::cached()` are now generic (`@template T`); static analysis infers the return type instead of `mixed`
+- `validate:config` no longer prints the no-op "Checking configuration paths..." placeholder section
+- `AbstractProvider::register()` is now `final`; overriding it silently disabled `#[Provides]` scanning — use `provideModuleDependencies()` instead
+- Class resolvers now share one `Container` built once from the global bindings, instead of rebuilding one per resolver type; reset with `Gacela::resetCache()`
+- `Gacela::bootstrap()` now batches file-cache writes into a single atomic write per cache file, instead of one full-file rewrite per newly discovered key
 
 ### Removed
 
-- `cache:warm --parallel` option and `ParallelModuleWarmer` — provided no real concurrency (warming is CPU-bound and the Fibers never suspended), so it matched sequential warming while advertising a speedup; use `cache:warm` (optionally `--attributes`)
-- `Gacela\Framework\Event\ClassResolver\GenericEvent` — dead code; the event was never dispatched
-- `GacelaFileCache::isEnabledFromCacheConfig()` — dead code with no callers; use `GacelaFileCache::isEnabled()`
+- `cache:warm --parallel` option and `ParallelModuleWarmer` — provided no real concurrency (warming is CPU-bound), so it matched sequential warming; use `cache:warm`
+- `Gacela\Framework\Event\ClassResolver\GenericEvent` — dead code; never dispatched
+- `GacelaFileCache::isEnabledFromCacheConfig()` — dead code; use `GacelaFileCache::isEnabled()`
 
 ### Documentation
 
-- `docs/module-health-checks.md` now documents `GacelaConfig::addHealthCheck()` and how registered checks surface in `bin/gacela doctor`, previously the CLI integration point was undocumented
-- `profile:report` help no longer claims resolution/container/factory operations are "automatically tracked" (nothing instruments itself); it now shows a manual `Profiler::start()`/`stop()` example
-- `validate:config` help no longer implies a missing `gacela.php` is flagged; the file is optional and only reported when present
+- `docs/module-health-checks.md` now documents `GacelaConfig::addHealthCheck()` and how checks surface in `bin/gacela doctor`
+- `profile:report` help no longer claims operations are "automatically tracked"; it now shows a manual `Profiler::start()`/`stop()` example
+- `validate:config` help no longer implies a missing `gacela.php` is flagged; the file is optional
 
 ## [1.16.0](https://github.com/gacela-project/gacela/compare/1.15.0...1.16.0) - 2026-07-15
 

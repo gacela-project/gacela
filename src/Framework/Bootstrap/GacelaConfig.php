@@ -94,7 +94,6 @@ final class GacelaConfig
         $this->appConfigBuilder = new AppConfigBuilder();
         $this->suffixTypesBuilder = new SuffixTypesBuilder();
         $this->bindingsBuilder = new BindingsBuilder();
-        HealthCheckRegistry::reset();
     }
 
     /**

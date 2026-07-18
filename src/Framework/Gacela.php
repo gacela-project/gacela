@@ -21,6 +21,7 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Exception\ServiceNotFoundException;
+use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
 
 use function is_string;
@@ -58,6 +59,11 @@ final class Gacela
     {
         self::$appRootDir = $appRootDir;
         self::$mainContainer = null;
+
+        // Clear health checks once per bootstrap, before the config files are
+        // read, so checks registered across gacela.php + gacela-{env}.php
+        // accumulate within a single bootstrap without leaking across bootstraps.
+        HealthCheckRegistry::reset();
 
         $setup = self::processConfigFnIntoSetup($configFn);
 

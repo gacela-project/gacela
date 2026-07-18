@@ -12,6 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 final class GacelaConfigTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        HealthCheckRegistry::reset();
+    }
+
+    protected function tearDown(): void
+    {
+        HealthCheckRegistry::reset();
+    }
+
     public function test_default_php_config_registers_default_paths(): void
     {
         $closure = GacelaConfig::defaultPhpConfig();

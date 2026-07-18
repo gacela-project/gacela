@@ -46,6 +46,44 @@ $checker = new HealthChecker([
 $report = $checker->checkAll();
 ```
 
+## CLI integration (`bin/gacela doctor`)
+
+Register a check with `GacelaConfig::addHealthCheck()` in your `gacela.php` and it runs automatically as part of `bin/gacela doctor`, alongside the built-in cache-staleness and suffix-mismatch checks.
+
+```php
+// gacela.php
+use Gacela\Framework\Bootstrap\GacelaConfig;
+
+return static function (GacelaConfig $config): void {
+    $config->addHealthCheck(DatabaseHealthCheck::class);
+    // or an instance:
+    $config->addHealthCheck(new DatabaseHealthCheck($pdo));
+};
+```
+
+`addHealthCheck()` accepts either a `class-string<ModuleHealthCheckInterface>` (resolved through the container) or a ready-made `ModuleHealthCheckInterface` instance:
+
+```php
+public function addHealthCheck(string|ModuleHealthCheckInterface $check): self
+```
+
+Running the command surfaces each registered check as a `module health: <module name>` line:
+
+```
+$ bin/gacela doctor
+
+Gacela Doctor
+============================================================
+
+✓ module health: Database
+    Database operational
+
+============================================================
+✓ All checks passed
+```
+
+A `degraded` check reports as a warning; an `unhealthy` check reports as an error and makes `doctor` exit non-zero. Check metadata is printed under the status line.
+
 ## Status levels
 
 | Level       | When to use                                  |
@@ -136,4 +174,11 @@ $status->toArray(): array
 ```php
 $checker->checkAll(): HealthCheckReport
 $checker->count(): int
+```
+
+### `GacelaConfig`
+
+```php
+// Register a check to run under `bin/gacela doctor`
+$config->addHealthCheck(string|ModuleHealthCheckInterface $check): self
 ```

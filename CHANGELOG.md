@@ -30,6 +30,10 @@
 - `Gacela\Framework\Event\ClassResolver\GenericEvent` — dead code; the event was never dispatched
 - `GacelaFileCache::isEnabledFromCacheConfig()` — dead code with no callers; use `GacelaFileCache::isEnabled()`
 
+### Documentation
+
+- `docs/module-health-checks.md` now documents `GacelaConfig::addHealthCheck()` and how registered checks surface in `bin/gacela doctor`, previously the CLI integration point was undocumented
+
 ## [1.16.0](https://github.com/gacela-project/gacela/compare/1.15.0...1.16.0) - 2026-07-15
 
 ### Fixed

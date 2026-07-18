@@ -10,7 +10,7 @@ declare -r EXIT_EXECUTION_ERROR=2
 
 GITHUB_REPO_PATH="gacela-project/gacela"
 GITHUB_REPO_URL="https://github.com/${GITHUB_REPO_PATH}"
-RELEASE_FILES=("bin/gacela" "CHANGELOG.md")
+RELEASE_FILES=("CHANGELOG.md")
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -45,10 +45,10 @@ Arguments:
 Options:
   --dry-run          Preview changes without modifying files or pushing.
   --force            Skip interactive confirmation (for CI).
-  --skip-tests       Skip 'composer quality' and 'composer test'.
+  --skip-tests       Skip the CI-status verification for HEAD.
   --without-gh-release
                      Tag and push, but do not create a GitHub release.
-  --rollback         Restore bin/gacela and CHANGELOG.md from latest backup.
+  --rollback         Restore CHANGELOG.md from latest backup.
   -h, --help         Show this message.
 
 Examples:
@@ -150,10 +150,11 @@ run_preflight() {
 #########################
 
 read_current_version() {
-  CURRENT_VERSION=$(grep -oE "version:\s*'[0-9]+\.[0-9]+\.[0-9]+'" bin/gacela \
-                    | head -1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
+  # Version is derived at runtime from Composer metadata (the git tag), so the
+  # latest tag — not a file — is the source of truth for the current version.
+  CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
   [[ -n "$CURRENT_VERSION" ]] || {
-    log_error "Could not read current version from bin/gacela."
+    log_error "Could not read current version from git tags."
     exit $EXIT_VALIDATION_ERROR
   }
 }
@@ -191,7 +192,6 @@ rollback_manual() {
   latest=$(find .release-state -maxdepth 1 -type d -name 'backup-*' 2>/dev/null | sort -r | head -1)
   [[ -n "$latest" ]] || { log_error "No backup found in .release-state."; exit $EXIT_VALIDATION_ERROR; }
   log_info "Restoring from $latest"
-  cp "$latest/gacela" bin/gacela
   cp "$latest/CHANGELOG.md" CHANGELOG.md
   log_success "Files restored. Remember to review 'git status'."
 }
@@ -199,16 +199,6 @@ rollback_manual() {
 #########################
 ###   FILE UPDATES    ###
 #########################
-
-update_bin_gacela() {
-  if [[ "$DRY_RUN" == true ]]; then
-    log_dry "Would update bin/gacela: $CURRENT_VERSION → $VERSION"
-    return
-  fi
-  sed -i.bak "s|version: '${CURRENT_VERSION}'|version: '${VERSION}'|" bin/gacela
-  rm -f bin/gacela.bak
-  log_success "bin/gacela → $VERSION"
-}
 
 capture_release_notes() {
   local notes
@@ -265,20 +255,43 @@ update_changelog() {
 }
 
 #########################
-###     TEST SUITE    ###
+###  CI VERIFICATION  ###
 #########################
 
-run_tests() {
-  [[ "$SKIP_TESTS" == true ]] && { log_warn "Skipping tests (--skip-tests)"; return; }
+# Preflight already asserts local HEAD == origin/main, which CI has run against.
+# Rather than re-run the full 'composer quality && composer test' locally (minutes
+# CI already spent), confirm CI is green for this exact commit via GitHub check-runs.
+verify_ci_green() {
+  [[ "$SKIP_TESTS" == true ]] && { log_warn "Skipping CI verification (--skip-tests)"; return; }
   if [[ "$DRY_RUN" == true ]]; then
-    log_dry "Would run: composer quality && composer test"
+    log_dry "Would verify CI is green for HEAD via GitHub check-runs"
     return
   fi
-  log_info "Running composer quality..."
-  composer quality
-  log_info "Running composer test..."
-  composer test
-  log_success "Quality + tests passed."
+
+  local head total bad
+  head=$(git rev-parse HEAD)
+  log_info "Verifying CI status for $head..."
+
+  total=$(gh api "repos/${GITHUB_REPO_PATH}/commits/${head}/check-runs" \
+          --jq '.check_runs | length')
+  [[ "$total" -gt 0 ]] || {
+    log_error "No CI check-runs found for HEAD. Wait for CI to start, or use --skip-tests to override."
+    exit $EXIT_VALIDATION_ERROR
+  }
+
+  bad=$(gh api "repos/${GITHUB_REPO_PATH}/commits/${head}/check-runs" \
+        --jq '.check_runs[]
+              | select(.status != "completed"
+                       or (.conclusion != "success"
+                           and .conclusion != "skipped"
+                           and .conclusion != "neutral"))
+              | "\(.name): \(.status)/\(.conclusion // "pending")"')
+  [[ -z "$bad" ]] || {
+    log_error "CI is not green for HEAD. Failing or pending checks:"
+    printf '%s\n' "$bad" | sed 's/^/    /' >&2
+    exit $EXIT_VALIDATION_ERROR
+  }
+  log_success "CI is green for HEAD ($total checks)."
 }
 
 #########################
@@ -292,7 +305,7 @@ git_commit_and_tag() {
   fi
   git add "${RELEASE_FILES[@]}"
   git commit -m "chore(release): ${VERSION}"
-  git tag -a "$VERSION" -m "Release $VERSION"
+  git tag -s "$VERSION" -m "Release $VERSION"
   log_success "Commit + tag $VERSION created."
 }
 
@@ -353,9 +366,8 @@ main() {
   [[ "$DRY_RUN" == true ]] || backup_init
 
   capture_release_notes
-  update_bin_gacela
   update_changelog
-  run_tests
+  verify_ci_green
   git_commit_and_tag
   git_push
   create_gh_release

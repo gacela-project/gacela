@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b95db0b8d6135e2719f314a096f02b5a",
+    "content-hash": "98b4709892e3aadfaa37832c30de9e98",
     "packages": [
         {
             "name": "gacela-project/container",
-            "version": "0.8.1",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gacela-project/container.git",
-                "reference": "6251aaf6973ab7ddc41f596a18a8ea9334582a1b"
+                "reference": "2451e7e9ed158a6f854505ee4040b63806c5cf5e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gacela-project/container/zipball/6251aaf6973ab7ddc41f596a18a8ea9334582a1b",
-                "reference": "6251aaf6973ab7ddc41f596a18a8ea9334582a1b",
+                "url": "https://api.github.com/repos/gacela-project/container/zipball/2451e7e9ed158a6f854505ee4040b63806c5cf5e",
+                "reference": "2451e7e9ed158a6f854505ee4040b63806c5cf5e",
                 "shasum": ""
             },
             "require": {
@@ -44,8 +44,8 @@
             ],
             "authors": [
                 {
-                    "name": "Jose Maria Valera Reales",
-                    "email": "chemaclass@outlook.es",
+                    "name": "Jose M. Valera Reales",
+                    "email": "gacela@chemaclass.com",
                     "homepage": "https://chemaclass.com"
                 },
                 {
@@ -63,8 +63,8 @@
                 "resolver"
             ],
             "support": {
-                "issues": "https://github.com/gacela-project/resolver/issues",
-                "source": "https://github.com/gacela-project/container/tree/0.8.1"
+                "issues": "https://github.com/gacela-project/container/issues",
+                "source": "https://github.com/gacela-project/container/tree/0.9.0"
             },
             "funding": [
                 {
@@ -72,7 +72,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-06-05T11:50:32+00:00"
+            "time": "2026-07-18T22:25:27+00:00"
         },
         {
             "name": "psr/container",
@@ -8812,5 +8812,5 @@
     "platform-overrides": {
         "php": "8.1.31"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

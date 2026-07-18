@@ -27,7 +27,7 @@
     },
     "require": {
         "php": ">=8.1",
-        "gacela-project/container": "^0.8.1"
+        "gacela-project/container": "^0.9.0"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.50",

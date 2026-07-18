@@ -66,6 +66,22 @@ final class FactoryDoesNotCallFacadeRuleTest extends RuleTestCase
         );
     }
 
+    public function test_skips_every_non_violating_reference_and_reports_all_violations(): void
+    {
+        $factory = 'Factory GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\MixedOrderBadFactory';
+        $newSuffix = '. Depend on other modules through their Facade via the Provider.';
+
+        $this->analyse(
+            [__DIR__ . '/Fixture/FactoryCallsFacade/MixedOrderBadFactory.php'],
+            [
+                [$factory . ' must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\ShopFacade)' . $newSuffix, 10],
+                [$factory . ' must not instantiate a Facade (found: new Facade)' . $newSuffix, 10],
+                [$factory . ' must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\Sub\Facade)' . $newSuffix, 10],
+                [$factory . ' must not call $this->getFacade(); same-module access goes through the Factory itself, cross-module access goes through the Provider.', 10],
+            ],
+        );
+    }
+
     protected function getRule(): Rule
     {
         return new FactoryDoesNotCallFacadeRule();

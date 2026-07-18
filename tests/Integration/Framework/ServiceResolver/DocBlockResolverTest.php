@@ -16,8 +16,10 @@ use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommandWithUnrel
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeConfig;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFacade;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFactory;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeNoDocBlockCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeRandomService;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function sprintf;
 
@@ -105,6 +107,56 @@ final class DocBlockResolverTest extends TestCase
 
         self::assertEquals(new DocBlockResolvable(FakeFactory::class, 'Factory'), $fromClassName);
         self::assertEquals($fromCaller, $fromClassName);
+    }
+
+    public function test_class_without_docblock_throws_missing_definition(): void
+    {
+        $this->expectException(MissingClassDefinitionException::class);
+
+        DocBlockResolver::fromClassName(FakeNoDocBlockCommand::class)
+            ->getDocBlockResolvable('getSomething');
+    }
+
+    public function test_internal_class_without_source_file_throws_missing_definition(): void
+    {
+        $this->expectException(MissingClassDefinitionException::class);
+
+        DocBlockResolver::fromClassName(stdClass::class)
+            ->getDocBlockResolvable('getSomething');
+    }
+
+    public function test_deleted_source_file_throws_missing_definition(): void
+    {
+        $file = sys_get_temp_dir() . '/FakeDeletedFileCommand-' . uniqid('', true) . '.php';
+        file_put_contents($file, <<<'PHP'
+            <?php
+
+            namespace GacelaTest\Integration\Framework\ServiceResolver\Module;
+
+            /**
+             * @method \GacelaTest\Unknown\DoesNotExist getGone()
+             */
+            class FakeDeletedFileCommand
+            {
+            }
+            PHP);
+        require $file;
+        unlink($file);
+
+        $this->expectException(MissingClassDefinitionException::class);
+
+        /** @var class-string $deletedFileClass */
+        $deletedFileClass = 'GacelaTest\Integration\Framework\ServiceResolver\Module\FakeDeletedFileCommand';
+
+        // Silence the expected file_get_contents() warning for the deleted file.
+        set_error_handler(static fn (): bool => true, E_WARNING);
+
+        try {
+            DocBlockResolver::fromClassName($deletedFileClass)
+                ->getDocBlockResolvable('getGone');
+        } finally {
+            restore_error_handler();
+        }
     }
 
     /**

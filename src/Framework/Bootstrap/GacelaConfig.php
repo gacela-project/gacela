@@ -98,8 +98,6 @@ final class GacelaConfig
     /**
      * Define 'config/*.php' as path, and 'config/local.php' as local path for the configuration.
      *
-     * @codeCoverageIgnore
-     *
      * @return Closure(GacelaConfig):void
      */
     public static function defaultPhpConfig(): callable

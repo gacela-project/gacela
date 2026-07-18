@@ -73,6 +73,16 @@ final class ProvidesScannerTest extends TestCase
         self::assertSame('no-container', $container->get('paramless'));
     }
 
+    public function test_only_container_typed_params_receive_the_container(): void
+    {
+        $container = new Container();
+
+        ProvidesScanner::scan(new ProviderWithContainerParam(), $container);
+
+        self::assertSame('untyped-ok', $container->get('untyped_param'));
+        self::assertSame(7, $container->get('scalar_param'));
+    }
+
     public function test_works_on_provider_without_any_attribute(): void
     {
         $container = new Container();

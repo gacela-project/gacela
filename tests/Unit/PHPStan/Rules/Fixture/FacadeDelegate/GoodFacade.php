@@ -55,4 +55,26 @@ final class GoodFacade extends AbstractFacade
     {
         return $this->cached(fn (): string => $this->getConfig()->getEndpoint());
     }
+
+    public function cachedSingleStatementClosure(): string
+    {
+        return $this->cached(function (): string {
+            return $this->getConfig()->getEndpoint();
+        });
+    }
+
+    public function deepChainThroughProperty(): mixed
+    {
+        return $this->getFactory()->createThing()->value->run();
+    }
+
+    protected function protectedHelperWithLogic(int $x): int
+    {
+        return $x + 1;
+    }
+
+    private function privateHelperWithLogic(int $x): int
+    {
+        return $x * 2;
+    }
 }

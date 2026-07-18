@@ -53,4 +53,46 @@ final class BadFacade extends AbstractFacade
     {
         return new stdClass();
     }
+
+    public function singleIfStatement(bool $flag): void
+    {
+        if ($flag) {
+            $this->getFactory()->createService()->run();
+        }
+    }
+
+    public function bareReturn(): void
+    {
+
+    }
+
+    public function delegatesOnLocalVariable(self $other): string
+    {
+        return $other->getFactory()->createService()->run();
+    }
+
+    public function dynamicMethodName(string $name): mixed
+    {
+        return $this->{$name}();
+    }
+
+    public function notCachedWrapper(): string
+    {
+        return $this->notCached(fn (): string => $this->getFactory()->createService()->run());
+    }
+
+    public function cachedWithoutArgs(): mixed
+    {
+        return $this->cached();
+    }
+
+    public function cachedWithNonClosure(): mixed
+    {
+        return $this->cached('not-a-closure');
+    }
+
+    private function notCached(callable $callback): string
+    {
+        return (string) $callback();
+    }
 }

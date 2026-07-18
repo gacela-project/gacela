@@ -49,9 +49,6 @@ final class SetupGacela extends AbstractSetupGacela
         $this->propertyMerger = new PropertyMerger($this);
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public static function fromFile(string $gacelaFilePath): self
     {
         if (!is_file($gacelaFilePath)) {

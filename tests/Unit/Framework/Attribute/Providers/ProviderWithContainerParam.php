@@ -21,4 +21,19 @@ final class ProviderWithContainerParam extends AbstractProvider
     {
         return 'no-container';
     }
+
+    /**
+     * @param mixed $anything
+     */
+    #[Provides('untyped_param')]
+    public function untypedParam($anything = 'default'): string
+    {
+        return 'untyped-ok';
+    }
+
+    #[Provides('scalar_param')]
+    public function scalarParam(int $number = 7): int
+    {
+        return $number;
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Closure;
+use Composer\InstalledVersions;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
@@ -29,9 +30,24 @@ final class Gacela
 {
     private const GACELA_PHP_FILENAME = 'gacela.php';
 
+    private const PACKAGE_NAME = 'gacela-project/gacela';
+
     private static ?Container $mainContainer = null;
 
     private static ?string $appRootDir = null;
+
+    /**
+     * The installed version of gacela, derived at runtime from Composer's
+     * metadata so it never drifts from the actual release being shipped.
+     */
+    public static function version(): string
+    {
+        if (!InstalledVersions::isInstalled(self::PACKAGE_NAME)) {
+            return 'unknown';
+        }
+
+        return InstalledVersions::getPrettyVersion(self::PACKAGE_NAME) ?? 'unknown';
+    }
 
     /**
      * Define the entry point of Gacela.

@@ -8,6 +8,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class GacelaConfigTest extends TestCase
@@ -42,6 +43,27 @@ final class GacelaConfigTest extends TestCase
         $config = new GacelaConfig();
 
         self::assertNull($config->toTransfer()->appModulePaths);
+    }
+
+    public function test_get_external_service_reports_numeric_string_key_zero_not_none(): void
+    {
+        $config = new GacelaConfig();
+        $config->addExternalService('0', 'value');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Available keys: 0');
+
+        $config->getExternalService('missing');
+    }
+
+    public function test_get_external_service_reports_none_when_no_services_registered(): void
+    {
+        $config = new GacelaConfig();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Available keys: none');
+
+        $config->getExternalService('missing');
     }
 
     public function test_set_app_module_paths_exposes_list_on_transfer(): void

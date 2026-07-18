@@ -18,7 +18,6 @@ use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use InvalidArgumentException;
 
 use function array_key_exists;
-use function in_array;
 use function sprintf;
 
 /**
@@ -209,7 +208,13 @@ final class GacelaConfig
     public function getExternalService(string $key): string|object|callable
     {
         if (!array_key_exists($key, $this->externalServices)) {
-            throw new InvalidArgumentException(sprintf('External service "%s" not found. Available keys: %s', $key, in_array(implode(', ', array_keys($this->externalServices)), ['', '0'], true) ? 'none' : implode(', ', array_keys($this->externalServices))));
+            $availableKeys = $this->externalServices === []
+                ? 'none'
+                : implode(', ', array_keys($this->externalServices));
+
+            throw new InvalidArgumentException(
+                sprintf('External service "%s" not found. Available keys: %s', $key, $availableKeys),
+            );
         }
 
         return $this->externalServices[$key];

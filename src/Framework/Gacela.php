@@ -11,6 +11,7 @@ use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
@@ -72,10 +73,19 @@ final class Gacela
         }
 
         $config = Config::createWithSetup($setup);
-        $config->setAppRootDir($appRootDir)
-            ->init();
+        $config->setAppRootDir($appRootDir);
 
-        self::runPlugins($config);
+        // Batch the file-cache writes produced while resolving classes during
+        // bootstrap into a single atomic write per cache file (like cache:warm
+        // does), instead of one full-file rewrite per newly discovered key.
+        AbstractPhpFileCache::beginBatch();
+
+        try {
+            $config->init();
+            self::runPlugins($config);
+        } finally {
+            AbstractPhpFileCache::commitBatch();
+        }
     }
 
     /**

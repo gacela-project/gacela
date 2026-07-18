@@ -27,9 +27,13 @@ abstract class AbstractClassResolver
 
     private static ?ClassNameFinderInterface $classNameFinder = null;
 
-    private ?GacelaConfigFileInterface $gacelaFileConfig = null;
+    /**
+     * Shared across every resolver instance/subclass: the bindings and
+     * contextual bindings are process-global, so one Container serves all.
+     */
+    private static ?Container $container = null;
 
-    private ?Container $container = null;
+    private ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
     /**
      * @internal remove all cached instances: facade, factory, config, dependency-provider
@@ -38,6 +42,7 @@ abstract class AbstractClassResolver
     {
         self::$cachedInstances = [];
         self::$classNameFinder = null;
+        self::$container = null;
     }
 
     /**
@@ -142,8 +147,8 @@ abstract class AbstractClassResolver
      */
     private function createInstance(string $resolvedClassName): object
     {
-        if (!$this->container instanceof Container) {
-            $this->container = new Container(
+        if (!self::$container instanceof Container) {
+            self::$container = new Container(
                 $this->getGacelaConfigFile()->getBindings(),
             );
 
@@ -151,13 +156,13 @@ abstract class AbstractClassResolver
                 foreach ($needs as $abstract => $implementation) {
                     /** @var class-string $concrete */
                     /** @var class-string $abstract */
-                    $this->container->when($concrete)->needs($abstract)->give($implementation);
+                    self::$container->when($concrete)->needs($abstract)->give($implementation);
                 }
             }
         }
 
         /** @var object $instance */
-        $instance = $this->container->get($resolvedClassName);
+        $instance = self::$container->get($resolvedClassName);
 
         return $instance;
     }

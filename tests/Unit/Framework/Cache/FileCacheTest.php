@@ -551,6 +551,10 @@ final class FileCacheTest extends TestCase
 
     public function test_write_contents_atomically_returns_false_when_file_write_fails(): void
     {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            self::markTestSkipped('chmod() cannot revoke directory write permission on Windows.');
+        }
+
         if (function_exists('posix_getuid') && posix_getuid() === 0) {
             self::markTestSkipped('Requires a non-writable directory, which root can always write to.');
         }

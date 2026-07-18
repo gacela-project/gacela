@@ -124,11 +124,15 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
             [
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopRepository from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
-                    14,
+                    15,
                 ],
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
-                    14,
+                    15,
+                ],
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopWriter from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
+                    15,
                 ],
             ],
         );

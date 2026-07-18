@@ -25,7 +25,7 @@ use Symfony\Component\Console\Application;
 
         Gacela::bootstrap($cwd);
 
-        $bootstrap = new ConsoleBootstrap(name: 'Gacela', version: '1.16.0');
+        $bootstrap = new ConsoleBootstrap(name: 'Gacela', version: Gacela::version());
         $bootstrap->run();
     } catch (Throwable $e) {
         fwrite(STDERR, 'gacela script failed. Error: ' . $e->getMessage() . PHP_EOL);

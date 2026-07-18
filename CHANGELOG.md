@@ -15,6 +15,11 @@
 - All cache-clear paths (`cache:clear`, `cache:warm --clear`, `ScopedCache`, merged-config) now delete through a single guarded helper that tolerates a missing file and invalidates opcache, so stale compiled cache files no longer survive a clear
 - `Config` no longer re-runs the full `init()` (re-globbing and re-parsing config) on every access when the merged config is empty; initialization is tracked with a flag instead of an empty-array sentinel
 - Resolving a deprecated `AbstractDependencyProvider` no longer fatals without `symfony/deprecation-contracts`; the `trigger_deprecation()` call is now guarded
+- `bin/gacela --version` no longer drifts after releases: the CLI version is derived at runtime from Composer's installed-package metadata via the new `Gacela::version()` instead of a hardcoded string
+- Calling an undocumented method through the resolver traits now throws `MissingClassDefinitionException` as intended, instead of silently resolving to the first `use` import of the caller's file (an empty class name matched every `use ...;` line)
+- `debug:container --stats` now shows container statistics even when combined with a class argument; the flag was registered but never read, so the dependency tree always won
+- `list:modules` now prints `No modules match filter "..."` when a filter matches nothing, instead of an empty table (default view) or no output at all (`--detailed`)
+- `getExternalService()` no longer misreports a service registered under the key `'0'` as `Available keys: none` in its not-found error message
 
 ### Added
 
@@ -24,6 +29,9 @@
 
 - `AbstractFactory::singleton()` and `CacheableTrait::cached()` are now generic (`@template T`): static analysis infers the creator/callback return type instead of `mixed`
 - `validate:config` no longer prints the "Checking configuration paths..." placeholder section, which performed no validation
+- `AbstractProvider::register()` is now `final`, enforcing its `@internal` contract; overriding it by mistake silently disabled `#[Provides]` attribute scanning — `provideModuleDependencies()` is the supported extension point
+- Class resolvers now share one `Container` built once from the process-global bindings, instead of rebuilding an identical one per resolver type; it is reset with the other caches in `Gacela::resetCache()`
+- `Gacela::bootstrap()` now batches file-cache writes produced while resolving classes into a single atomic write per cache file (like `cache:warm`), instead of one full-file rewrite per newly discovered key
 
 ### Removed
 
@@ -34,6 +42,8 @@
 ### Documentation
 
 - `docs/module-health-checks.md` now documents `GacelaConfig::addHealthCheck()` and how registered checks surface in `bin/gacela doctor`, previously the CLI integration point was undocumented
+- `profile:report` help no longer claims resolution/container/factory operations are "automatically tracked" (nothing instruments itself); it now shows a manual `Profiler::start()`/`stop()` example
+- `validate:config` help no longer implies a missing `gacela.php` is flagged; the file is optional and only reported when present
 
 ## [1.16.0](https://github.com/gacela-project/gacela/compare/1.15.0...1.16.0) - 2026-07-15
 

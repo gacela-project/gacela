@@ -187,11 +187,15 @@ use Gacela\Framework\Profiler\Profiler;
 Profiler::getInstance()->enable();
 ```
 
-2. Profiling is automatically tracked for:
-- Module resolution
-- Service resolution
-- Container operations
-- Factory creation
+2. Manually instrument the code you want to measure by wrapping it in
+matching start()/stop() calls (same operation and subject):
+```php
+$profiler = Profiler::getInstance();
+
+$profiler->start('db-query', 'users');
+$users = $repository->findAll();
+$profiler->stop('db-query', 'users');
+```
 
 3. View the profiling report:
 ```bash

@@ -7,6 +7,7 @@ namespace GacelaTest\Unit\PHPStan\Rules;
 use Gacela\PHPStan\Rules\CrossModuleViaFacadeRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
+use ReflectionMethod;
 
 /**
  * @extends RuleTestCase<CrossModuleViaFacadeRule>
@@ -114,6 +115,32 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
     public function test_ignores_references_with_no_module_depth(): void
     {
         $this->analyse([__DIR__ . '/Fixture/CrossModule/User/NoDepthRefFactory.php'], []);
+    }
+
+    public function test_skips_every_allowed_reference_kind_and_reports_each_distinct_violation(): void
+    {
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/User/MixedOrderFactory.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopRepository from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
+                    14,
+                ],
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
+                    14,
+                ],
+            ],
+        );
+    }
+
+    public function test_default_module_path_segments_is_one(): void
+    {
+        $rule = new CrossModuleViaFacadeRule(self::ROOT);
+        $moduleOf = new ReflectionMethod($rule, 'moduleOf');
+
+        self::assertSame(self::ROOT . '\Shop', $moduleOf->invoke($rule, self::ROOT . '\Shop\Domain\ShopService'));
+        self::assertNull($moduleOf->invoke($rule, self::ROOT . '\OnlyOneSegment'));
     }
 
     protected function getRule(): Rule

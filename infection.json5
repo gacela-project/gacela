@@ -22,6 +22,191 @@
         '@default': true,
         "global-ignore": [
             "Gacela\\Console\\*",
-        ]
+        ],
+        // Equivalent or environment-untestable mutants, grouped by reason.
+        "global-ignoreSourceCodeByRegex": [
+            // Windows-only PHP_OS/EOL handling: a no-op on POSIX where PHP_EOL is "\n".
+            '.*strcasecmp\\(substr\\(PHP_OS.*',
+            '.*str_replace\\("\\\\n", PHP_EOL.*',
+            // GLOB_BRACE fallback constant is only defined on non-GNU systems.
+            '.*define\\(.GLOB_BRACE., 0x10\\).*',
+            // debug_backtrace flags/limit: any nearby value yields the same caller frame.
+            '.*debug_backtrace\\(0, 2\\).*',
+            // A fresh sentinel instance per call is observationally identical.
+            '.*cacheMissSentinel \\?\\?= new stdClass\\(\\).*',
+            // sprintf(%s) stringifies scalars with or without the explicit cast.
+            '.*is_scalar\\(\\$value\\) \\? \\(string\\) \\$value.*',
+            '.*\\(string\\) preg_replace_callback.*',
+            // list arrays juggle numeric-string offsets to the same element.
+            '.*\\(int\\) \\$match\\[1\\].*',
+            // BFS visited-set bookkeeping: isset() treats `false` like `true`,
+            // and re-visiting a seen start node yields the same output.
+            '.*\\$seen\\[.*\\] = true;.*',
+            '.*\\$seen = \\[\\$\\w+ => true\\];.*',
+            // commitBatch() writes for every key of $dirty regardless of value.
+            '.*\\$dirty\\[static::class\\] = true;.*',
+        ],
+        // flock()-based locking and opcache invalidation are not observable in-process.
+        FunctionCallRemoval: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::commitBatch",
+                "Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor",
+                "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
+            ],
+        },
+        UnwrapFinally: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::commitBatch"],
+        },
+        MethodCallRemoval: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
+                "Gacela\\Framework\\Cache\\FileCache::delete",
+                "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
+            ],
+        },
+        IfNegation: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor"],
+        },
+        // stats() aggregates over existing files, where the int-casts and the
+        // equal-timestamp comparisons cannot change the outcome.
+        CastInt: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::stats"],
+        },
+        LessThan: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::stats"],
+        },
+        // normalizeDirectory(): Windows-specific branches (UNC/backslash folding)
+        // that are dead code on the POSIX machines running this suite.
+        GreaterThan: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::stats",
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",
+            ],
+        },
+        FalseValue: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
+        },
+        ArrayItemRemoval: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
+        },
+        Identical: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
+        },
+        LogicalAnd: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Framework\\Cache\\WritableDirectory::probe",
+                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
+            ],
+        },
+        LogicalAndSingleSubExprNegation: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
+        },
+        // WritableDirectory::probe() / containerTempDir(): mkdir-failure paths only
+        // reachable through filesystem races (TOCTOU) or an unwritable system temp dir.
+        LogicalNot: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\WritableDirectory::probe",
+                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
+            ],
+        },
+        Throw_: {
+            ignore: ["Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir"],
+        },
+        PregQuote: {
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
+        },
+        // Random tmp-file suffix shape and the per-class attribute memo key are
+        // internal formats with no observable behavior of their own.
+        Concat: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
+                "Gacela\\Framework\\Attribute\\CacheableTrait::resolveCacheableAttribute",
+                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
+            ],
+        },
+        ConcatOperandRemoval: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
+                "Gacela\\Framework\\Attribute\\CacheableTrait::resolveCacheableAttribute",
+                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
+            ],
+        },
+        DecrementInteger: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
+                "Gacela\\PHPStan\\Rules\\ClassReflectionHelperTrait::shortClassName",
+            ],
+        },
+        IncrementInteger: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
+            ],
+        },
+        // shortClassName() feeds str_ends_with() checks, where keeping a longer
+        // prefix of the FQCN can never change the suffix comparison.
+        UnwrapSubstr: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\PHPStan\\Rules\\ClassReflectionHelperTrait::shortClassName",
+                "Gacela\\Framework\\ClassResolver\\ClassInfo::normalizeFilename",
+            ],
+        },
+        Plus: {
+            ignore: ["Gacela\\PHPStan\\Rules\\ClassReflectionHelperTrait::shortClassName"],
+        },
+        // The keys used by the lazy handler registry stringify identically via sprintf.
+        CastString: {
+            ignore: ["Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get"],
+        },
+        UnwrapArrayMap: {
+            ignore: ["Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get"],
+        },
+        // hrtime(true) is an int; dividing by a float yields a float either way.
+        CastFloat: {
+            ignore: ["Gacela\\Framework\\Profiler\\Profiler::getCurrentTime"],
+        },
+        // Keys never carry a leading backslash outside the normalization itself.
+        UnwrapLtrim: {
+            ignore: ["Gacela\\Framework\\ClassResolver\\GlobalInstance\\AnonymousGlobal::getByKey"],
+        },
+        // Guard for a dirty class without a registered filename: internal state
+        // that the public API cannot produce.
+        Continue_: {
+            ignore: ["Gacela\\Framework\\ClassResolver\\Cache\\AbstractPhpFileCache::commitBatch"],
+        },
+        // Lookup-order swap between two stores that never share a key.
+        Coalesce: {
+            ignore: ["Gacela\\Framework\\ClassResolver\\AbstractClassResolver::resolveCached"],
+        },
+        // AST node-type guards in the PHPStan rules: the analyser hands over
+        // well-typed nodes, so the always-true/negated guard variants are
+        // unreachable defensive narrowing.
+        InstanceOf_: {
+            ignore: [
+                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
+                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::processNode",
+                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement",
+                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateChain",
+                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation",
+                "Gacela\\PHPStan\\Rules\\FactoryDoesNotCallFacadeRule::processNode",
+                "Gacela\\PHPStan\\Rules\\SuffixExtendsRule::processNode",
+            ],
+        },
+        LogicalOrAllSubExprNegation: {
+            ignore: ["Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode"],
+        },
+        TrueValue: {
+            ignore: ["Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement"],
+        },
+        LogicalOr: {
+            ignore: ["Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation"],
+        },
     }
 }

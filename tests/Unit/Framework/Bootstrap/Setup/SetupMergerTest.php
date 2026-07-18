@@ -206,6 +206,43 @@ final class SetupMergerTest extends TestCase
         self::assertSame('RedisCache', $contextualBindings[stdClass::class]['CacheInterface']);
     }
 
+    public function test_merge_handler_registries_from_two_setups(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addHandlerRegistry('registry-a', ['handler-1' => stdClass::class]);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addHandlerRegistry('registry-b', ['handler-2' => stdClass::class]);
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        $registries = $merged->getHandlerRegistries();
+        self::assertArrayHasKey('registry-a', $registries);
+        self::assertArrayHasKey('registry-b', $registries);
+    }
+
+    public function test_merge_lazy_services_from_two_setups(): void
+    {
+        $lazyA = static fn (): stdClass => new stdClass();
+        $lazyB = static fn (): stdClass => new stdClass();
+
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config) use ($lazyA): void {
+            $config->addLazy('lazy-a', $lazyA);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config) use ($lazyB): void {
+            $config->addLazy('lazy-b', $lazyB);
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        $lazyServices = $merged->getLazyServices();
+        self::assertSame($lazyA, $lazyServices['lazy-a'] ?? null);
+        self::assertSame($lazyB, $lazyServices['lazy-b'] ?? null);
+    }
+
     public function test_merge_gacela_configs_to_extend_skipped_when_other_has_no_changes(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

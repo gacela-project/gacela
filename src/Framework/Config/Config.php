@@ -161,7 +161,7 @@ final class Config implements ConfigInterface
         $this->appRootDir = rtrim($dir, DIRECTORY_SEPARATOR);
 
         if ($this->appRootDir === '' || $this->appRootDir === '0') {
-            $this->appRootDir = getcwd() ?: ''; // @codeCoverageIgnore
+            $this->appRootDir = getcwd() ?: '';
         }
 
         return $this;

@@ -14,6 +14,7 @@ use Gacela\Framework\Container\Locator;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Testing\ContainerFixture;
 use Gacela\Framework\Testing\ContainerSnapshot;
+use GacelaTest\Unit\Framework\Testing\Fixture\ChildOfContainerFixtureUser;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -103,6 +104,19 @@ final class ContainerFixtureTest extends TestCase
         $this->resetContainer();
 
         self::assertNull($prop->getValue());
+    }
+
+    public function test_reset_container_clears_abstract_factory_containers(): void
+    {
+        $reflection = new ReflectionClass(\Gacela\Framework\AbstractFactory::class);
+        $prop = $reflection->getProperty('containers');
+        $prop->setValue(null, ['some-key' => new stdClass()]);
+
+        $this->resetContainer();
+
+        /** @var array<string, mixed> $after */
+        $after = $prop->getValue();
+        self::assertSame([], $after);
     }
 
     public function test_reset_container_clears_abstract_facade_factories(): void
@@ -208,6 +222,70 @@ final class ContainerFixtureTest extends TestCase
         $this->cleanupContainerTempDirs();
 
         self::assertDirectoryDoesNotExist($dir);
+    }
+
+    public function test_protected_fixture_methods_are_callable_from_a_subclass(): void
+    {
+        $child = new ChildOfContainerFixtureUser();
+
+        $child->doResetContainer();
+        $child->doResetGacelaSingletons();
+
+        $snapshot = $child->doCaptureContainerState();
+        $child->doRestoreContainerState($snapshot);
+
+        $dir = $child->doContainerTempDir();
+        self::assertDirectoryExists($dir);
+
+        $child->doCleanupContainerTempDirs();
+        self::assertDirectoryDoesNotExist($dir);
+    }
+
+    public function test_capture_container_state_reads_config_internals_when_bootstrapped(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+            $config->addAppConfigKeyValue('fixture-key', 'fixture-value');
+        });
+        Config::getInstance()->get('fixture-key');
+
+        $snapshot = $this->captureContainerState();
+
+        self::assertSame('fixture-value', $snapshot->config()['fixture-key'] ?? null);
+        self::assertSame(__DIR__, $snapshot->appRootDir());
+    }
+
+    public function test_restore_container_state_drops_state_added_after_capture(): void
+    {
+        (new InMemoryCache('kept'))->put('A', '1');
+        $snapshot = $this->captureContainerState();
+
+        (new InMemoryCache('stale'))->put('B', '2');
+
+        $this->restoreContainerState($snapshot);
+
+        self::assertSame(['kept' => ['A' => '1']], InMemoryCache::all());
+    }
+
+    public function test_container_temp_dir_lives_in_system_temp_with_random_suffix(): void
+    {
+        $dir = $this->containerTempDir();
+
+        $prefix = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-container-fixture-';
+        self::assertStringStartsWith($prefix, $dir);
+        self::assertMatchesRegularExpression(
+            '/^gacela-container-fixture-[0-9a-f]{16}$/',
+            basename($dir),
+        );
+    }
+
+    public function test_temp_dir_cleanup_registration_is_recorded(): void
+    {
+        $this->containerTempDir();
+
+        $prop = (new ReflectionClass($this))->getProperty('containerTempDirsCleanupRegistered');
+
+        self::assertTrue($prop->getValue($this));
     }
 
     #[Before]

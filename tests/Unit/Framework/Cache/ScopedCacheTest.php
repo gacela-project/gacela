@@ -359,6 +359,83 @@ final class ScopedCacheTest extends TestCase
         self::assertFalse($this->cache->has('file:a'));
     }
 
+    public function test_invalidate_persists_pruned_graph_to_disk(): void
+    {
+        $this->cache->dependsOn('file:a', 'ns:X');
+
+        $this->cache->invalidate('ns:X');
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+        self::assertSame([], $reopened->dependents('ns:X'));
+    }
+
+    public function test_invalidate_leaf_persists_pruned_graph_to_disk(): void
+    {
+        $this->cache->dependsOn('file:a', 'ns:X');
+
+        $this->cache->invalidateLeaf('ns:X');
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+        self::assertSame([], $reopened->dependents('ns:X'));
+    }
+
+    public function test_duplicate_edge_does_not_rewrite_graph_file(): void
+    {
+        $this->cache->dependsOn('file:a', 'ns:X');
+
+        $graphFile = $this->cacheDir . '/.gacela-scoped-cache-graph.php';
+        self::assertFileExists($graphFile);
+        unlink($graphFile);
+
+        // Re-declaring an existing edge must not persist the graph again.
+        $this->cache->dependsOn('file:a', 'ns:X');
+
+        self::assertFileDoesNotExist($graphFile);
+    }
+
+    public function test_cascade_continues_past_already_seen_dependents(): void
+    {
+        // dependents('x') lists an already-visited node (`a`) before a fresh
+        // one (`b`); the BFS must skip `a` and still reach `b`.
+        $this->cache->put('b', 'B');
+
+        $this->cache->dependsOn('a', 'k');
+        $this->cache->dependsOn('x', 'k');
+        $this->cache->dependsOn('a', 'x');
+        $this->cache->dependsOn('b', 'x');
+
+        $this->cache->invalidate('k');
+
+        self::assertFalse($this->cache->has('b'));
+    }
+
+    public function test_cycle_check_continues_past_seen_parents_in_crafted_graph(): void
+    {
+        // A hand-written graph file may contain cycles the API would have
+        // rejected. Reaching `t` from `s` requires walking past the
+        // already-seen `s` inside `m`'s parent list.
+        file_put_contents(
+            $this->cacheDir . '/.gacela-scoped-cache-graph.php',
+            "<?php return ['s' => ['m'], 'm' => ['s', 't']];",
+        );
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+
+        $this->expectException(CycleDetectedException::class);
+        $reopened->dependsOn('t', 's');
+    }
+
+    public function test_loadgraph_keeps_valid_parent_listed_after_malformed_one(): void
+    {
+        file_put_contents(
+            $this->cacheDir . '/.gacela-scoped-cache-graph.php',
+            "<?php return ['file:d' => [789, 'ns:Z']];",
+        );
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame(['file:d'], $reopened->dependents('ns:Z'));
+    }
+
     public function test_loadgraph_ignores_non_array_payload(): void
     {
         file_put_contents(

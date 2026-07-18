@@ -142,6 +142,32 @@ final class GacelaConfigTest extends TestCase
 
         self::assertSame([], HealthCheckRegistry::all());
     }
+
+    public function test_extend_gacela_config_accumulates_across_calls(): void
+    {
+        $config = (new GacelaConfig())
+            ->extendGacelaConfig('FirstConfigToExtend')
+            ->extendGacelaConfig('SecondConfigToExtend');
+
+        self::assertSame(
+            ['FirstConfigToExtend', 'SecondConfigToExtend'],
+            $config->toTransfer()->gacelaConfigsToExtend,
+        );
+    }
+
+    public function test_add_plugin_accumulates_across_calls(): void
+    {
+        $pluginA = static function (): void {
+        };
+        $pluginB = static function (): void {
+        };
+
+        $config = (new GacelaConfig())
+            ->addPlugin($pluginA)
+            ->addPlugin($pluginB);
+
+        self::assertSame([$pluginA, $pluginB], $config->toTransfer()->plugins);
+    }
 }
 
 final class GacelaConfigTestFakeHealthCheck implements ModuleHealthCheckInterface

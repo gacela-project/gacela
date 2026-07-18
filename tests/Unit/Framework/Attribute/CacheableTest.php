@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Attribute;
 
+use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\Attribute\Cacheable;
 use Gacela\Framework\Attribute\CacheableConfig;
 use Gacela\Framework\Attribute\CacheableTrait;
@@ -352,6 +353,99 @@ final class CacheableTest extends TestCase
         $facade->plain();
 
         self::assertSame(3, $facade->getCallCount());
+    }
+
+    public function test_attribute_memoization_is_isolated_per_class_for_same_method_name(): void
+    {
+        // Resolve the attribute on the class that HAS it first, so a
+        // class-agnostic memo key would leak the attribute to the next class.
+        $withAttribute = new TestFacadeWithAttributeOnShared();
+        $withAttribute->sharedName();
+
+        $withoutAttribute = new TestFacadeNoAttributeOnShared();
+        $withoutAttribute->sharedName();
+        $withoutAttribute->sharedName();
+
+        self::assertSame(2, $withoutAttribute->getCallCount());
+    }
+
+    public function test_explicit_args_without_explicit_method_take_precedence_over_frame_args(): void
+    {
+        $facade = new TestFacadeWithExplicitArgsOnly();
+
+        self::assertSame('fixed-1', $facade->compute(10));
+        self::assertSame('fixed-1', $facade->compute(20));
+        self::assertSame(1, $facade->getCallCount());
+    }
+
+    public function test_abstract_facade_reset_cache_clears_the_method_cache_storage(): void
+    {
+        $storage = CacheableConfig::getStorage();
+        $storage->set('facade-reset-check', 'value', 3600);
+
+        AbstractFacade::resetCache();
+
+        self::assertNull($storage->get('facade-reset-check'));
+    }
+}
+
+final class TestFacadeWithAttributeOnShared
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function sharedName(): string
+    {
+        return $this->cached(function (): string {
+            ++$this->callCount;
+
+            return 'with-attribute-' . $this->callCount;
+        });
+    }
+}
+
+final class TestFacadeNoAttributeOnShared
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    public function sharedName(): string
+    {
+        return $this->cached(function (): string {
+            ++$this->callCount;
+
+            return 'no-attribute-' . $this->callCount;
+        });
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+}
+
+final class TestFacadeWithExplicitArgsOnly
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function compute(int $id): string
+    {
+        return $this->cached(function (): string {
+            ++$this->callCount;
+
+            return 'fixed-' . $this->callCount;
+        }, null, ['fixed']);
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
     }
 }
 

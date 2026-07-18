@@ -15,6 +15,7 @@ use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWith
 use GacelaTest\Feature\Framework\Plugins\Module\Infrastructure\ExamplePluginWithoutConstructor;
 use GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory\FakeEvent;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 
 final class SetupGacelaTest extends TestCase
@@ -435,6 +436,49 @@ final class SetupGacelaTest extends TestCase
         $setup1->getEventDispatcher()->dispatch(new FakeEvent());
 
         self::assertTrue($genericFromOther, 'generic listener from `$other` must be registered and fire on dispatch');
+    }
+
+    public function test_from_file_throws_for_missing_path(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        SetupGacela::fromFile('/nonexistent/dir/gacela.php');
+    }
+
+    public function test_from_file_builds_setup_from_returned_callable(): void
+    {
+        $file = sys_get_temp_dir() . '/gacela-from-file-' . uniqid('', true) . '.php';
+        file_put_contents($file, <<<'PHP'
+            <?php
+
+            use Gacela\Framework\Bootstrap\GacelaConfig;
+
+            return static function (GacelaConfig $config): void {
+                $config->addAppConfigKeyValue('from-file-key', 'from-file-value');
+            };
+            PHP);
+
+        try {
+            $setup = SetupGacela::fromFile($file);
+        } finally {
+            unlink($file);
+        }
+
+        self::assertSame(['from-file-key' => 'from-file-value'], $setup->getConfigKeyValues());
+    }
+
+    public function test_from_file_with_non_callable_return_yields_default_setup(): void
+    {
+        $file = sys_get_temp_dir() . '/gacela-from-file-' . uniqid('', true) . '.php';
+        file_put_contents($file, '<?php return 123;');
+
+        try {
+            $setup = SetupGacela::fromFile($file);
+        } finally {
+            unlink($file);
+        }
+
+        self::assertSame([], $setup->getConfigKeyValues());
     }
 }
 

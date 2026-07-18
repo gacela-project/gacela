@@ -17,6 +17,7 @@ use function count;
 use function file_get_contents;
 use function file_put_contents;
 use function filesize;
+use function function_exists;
 use function glob;
 use function is_dir;
 use function mkdir;
@@ -452,6 +453,179 @@ final class FileCacheTest extends TestCase
 
         $leftovers = glob($this->cacheDir . '/*.tmp') ?: [];
         self::assertCount(0, $leftovers);
+    }
+
+    public function test_default_ttl_is_zero_so_entries_never_expire_on_disk(): void
+    {
+        self::assertSame(0, $this->cache->defaultTtl);
+
+        $this->cache->put('key', 'value');
+
+        $files = glob($this->cacheDir . '/*.php') ?: [];
+        self::assertCount(1, $files);
+
+        $entry = require $files[0];
+        self::assertNull($entry['expiresAt']);
+    }
+
+    public function test_put_after_commit_batch_writes_directly_to_disk(): void
+    {
+        $this->cache->beginBatch();
+        $this->cache->put('a', 1);
+        $this->cache->commitBatch();
+
+        $this->cache->put('b', 2);
+
+        $fresh = new FileCache($this->cacheDir);
+        self::assertSame(2, $fresh->get('b'));
+    }
+
+    public function test_commit_batch_creates_index_lock_file_inside_cache_directory(): void
+    {
+        $this->cache->beginBatch();
+        $this->cache->put('a', 1);
+        $this->cache->commitBatch();
+
+        self::assertFileExists($this->cacheDir . DIRECTORY_SEPARATOR . '.gacela-filecache.lock');
+    }
+
+    public function test_commit_batch_falls_back_to_direct_writes_when_lock_file_unavailable(): void
+    {
+        // Occupying the lock path with a directory makes fopen() fail, forcing
+        // the lock-less fallback, which must still persist every entry.
+        mkdir($this->cacheDir . DIRECTORY_SEPARATOR . '.gacela-filecache.lock');
+
+        $this->cache->beginBatch();
+        $this->cache->put('a', 1);
+        $this->cache->put('b', 2);
+        $this->cache->commitBatch();
+
+        $fresh = new FileCache($this->cacheDir);
+        self::assertSame(1, $fresh->get('a'));
+        self::assertSame(2, $fresh->get('b'));
+    }
+
+    public function test_stats_aggregates_bytes_and_timestamps_across_files(): void
+    {
+        $base = time() - 1_000;
+        $files = [
+            'a.php' => ['12345', $base],           // oldest
+            'b.php' => ['1234567', $base + 900],   // newest
+            'c.php' => ['12345678901', $base + 500],
+        ];
+        foreach ($files as $name => [$content, $mtime]) {
+            $path = $this->cacheDir . '/' . $name;
+            file_put_contents($path, $content);
+            touch($path, $mtime);
+        }
+
+        $stats = $this->cache->stats();
+
+        self::assertSame(3, $stats->entries);
+        self::assertSame(5 + 7 + 11, $stats->bytes);
+        self::assertSame($base, $stats->oldestAt);
+        self::assertSame($base + 900, $stats->newestAt);
+    }
+
+    public function test_write_contents_atomically_stages_tmp_next_to_target_not_in_cwd(): void
+    {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            self::markTestSkipped('Requires a non-writable cwd, which root can always write to.');
+        }
+
+        $unwritableCwd = $this->cacheDir . '/no-write-cwd';
+        mkdir($unwritableCwd, 0555);
+        $cwd = (string) getcwd();
+        chdir($unwritableCwd);
+
+        try {
+            $ok = FileCache::writeContentsAtomically($this->cacheDir . '/staged.php', 'payload');
+        } finally {
+            chdir($cwd);
+            chmod($unwritableCwd, 0755);
+        }
+
+        self::assertTrue($ok);
+        self::assertSame('payload', file_get_contents($this->cacheDir . '/staged.php'));
+    }
+
+    public function test_write_contents_atomically_returns_false_when_file_write_fails(): void
+    {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            self::markTestSkipped('Requires a non-writable directory, which root can always write to.');
+        }
+
+        // Warm the writability memo while the directory is writable, then
+        // revoke write permission so the actual file write fails.
+        $dir = $this->cacheDir . '/revoked';
+        mkdir($dir);
+        self::assertTrue(FileCache::writeContentsAtomically($dir . '/warm.php', 'warm'));
+        chmod($dir, 0555);
+
+        try {
+            self::assertFalse(FileCache::writeContentsAtomically($dir . '/fail.php', 'data'));
+        } finally {
+            chmod($dir, 0755);
+        }
+    }
+
+    public function test_write_contents_atomically_returns_false_when_rename_fails(): void
+    {
+        // Renaming onto an existing directory fails after the tmp stage succeeded.
+        $target = $this->cacheDir . '/occupied';
+        mkdir($target);
+
+        self::assertFalse(FileCache::writeContentsAtomically($target, 'data'));
+        self::assertCount(0, glob($this->cacheDir . '/*.tmp') ?: []);
+    }
+
+    public function test_expired_memory_entry_is_evicted_from_disk_too(): void
+    {
+        $this->cache->put('short', 'lived', ttl: -1);
+
+        // The same instance holds the entry in memory: expiry via the memory
+        // path must also remove the stale file on disk.
+        self::assertNull($this->cache->get('short'));
+        self::assertCount(0, glob($this->cacheDir . '/*.php') ?: []);
+    }
+
+    public function test_entry_expiring_exactly_now_is_already_expired(): void
+    {
+        // Retry when the clock ticks between write and read, so the
+        // boundary (expiresAt === now) is what actually gets asserted.
+        do {
+            $now = time();
+            $file = $this->cacheDir . '/' . sha1('edge') . '.php';
+            file_put_contents(
+                $file,
+                '<?php return ' . var_export(['value' => 'v', 'expiresAt' => $now], true) . ';',
+            );
+            $fresh = new FileCache($this->cacheDir);
+            $hasEntry = $fresh->has('edge');
+        } while (time() !== $now);
+
+        self::assertFalse($hasEntry);
+    }
+
+    public function test_normalize_keeps_single_embedded_drive_reference_intact(): void
+    {
+        $expected = DIRECTORY_SEPARATOR . 'foo' . DIRECTORY_SEPARATOR . 'C:' . DIRECTORY_SEPARATOR . 'bar';
+
+        self::assertSame($expected, $this->invokeNormalize('/foo/C:/bar'));
+    }
+
+    public function test_normalize_folds_backslashes_to_directory_separator(): void
+    {
+        $expected = 'a' . DIRECTORY_SEPARATOR . 'b' . DIRECTORY_SEPARATOR . 'c';
+
+        self::assertSame($expected, $this->invokeNormalize('a\\b\\c'));
+    }
+
+    public function test_normalize_trims_trailing_separators(): void
+    {
+        $expected = DIRECTORY_SEPARATOR . 'foo' . DIRECTORY_SEPARATOR . 'bar';
+
+        self::assertSame($expected, $this->invokeNormalize('/foo/bar///'));
     }
 
     private function invokeNormalize(string $dir): string

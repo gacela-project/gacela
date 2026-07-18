@@ -174,6 +174,68 @@ final class ConfigTest extends TestCase
         );
     }
 
+    public function test_get_cache_dir_treats_backslash_prefix_as_absolute(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setFileCache(true, '\\win-style-cache'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir('/apps');
+
+        self::assertSame('/apps\\win-style-cache', $config->getCacheDir());
+    }
+
+    public function test_get_cache_dir_keeps_backslash_joined_path_inside_app_root(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setFileCache(true, '/apps\\custom-cache'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir('/apps');
+
+        self::assertSame('/apps\\custom-cache', $config->getCacheDir());
+    }
+
+    public function test_get_cache_dir_ignores_windows_drive_embedded_mid_path(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setFileCache(true, '/data/C:/cache'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir('/apps');
+
+        self::assertSame('/apps/data/C:/cache', $config->getCacheDir());
+    }
+
+    public function test_get_returns_every_value_when_multiple_keys_are_defined(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+            $config->addAppConfigKeyValue('multi-key-one', 'value-one');
+            $config->addAppConfigKeyValue('multi-key-two', 'value-two');
+        });
+
+        self::assertSame('value-one', Config::getInstance()->get('multi-key-one'));
+        self::assertSame('value-two', Config::getInstance()->get('multi-key-two'));
+    }
+
+    public function test_get_all_values_initializes_the_config_on_first_access(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())
+                ->setFileCache(false)
+                ->addAppConfigKeyValue('all-values-key', 'all-values-value'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir(__DIR__);
+
+        self::assertSame('all-values-value', $config->getAllValues()['all-values-key'] ?? null);
+    }
+
     public function test_get_factory_returns_cached_instance_across_calls(): void
     {
         $config = Config::getInstance();

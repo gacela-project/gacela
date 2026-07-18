@@ -8,6 +8,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class BootstrapBatchesFileCacheTest extends TestCase
 {
@@ -39,6 +40,26 @@ final class BootstrapBatchesFileCacheTest extends TestCase
         self::assertFalse(
             AbstractPhpFileCache::isBatching(),
             'the bootstrap batch must be committed before bootstrap() returns',
+        );
+    }
+
+    public function test_bootstrap_commits_file_cache_batch_even_when_a_plugin_throws(): void
+    {
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->addPlugin(static function (): void {
+                    throw new RuntimeException('plugin boom');
+                });
+            });
+            self::fail('the throwing plugin should abort bootstrap');
+        } catch (RuntimeException) {
+            // expected
+        }
+
+        self::assertFalse(
+            AbstractPhpFileCache::isBatching(),
+            'a failed bootstrap must still commit (close) the file-cache batch',
         );
     }
 }

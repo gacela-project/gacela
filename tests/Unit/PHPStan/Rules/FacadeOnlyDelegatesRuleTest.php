@@ -43,6 +43,12 @@ final class FacadeOnlyDelegatesRuleTest extends RuleTestCase
                 [$prefix . 'cachedNonDelegation' . $suffix, 38],
                 [$prefix . 'cachedMultiStmt' . $suffix, 43],
                 [$prefix . 'somethingElse' . $suffix, 52],
+                [$prefix . 'singleIfStatement' . $suffix, 57],
+                [$prefix . 'delegatesOnLocalVariable' . $suffix, 69],
+                [$prefix . 'dynamicMethodName' . $suffix, 74],
+                [$prefix . 'notCachedWrapper' . $suffix, 79],
+                [$prefix . 'cachedWithoutArgs' . $suffix, 84],
+                [$prefix . 'cachedWithNonClosure' . $suffix, 89],
             ],
         );
     }

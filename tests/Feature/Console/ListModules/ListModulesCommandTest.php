@@ -95,6 +95,26 @@ TXT;
         self::assertStringNotContainsString('ToBeIgnored', $out);
     }
 
+    public function test_non_matching_filter_reports_no_modules(): void
+    {
+        $this->command->execute(['filter' => 'NoSuchModuleXYZ']);
+
+        $output = $this->command->getDisplay();
+
+        self::assertStringContainsString('No modules match filter "NoSuchModuleXYZ".', $output);
+        self::assertStringNotContainsString('┌────', $output);
+    }
+
+    public function test_non_matching_filter_reports_no_modules_in_detailed_view(): void
+    {
+        $this->command->execute(['filter' => 'NoSuchModuleXYZ', '--detailed' => true]);
+
+        self::assertStringContainsString(
+            'No modules match filter "NoSuchModuleXYZ".',
+            $this->command->getDisplay(),
+        );
+    }
+
     public static function commandInputProvider(): iterable
     {
         yield 'slashes' => ['ListModules/TestModule1'];

@@ -15,6 +15,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function sprintf;
+
 /**
  * @method ConsoleFacade getFacade()
  */
@@ -41,10 +43,17 @@ final class ListModulesCommand extends Command
         $this->output = $output;
 
         $filter = (string)$input->getArgument('filter');
+        $modules = $this->getFacade()->findAllAppModules($filter);
+
+        if ($modules === []) {
+            $output->writeln(sprintf('<comment>No modules match filter "%s".</comment>', $filter));
+
+            return self::SUCCESS;
+        }
 
         $this->generateListOfModules(
             (bool)$input->getOption('detailed'),
-            $this->getFacade()->findAllAppModules($filter),
+            $modules,
         );
 
         return self::SUCCESS;

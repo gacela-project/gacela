@@ -34,7 +34,7 @@ The script (and a manual release) assume:
    ```bash
    git add CHANGELOG.md
    git commit -m "chore(release): X.Y.Z"
-   git tag -a X.Y.Z -m "Release X.Y.Z"
+   git tag -s X.Y.Z -m "Release X.Y.Z"
    git push origin main
    git push origin X.Y.Z
    ```

@@ -305,7 +305,7 @@ git_commit_and_tag() {
   fi
   git add "${RELEASE_FILES[@]}"
   git commit -m "chore(release): ${VERSION}"
-  git tag -a "$VERSION" -m "Release $VERSION"
+  git tag -s "$VERSION" -m "Release $VERSION"
   log_success "Commit + tag $VERSION created."
 }
 

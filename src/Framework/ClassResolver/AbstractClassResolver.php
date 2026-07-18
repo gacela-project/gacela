@@ -17,6 +17,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 use function is_array;
 use function is_object;
+use function ltrim;
 
 abstract class AbstractClassResolver
 {
@@ -161,8 +162,10 @@ abstract class AbstractClassResolver
             }
         }
 
+        // The finder yields `\Fq\Class\Name` while contextual bindings are keyed
+        // by `Fq\Class\Name::class`; normalize so the container can match them.
         /** @var object $instance */
-        $instance = self::$container->get($resolvedClassName);
+        $instance = self::$container->get(ltrim($resolvedClassName, '\\'));
 
         return $instance;
     }

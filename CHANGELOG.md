@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Contextual bindings (`$config->when(X)->needs(Y)->give(Z)`) now apply when resolving Gacela classes (factories, configs, providers): the class resolver passed a `\`-prefixed class name to the container, which never matched the `X::class`-keyed contextual bindings, so the global binding always won
 - Health checks registered in `gacela.php` are no longer wiped when a project also ships `gacela-{APP_ENV}.php`: `GacelaConfig::__construct()` no longer resets the shared `HealthCheckRegistry` on every instantiation. The registry is now cleared exactly once per `Gacela::bootstrap()`, so checks from the default and env config files accumulate together without leaking across bootstraps
 - `bin/gacela` now exits 1 and writes to STDERR on every failure path — missing `vendor/autoload.php`, missing `symfony/console`, a `Gacela::bootstrap()` failure, or any `Throwable` (incl. `Error`/`TypeError`) from the runner — instead of exiting 0 or 255 with a raw stack trace
 - `cache:clear` is now registered in the console; it shipped in 1.13.0 but was never wired in, so `bin/gacela cache:clear` was unavailable

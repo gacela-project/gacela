@@ -10,7 +10,7 @@ declare -r EXIT_EXECUTION_ERROR=2
 
 GITHUB_REPO_PATH="gacela-project/gacela"
 GITHUB_REPO_URL="https://github.com/${GITHUB_REPO_PATH}"
-RELEASE_FILES=("bin/gacela" "CHANGELOG.md")
+RELEASE_FILES=("CHANGELOG.md")
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -48,7 +48,7 @@ Options:
   --skip-tests       Skip 'composer quality' and 'composer test'.
   --without-gh-release
                      Tag and push, but do not create a GitHub release.
-  --rollback         Restore bin/gacela and CHANGELOG.md from latest backup.
+  --rollback         Restore CHANGELOG.md from latest backup.
   -h, --help         Show this message.
 
 Examples:
@@ -150,10 +150,11 @@ run_preflight() {
 #########################
 
 read_current_version() {
-  CURRENT_VERSION=$(grep -oE "version:\s*'[0-9]+\.[0-9]+\.[0-9]+'" bin/gacela \
-                    | head -1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
+  # Version is derived at runtime from Composer metadata (the git tag), so the
+  # latest tag — not a file — is the source of truth for the current version.
+  CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
   [[ -n "$CURRENT_VERSION" ]] || {
-    log_error "Could not read current version from bin/gacela."
+    log_error "Could not read current version from git tags."
     exit $EXIT_VALIDATION_ERROR
   }
 }
@@ -191,7 +192,6 @@ rollback_manual() {
   latest=$(find .release-state -maxdepth 1 -type d -name 'backup-*' 2>/dev/null | sort -r | head -1)
   [[ -n "$latest" ]] || { log_error "No backup found in .release-state."; exit $EXIT_VALIDATION_ERROR; }
   log_info "Restoring from $latest"
-  cp "$latest/gacela" bin/gacela
   cp "$latest/CHANGELOG.md" CHANGELOG.md
   log_success "Files restored. Remember to review 'git status'."
 }
@@ -199,16 +199,6 @@ rollback_manual() {
 #########################
 ###   FILE UPDATES    ###
 #########################
-
-update_bin_gacela() {
-  if [[ "$DRY_RUN" == true ]]; then
-    log_dry "Would update bin/gacela: $CURRENT_VERSION → $VERSION"
-    return
-  fi
-  sed -i.bak "s|version: '${CURRENT_VERSION}'|version: '${VERSION}'|" bin/gacela
-  rm -f bin/gacela.bak
-  log_success "bin/gacela → $VERSION"
-}
 
 capture_release_notes() {
   local notes
@@ -353,7 +343,6 @@ main() {
   [[ "$DRY_RUN" == true ]] || backup_init
 
   capture_release_notes
-  update_bin_gacela
   update_changelog
   run_tests
   git_commit_and_tag

@@ -24,7 +24,7 @@ The script (and a manual release) assume:
 
 ## Manual steps (if not using the script)
 
-1. **Bump the version** in [`bin/gacela`](../bin/gacela) — update the `version:` argument passed to `ConsoleBootstrap`.
+1. **No version file to bump** — the version is derived at runtime from Composer's metadata (the git tag), so creating the tag in step 4 is what sets the version.
 2. **Update [`CHANGELOG.md`](../CHANGELOG.md)**:
    - Rename the current `## Unreleased` header to
      `## [X.Y.Z](https://github.com/gacela-project/gacela/compare/<prev>...<X.Y.Z>) - YYYY-MM-DD`
@@ -32,7 +32,7 @@ The script (and a manual release) assume:
 3. **Run quality + tests**: `composer quality && composer test`
 4. **Commit, tag, push**:
    ```bash
-   git add bin/gacela CHANGELOG.md
+   git add CHANGELOG.md
    git commit -m "chore(release): X.Y.Z"
    git tag -a X.Y.Z -m "Release X.Y.Z"
    git push origin main

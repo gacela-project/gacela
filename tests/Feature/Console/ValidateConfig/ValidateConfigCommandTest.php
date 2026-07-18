@@ -35,6 +35,16 @@ final class ValidateConfigCommandTest extends TestCase
         self::assertStringContainsString('Checking bindings...', $output);
     }
 
+    public function test_help_does_not_imply_a_missing_gacela_php_is_flagged(): void
+    {
+        $help = (new ValidateConfigCommand())->getHelp();
+
+        // A missing gacela.php stays silent, so the help must not present its
+        // existence as a pass/fail check.
+        self::assertStringNotContainsString('Existence of gacela.php', $help);
+        self::assertStringContainsString('absence is not an error', $help);
+    }
+
     public function test_validate_config_is_silent_when_gacela_php_missing(): void
     {
         $this->command->execute([]);

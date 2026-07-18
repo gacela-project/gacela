@@ -218,7 +218,7 @@ final class ValidateConfigCommand extends Command
 This command validates your Gacela configuration for common errors and potential issues.
 
 <info>What it checks:</info>
-  - Existence of gacela.php configuration file
+  - Presence of the optional gacela.php file (its absence is not an error; it is only reported when found)
   - Bindings configuration:
     - Validates that binding keys (interfaces/classes) exist
     - Validates that binding values (classes) exist

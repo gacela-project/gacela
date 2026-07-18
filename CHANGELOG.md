@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.17.0](https://github.com/gacela-project/gacela/compare/1.16.0...1.17.0) - 2026-07-18
+
 ### Fixed
 
 - Contextual bindings (`$config->when(X)->needs(Y)->give(Z)`) now apply when resolving Gacela classes (factories, configs, providers); previously the global binding always won

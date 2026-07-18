@@ -38,8 +38,14 @@ final class DebugContainerCommand extends Command
     {
         /** @var string|null $className */
         $className = $input->getArgument('class');
+        $showStats = (bool) $input->getOption('stats');
         /** @var bool $showTree */
         $showTree = (bool) $input->getOption('tree');
+
+        // --stats takes precedence, even when combined with a class argument
+        if ($showStats) {
+            return $this->displayStats($output);
+        }
 
         if ($showTree && $className === null) {
             $output->writeln('<error>The --tree option requires a class name argument</error>');

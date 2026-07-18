@@ -83,23 +83,25 @@ For each issue in the queue:
    - commit with `Related to #<num>` (conventional: `feat:`, `fix:`, `ref:`, `docs:`, `chore:`, `test:`)
    - PR opened via `/pr #<num>`
 
-3. After `/gh-issue` returns, wait for CI green on the PR:
+3. Before opening the PR, do a **refactor pass** over every file the issue touched — dedupe new code, drop dead branches/unused params, fix naming drift vs. surrounding module conventions, honor `.claude/rules/php.md`, remove speculative abstractions. Apply fixes, re-run `composer test`, and commit them as a separate `ref(...)` commit with `Related to #<num>`. If nothing needs changing, note that in the PR body instead of skipping silently.
+
+4. After `/gh-issue` returns, wait for CI green on the PR:
    ```bash
    gh pr checks --watch
    ```
    Fix red checks on the branch before moving on.
 
-4. Merge when allowed:
+5. Merge when allowed:
    ```bash
    gh pr merge --auto --squash --admin
    ```
 
-5. Sync `main` for next iteration:
+6. Sync `main` for next iteration:
    ```bash
    git checkout main && git fetch origin main && git reset --hard origin/main
    ```
 
-6. Continue with next issue.
+7. Continue with next issue.
 
 ## Stop Conditions
 

@@ -23,6 +23,16 @@ final class UseBlockParserTest extends TestCase
         self::assertSame('', $actual);
     }
 
+    public function test_empty_class_name_does_not_match_the_first_use_statement(): void
+    {
+        // With an empty class name the needle would degrade to ';', which every
+        // `use ...;` line contains, so the parser would wrongly resolve to the
+        // first import. An empty class name must resolve to nothing instead.
+        $actual = $this->parser->getUseStatement('', $this->phpCode());
+
+        self::assertSame('', $actual);
+    }
+
     public function test_get_class_from_use(): void
     {
         $actual = $this->parser->getUseStatement('ExistingClassInOtherNs', $this->phpCode());

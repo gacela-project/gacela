@@ -5,6 +5,7 @@
 ### Added
 
 - Framework lifecycle events for observability, all allocation-guarded so they stay zero-cost when nothing listens: `GacelaBootstrapStartedEvent`/`GacelaBootstrapFinishedEvent(durationMs)`, `ConfigInitializedEvent(keyCount)`, `ConfigKeyReadEvent(key)`, `ConfigKeyNotFoundEvent(key)`, `ServiceResolvedEvent(id)` (once per container service), `BindingRegisteredEvent(id)`, `ProviderRegisteredEvent(providerClass, moduleName)`, `CacheClearedEvent(cacheFile)`, `CacheWarmedEvent(moduleCount, failedCount)`
+- `debug:module <ModuleName>` console command: given a module name it prints the resolved Facade/Factory/Config/Provider classes, the container bindings (global + contextual), and the facade dependency tree; supports `--json` for machine output and `--tree` to limit output to the tree
 - Typed config accessors on `Config`/`AbstractConfig`: `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()`. Each returns a concrete type (no more `mixed` casts), uses a `null` default to mean "required", and throws `ConfigException` on a type mismatch instead of coercing (`getFloat()` accepts an int via lossless widening). Self-contained implementations: a typed read is faster than `get()` + a manual cast (single `array_key_exists`, no default sentinel comparison)
 
 ### Fixed

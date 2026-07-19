@@ -31,7 +31,7 @@
 
 ### Changed
 
-- Bumped `gacela-project/container` to `^0.10.0` (fluent `bind()`/`singleton()`, typed `make()`, runtime parameters, scalar contextual bindings, service tagging, conditional registration, `afterResolving()` hooks, `ArrayAccess`, compiled constructor plans; transient resolutions no longer share child instances)
+- Bumped `gacela-project/container` to `^0.10.0` (fluent `bind()`/`singleton()`, typed `make()`, runtime parameters, scalar contextual bindings, service tagging, conditional registration, `afterResolving()` hooks, `ArrayAccess`, compiled constructor plans). Note: 0.10 fixes transient resolutions sharing child instances, which makes uncached container construction measurably slower (~17-41% on raw micro-benches); Gacela's steady-state paths are unaffected since resolved classes are instance-cached, and the compiled-plans adoption is tracked to reclaim the cold cost
 - Event dispatch on the class-resolution hot path is now zero-cost when nothing listens: dispatch sites check the new `EventDispatcherInterface::hasListeners()` before allocating the event object (~20% faster warm resolves; custom `EventDispatcherInterface` implementations must add the method)
 
 ## [1.17.0](https://github.com/gacela-project/gacela/compare/1.16.0...1.17.0) - 2026-07-18

@@ -81,7 +81,8 @@ final class ReadOnlyAppRootTest extends TestCase
             $cacheDir = $dir . '/.gacela/cache';
             mkdir($cacheDir, 0o755, true);
             file_put_contents(
-                $cacheDir . '/' . MergedConfigCache::FILENAME_PREFIX . MergedConfigCache::FILENAME_EXTENSION,
+                // Filenames are scoped per app root (#465).
+                (new MergedConfigCache($cacheDir, '', $dir))->filename(),
                 sprintf('<?php return %s;', var_export(['ro_key' => 'from_prewarmed_cache'], true)),
             );
             chmod($cacheDir, 0o555);

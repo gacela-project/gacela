@@ -6,6 +6,9 @@ namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Cache\FileCache;
 
+use function sha1;
+use function substr;
+
 final class MergedConfigCache
 {
     public const FILENAME_PREFIX = 'gacela-merged-config';
@@ -15,6 +18,7 @@ final class MergedConfigCache
     public function __construct(
         private readonly string $cacheDir,
         private readonly string $env = '',
+        private readonly string $appRootDir = '',
     ) {
     }
 
@@ -49,16 +53,39 @@ final class MergedConfigCache
     public function clear(): void
     {
         FileCache::delete($this->filename());
+
+        // Also drop a cache written before filenames were app-scoped, so
+        // clearing leaves no stale pre-#465 file behind in a shared dir.
+        $legacyFilename = $this->buildFilename('');
+        if ($legacyFilename !== $this->filename()) {
+            FileCache::delete($legacyFilename);
+        }
     }
 
+    /**
+     * The cache dir can be shared between apps (it defaults to the system
+     * temp dir), so the filename embeds a hash of the app root: without it,
+     * every app using the shared default read and wrote the same file and
+     * silently served another app's merged config.
+     */
     public function filename(): string
     {
-        $suffix = $this->env !== '' ? '-' . $this->env : '';
+        $appSuffix = $this->appRootDir !== ''
+            ? '-' . substr(sha1($this->appRootDir), 0, 12)
+            : '';
+
+        return $this->buildFilename($appSuffix);
+    }
+
+    private function buildFilename(string $appSuffix): string
+    {
+        $envSuffix = $this->env !== '' ? '-' . $this->env : '';
 
         return $this->cacheDir
             . DIRECTORY_SEPARATOR
             . self::FILENAME_PREFIX
-            . $suffix
+            . $appSuffix
+            . $envSuffix
             . self::FILENAME_EXTENSION;
     }
 }

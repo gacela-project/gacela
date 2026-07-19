@@ -10,10 +10,19 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
+use PhpBench\Attributes\BeforeMethods;
+use PhpBench\Attributes\Groups;
 
 /**
- * @BeforeMethods("setUp")
+ * Warm facade access through anonymous classes registered via
+ * Gacela::addGlobal() (facade -> factory -> config + provider). Complements
+ * ModuleExampleBench, which covers the same flow for a conventional on-disk
+ * module discovered by naming convention.
+ *
+ * Sampling: inherits the phpbench.json defaults — see tests/Benchmark/README.md.
  */
+#[BeforeMethods('setUp')]
+#[Groups(['gate', 'resolve'])]
 final class GacelaGlobalBench
 {
     private AbstractFacade $facade;

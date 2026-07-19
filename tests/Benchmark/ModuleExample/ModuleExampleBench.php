@@ -5,14 +5,20 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\ModuleExample;
 
 use Gacela\Framework\Gacela;
+use PhpBench\Attributes\BeforeMethods;
+use PhpBench\Attributes\Groups;
 
 /**
- * @Revs(50)
+ * Warm facade access through a conventional on-disk module (Facade, Factory,
+ * Config, Provider classes discovered by naming convention). Complements
+ * GacelaGlobalBench, which covers the same flow for anonymous classes
+ * registered via Gacela::addGlobal().
  *
- * @Iterations(3)
- *
- * @BeforeMethods("setUp")
+ * Sampling: inherits the phpbench.json defaults (200 revs, 10 iterations,
+ * warmup) — see tests/Benchmark/README.md.
  */
+#[BeforeMethods('setUp')]
+#[Groups(['gate', 'resolve'])]
 final class ModuleExampleBench
 {
     private ModuleExampleFacade $facade;

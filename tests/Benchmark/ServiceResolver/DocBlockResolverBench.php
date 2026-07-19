@@ -6,12 +6,19 @@ namespace GacelaTest\Benchmark\ServiceResolver;
 
 use Gacela\Framework\Gacela;
 use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
+use PhpBench\Attributes\AfterMethods;
+use PhpBench\Attributes\BeforeMethods;
+use PhpBench\Attributes\Groups;
 
 /**
- * @BeforeMethods("setUp")
+ * Attribute-based vs phpdoc-based service resolution, single and repeated
+ * (repeated variants exercise the DocBlockResolverCache).
  *
- * @AfterMethods("tearDown")
+ * Sampling: inherits the phpbench.json defaults — see tests/Benchmark/README.md.
  */
+#[BeforeMethods('setUp')]
+#[AfterMethods('tearDown')]
+#[Groups(['gate', 'resolve'])]
 final class DocBlockResolverBench
 {
     public function setUp(): void

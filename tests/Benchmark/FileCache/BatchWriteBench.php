@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\FileCache;
 
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
+use PhpBench\Attributes\AfterMethods;
+use PhpBench\Attributes\BeforeMethods;
+use PhpBench\Attributes\Groups;
+use PhpBench\Attributes\Iterations;
+use PhpBench\Attributes\Revs;
 
 use function bin2hex;
 use function is_dir;
@@ -15,14 +20,14 @@ use function sys_get_temp_dir;
 use function unlink;
 
 /**
- * @BeforeMethods({"setUp"})
- *
- * @AfterMethods({"tearDown"})
- *
- * @Revs(50)
- *
- * @Iterations(5)
+ * Batched vs unbatched file-cache writes: 200 puts as one atomic write per
+ * commit versus one full-file rewrite per put.
  */
+#[BeforeMethods('setUp')]
+#[AfterMethods('tearDown')]
+#[Groups(['gate', 'cache'])]
+#[Revs(50)]
+#[Iterations(5)]
 final class BatchWriteBench
 {
     private string $cacheDir;

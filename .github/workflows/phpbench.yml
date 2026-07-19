@@ -1,9 +1,14 @@
 # https://help.github.com/en/categories/automating-your-workflow-with-github-actions
 #
 # Performance regression guard: benchmarks the PR base branch, then benchmarks
-# the PR head against that stored baseline. The suite-wide assertion configured
-# in phpbench.json (mode(variant.time.avg) <= mode(baseline.time.avg) +/- 10%)
+# the PR head against that stored baseline. The assertion configured in
+# phpbench.json (mode(variant.time.avg) <= mode(baseline.time.avg) +/- 10%)
 # fails the job when a benchmarked path regresses by more than 10%.
+#
+# Only the `gate` group blocks the merge: those are the stable macro benches.
+# The `micro` group (sub-microsecond subjects, where timer quantization alone
+# moves the mode by ~10%) runs afterwards as a non-blocking informational
+# report. See tests/Benchmark/README.md for the group taxonomy.
 
 on:
   pull_request:
@@ -53,5 +58,9 @@ jobs:
       - name: Install PR head dependencies
         run: composer install --no-interaction --no-progress
 
-      - name: Assert no >10% regression against the base baseline
-        run: vendor/bin/phpbench run --ref=base --report=aggregate --progress=none
+      - name: Assert no >10% regression against the base baseline (gate group)
+        run: vendor/bin/phpbench run --ref=base --group=gate --report=aggregate --progress=none
+
+      - name: Report micro benches against the base baseline (informational, non-blocking)
+        continue-on-error: true
+        run: vendor/bin/phpbench run --ref=base --group=micro --report=aggregate --progress=none

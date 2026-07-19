@@ -6,6 +6,11 @@ namespace GacelaTest\Benchmark\Cache;
 
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\ScopedCache;
+use PhpBench\Attributes\AfterMethods;
+use PhpBench\Attributes\BeforeMethods;
+use PhpBench\Attributes\Groups;
+use PhpBench\Attributes\Iterations;
+use PhpBench\Attributes\Revs;
 
 use function bin2hex;
 use function is_dir;
@@ -18,14 +23,14 @@ use function sys_get_temp_dir;
 use function unlink;
 
 /**
- * @BeforeMethods({"setUp"})
- *
- * @AfterMethods({"tearDown"})
- *
- * @Revs(50)
- *
- * @Iterations(5)
+ * ScopedCache decorator cost: put/get overhead and dependsOn() cycle-detection
+ * at increasing depths, on top of a real FileCache.
  */
+#[BeforeMethods('setUp')]
+#[AfterMethods('tearDown')]
+#[Groups(['gate', 'cache'])]
+#[Revs(50)]
+#[Iterations(5)]
 final class ScopedCacheBench
 {
     private string $cacheDir;

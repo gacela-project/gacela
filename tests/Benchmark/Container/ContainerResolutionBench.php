@@ -11,7 +11,17 @@ use GacelaTest\Benchmark\Container\Fixtures\DeepD;
 use GacelaTest\Benchmark\Container\Fixtures\InjectConsumer;
 use GacelaTest\Benchmark\Container\Fixtures\ServiceInterface;
 use GacelaTest\Benchmark\Container\Fixtures\SimpleClass;
+use PhpBench\Attributes\Groups;
 
+/**
+ * Cold container resolution: each subject deliberately constructs a fresh
+ * Container so it measures first-resolution cost (reflection, attribute
+ * lookup, binding lookup) — the container allocation is part of the
+ * documented path, not incidental noise.
+ *
+ * Sampling: inherits the phpbench.json defaults — see tests/Benchmark/README.md.
+ */
+#[Groups(['gate', 'container'])]
 final class ContainerResolutionBench
 {
     /**

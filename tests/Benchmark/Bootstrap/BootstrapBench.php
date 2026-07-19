@@ -43,7 +43,13 @@ final class BootstrapBench
         $this->bootstrapWarm();
     }
 
-    public function bench_bootstrap_cold(): void
+    /**
+     * Renamed from bench_bootstrap_cold when Gacela::resetCache() started
+     * clearing the glob cache (#474): the old numbers measured bootstraps
+     * that reused a stale glob file list, so they are not comparable — a
+     * cold boot now genuinely re-scans the config files every rev.
+     */
+    public function bench_bootstrap_cold_rescan(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();

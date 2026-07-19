@@ -18,6 +18,7 @@ use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
+use Gacela\Framework\Config\PathFinder;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
@@ -202,6 +203,7 @@ final class Gacela
         DocBlockResolverCache::resetCache();
         ClassResolverCache::resetCache();
         ConfigFactory::resetCache();
+        PathFinder::resetCache();
         Config::resetInstance();
         Locator::resetInstance();
     }

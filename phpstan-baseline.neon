@@ -1,8 +1,2 @@
 parameters:
-	ignoreErrors:
-		-
-			rawMessage: Trait Gacela\Framework\Testing\ContainerFixture is used zero times and is not analysed.
-			identifier: trait.unused
-			count: 1
-			path: src/Framework/Testing/ContainerFixture.php
-
+	ignoreErrors: []

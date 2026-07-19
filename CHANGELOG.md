@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- `ProviderRegisteredEvent` is no longer dispatched twice for a modern `AbstractProvider`: the BC `DependencyProvider` resolver returns the same cached provider instance and no longer re-reports it
 - `Config::getEventDispatcher()` no longer throws when called before bootstrap; it returns a no-op dispatcher so guarded dispatch sites (e.g. cache-file deletion) stay silent
 - Re-bootstrapping now rebuilds the event dispatcher from the new setup; previously a dispatcher cached by a prior bootstrap kept serving stale listeners unless the in-memory cache was reset
 

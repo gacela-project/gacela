@@ -81,6 +81,8 @@ final class MergedConfigCacheIntegrationTest extends TestCase
 
         self::assertTrue(is_file($filename), 'merged config cache should be auto-warmed on miss');
         self::assertSame('warm_value', Config::getInstance()->get('warm_key'));
+        // A multi-key merged config must survive the cache-miss path intact.
+        self::assertSame('second_warm_value', Config::getInstance()->get('second_warm_key'));
     }
 
     public function test_does_not_auto_warm_when_file_cache_disabled(): void

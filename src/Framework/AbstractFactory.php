@@ -80,7 +80,9 @@ abstract class AbstractFactory
         // Temporal solution to keep BC with the AbstractDependencyProvider
         $dpResolver = (new DependencyProviderResolver())->resolve($this);
         $dpResolver?->provideModuleDependencies($container);
-        if ($dpResolver !== null) {
+        // Both resolvers share a normalized cache slot ("DependencyProvider" -> "Provider"),
+        // so a modern provider comes back from both; only notify when it is a distinct one.
+        if ($dpResolver !== null && $dpResolver !== $resolver) {
             $this->notifyProviderRegistered($dpResolver::class);
         }
 

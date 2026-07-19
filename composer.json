@@ -99,7 +99,7 @@
             "@rector"
         ],
         "infection": [
-            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=75 --min-covered-msi=75",
+            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=100 --min-covered-msi=100",
             "@static-clear-cache"
         ],
         "metrics-report": [

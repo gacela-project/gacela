@@ -4,6 +4,8 @@
 
 ### Added
 
+- Scalar contextual bindings: `$config->when(X)->needs('$paramName')->give(30)` injects class-specific scalar values (strings, numbers, booleans, arrays, or lazy closures) when resolving Gacela classes; documented in `docs/container-configuration.md`
+- The main container now supports `ArrayAccess` (`$container[Id::class]`, `isset`, assignment, `unset`), inherited from `gacela-project/container` 0.10
 - `make:module --template=service [--with-tests]`: scaffolds the four pillars plus a `Domain` service the Facade delegates to (built on the existing `.txt` template mechanism); `--with-tests` adds a ready-to-run facade test extending `GacelaTestCase` under the module's `Tests/` directory. The generated module compiles and runs out of the box
 - `debug:graph` console command: prints the module dependency graph (which module's `use` imports point into which other module); `--format=text|mermaid|graphviz|json`, optional module filter
 - `CrossModuleViaFacadeRule` now accepts a `sharedNamespaces` argument: shared-kernel namespaces are exempt from the boundary check in both directions (references into them are allowed, classes inside them are not checked); documented in `docs/static-analysis.md`
@@ -29,7 +31,7 @@
 
 ### Changed
 
-- Bumped `gacela-project/container` to `^0.9.0`
+- Bumped `gacela-project/container` to `^0.10.0` (fluent `bind()`/`singleton()`, typed `make()`, runtime parameters, scalar contextual bindings, service tagging, conditional registration, `afterResolving()` hooks, `ArrayAccess`, compiled constructor plans; transient resolutions no longer share child instances)
 - Event dispatch on the class-resolution hot path is now zero-cost when nothing listens: dispatch sites check the new `EventDispatcherInterface::hasListeners()` before allocating the event object (~20% faster warm resolves; custom `EventDispatcherInterface` implementations must add the method)
 
 ## [1.17.0](https://github.com/gacela-project/gacela/compare/1.16.0...1.17.0) - 2026-07-18

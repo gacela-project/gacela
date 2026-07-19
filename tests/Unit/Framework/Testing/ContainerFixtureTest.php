@@ -179,6 +179,19 @@ final class ContainerFixtureTest extends TestCase
         self::assertNull($snapshot->cacheDir());
     }
 
+    public function test_capture_container_state_includes_app_root_and_cache_dir_once_known(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+        $cacheDir = Config::getInstance()->getCacheDir();
+
+        $snapshot = $this->captureContainerState();
+
+        self::assertSame(__DIR__, $snapshot->appRootDir());
+        self::assertSame($cacheDir, $snapshot->cacheDir());
+    }
+
     public function test_restore_container_state_reinstates_in_memory_cache(): void
     {
         (new InMemoryCache('to-restore'))->put('Foo', 'Bar');

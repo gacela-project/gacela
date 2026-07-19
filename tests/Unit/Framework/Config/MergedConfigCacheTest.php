@@ -124,6 +124,20 @@ final class MergedConfigCacheTest extends TestCase
         );
     }
 
+    public function test_filename_embeds_the_exact_app_root_hash_and_env_suffix(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir, 'prod', '/app/root');
+
+        self::assertSame(
+            $this->cacheDir . DIRECTORY_SEPARATOR
+                . MergedConfigCache::FILENAME_PREFIX
+                . '-' . substr(sha1('/app/root'), 0, 12)
+                . '-prod'
+                . MergedConfigCache::FILENAME_EXTENSION,
+            $cache->filename(),
+        );
+    }
+
     public function test_different_envs_produce_isolated_cache_files(): void
     {
         $prod = new MergedConfigCache($this->cacheDir, 'prod');

@@ -66,4 +66,20 @@ final class ConsoleFacade extends AbstractFacade
     {
         return $this->getFactory()->getContainerDependencyTree($className);
     }
+
+    /**
+     * @return array<string,string>
+     */
+    public function getContainerBindings(): array
+    {
+        return $this->getFactory()->getContainerBindings();
+    }
+
+    /**
+     * @return array<string,array<string,string>>
+     */
+    public function getContainerContextualBindings(): array
+    {
+        return $this->getFactory()->getContainerContextualBindings();
+    }
 }

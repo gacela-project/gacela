@@ -30,6 +30,7 @@ use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
 
 use function is_dir;
+use function is_string;
 use function sprintf;
 use function str_starts_with;
 use function strlen;
@@ -112,6 +113,39 @@ final class ConsoleFactory extends AbstractFactory
     public function getContainerDependencyTree(string $className): array
     {
         return $this->getMainContainer()->getDependencyTree($className);
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    public function getContainerBindings(): array
+    {
+        $result = [];
+        foreach (Config::getInstance()->getFactory()->createGacelaFileConfig()->getBindings() as $abstract => $concrete) {
+            $result[$abstract] = $this->stringifyBoundConcrete($concrete);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array<string,array<string,string>>
+     */
+    public function getContainerContextualBindings(): array
+    {
+        $result = [];
+        foreach (Config::getInstance()->getSetupGacela()->getContextualBindings() as $consumer => $needs) {
+            foreach ($needs as $abstract => $concrete) {
+                $result[$consumer][$abstract] = $this->stringifyBoundConcrete($concrete);
+            }
+        }
+
+        return $result;
+    }
+
+    private function stringifyBoundConcrete(mixed $concrete): string
+    {
+        return is_string($concrete) ? $concrete : get_debug_type($concrete);
     }
 
     /**

@@ -66,6 +66,9 @@ final class DebugModuleCommand extends Command
      */
     private function renderJson(OutputInterface $output, array $modules): int
     {
+        $bindings = $this->getFacade()->getContainerBindings();
+        $contextualBindings = $this->getFacade()->getContainerContextualBindings();
+
         $payload = [];
         foreach ($modules as $module) {
             $payload[] = [
@@ -75,8 +78,8 @@ final class DebugModuleCommand extends Command
                 'factory' => $module->factoryClass(),
                 'config' => $module->configClass(),
                 'provider' => $module->providerClass(),
-                'bindings' => $this->getFacade()->getContainerBindings(),
-                'contextualBindings' => $this->getFacade()->getContainerContextualBindings(),
+                'bindings' => $bindings,
+                'contextualBindings' => $contextualBindings,
                 'dependencyTree' => $this->getFacade()->getContainerDependencyTree($module->facadeClass()),
             ];
         }

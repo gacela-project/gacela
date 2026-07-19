@@ -22,6 +22,7 @@ final class MakeModuleCommandTest extends TestCase
     public static function tearDownAfterClass(): void
     {
         DirectoryUtil::removeDir(self::CACHE_DIR);
+        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ServiceModule');
     }
 
     protected function setUp(): void
@@ -85,5 +86,65 @@ OUT;
     {
         yield 'module' => ['TestModule', false];
         yield 'module -s' => ['', true];
+    }
+
+    public function test_make_module_with_service_template_generates_a_working_module(): void
+    {
+        $input = new StringInput('make:module Psr4CodeGeneratorData/ServiceModule --template=service --with-tests');
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+        $bootstrap->run($input, $output);
+
+        $display = $output->fetch();
+        self::assertStringContainsString("Module 'ServiceModule' created successfully", $display);
+
+        // Paths are built at runtime: the files only exist after the command ran.
+        $moduleDir = getcwd() . '/data/ServiceModule';
+        $files = [
+            $moduleDir . '/ServiceModuleFacade.php',
+            $moduleDir . '/ServiceModuleFactory.php',
+            $moduleDir . '/ServiceModuleConfig.php',
+            $moduleDir . '/ServiceModuleProvider.php',
+            $moduleDir . '/Domain/ServiceModuleService.php',
+            $moduleDir . '/Tests/ServiceModuleFacadeTest.php',
+        ];
+        foreach ($files as $file) {
+            self::assertFileExists($file);
+            // Every generated file must be valid PHP.
+            exec(sprintf('php -l %s 2>&1', escapeshellarg($file)), $lintOutput, $lintExit);
+            self::assertSame(0, $lintExit, implode("\n", $lintOutput));
+        }
+
+        // The generated module actually runs: the facade delegates through
+        // the factory to the Domain service. The Psr4CodeGeneratorData
+        // namespace is only mapped in the fixture composer.json, so load
+        // the generated files explicitly.
+        foreach ($files as $file) {
+            if (!str_contains($file, '/Tests/')) {
+                require_once $file;
+            }
+        }
+
+        $facadeClass = 'Psr4CodeGeneratorData\ServiceModule\ServiceModuleFacade';
+        self::assertTrue(class_exists($facadeClass));
+
+        $execute = [new $facadeClass(), 'execute'];
+        self::assertIsCallable($execute);
+        self::assertSame('Hello from ServiceModuleService!', $execute());
+    }
+
+    public function test_make_module_with_unknown_template_fails(): void
+    {
+        $input = new StringInput('make:module Psr4CodeGeneratorData/AnotherModule --template=nope');
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+        $exitCode = $bootstrap->run($input, $output);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('Unknown template "nope"', $output->fetch());
     }
 }

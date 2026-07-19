@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace $NAMESPACE$;
+
+use $NAMESPACE$\Domain\$MODULE_NAME$Service;
+use Gacela\Framework\AbstractFactory;
+
+/**
+ * @extends AbstractFactory<$MODULE_NAME$Config>
+ */
+final class $CLASS_NAME$ extends AbstractFactory
+{
+    public function createService(): $MODULE_NAME$Service
+    {
+        return new $MODULE_NAME$Service();
+    }
+}

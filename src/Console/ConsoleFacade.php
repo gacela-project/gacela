@@ -40,6 +40,22 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
+     * Generate a file from the `service` template set.
+     *
+     * @param string $subDirectory optional sub-directory (relative to the module dir) to place the file in
+     */
+    public function generateServiceFileContent(
+        CommandArguments $commandArguments,
+        string $filename,
+        bool $withShortName = false,
+        string $subDirectory = '',
+    ): string {
+        return $this->getFactory()
+            ->createServiceFileContentGenerator()
+            ->generate($commandArguments, $filename, $withShortName, $subDirectory);
+    }
+
+    /**
      * @return list<AppModule>
      */
     public function findAllAppModules(string $filter = ''): array

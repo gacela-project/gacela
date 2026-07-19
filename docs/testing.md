@@ -48,3 +48,15 @@ $resolved = $this->recordedGacelaEventsOf(ServiceResolvedEvent::class); // one t
 If you only need the reset helpers inside an existing test hierarchy, use the
 [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait
 directly — `GacelaTestCase` builds on it.
+
+## Scaffolding a testable module
+
+`make:module` can scaffold a module already wired for testing:
+
+```bash
+vendor/bin/gacela make:module App/Greeting --template=service --with-tests
+```
+
+The `service` template generates the four pillars plus a `Domain` service the
+Facade delegates to, and `--with-tests` adds a ready-to-run facade test (a
+`GacelaTestCase`) under the module's `Tests/` directory.

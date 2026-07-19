@@ -30,6 +30,26 @@ final class ConsoleConfig extends AbstractConfig
         return $this->getCommandTemplateContent('provider-maker.txt');
     }
 
+    public function getServiceFacadeMakerTemplate(): string
+    {
+        return $this->getCommandTemplateContent('service/facade-maker.txt');
+    }
+
+    public function getServiceFactoryMakerTemplate(): string
+    {
+        return $this->getCommandTemplateContent('service/factory-maker.txt');
+    }
+
+    public function getServiceMakerTemplate(): string
+    {
+        return $this->getCommandTemplateContent('service/service-maker.txt');
+    }
+
+    public function getServiceFacadeTestMakerTemplate(): string
+    {
+        return $this->getCommandTemplateContent('service/facade-test-maker.txt');
+    }
+
     /**
      * @psalm-suppress MixedReturnTypeCoercion
      *

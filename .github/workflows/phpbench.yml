@@ -1,0 +1,57 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+#
+# Performance regression guard: benchmarks the PR base branch, then benchmarks
+# the PR head against that stored baseline. The suite-wide assertion configured
+# in phpbench.json (mode(variant.time.avg) <= mode(baseline.time.avg) +/- 10%)
+# fails the job when a benchmarked path regresses by more than 10%.
+
+on:
+  pull_request:
+
+name: PHPBench
+
+permissions:
+  contents: read
+
+jobs:
+
+  regression-guard:
+    name: "Performance regression guard"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the base branch can be checked out for the baseline run.
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+          tools: composer
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: "phpbench-php-8.4-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: "phpbench-php-8.4-"
+
+      - name: Benchmark base branch (${{ github.base_ref }}) and store as baseline
+        run: |
+          git checkout --detach "origin/${{ github.base_ref }}"
+          composer install --no-interaction --no-progress
+          vendor/bin/phpbench run --tag=base --store --progress=none
+
+      - name: Restore PR head
+        run: git checkout --detach "${{ github.event.pull_request.head.sha }}"
+
+      - name: Install PR head dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Assert no >10% regression against the base baseline
+        run: vendor/bin/phpbench run --ref=base --report=aggregate --progress=none

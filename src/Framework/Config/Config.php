@@ -110,17 +110,13 @@ final class Config implements ConfigInterface
         }
 
         if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasKey($key)) {
-            if (self::shouldDispatch(ConfigKeyNotFoundEvent::class)) {
-                self::dispatchEvent(new ConfigKeyNotFoundEvent($key));
-            }
+            self::notifyKeyNotFound($key);
 
             return $default;
         }
 
         if (!$this->hasKey($key)) {
-            if (self::shouldDispatch(ConfigKeyNotFoundEvent::class)) {
-                self::dispatchEvent(new ConfigKeyNotFoundEvent($key));
-            }
+            self::notifyKeyNotFound($key);
 
             throw ConfigException::keyNotFound($key, self::class);
         }
@@ -381,6 +377,13 @@ final class Config implements ConfigInterface
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
+    }
+
+    private static function notifyKeyNotFound(string $key): void
+    {
+        if (self::shouldDispatch(ConfigKeyNotFoundEvent::class)) {
+            self::dispatchEvent(new ConfigKeyNotFoundEvent($key));
+        }
     }
 
     /**

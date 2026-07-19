@@ -16,6 +16,7 @@
 ### Documentation
 
 - New `docs/events.md`: event system guide with the dispatch model, a complete event catalog (payloads, firing sites, hot-path markers), and a listener cookbook; linked from the README and docs index
+- `docs/container-configuration.md` now documents the container's class attributes `#[Singleton]` and `#[Factory]` for module authors (attribute vs imperative registration, lifetime semantics through Gacela factories); a feature test proves all three DI attributes work through `getProvidedDependency()`
 
 ### Changed
 

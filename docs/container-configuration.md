@@ -182,6 +182,54 @@ compiler pass is required to route `#[Inject]` parameters to Gacela before
 Symfony's autowire claims them. A dedicated `gacela/symfony-bridge` package
 ships this pass; adopt it in projects where Symfony owns the container.
 
+## Class Attributes: `#[Singleton]` and `#[Factory]`
+
+Instead of registering a binding or an `addFactory()` closure, module authors can
+annotate the service class itself. Any class resolved through the container —
+including via `getProvidedDependency()` in a Gacela `Factory` — honors these:
+
+```php
+use Gacela\Container\Attribute\Factory;
+use Gacela\Container\Attribute\Singleton;
+
+#[Singleton]
+final class ConnectionPool {}   // one instance, cached and reused
+
+#[Factory]
+final class ReportBuilder {}    // fresh instance on every resolution
+```
+
+```php
+final class MyModuleFactory extends AbstractFactory
+{
+    public function createPool(): ConnectionPool
+    {
+        /** @var ConnectionPool */
+        return $this->getProvidedDependency(ConnectionPool::class);  // same instance every call
+    }
+}
+```
+
+The attribute lives with the class, so the lifetime choice travels with the code
+instead of a `gacela.php` entry. Equivalent imperative registrations:
+
+| Attribute | Imperative equivalent |
+|---|---|
+| `#[Singleton]` on `Pool` | `$container->set(Pool::class, new Pool())` in a provider |
+| `#[Factory]` on `Builder` | `$config->addFactory(Builder::class, static fn() => new Builder())` |
+| `#[Inject(X::class)]` on a param | `$config->when(Consumer::class)->needs(Type::class)->give(X::class)` |
+
+Notes:
+
+- `#[Singleton]` instances are cached per container. Each Gacela module factory
+  keeps one container, so repeated resolves through the same module share the
+  instance.
+- Without any attribute, an unregistered class is autowired fresh on each
+  `get()` — `#[Singleton]` is the opt-in for caching, `#[Factory]` documents
+  the fresh-instance intent explicitly.
+- Constructor params of attribute-annotated classes still go through the normal
+  resolution order (bindings, contextual bindings, `#[Inject]`).
+
 ## Quick Reference
 
 | Type | Behavior | Use Case |
@@ -192,6 +240,8 @@ ships this pass; adopt it in projects where Symfony owns the container.
 | Alias | Points to another service | Backward compatibility, short names |
 | Contextual | Different impl per class | Per-controller loggers, context-specific deps |
 | `#[Inject]` | Constructor-param opt-in | Explicit concrete override, tool visibility |
+| `#[Singleton]` | One cached instance per container | Shared stateful services, no registration needed |
+| `#[Factory]` | New instance each resolution | Explicit fresh-instance intent on the class |
 
 ## Example
 

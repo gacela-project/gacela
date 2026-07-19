@@ -10,6 +10,7 @@ use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Console\Infrastructure\Command\DebugConfigCommand;
 use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
 use Gacela\Console\Infrastructure\Command\DebugDependenciesCommand;
+use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
 use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
@@ -43,6 +44,7 @@ final class ConsoleProvider extends AbstractProvider
             new DebugConfigCommand(),
             new DebugContainerCommand(),
             new DebugDependenciesCommand(),
+            new DebugGraphCommand(),
             new DebugModuleCommand(),
             new DebugModulesCommand(),
             new CacheWarmCommand(),

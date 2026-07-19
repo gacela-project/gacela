@@ -20,6 +20,9 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
 
     private int $modulePathSegments = 1;
 
+    /** @var list<string> */
+    private array $sharedNamespaces = [];
+
     public function test_reports_cross_module_new_of_non_facade(): void
     {
         $this->analyse(
@@ -147,8 +150,67 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
         self::assertNull($moduleOf->invoke($rule, self::ROOT . '\OnlyOneSegment'));
     }
 
+    public function test_reports_shared_namespace_reference_when_not_allowlisted(): void
+    {
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/User/SharedKernelFactory.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\SharedKernelFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared\Clock from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared). Cross-module access must go through a Facade.',
+                    9,
+                ],
+            ],
+        );
+    }
+
+    public function test_allows_reference_into_a_shared_namespace(): void
+    {
+        $this->sharedNamespaces = [self::ROOT . '\Shared'];
+
+        $this->analyse([__DIR__ . '/Fixture/CrossModule/User/SharedKernelFactory.php'], []);
+    }
+
+    public function test_shared_namespace_must_match_a_namespace_boundary(): void
+    {
+        // "Shar" is a prefix of "Shared" but not a namespace boundary:
+        // the reference must still be reported.
+        $this->sharedNamespaces = [self::ROOT . '\Shar'];
+
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/User/SharedKernelFactory.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\SharedKernelFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared\Clock from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared). Cross-module access must go through a Facade.',
+                    9,
+                ],
+            ],
+        );
+    }
+
+    public function test_still_reports_a_violation_after_an_allowed_shared_reference(): void
+    {
+        $this->sharedNamespaces = [self::ROOT . '\Shared'];
+
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/User/SharedThenBadFactory.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\SharedThenBadFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
+                    10,
+                ],
+            ],
+        );
+    }
+
+    public function test_class_inside_a_shared_namespace_is_not_itself_checked(): void
+    {
+        $this->sharedNamespaces = [self::ROOT . '\Shared'];
+
+        $this->analyse([__DIR__ . '/Fixture/CrossModule/Shared/UsesOtherModule.php'], []);
+    }
+
     protected function getRule(): Rule
     {
-        return new CrossModuleViaFacadeRule($this->rootNamespace, $this->modulePathSegments);
+        return new CrossModuleViaFacadeRule($this->rootNamespace, $this->modulePathSegments, $this->sharedNamespaces);
     }
 }

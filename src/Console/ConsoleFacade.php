@@ -50,6 +50,29 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
+     * Build the module dependency graph: module namespace => the module
+     * namespaces its `use` imports point into.
+     *
+     * @return array<string, list<string>>
+     */
+    public function buildModuleGraph(string $filter = ''): array
+    {
+        return $this->getFactory()
+            ->createModuleGraphBuilder()
+            ->build($this->findAllAppModules($filter));
+    }
+
+    /**
+     * @param array<string, list<string>> $graph
+     */
+    public function formatModuleGraph(array $graph, string $format): string
+    {
+        return $this->getFactory()
+            ->createModuleGraphFormatter($format)
+            ->format($graph);
+    }
+
+    /**
      * @return ContainerStats
      */
     public function getContainerStats(): array

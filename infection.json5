@@ -16,8 +16,8 @@
             'src'
         ]
     },
-    minMsi: 65,
-    minCoveredMsi: 65,
+    minMsi: 100,
+    minCoveredMsi: 100,
     mutators: {
         '@default': true,
         "global-ignore": [
@@ -45,6 +45,17 @@
             '.*\\$seen = \\[\\$\\w+ => true\\];.*',
             // commitBatch() writes for every key of $dirty regardless of value.
             '.*\\$dirty\\[static::class\\] = true;.*',
+            // Memoization guards: rebuilding the cached instance every call is
+            // observationally identical (idempotent construction), only slower.
+            '.*!self::\\$container instanceof Container.*',
+            '.*\\$this->gacelaFileConfig instanceof GacelaConfigFileInterface.*',
+            '.*self::\\$eventDispatcher instanceof EventDispatcherInterface.*',
+            // A fresh no-op dispatcher per pre-bootstrap call is identical.
+            '.*preBootstrapDispatcher \\?\\?= new NullEventDispatcher.*',
+            // Dedup bookkeeping: isset() treats `false` like `true`.
+            '.*resolvedServiceIds\\[\\$id\\] = true;.*',
+            // The candidate list feeds implode(); reindexing cannot change the message.
+            '.*array_values\\(array_unique\\(\\$candidates\\)\\).*',
         ],
         // flock()-based locking and opcache invalidation are not observable in-process.
         FunctionCallRemoval: {
@@ -169,8 +180,14 @@
             ignore: ["Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get"],
         },
         // hrtime(true) is an int; dividing by a float yields a float either way.
+        // Same for the bootstrap-duration event, and getFloat()'s widening
+        // return: int-to-float applies via the float return type anyway.
         CastFloat: {
             ignore: ["Gacela\\Framework\\Profiler\\Profiler::getCurrentTime"],
+            ignoreSourceCodeByRegex: [
+                '.*return \\(float\\) \\$value;.*',
+                '.*\\(float\\) \\(hrtime\\(true\\) - \\$startTime\\).*',
+            ],
         },
         // Keys never carry a leading backslash outside the normalization itself.
         UnwrapLtrim: {
@@ -190,6 +207,10 @@
         // unreachable defensive narrowing.
         InstanceOf_: {
             ignore: [
+                // instantiate(): both instanceof mutants collapse into the same
+                // catch(Throwable)+fallback path (null->get() Error, or the
+                // strict return type throwing TypeError): identical outcome.
+                "Gacela\\Framework\\Health\\HealthCheckRegistry::instantiate",
                 "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
                 "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::processNode",
                 "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement",

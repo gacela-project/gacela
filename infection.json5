@@ -56,6 +56,10 @@
             '.*resolvedServiceIds\\[\\$id\\] = true;.*',
             // The candidate list feeds implode(); reindexing cannot change the message.
             '.*array_values\\(array_unique\\(\\$candidates\\)\\).*',
+            // Cache-key separator: collisions require crafting spl_object_id values,
+            // which are runtime-assigned and untestable; any separator variant behaves
+            // identically for real ids/paths.
+            '.*spl_object_id\\(\\$configItem->reader\\(\\)\\).*',
         ],
         // flock()-based locking and opcache invalidation are not observable in-process.
         FunctionCallRemoval: {

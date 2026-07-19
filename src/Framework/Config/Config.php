@@ -415,11 +415,9 @@ final class Config implements ConfigInterface
 
     private function createMergedConfigCache(): MergedConfigCache
     {
-        $env = getenv('APP_ENV');
-
         return new MergedConfigCache(
             $this->getCacheDir(),
-            is_string($env) ? $env : '',
+            AppEnv::current(),
             $this->getAppRootDir(),
         );
     }

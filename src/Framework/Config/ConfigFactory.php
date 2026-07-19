@@ -109,7 +109,7 @@ final class ConfigFactory extends AbstractFactory
 
     private function env(): string
     {
-        return getenv('APP_ENV') ?: '';
+        return AppEnv::current();
     }
 
     private function createPathFinder(): PathFinderInterface

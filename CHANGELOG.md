@@ -14,6 +14,8 @@
 
 ### Fixed
 
+- The application environment (`APP_ENV`) is now read from a single source (`AppEnv::current()`) for both the env-suffixed config file lookup and the merged-config cache filename, so they can no longer disagree when the env var changes mid-process
+- `ConfigLoader`'s per-load read cache is now keyed by reader as well as path: two config items pointing the same file at different readers no longer share a cache entry
 - `Gacela::resetCache()` now also clears the glob-result cache (`PathFinder`), so config files added or removed on disk are picked up by the next bootstrap in the same process (long-running workers, multi-bootstrap tests); previously the file list was cached for the process lifetime
 - `ProviderRegisteredEvent` is no longer dispatched twice for a modern `AbstractProvider`: the BC `DependencyProvider` resolver returns the same cached provider instance and no longer re-reports it
 - `Config::getEventDispatcher()` no longer throws when called before bootstrap; it returns a no-op dispatcher so guarded dispatch sites (e.g. cache-file deletion) stay silent

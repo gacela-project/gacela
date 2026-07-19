@@ -43,11 +43,11 @@ final class Container extends GacelaContainer implements ContainerInterface
         /** @var mixed $service */
         $service = parent::get($id);
 
-        if (!isset($this->resolvedServiceIds[$id])) {
+        // Guard first so a container with no listener pays nothing: no dedup-map
+        // growth and no per-get work, keeping get() zero-cost when events are off.
+        if (self::shouldDispatch(ServiceResolvedEvent::class) && !isset($this->resolvedServiceIds[$id])) {
             $this->resolvedServiceIds[$id] = true;
-            if (self::shouldDispatch(ServiceResolvedEvent::class)) {
-                self::dispatchEvent(new ServiceResolvedEvent($id));
-            }
+            self::dispatchEvent(new ServiceResolvedEvent($id));
         }
 
         return $service;

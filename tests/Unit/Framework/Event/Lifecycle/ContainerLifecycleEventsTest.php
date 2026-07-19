@@ -10,6 +10,7 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use GacelaTest\Fixtures\SpyEventDispatcher;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use stdClass;
 
 final class ContainerLifecycleEventsTest extends TestCase
@@ -48,6 +49,21 @@ final class ContainerLifecycleEventsTest extends TestCase
         $container->get('my-service');
 
         self::assertSame([], $spy->dispatchedEvents());
+    }
+
+    public function test_get_stays_zero_cost_when_nothing_listens(): void
+    {
+        $this->bootstrapWithSpy(hasListeners: false);
+
+        $container = new Container();
+        $container->set('my-service', static fn (): stdClass => new stdClass());
+        $container->get('my-service');
+        $container->get('my-service');
+
+        // With no listener the resolved-id dedup map must stay empty, so get()
+        // adds no per-call bookkeeping nor unbounded memory growth.
+        $resolvedServiceIds = new ReflectionProperty(Container::class, 'resolvedServiceIds');
+        self::assertSame([], $resolvedServiceIds->getValue($container));
     }
 
     private function bootstrapWithSpy(bool $hasListeners = true): SpyEventDispatcher

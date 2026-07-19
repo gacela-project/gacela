@@ -5,6 +5,7 @@
 - [Static analysis](static-analysis.md) — PHPStan and Psalm setup
 - [Module health checks](module-health-checks.md) — report module operational status
 - [Events](events.md) — listen to Gacela internals: dispatch model, event catalog, cookbook
+- [Testing](testing.md) — `GacelaTestCase`: bootstrap isolation, config overrides, container assertions
 - [Caching](caching.md) — overview of Gacela's three caching layers and when to reach for each
 - [Cacheable methods](cacheable-methods.md) — cache facade method results with `#[Cacheable]`
 - [Opcache preload](opcache-preload.md) — production performance tuning

@@ -14,7 +14,9 @@ use ReflectionClass;
 use RuntimeException;
 use SplFileInfo;
 
+use function is_array;
 use function is_dir;
+use function is_string;
 use function register_shutdown_function;
 use function sprintf;
 
@@ -89,6 +91,7 @@ trait ContainerFixture
      */
     protected function captureContainerState(): ContainerSnapshot
     {
+        /** @var mixed $config */
         $config = self::readStaticProperty(Config::class, 'instance');
 
         $configValues = [];
@@ -96,14 +99,20 @@ trait ContainerFixture
         $cacheDir = null;
 
         if ($config instanceof Config) {
-            $configValues = self::readPrivateProperty($config, 'config') ?? [];
-            $appRootDir = self::readPrivateProperty($config, 'appRootDir');
-            $cacheDir = self::readPrivateProperty($config, 'cacheDir');
+            /** @var mixed $rawConfigValues */
+            $rawConfigValues = self::readPrivateProperty($config, 'config');
+            /** @var array<string, mixed> $configValues */
+            $configValues = is_array($rawConfigValues) ? $rawConfigValues : [];
+
+            /** @var mixed $rawAppRootDir */
+            $rawAppRootDir = self::readPrivateProperty($config, 'appRootDir');
+            $appRootDir = is_string($rawAppRootDir) ? $rawAppRootDir : null;
+
+            /** @var mixed $rawCacheDir */
+            $rawCacheDir = self::readPrivateProperty($config, 'cacheDir');
+            $cacheDir = is_string($rawCacheDir) ? $rawCacheDir : null;
         }
 
-        /** @var array<string, mixed> $configValues */
-        /** @var ?string $appRootDir */
-        /** @var ?string $cacheDir */
         return new ContainerSnapshot(
             inMemoryCache: InMemoryCache::all(),
             config: $configValues,
@@ -193,8 +202,8 @@ trait ContainerFixture
             RecursiveIteratorIterator::CHILD_FIRST,
         );
 
+        /** @var SplFileInfo $entry */
         foreach ($iterator as $entry) {
-            /** @var SplFileInfo $entry */
             $path = $entry->getPathname();
             if ($entry->isDir()) {
                 @rmdir($path);

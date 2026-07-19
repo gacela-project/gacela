@@ -49,6 +49,7 @@
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files",
         "gacela-project/phpstan-extension": "A set of phpstan rules for Gacela",
+        "phpunit/phpunit": "Allows to extend Gacela\\Framework\\Testing\\GacelaTestCase in your tests",
         "symfony/console": "Allows to use vendor/bin/gacela script"
     },
     "minimum-stability": "dev",

@@ -4,7 +4,7 @@
 
 ### Added
 
-- Typed config accessors on `Config`/`AbstractConfig`: `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()`. Each returns a concrete type (no more `mixed` casts), uses a `null` default to mean "required", and throws `ConfigException` on a type mismatch instead of coercing (`getFloat()` accepts an int via lossless widening)
+- Typed config accessors on `Config`/`AbstractConfig`: `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()`. Each returns a concrete type (no more `mixed` casts), uses a `null` default to mean "required", and throws `ConfigException` on a type mismatch instead of coercing (`getFloat()` accepts an int via lossless widening). Self-contained implementations: a typed read is faster than `get()` + a manual cast (single `array_key_exists`, no default sentinel comparison)
 
 ### Changed
 

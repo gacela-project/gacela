@@ -101,8 +101,19 @@ final class Config implements ConfigInterface
      */
     public function getString(string $key, ?string $default = null): string
     {
-        $value = $this->getTypedOrDefault($key, $default);
+        if (!$this->initialized) {
+            $this->init();
+        }
 
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
         if (!is_string($value)) {
             throw ConfigException::invalidType($key, 'string', get_debug_type($value));
         }
@@ -115,8 +126,19 @@ final class Config implements ConfigInterface
      */
     public function getInt(string $key, ?int $default = null): int
     {
-        $value = $this->getTypedOrDefault($key, $default);
+        if (!$this->initialized) {
+            $this->init();
+        }
 
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
         if (!is_int($value)) {
             throw ConfigException::invalidType($key, 'int', get_debug_type($value));
         }
@@ -131,8 +153,19 @@ final class Config implements ConfigInterface
      */
     public function getFloat(string $key, ?float $default = null): float
     {
-        $value = $this->getTypedOrDefault($key, $default);
+        if (!$this->initialized) {
+            $this->init();
+        }
 
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
         if (is_int($value)) {
             return (float) $value;
         }
@@ -149,8 +182,19 @@ final class Config implements ConfigInterface
      */
     public function getBool(string $key, ?bool $default = null): bool
     {
-        $value = $this->getTypedOrDefault($key, $default);
+        if (!$this->initialized) {
+            $this->init();
+        }
 
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
         if (!is_bool($value)) {
             throw ConfigException::invalidType($key, 'bool', get_debug_type($value));
         }
@@ -167,8 +211,19 @@ final class Config implements ConfigInterface
      */
     public function getArray(string $key, ?array $default = null): array
     {
-        $value = $this->getTypedOrDefault($key, $default);
+        if (!$this->initialized) {
+            $this->init();
+        }
 
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
         if (!is_array($value)) {
             throw ConfigException::invalidType($key, 'array', get_debug_type($value));
         }
@@ -290,18 +345,6 @@ final class Config implements ConfigInterface
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
-    }
-
-    /**
-     * Returns the raw config value, or the given non-null default when the key
-     * is missing. A null default means "required": a missing key throws via get().
-     * Delegates to get() so config initialization and default handling stay in one place.
-     *
-     * @throws ConfigException
-     */
-    private function getTypedOrDefault(string $key, mixed $default): mixed
-    {
-        return $this->get($key, $default ?? self::DEFAULT_CONFIG_VALUE);
     }
 
     /**

@@ -15,6 +15,12 @@ use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Domain\ModuleGraph\GraphFormatterInterface;
+use Gacela\Console\Domain\ModuleGraph\GraphvizGraphFormatter;
+use Gacela\Console\Domain\ModuleGraph\JsonGraphFormatter;
+use Gacela\Console\Domain\ModuleGraph\MermaidGraphFormatter;
+use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
+use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
@@ -86,6 +92,21 @@ final class ConsoleFactory extends AbstractFactory
             $this->createModuleScanIterator(),
             $this->createAppModuleCreator(),
         );
+    }
+
+    public function createModuleGraphBuilder(): ModuleGraphBuilder
+    {
+        return new ModuleGraphBuilder();
+    }
+
+    public function createModuleGraphFormatter(string $format): GraphFormatterInterface
+    {
+        return match ($format) {
+            'mermaid' => new MermaidGraphFormatter(),
+            'graphviz' => new GraphvizGraphFormatter(),
+            'json' => new JsonGraphFormatter(),
+            default => new TextGraphFormatter(),
+        };
     }
 
     public function createAppModuleCreator(): AppModuleCreator

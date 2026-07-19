@@ -26,12 +26,14 @@ final class GacelaTestCaseTest extends GacelaTestCase
         self::assertSame(42, Config::getInstance()->getInt('an-int'));
     }
 
-    public function test_config_singleton_is_reset_between_tests(): void
+    public function test_teardown_resets_the_config_singleton(): void
     {
-        // Whatever other test ran before, tearDown() must have dropped the
-        // Config singleton; a fresh test starts unbootstrapped.
-        $this->expectException(RuntimeException::class);
+        $this->bootstrapGacela(__DIR__);
+        self::assertNotNull(Config::getInstance());
 
+        $this->tearDown();
+
+        $this->expectException(RuntimeException::class);
         Config::getInstance();
     }
 

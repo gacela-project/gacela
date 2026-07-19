@@ -34,9 +34,16 @@ final class CrossModuleViaFacadeRule implements Rule
 {
     use ClassReflectionHelperTrait;
 
+    /**
+     * @param list<string> $sharedNamespaces namespaces exempt from the boundary
+     *                                       check (shared kernels): references
+     *                                       into them are always allowed, and
+     *                                       classes inside them are not checked
+     */
     public function __construct(
         private readonly string $rootNamespace,
         private readonly int $modulePathSegments = 1,
+        private readonly array $sharedNamespaces = [],
     ) {
     }
 
@@ -53,6 +60,10 @@ final class CrossModuleViaFacadeRule implements Rule
         }
 
         $currentClass = $classReflection->getName();
+        if ($this->isShared($currentClass)) {
+            return [];
+        }
+
         $currentModule = $this->moduleOf($currentClass);
         if ($currentModule === null) {
             return [];
@@ -91,6 +102,10 @@ final class CrossModuleViaFacadeRule implements Rule
                 continue;
             }
 
+            if ($this->isShared($referenced)) {
+                continue;
+            }
+
             $key = $currentClass . '|' . $referenced;
             if (isset($seen[$key])) {
                 continue;
@@ -108,6 +123,17 @@ final class CrossModuleViaFacadeRule implements Rule
         }
 
         return $errors;
+    }
+
+    private function isShared(string $class): bool
+    {
+        foreach ($this->sharedNamespaces as $sharedNamespace) {
+            if ($class === $sharedNamespace || str_starts_with($class, $sharedNamespace . '\\')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function moduleOf(string $class): ?string

@@ -25,7 +25,9 @@ final class PhpConfigReader implements ConfigReaderInterface
             return [];
         }
 
-        self::dispatchEvent(new ReadPhpConfigEvent($absolutePath));
+        if (self::shouldDispatch(ReadPhpConfigEvent::class)) {
+            self::dispatchEvent(new ReadPhpConfigEvent($absolutePath));
+        }
 
         /**
          * @psalm-suppress UnresolvableInclude

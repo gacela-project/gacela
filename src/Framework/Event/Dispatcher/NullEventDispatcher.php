@@ -9,4 +9,9 @@ final class NullEventDispatcher implements EventDispatcherInterface
     public function dispatch(object $event): void
     {
     }
+
+    public function hasListeners(string $eventClass): bool
+    {
+        return false;
+    }
 }

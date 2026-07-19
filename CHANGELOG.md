@@ -9,6 +9,7 @@
 ### Changed
 
 - Bumped `gacela-project/container` to `^0.9.0`
+- Event dispatch on the class-resolution hot path is now zero-cost when nothing listens: dispatch sites check the new `EventDispatcherInterface::hasListeners()` before allocating the event object (~20% faster warm resolves; custom `EventDispatcherInterface` implementations must add the method)
 
 ## [1.17.0](https://github.com/gacela-project/gacela/compare/1.16.0...1.17.0) - 2026-07-18
 

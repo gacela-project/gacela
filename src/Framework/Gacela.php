@@ -20,6 +20,9 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Exception\ServiceNotFoundException;
 use Gacela\Framework\Health\HealthCheckRegistry;
@@ -30,6 +33,8 @@ use function sprintf;
 
 final class Gacela
 {
+    use EventDispatchingCapabilities;
+
     private const GACELA_PHP_FILENAME = 'gacela.php';
 
     private const PACKAGE_NAME = 'gacela-project/gacela';
@@ -58,6 +63,8 @@ final class Gacela
      */
     public static function bootstrap(string $appRootDir, ?Closure $configFn = null): void
     {
+        $startTime = hrtime(true);
+
         self::$appRootDir = $appRootDir;
         self::$mainContainer = null;
 
@@ -75,6 +82,10 @@ final class Gacela
         $config = Config::createWithSetup($setup);
         $config->setAppRootDir($appRootDir);
 
+        if (self::shouldDispatch(GacelaBootstrapStartedEvent::class)) {
+            self::dispatchEvent(new GacelaBootstrapStartedEvent($appRootDir));
+        }
+
         // Batch the file-cache writes produced while resolving classes during
         // bootstrap into a single atomic write per cache file (like cache:warm
         // does), instead of one full-file rewrite per newly discovered key.
@@ -85,6 +96,10 @@ final class Gacela
             self::runPlugins($config);
         } finally {
             AbstractPhpFileCache::commitBatch();
+        }
+
+        if (self::shouldDispatch(GacelaBootstrapFinishedEvent::class)) {
+            self::dispatchEvent(new GacelaBootstrapFinishedEvent((float)(hrtime(true) - $startTime) / 1e6));
         }
     }
 

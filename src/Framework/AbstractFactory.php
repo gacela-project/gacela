@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+use Gacela\Framework\Event\Provider\ProviderRegisteredEvent;
 
 /**
  * @template TConfig of AbstractConfig = AbstractConfig
@@ -17,6 +20,7 @@ abstract class AbstractFactory
 {
     /** @use ConfigResolverAwareTrait<TConfig> */
     use ConfigResolverAwareTrait;
+    use EventDispatchingCapabilities;
 
     /** @var array<string,Container> */
     private static array $containers = [];
@@ -69,15 +73,31 @@ abstract class AbstractFactory
 
         $resolver = (new ProviderResolver())->resolve($this);
         $resolver?->register($container);
+        if ($resolver !== null) {
+            $this->notifyProviderRegistered($resolver::class);
+        }
 
         // Temporal solution to keep BC with the AbstractDependencyProvider
         $dpResolver = (new DependencyProviderResolver())->resolve($this);
         $dpResolver?->provideModuleDependencies($container);
+        if ($dpResolver !== null) {
+            $this->notifyProviderRegistered($dpResolver::class);
+        }
 
         if ($resolver === null && $dpResolver === null) {
             throw new ProviderNotFoundException(static::class);
         }
 
         return $container;
+    }
+
+    private function notifyProviderRegistered(string $providerClass): void
+    {
+        if (self::shouldDispatch(ProviderRegisteredEvent::class)) {
+            self::dispatchEvent(new ProviderRegisteredEvent(
+                $providerClass,
+                ClassInfo::from($this)->getModuleName(),
+            ));
+        }
     }
 }

@@ -14,6 +14,8 @@ use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Event\Cache\CacheWarmedEvent;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -31,6 +33,7 @@ use function filesize;
  */
 final class CacheWarmCommand extends Command
 {
+    use EventDispatchingCapabilities;
     use ServiceResolverAwareTrait;
 
     protected function configure(): void
@@ -72,6 +75,10 @@ final class CacheWarmCommand extends Command
             [$resolvedCount, $skippedCount] = $moduleWarmer->warmModules($modules, $warmAttributes);
         } finally {
             AbstractPhpFileCache::commitBatch();
+        }
+
+        if (self::shouldDispatch(CacheWarmedEvent::class)) {
+            self::dispatchEvent(new CacheWarmedEvent(count($modules), $skippedCount));
         }
 
         $formatter->writeSummary(

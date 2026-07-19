@@ -8,6 +8,9 @@ use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Event\Container\BindingRegisteredEvent;
+use Gacela\Framework\Event\Container\ServiceResolvedEvent;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 
 /**
@@ -17,6 +20,11 @@ use Gacela\Framework\Plugins\LazyHandlerRegistry;
  */
 final class Container extends GacelaContainer implements ContainerInterface
 {
+    use EventDispatchingCapabilities;
+
+    /** @var array<string, true> */
+    private array $resolvedServiceIds = [];
+
     public static function withConfig(Config $config): self
     {
         return self::withContainerConfiguration(
@@ -28,6 +36,21 @@ final class Container extends GacelaContainer implements ContainerInterface
     public function getLocator(): LocatorInterface
     {
         return Locator::getInstance($this);
+    }
+
+    public function get(string $id): mixed
+    {
+        /** @var mixed $service */
+        $service = parent::get($id);
+
+        if (!isset($this->resolvedServiceIds[$id])) {
+            $this->resolvedServiceIds[$id] = true;
+            if (self::shouldDispatch(ServiceResolvedEvent::class)) {
+                self::dispatchEvent(new ServiceResolvedEvent($id));
+            }
+        }
+
+        return $service;
     }
 
     /**
@@ -42,16 +65,23 @@ final class Container extends GacelaContainer implements ContainerInterface
             $containerConfig->getServicesToExtend(),
         );
 
+        foreach (array_keys($bindings) as $id) {
+            self::notifyBindingRegistered($id);
+        }
+
         foreach ($containerConfig->getFactories() as $id => $factory) {
             $container->set($id, $container->factory($factory));
+            self::notifyBindingRegistered($id);
         }
 
         foreach ($containerConfig->getProtectedServices() as $id => $service) {
             $container->set($id, $container->protect($service));
+            self::notifyBindingRegistered($id);
         }
 
         foreach ($containerConfig->getAliases() as $alias => $id) {
             $container->alias($alias, $id);
+            self::notifyBindingRegistered($alias);
         }
 
         foreach ($containerConfig->getContextualBindings() as $concrete => $needs) {
@@ -59,6 +89,7 @@ final class Container extends GacelaContainer implements ContainerInterface
                 /** @var class-string $concrete */
                 /** @var class-string $abstract */
                 $container->when($concrete)->needs($abstract)->give($implementation);
+                self::notifyBindingRegistered($abstract);
             }
         }
 
@@ -72,8 +103,16 @@ final class Container extends GacelaContainer implements ContainerInterface
         // Register lazy services - wrapped as factories that instantiate on first access
         foreach ($containerConfig->getLazyServices() as $id => $lazyFactory) {
             $container->set($id, $container->factory(static fn (): mixed => $lazyFactory($container)));
+            self::notifyBindingRegistered($id);
         }
 
         return $container;
+    }
+
+    private static function notifyBindingRegistered(string $id): void
+    {
+        if (self::shouldDispatch(BindingRegisteredEvent::class)) {
+            self::dispatchEvent(new BindingRegisteredEvent($id));
+        }
     }
 }

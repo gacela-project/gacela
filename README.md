@@ -63,6 +63,7 @@ app/
 - [Container configuration](docs/container-configuration.md)
 - [Static analysis (PHPStan / Psalm)](docs/static-analysis.md)
 - [Module health checks](docs/module-health-checks.md)
+- [Events](docs/events.md)
 - [Opcache preload](docs/opcache-preload.md)
 - Full reference: [gacela-project.com](https://gacela-project.com/)
 - Examples: [gacela-example](https://github.com/gacela-project/gacela-example)

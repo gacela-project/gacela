@@ -62,7 +62,9 @@ abstract class AbstractClassResolver
         $cacheKey = $previousCacheKey ?? $classInfo->getCacheKey();
         $resolvedClass = $this->resolveCached($cacheKey);
         if ($resolvedClass !== null) {
-            self::dispatchEvent(new ResolvedClassCachedEvent($classInfo));
+            if (self::shouldDispatch(ResolvedClassCachedEvent::class)) {
+                self::dispatchEvent(new ResolvedClassCachedEvent($classInfo));
+            }
 
             return $resolvedClass;
         }
@@ -70,19 +72,26 @@ abstract class AbstractClassResolver
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName !== null) {
             $instance = $this->createInstance($resolvedClassName);
-            self::dispatchEvent(new ResolvedClassCreatedEvent($classInfo));
+            if (self::shouldDispatch(ResolvedClassCreatedEvent::class)) {
+                self::dispatchEvent(new ResolvedClassCreatedEvent($classInfo));
+            }
         } else {
             // Try again with its parent class
             if (is_object($caller)) {
                 $parentClass = get_parent_class($caller);
                 if ($parentClass !== false) {
-                    self::dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
+                    if (self::shouldDispatch(ResolvedClassTriedFromParentEvent::class)) {
+                        self::dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
+                    }
 
                     return $this->doResolve($parentClass, $cacheKey);
                 }
             }
 
-            self::dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
+            if (self::shouldDispatch(ResolvedCreatedDefaultClassEvent::class)) {
+                self::dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
+            }
+
             $instance = $this->createDefaultGacelaClass();
         }
 

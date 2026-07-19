@@ -31,6 +31,12 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
         $this->specificListeners[$event][] = $listener;
     }
 
+    public function hasListeners(string $eventClass): bool
+    {
+        return $this->genericListeners !== []
+            || isset($this->specificListeners[$eventClass]);
+    }
+
     public function dispatch(object $event): void
     {
         foreach ($this->genericListeners as $listener) {

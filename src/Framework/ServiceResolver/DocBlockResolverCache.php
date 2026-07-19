@@ -29,16 +29,22 @@ final class DocBlockResolverCache
     {
         $cache = self::$cache;
         if ($cache instanceof CacheInterface) {
-            self::dispatchEvent(new CustomServicesCacheCachedEvent());
+            if (self::shouldDispatch(CustomServicesCacheCachedEvent::class)) {
+                self::dispatchEvent(new CustomServicesCacheCachedEvent());
+            }
 
             return $cache;
         }
 
         if (self::isProjectCacheEnabled()) {
-            self::dispatchEvent(new CustomServicesPhpCacheCreatedEvent());
+            if (self::shouldDispatch(CustomServicesPhpCacheCreatedEvent::class)) {
+                self::dispatchEvent(new CustomServicesPhpCacheCreatedEvent());
+            }
             $cache = new CustomServicesPhpCache(Config::getInstance()->getCacheDir());
         } else {
-            self::dispatchEvent(new CustomServicesInMemoryCacheCreatedEvent());
+            if (self::shouldDispatch(CustomServicesInMemoryCacheCreatedEvent::class)) {
+                self::dispatchEvent(new CustomServicesInMemoryCacheCreatedEvent());
+            }
             $cache = new InMemoryCache(CustomServicesPhpCache::class);
         }
 

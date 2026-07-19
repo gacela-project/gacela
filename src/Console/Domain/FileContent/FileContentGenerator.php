@@ -21,16 +21,23 @@ final class FileContentGenerator implements FileContentGeneratorInterface
     }
 
     /**
+     * @param string $subDirectory optional sub-directory (relative to the module dir) to place the file in
+     *
      * @return string path result where the file was generated
      */
-    public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName = false): string
+    public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName = false, string $subDirectory = ''): string
     {
-        $this->fileContentIo->mkdir($commandArguments->directory());
+        $targetDirectory = $commandArguments->directory();
+        if ($subDirectory !== '') {
+            $targetDirectory .= '/' . $subDirectory;
+        }
+
+        $this->fileContentIo->mkdir($targetDirectory);
 
         $moduleName = $withShortName ? '' : $commandArguments->basename();
         $className = $moduleName . $filename;
 
-        $path = sprintf('%s/%s.php', $commandArguments->directory(), $className);
+        $path = sprintf('%s/%s.php', $targetDirectory, $className);
         $search = ['$NAMESPACE$', '$MODULE_NAME$', '$CLASS_NAME$'];
         $replace = [$commandArguments->namespace(), $moduleName, $className];
 

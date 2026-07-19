@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace $NAMESPACE$;
+
+use Gacela\Framework\AbstractFacade;
+
+/**
+ * @extends AbstractFacade<$MODULE_NAME$Factory>
+ */
+final class $CLASS_NAME$ extends AbstractFacade
+{
+    public function execute(): string
+    {
+        return $this->getFactory()
+            ->createService()
+            ->execute();
+    }
+}

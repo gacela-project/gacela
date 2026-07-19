@@ -4,6 +4,7 @@
 
 ### Added
 
+- `make:module --template=service [--with-tests]`: scaffolds the four pillars plus a `Domain` service the Facade delegates to (built on the existing `.txt` template mechanism); `--with-tests` adds a ready-to-run facade test extending `GacelaTestCase` under the module's `Tests/` directory. The generated module compiles and runs out of the box
 - `debug:graph` console command: prints the module dependency graph (which module's `use` imports point into which other module); `--format=text|mermaid|graphviz|json`, optional module filter
 - `CrossModuleViaFacadeRule` now accepts a `sharedNamespaces` argument: shared-kernel namespaces are exempt from the boundary check in both directions (references into them are allowed, classes inside them are not checked); documented in `docs/static-analysis.md`
 - `Gacela\Framework\Testing\GacelaTestCase`: PHPUnit base class for module tests — `bootstrapGacela()`/`bootstrapGacelaWithConfig()` start from a clean in-memory state, `tearDown()` drops all Gacela singletons, and every bootstrap records the lifecycle events, enabling `assertServiceResolved()`, `assertBindingRegistered()`, and `recordedGacelaEventsOf()`

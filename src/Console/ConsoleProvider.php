@@ -31,6 +31,8 @@ final class ConsoleProvider extends AbstractProvider
 
     public const TEMPLATE_BY_FILENAME_MAP = 'TEMPLATE_FILENAME_MAP';
 
+    public const SERVICE_TEMPLATE_BY_FILENAME_MAP = 'SERVICE_TEMPLATE_FILENAME_MAP';
+
     /**
      * @return list<object>
      */
@@ -66,6 +68,25 @@ final class ConsoleProvider extends AbstractProvider
             FilenameSanitizer::FACTORY => $this->getConfig()->getFactoryMakerTemplate(),
             FilenameSanitizer::CONFIG => $this->getConfig()->getConfigMakerTemplate(),
             FilenameSanitizer::PROVIDER => $this->getConfig()->getProviderMakerTemplate(),
+        ];
+    }
+
+    /**
+     * The `service` template set: Facade and Factory variants wired to a
+     * Domain service, plus the extra Service and FacadeTest files.
+     *
+     * @return array<string,string>
+     */
+    #[Provides(self::SERVICE_TEMPLATE_BY_FILENAME_MAP)]
+    public function serviceTemplateByFilenameMap(): array
+    {
+        return [
+            FilenameSanitizer::FACADE => $this->getConfig()->getServiceFacadeMakerTemplate(),
+            FilenameSanitizer::FACTORY => $this->getConfig()->getServiceFactoryMakerTemplate(),
+            FilenameSanitizer::CONFIG => $this->getConfig()->getConfigMakerTemplate(),
+            FilenameSanitizer::PROVIDER => $this->getConfig()->getProviderMakerTemplate(),
+            'Service' => $this->getConfig()->getServiceMakerTemplate(),
+            'FacadeTest' => $this->getConfig()->getServiceFacadeTestMakerTemplate(),
         ];
     }
 }

@@ -86,6 +86,14 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
+    public function createServiceFileContentGenerator(): FileContentGeneratorInterface
+    {
+        return new FileContentGenerator(
+            $this->createFileContentIo(),
+            $this->getServiceTemplateByFilenameMap(),
+        );
+    }
+
     public function createAllAppModulesFinder(): AllAppModulesFinder
     {
         return new AllAppModulesFinder(
@@ -238,6 +246,16 @@ final class ConsoleFactory extends AbstractFactory
     private function getTemplateByFilenameMap(): array
     {
         return (array)$this->getProvidedDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
+    }
+
+    /**
+     * @psalm-suppress MixedReturnTypeCoercion
+     *
+     * @return array<string,string>
+     */
+    private function getServiceTemplateByFilenameMap(): array
+    {
+        return (array)$this->getProvidedDependency(ConsoleProvider::SERVICE_TEMPLATE_BY_FILENAME_MAP);
     }
 
     private function getMainContainer(): Container

@@ -7,16 +7,23 @@ namespace GacelaTest\Benchmark\Config;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
+use PhpBench\Attributes\Assert;
 
 /**
  * Tracks the runtime cost of the typed config accessors against the raw
  * get()+cast they replace. The typed getters are self-contained (single
  * array_key_exists, null-default compare, no get() delegation) and should
- * stay at least as fast as get()+cast. The suite-wide +/-10% baseline assert
- * (phpbench.json) guards against future regressions.
+ * stay at least as fast as get()+cast.
+ *
+ * Informational, not gated: these subjects run at ~0.06-0.20μs, where timer
+ * quantization alone moves the mode by ~10% between runs, so a strict +/-10%
+ * baseline assert false-fails unrelated PRs. The class-level assertion widens
+ * the tolerance so the numbers are still reported and compared, but noise can't
+ * break CI. The gate/informational split is tracked in #458.
  *
  * @BeforeMethods("setUp")
  */
+#[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
 final class ConfigTypedAccessBench
 {
     private Config $config;

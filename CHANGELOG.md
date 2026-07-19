@@ -5,13 +5,16 @@
 ### Added
 
 - Framework lifecycle events for observability, all allocation-guarded so they stay zero-cost when nothing listens: `GacelaBootstrapStartedEvent`/`GacelaBootstrapFinishedEvent(durationMs)`, `ConfigInitializedEvent(keyCount)`, `ConfigKeyReadEvent(key)`, `ConfigKeyNotFoundEvent(key)`, `ServiceResolvedEvent(id)` (once per container service), `BindingRegisteredEvent(id)`, `ProviderRegisteredEvent(providerClass, moduleName)`, `CacheClearedEvent(cacheFile)`, `CacheWarmedEvent(moduleCount, failedCount)`
+- Typed config accessors on `Config`/`AbstractConfig`: `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()`. Each returns a concrete type (no more `mixed` casts), uses a `null` default to mean "required", and throws `ConfigException` on a type mismatch instead of coercing (`getFloat()` accepts an int via lossless widening). Self-contained implementations: a typed read is faster than `get()` + a manual cast (single `array_key_exists`, no default sentinel comparison)
 
 ### Fixed
 
 - `Config::getEventDispatcher()` no longer throws when called before bootstrap; it returns a no-op dispatcher so guarded dispatch sites (e.g. cache-file deletion) stay silent
 - Re-bootstrapping now rebuilds the event dispatcher from the new setup; previously a dispatcher cached by a prior bootstrap kept serving stale listeners unless the in-memory cache was reset
 
-- Typed config accessors on `Config`/`AbstractConfig`: `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()`. Each returns a concrete type (no more `mixed` casts), uses a `null` default to mean "required", and throws `ConfigException` on a type mismatch instead of coercing (`getFloat()` accepts an int via lossless widening). Self-contained implementations: a typed read is faster than `get()` + a manual cast (single `array_key_exists`, no default sentinel comparison)
+### Documentation
+
+- New `docs/events.md`: event system guide with the dispatch model, a complete event catalog (payloads, firing sites, hot-path markers), and a listener cookbook; linked from the README and docs index
 
 ### Changed
 

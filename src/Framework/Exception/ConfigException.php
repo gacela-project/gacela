@@ -21,4 +21,14 @@ final class ConfigException extends RuntimeException
 
         return new self($message);
     }
+
+    public static function invalidType(string $key, string $expectedType, string $actualType): self
+    {
+        return new self(sprintf(
+            'Config key "%s" expected "%s", got "%s". Values are not coerced; fix the config value or use get() for a raw value.',
+            $key,
+            $expectedType,
+            $actualType,
+        ));
+    }
 }

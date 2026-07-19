@@ -10,6 +10,10 @@ use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
 
 use function array_key_exists;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
 use function is_string;
 
 final class Config implements ConfigInterface
@@ -90,6 +94,141 @@ final class Config implements ConfigInterface
         }
 
         return $this->config[$key];
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    public function getString(string $key, ?string $default = null): string
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
+        if (!is_string($value)) {
+            throw ConfigException::invalidType($key, 'string', get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    public function getInt(string $key, ?int $default = null): int
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
+        if (!is_int($value)) {
+            throw ConfigException::invalidType($key, 'int', get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Accepts an int value via lossless numeric widening (e.g. 42 -> 42.0).
+     *
+     * @throws ConfigException
+     */
+    public function getFloat(string $key, ?float $default = null): float
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        if (!is_float($value)) {
+            throw ConfigException::invalidType($key, 'float', get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    public function getBool(string $key, ?bool $default = null): bool
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
+        if (!is_bool($value)) {
+            throw ConfigException::invalidType($key, 'bool', get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array<array-key,mixed>|null $default
+     *
+     * @throws ConfigException
+     *
+     * @return array<array-key,mixed>
+     */
+    public function getArray(string $key, ?array $default = null): array
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+
+        if (!array_key_exists($key, $this->config)) {
+            if ($default !== null) {
+                return $default;
+            }
+
+            throw ConfigException::keyNotFound($key, self::class);
+        }
+
+        $value = $this->config[$key];
+        if (!is_array($value)) {
+            throw ConfigException::invalidType($key, 'array', get_debug_type($value));
+        }
+
+        return $value;
     }
 
     /**

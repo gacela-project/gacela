@@ -164,6 +164,7 @@ final class ConsoleFactory extends AbstractFactory
     {
         $result = [];
         foreach (Config::getInstance()->getSetupGacela()->getContextualBindings() as $consumer => $needs) {
+            /** @var mixed $concrete */
             foreach ($needs as $abstract => $concrete) {
                 $result[$consumer][$abstract] = $this->stringifyBoundConcrete($concrete);
             }

@@ -9,6 +9,7 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Container\ContextualBindingRegistrar;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
@@ -163,10 +164,10 @@ abstract class AbstractClassResolver
             );
 
             foreach (Config::getInstance()->getSetupGacela()->getContextualBindings() as $concrete => $needs) {
+                /** @var mixed $implementation */
                 foreach ($needs as $abstract => $implementation) {
                     /** @var class-string $concrete */
-                    /** @var class-string $abstract */
-                    self::$container->when($concrete)->needs($abstract)->give($implementation);
+                    ContextualBindingRegistrar::register(self::$container, $concrete, $abstract, $implementation);
                 }
             }
         }

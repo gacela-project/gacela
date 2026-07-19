@@ -73,6 +73,20 @@ $config->when([ApiController::class, WebController::class])
     ->give(RedisCache::class);
 ```
 
+### Scalar parameters
+
+`needs()` also accepts a constructor parameter name (prefixed with `$`), so a
+class-specific scalar can be injected without a config lookup:
+
+```php
+$config->when(PaymentGateway::class)
+    ->needs('$apiTimeout')
+    ->give(30);
+```
+
+Any non-class value works: strings, numbers, booleans, arrays — or a closure
+when the value should be built lazily.
+
 ## Constructor Injection with `#[Inject]`
 
 The container autowires constructor parameters by type-hint. For most cases

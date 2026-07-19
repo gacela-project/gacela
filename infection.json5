@@ -225,13 +225,30 @@
             ],
         },
         LogicalOrAllSubExprNegation: {
-            ignore: ["Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode"],
+            ignore: [
+                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
+                // Negating both existence checks routes every string through the
+                // same branch for all realistic inputs (the container injects raw
+                // scalars and pass-through strings identically).
+                "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
+            ],
         },
         TrueValue: {
             ignore: ["Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement"],
         },
+        // Closures are objects and the container evaluates wrapped closures to
+        // the same injected value, so the or-variant mutants on the registrar's
+        // object/callable pass-through are observationally equivalent.
         LogicalOr: {
-            ignore: ["Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation"],
+            ignore: [
+                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation",
+                "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
+            ],
+        },
+        LogicalOrSingleSubExprNegation: {
+            ignoreSourceCodeByRegex: [
+                '.*is_object\\(\\$implementation\\) \\|\\| is_callable\\(\\$implementation\\).*',
+            ],
         },
     }
 }

@@ -21,6 +21,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
  */
 final class Properties
@@ -80,7 +81,7 @@ final class Properties
     /** @var ?array<string,string> */
     public ?array $aliases = null;
 
-    /** @var ?array<string,BindingsMap> */
+    /** @var ?ContextualBindingsMap */
     public ?array $contextualBindings = null;
 
     /** @var ?array<string,Closure> */

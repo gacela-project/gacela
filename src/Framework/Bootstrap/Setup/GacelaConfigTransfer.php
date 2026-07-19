@@ -18,6 +18,7 @@ use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
  */
 final class GacelaConfigTransfer
@@ -35,7 +36,7 @@ final class GacelaConfigTransfer
      * @param array<string,Closure> $factories
      * @param array<string,Closure> $protectedServices
      * @param array<string,string> $aliases
-     * @param array<string,BindingsMap> $contextualBindings
+     * @param ContextualBindingsMap $contextualBindings
      * @param HandlerRegistriesMap $handlerRegistries
      * @param array<string,Closure> $lazyServices
      */

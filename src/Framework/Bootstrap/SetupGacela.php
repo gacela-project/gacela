@@ -29,6 +29,7 @@ use function sprintf;
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
 final class SetupGacela extends AbstractSetupGacela
@@ -313,7 +314,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,BindingsMap>
+     * @return ContextualBindingsMap
      */
     public function getContextualBindings(): array
     {
@@ -476,7 +477,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,BindingsMap> $list
+     * @param ContextualBindingsMap $list
      */
     public function mergeContextualBindings(array $list): void
     {
@@ -628,7 +629,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,BindingsMap> $list
+     * @param ?ContextualBindingsMap $list
      */
     public function setContextualBindings(?array $list): self
     {

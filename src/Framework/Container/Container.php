@@ -85,10 +85,10 @@ final class Container extends GacelaContainer implements ContainerInterface
         }
 
         foreach ($containerConfig->getContextualBindings() as $concrete => $needs) {
+            /** @var mixed $implementation */
             foreach ($needs as $abstract => $implementation) {
                 /** @var class-string $concrete */
-                /** @var class-string $abstract */
-                $container->when($concrete)->needs($abstract)->give($implementation);
+                ContextualBindingRegistrar::register($container, $concrete, $abstract, $implementation);
                 self::notifyBindingRegistered($abstract);
             }
         }

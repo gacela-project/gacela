@@ -19,6 +19,7 @@ use function array_unique;
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  */
 final class PropertyMerger
 {
@@ -102,7 +103,7 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,BindingsMap> $list
+     * @param ContextualBindingsMap $list
      */
     public function mergeContextualBindings(array $list): void
     {

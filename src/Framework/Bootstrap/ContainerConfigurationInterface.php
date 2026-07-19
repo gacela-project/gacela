@@ -17,6 +17,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
  *
  * @psalm-type ServicesToExtendMap = array<string, list<Closure>>
  * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
+ * @psalm-type ContextualBindingsMap = array<string, array<string, mixed>>
  */
 interface ContainerConfigurationInterface
 {
@@ -54,7 +55,7 @@ interface ContainerConfigurationInterface
      * Contextual bindings allow different implementations to be injected
      * based on the context (which class is requesting the dependency).
      *
-     * @return array<string,BindingsMap>
+     * @return ContextualBindingsMap
      */
     public function getContextualBindings(): array;
 

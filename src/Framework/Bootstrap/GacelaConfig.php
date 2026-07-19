@@ -25,6 +25,7 @@ use function sprintf;
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
 final class GacelaConfig
@@ -76,7 +77,7 @@ final class GacelaConfig
     /** @var array<string,string> */
     private array $aliases = [];
 
-    /** @var array<string,BindingsMap> */
+    /** @var ContextualBindingsMap */
     private array $contextualBindings = [];
 
     /** @var HandlerRegistriesMap */

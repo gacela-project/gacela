@@ -420,6 +420,7 @@ final class Config implements ConfigInterface
         return new MergedConfigCache(
             $this->getCacheDir(),
             is_string($env) ? $env : '',
+            $this->getAppRootDir(),
         );
     }
 

@@ -12,6 +12,7 @@
 
 - `Config::getEventDispatcher()` no longer throws when called before bootstrap; it returns a no-op dispatcher so guarded dispatch sites (e.g. cache-file deletion) stay silent
 - Re-bootstrapping now rebuilds the event dispatcher from the new setup; previously a dispatcher cached by a prior bootstrap kept serving stale listeners unless the in-memory cache was reset
+- The merged-config cache filename now embeds a hash of the app root dir, so apps sharing a cache directory (the default is the system temp dir when `setFileCache(true)` is used without a directory) no longer read each other's merged config. Cache files written under the old name become stale; they are removed by `cache:clear` / `clearMergedConfigCache()` and are otherwise ignored
 
 ### Documentation
 

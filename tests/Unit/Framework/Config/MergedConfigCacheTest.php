@@ -136,6 +136,59 @@ final class MergedConfigCacheTest extends TestCase
         self::assertSame(['app' => 'dev'], $dev->load());
     }
 
+    public function test_different_app_roots_produce_isolated_cache_files_in_a_shared_dir(): void
+    {
+        $appA = new MergedConfigCache($this->cacheDir, '', '/srv/app-a');
+        $appB = new MergedConfigCache($this->cacheDir, '', '/srv/app-b');
+
+        $appA->write(['app' => 'a']);
+        $appB->write(['app' => 'b']);
+
+        self::assertNotSame($appA->filename(), $appB->filename());
+        self::assertSame(['app' => 'a'], $appA->load());
+        self::assertSame(['app' => 'b'], $appB->load());
+    }
+
+    public function test_same_app_root_produces_a_stable_filename(): void
+    {
+        $first = new MergedConfigCache($this->cacheDir, '', '/srv/app-a');
+        $second = new MergedConfigCache($this->cacheDir, '', '/srv/app-a');
+
+        self::assertSame($first->filename(), $second->filename());
+    }
+
+    public function test_filename_keeps_legacy_name_without_app_root(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+
+        self::assertStringEndsWith(
+            MergedConfigCache::FILENAME_PREFIX . MergedConfigCache::FILENAME_EXTENSION,
+            $cache->filename(),
+        );
+    }
+
+    public function test_app_scoped_filename_keeps_env_suffix(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir, 'prod', '/srv/app-a');
+
+        self::assertStringEndsWith('-prod' . MergedConfigCache::FILENAME_EXTENSION, $cache->filename());
+        self::assertStringContainsString(MergedConfigCache::FILENAME_PREFIX . '-', $cache->filename());
+    }
+
+    public function test_clear_also_removes_a_legacy_unscoped_cache_file(): void
+    {
+        $legacy = new MergedConfigCache($this->cacheDir);
+        $legacy->write(['stale' => 'legacy']);
+
+        $scoped = new MergedConfigCache($this->cacheDir, '', '/srv/app-a');
+        $scoped->write(['fresh' => 'scoped']);
+
+        $scoped->clear();
+
+        self::assertFalse($scoped->exists());
+        self::assertFalse($legacy->exists());
+    }
+
     public function test_write_creates_cache_directory_when_missing(): void
     {
         $cache = new MergedConfigCache($this->cacheDir);

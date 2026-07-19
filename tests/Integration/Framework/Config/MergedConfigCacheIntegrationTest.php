@@ -198,6 +198,23 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertSame('missing', Config::getInstance()->get('env_marker', 'missing'));
     }
 
+    public function test_apps_sharing_a_cache_dir_do_not_read_each_others_merged_config(): void
+    {
+        // App A (the AutoWarmFixtures root) warms its merged config into the shared dir.
+        Gacela::bootstrap($this->fixtureDir, $this->autoWarmConfig());
+        self::assertSame('warm_value', Config::getInstance()->get('warm_key'));
+
+        // App B (this dir, no config files) boots against the same cache dir:
+        // it must not be served app A's merged config.
+        $cacheDir = $this->cacheDir;
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheDir): void {
+            $config->setFileCache(true, $cacheDir);
+            $config->resetInMemoryCache();
+        });
+
+        self::assertSame('missing', Config::getInstance()->get('warm_key', 'missing'));
+    }
+
     private function autoWarmConfig(): Closure
     {
         $cacheDir = $this->cacheDir;
@@ -218,12 +235,8 @@ final class MergedConfigCacheIntegrationTest extends TestCase
             mkdir($this->cacheDir, 0777, true);
         }
 
-        $suffix = $env !== '' ? '-' . $env : '';
-        $filename = $this->cacheDir
-            . DIRECTORY_SEPARATOR
-            . MergedConfigCache::FILENAME_PREFIX
-            . $suffix
-            . MergedConfigCache::FILENAME_EXTENSION;
+        // Filenames are scoped per app root (#465); every test here boots __DIR__.
+        $filename = (new MergedConfigCache($this->cacheDir, $env, __DIR__))->filename();
 
         file_put_contents($filename, sprintf('<?php return %s;', var_export($data, true)));
     }

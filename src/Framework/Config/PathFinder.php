@@ -13,6 +13,14 @@ final class PathFinder implements PathFinderInterface
     private static array $cache = [];
 
     /**
+     * @internal drop all cached glob results, so a re-bootstrap re-scans the filesystem
+     */
+    public static function resetCache(): void
+    {
+        self::$cache = [];
+    }
+
+    /**
      * @return string[]
      */
     public function matchingPattern(string $pattern): array

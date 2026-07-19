@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Event\Config\ConfigInitializedEvent;
+use Gacela\Framework\Event\Config\ConfigKeyNotFoundEvent;
+use Gacela\Framework\Event\Config\ConfigKeyReadEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
 
 use function array_key_exists;
+use function count;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -18,9 +24,13 @@ use function is_string;
 
 final class Config implements ConfigInterface
 {
+    use EventDispatchingCapabilities;
+
     private static ?self $instance = null;
 
     private static ?EventDispatcherInterface $eventDispatcher = null;
+
+    private static ?NullEventDispatcher $preBootstrapDispatcher = null;
 
     private ?ConfigFactory $configFactory = null;
 
@@ -43,6 +53,8 @@ final class Config implements ConfigInterface
     public static function createWithSetup(SetupGacelaInterface $setup): self
     {
         self::$instance = new self($setup);
+        // A new setup brings its own listeners; drop the dispatcher built from the previous one.
+        self::$eventDispatcher = null;
 
         return self::$instance;
     }
@@ -67,11 +79,19 @@ final class Config implements ConfigInterface
 
     public static function getEventDispatcher(): EventDispatcherInterface
     {
-        if (!self::$eventDispatcher instanceof EventDispatcherInterface) {
-            self::$eventDispatcher = self::getInstance()
-                ->getSetupGacela()
-                ->getEventDispatcher();
+        if (self::$eventDispatcher instanceof EventDispatcherInterface) {
+            return self::$eventDispatcher;
         }
+
+        // Dispatch sites can run before bootstrap (e.g. clearing cache files);
+        // without a Config instance there is nothing to listen, so stay silent.
+        if (!self::$instance instanceof self) {
+            return self::$preBootstrapDispatcher ??= new NullEventDispatcher();
+        }
+
+        self::$eventDispatcher = self::$instance
+            ->getSetupGacela()
+            ->getEventDispatcher();
 
         return self::$eventDispatcher;
     }
@@ -85,11 +105,19 @@ final class Config implements ConfigInterface
             $this->init();
         }
 
+        if (self::shouldDispatch(ConfigKeyReadEvent::class)) {
+            self::dispatchEvent(new ConfigKeyReadEvent($key));
+        }
+
         if ($default !== self::DEFAULT_CONFIG_VALUE && !$this->hasKey($key)) {
+            self::notifyKeyNotFound($key);
+
             return $default;
         }
 
         if (!$this->hasKey($key)) {
+            self::notifyKeyNotFound($key);
+
             throw ConfigException::keyNotFound($key, self::class);
         }
 
@@ -263,6 +291,10 @@ final class Config implements ConfigInterface
         ];
 
         $this->initialized = true;
+
+        if (self::shouldDispatch(ConfigInitializedEvent::class)) {
+            self::dispatchEvent(new ConfigInitializedEvent(count($this->config)));
+        }
     }
 
     /**
@@ -345,6 +377,13 @@ final class Config implements ConfigInterface
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
+    }
+
+    private static function notifyKeyNotFound(string $key): void
+    {
+        if (self::shouldDispatch(ConfigKeyNotFoundEvent::class)) {
+            self::dispatchEvent(new ConfigKeyNotFoundEvent($key));
+        }
     }
 
     /**

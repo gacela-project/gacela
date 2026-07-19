@@ -8,6 +8,7 @@ use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -42,6 +43,28 @@ final class CacheWarmCommandTest extends TestCase
     protected function tearDown(): void
     {
         $this->removeGeneratedCaches();
+    }
+
+    public function test_cache_warm_dispatches_cache_warmed_event(): void
+    {
+        $warmedEvents = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$warmedEvents): void {
+            $config->resetInMemoryCache();
+            $config->enableFileCache(__DIR__ . '/cache');
+            $config->registerSpecificListener(
+                CacheWarmedEvent::class,
+                static function (object $event) use (&$warmedEvents): void {
+                    $warmedEvents[] = $event;
+                },
+            );
+        });
+
+        $this->command->execute([]);
+
+        self::assertCount(1, $warmedEvents);
+        self::assertInstanceOf(CacheWarmedEvent::class, $warmedEvents[0]);
+        self::assertGreaterThanOrEqual(0, $warmedEvents[0]->moduleCount());
+        self::assertGreaterThanOrEqual(0, $warmedEvents[0]->failedCount());
     }
 
     public function test_cache_warm_creates_cache_file(): void

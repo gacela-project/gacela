@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Cache;
 
+use Gacela\Framework\Event\Cache\CacheClearedEvent;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+
 use function bin2hex;
 use function count;
 use function dirname;
@@ -56,6 +59,8 @@ use const PREG_OFFSET_CAPTURE;
  */
 final class FileCache
 {
+    use EventDispatchingCapabilities;
+
     private const INDEX_FILENAME = '.gacela-filecache.lock';
 
     public readonly string $directory;
@@ -269,6 +274,10 @@ final class FileCache
         if (is_file($file)) {
             @unlink($file);
             self::invalidateOpcacheFor($file);
+
+            if (self::shouldDispatch(CacheClearedEvent::class)) {
+                self::dispatchEvent(new CacheClearedEvent($file));
+            }
         }
     }
 

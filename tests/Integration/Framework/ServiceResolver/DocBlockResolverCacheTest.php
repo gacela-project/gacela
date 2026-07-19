@@ -27,8 +27,13 @@ final class DocBlockResolverCacheTest extends TestCase
         Gacela::bootstrap(__DIR__, function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
 
+            // This test asserts the exact class-resolver event stream; ignore
+            // the framework lifecycle events (bootstrap, config, ...) that a
+            // generic listener also receives.
             $config->registerGenericListener(function (GacelaEventInterface $event): void {
-                $this->saveInMemoryEvent($event);
+                if (str_starts_with($event::class, 'Gacela\Framework\Event\ClassResolver\\')) {
+                    $this->saveInMemoryEvent($event);
+                }
             });
         });
     }

@@ -67,7 +67,10 @@ app/
 - [Testing](docs/testing.md)
 - [Opcache preload](docs/opcache-preload.md)
 - Full reference: [gacela-project.com](https://gacela-project.com/)
-- Examples: [gacela-example](https://github.com/gacela-project/gacela-example)
+- Examples:
+  - [gacela-example](https://github.com/gacela-project/gacela-example)
+  - [symfony-gacela-example](https://github.com/gacela-project/symfony-gacela-example) — Gacela with Symfony 7.4
+  - [laravel-gacela-example](https://github.com/gacela-project/laravel-gacela-example) — Gacela with Laravel 12
 
 ## Contributing
 

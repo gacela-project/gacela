@@ -39,10 +39,7 @@ final class DoctorCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $output->writeln('');
-        $output->writeln('<info>Gacela Doctor</info>');
-        $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
-        $output->writeln('');
+        ConsoleSection::title($output, 'Gacela Doctor');
 
         $filter = (string) $input->getArgument('filter');
         $checks = $this->buildChecks($filter);
@@ -55,7 +52,7 @@ final class DoctorCommand extends Command
         }
 
         $output->writeln('');
-        $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
+        ConsoleSection::separator($output);
 
         return match ($worst) {
             CheckStatus::Error => $this->finish($output, '<error>✗ Doctor found errors</error>', Command::FAILURE),

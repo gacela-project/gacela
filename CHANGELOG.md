@@ -4,35 +4,35 @@
 
 ### Added
 
-- Scalar contextual bindings: `$config->when(X)->needs('$paramName')->give(30)` injects class-specific scalar values (strings, numbers, booleans, arrays, or lazy closures) when resolving Gacela classes; documented in `docs/container-configuration.md`
-- The main container now supports `ArrayAccess` (`$container[Id::class]`, `isset`, assignment, `unset`), inherited from `gacela-project/container` 0.10
-- `make:module --template=service [--with-tests]`: scaffolds the four pillars plus a `Domain` service the Facade delegates to (built on the existing `.txt` template mechanism); `--with-tests` adds a ready-to-run facade test extending `GacelaTestCase` under the module's `Tests/` directory. The generated module compiles and runs out of the box
-- `debug:graph` console command: prints the module dependency graph (which module's `use` imports point into which other module); `--format=text|mermaid|graphviz|json`, optional module filter
-- `CrossModuleViaFacadeRule` now accepts a `sharedNamespaces` argument: shared-kernel namespaces are exempt from the boundary check in both directions (references into them are allowed, classes inside them are not checked); documented in `docs/static-analysis.md`
-- `Gacela\Framework\Testing\GacelaTestCase`: PHPUnit base class for module tests — `bootstrapGacela()`/`bootstrapGacelaWithConfig()` start from a clean in-memory state, `tearDown()` drops all Gacela singletons, and every bootstrap records the lifecycle events, enabling `assertServiceResolved()`, `assertBindingRegistered()`, and `recordedGacelaEventsOf()`
-- Framework lifecycle events for observability, all allocation-guarded so they stay zero-cost when nothing listens: `GacelaBootstrapStartedEvent`/`GacelaBootstrapFinishedEvent(durationMs)`, `ConfigInitializedEvent(keyCount)`, `ConfigKeyReadEvent(key)`, `ConfigKeyNotFoundEvent(key)`, `ServiceResolvedEvent(id)` (once per container service), `BindingRegisteredEvent(id)`, `ProviderRegisteredEvent(providerClass, moduleName)`, `CacheClearedEvent(cacheFile)`, `CacheWarmedEvent(moduleCount, failedCount)`
-- `debug:module <ModuleName>` console command: given a module name it prints the resolved Facade/Factory/Config/Provider classes, the container bindings (global + contextual), and the facade dependency tree; supports `--json` for machine output and `--tree` to limit output to the tree
-- Typed config accessors on `Config`/`AbstractConfig`: `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()`. Each returns a concrete type (no more `mixed` casts), uses a `null` default to mean "required", and throws `ConfigException` on a type mismatch instead of coercing (`getFloat()` accepts an int via lossless widening). Self-contained implementations: a typed read is faster than `get()` + a manual cast (single `array_key_exists`, no default sentinel comparison)
-
-### Fixed
-
-- The application environment (`APP_ENV`) is now read from a single source (`AppEnv::current()`) for both the env-suffixed config file lookup and the merged-config cache filename, so they can no longer disagree when the env var changes mid-process
-- `ConfigLoader`'s per-load read cache is now keyed by reader as well as path: two config items pointing the same file at different readers no longer share a cache entry
-- `Gacela::resetCache()` now also clears the glob-result cache (`PathFinder`), so config files added or removed on disk are picked up by the next bootstrap in the same process (long-running workers, multi-bootstrap tests); previously the file list was cached for the process lifetime
-- `ProviderRegisteredEvent` is no longer dispatched twice for a modern `AbstractProvider`: the BC `DependencyProvider` resolver returns the same cached provider instance and no longer re-reports it
-- `Config::getEventDispatcher()` no longer throws when called before bootstrap; it returns a no-op dispatcher so guarded dispatch sites (e.g. cache-file deletion) stay silent
-- Re-bootstrapping now rebuilds the event dispatcher from the new setup; previously a dispatcher cached by a prior bootstrap kept serving stale listeners unless the in-memory cache was reset
-- The merged-config cache filename now embeds a hash of the app root dir, so apps sharing a cache directory (the default is the system temp dir when `setFileCache(true)` is used without a directory) no longer read each other's merged config. Cache files written under the old name become stale; they are removed by `cache:clear` / `clearMergedConfigCache()` and are otherwise ignored
-
-### Documentation
-
-- New `docs/events.md`: event system guide with the dispatch model, a complete event catalog (payloads, firing sites, hot-path markers), and a listener cookbook; linked from the README and docs index
-- `docs/container-configuration.md` now documents the container's class attributes `#[Singleton]` and `#[Factory]` for module authors (attribute vs imperative registration, lifetime semantics through Gacela factories); a feature test proves all three DI attributes work through `getProvidedDependency()`
+- Framework lifecycle events, zero-cost when nothing listens: `GacelaBootstrapStarted`/`GacelaBootstrapFinished`, `ConfigInitialized`/`ConfigKeyRead`/`ConfigKeyNotFound`, `ServiceResolved` (once per id), `BindingRegistered`, `ProviderRegistered`, `CacheCleared`, `CacheWarmed`
+- `Gacela\Framework\Testing\GacelaTestCase`: bootstrap isolation per test, config overrides, and event-backed assertions — `assertServiceResolved()`, `assertBindingRegistered()`, `recordedGacelaEventsOf()`
+- Typed config accessors on `Config`/`AbstractConfig`: `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()` — concrete return types, `null` default means required, wrong type throws instead of coercing (int→float widening allowed); faster than `get()` + a manual cast
+- Scalar contextual bindings: `$config->when(X)->needs('$paramName')->give(30)`
+- `ArrayAccess` on the main container: `$container[Id::class]`, `isset`, assignment, `unset`
+- `debug:module <Name>`: resolved Facade/Factory/Config/Provider, bindings, and dependency tree (`--json`, `--tree`)
+- `debug:graph`: whole-app module dependency graph (`--format=text|mermaid|graphviz|json`)
+- `make:module --template=service [--with-tests]`: scaffolds a module that runs out of the box — four pillars plus a `Domain` service, optionally with a `GacelaTestCase`-based facade test
+- `CrossModuleViaFacadeRule`: optional `sharedNamespaces` allowlist for shared kernels
 
 ### Changed
 
-- Bumped `gacela-project/container` to `^0.10.0` (fluent `bind()`/`singleton()`, typed `make()`, runtime parameters, scalar contextual bindings, service tagging, conditional registration, `afterResolving()` hooks, `ArrayAccess`, compiled constructor plans). Note: 0.10 fixes transient resolutions sharing child instances, which makes uncached container construction measurably slower (~17-41% on raw micro-benches); Gacela's steady-state paths are unaffected since resolved classes are instance-cached, and the compiled-plans adoption is tracked to reclaim the cold cost
-- Event dispatch on the class-resolution hot path is now zero-cost when nothing listens: dispatch sites check the new `EventDispatcherInterface::hasListeners()` before allocating the event object (~20% faster warm resolves; custom `EventDispatcherInterface` implementations must add the method)
+- Bumped `gacela-project/container` to `^0.10.0`. It fixes transient resolutions sharing child instances; uncached construction gets slower (sub-microsecond per resolve), while Gacela's steady-state paths are unaffected because resolved classes are instance-cached
+- Event dispatch is zero-cost when nothing listens (~20% faster warm resolves). BC note: custom `EventDispatcherInterface` implementations must add `hasListeners()`
+
+### Fixed
+
+- `APP_ENV` is read from a single source for both the env-suffixed config files and the merged-config cache key, so they can no longer disagree mid-process
+- `ConfigLoader`'s read cache is keyed by reader and path: the same file under two readers no longer shares a cache entry
+- `Gacela::resetCache()` also clears the glob cache, so config files added or removed on disk are seen by the next bootstrap in the same process
+- `ProviderRegisteredEvent` no longer fires twice for a modern `AbstractProvider`
+- `Config::getEventDispatcher()` returns a no-op dispatcher before bootstrap instead of throwing
+- Re-bootstrapping rebuilds the event dispatcher; listeners from a previous bootstrap no longer leak
+- The merged-config cache filename embeds an app-root hash: apps sharing a cache directory no longer read each other's config (old files are ignored and removed by `cache:clear`)
+
+### Documentation
+
+- New `docs/events.md` (dispatch model, event catalog, listener cookbook) and `docs/testing.md` (`GacelaTestCase`, `ContainerFixture`)
+- Module boundaries in `docs/static-analysis.md`, config precedence in `docs/getting-started.md`, scalar bindings and the `#[Singleton]`/`#[Factory]` attributes in `docs/container-configuration.md`
 
 ## [1.17.0](https://github.com/gacela-project/gacela/compare/1.16.0...1.17.0) - 2026-07-18
 

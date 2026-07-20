@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\CommandArguments;
 
+use Gacela\Console\ConsoleConfig;
 use InvalidArgumentException;
 
 use function count;
 
+/**
+ * @psalm-import-type ComposerJsonContent from ConsoleConfig
+ */
 final class CommandArgumentsParser implements CommandArgumentsParserInterface
 {
     /**
-     * @param array{
-     *     autoload?: array{"psr-4"?:array<string,string>},
-     *     autoload-dev?: array{"psr-4"?:array<string,string>},
-     * } $composerJson
+     * @param ComposerJsonContent $composerJson
      */
     public function __construct(
         private array $composerJson,

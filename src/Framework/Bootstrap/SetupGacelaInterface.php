@@ -8,9 +8,6 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
  * Main configuration interface for Gacela framework setup.
- *
- * This interface extends specialized configuration interfaces to provide
- * a complete configuration contract for the Gacela framework.
  */
 interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerConfigurationInterface, CacheConfigurationInterface
 {

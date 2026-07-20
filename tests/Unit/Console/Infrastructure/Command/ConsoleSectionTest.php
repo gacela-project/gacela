@@ -17,7 +17,7 @@ final class ConsoleSectionTest extends TestCase
         ConsoleSection::title($output, 'My Title');
 
         self::assertSame(
-            "\nMy Title\n" . str_repeat('=', 60) . "\n\n",
+            PHP_EOL . 'My Title' . PHP_EOL . str_repeat('=', 60) . PHP_EOL . PHP_EOL,
             $output->fetch(),
         );
     }
@@ -28,6 +28,6 @@ final class ConsoleSectionTest extends TestCase
 
         ConsoleSection::separator($output);
 
-        self::assertSame(str_repeat('=', 60) . "\n", $output->fetch());
+        self::assertSame(str_repeat('=', 60) . PHP_EOL, $output->fetch());
     }
 }

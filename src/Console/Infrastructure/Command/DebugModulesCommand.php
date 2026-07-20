@@ -21,7 +21,6 @@ use Throwable;
 
 use function class_exists;
 use function sprintf;
-use function str_repeat;
 use function strlen;
 
 /**
@@ -202,10 +201,7 @@ final class DebugModulesCommand extends Command
             ? 'Gacela modules: constructor resolvability'
             : sprintf('Gacela modules matching "%s"', $filter);
 
-        $output->writeln('');
-        $output->writeln(sprintf('<info>%s</info>', $title));
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
-        $output->writeln('');
+        ConsoleSection::title($output, $title);
     }
 
     private function writePillar(OutputInterface $output, ConstructorInspection $inspection, bool $detail): void

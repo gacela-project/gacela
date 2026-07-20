@@ -77,7 +77,7 @@ abstract class AbstractFactory
             $this->notifyProviderRegistered($resolver::class);
         }
 
-        // Temporal solution to keep BC with the AbstractDependencyProvider
+        // Backward compatibility with the deprecated AbstractDependencyProvider.
         $dpResolver = (new DependencyProviderResolver())->resolve($this);
         $dpResolver?->provideModuleDependencies($container);
         // Both resolvers share a normalized cache slot ("DependencyProvider" -> "Provider"),

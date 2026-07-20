@@ -93,10 +93,7 @@ final class ProfileReportCommand extends Command
      */
     private function outputTable(array $entries, Profiler $profiler, OutputInterface $output): void
     {
-        $output->writeln('');
-        $output->writeln('<info>Performance Profiling Report</info>');
-        $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
-        $output->writeln('');
+        ConsoleSection::title($output, 'Performance Profiling Report');
 
         $table = new Table($output);
         $table->setStyle('box');

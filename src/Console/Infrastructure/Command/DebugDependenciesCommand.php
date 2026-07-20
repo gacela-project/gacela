@@ -21,7 +21,6 @@ use function interface_exists;
 use function is_array;
 use function ltrim;
 use function sprintf;
-use function str_repeat;
 
 /**
  * @psalm-type TokenList = list<array{0: int, 1: string, 2: int}|string>
@@ -72,10 +71,7 @@ final class DebugDependenciesCommand extends Command
 
     private function renderInspection(OutputInterface $output, ConstructorInspection $inspection): void
     {
-        $output->writeln('');
-        $output->writeln(sprintf('<info>Constructor dependencies for %s</info>', $inspection->className));
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
-        $output->writeln('');
+        ConsoleSection::title($output, sprintf('Constructor dependencies for %s', $inspection->className));
 
         if (!$inspection->hasConstructor) {
             $output->writeln('  <fg=cyan>No constructor</>');

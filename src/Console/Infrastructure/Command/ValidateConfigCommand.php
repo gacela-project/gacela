@@ -34,10 +34,7 @@ final class ValidateConfigCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $output->writeln('');
-        $output->writeln('<info>Validating Gacela Configuration</info>');
-        $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
-        $output->writeln('');
+        ConsoleSection::title($output, 'Validating Gacela Configuration');
 
         // gacela.php is optional: report it when present, stay silent when missing.
         $gacelaConfigPath = Gacela::rootDir() . '/gacela.php';
@@ -56,7 +53,7 @@ final class ValidateConfigCommand extends Command
         $hasWarnings = $hasWarnings || $circularDepsValidation['warnings'];
 
         $output->writeln('');
-        $output->writeln(sprintf('<info>%s</info>', str_repeat('=', 60)));
+        ConsoleSection::separator($output);
 
         if ($hasErrors) {
             $output->writeln('<error>✗ Validation failed with errors</error>');

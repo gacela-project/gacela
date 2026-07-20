@@ -62,10 +62,7 @@ final class DebugContainerCommand extends Command
 
     private function displayStats(OutputInterface $output): int
     {
-        $output->writeln('');
-        $output->writeln('<info>Container Statistics</info>');
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
-        $output->writeln('');
+        ConsoleSection::title($output, 'Container Statistics');
 
         $stats = $this->getFacade()->getContainerStats();
 
@@ -96,10 +93,7 @@ final class DebugContainerCommand extends Command
             return Command::FAILURE;
         }
 
-        $output->writeln('');
-        $output->writeln(sprintf('<info>Dependency Tree for %s</info>', $className));
-        $output->writeln('<info>' . str_repeat('=', 60) . '</info>');
-        $output->writeln('');
+        ConsoleSection::title($output, sprintf('Dependency Tree for %s', $className));
 
         $dependencyTree = $this->getFacade()->getContainerDependencyTree($className);
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Confirmed PHP 8.5 support by adding it to the CI test matrix (the `>=8.1` requirement already permitted it)
+
 ### Fixed
 
 - The opcache preload script (`resources/gacela-preload.php`) now requires PHP 8.1, matching the framework's `>=8.1`, instead of advertising and guarding an obsolete PHP 7.4 floor

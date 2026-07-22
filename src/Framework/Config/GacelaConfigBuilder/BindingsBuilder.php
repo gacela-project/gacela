@@ -26,6 +26,21 @@ final class BindingsBuilder
     }
 
     /**
+     * Bind a value only when the key is not already bound (register-unless-overridden).
+     *
+     * @param class-string $key
+     * @param callable|object|class-string $value
+     */
+    public function bindIf(string $key, callable|object|string $value): self
+    {
+        if (!isset($this->mapping[$key])) {
+            $this->mapping[$key] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
      * @return BindingsMap
      */
     public function build(): array

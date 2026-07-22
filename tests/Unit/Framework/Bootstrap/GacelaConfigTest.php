@@ -90,6 +90,31 @@ final class GacelaConfigTest extends TestCase
         );
     }
 
+    public function test_add_binding_if_registers_a_default_when_absent(): void
+    {
+        $config = new GacelaConfig();
+
+        $config->addBindingIf('App\\Port', 'App\\Adapter');
+
+        self::assertSame(
+            ['App\\Port' => 'App\\Adapter'],
+            $config->toTransfer()->bindingsBuilder->build(),
+        );
+    }
+
+    public function test_add_binding_if_does_not_override_an_existing_binding(): void
+    {
+        $config = new GacelaConfig();
+
+        $config->addBinding('App\\Port', 'App\\Existing');
+        $config->addBindingIf('App\\Port', 'App\\Override');
+
+        self::assertSame(
+            ['App\\Port' => 'App\\Existing'],
+            $config->toTransfer()->bindingsBuilder->build(),
+        );
+    }
+
     public function test_add_health_check_collects_class_string(): void
     {
         $config = new GacelaConfig();

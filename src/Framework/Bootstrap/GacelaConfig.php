@@ -188,6 +188,20 @@ final class GacelaConfig
     }
 
     /**
+     * Bind a key only when it is not already bound in this config, so plugins can
+     * register a default that the application (or an earlier binding) can override.
+     *
+     * @param class-string $key
+     * @param class-string|object|callable $value
+     */
+    public function addBindingIf(string $key, string|object|callable $value): self
+    {
+        $this->bindingsBuilder->bindIf($key, $value);
+
+        return $this;
+    }
+
+    /**
      * Useful to pass services while bootstrapping Gacela to the gacela.php config file.
      *
      * @param class-string|object|callable $value

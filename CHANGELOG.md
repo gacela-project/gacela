@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `GacelaConfig::addBindingIf(key, value)`: register a binding only when the key is not already bound, so plugins can ship an overridable default (register-unless-overridden)
+
 ### Changed
 
 - Confirmed PHP 8.5 support by adding it to the CI test matrix (the `>=8.1` requirement already permitted it)

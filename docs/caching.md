@@ -37,7 +37,7 @@ Typical wiring:
 - **Production** — file cache **on**, directory baked into the image. Re-deploy to refresh.
 - **Tests** — call `resetInMemoryCache()` between suites so resolution state doesn't bleed.
 
-See also: [Opcache preload](opcache-preload.md) for getting PHP itself to cache Gacela's own source files.
+See also: [Opcache preload](opcache-preload.md) for getting PHP itself to cache Gacela's own source files, and [Production performance](production-performance.md) for the full production tuning checklist.
 
 ## Layer 2 — Cacheable facade methods
 

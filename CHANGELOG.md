@@ -6,6 +6,10 @@
 
 - The opcache preload script (`resources/gacela-preload.php`) now requires PHP 8.1, matching the framework's `>=8.1`, instead of advertising and guarding an obsolete PHP 7.4 floor
 
+### Documentation
+
+- New `docs/production-performance.md`: a single checklist for running Gacela fast in production (file cache, `cache:warm`, opcache preload, autoloader optimisation, disabling unused event listeners, cross-request `#[Cacheable]` storage, `GACELA_CACHE_DIR`)
+
 ## [1.18.0](https://github.com/gacela-project/gacela/compare/1.17.0...1.18.0) - 2026-07-20
 
 ### Added

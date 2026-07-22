@@ -16,23 +16,23 @@
  *   - Faster bootstrap time
  *
  * Requirements:
- *   - PHP 7.4 or higher
+ *   - PHP 8.1 or higher
  *   - Opcache enabled
  *   - Production environment (not recommended for development)
  */
 
 declare(strict_types=1);
 
-if (PHP_VERSION_ID < 70400) {
-    throw new RuntimeException('Opcache preloading requires PHP 7.4 or higher');
+if (PHP_VERSION_ID < 80100) {
+    throw new RuntimeException('Opcache preloading requires PHP 8.1 or higher');
 }
 
-if (!function_exists('opcache_compile_file')) {
+if (!\function_exists('opcache_compile_file')) {
     throw new RuntimeException('Opcache is not enabled or opcache_compile_file is not available');
 }
 
 // Get the Gacela root directory (vendor/gacela-project/gacela)
-$gacelaRoot = dirname(__DIR__);
+$gacelaRoot = \dirname(__DIR__);
 
 // Core framework files that should be preloaded
 $coreFiles = [
@@ -115,11 +115,11 @@ if ($userPreloadFile && file_exists($userPreloadFile)) {
 }
 
 // Log preloading statistics
-if (function_exists('error_log')) {
-    error_log(sprintf(
+if (\function_exists('error_log')) {
+    error_log(\sprintf(
         'Gacela Opcache Preload: %d files preloaded successfully, %d failed',
         $preloadedCount,
-        count($failedFiles)
+        \count($failedFiles),
     ));
 
     if ($failedFiles !== []) {

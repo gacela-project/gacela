@@ -47,6 +47,28 @@ $container->get(LoggerInterface::class);
 $container->get('logger');
 ```
 
+## Conditional Bindings
+
+Register a binding only when the key is not already bound — a default that the
+application (or an earlier binding) can override. Useful for plugins that want to
+ship a sensible default without clobbering a host application's choice.
+
+```php
+return static function (GacelaConfig $config): void {
+    // App opts into its own logger.
+    $config->addBinding(LoggerInterface::class, JsonLogger::class);
+
+    // A plugin provides a fallback; skipped because the key is already bound.
+    $config->addBindingIf(LoggerInterface::class, NullLogger::class);
+};
+
+// Resolves to JsonLogger.
+$container->get(LoggerInterface::class);
+```
+
+`addBindingIf()` compares against the bindings already declared in the same config.
+If no binding exists for the key, it behaves exactly like `addBinding()`.
+
 ## Contextual Bindings
 
 Provide different implementations based on which class is requesting a dependency.
@@ -249,6 +271,7 @@ Notes:
 | Type | Behavior | Use Case |
 |------|----------|----------|
 | Regular (binding) | Singleton | Stateless services, repositories |
+| Conditional (`addBindingIf`) | Binds only if unbound | Plugin defaults that apps can override |
 | Factory | New instance each call | Stateful services, request-scoped |
 | Protected | Returns closure as-is | Lazy initialization, callable configs |
 | Alias | Points to another service | Backward compatibility, short names |
@@ -276,3 +299,22 @@ return static function (GacelaConfig $config): void {
     $config->addAlias('db', Database::class);
 };
 ```
+
+## Underlying container features gacela does not expose
+
+The `gacela-project/container` package offers a few capabilities that gacela
+deliberately keeps internal, to avoid two ways of doing the same thing:
+
+- **Service tagging** (`tag()` / `tagged()`): use [`addHandlerRegistry()`](events.md)
+  instead. Handler registries are a superset — lazily resolved, keyed dispatch
+  tables, frozen after boot — so a flat tag group would only duplicate a weaker
+  version of the same idea.
+- **`afterResolving()` hooks**: use the [`ServiceResolvedEvent`](events.md) instead.
+  It is the gacela-native, zero-cost-when-unused way to react to resolution.
+- **`make()` with runtime parameters**: kept internal. One-off construction with
+  ad-hoc overrides encourages service location; resolve through your module's
+  Factory instead.
+- **Compiled constructor plans**: measured on gacela's instance-cached resolution,
+  the reflection saved is sub-microsecond per class, so the cache-file lifecycle is
+  not worth its complexity today. May be revisited if bootstrap reflection ever
+  shows up as a real hotspot for large applications.

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Health;
 
 use Gacela\Framework\Container\Container;
-use Throwable;
 
 /**
  * Tracks health checks registered through GacelaConfig::addHealthCheck()
@@ -74,14 +73,10 @@ final class HealthCheckRegistry
     private static function instantiate(string $className, ?Container $container): ?ModuleHealthCheckInterface
     {
         if ($container instanceof Container) {
-            try {
-                /** @var mixed $instance */
-                $instance = $container->get($className);
-                if ($instance instanceof ModuleHealthCheckInterface) {
-                    return $instance;
-                }
-            } catch (Throwable) {
-                // fall through to direct instantiation
+            /** @var mixed $instance */
+            $instance = $container->get($className);
+            if ($instance instanceof ModuleHealthCheckInterface) {
+                return $instance;
             }
         }
 

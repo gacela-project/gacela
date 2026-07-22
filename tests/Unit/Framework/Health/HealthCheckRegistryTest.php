@@ -10,6 +10,7 @@ use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 
 final class HealthCheckRegistryTest extends TestCase
@@ -130,6 +131,28 @@ final class HealthCheckRegistryTest extends TestCase
             $report = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll();
 
             self::assertArrayHasKey('default', $report->getResults());
+        } finally {
+            Gacela::resetCache();
+        }
+    }
+
+    public function test_container_resolution_error_propagates_instead_of_being_swallowed(): void
+    {
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->addFactory(
+                    HealthCheckRegistryConfigurableFake::class,
+                    static function (): HealthCheckRegistryConfigurableFake {
+                        throw new RuntimeException('boom from factory');
+                    },
+                );
+            });
+            HealthCheckRegistry::register(HealthCheckRegistryConfigurableFake::class);
+
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('boom from factory');
+
+            HealthCheckRegistry::createHealthChecker(Gacela::container());
         } finally {
             Gacela::resetCache();
         }

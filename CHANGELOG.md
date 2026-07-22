@@ -13,6 +13,7 @@
 ### Fixed
 
 - The opcache preload script (`resources/gacela-preload.php`) now requires PHP 8.1, matching the framework's `>=8.1`, instead of advertising and guarding an obsolete PHP 7.4 floor
+- Health-check resolution no longer swallows container errors: a registered check whose container resolution throws now surfaces the real exception instead of silently falling back to a default instance and hiding the misconfiguration
 
 ### Documentation
 

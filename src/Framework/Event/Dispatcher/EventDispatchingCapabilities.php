@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Event\Dispatcher;
 
-use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\GacelaEventInterface;
 
 trait EventDispatchingCapabilities
@@ -17,11 +16,11 @@ trait EventDispatchingCapabilities
      */
     private static function shouldDispatch(string $eventClass): bool
     {
-        return Config::getEventDispatcher()->hasListeners($eventClass);
+        return EventDispatcherProvider::get()->hasListeners($eventClass);
     }
 
     private static function dispatchEvent(GacelaEventInterface $event): void
     {
-        Config::getEventDispatcher()->dispatch($event);
+        EventDispatcherProvider::get()->dispatch($event);
     }
 }

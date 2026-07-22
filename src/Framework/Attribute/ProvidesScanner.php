@@ -15,10 +15,12 @@ use ReflectionNamedType;
  * method into the given Container as a lazy service factory.
  *
  * @internal
+ *
+ * @psalm-type ProvidesEntry = array{id: string, method: ReflectionMethod, needsContainer: bool}
  */
 final class ProvidesScanner
 {
-    /** @var array<class-string<AbstractProvider>, list<array{id:string, method:ReflectionMethod, needsContainer:bool}>> */
+    /** @var array<class-string<AbstractProvider>, list<ProvidesEntry>> */
     private static array $cache = [];
 
     public static function scan(AbstractProvider $provider, Container $container): void
@@ -35,7 +37,7 @@ final class ProvidesScanner
     }
 
     /**
-     * @return list<array{id:string, method:ReflectionMethod, needsContainer:bool}>
+     * @return list<ProvidesEntry>
      */
     private static function resolveEntries(AbstractProvider $provider): array
     {

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Health;
 
 use Gacela\Framework\Container\Container;
-use Gacela\Framework\Exception\GacelaNotBootstrappedException;
-use Gacela\Framework\Gacela;
 use Throwable;
 
 /**
@@ -39,17 +37,20 @@ final class HealthCheckRegistry
         return self::$checks;
     }
 
-    public static function createHealthChecker(): HealthChecker
+    /**
+     * @param ?Container $container used to resolve registered class-string checks;
+     *                              when null, checks are instantiated directly
+     */
+    public static function createHealthChecker(?Container $container = null): HealthChecker
     {
-        return new HealthChecker(self::resolveAll());
+        return new HealthChecker(self::resolveAll($container));
     }
 
     /**
      * @return list<ModuleHealthCheckInterface>
      */
-    private static function resolveAll(): array
+    private static function resolveAll(?Container $container): array
     {
-        $container = self::resolveContainer();
         $resolved = [];
 
         foreach (self::$checks as $check) {
@@ -65,15 +66,6 @@ final class HealthCheckRegistry
         }
 
         return $resolved;
-    }
-
-    private static function resolveContainer(): ?Container
-    {
-        try {
-            return Gacela::container();
-        } catch (GacelaNotBootstrappedException) {
-            return null;
-        }
     }
 
     /**

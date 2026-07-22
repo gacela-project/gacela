@@ -11,6 +11,7 @@ use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\HealthLevel;
 use Gacela\Framework\Health\HealthStatus;
@@ -75,7 +76,7 @@ final class DoctorCommand extends Command
             new SuffixMismatchCheck($modules, $suffixTypes),
         ];
 
-        foreach (HealthCheckRegistry::createHealthChecker()->checkAll()->getResults() as $moduleName => $status) {
+        foreach (HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults() as $moduleName => $status) {
             $checks[] = $this->toHealthCheck($moduleName, $status);
         }
 

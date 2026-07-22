@@ -9,8 +9,8 @@ use Gacela\Framework\Event\Config\ConfigInitializedEvent;
 use Gacela\Framework\Event\Config\ConfigKeyNotFoundEvent;
 use Gacela\Framework\Event\Config\ConfigKeyReadEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
-use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
 
@@ -27,10 +27,6 @@ final class Config implements ConfigInterface
     use EventDispatchingCapabilities;
 
     private static ?self $instance = null;
-
-    private static ?EventDispatcherInterface $eventDispatcher = null;
-
-    private static ?NullEventDispatcher $preBootstrapDispatcher = null;
 
     private ?ConfigFactory $configFactory = null;
 
@@ -53,8 +49,7 @@ final class Config implements ConfigInterface
     public static function createWithSetup(SetupGacelaInterface $setup): self
     {
         self::$instance = new self($setup);
-        // A new setup brings its own listeners; drop the dispatcher built from the previous one.
-        self::$eventDispatcher = null;
+        EventDispatcherProvider::setResolver(static fn (): EventDispatcherInterface => $setup->getEventDispatcher());
 
         return self::$instance;
     }
@@ -74,26 +69,12 @@ final class Config implements ConfigInterface
     public static function resetInstance(): void
     {
         self::$instance = null;
-        self::$eventDispatcher = null;
+        EventDispatcherProvider::reset();
     }
 
     public static function getEventDispatcher(): EventDispatcherInterface
     {
-        if (self::$eventDispatcher instanceof EventDispatcherInterface) {
-            return self::$eventDispatcher;
-        }
-
-        // Dispatch sites can run before bootstrap (e.g. clearing cache files);
-        // without a Config instance there is nothing to listen, so stay silent.
-        if (!self::$instance instanceof self) {
-            return self::$preBootstrapDispatcher ??= new NullEventDispatcher();
-        }
-
-        self::$eventDispatcher = self::$instance
-            ->getSetupGacela()
-            ->getEventDispatcher();
-
-        return self::$eventDispatcher;
+        return EventDispatcherProvider::get();
     }
 
     /**

@@ -17,6 +17,7 @@
 ### Documentation
 
 - New `docs/production-performance.md`: a single checklist for running Gacela fast in production (file cache, `cache:warm`, opcache preload, autoloader optimisation, disabling unused event listeners, cross-request `#[Cacheable]` storage, `GACELA_CACHE_DIR`)
+- Corrected the `#[Cacheable]` backtrace-cost note (measured ~0.08 µs/call on a warm hit, not 1–5 µs) and now recommend explicit `$method`/`$args` as the pattern for hot, cheap methods; added `CacheableBench` to guard the delta
 
 ## [1.18.0](https://github.com/gacela-project/gacela/compare/1.17.0...1.18.0) - 2026-07-20
 

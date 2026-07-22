@@ -126,9 +126,9 @@ The override applies on the next `set()`; existing entries keep their original e
 
 ## Opting out of backtrace
 
-`cached()` calls `debug_backtrace()` (limit 2) to infer the method name and arguments. Cost is 1–5 µs — unmeasurable for typical "expensive" methods (DB, HTTP). Pass `$method` and `$args` explicitly when:
+`cached()` calls `debug_backtrace()` (limit 2) to infer the method name and arguments. The overhead is ~0.08 µs per call on a warm cache hit (`CacheableBench`) — negligible for typical "expensive" methods (DB, HTTP), where it is lost in the noise of the work being cached. Pass `$method` and `$args` explicitly when:
 
-- The cached operation itself is very fast and the overhead matters.
+- **The method is hot and its work is cheap** — the recommended pattern for tight, frequently-hit lookups where every fraction of a microsecond counts.
 - The method takes very large arguments (frame-construction cost scales with arg count).
 - `cached()` is called from a private helper rather than the attributed method itself (backtrace would pick the helper, find no attribute, and skip caching).
 

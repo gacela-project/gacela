@@ -9,6 +9,7 @@
 - [Caching](caching.md) — overview of Gacela's three caching layers and when to reach for each
 - [Cacheable methods](cacheable-methods.md) — cache facade method results with `#[Cacheable]`
 - [Opcache preload](opcache-preload.md) — production performance tuning
+- [Production performance](production-performance.md) — full checklist to run Gacela fast in production
 
 ## RFCs
 

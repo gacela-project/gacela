@@ -66,6 +66,7 @@ app/
 - [Events](docs/events.md)
 - [Testing](docs/testing.md)
 - [Opcache preload](docs/opcache-preload.md)
+- [Production performance](docs/production-performance.md)
 - Full reference: [gacela-project.com](https://gacela-project.com/)
 - Examples:
   - [gacela-example](https://github.com/gacela-project/gacela-example)

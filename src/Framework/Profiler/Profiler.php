@@ -9,6 +9,9 @@ use function hrtime;
 use function memory_get_usage;
 use function round;
 
+/**
+ * @psalm-type OperationStats = array{count: int, total_duration: float, avg_duration: float}
+ */
 final class Profiler
 {
     private static ?self $instance = null;
@@ -109,7 +112,7 @@ final class Profiler
      *     total_duration: float,
      *     avg_duration: float,
      *     peak_memory: int,
-     *     by_operation: array<string, array{count: int, total_duration: float, avg_duration: float}>
+     *     by_operation: array<string, OperationStats>
      * }
      */
     public function getStats(): array
@@ -131,7 +134,7 @@ final class Profiler
             $tally[$entry->operation]['total_duration'] += $entry->duration;
         }
 
-        /** @var array<string, array{count: int, total_duration: float, avg_duration: float}> $byOperation */
+        /** @var array<string, OperationStats> $byOperation */
         $byOperation = [];
         foreach ($tally as $operation => $stats) {
             $byOperation[$operation] = [

@@ -12,13 +12,15 @@ namespace Gacela\Framework\Testing;
  * (scalars, arrays, and cache-dir roots). It does not attempt to capture
  * object instances from the container because those may hold non-serializable
  * resources (closures, file handles, PDO connections, etc.).
+ *
+ * @psalm-type InMemoryCacheSnapshot = array<string, array<string, string>>
  */
 final class ContainerSnapshot
 {
     /**
-     * @param  array<string, array<string, string>>  $inMemoryCache
-     * @param  array<string, mixed>                  $config
-     * @param  array<string, mixed>                  $extras
+     * @param  InMemoryCacheSnapshot  $inMemoryCache
+     * @param  array<string, mixed>   $config
+     * @param  array<string, mixed>   $extras
      */
     public function __construct(
         private readonly array $inMemoryCache = [],
@@ -31,7 +33,7 @@ final class ContainerSnapshot
 
     /**
      * @return array{
-     *     inMemoryCache: array<string, array<string, string>>,
+     *     inMemoryCache: InMemoryCacheSnapshot,
      *     config: array<string, mixed>,
      *     appRootDir: ?string,
      *     cacheDir: ?string,
@@ -51,7 +53,7 @@ final class ContainerSnapshot
 
     /**
      * @param  array{
-     *     inMemoryCache?: array<string, array<string, string>>,
+     *     inMemoryCache?: InMemoryCacheSnapshot,
      *     config?: array<string, mixed>,
      *     appRootDir?: ?string,
      *     cacheDir?: ?string,
@@ -73,7 +75,7 @@ final class ContainerSnapshot
     }
 
     /**
-     * @return array<string, array<string, string>>
+     * @return InMemoryCacheSnapshot
      */
     public function inMemoryCache(): array
     {

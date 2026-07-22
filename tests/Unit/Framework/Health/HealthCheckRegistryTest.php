@@ -108,7 +108,7 @@ final class HealthCheckRegistryTest extends TestCase
             });
             HealthCheckRegistry::register(HealthCheckRegistryConfigurableFake::class);
 
-            $report = HealthCheckRegistry::createHealthChecker()->checkAll();
+            $report = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll();
 
             self::assertArrayHasKey('from-container', $report->getResults());
         } finally {
@@ -127,7 +127,7 @@ final class HealthCheckRegistryTest extends TestCase
             });
             HealthCheckRegistry::register(HealthCheckRegistryConfigurableFake::class);
 
-            $report = HealthCheckRegistry::createHealthChecker()->checkAll();
+            $report = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll();
 
             self::assertArrayHasKey('default', $report->getResults());
         } finally {

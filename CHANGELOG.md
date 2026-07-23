@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
+
 ### Added
 
 - `GacelaConfig::addBindingIf(key, value)`: register a binding only when the key is not already bound, so plugins can ship an overridable default (register-unless-overridden)

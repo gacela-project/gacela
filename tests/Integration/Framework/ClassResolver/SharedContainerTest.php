@@ -10,7 +10,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
-use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Supplier\Facade;
@@ -46,7 +46,7 @@ final class SharedContainerTest extends TestCase
         self::assertInstanceOf(Container::class, $afterFactory);
 
         (new ConfigResolver())->resolve($caller);
-        (new DependencyProviderResolver())->resolve($caller);
+        (new ProviderResolver())->resolve($caller);
 
         self::assertSame(
             $afterFactory,

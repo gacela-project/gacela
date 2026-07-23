@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\ClassResolver;
 
-use Gacela\Framework\AbstractDependencyProvider;
 use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\Container\Container;
 use GacelaTest\Fixtures\ClassInfoTestingFacade;
@@ -24,14 +24,14 @@ final class ClassInfoTest extends TestCase
         self::assertSame('\module-name@anonymous\ClassInfoTest\Factory', $actual->getCacheKey(), 'cache key');
     }
 
-    public function test_anonymous_dependency_provider_class(): void
+    public function test_anonymous_provider_class(): void
     {
-        $dependencyProvider = new class() extends AbstractDependencyProvider {
+        $provider = new class() extends AbstractProvider {
             public function provideModuleDependencies(Container $container): void
             {
             }
         };
-        $actual = ClassInfo::from($dependencyProvider, 'DependencyProvider');
+        $actual = ClassInfo::from($provider, 'Provider');
 
         self::assertSame('module-name@anonymous', $actual->getModuleNamespace(), 'full namespace');
         self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getModuleName(), 'module');

@@ -10,6 +10,6 @@ final class Factory extends AbstractFactory
 {
     public function createGreeting(): string
     {
-        return (string)$this->getProvidedDependency(DependencyProvider::GREETING);
+        return (string)$this->getProvidedDependency(Provider::GREETING);
     }
 }

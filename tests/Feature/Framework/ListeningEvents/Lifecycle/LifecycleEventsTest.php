@@ -109,8 +109,6 @@ final class LifecycleEventsTest extends TestCase
             $this->events,
             static fn (GacelaEventInterface $event): bool => $event instanceof ProviderRegisteredEvent,
         ));
-        // Exactly one: the BC DependencyProvider resolver returns the same cached
-        // provider instance and must not re-report it.
         self::assertCount(1, $providerEvents);
         self::assertSame(Module\Provider::class, $providerEvents[0]->providerClass());
         self::assertSame('Module', $providerEvents[0]->moduleName());
@@ -129,7 +127,7 @@ final class LifecycleEventsTest extends TestCase
         self::assertContains(Module\Provider::GREETING, $serviceIds);
     }
 
-    public function test_bc_dependency_provider_dispatches_provider_registered_event(): void
+    public function test_second_module_dispatches_its_own_provider_registered_event(): void
     {
         self::assertSame('hello bc lifecycle', (new ModuleBc\Facade())->greet());
 
@@ -140,7 +138,7 @@ final class LifecycleEventsTest extends TestCase
                 static fn (GacelaEventInterface $event): bool => $event instanceof ProviderRegisteredEvent,
             )),
         );
-        self::assertContains(ModuleBc\DependencyProvider::class, $providerClasses);
+        self::assertContains(ModuleBc\Provider::class, $providerClasses);
     }
 
     /**

@@ -10,7 +10,6 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
-use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use Gacela\Framework\ServiceResolver\ReflectionClassPool;
@@ -163,7 +162,6 @@ final class CacheWarmService
             new FactoryResolver(),
             new ConfigResolver(),
             new ProviderResolver(),
-            new DependencyProviderResolver(),
         ];
     }
 }

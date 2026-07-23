@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Removed (BREAKING — 2.0)
+
+- `AbstractDependencyProvider` — extend `AbstractProvider` instead (identical API; it was a deprecated alias)
+- `GacelaConfig::addMappingInterface()` — use `addBinding()` instead
+- `DocBlockResolverAwareTrait` — use `ServiceResolverAwareTrait` instead
+- Internal `DependencyProviderResolver` and the `AbstractFactory` dual-resolver path. Provider classes named `*DependencyProvider` are no longer auto-resolved; rename them to `<Module>Provider` (extending `AbstractProvider`). Module resolution now goes through a single `ProviderResolver`.
+
 ### Added
 
 - `GacelaConfig::addBindingIf(key, value)`: register a binding only when the key is not already bound, so plugins can ship an overridable default (register-unless-overridden)

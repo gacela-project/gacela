@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework;
 
 use Gacela\Framework\ClassResolver\ClassInfo;
-use Gacela\Framework\ClassResolver\Provider\DependencyProviderResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
@@ -72,23 +71,12 @@ abstract class AbstractFactory
         $container = Container::withConfig(Config::getInstance());
 
         $resolver = (new ProviderResolver())->resolve($this);
-        $resolver?->register($container);
-        if ($resolver !== null) {
-            $this->notifyProviderRegistered($resolver::class);
-        }
-
-        // Backward compatibility with the deprecated AbstractDependencyProvider.
-        $dpResolver = (new DependencyProviderResolver())->resolve($this);
-        $dpResolver?->provideModuleDependencies($container);
-        // Both resolvers share a normalized cache slot ("DependencyProvider" -> "Provider"),
-        // so a modern provider comes back from both; only notify when it is a distinct one.
-        if ($dpResolver !== null && $dpResolver !== $resolver) {
-            $this->notifyProviderRegistered($dpResolver::class);
-        }
-
-        if ($resolver === null && $dpResolver === null) {
+        if ($resolver === null) {
             throw new ProviderNotFoundException(static::class);
         }
+
+        $resolver->register($container);
+        $this->notifyProviderRegistered($resolver::class);
 
         return $container;
     }

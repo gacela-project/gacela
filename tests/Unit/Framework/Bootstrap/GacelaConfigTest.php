@@ -76,20 +76,6 @@ final class GacelaConfigTest extends TestCase
         self::assertSame(['src/php', '/abs/path'], $config->toTransfer()->appModulePaths);
     }
 
-    public function test_add_mapping_interface_is_an_alias_of_add_binding(): void
-    {
-        $a = new GacelaConfig();
-        $b = new GacelaConfig();
-
-        $a->addMappingInterface('App\\Port', 'App\\Adapter');
-        $b->addBinding('App\\Port', 'App\\Adapter');
-
-        self::assertEquals(
-            $a->toTransfer()->bindingsBuilder->build(),
-            $b->toTransfer()->bindingsBuilder->build(),
-        );
-    }
-
     public function test_add_binding_if_registers_a_default_when_absent(): void
     {
         $config = new GacelaConfig();

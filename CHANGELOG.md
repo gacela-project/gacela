@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `AbstractFactory::make(class-string, params)`: resolve a domain object through the module container with autowiring, so a `create*()` method can build it by type instead of hand-wiring each constructor argument. The container DI attributes (`#[Inject]`/`#[Singleton]`/`#[Factory]`) are honored on the resolved class, and optional runtime `params` override constructor arguments by name (fresh instance). Additive and opt-in — existing `getProvidedDependency()` and hand-wired `create*()` methods keep working
+
 ## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
 
 ### Added

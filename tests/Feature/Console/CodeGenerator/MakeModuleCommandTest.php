@@ -24,6 +24,7 @@ final class MakeModuleCommandTest extends TestCase
     {
         DirectoryUtil::removeDir(self::CACHE_DIR);
         DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ServiceModule');
+        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ProvidesModule');
         DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalModule');
         DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalTemplateModule');
         DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalRunModule');
@@ -137,6 +138,37 @@ OUT;
         $execute = [new $facadeClass(), 'execute'];
         self::assertIsCallable($execute);
         self::assertSame('Hello from ServiceModuleService!', $execute());
+    }
+
+    public function test_make_module_provider_demonstrates_provides_attribute(): void
+    {
+        $input = new StringInput('make:module Psr4CodeGeneratorData/ProvidesModule');
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+        $bootstrap->run($input, $output);
+
+        $providerFile = getcwd() . '/data/ProvidesModule/ProvidesModuleProvider.php';
+        self::assertFileExists($providerFile);
+
+        $contents = (string)file_get_contents($providerFile);
+
+        // Attribute-first: the scaffolded provider demonstrates a typed #[Provides]
+        // method as the primary registration path.
+        self::assertStringContainsString('use Gacela\Framework\Attribute\Provides;', $contents);
+        self::assertStringContainsString('#[Provides(', $contents);
+        self::assertStringContainsString('public function clock(): DateTimeImmutable', $contents);
+
+        // ...while keeping the imperative provideModuleDependencies() available (no BC break).
+        self::assertStringContainsString(
+            'public function provideModuleDependencies(Container $container): void',
+            $contents,
+        );
+
+        // The generated provider must be valid PHP.
+        exec(sprintf('php -l %s 2>&1', escapeshellarg($providerFile)), $lintOutput, $lintExit);
+        self::assertSame(0, $lintExit, implode("\n", $lintOutput));
     }
 
     public function test_make_module_minimal_generates_only_facade_and_factory(): void

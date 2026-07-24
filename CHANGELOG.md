@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- `make:module --minimal` (or `--template=minimal`): scaffolds only the Facade and Factory pillars. Config and Provider are optional — the runtime tolerates their absence — so add them only when the module reads config or wires external dependencies. `basic` (four pillars) and `service` are unchanged
+- Documented Config and Provider as optional pillars (the two-file Facade + Factory floor) in `docs/getting-started.md`
+
 ## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
 
 ### Added

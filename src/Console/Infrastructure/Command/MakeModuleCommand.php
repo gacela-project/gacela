@@ -24,7 +24,7 @@ final class MakeModuleCommand extends Command
 {
     use ServiceResolverAwareTrait;
 
-    private const TEMPLATES = ['basic', 'service'];
+    private const TEMPLATES = ['basic', 'service', 'minimal'];
 
     protected function configure(): void
     {
@@ -32,15 +32,24 @@ final class MakeModuleCommand extends Command
             ->setDescription('Generate a basic module with an empty ' . $this->getExpectedFilenames())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name')
-            ->addOption('template', 't', InputOption::VALUE_REQUIRED, 'Module template: basic, or service (Facade wired to a Domain service)', 'basic')
+            ->addOption('template', 't', InputOption::VALUE_REQUIRED, 'Module template: basic, service (Facade wired to a Domain service), or minimal (Facade + Factory only)', 'basic')
+            ->addOption('minimal', null, InputOption::VALUE_NONE, 'Scaffold only the Facade and Factory pillars (shorthand for --template=minimal)')
             ->addOption('with-tests', null, InputOption::VALUE_NONE, 'Also scaffold a facade test (service template only)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $template = (string)$input->getOption('template');
+        if ((bool)$input->getOption('minimal')) {
+            $template = 'minimal';
+        }
+
         if (!in_array($template, self::TEMPLATES, true)) {
-            $output->writeln(sprintf('<error>Unknown template "%s". Use one of: basic, service</error>', $template));
+            $output->writeln(sprintf(
+                '<error>Unknown template "%s". Use one of: %s</error>',
+                $template,
+                implode(', ', self::TEMPLATES),
+            ));
 
             return self::FAILURE;
         }
@@ -52,6 +61,8 @@ final class MakeModuleCommand extends Command
 
         if ($template === 'service') {
             $this->generateServiceModule($commandArguments, $shortName, (bool)$input->getOption('with-tests'), $output);
+        } elseif ($template === 'minimal') {
+            $this->generateMinimalModule($commandArguments, $shortName, $output);
         } else {
             foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
                 $fullPath = $this->getFacade()->generateFileContent(
@@ -92,6 +103,26 @@ final class MakeModuleCommand extends Command
                 $filename,
                 $shortName,
                 $subDirectory,
+            );
+            $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
+        }
+    }
+
+    /**
+     * The `minimal` template scaffolds only the Facade and Factory pillars.
+     * Config and Provider are optional: add them when the module actually
+     * reads config or wires external dependencies.
+     */
+    private function generateMinimalModule(
+        CommandArguments $commandArguments,
+        bool $shortName,
+        OutputInterface $output,
+    ): void {
+        foreach ([FilenameSanitizer::FACADE, FilenameSanitizer::FACTORY] as $filename) {
+            $fullPath = $this->getFacade()->generateFileContent(
+                $commandArguments,
+                $filename,
+                $shortName,
             );
             $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
         }

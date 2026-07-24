@@ -81,6 +81,29 @@ final class Factory extends AbstractFactory
 
 > Using `singleton()` the factory keeps instances in memory.
 
+### Config and Provider are optional pillars
+
+A Gacela module has four pillars — **Facade**, **Factory**, **Config**, and
+**Provider** — but only the **Facade** and **Factory** are required. The
+runtime tolerates the other two being absent: Config falls back to an anonymous
+default, and a module whose Factory never calls `getProvidedDependency()` never
+needs a Provider. So the two-file module above already resolves and runs.
+
+Add the optional pillars only when you actually need them:
+
+- **Config** — when the module reads configuration values.
+- **Provider** — when the module wires external dependencies (services from
+  other modules or third-party libraries) into its container.
+
+Scaffold just the two-file floor with the CLI:
+
+```bash
+vendor/bin/gacela make:module App/Hello --minimal
+```
+
+Use `make:module App/Hello` (or `--template=basic`) for the full four-pillar
+shape, or `--template=service` for a module wired to a `Domain` service.
+
 `src/Hello/Greeter.php`
 ```php
 <?php

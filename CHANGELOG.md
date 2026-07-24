@@ -2,9 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- `make:module --minimal` (alias `--template=minimal`): scaffolds only the Facade and Factory pillars; Config and Provider are optional (the runtime tolerates their absence). `basic` and `service` templates are unchanged
+
 ### Changed
 
-- `make:module` provider template is now attribute-first: the scaffolded provider demonstrates a typed `#[Provides]` method (a `clock(): DateTimeImmutable` example) as the primary registration path, while keeping the imperative `provideModuleDependencies(Container $container)` available for edge cases (no BC break)
+- `make:module` provider template is now attribute-first: the scaffolded provider demonstrates a typed `#[Provides]` method as the primary registration path, keeping the imperative `provideModuleDependencies()` available (no BC break)
+
+### Documentation
+
+- Documented Config and Provider as optional pillars (the two-file Facade + Factory floor) in `docs/getting-started.md`
 
 ## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
 

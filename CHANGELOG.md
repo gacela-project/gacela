@@ -4,6 +4,7 @@
 
 ### Added
 
+- `AbstractFactory::make(class-string, params)`: resolve a domain object through the module container with autowiring — a `create*()` method can build it by type, honoring the container attributes (`#[Inject]`/`#[Singleton]`/`#[Factory]`) on the resolved class, with optional `params` overriding constructor arguments by name. Additive and opt-in; `getProvidedDependency()` and hand-wired `create*()` keep working
 - `make:module --minimal` (alias `--template=minimal`): scaffolds only the Facade and Factory pillars; Config and Provider are optional (the runtime tolerates their absence). `basic` and `service` templates are unchanged
 
 ### Changed
@@ -12,7 +13,7 @@
 
 ### Documentation
 
-- Documented Config and Provider as optional pillars (the two-file Facade + Factory floor) in `docs/getting-started.md`
+- Documented `AbstractFactory::make()` and attribute-first module DI in `docs/container-configuration.md`; documented Config and Provider as optional pillars (the two-file Facade + Factory floor) in `docs/getting-started.md`
 
 ## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
 

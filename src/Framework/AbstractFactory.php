@@ -56,6 +56,27 @@ abstract class AbstractFactory
         return $this->getContainer()->get($key);
     }
 
+    /**
+     * Resolve a class through the module container with autowiring, so its
+     * constructor dependencies and the container DI attributes (#[Inject],
+     * #[Singleton], #[Factory]) are honored — letting a create*() method
+     * resolve a domain object by type instead of hand-wiring it.
+     *
+     * Pass $params to override constructor arguments by name (top level only);
+     * the instance is then always built fresh.
+     *
+     * @template T of object
+     *
+     * @param class-string<T> $className
+     * @param array<string, mixed> $params
+     *
+     * @return T
+     */
+    protected function make(string $className, array $params = []): object
+    {
+        return $this->getContainer()->make($className, $params);
+    }
+
     private function getContainer(): Container
     {
         $containerKey = static::class;

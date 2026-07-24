@@ -8,6 +8,7 @@ use Gacela\Framework\AbstractFactory;
 use GacelaTest\Feature\Container\ModuleAttributes\Module\Domain\CounterServiceSingleton;
 use GacelaTest\Feature\Container\ModuleAttributes\Module\Domain\FreshPrinter;
 use GacelaTest\Feature\Container\ModuleAttributes\Module\Domain\GreeterWithInject;
+use GacelaTest\Feature\Container\ModuleAttributes\Module\Domain\GreetingInterface;
 use GacelaTest\Feature\Container\ModuleAttributes\Module\Domain\PlainGreeter;
 
 final class Factory extends AbstractFactory
@@ -34,5 +35,30 @@ final class Factory extends AbstractFactory
     {
         /** @var PlainGreeter */
         return $this->getProvidedDependency(PlainGreeter::class);
+    }
+
+    public function makeSingletonCounter(): CounterServiceSingleton
+    {
+        return $this->make(CounterServiceSingleton::class);
+    }
+
+    public function makeFreshPrinter(): FreshPrinter
+    {
+        return $this->make(FreshPrinter::class);
+    }
+
+    public function makeGreeterWithInject(): GreeterWithInject
+    {
+        return $this->make(GreeterWithInject::class);
+    }
+
+    public function makePlainGreeter(): PlainGreeter
+    {
+        return $this->make(PlainGreeter::class);
+    }
+
+    public function makePlainGreeterWith(GreetingInterface $greeting): PlainGreeter
+    {
+        return $this->make(PlainGreeter::class, ['greeting' => $greeting]);
     }
 }

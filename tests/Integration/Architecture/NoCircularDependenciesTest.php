@@ -49,6 +49,16 @@ final class NoCircularDependenciesTest extends TestCase
         // is what unpicks this component. That is a BC break on a public method, so
         // it is deferred; until then the whole component is listed.
         //
+        // A second, smaller edge for the same 2.0 pass: `SetupGacelaInterface`
+        // declares `merge(SetupGacela $other)`, naming its own implementation in
+        // its own contract, which no other implementation could satisfy. Dropping
+        // it from the interface needs `ConfigFactory` and
+        // `GacelaConfigUsingGacelaPhpFileFactory` to type-hint the concrete
+        // `SetupGacela`; both are public non-@internal constructors, so it cannot
+        // be done in a minor. Deprecating it early was tried and reverted: nothing
+        // in Gacela itself could satisfy the deprecation, so it only produced a
+        // warning no caller could act on.
+        //
         // Two sub-clusters inside it are cohesive on their own merits and are
         // expected to survive even after the knot is cut:
         //   - SetupGacela + its Setup\* strategy helpers: an aggregate and the

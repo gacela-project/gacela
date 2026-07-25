@@ -10,6 +10,7 @@
 - [Cacheable methods](cacheable-methods.md) — cache facade method results with `#[Cacheable]`
 - [Opcache preload](opcache-preload.md) — production performance tuning
 - [Production performance](production-performance.md) — full checklist to run Gacela fast in production
+- [Upgrading](upgrading.md) — what is deprecated in 1.x, and what to replace it with
 
 ## RFCs
 

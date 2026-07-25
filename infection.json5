@@ -27,10 +27,6 @@
             // being switched on and baselined.
             "Gacela\\Console\\Application\\*",
             "Gacela\\Console\\Infrastructure\\*",
-            "Gacela\\Console\\ConsoleConfig",
-            "Gacela\\Console\\ConsoleFacade",
-            "Gacela\\Console\\ConsoleFactory",
-            "Gacela\\Console\\ConsoleProvider",
         ],
         // Equivalent or environment-untestable mutants, grouped by reason.
         "global-ignoreSourceCodeByRegex": [
@@ -97,13 +93,6 @@
         },
         // normalizeDirectory(): Windows-specific branches (UNC/backslash folding)
         // that are dead code on the POSIX machines running this suite.
-        GreaterThan: {
-            ignore: [
-                "Gacela\\Framework\\Cache\\FileCache::stats",
-                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
-                "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",
-            ],
-        },
         // createAppModule()/getNamespace(): the realPath and file_get_contents
         // false-branches need a file that vanishes or turns unreadable between the
         // directory scan and the read, i.e. a filesystem race. buildClassName()'s
@@ -165,6 +154,7 @@
         DecrementInteger: {
             ignore: [
                 "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+                "Gacela\\Console\\ConsoleFactory::resolveScanPath",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
@@ -176,6 +166,7 @@
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+                "Gacela\\Console\\ConsoleFactory::resolveScanPath",
             ],
         },
         // shortClassName() feeds str_ends_with() checks, where keeping a longer
@@ -248,6 +239,28 @@
         // always end in "\\" or "/", both single-byte, so mb_substr() and substr()
         // cut the same character for every valid input -- the multibyte characters
         // are never the last one. Kept as mb_substr() for intent, not behaviour.
+        // resolveScanPath(): the `strlen($path) > 1 && $path[1] === ':'` clause
+        // detects a Windows drive prefix, which is dead code on the POSIX
+        // machines running this suite -- same category as normalizeDirectory
+        // below. UnwrapRtrim leaves a doubled separator, which POSIX resolves
+        // identically, so the path still points at the same directory.
+        GreaterThan: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::stats",
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",
+                "Gacela\\Console\\ConsoleFactory::resolveScanPath",
+            ],
+        },
+        GreaterThanNegotiation: {
+            ignore: ["Gacela\\Console\\ConsoleFactory::resolveScanPath"],
+        },
+        LogicalAndAllSubExprNegation: {
+            ignore: ["Gacela\\Console\\ConsoleFactory::resolveScanPath"],
+        },
+        UnwrapRtrim: {
+            ignore: ["Gacela\\Console\\ConsoleFactory::resolveScanPath"],
+        },
         MBString: {
             ignore: ["Gacela\\Console\\Domain\\CommandArguments\\CommandArgumentsParser::foundPsr4"],
         },

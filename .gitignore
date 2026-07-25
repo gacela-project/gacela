@@ -31,3 +31,10 @@ gacela-uncreatable-*/
 gacela-filecache-test-*/
 gacela-scoped-bench-*/
 gacela-doctor-strict-*/
+
+# The patterns above only match the leaf directories. The whole tree hangs off a
+# mangled root -- a mutated `/var/folders/...` becomes `\\ar/folders/...` -- so
+# git reports that parent as untracked and the leaves are never consulted. This
+# is the directory that broke every Windows job once already: the name is not a
+# valid path there, so `git checkout` fails outright if it is ever committed.
+[\\]*

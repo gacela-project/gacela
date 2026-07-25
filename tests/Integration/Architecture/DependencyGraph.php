@@ -110,7 +110,7 @@ final class DependencyGraph
             /** @var list<string> */
             private array $stack = [];
 
-            public function enterNode(Node $node): null
+            public function enterNode(Node $node): ?Node
             {
                 if ($node instanceof Node\Stmt\ClassLike) {
                     $this->enterClassLike($node);
@@ -130,7 +130,7 @@ final class DependencyGraph
                 return null;
             }
 
-            public function leaveNode(Node $node): null
+            public function leaveNode(Node $node): ?Node
             {
                 if ($node instanceof Node\Stmt\ClassLike && $node->namespacedName !== null) {
                     array_pop($this->stack);

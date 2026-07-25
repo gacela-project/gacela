@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\Health;
 
 use Gacela\Framework\Container\Container;
+use ReflectionClass;
+
+use function class_exists;
 
 /**
  * Tracks health checks registered through GacelaConfig::addHealthCheck()
@@ -58,19 +61,23 @@ final class HealthCheckRegistry
                 continue;
             }
 
-            $instance = self::instantiate($check, $container);
-            if ($instance instanceof ModuleHealthCheckInterface) {
-                $resolved[] = $instance;
-            }
+            $resolved[] = self::instantiate($check, $container);
         }
 
         return $resolved;
     }
 
     /**
-     * @param class-string<ModuleHealthCheckInterface> $className
+     * The registry stores whatever `addHealthCheck()` was handed. Its
+     * `class-string<ModuleHealthCheckInterface>` annotation is a promise from
+     * the caller, not a verified fact, so this takes a bare `class-string` and
+     * checks both halves of that promise at runtime.
+     *
+     * @param class-string $className
+     *
+     * @throws HealthCheckNotResolvableException
      */
-    private static function instantiate(string $className, ?Container $container): ?ModuleHealthCheckInterface
+    private static function instantiate(string $className, ?Container $container): ModuleHealthCheckInterface
     {
         if ($container instanceof Container) {
             /** @var mixed $instance */
@@ -81,9 +88,14 @@ final class HealthCheckRegistry
         }
 
         if (!class_exists($className)) {
-            return null;
+            throw HealthCheckNotResolvableException::classNotFound($className);
         }
 
-        return new $className();
+        $instance = (new ReflectionClass($className))->newInstance();
+        if (!$instance instanceof ModuleHealthCheckInterface) {
+            throw HealthCheckNotResolvableException::notAHealthCheck($className);
+        }
+
+        return $instance;
     }
 }

@@ -14,6 +14,7 @@
 
 - `GacelaConfig::addMappingInterface()` now emits an `E_USER_DEPRECATED` notice. It has carried a `@deprecated` docblock since 1.2.0 — over three years and 17 minor releases — but nothing surfaced it at runtime, so an app could not discover it was on a path scheduled for removal in 2.0. Use `addBinding()`; the arguments are unchanged. `DocBlockResolverAwareTrait` stays documentation-only: PHP offers no hook for "a trait was used"
 - Scaffolding commands (`make:module`, `make:file`) now fail loudly when a generated file cannot be written. `FileContentIo::filePutContents()` discarded the result of `file_put_contents()`, so a read-only target, a permission error, or a full disk produced a success message, an exit code of `0`, and no file on disk. It now throws a `RuntimeException` naming the path, matching how the neighbouring `mkdir()` has always behaved. This only changes behaviour on runs that were already failing silently
+- A health check registered by class-string that cannot be resolved now throws `HealthCheckNotResolvableException` instead of being dropped from the report. A typo in `addHealthCheck(SomeCheck::class)`, or a class that does not implement `ModuleHealthCheckInterface`, previously produced a report that looked healthy while the check silently never ran — the exact failure mode health checks exist to surface. This completes the direction 1.19.0 started, where health-check container-resolution errors stopped being swallowed
 
 ### Removed
 

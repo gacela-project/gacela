@@ -6,12 +6,15 @@ namespace GacelaTest\Unit\Framework\Health;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Health\HealthCheckNotResolvableException;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use stdClass;
+
+use function sprintf;
 
 final class HealthCheckRegistryTest extends TestCase
 {
@@ -87,15 +90,40 @@ final class HealthCheckRegistryTest extends TestCase
         self::assertArrayHasKey('SecondFake', $report->getResults());
     }
 
-    public function test_unresolvable_class_string_is_skipped(): void
+    /**
+     * A registered check that cannot be resolved is a misconfiguration, not a
+     * reason to report a healthy system: skipping it silently would hide the
+     * very problem health checks exist to surface.
+     */
+    public function test_unresolvable_class_string_reports_the_misconfiguration(): void
     {
         /** @var class-string<ModuleHealthCheckInterface> $bogus */
         $bogus = 'GacelaTest\NotExisting\HealthCheck';
         HealthCheckRegistry::register($bogus);
 
-        $checker = HealthCheckRegistry::createHealthChecker();
+        $this->expectException(HealthCheckNotResolvableException::class);
+        $this->expectExceptionMessage(
+            'The health check "GacelaTest\NotExisting\HealthCheck" was registered but the class does not exist. '
+            . 'Check the class-string passed to GacelaConfig::addHealthCheck().',
+        );
 
-        self::assertSame(0, $checker->count());
+        HealthCheckRegistry::createHealthChecker();
+    }
+
+    public function test_class_that_is_not_a_health_check_reports_the_misconfiguration(): void
+    {
+        /** @var class-string<ModuleHealthCheckInterface> $notACheck */
+        $notACheck = HealthCheckRegistryNotACheck::class;
+        HealthCheckRegistry::register($notACheck);
+
+        $this->expectException(HealthCheckNotResolvableException::class);
+        $this->expectExceptionMessage(sprintf(
+            'The health check "%s" does not implement %s.',
+            HealthCheckRegistryNotACheck::class,
+            ModuleHealthCheckInterface::class,
+        ));
+
+        HealthCheckRegistry::createHealthChecker();
     }
 
     public function test_container_provided_instance_is_preferred_over_direct_instantiation(): void
@@ -201,4 +229,8 @@ final class HealthCheckRegistryConfigurableFake implements ModuleHealthCheckInte
     {
         return $this->name;
     }
+}
+
+final class HealthCheckRegistryNotACheck
+{
 }

@@ -91,13 +91,15 @@ final class CacheWarmService
         return $classes;
     }
 
+    /**
+     * class_exists() autoloads by default, so the guard below is what actually
+     * loads the class; a second autoloading call would be a no-op.
+     */
     public function resolveClass(string $className): void
     {
         if (!class_exists($className)) {
             throw new ClassNotFoundException($className);
         }
-
-        class_exists($className, true);
     }
 
     /**

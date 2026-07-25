@@ -17,6 +17,14 @@ parameters:
         # (e.g. strrpos() returning a falsy 0) still shows up as an opt-out.
         disallowedShortTernary: false
     ignoreErrors:
+        # Building a MethodReflection is unavoidable for a methodsClassReflectionExtension,
+        # and PHPStan covers no way of doing it under its BC promise -- neither implementing
+        # ExtendedMethodReflection nor constructing its own implementation of it. The class
+        # docblock explains why this is the lesser of the two.
+        -
+            identifier: phpstanApi.constructor
+            path: src/PHPStan/Reflection/ServiceMapMethodsClassReflectionExtension.php
+            count: 1
         # The resolver caches store class names that were validated before being
         # put(), but CacheInterface::get() is a plain string map shared with the
         # generic service caches, so the class-string-ness cannot be proven here.

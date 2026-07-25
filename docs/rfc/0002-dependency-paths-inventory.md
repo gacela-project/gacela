@@ -31,11 +31,41 @@ taught, type-safe), **S** = supported (works, not the answer to "how do I…"),
 |---|---|---|---|---|
 | 1 | `$this->getFacade()` resolved from `@method` docblock | `ServiceResolverAwareTrait` | S | PHPStan reads the docblock natively |
 | 2 | `$this->getFacade()` resolved from `#[ServiceMap]` | `ServiceResolverAwareTrait` | **P** | Typed by the reflection extension since #521 |
-| 3 | `$this->getFacade()` resolved by scanning `use` statements | `DocBlockResolver::searchClassOverUseStatements()` | S | Invisible to every static analyser; file-parsing at runtime |
+| 3 | `@method` docblock with an **unqualified** name, resolved against the file's `use` statements | `DocBlockResolver::searchClassOverUseStatements()` | S | Costs a file read + regex per cold resolve. **Analysers do follow it** — see the correction below |
 | 4 | `new SomeFacade()` directly | — | S | What `CrossModuleViaFacadeRule` permits and `FactoryDoesNotCallFacadeRule` forbids in a Factory |
 
 Paths 1–3 are the *same call* resolved three different ways, in a documented order, at
 runtime. That is the "convention re-derived per process" problem in one line.
+
+> **Correction (2026-07-26).** The first version of this RFC described path 3 as "the only
+> resolution strategy no static analyser can see" and claimed "a consumer who writes no
+> docblock and no attribute still gets a working `getFacade()`". **Both are wrong**, and the
+> proposal built on them has been withdrawn.
+>
+> What the code actually does: `UseBlockParser::getUseStatement()` returns `''` for an empty
+> class name, so path 3 only runs when a `@method` docblock *is* present and names an
+> unqualified class. Without a docblock *and* without `#[ServiceMap]`, `getFactory()` falls
+> back to `AbstractFactory` and every other accessor throws
+> `MissingClassDefinitionException` — the path does not silently rescue an undeclared class.
+>
+> And PHPStan resolves `@method Target getFactory()` through the file's imports natively.
+> Verified on a fixture: with only that docblock, PHPStan reports
+> `Call to an undefined method Probe\Target::nope()`. So path 3 is ordinary, idiomatic
+> PHPDoc, not an analyser blind spot.
+>
+> The remaining cost is real but small: a file read and a regex on each cold resolve, on a
+> path already covered by `cache:warm`. That does not justify deprecating a style people
+> reasonably write, so **the "retire path 3" proposal below is withdrawn**.
+>
+> **Still not fully mapped.** For the three *special* resolvable types — Facade, Factory,
+> Config — the class name that paths 1–3 produce is then reduced by
+> `DocBlockResolver::normalizeResolvableType()` to just the type, and the concrete class is
+> resolved by module convention rather than by the name the docblock gave. So for those
+> three, what the docblock names may not be what you get: a class whose module has no
+> conventional Factory receives a base `AbstractFactory` even when its docblock names a
+> real one. The interaction between the docblock name and convention resolution is not
+> documented anywhere and is not characterised here. **Anyone acting on intents 1–3 in this
+> RFC should map that first** — it is the part most likely to invalidate a plan.
 
 ### Intent 2 — get a collaborator inside my own module
 
@@ -107,10 +137,11 @@ Not "delete 15 methods". Most have a real use, and 2.0 is not a rewrite.
    - own collaborator → `create*()`, or `make()` when autowiring pays
    - external service → `#[Provides]`, or `addBinding()` for an interface
    - config value → `AbstractConfig::get*()`
-2. **Retire the `use`-statement scan** (path 3). It is the only resolution strategy no
-   static analyser can see, it costs a file read and a regex per cold resolve, and it exists
-   solely so that omitting both the docblock and the attribute still works. Deprecate in
-   1.x, remove in 2.0. This is the one *removal* this RFC actually argues for.
+2. ~~**Retire the `use`-statement scan** (path 3).~~ **Withdrawn** — see the correction
+   above. It is idiomatic PHPDoc that analysers follow, not a blind spot, and the only cost
+   left is a file read and a regex on a cold resolve that `cache:warm` already covers.
+   Deprecating it would have broken a reasonable style for close to nothing.
+   **This RFC now argues for no removals at all.**
 3. **Segregate `GacelaConfig` by audience** rather than shrinking it — bootstrap, container
    bindings, testing helpers, plugins. A consumer wiring one service should see ~8 methods,
    not 33. Interface segregation, no deletions, non-breaking if the concrete class keeps
@@ -119,9 +150,12 @@ Not "delete 15 methods". Most have a real use, and 2.0 is not a rewrite.
 
 ## Open questions
 
-1. Does retiring path 3 break anyone in practice? It is the *default* for a class with
-   neither a docblock nor an attribute, so the blast radius is "every consumer who wrote
-   neither" — unknown, and worth measuring before committing.
+1. ~~Does retiring path 3 break anyone in practice?~~ **Answered, and it invalidated the
+   question's premise.** Path 3 is not the default for an undeclared class — it requires a
+   `@method` docblock — and analysers follow it. The proposal was withdrawn rather than
+   measured. Worth noting as a method: the question was resolved by writing the deprecation
+   and a fixture for it, then watching the fixture fail to reach the path it was supposed to
+   exercise. The claim had been plausible enough to write down twice.
 2. Is `Locator`/`AnonymousGlobal` being `@internal` but reachable acceptable, or should 2.0
    make it unreachable? Making it private is breaking for anyone who ignored the marker.
 3. Does segregating `GacelaConfig` help if the concrete class still implements every

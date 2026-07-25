@@ -7,6 +7,7 @@ namespace GacelaTest\Benchmark\Cache;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\ScopedCache;
 use PhpBench\Attributes\AfterMethods;
+use PhpBench\Attributes\Assert;
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
@@ -25,7 +26,19 @@ use function unlink;
 /**
  * ScopedCache decorator cost: put/get overhead and dependsOn() cycle-detection
  * at increasing depths, on top of a real FileCache.
+ *
+ * Gated, but with a widened tolerance: every subject here is disk-bound, and
+ * the gate compares two runs made at different moments on the same machine.
+ * `rstdev` stays under 2%, so these look stable by the README's criterion --
+ * but that measures spread *within* one run, not drift *between* runs. Two
+ * repeated runs of identical code moved `bench_invalidate_leaf` by -7.61% and
+ * then -16.36%, and CI has produced +14.70%. A +/-10% assert therefore sits
+ * below the noise floor and fails PRs that did not touch this code. The
+ * tolerance below clears the worst observed drift with headroom while still
+ * catching a real algorithmic regression, which would be far larger.
+ * See tests/Benchmark/README.md.
  */
+#[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 30%')]
 #[BeforeMethods('setUp')]
 #[AfterMethods('tearDown')]
 #[Groups(['gate', 'cache'])]

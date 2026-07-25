@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\ModuleGraph;
 
-use function array_unique;
 use function array_values;
 use function implode;
 use function in_array;
@@ -130,14 +129,20 @@ final class GraphDiffMarkdownFormatter
      */
     private function affectedModules(GraphDiffResult $diff): array
     {
-        $modules = [...$diff->addedModules, ...$diff->removedModules];
+        // Keyed by name so a module named twice -- added *and* an edge endpoint
+        // -- collapses on the way in, rather than being deduplicated afterwards.
+        $modules = [];
 
-        foreach ([...$diff->addedEdges, ...$diff->removedEdges] as $edge) {
-            $modules[] = $edge['from'];
-            $modules[] = $edge['to'];
+        foreach ([...$diff->addedModules, ...$diff->removedModules] as $module) {
+            $modules[$module] = $module;
         }
 
-        return array_values(array_unique($modules));
+        foreach ([...$diff->addedEdges, ...$diff->removedEdges] as $edge) {
+            $modules[$edge['from']] = $edge['from'];
+            $modules[$edge['to']] = $edge['to'];
+        }
+
+        return array_values($modules);
     }
 
     private static function nodeId(string $module): string

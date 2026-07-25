@@ -119,6 +119,32 @@ final class GraphDiffMarkdownFormatterTest extends TestCase
         self::assertStringContainsString("    App.Lonely\n", $markdown);
     }
 
+    public function test_the_report_ends_with_a_newline(): void
+    {
+        $markdown = (new GraphDiffMarkdownFormatter())->format(
+            new GraphDiffResult(['A'], [], [], []),
+            ['A' => []],
+        );
+
+        self::assertStringEndsWith("artifact.\n", $markdown);
+    }
+
+    /**
+     * An edge is only drawn when *both* ends are part of the change. Drawing it
+     * when either end matches pulls in every unchanged module that happens to
+     * touch a changed one, which for a hub module is the whole graph.
+     */
+    public function test_an_edge_with_only_one_affected_end_is_not_drawn(): void
+    {
+        $markdown = (new GraphDiffMarkdownFormatter())->format(
+            new GraphDiffResult(['App\\New'], [], [], []),
+            ['App\\Hub' => ['App\\New'], 'App\\New' => [], 'App\\Other' => ['App\\Hub']],
+        );
+
+        self::assertStringNotContainsString('App.Hub', $markdown);
+        self::assertStringContainsString('    App.New', $markdown);
+    }
+
     public function test_heading_states_what_changed(): void
     {
         $markdown = (new GraphDiffMarkdownFormatter())->format(

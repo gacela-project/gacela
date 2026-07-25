@@ -21,7 +21,16 @@
     mutators: {
         '@default': true,
         "global-ignore": [
-            "Gacela\\Console\\*",
+            // Ratcheting out of a blanket "Gacela\\Console\\*" ignore, namespace by
+            // namespace (#529). Domain is done and is now enforced at 100%; the
+            // rest stays ignored until it gets the same treatment, rather than
+            // being switched on and baselined.
+            "Gacela\\Console\\Application\\*",
+            "Gacela\\Console\\Infrastructure\\*",
+            "Gacela\\Console\\ConsoleConfig",
+            "Gacela\\Console\\ConsoleFacade",
+            "Gacela\\Console\\ConsoleFactory",
+            "Gacela\\Console\\ConsoleProvider",
         ],
         // Equivalent or environment-untestable mutants, grouped by reason.
         "global-ignoreSourceCodeByRegex": [
@@ -62,13 +71,6 @@
             '.*spl_object_id\\(\\$configItem->reader\\(\\)\\).*',
         ],
         // flock()-based locking and opcache invalidation are not observable in-process.
-        FunctionCallRemoval: {
-            ignore: [
-                "Gacela\\Framework\\Cache\\FileCache::commitBatch",
-                "Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor",
-                "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
-            ],
-        },
         UnwrapFinally: {
             ignore: ["Gacela\\Framework\\Cache\\FileCache::commitBatch"],
         },
@@ -80,7 +82,10 @@
             ],
         },
         IfNegation: {
-            ignore: ["Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor"],
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor",
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+            ],
         },
         // stats() aggregates over existing files, where the int-casts and the
         // equal-timestamp comparisons cannot change the outcome.
@@ -99,13 +104,24 @@
                 "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",
             ],
         },
+        // createAppModule()/getNamespace(): the realPath and file_get_contents
+        // false-branches need a file that vanishes or turns unreadable between the
+        // directory scan and the read, i.e. a filesystem race. buildClassName()'s
+        // `strpos() !== false` needs an extensionless file, which the .php filter
+        // above has already rejected. fullModuleName() handles a facade with no
+        // namespace separator at all, unreachable from the finder because the
+        // namespace guard rejects those first (see the global-namespace test).
         FalseValue: {
-            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::createAppModule",
+                "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::getNamespace",
+                "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::buildClassName",
+                "Gacela\\Console\\Domain\\AllAppModules\\AppModuleCreator::fullModuleName",
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+            ],
         },
         ArrayItemRemoval: {
-            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
-        },
-        Identical: {
             ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
         },
         LogicalAnd: {
@@ -120,12 +136,6 @@
         },
         // WritableDirectory::probe() / containerTempDir(): mkdir-failure paths only
         // reachable through filesystem races (TOCTOU) or an unwritable system temp dir.
-        LogicalNot: {
-            ignore: [
-                "Gacela\\Framework\\Cache\\WritableDirectory::probe",
-                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
-            ],
-        },
         Throw_: {
             ignore: ["Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir"],
         },
@@ -150,8 +160,11 @@
                 "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
             ],
         },
+        // Tarjan's index counter is only ever compared with other indices or fed
+        // to min(); shifting its origin by a constant changes no component.
         DecrementInteger: {
             ignore: [
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
@@ -162,6 +175,7 @@
             ignore: [
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
             ],
         },
         // shortClassName() feeds str_ends_with() checks, where keeping a longer
@@ -178,10 +192,60 @@
         },
         // The keys used by the lazy handler registry stringify identically via sprintf.
         CastString: {
-            ignore: ["Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get"],
+            ignore: [
+                "Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get",
+                // The cast is already annotated @psalm-suppress RedundantCast:
+                // reset() on a non-empty string list returns a string either way.
+                "Gacela\\Console\\Domain\\FilenameSanitizer\\FilenameSanitizer::sanitize",
+            ],
         },
         UnwrapArrayMap: {
             ignore: ["Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get"],
+        },
+        // affectedModules() keys its accumulator by module name to deduplicate;
+        // array_values() only restores the list shape the return type declares,
+        // and every consumer (in_array, foreach) behaves the same either way.
+        // moduleImports(): the unreadable-file branch needs a .php file that turns
+        // unreadable between the directory scan and the read -- a filesystem race.
+        // stronglyConnectedComponents(): both mutants break the iterative DFS's
+        // loop control so the traversal never terminates. Infection counts the
+        // timeout as a kill, but at 10s each; ignoring them by name keeps the
+        // suite fast without pretending they are untested.
+        Identical: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+            ],
+        },
+        // stronglyConnectedComponents() is an iterative DFS whose loop control --
+        // the frame pointer, the visited guards, the edge cursor -- cannot be
+        // mutated without the traversal failing to terminate. Infection scores a
+        // timeout as a kill, so these would "pass" only by hanging for 10s each,
+        // and whether a given mutant times out or escapes shifts with machine
+        // load. Ignore them by name instead of letting the score depend on it.
+        LogicalNot: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\WritableDirectory::probe",
+                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+            ],
+        },
+        Increment: {
+            ignore: ["Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents"],
+        },
+        Minus: {
+            ignore: ["Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents"],
+        },
+        FunctionCallRemoval: {
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::commitBatch",
+                "Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor",
+                "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+            ],
+        },
+        UnwrapArrayValues: {
+            ignore: ["Gacela\\Console\\Domain\\ModuleGraph\\GraphDiffMarkdownFormatter::affectedModules"],
         },
         // hrtime(true) is an int; dividing by a float yields a float either way.
         // Same for the bootstrap-duration event, and getFloat()'s widening
@@ -197,10 +261,15 @@
         UnwrapLtrim: {
             ignore: ["Gacela\\Framework\\ClassResolver\\GlobalInstance\\AnonymousGlobal::getByKey"],
         },
-        // Guard for a dirty class without a registered filename: internal state
-        // that the public API cannot produce.
+        // commitBatch(): guard for a dirty class without a registered filename,
+        // internal state the public API cannot produce.
+        // moduleImports(): needs a .php file that turns unreadable between the
+        // directory scan and the read -- a filesystem race.
         Continue_: {
-            ignore: ["Gacela\\Framework\\ClassResolver\\Cache\\AbstractPhpFileCache::commitBatch"],
+            ignore: [
+                "Gacela\\Framework\\ClassResolver\\Cache\\AbstractPhpFileCache::commitBatch",
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleGraphBuilder::moduleImports",
+            ],
         },
         // Lookup-order swap between two stores that never share a key.
         Coalesce: {

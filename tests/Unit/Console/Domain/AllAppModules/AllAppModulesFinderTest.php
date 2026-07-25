@@ -100,6 +100,102 @@ final class AllAppModulesFinderTest extends TestCase
         }
     }
 
+    /**
+     * A PHP file with no `namespace` declaration still yields a class name, so
+     * both halves of the guard have to be able to reject on their own.
+     */
+    public function test_skips_a_php_file_that_declares_no_namespace(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('nonamespace');
+        $filePath = $tempDir . '/NamespacelessFacade.php';
+        file_put_contents($filePath, "<?php\n\nreturn [];\n");
+
+        $fileInfo = $this->createMock(SplFileInfo::class);
+        $fileInfo->method('isFile')->willReturn(true);
+        $fileInfo->method('getExtension')->willReturn('php');
+        $fileInfo->method('getRealPath')->willReturn($filePath);
+        $fileInfo->method('getFilename')->willReturn('NamespacelessFacade.php');
+
+        $finder = new AllAppModulesFinder($this->iteratorFor($fileInfo), $this->createAppModuleCreator());
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    /**
+     * A facade in the global namespace passes the class-name half of the guard
+     * *and* class_exists(), so only the namespace half can reject it. Gacela
+     * resolves pillars by namespace; a module without one has nothing to scan.
+     */
+    public function test_skips_a_facade_declared_in_the_global_namespace(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('rootnamespace');
+        $filePath = $tempDir . '/TempRootFacade.php';
+        file_put_contents($filePath, <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            final class TempRootFacade extends Gacela\Framework\AbstractFacade
+            {
+            }
+            PHP);
+        require_once $filePath;
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($filePath, 'TempRootFacade.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    /**
+     * The filter is written the way a path is (`Foo/Bar`) but matched against a
+     * namespace, so the separators have to be translated first.
+     */
+    public function test_a_filter_written_with_slashes_matches_the_namespace(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('slashfilter');
+        $filePath = $tempDir . '/SlashFilterFacade.php';
+        $className = 'TempSlashFilter\\Inner\\SlashFilterFacade';
+
+        $this->writeTempFacadeFile($filePath, $className);
+        require_once $filePath;
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($filePath, 'SlashFilterFacade.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            $modules = $finder->findAllAppModules('TempSlashFilter/Inner');
+
+            self::assertCount(1, $modules);
+            self::assertSame($className, $modules[0]->facadeClass());
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    private function fileInfoFor(string $path, string $filename): SplFileInfo
+    {
+        $fileInfo = $this->createMock(SplFileInfo::class);
+        $fileInfo->method('isFile')->willReturn(true);
+        $fileInfo->method('getExtension')->willReturn('php');
+        $fileInfo->method('getRealPath')->willReturn($path);
+        $fileInfo->method('getFilename')->willReturn($filename);
+
+        return $fileInfo;
+    }
+
     private function iteratorFor(SplFileInfo ...$files): IteratorIterator
     {
         return new IteratorIterator(new ArrayIterator($files));

@@ -39,7 +39,8 @@ final class ModuleGraphDiffer
      */
     private function modulesOnlyIn(array $subject, array $other): array
     {
-        $modules = array_values(array_diff(array_keys($subject), array_keys($other)));
+        // sort() reindexes, so array_values() on top of array_diff() would be a no-op.
+        $modules = array_diff(array_keys($subject), array_keys($other));
         sort($modules);
 
         return $modules;

@@ -6,6 +6,7 @@
 
 - `doctor` now reports pillar classes whose file is named differently from the class. Gacela resolves pillars by *filename* suffix, so a class renamed without its file stops resolving with nothing pointing at the cause — the step people miss migrating `AbstractDependencyProvider` to `AbstractProvider`, where `DependencyProvider.php` must also become `Provider.php`
 - `doctor --strict` exits non-zero on warnings as well as errors, so it can gate CI
+- `gacela init` scaffolds a project's `gacela.php`. It was the one file you had to hand-write from the docs before anything ran; `composer require` → `gacela init` → `make:module` now gets you to working code. Refuses to overwrite an existing file unless `--force`
 
 ## [1.20.0](https://github.com/gacela-project/gacela/compare/1.19.0...1.20.0) - 2026-07-25
 

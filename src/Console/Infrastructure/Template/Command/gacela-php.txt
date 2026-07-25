@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+use Gacela\Framework\Bootstrap\GacelaConfig;
+
+return static function (GacelaConfig $config): void {
+    // Where Gacela reads your configuration from. The local file wins, so keep
+    // it out of version control for machine-specific overrides.
+    $config->addAppConfig('config/*.php', 'config/local.php');
+
+    // Namespaces Gacela scans when resolving a module's pillars.
+    $config->setProjectNamespaces(['App']);
+
+    // Always pass an explicit directory. Without one the cache falls back to
+    // the system temp directory, which is shared with every other app on the
+    // machine — you would be reading someone else's stale entries.
+    $config->setFileCache(false, __DIR__ . '/data/cache');
+};

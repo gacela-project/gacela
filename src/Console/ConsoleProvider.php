@@ -14,6 +14,7 @@ use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
 use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
+use Gacela\Console\Infrastructure\Command\InitCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
@@ -21,6 +22,7 @@ use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Attribute\Provides;
+use Gacela\Framework\Config\Config;
 use Symfony\Component\Console\Command\Command;
 
 /**
@@ -55,6 +57,7 @@ final class ConsoleProvider extends AbstractProvider
             new ValidateConfigCommand(),
             new ProfileReportCommand(),
             new DoctorCommand(),
+            new InitCommand(Config::getInstance()->getAppRootDir()),
         ];
     }
 

@@ -30,6 +30,10 @@
 - Documented `AbstractFactory::make()` and attribute-first module DI in `docs/container-configuration.md`; documented Config and Provider as optional pillars (the two-file Facade + Factory floor) in `docs/getting-started.md`
 - Added `docs/upgrading.md`. All three 1.x deprecations pointed at a 2.0 removal with no migration path documented anywhere outside the changelog. It covers each old → new mapping, and calls out that `DependencyProvider.php` must be renamed to `Provider.php` — pillars resolve by filename suffix, so changing only the class name leaves it unresolvable, which is the step most people miss
 
+### Internal
+
+- Mutation testing now runs in CI. `infection.json5` has required `minMsi: 100` and `minCoveredMsi: 100` for a while, but no workflow ran it, and the score had drifted below the bar. A surviving mutant means the suite asserts the shape of the code rather than its behaviour — the line runs, but nothing checks the result
+
 ## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
 
 ### Added

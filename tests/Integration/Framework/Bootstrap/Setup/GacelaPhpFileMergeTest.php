@@ -97,16 +97,13 @@ PHP;
 
         $container = Container::withConfig(\Gacela\Framework\Config\Config::getInstance());
 
-        // Test factory
         $factory1 = $container->get('my-factory');
         $factory2 = $container->get('my-factory');
         self::assertNotSame($factory1, $factory2);
 
-        // Test protected
         $protected = $container->get('my-protected');
         self::assertSame($protectedCallable, $protected);
 
-        // Test alias
         $aliased = $container->get('my-alias');
         self::assertInstanceOf(stdClass::class, $aliased);
     }

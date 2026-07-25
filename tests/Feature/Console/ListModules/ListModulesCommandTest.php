@@ -53,7 +53,6 @@ TXT;
         self::assertStringContainsString('TestModule3Facade', $output);
         self::assertStringContainsString('TestModule1Factory', $output);
 
-        // Test that modules are numbered starting from 1 (not 0 or 2)
         self::assertStringContainsString('1.-', $output);
         self::assertStringContainsString('2.-', $output);
         self::assertStringContainsString('3.-', $output);

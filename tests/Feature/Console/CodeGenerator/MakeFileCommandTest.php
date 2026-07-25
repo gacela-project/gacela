@@ -39,14 +39,12 @@ final class MakeFileCommandTest extends TestCase
 
         $description = $command->getDescription();
 
-        // Test that the description contains 'Generate a ' followed by the expected filenames
         self::assertStringContainsString('Generate a ', $description);
         self::assertStringContainsString('Facade', $description);
         self::assertStringContainsString('Factory', $description);
         self::assertStringContainsString('Config', $description);
         self::assertStringContainsString('Provider', $description);
 
-        // Ensure it's in the correct order (not reversed)
         self::assertStringStartsWith('Generate a ', $description);
     }
 
@@ -72,7 +70,6 @@ final class MakeFileCommandTest extends TestCase
         yield 'config' => ['config', 'TestModuleConfig', false];
         yield 'dependency provider' => ['dependency-provider', 'TestModuleProvider', false];
 
-        // Short name flag
         yield 'facade -s' => ['facade', 'Facade', true];
         yield 'factory -s' => ['factory', 'Factory', true];
         yield 'config -s' => ['config', 'Config', true];

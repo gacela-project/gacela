@@ -174,6 +174,15 @@ final class GacelaConfig
      */
     public function addMappingInterface(string $key, string|object|callable $value): self
     {
+        @trigger_error(
+            sprintf(
+                'Since gacela-project/gacela 1.2: `%s::addMappingInterface()` is deprecated and will be '
+                . 'removed in version 2.0. Use `addBinding()` instead; the arguments are unchanged.',
+                self::class,
+            ),
+            E_USER_DEPRECATED,
+        );
+
         return $this->addBinding($key, $value);
     }
 
@@ -560,4 +569,5 @@ final class GacelaConfig
             $this->lazyServices,
         );
     }
+
 }

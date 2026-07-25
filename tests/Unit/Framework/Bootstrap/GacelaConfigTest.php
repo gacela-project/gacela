@@ -90,6 +90,31 @@ final class GacelaConfigTest extends TestCase
         );
     }
 
+    public function test_add_mapping_interface_emits_a_deprecation(): void
+    {
+        $deprecations = [];
+        set_error_handler(
+            static function (int $errno, string $errstr) use (&$deprecations): bool {
+                if ($errno === E_USER_DEPRECATED) {
+                    $deprecations[] = $errstr;
+                }
+
+                return true;
+            },
+            E_USER_DEPRECATED,
+        );
+
+        try {
+            (new GacelaConfig())->addMappingInterface('App\\Port', 'App\\Adapter');
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertCount(1, $deprecations);
+        self::assertStringContainsString('addMappingInterface', $deprecations[0]);
+        self::assertStringContainsString('addBinding', $deprecations[0]);
+    }
+
     public function test_add_binding_if_registers_a_default_when_absent(): void
     {
         $config = new GacelaConfig();

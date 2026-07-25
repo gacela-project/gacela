@@ -77,11 +77,11 @@ final class FilenameMismatchCheck implements HealthCheck
     }
 
     /**
-     * @return list<class-string>
+     * @return array<class-string>
      */
     private static function pillarsOf(AppModule $module): array
     {
-        return array_values(array_filter(
+        return array_filter(
             [
                 $module->facadeClass(),
                 $module->factoryClass(),
@@ -89,7 +89,7 @@ final class FilenameMismatchCheck implements HealthCheck
                 $module->providerClass(),
             ],
             static fn (?string $pillar): bool => $pillar !== null,
-        ));
+        );
     }
 
     /**

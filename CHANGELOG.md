@@ -10,6 +10,18 @@
 ### Changed
 
 - `make:module` provider template is now attribute-first: the scaffolded provider demonstrates a typed `#[Provides]` method as the primary registration path, keeping the imperative `provideModuleDependencies()` available (no BC break)
+- The deprecation notice for `AbstractDependencyProvider` is now emitted whether or not `symfony/deprecation-contracts` is installed. It was previously routed through `trigger_deprecation()` and skipped when that function was unavailable — which is most apps, since the package is not a runtime dependency of Gacela. The message keeps the contract's `Since <package> <version>: ` format, so deprecation collectors group it exactly as before. Apps still using `AbstractDependencyProvider` will start seeing the deprecation; migrate to `AbstractProvider`
+
+- Scaffolding commands (`make:module`, `make:file`) now fail loudly when a generated file cannot be written. `FileContentIo::filePutContents()` discarded the result of `file_put_contents()`, so a read-only target, a permission error, or a full disk produced a success message, an exit code of `0`, and no file on disk. It now throws a `RuntimeException` naming the path, matching how the neighbouring `mkdir()` has always behaved. This only changes behaviour on runs that were already failing silently
+
+### Removed
+
+- `Gacela\Framework\Container\Locator::addSingleton()`, which had no production caller. `Locator` is `@internal`; seed services through a `Container` and `Locator::getInstance($container)` instead
+
+### Fixed
+
+- A module's `provideModuleDependencies()` is no longer invoked twice. The `AbstractDependencyProvider` backward-compatibility path in `AbstractFactory` resolved the same provider instance through both `ProviderResolver` and `DependencyProviderResolver` (they share a normalized cache slot, because `DependencyProvider` ends with `Provider`) and then registered it once via `register()` and again directly. Providers whose body is not idempotent — counters, external registrations, logging — ran their side effects twice
+- `validate:config` now actually reports circular dependencies. The check caught every resolution error and then searched the message text for the lowercase word `circular`, but the container throws `CircularDependencyException` whose message begins `Circular dependency detected:` — capital `C`, and `str_contains()` is case-sensitive, so the branch never once matched. A genuinely cyclic configuration printed `✓ No circular dependencies detected` and exited `0`. The command now catches `CircularDependencyException` by type and prints the full `A -> B -> A` chain. Configurations that were always cyclic will now fail validation (exit code `1`) where they previously passed — if `validate:config` runs in your CI pipeline, expect it to surface pre-existing cycles on the first run after upgrading. Every other binding-resolution failure, previously discarded in silence by the same `catch`, is now reported as a warning naming the binding and the error
 
 ### Documentation
 

@@ -48,7 +48,7 @@ final class CacheWarmCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $cacheManager = new CacheManager();
-        $cacheWarmService = new CacheWarmService($this->getFacade());
+        $cacheWarmService = new CacheWarmService();
         $formatter = new CacheWarmOutputFormatter($output);
         $metrics = new PerformanceMetrics();
 
@@ -63,7 +63,7 @@ final class CacheWarmCommand extends Command
             $formatter->writeCacheCleared();
         }
 
-        $modules = $this->discoverModules($cacheWarmService, $formatter);
+        $modules = $this->discoverModules($formatter);
         $modules = $cacheWarmService->filterProductionModules($modules);
 
         $formatter->writeModulesFound($modules);
@@ -110,11 +110,10 @@ final class CacheWarmCommand extends Command
      * @return list<AppModule>
      */
     private function discoverModules(
-        CacheWarmService $cacheWarmService,
         CacheWarmOutputFormatter $formatter,
     ): array {
         try {
-            return $cacheWarmService->discoverModules();
+            return $this->getFacade()->findAllAppModules();
         } catch (Throwable $throwable) {
             $formatter->writeModuleDiscoveryWarning($throwable->getMessage());
             return [];

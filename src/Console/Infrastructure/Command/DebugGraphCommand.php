@@ -34,14 +34,14 @@ final class DebugGraphCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $format = (string)$input->getOption('format');
+        $format = ConsoleInput::option($input, 'format');
         if (!in_array($format, self::FORMATS, true)) {
             $output->writeln(sprintf('<error>Unknown format "%s". Use one of: text, mermaid, graphviz, json</error>', $format));
 
             return self::FAILURE;
         }
 
-        $filter = (string)$input->getArgument('filter');
+        $filter = ConsoleInput::argument($input, 'filter');
         $graph = $this->getFacade()->buildModuleGraph($filter);
 
         if ($graph === []) {

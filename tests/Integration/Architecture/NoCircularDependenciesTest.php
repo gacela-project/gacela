@@ -5,31 +5,26 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Architecture;
 
 use PHPUnit\Framework\TestCase;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use SplFileInfo;
 
-use function array_keys;
-use function count;
-use function file_get_contents;
+use function array_diff;
+use function array_values;
 use function implode;
-use function preg_match;
-use function preg_match_all;
-use function sort;
 use function sprintf;
 
 /**
- * Guards the source tree against circular dependencies between classes.
+ * Guards the source tree against circular dependencies, at both the class and
+ * the namespace (package) level.
  *
- * The graph is built from fully-qualified `use Gacela\{Framework,Console,PHPStan}\...`
- * imports (short-name matching would conflate the framework `Container` with the vendor
- * `Gacela\Container\Container`), then Tarjan's algorithm reports every strongly connected
- * component larger than one node.
+ * The graph is built from the AST — see {@see DependencyGraph} for why an
+ * import-based graph is not good enough — and Tarjan's algorithm reports every
+ * strongly connected component larger than one node.
  *
- * Two benign cycles are allow-listed: cohesive aggregate/helper clusters where the
- * back-edge is a constructor dependency or a parameter type, and where inverting the
- * dependency would add indirection without decoupling anything real. Any *new* cycle
- * fails the test.
+ * Cycles that are cohesive by design are allow-listed below with a rationale.
+ * Any *new* cycle fails the test.
+ *
+ * Note the allow-list forgives a whole component: while a component is listed,
+ * new edges *among its existing members* are not detected. That is the cost of
+ * listing the large bootstrap component, and a reason to keep shrinking it.
  */
 final class NoCircularDependenciesTest extends TestCase
 {
@@ -40,182 +35,171 @@ final class NoCircularDependenciesTest extends TestCase
      *
      * @var list<string>
      */
-    private const ALLOWED_CYCLES = [
-        'Gacela\Framework\AbstractProvider | Gacela\Framework\Attribute\ProvidesScanner',
-        'Gacela\Framework\Bootstrap\SetupGacela | Gacela\Framework\Bootstrap\Setup\PropertyMerger'
-            . ' | Gacela\Framework\Bootstrap\Setup\SetupInitializer | Gacela\Framework\Bootstrap\Setup\SetupMerger',
+    private const ALLOWED_CLASS_CYCLES = [
+        // The bootstrap knot. Config needs a ConfigFactory to read `gacela.php`, that
+        // file produces a SetupGacela, setup resolves extenders and health checks
+        // through the Container, and the Container reads its bindings back off Config:
+        //
+        //   Config -> ConfigFactory -> GacelaConfigUsingGacelaPhpFileFactory
+        //     -> SetupGacela -> {GacelaConfigExtender, HealthCheckRegistry}
+        //     -> Container -> Config
+        //
+        // `Container::withConfig(Config)` is the single edge every path returns
+        // through, and inverting it (Config builds the Container, not the reverse)
+        // is what unpicks this component. That is a BC break on a public method, so
+        // it is deferred; until then the whole component is listed.
+        //
+        // Two sub-clusters inside it are cohesive on their own merits and are
+        // expected to survive even after the knot is cut:
+        //   - SetupGacela + its Setup\* strategy helpers: an aggregate and the
+        //     strategies extracted from it; the back-edges are parameter/return
+        //     types, and SetupMerger alone reads 17 of its constants.
+        //   - Container + Locator: a container and its service locator, both
+        //     @internal, one concept split across two classes.
+        'Gacela\Framework\Bootstrap\AbstractSetupGacela'
+            . ' | Gacela\Framework\Bootstrap\GacelaConfig'
+            . ' | Gacela\Framework\Bootstrap\SetupEventDispatcher'
+            . ' | Gacela\Framework\Bootstrap\SetupGacela'
+            . ' | Gacela\Framework\Bootstrap\SetupGacelaInterface'
+            . ' | Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender'
+            . ' | Gacela\Framework\Bootstrap\Setup\PropertyMerger'
+            . ' | Gacela\Framework\Bootstrap\Setup\SetupInitializer'
+            . ' | Gacela\Framework\Bootstrap\Setup\SetupMerger'
+            . ' | Gacela\Framework\ClassResolver\Cache\GacelaFileCache'
+            . ' | Gacela\Framework\Config\Config'
+            . ' | Gacela\Framework\Config\ConfigFactory'
+            . ' | Gacela\Framework\Config\ConfigInterface'
+            . ' | Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory'
+            . ' | Gacela\Framework\Container\Container'
+            . ' | Gacela\Framework\Container\Locator'
+            . ' | Gacela\Framework\Health\HealthCheckRegistry',
     ];
 
-    public function test_source_tree_has_no_unexpected_circular_dependencies(): void
+    /**
+     * Package-level cycles. These are looser than class cycles by nature: a
+     * namespace pair is cyclic as soon as any one class on each side points at
+     * the other, so a framework that configures itself is cyclic here almost by
+     * construction — resolving a config class needs the class resolver, and the
+     * class resolver needs config to know where to look.
+     *
+     * Both entries are accepted for 1.x. Splitting them needs classes moved
+     * between namespaces, which is a BC break for a public library.
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_NAMESPACE_CYCLES = [
+        // One component covering most of Gacela\Framework. It is the package-level
+        // shadow of the class cycle allow-listed above, widened by two things that
+        // are cyclic only at namespace granularity:
+        //   - the module-facing API (AbstractFacade/Factory/Config/Provider) and the
+        //     resolvers that construct it — each base class names its resolver, and
+        //     each resolver returns the matching base class;
+        //   - the #[Provides] attribute scanner, which reads provider objects that
+        //     the framework root defines.
+        //
+        // Cutting the class cycle above shrinks this but does not remove it: a
+        // namespace pair is cyclic as soon as any one class on each side points at
+        // the other, so a framework that configures itself is cyclic here almost by
+        // construction. Splitting it needs classes moved between namespaces, which
+        // is a BC break on a public library. Accepted for 1.x.
+        'Gacela\Framework'
+            . ' | Gacela\Framework\Attribute'
+            . ' | Gacela\Framework\Bootstrap'
+            . ' | Gacela\Framework\Bootstrap\Setup'
+            . ' | Gacela\Framework\ClassResolver'
+            . ' | Gacela\Framework\ClassResolver\Cache'
+            . ' | Gacela\Framework\ClassResolver\ClassNameFinder'
+            . ' | Gacela\Framework\ClassResolver\ClassNameFinder\Rule'
+            . ' | Gacela\Framework\ClassResolver\Config'
+            . ' | Gacela\Framework\ClassResolver\DocBlockService'
+            . ' | Gacela\Framework\ClassResolver\Facade'
+            . ' | Gacela\Framework\ClassResolver\Factory'
+            . ' | Gacela\Framework\ClassResolver\GlobalInstance'
+            . ' | Gacela\Framework\ClassResolver\Provider'
+            . ' | Gacela\Framework\Config'
+            . ' | Gacela\Framework\Config\ConfigReader'
+            . ' | Gacela\Framework\Config\GacelaConfigBuilder'
+            . ' | Gacela\Framework\Config\GacelaFileConfig'
+            . ' | Gacela\Framework\Config\GacelaFileConfig\Factory'
+            . ' | Gacela\Framework\Config\PathNormalizer'
+            . ' | Gacela\Framework\Container'
+            . ' | Gacela\Framework\Event\ClassResolver'
+            . ' | Gacela\Framework\Event\ClassResolver\ClassNameFinder'
+            . ' | Gacela\Framework\Health'
+            . ' | Gacela\Framework\ServiceResolver',
+    ];
+
+    public function test_source_tree_has_no_unexpected_class_cycles(): void
     {
-        $edges = $this->buildDependencyGraph();
+        self::assertNoUnexpectedCycles(
+            DependencyGraph::fromDirectory(self::SRC)->classCycles(),
+            self::ALLOWED_CLASS_CYCLES,
+            'class',
+        );
+    }
 
-        $cycles = [];
-        foreach ($this->stronglyConnectedComponents($edges) as $component) {
-            if (count($component) < 2) {
-                continue;
-            }
-            sort($component);
-            $cycles[] = implode(' | ', $component);
-        }
-        sort($cycles);
+    public function test_source_tree_has_no_unexpected_namespace_cycles(): void
+    {
+        self::assertNoUnexpectedCycles(
+            DependencyGraph::fromDirectory(self::SRC)->namespaceCycles(),
+            self::ALLOWED_NAMESPACE_CYCLES,
+            'namespace',
+        );
+    }
 
-        $unexpected = array_values(array_diff($cycles, self::ALLOWED_CYCLES));
+    public function test_allow_listed_class_cycles_still_exist(): void
+    {
+        self::assertAllowListIsNotStale(
+            DependencyGraph::fromDirectory(self::SRC)->classCycles(),
+            self::ALLOWED_CLASS_CYCLES,
+            'ALLOWED_CLASS_CYCLES',
+        );
+    }
+
+    public function test_allow_listed_namespace_cycles_still_exist(): void
+    {
+        self::assertAllowListIsNotStale(
+            DependencyGraph::fromDirectory(self::SRC)->namespaceCycles(),
+            self::ALLOWED_NAMESPACE_CYCLES,
+            'ALLOWED_NAMESPACE_CYCLES',
+        );
+    }
+
+    /**
+     * @param list<string> $found
+     * @param list<string> $allowed
+     */
+    private static function assertNoUnexpectedCycles(array $found, array $allowed, string $level): void
+    {
+        $unexpected = array_values(array_diff($found, $allowed));
 
         self::assertSame(
             [],
             $unexpected,
             sprintf(
-                "Unexpected dependency cycle(s) introduced:\n- %s\n\nBreak the cycle, or (if genuinely benign) add it to ALLOWED_CYCLES with a rationale.",
+                "Unexpected %s dependency cycle(s) introduced:\n- %s\n\n"
+                . 'Break the cycle, or (if genuinely cohesive) add it to the allow-list with a rationale.',
+                $level,
                 implode("\n- ", $unexpected),
             ),
         );
     }
 
-    public function test_allow_listed_cycles_still_exist(): void
+    /**
+     * A cycle that no longer exists must leave the allow-list, otherwise the list
+     * grows stale and starts forgiving components nobody has looked at in years.
+     *
+     * @param list<string> $found
+     * @param list<string> $allowed
+     */
+    private static function assertAllowListIsNotStale(array $found, array $allowed, string $constant): void
     {
-        $edges = $this->buildDependencyGraph();
-
-        $found = [];
-        foreach ($this->stronglyConnectedComponents($edges) as $component) {
-            if (count($component) < 2) {
-                continue;
-            }
-            sort($component);
-            $found[] = implode(' | ', $component);
-        }
-
-        foreach (self::ALLOWED_CYCLES as $allowed) {
+        foreach ($allowed as $cycle) {
             self::assertContains(
-                $allowed,
+                $cycle,
                 $found,
-                sprintf('Allow-listed cycle no longer exists; remove it from ALLOWED_CYCLES: %s', $allowed),
+                sprintf('Cycle no longer exists; remove it from %s: %s', $constant, $cycle),
             );
         }
-    }
-
-    /**
-     * @return array<string, list<string>> adjacency list of intra-source class dependencies
-     */
-    private function buildDependencyGraph(): array
-    {
-        /** @var array<string, list<string>> $rawEdges */
-        $rawEdges = [];
-        $defined = [];
-
-        /** @var iterable<SplFileInfo> $iterator */
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(self::SRC, RecursiveDirectoryIterator::SKIP_DOTS),
-        );
-
-        foreach ($iterator as $file) {
-            if ($file->getExtension() !== 'php') {
-                continue;
-            }
-
-            $code = (string) file_get_contents($file->getPathname());
-            if (preg_match('/^namespace\s+([^;]+);/m', $code, $ns) !== 1) {
-                continue;
-            }
-            if (preg_match('/^(?:final\s+|abstract\s+)?(?:class|interface|trait|enum)\s+(\w+)/m', $code, $type) !== 1) {
-                continue;
-            }
-
-            $fqn = trim($ns[1]) . '\\' . trim($type[1]);
-            $defined[$fqn] = true;
-
-            preg_match_all('/^use\s+(Gacela\\\\(?:Framework|Console|PHPStan)\\\\[^;\s]+?)(?:\s+as\s+\w+)?;/m', $code, $uses);
-            /** @var list<string> $imports */
-            $imports = $uses[1];
-            $rawEdges[$fqn] = $imports;
-        }
-
-        $edges = [];
-        foreach ($rawEdges as $from => $tos) {
-            $edges[$from] = array_values(array_filter(
-                $tos,
-                static fn (string $to): bool => isset($defined[$to]) && $to !== $from,
-            ));
-        }
-
-        return $edges;
-    }
-
-    /**
-     * Tarjan's strongly-connected-components algorithm (iterative).
-     *
-     * @param array<string, list<string>> $edges
-     *
-     * @return list<list<string>>
-     */
-    private function stronglyConnectedComponents(array $edges): array
-    {
-        $index = [];
-        $low = [];
-        $onStack = [];
-        $stack = [];
-        $result = [];
-        $counter = 0;
-
-        /** @var array<string, int> $nodes */
-        $nodes = array_fill_keys(array_keys($edges), 0);
-
-        foreach (array_keys($nodes) as $start) {
-            if (isset($index[$start])) {
-                continue;
-            }
-
-            // Iterative DFS: each frame tracks the node and how far through its edges we are.
-            $work = [[$start, 0]];
-
-            while ($work !== []) {
-                [$node, $edgePointer] = $work[count($work) - 1];
-
-                if ($edgePointer === 0) {
-                    $index[$node] = $counter;
-                    $low[$node] = $counter;
-                    ++$counter;
-                    $stack[] = $node;
-                    $onStack[$node] = true;
-                }
-
-                $recursed = false;
-                $neighbors = $edges[$node] ?? [];
-                for ($i = $edgePointer; $i < count($neighbors); ++$i) {
-                    $next = $neighbors[$i];
-                    if (!isset($index[$next])) {
-                        $work[count($work) - 1] = [$node, $i + 1];
-                        $work[] = [$next, 0];
-                        $recursed = true;
-                        break;
-                    }
-                    if (($onStack[$next] ?? false) === true) {
-                        $low[$node] = min($low[$node], $index[$next]);
-                    }
-                }
-
-                if ($recursed) {
-                    continue;
-                }
-
-                if ($low[$node] === $index[$node]) {
-                    $component = [];
-                    do {
-                        $w = array_pop($stack);
-                        $onStack[$w] = false;
-                        $component[] = $w;
-                    } while ($w !== $node);
-                    $result[] = $component;
-                }
-
-                array_pop($work);
-                if ($work !== []) {
-                    $parent = $work[count($work) - 1][0];
-                    $low[$parent] = min($low[$parent], $low[$node]);
-                }
-            }
-        }
-
-        return $result;
     }
 }

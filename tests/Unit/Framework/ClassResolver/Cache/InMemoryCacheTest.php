@@ -25,11 +25,11 @@ final class InMemoryCacheTest extends TestCase
         $cache->put('A', 'ResolvedA');
         $cache->put('B', 'ResolvedB');
 
-        self::assertSame(['A' => 'ResolvedA', 'B' => 'ResolvedB'], $cache->getAll());
+        self::assertSame(['A' => 'ResolvedA', 'B' => 'ResolvedB'], InMemoryCache::getAllFromKey('some-key'));
     }
 
     public function test_get_all_is_empty_for_untouched_key(): void
     {
-        self::assertSame([], (new InMemoryCache('fresh-key'))->getAll());
+        self::assertSame([], InMemoryCache::getAllFromKey('fresh-key'));
     }
 }

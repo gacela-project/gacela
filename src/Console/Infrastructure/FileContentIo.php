@@ -33,6 +33,8 @@ final class FileContentIo implements FileContentIoInterface
 
     public function filePutContents(string $path, string $fileContent): void
     {
-        file_put_contents($path, $fileContent);
+        if (file_put_contents($path, $fileContent) === false) {
+            throw new RuntimeException(sprintf('File "%s" was not written', $path));
+        }
     }
 }

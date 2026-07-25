@@ -40,7 +40,7 @@ final class DebugModuleCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $moduleName = (string)$input->getArgument('module');
+        $moduleName = ConsoleInput::argument($input, 'module');
         $modules = $this->getFacade()->findAllAppModules($moduleName);
 
         if ($modules === []) {

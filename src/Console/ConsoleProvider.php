@@ -21,6 +21,7 @@ use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Attribute\Provides;
+use Symfony\Component\Console\Command\Command;
 
 /**
  * @extends AbstractProvider<ConsoleConfig>
@@ -34,7 +35,7 @@ final class ConsoleProvider extends AbstractProvider
     public const SERVICE_TEMPLATE_BY_FILENAME_MAP = 'SERVICE_TEMPLATE_FILENAME_MAP';
 
     /**
-     * @return list<object>
+     * @return list<Command>
      */
     #[Provides(self::COMMANDS)]
     public function commands(): array

@@ -42,7 +42,10 @@ final class AppModuleCreator
      */
     private function fullModuleName(string $facadeClass): string
     {
-        $moduleNameIndex = strrpos($facadeClass, '\\') ?: strlen($facadeClass);
+        // Not `?:` — a class in the root namespace yields position 0, which is a
+        // valid separator index but falsy, and would fall through to strlen().
+        $separatorIndex = strrpos($facadeClass, '\\');
+        $moduleNameIndex = $separatorIndex === false ? strlen($facadeClass) : $separatorIndex;
 
         return substr($facadeClass, 0, $moduleNameIndex);
     }
@@ -61,6 +64,8 @@ final class AppModuleCreator
 
     /**
      * @param class-string $facadeClass
+     *
+     * @return ?class-string
      */
     private function findFactory(string $facadeClass): ?string
     {
@@ -69,6 +74,8 @@ final class AppModuleCreator
 
     /**
      * @param class-string $facadeClass
+     *
+     * @return ?class-string
      */
     private function findConfig(string $facadeClass): ?string
     {
@@ -77,6 +84,8 @@ final class AppModuleCreator
 
     /**
      * @param class-string $facadeClass
+     *
+     * @return ?class-string
      */
     private function findProvider(string $facadeClass): ?string
     {
@@ -89,6 +98,8 @@ final class AppModuleCreator
      * or falls back to an anonymous default class).
      *
      * @param class-string $facadeClass
+     *
+     * @return ?class-string
      */
     private function resolveClassName(AbstractClassResolver $resolver, string $facadeClass): ?string
     {

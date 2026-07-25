@@ -29,7 +29,7 @@ final class MakeModuleCommand extends Command
     protected function configure(): void
     {
         $this->setName('make:module')
-            ->setDescription('Generate a basic module with an empty ' . $this->getExpectedFilenames())
+            ->setDescription('Generate a basic module with an empty ' . FilenameSanitizer::expectedFilenamesAsText())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name')
             ->addOption('template', 't', InputOption::VALUE_REQUIRED, 'Module template: basic, service (Facade wired to a Domain service), or minimal (Facade + Factory only)', 'basic')
@@ -39,7 +39,7 @@ final class MakeModuleCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $template = (string)$input->getOption('template');
+        $template = ConsoleInput::option($input, 'template');
         if ((bool)$input->getOption('minimal')) {
             $template = 'minimal';
         }
@@ -128,8 +128,4 @@ final class MakeModuleCommand extends Command
         }
     }
 
-    private function getExpectedFilenames(): string
-    {
-        return implode(', ', FilenameSanitizer::EXPECTED_FILENAMES);
-    }
 }

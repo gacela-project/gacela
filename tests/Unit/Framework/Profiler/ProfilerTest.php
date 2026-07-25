@@ -49,7 +49,7 @@ final class ProfilerTest extends TestCase
     public function test_profiler_tracks_operations(): void
     {
         $this->profiler->start('test_operation', 'test_subject');
-        usleep(1000); // Sleep for 1ms
+        usleep(1000);
         $this->profiler->stop('test_operation', 'test_subject');
 
         $entries = $this->profiler->getEntries();
@@ -120,7 +120,7 @@ final class ProfilerTest extends TestCase
         $this->profiler->start('operation1', 'subject1');
         // Intentionally not stopping
 
-        $this->profiler->stop('operation2', 'subject2'); // Stop different operation
+        $this->profiler->stop('operation2', 'subject2');
 
         self::assertCount(0, $this->profiler->getEntries());
     }

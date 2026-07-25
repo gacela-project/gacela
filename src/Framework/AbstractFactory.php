@@ -99,11 +99,12 @@ abstract class AbstractFactory
         }
 
         // Backward compatibility with the deprecated AbstractDependencyProvider.
-        $dpResolver = (new DependencyProviderResolver())->resolve($this);
-        $dpResolver?->provideModuleDependencies($container);
         // Both resolvers share a normalized cache slot ("DependencyProvider" -> "Provider"),
-        // so a modern provider comes back from both; only notify when it is a distinct one.
+        // so a modern provider comes back from both; register and notify only when it is a
+        // distinct one, otherwise `register()` above already provided its dependencies.
+        $dpResolver = (new DependencyProviderResolver())->resolve($this);
         if ($dpResolver !== null && $dpResolver !== $resolver) {
+            $dpResolver->provideModuleDependencies($container);
             $this->notifyProviderRegistered($dpResolver::class);
         }
 

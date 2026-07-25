@@ -6,6 +6,12 @@ namespace Gacela\Console\Domain\AllAppModules;
 
 final class AppModule
 {
+    /**
+     * @param class-string $facadeClass
+     * @param ?class-string $factoryClass
+     * @param ?class-string $configClass
+     * @param ?class-string $providerClass
+     */
     public function __construct(
         private readonly string $fullModuleName,
         private readonly string $moduleName,

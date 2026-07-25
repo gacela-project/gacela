@@ -7,6 +7,8 @@ namespace GacelaTest\Feature\Console\ValidateConfig;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Console\ValidateConfig\Fixtures\CyclicA;
+use GacelaTest\Feature\Console\ValidateConfig\Fixtures\CyclicContract;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\SomeContract;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\UnrelatedImplementation;
 use PHPUnit\Framework\TestCase;
@@ -70,6 +72,24 @@ final class ValidateConfigCommandTest extends TestCase
         $output = $this->command->getDisplay();
 
         self::assertStringContainsString('Checking for circular dependencies...', $output);
+    }
+
+    public function test_validate_config_reports_a_real_circular_dependency(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addBinding(CyclicContract::class, CyclicA::class);
+        });
+
+        $command = new CommandTester(new ValidateConfigCommand());
+        $exitCode = $command->execute([]);
+
+        $output = $command->getDisplay();
+
+        self::assertStringContainsString('Circular dependency detected', $output);
+        self::assertStringContainsString(CyclicContract::class, $output);
+        self::assertStringNotContainsString('No circular dependencies detected', $output);
+        self::assertSame(1, $exitCode);
     }
 
     public function test_validate_config_explains_binding_mismatch(): void

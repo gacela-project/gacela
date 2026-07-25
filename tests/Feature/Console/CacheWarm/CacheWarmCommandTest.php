@@ -84,13 +84,11 @@ final class CacheWarmCommandTest extends TestCase
 
     public function test_cache_warm_with_clear_option(): void
     {
-        // Ensure cache directory exists
         $cacheDir = dirname($this->cacheFile);
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0777, true);
         }
 
-        // Create a cache file first
         file_put_contents($this->cacheFile, '<?php return [];');
         self::assertFileExists($this->cacheFile);
 
@@ -108,7 +106,6 @@ final class CacheWarmCommandTest extends TestCase
 
         $output = $this->command->getDisplay();
 
-        // Should find at least the test facade in this directory
         self::assertStringContainsString('Found', $output);
         self::assertStringContainsString('modules', $output);
     }
@@ -119,7 +116,6 @@ final class CacheWarmCommandTest extends TestCase
 
         $output = $this->command->getDisplay();
 
-        // Check for statistics
         self::assertMatchesRegularExpression('/Modules processed:\s+\d+/', $output);
         self::assertMatchesRegularExpression('/Classes resolved:\s+\d+/', $output);
         self::assertMatchesRegularExpression('/Classes skipped:\s+\d+/', $output);

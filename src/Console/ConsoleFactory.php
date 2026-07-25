@@ -58,12 +58,19 @@ final class ConsoleFactory extends AbstractFactory
 {
     /**
      * @return list<Command>
-     *
-     * @psalm-suppress MixedReturnTypeCoercion
      */
     public function getConsoleCommands(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleProvider::COMMANDS);
+        $commands = [];
+
+        /** @var mixed $command */
+        foreach ((array)$this->getProvidedDependency(ConsoleProvider::COMMANDS) as $command) {
+            if ($command instanceof Command) {
+                $commands[] = $command;
+            }
+        }
+
+        return $commands;
     }
 
     public function createCommandArgumentsParser(): CommandArgumentsParserInterface
@@ -240,23 +247,40 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
-     * @psalm-suppress MixedReturnTypeCoercion
-     *
      * @return array<string,string>
      */
     private function getTemplateByFilenameMap(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
+        return $this->stringMapDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
     }
 
     /**
-     * @psalm-suppress MixedReturnTypeCoercion
-     *
      * @return array<string,string>
      */
     private function getServiceTemplateByFilenameMap(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleProvider::SERVICE_TEMPLATE_BY_FILENAME_MAP);
+        return $this->stringMapDependency(ConsoleProvider::SERVICE_TEMPLATE_BY_FILENAME_MAP);
+    }
+
+    /**
+     * Narrow a provided dependency to a string map, dropping any entry that is
+     * not a string-keyed string. Providers are user-supplied, so the container
+     * cannot guarantee the shape on its own.
+     *
+     * @return array<string,string>
+     */
+    private function stringMapDependency(string $key): array
+    {
+        $map = [];
+
+        /** @var mixed $value */
+        foreach ((array)$this->getProvidedDependency($key) as $name => $value) {
+            if (is_string($name) && is_string($value)) {
+                $map[$name] = $value;
+            }
+        }
+
+        return $map;
     }
 
     private function getMainContainer(): Container

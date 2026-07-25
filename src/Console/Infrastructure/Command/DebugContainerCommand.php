@@ -52,7 +52,6 @@ final class DebugContainerCommand extends Command
             return Command::FAILURE;
         }
 
-        // If class provided without --tree flag, assume --tree
         if ($className !== null) {
             return $this->displayDependencyTree($output, $className);
         }
@@ -124,7 +123,6 @@ final class DebugContainerCommand extends Command
 
     private function getIndentLevel(string $dependency): int
     {
-        // Count leading spaces to determine depth
         $matches = [];
         if (preg_match('/^(\s*)/', $dependency, $matches) === 1) {
             return (int)(strlen($matches[1]) / 2);

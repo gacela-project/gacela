@@ -31,9 +31,5 @@
     <include>
       <directory suffix=".php">src</directory>
     </include>
-    <exclude>
-      <directory prefix="CodeGenerator">src/CodeGenerator</directory>
-      <directory suffix=".php">src/CodeGenerator/Infrastructure</directory>
-    </exclude>
   </source>
 </phpunit>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Container\Exception\CircularDependencyException;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Command\Command;
@@ -164,13 +165,21 @@ final class ValidateConfigCommand extends Command
 
                 if (class_exists($value)) {
                     try {
-                        // Resolving the binding surfaces circular/recursive dependency errors.
+                        // Resolving the binding surfaces circular dependency errors.
                         $container->get($key);
+                    } catch (CircularDependencyException $exception) {
+                        $output->writeln(sprintf('  <error>✗ Circular dependency detected:</> %s', $key));
+                        $output->writeln(sprintf('      chain: %s', $this->cycleChain($exception)));
+                        $hasErrors = true;
                     } catch (Throwable $throwable) {
-                        if (str_contains($throwable->getMessage(), 'circular') || str_contains($throwable->getMessage(), 'recursive')) {
-                            $output->writeln(sprintf('  <error>✗ Circular dependency detected:</> %s', $key));
-                            $hasErrors = true;
-                        }
+                        // Any other resolution failure is a real problem the developer
+                        // needs to see; reporting it is the whole point of this command.
+                        $output->writeln(sprintf(
+                            '  <fg=yellow>⚠ Warning: Could not resolve binding:</> %s (%s)',
+                            $key,
+                            $throwable->getMessage(),
+                        ));
+                        $hasWarnings = true;
                     }
                 }
             }
@@ -186,6 +195,20 @@ final class ValidateConfigCommand extends Command
         $output->writeln('');
 
         return ['errors' => $hasErrors, 'warnings' => $hasWarnings];
+    }
+
+    /**
+     * Pull the `A -> B -> A` chain out of the exception headline, so the
+     * developer sees exactly which classes close the loop.
+     */
+    private function cycleChain(CircularDependencyException $exception): string
+    {
+        /** @var non-empty-list<string> $lines */
+        $lines = explode("\n", $exception->getMessage());
+        $headline = $lines[0];
+        $colonPos = strpos($headline, ':');
+
+        return $colonPos === false ? $headline : trim(substr($headline, $colonPos + 1));
     }
 
     private function describeTypeChain(string $className): string

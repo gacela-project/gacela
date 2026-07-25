@@ -58,8 +58,8 @@ final class ProfileReportCommand extends Command
             return self::SUCCESS;
         }
 
-        $format = (string)$input->getOption('format');
-        $sortBy = (string)$input->getOption('sort');
+        $format = ConsoleInput::option($input, 'format');
+        $sortBy = ConsoleInput::option($input, 'sort');
 
         $entries = $this->sortEntries($entries, $sortBy);
 

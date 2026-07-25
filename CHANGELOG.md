@@ -4,34 +4,34 @@
 
 ### Added
 
-- `AbstractFactory::make(class-string, params)`: resolve a domain object through the module container with autowiring — a `create*()` method can build it by type, honoring the container attributes (`#[Inject]`/`#[Singleton]`/`#[Factory]`) on the resolved class, with optional `params` overriding constructor arguments by name. Additive and opt-in; `getProvidedDependency()` and hand-wired `create*()` keep working. Autowiring needs no bindings, so `make()` works in a module with no Provider — including the Facade+Factory floor that `make:module --minimal` scaffolds. `getProvidedDependency()` still reports a missing Provider, since that is where bindings would come from
-- `make:module --minimal` (alias `--template=minimal`): scaffolds only the Facade and Factory pillars; Config and Provider are optional (the runtime tolerates their absence). `basic` and `service` templates are unchanged
+- `AbstractFactory::make(class-string, params)`: build a domain object through the module container with autowiring, honouring `#[Inject]`/`#[Singleton]`/`#[Factory]`, with `params` overriding constructor arguments by name. Needs no bindings, so it works in a module with no Provider. Additive — `getProvidedDependency()` and hand-wired `create*()` are unchanged
+- `make:module --minimal` (alias `--template=minimal`): scaffolds Facade and Factory only. Config and Provider are optional at runtime
 
 ### Changed
 
-- `make:module` provider template is now attribute-first: the scaffolded provider demonstrates a typed `#[Provides]` method as the primary registration path, keeping the imperative `provideModuleDependencies()` available (no BC break)
-- The deprecation notice for `AbstractDependencyProvider` is now emitted whether or not `symfony/deprecation-contracts` is installed. It was previously routed through `trigger_deprecation()` and skipped when that function was unavailable — which is most apps, since the package is not a runtime dependency of Gacela. The message keeps the contract's `Since <package> <version>: ` format, so deprecation collectors group it exactly as before. Apps still using `AbstractDependencyProvider` will start seeing the deprecation; migrate to `AbstractProvider`
-- `GacelaConfig::addMappingInterface()` now emits an `E_USER_DEPRECATED` notice. It has carried a `@deprecated` docblock since 1.2.0 — over three years and 17 minor releases — but nothing surfaced it at runtime, so an app could not discover it was on a path scheduled for removal in 2.0. Use `addBinding()`; the arguments are unchanged. `DocBlockResolverAwareTrait` stays documentation-only: PHP offers no hook for "a trait was used"
-- Scaffolding commands (`make:module`, `make:file`) now fail loudly when a generated file cannot be written. `FileContentIo::filePutContents()` discarded the result of `file_put_contents()`, so a read-only target, a permission error, or a full disk produced a success message, an exit code of `0`, and no file on disk. It now throws a `RuntimeException` naming the path, matching how the neighbouring `mkdir()` has always behaved. This only changes behaviour on runs that were already failing silently
-- A health check registered by class-string that cannot be resolved now throws `HealthCheckNotResolvableException` instead of being dropped from the report. A typo in `addHealthCheck(SomeCheck::class)`, or a class that does not implement `ModuleHealthCheckInterface`, previously produced a report that looked healthy while the check silently never ran — the exact failure mode health checks exist to surface. This completes the direction 1.19.0 started, where health-check container-resolution errors stopped being swallowed
+- `make:module`'s provider template is now attribute-first, leading with a typed `#[Provides]` method. `provideModuleDependencies()` still works
+- The `AbstractDependencyProvider` deprecation notice now always fires. It went through `trigger_deprecation()` and was skipped when `symfony/deprecation-contracts` was absent — which is most apps, since it is not a runtime dependency. **Expect to start seeing this notice**; migrate to `AbstractProvider`
+- `GacelaConfig::addMappingInterface()` now emits `E_USER_DEPRECATED`. Deprecated since 1.2.0 with no runtime signal until now. Use `addBinding()` — same arguments
+- `make:module` and `make:file` now throw when a generated file cannot be written. A read-only target or full disk previously printed success, exited `0`, and wrote nothing
+- An unresolvable health check now throws `HealthCheckNotResolvableException` instead of being skipped. A typo in `addHealthCheck(SomeCheck::class)` previously produced a report that looked healthy while the check never ran
 
 ### Removed
 
-- `Gacela\Framework\Container\Locator::addSingleton()`, which had no production caller. `Locator` is `@internal`; seed services through a `Container` and `Locator::getInstance($container)` instead
+- `Gacela\Framework\Container\Locator::addSingleton()` — no production caller, and `Locator` is `@internal`. Seed through a `Container` plus `Locator::getInstance($container)`
 
 ### Fixed
 
-- A module's `provideModuleDependencies()` is no longer invoked twice. The `AbstractDependencyProvider` backward-compatibility path in `AbstractFactory` resolved the same provider instance through both `ProviderResolver` and `DependencyProviderResolver` (they share a normalized cache slot, because `DependencyProvider` ends with `Provider`) and then registered it once via `register()` and again directly. Providers whose body is not idempotent — counters, external registrations, logging — ran their side effects twice
-- `validate:config` now actually reports circular dependencies. The check caught every resolution error and then searched the message text for the lowercase word `circular`, but the container throws `CircularDependencyException` whose message begins `Circular dependency detected:` — capital `C`, and `str_contains()` is case-sensitive, so the branch never once matched. A genuinely cyclic configuration printed `✓ No circular dependencies detected` and exited `0`. The command now catches `CircularDependencyException` by type and prints the full `A -> B -> A` chain. Configurations that were always cyclic will now fail validation (exit code `1`) where they previously passed — if `validate:config` runs in your CI pipeline, expect it to surface pre-existing cycles on the first run after upgrading. Every other binding-resolution failure, previously discarded in silence by the same `catch`, is now reported as a warning naming the binding and the error
+- A module's `provideModuleDependencies()` no longer runs twice. Both provider resolvers share a normalized cache slot, so a modern Provider was registered once via `register()` and again directly — running non-idempotent provider bodies (counters, external registrations, logging) twice
+- `validate:config` now detects circular dependencies. It matched the exception message case-sensitively against the wrong casing, so the check never fired once and a cyclic configuration exited `0`. It now catches `CircularDependencyException` by type and prints the full `A -> B -> A` chain. **Pre-existing cycles will now fail validation (exit `1`)** — if this runs in CI, expect it to surface them on the first run. Other resolution failures, previously discarded silently, are reported as warnings
 
 ### Documentation
 
-- Documented `AbstractFactory::make()` and attribute-first module DI in `docs/container-configuration.md`; documented Config and Provider as optional pillars (the two-file Facade + Factory floor) in `docs/getting-started.md`
-- Added `docs/upgrading.md`. All three 1.x deprecations pointed at a 2.0 removal with no migration path documented anywhere outside the changelog. It covers each old → new mapping, and calls out that `DependencyProvider.php` must be renamed to `Provider.php` — pillars resolve by filename suffix, so changing only the class name leaves it unresolvable, which is the step most people miss
+- New `docs/upgrading.md`: every 1.x deprecation with its replacement. Note that migrating off `AbstractDependencyProvider` also requires renaming `DependencyProvider.php` to `Provider.php` — pillars resolve by filename suffix, so renaming only the class leaves the module unresolvable
+- Documented `make()` and attribute-first module DI in `docs/container-configuration.md`, and the optional Config/Provider pillars in `docs/getting-started.md`
 
 ### Internal
 
-- Mutation testing now runs in CI. `infection.json5` has required `minMsi: 100` and `minCoveredMsi: 100` for a while, but no workflow ran it, and the score had drifted below the bar. A surviving mutant means the suite asserts the shape of the code rather than its behaviour — the line runs, but nothing checks the result
+- Mutation testing now runs in CI. `infection.json5` has required an MSI of 100 for a while but no workflow ran it, so the score had drifted below the bar
 
 ## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
 

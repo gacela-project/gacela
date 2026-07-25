@@ -42,6 +42,38 @@ natively — but then the same fact is written twice, and the copies drift.
 The suppression is still in `phpstan-gacela.neon` as a fallback for classes that
 declare neither, and is scheduled for removal in 2.0.
 
+### Typed provided dependencies
+
+Ask for a provided dependency by class-string and it comes back typed:
+
+```php
+// PHPStan knows this is a Clock, and checks the call on it.
+$clock = $this->getProvidedDependency(Clock::class);
+```
+
+`getProvidedDependency()` is declared as returning `mixed`, which is why call
+sites end up with a hand-written `@var` above them — an assertion the analyser
+takes on faith, and which keeps claiming the old type after the Provider
+changes. When the key *is* a class-string, the type was never unknown; it was
+discarded at the boundary.
+
+A string key (`$this->getProvidedDependency('some.service')`) still returns
+`mixed`. Nothing in the type system says what it resolves to, and inventing a
+type there would be worse than `mixed` — a guess the analyser then trusts.
+
+A Factory may also declare its dependencies in its **constructor**; pillars are
+resolved through the container, so autowiring applies to the Factory itself:
+
+```php
+final class CheckoutFactory extends AbstractFactory
+{
+    public function __construct(
+        private readonly Clock $clock,
+    ) {
+    }
+}
+```
+
 ### Facade interfaces
 
 If you type-hint against a `*FacadeInterface` rather than the concrete facade,

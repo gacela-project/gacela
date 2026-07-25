@@ -20,6 +20,11 @@ services:
     -
         class: Gacela\PHPStan\Reflection\ServiceMapMethodsClassReflectionExtension
         tags: [phpstan.broker.methodsClassReflectionExtension]
+    # Types getProvidedDependency(Foo::class) as Foo, so the class-string form
+    # needs no hand-written @var. String keys still return mixed.
+    -
+        class: Gacela\PHPStan\Reflection\GetProvidedDependencyReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
 
     -
         class: Gacela\PHPStan\Rules\SuffixExtendsRule

@@ -111,8 +111,11 @@ final class GacelaConfigTest extends TestCase
         }
 
         self::assertCount(1, $deprecations);
-        self::assertStringContainsString('addMappingInterface', $deprecations[0]);
-        self::assertStringContainsString('addBinding', $deprecations[0]);
+        self::assertSame(
+            'Since gacela-project/gacela 1.2: `' . GacelaConfig::class . '::addMappingInterface()` is deprecated '
+            . 'and will be removed in version 2.0. Use `addBinding()` instead; the arguments are unchanged.',
+            $deprecations[0],
+        );
     }
 
     public function test_add_binding_if_registers_a_default_when_absent(): void

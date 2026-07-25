@@ -100,17 +100,16 @@ final class ConstructorInspector
         return new ParameterInspection($name, $renderedType, ParameterStatus::MissingType, 'type does not exist');
     }
 
+    /**
+     * ReflectionType::__toString() already renders every shape the way this
+     * command wants it: `?Foo` for a nullable named type, `mixed` (never
+     * `?mixed`) for mixed, and `A|B` / `A&B` for union and intersection types.
+     */
     private function renderType(?ReflectionType $type): string
     {
-        if (!$type instanceof ReflectionType) {
-            return 'mixed';
-        }
-
-        if ($type instanceof ReflectionNamedType) {
-            return ($type->allowsNull() && $type->getName() !== 'mixed' ? '?' : '') . $type->getName();
-        }
-
-        return (string) $type;
+        return $type instanceof ReflectionType
+            ? (string) $type
+            : 'mixed';
     }
 
     private function defaultDetail(ReflectionParameter $parameter): string

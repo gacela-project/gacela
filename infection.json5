@@ -25,7 +25,6 @@
             // namespace (#529). Domain is done and is now enforced at 100%; the
             // rest stays ignored until it gets the same treatment, rather than
             // being switched on and baselined.
-            "Gacela\\Console\\Application\\*",
             "Gacela\\Console\\Infrastructure\\*",
         ],
         // Equivalent or environment-untestable mutants, grouped by reason.
@@ -85,8 +84,16 @@
         },
         // stats() aggregates over existing files, where the int-casts and the
         // equal-timestamp comparisons cannot change the outcome.
+        // Same for the cache-manager and doctor casts: filesize()/filemtime()
+        // only return false for a file that vanished between the existence
+        // check right above and the call itself, i.e. a filesystem race.
         CastInt: {
-            ignore: ["Gacela\\Framework\\Cache\\FileCache::stats"],
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::stats",
+                "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getCacheFileSize",
+                "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getExistingCacheFilesWithSize",
+                "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::run",
+            ],
         },
         LessThan: {
             ignore: ["Gacela\\Framework\\Cache\\FileCache::stats"],
@@ -343,6 +350,19 @@
                 "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation",
                 "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
             ],
+        },
+        // warmAttributeCache() breaks out of the prefix scan after the first
+        // match. The four prefixes (get/create/find/build) are mutually
+        // exclusive -- none is a prefix of another -- so continuing the scan
+        // after a match can never match a second time.
+        Break_: {
+            ignore: ["Gacela\\Console\\Application\\CacheWarm\\CacheWarmService::warmAttributeCache"],
+        },
+        // Memoization guard: the four resolvers are stateless and constructed
+        // the same way every time, so rebuilding them per call is
+        // observationally identical, only slower.
+        AssignCoalesce: {
+            ignore: ["Gacela\\Console\\Application\\CacheWarm\\CacheWarmService::classResolvers"],
         },
         LogicalOrSingleSubExprNegation: {
             ignoreSourceCodeByRegex: [

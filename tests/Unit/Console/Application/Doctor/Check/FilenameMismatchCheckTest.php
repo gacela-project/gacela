@@ -8,6 +8,10 @@ use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+
+use function end;
+use function explode;
 
 final class FilenameMismatchCheckTest extends TestCase
 {
@@ -60,9 +64,68 @@ final class FilenameMismatchCheckTest extends TestCase
         $result = $check->run();
 
         self::assertSame(CheckStatus::Error, $result->status);
-        self::assertStringContainsString('App\\Foo\\Provider', $result->details[0]);
-        self::assertStringContainsString('DependencyProvider.php', $result->details[0]);
-        self::assertStringContainsString('Provider.php', $result->remediation);
+        self::assertSame(
+            ['App\\Foo\\Provider is declared in DependencyProvider.php, expected Provider.php'],
+            $result->details,
+        );
+        self::assertSame(
+            'rename the file to match the class — pillars resolve by filename, '
+            . 'so `Provider` declared in `DependencyProvider.php` is never found',
+            $result->remediation,
+        );
+    }
+
+    /**
+     * The same trap, but resolved through the production file resolver instead
+     * of an injected one, so the reflection path is exercised too.
+     */
+    public function test_the_default_file_resolver_catches_a_class_renamed_without_its_file(): void
+    {
+        require_once __DIR__ . '/Fixtures/DependencyProvider.php';
+
+        $module = new AppModule(
+            'GacelaTest\\Fixtures',
+            'Fixtures',
+            'GacelaTest\\Unit\\Console\\Application\\Doctor\\Check\\Fixtures\\Provider',
+        );
+
+        $result = (new FilenameMismatchCheck([$module]))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertStringContainsString(
+            'is declared in DependencyProvider.php, expected Provider.php',
+            $result->details[0],
+        );
+    }
+
+    public function test_the_default_file_resolver_accepts_a_class_that_matches_its_file(): void
+    {
+        $module = new AppModule('Gacela\\Doctor', 'Doctor', FilenameMismatchCheck::class);
+
+        self::assertSame(CheckStatus::Ok, (new FilenameMismatchCheck([$module]))->run()->status);
+    }
+
+    /**
+     * Internal classes have no source file at all; they are skipped, not
+     * reported as a mismatch.
+     */
+    public function test_the_default_file_resolver_skips_a_class_without_a_source_file(): void
+    {
+        $module = new AppModule('Php\\Internal', 'Internal', stdClass::class);
+
+        self::assertSame(CheckStatus::Ok, (new FilenameMismatchCheck([$module]))->run()->status);
+    }
+
+    public function test_windows_style_paths_are_split_on_backslashes_too(): void
+    {
+        $module = new AppModule('App\\Foo', 'Foo', 'App\\Foo\\FooFacade');
+
+        $check = new FilenameMismatchCheck(
+            [$module],
+            static fn (string $class): string => 'C:\\app\\Foo\\FooFacade.php',
+        );
+
+        self::assertSame(CheckStatus::Ok, $check->run()->status);
     }
 
     public function test_unlocatable_class_is_skipped_not_reported(): void

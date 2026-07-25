@@ -12,6 +12,7 @@
 - `make:module` provider template is now attribute-first: the scaffolded provider demonstrates a typed `#[Provides]` method as the primary registration path, keeping the imperative `provideModuleDependencies()` available (no BC break)
 - The deprecation notice for `AbstractDependencyProvider` is now emitted whether or not `symfony/deprecation-contracts` is installed. It was previously routed through `trigger_deprecation()` and skipped when that function was unavailable — which is most apps, since the package is not a runtime dependency of Gacela. The message keeps the contract's `Since <package> <version>: ` format, so deprecation collectors group it exactly as before. Apps still using `AbstractDependencyProvider` will start seeing the deprecation; migrate to `AbstractProvider`
 
+- `GacelaConfig::addMappingInterface()` now emits an `E_USER_DEPRECATED` notice. It has carried a `@deprecated` docblock since 1.2.0 — over three years and 17 minor releases — but nothing surfaced it at runtime, so an app could not discover it was on a path scheduled for removal in 2.0. Use `addBinding()`; the arguments are unchanged. `DocBlockResolverAwareTrait` stays documentation-only: PHP offers no hook for "a trait was used"
 - Scaffolding commands (`make:module`, `make:file`) now fail loudly when a generated file cannot be written. `FileContentIo::filePutContents()` discarded the result of `file_put_contents()`, so a read-only target, a permission error, or a full disk produced a success message, an exit code of `0`, and no file on disk. It now throws a `RuntimeException` naming the path, matching how the neighbouring `mkdir()` has always behaved. This only changes behaviour on runs that were already failing silently
 
 ### Removed
@@ -26,6 +27,7 @@
 ### Documentation
 
 - Documented `AbstractFactory::make()` and attribute-first module DI in `docs/container-configuration.md`; documented Config and Provider as optional pillars (the two-file Facade + Factory floor) in `docs/getting-started.md`
+- Added `docs/upgrading.md`. All three 1.x deprecations pointed at a 2.0 removal with no migration path documented anywhere outside the changelog. It covers each old → new mapping, and calls out that `DependencyProvider.php` must be renamed to `Provider.php` — pillars resolve by filename suffix, so changing only the class name leaves it unresolvable, which is the step most people miss
 
 ## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
 

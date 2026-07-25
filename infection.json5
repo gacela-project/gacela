@@ -244,6 +244,13 @@
                 "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
             ],
         },
+        // foundPsr4() strips the trailing separator from a psr-4 key/value. Those
+        // always end in "\\" or "/", both single-byte, so mb_substr() and substr()
+        // cut the same character for every valid input -- the multibyte characters
+        // are never the last one. Kept as mb_substr() for intent, not behaviour.
+        MBString: {
+            ignore: ["Gacela\\Console\\Domain\\CommandArguments\\CommandArgumentsParser::foundPsr4"],
+        },
         UnwrapArrayValues: {
             ignore: ["Gacela\\Console\\Domain\\ModuleGraph\\GraphDiffMarkdownFormatter::affectedModules"],
         },

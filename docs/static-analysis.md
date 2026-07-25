@@ -42,6 +42,23 @@ natively — but then the same fact is written twice, and the copies drift.
 The suppression is still in `phpstan-gacela.neon` as a fallback for classes that
 declare neither, and is scheduled for removal in 2.0.
 
+### Facade interfaces
+
+If you type-hint against a `*FacadeInterface` rather than the concrete facade,
+`FacadeInterfaceInSyncRule` keeps the pair honest: a public facade method missing
+from the interface is reported.
+
+Only that direction can drift. PHP already rejects a class that fails to
+implement an interface method, so the interface cannot gain a method the facade
+lacks — but the facade grows public methods the interface never hears about, and
+consumers holding the interface silently cannot reach them. That stays invisible
+until someone compares the two files, and by then the fix is a breaking change.
+
+The rule is on by default and self-limiting: it only fires for a facade that
+explicitly implements the interface named after it (`FooFacade` implements
+`FooFacadeInterface`). A facade that implements unrelated interfaces, or none,
+is not checked.
+
 ### Module boundaries
 
 The bundled `CrossModuleViaFacadeRule` enforces gacela's core architecture rule

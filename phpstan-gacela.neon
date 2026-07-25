@@ -51,6 +51,11 @@ services:
     -
         class: Gacela\PHPStan\Rules\FactoryDoesNotCallFacadeRule
         tags: [phpstan.rules.rule]
+    # Self-limiting: only fires for a facade that explicitly implements the
+    # interface named after it, so it costs nothing for facades without one.
+    -
+        class: Gacela\PHPStan\Rules\FacadeInterfaceInSyncRule
+        tags: [phpstan.rules.rule]
     # Opt-in: enable by passing your project's root namespace (and, if needed,
     # how many segments beneath that root identify a module). Namespaces in
     # sharedNamespaces are exempt shared kernels: references into them are

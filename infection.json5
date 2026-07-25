@@ -261,14 +261,6 @@
         UnwrapRtrim: {
             ignore: ["Gacela\\Console\\ConsoleFactory::resolveScanPath"],
         },
-        // getConsoleCommands(): getProvidedDependency() is typed mixed, so the (array)
-        // cast is what lets PHPStan foreach over it. ConsoleProvider::commands()
-        // always returns a list, so the cast never converts anything -- it only
-        // exists so a malformed provider degrades to an empty loop instead of a
-        // warning, which no public API can produce.
-        CastArray: {
-            ignore: ["Gacela\\Console\\ConsoleFactory::getConsoleCommands"],
-        },
         MBString: {
             ignore: ["Gacela\\Console\\Domain\\CommandArguments\\CommandArgumentsParser::foundPsr4"],
         },

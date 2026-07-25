@@ -1,6 +1,8 @@
 # Static Analysis
 
-Gacela ships configs for PHPStan and Psalm that suppress false positives from dynamic resolution via `#[ServiceMap]` attributes (magic `getFacade()`/`getFactory()`/`getConfig()`, `AbstractConfig` methods, related type mismatches).
+Gacela ships configs for PHPStan and Psalm covering the pillar accessors that
+`ServiceResolverAwareTrait` resolves at runtime — `getFacade()`, `getFactory()`,
+`getConfig()`.
 
 ## PHPStan
 
@@ -10,6 +12,35 @@ Include in your `phpstan.neon`:
 includes:
     - vendor/gacela-project/gacela/phpstan-gacela.neon
 ```
+
+### Typed pillar accessors
+
+Declare the pillar with `#[ServiceMap]` and the accessor gets a real return type:
+
+```php
+#[ServiceMap(method: 'getFacade', className: CheckoutFacade::class)]
+final class CheckoutController
+{
+    use ServiceResolverAwareTrait;
+
+    public function __invoke(): Response
+    {
+        // PHPStan knows this is a CheckoutFacade, and checks the call on it.
+        return $this->getFacade()->placeOrder();
+    }
+}
+```
+
+This matters more than it looks. The accessor was previously *suppressed* rather
+than typed, and a suppressed call is not a checked one — it evaluates to `mixed`,
+which silently switches off analysis of everything reached through it, not just
+the accessor itself. A typo in `placeOrder()` produced no error at all.
+
+A `@method CheckoutFacade getFacade()` docblock works too — PHPStan reads those
+natively — but then the same fact is written twice, and the copies drift.
+
+The suppression is still in `phpstan-gacela.neon` as a fallback for classes that
+declare neither, and is scheduled for removal in 2.0.
 
 ### Module boundaries
 

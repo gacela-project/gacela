@@ -222,6 +222,7 @@
                 "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation",
                 "Gacela\\PHPStan\\Rules\\FactoryDoesNotCallFacadeRule::processNode",
                 "Gacela\\PHPStan\\Rules\\SuffixExtendsRule::processNode",
+                "Gacela\\PHPStan\\Rules\\FacadeInterfaceInSyncRule::processNode",
             ],
         },
         // isDelegateChain() walks an expression tree in a `while (true)`, advancing

@@ -1,0 +1,54 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+#
+# Module dependency cycle gate.
+#
+# Unlike the module-graph comment job, this one *is* a gate. A cycle between
+# modules is either a decision somebody made or a mistake nobody noticed, and
+# until the decision is written down the two are the same thing.
+#
+# allowed-module-cycles.json is where the decision gets written down. It is
+# self-invalidating on purpose: an entry that no longer matches a real cycle
+# fails the job just as loudly as an undeclared cycle, because an allow-list
+# that outlives what it allows stops being a record and becomes a mute button.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+name: Module cycles
+
+permissions:
+  contents: read
+
+jobs:
+
+  cycle-gate:
+    name: "Module dependency cycles"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+          tools: composer
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: "module-cycles-php-8.4-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: "module-cycles-php-8.4-"
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Assert every module cycle is a declared one
+        run: php bin/gacela debug:graph --check --allowed-cycles=allowed-module-cycles.json

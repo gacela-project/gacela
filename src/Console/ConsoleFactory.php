@@ -20,6 +20,7 @@ use Gacela\Console\Domain\ModuleGraph\GraphFormatterInterface;
 use Gacela\Console\Domain\ModuleGraph\GraphvizGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\JsonGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\MermaidGraphFormatter;
+use Gacela\Console\Domain\ModuleGraph\ModuleCycleDetector;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
@@ -119,6 +120,11 @@ final class ConsoleFactory extends AbstractFactory
     public function createModuleGraphDiffer(): ModuleGraphDiffer
     {
         return new ModuleGraphDiffer();
+    }
+
+    public function createModuleCycleDetector(): ModuleCycleDetector
+    {
+        return new ModuleCycleDetector();
     }
 
     public function createGraphDiffMarkdownFormatter(): GraphDiffMarkdownFormatter

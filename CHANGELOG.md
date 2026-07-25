@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.20.0](https://github.com/gacela-project/gacela/compare/1.19.0...1.20.0) - 2026-07-25
+
 ### Added
 
 - `AbstractFactory::make(class-string, params)`: build a domain object through the module container with autowiring, honouring `#[Inject]`/`#[Singleton]`/`#[Factory]`, with `params` overriding constructor arguments by name. Needs no bindings, so it works in a module with no Provider. Additive — `getProvidedDependency()` and hand-wired `create*()` are unchanged

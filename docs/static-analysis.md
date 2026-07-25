@@ -87,6 +87,41 @@ services:
 To see the actual module dependency graph of your app, run
 `vendor/bin/gacela debug:graph` (formats: `text`, `mermaid`, `graphviz`, `json`).
 
+### Failing on dependency cycles
+
+`debug:graph --check` exits non-zero when two modules depend on each other:
+
+```bash
+vendor/bin/gacela debug:graph --check
+```
+
+A cycle is either a decision somebody made or a mistake nobody noticed, and
+until the decision is written down those are the same thing. Write it down in a
+JSON file and pass it in:
+
+```json
+[
+    {
+        "modules": ["App\\Billing", "App\\Invoicing"],
+        "reason": "reviewed 2026-07: bidirectional by design until the shared kernel lands"
+    }
+]
+```
+
+```bash
+vendor/bin/gacela debug:graph --check --allowed-cycles=allowed-module-cycles.json
+```
+
+The allow list is **self-invalidating**: an entry that no longer matches a real
+cycle fails the check just as loudly as an undeclared cycle. That is deliberate.
+An allow-list that outlives what it allows stops being a record of a decision
+and becomes a mute button, and nothing would tell you it had happened. A `reason`
+is required for the same reason — an allowance nobody justified is
+indistinguishable from a cycle nobody noticed.
+
+`debug:graph` with no `--check` stays exit-code-neutral, so adding the gate does
+not change what the command already did.
+
 ### Reviewing graph changes in CI
 
 A new cross-module edge enters a pull request as one more `use` statement, which

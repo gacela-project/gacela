@@ -90,6 +90,20 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
+     * Every dependency cycle in the module graph, each as a sorted module list.
+     *
+     * @param array<string, list<string>> $graph
+     *
+     * @return list<list<string>>
+     */
+    public function detectModuleCycles(array $graph): array
+    {
+        return $this->getFactory()
+            ->createModuleCycleDetector()
+            ->detect($graph);
+    }
+
+    /**
      * Compare a previously captured module graph against another one.
      *
      * @param array<string, list<string>> $base

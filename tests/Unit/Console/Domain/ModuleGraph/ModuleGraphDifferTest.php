@@ -93,4 +93,31 @@ final class ModuleGraphDifferTest extends TestCase
     {
         self::assertFalse((new ModuleGraphDiffer())->diff([], [])->hasChanges());
     }
+
+    /**
+     * Each kind of change has to be sufficient on its own; a report that only
+     * fires when several coincide would stay silent on the common case.
+     */
+    public function test_each_kind_of_change_alone_counts_as_a_change(): void
+    {
+        $differ = new ModuleGraphDiffer();
+
+        self::assertTrue($differ->diff([], ['A' => []])->hasChanges(), 'added module only');
+        self::assertTrue($differ->diff(['A' => []], [])->hasChanges(), 'removed module only');
+        self::assertTrue($differ->diff(['A' => [], 'B' => []], ['A' => ['B'], 'B' => []])->hasChanges(), 'added edge only');
+        self::assertTrue($differ->diff(['A' => ['B'], 'B' => []], ['A' => [], 'B' => []])->hasChanges(), 'removed edge only');
+    }
+
+    public function test_reports_every_edge_a_module_gained_not_just_the_first(): void
+    {
+        $diff = (new ModuleGraphDiffer())->diff(
+            ['A' => [], 'B' => [], 'C' => []],
+            ['A' => ['B', 'C'], 'B' => [], 'C' => []],
+        );
+
+        self::assertSame(
+            [['from' => 'A', 'to' => 'B'], ['from' => 'A', 'to' => 'C']],
+            $diff->addedEdges,
+        );
+    }
 }

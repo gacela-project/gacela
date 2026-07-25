@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Console\Application\Doctor\Check;
 
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\CheckStatus;
+use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use PHPUnit\Framework\TestCase;
@@ -193,6 +194,43 @@ final class CacheStalenessCheckTest extends TestCase
 
         self::assertSame(CheckStatus::Warn, $result->status);
         self::assertSame(['missing source: SomeKey → stdClass (source file not found)'], $result->details);
+    }
+
+    /**
+     * The entry a stale cache most often holds: a class that was renamed or
+     * deleted, so the name resolves to neither a class nor an interface. It
+     * must be reported rather than handed to ReflectionClass, which would
+     * throw on a name that does not exist.
+     */
+    public function test_the_default_resolver_reports_a_class_that_no_longer_exists(): void
+    {
+        $this->writeCache(ClassNamePhpCache::FILENAME, ['SomeKey' => 'Some\\Deleted\\Class'], time());
+
+        $result = (new CacheStalenessCheck($this->tempDir))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(
+            ['missing source: SomeKey → Some\\Deleted\\Class (source file not found)'],
+            $result->details,
+        );
+    }
+
+    /**
+     * Interfaces are cached like any other resolvable type, so the default
+     * resolver has to find their source file too, not just classes'.
+     */
+    public function test_the_default_resolver_finds_the_source_of_an_interface(): void
+    {
+        $this->writeCache(
+            ClassNamePhpCache::FILENAME,
+            ['SomeKey' => HealthCheck::class],
+            time() + 3600,
+        );
+
+        $result = (new CacheStalenessCheck($this->tempDir))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['all cache entries are fresh'], $result->details);
     }
 
     private function writeSource(int $mtime): string

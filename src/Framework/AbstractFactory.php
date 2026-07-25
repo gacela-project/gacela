@@ -25,6 +25,15 @@ abstract class AbstractFactory
     /** @var array<string,Container> */
     private static array $containers = [];
 
+    /**
+     * Modules that resolved no Provider at all. Their container is still usable
+     * for make(), which autowires by type, but getProvidedDependency() has
+     * nothing to read from and reports the missing Provider instead.
+     *
+     * @var array<string,bool>
+     */
+    private static array $providerless = [];
+
     /** @var array<string,mixed> */
     private array $instances = [];
 
@@ -34,6 +43,7 @@ abstract class AbstractFactory
     public static function resetCache(): void
     {
         self::$containers = [];
+        self::$providerless = [];
     }
 
     /**
@@ -53,7 +63,13 @@ abstract class AbstractFactory
 
     protected function getProvidedDependency(string $key): mixed
     {
-        return $this->getContainer()->get($key);
+        $container = $this->getContainer();
+
+        if (self::$providerless[static::class]) {
+            throw new ProviderNotFoundException(static::class);
+        }
+
+        return $container->get($key);
     }
 
     /**
@@ -108,9 +124,7 @@ abstract class AbstractFactory
             $this->notifyProviderRegistered($dpResolver::class);
         }
 
-        if ($resolver === null && $dpResolver === null) {
-            throw new ProviderNotFoundException(static::class);
-        }
+        self::$providerless[static::class] = $resolver === null && $dpResolver === null;
 
         return $container;
     }

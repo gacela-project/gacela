@@ -41,4 +41,18 @@ final class FeatureTest extends TestCase
         $facade = new MissingProviderFile\Facade();
         $facade->error();
     }
+
+    /**
+     * A Facade+Factory-only module -- what `make:module --minimal` scaffolds --
+     * has no Provider, but make() autowires by type and needs no bindings.
+     */
+    public function test_make_autowires_without_a_provider(): void
+    {
+        $factory = new MissingProviderFile\Factory();
+
+        self::assertInstanceOf(
+            MissingProviderFile\DomainService::class,
+            $factory->makeDomainService(),
+        );
+    }
 }

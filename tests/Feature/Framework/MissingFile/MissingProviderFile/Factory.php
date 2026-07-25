@@ -12,4 +12,9 @@ final class Factory extends AbstractFactory
     {
         $this->getProvidedDependency('non-existing-service');
     }
+
+    public function makeDomainService(): DomainService
+    {
+        return $this->make(DomainService::class);
+    }
 }

@@ -4,7 +4,7 @@
 
 ### Added
 
-- `AbstractFactory::make(class-string, params)`: resolve a domain object through the module container with autowiring — a `create*()` method can build it by type, honoring the container attributes (`#[Inject]`/`#[Singleton]`/`#[Factory]`) on the resolved class, with optional `params` overriding constructor arguments by name. Additive and opt-in; `getProvidedDependency()` and hand-wired `create*()` keep working
+- `AbstractFactory::make(class-string, params)`: resolve a domain object through the module container with autowiring — a `create*()` method can build it by type, honoring the container attributes (`#[Inject]`/`#[Singleton]`/`#[Factory]`) on the resolved class, with optional `params` overriding constructor arguments by name. Additive and opt-in; `getProvidedDependency()` and hand-wired `create*()` keep working. Autowiring needs no bindings, so `make()` works in a module with no Provider — including the Facade+Factory floor that `make:module --minimal` scaffolds. `getProvidedDependency()` still reports a missing Provider, since that is where bindings would come from
 - `make:module --minimal` (alias `--template=minimal`): scaffolds only the Facade and Factory pillars; Config and Provider are optional (the runtime tolerates their absence). `basic` and `service` templates are unchanged
 
 ### Changed

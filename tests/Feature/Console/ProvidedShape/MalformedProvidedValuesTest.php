@@ -85,6 +85,30 @@ final class MalformedProvidedValuesTest extends TestCase
         }
     }
 
+    /**
+     * The same shape one method over: a template map that is not a map at all
+     * must degrade to "no templates", so `make:file` reports an unknown template
+     * instead of the whole console fatalling inside a foreach.
+     */
+    public function test_a_template_map_that_is_not_an_array_does_not_break_the_generator(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->extendService(
+                ConsoleProvider::TEMPLATE_BY_FILENAME_MAP,
+                static fn (mixed $map): mixed => 'not-a-map',
+            );
+        });
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Unknown template for 'Facade'?");
+
+        (new ConsoleFacade())->generateFileContent(
+            new CommandArguments('App\\Checkout', $this->moduleDir),
+            'Facade',
+        );
+    }
+
     public function test_a_non_string_template_entry_is_dropped(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {

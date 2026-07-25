@@ -39,6 +39,30 @@ services:
 To see the actual module dependency graph of your app, run
 `vendor/bin/gacela debug:graph` (formats: `text`, `mermaid`, `graphviz`, `json`).
 
+### Reviewing graph changes in CI
+
+A new cross-module edge enters a pull request as one more `use` statement, which
+is exactly as visible as every other import. `--compare-to` turns it into
+something a reviewer can see:
+
+```bash
+# on the base branch
+vendor/bin/gacela debug:graph --format=json > base-graph.json
+
+# on the branch under review
+vendor/bin/gacela debug:graph --compare-to=base-graph.json > graph-diff.md
+```
+
+The report is GitHub-flavoured markdown with a mermaid block GitHub renders
+natively in a comment, listing new and removed dependencies and drawing only the
+modules the change touches. When the graph is unchanged it writes **nothing** and
+exits `0` — so a CI job can test the file for emptiness and stay quiet on the
+pull requests that did not move the graph. An unreadable or invalid baseline
+exits `1`: that is a broken setup, not an unchanged graph, and the two must not
+look alike.
+
+`.github/workflows/module-graph.yml` in this repository is a working example.
+
 ## Psalm
 
 ```xml

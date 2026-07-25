@@ -20,6 +20,9 @@ final class DebugGraphCommandTest extends TestCase
 
     private CommandTester $command;
 
+    /** @var list<string> */
+    private array $baselines = [];
+
     protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
@@ -27,6 +30,17 @@ final class DebugGraphCommandTest extends TestCase
         });
 
         $this->command = new CommandTester(new DebugGraphCommand());
+    }
+
+    protected function tearDown(): void
+    {
+        foreach ($this->baselines as $baseline) {
+            if (is_file($baseline)) {
+                unlink($baseline);
+            }
+        }
+
+        $this->baselines = [];
     }
 
     public function test_text_format_lists_modules_and_edges(): void
@@ -86,5 +100,78 @@ final class DebugGraphCommandTest extends TestCase
 
         self::assertSame(0, $exitCode);
         self::assertStringContainsString('No modules match filter "DoesNotExist"', $this->command->getDisplay());
+    }
+
+    public function test_compare_to_an_identical_graph_writes_nothing(): void
+    {
+        $this->command->execute(['--format' => 'json']);
+        $baseline = $this->writeBaseline($this->command->getDisplay());
+
+        $exitCode = $this->command->execute(['--compare-to' => $baseline]);
+
+        self::assertSame(0, $exitCode);
+        self::assertSame('', $this->command->getDisplay(), 'an unchanged graph must produce no report for CI to post');
+    }
+
+    public function test_compare_to_a_graph_missing_an_edge_reports_it_as_new(): void
+    {
+        $baseline = $this->writeBaseline(json_encode([
+            self::MODULE_A => [],
+            self::MODULE_B => [],
+        ], JSON_THROW_ON_ERROR));
+
+        $exitCode = $this->command->execute(['--compare-to' => $baseline]);
+
+        $display = $this->command->getDisplay();
+        self::assertSame(0, $exitCode);
+        self::assertStringContainsString('### Module dependency graph changed', $display);
+        self::assertStringContainsString(sprintf('- **new dependency** `%s` → `%s`', self::MODULE_A, self::MODULE_B), $display);
+        self::assertStringContainsString(
+            str_replace('\\', '.', self::MODULE_A) . ' ==> ' . str_replace('\\', '.', self::MODULE_B),
+            $display,
+        );
+    }
+
+    public function test_compare_to_a_graph_with_an_extra_module_reports_it_as_removed(): void
+    {
+        $this->command->execute(['--format' => 'json']);
+        /** @var array<string, list<string>> $current */
+        $current = json_decode($this->command->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+        $current['GacelaTest\Feature\Console\DebugGraph\ModuleGone'] = [self::MODULE_A];
+
+        $baseline = $this->writeBaseline(json_encode($current, JSON_THROW_ON_ERROR));
+
+        $this->command->execute(['--compare-to' => $baseline]);
+
+        $display = $this->command->getDisplay();
+        self::assertStringContainsString('- **removed module** `GacelaTest\Feature\Console\DebugGraph\ModuleGone`', $display);
+        self::assertStringContainsString('ModuleGone -.-> ', $display);
+    }
+
+    public function test_compare_to_a_missing_file_fails_instead_of_reporting_no_changes(): void
+    {
+        $exitCode = $this->command->execute(['--compare-to' => '/does/not/exist.json']);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('Cannot read the graph to compare to: "/does/not/exist.json"', $this->command->getDisplay());
+    }
+
+    public function test_compare_to_an_unparseable_file_fails(): void
+    {
+        $baseline = $this->writeBaseline('{not json');
+
+        $exitCode = $this->command->execute(['--compare-to' => $baseline]);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('is not valid JSON', $this->command->getDisplay());
+    }
+
+    private function writeBaseline(string $contents): string
+    {
+        $path = sys_get_temp_dir() . '/gacela-graph-baseline-' . bin2hex(random_bytes(4)) . '.json';
+        file_put_contents($path, $contents);
+        $this->baselines[] = $path;
+
+        return $path;
     }
 }

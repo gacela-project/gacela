@@ -6,6 +6,7 @@ namespace Gacela\Console;
 
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
+use Gacela\Console\Domain\ModuleGraph\GraphDiffResult;
 use Gacela\Framework\AbstractFacade;
 
 /**
@@ -86,6 +87,31 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createModuleGraphFormatter($format)
             ->format($graph);
+    }
+
+    /**
+     * Compare a previously captured module graph against another one.
+     *
+     * @param array<string, list<string>> $base
+     * @param array<string, list<string>> $head
+     */
+    public function diffModuleGraph(array $base, array $head): GraphDiffResult
+    {
+        return $this->getFactory()
+            ->createModuleGraphDiffer()
+            ->diff($base, $head);
+    }
+
+    /**
+     * Render a graph diff as markdown, with a mermaid block GitHub renders natively.
+     *
+     * @param array<string, list<string>> $head
+     */
+    public function formatModuleGraphDiff(GraphDiffResult $diff, array $head): string
+    {
+        return $this->getFactory()
+            ->createGraphDiffMarkdownFormatter()
+            ->format($diff, $head);
     }
 
     /**

@@ -15,11 +15,13 @@ use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Domain\ModuleGraph\GraphDiffMarkdownFormatter;
 use Gacela\Console\Domain\ModuleGraph\GraphFormatterInterface;
 use Gacela\Console\Domain\ModuleGraph\GraphvizGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\JsonGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\MermaidGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
+use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
@@ -112,6 +114,16 @@ final class ConsoleFactory extends AbstractFactory
     public function createModuleGraphBuilder(): ModuleGraphBuilder
     {
         return new ModuleGraphBuilder();
+    }
+
+    public function createModuleGraphDiffer(): ModuleGraphDiffer
+    {
+        return new ModuleGraphDiffer();
+    }
+
+    public function createGraphDiffMarkdownFormatter(): GraphDiffMarkdownFormatter
+    {
+        return new GraphDiffMarkdownFormatter();
     }
 
     public function createModuleGraphFormatter(string $format): GraphFormatterInterface

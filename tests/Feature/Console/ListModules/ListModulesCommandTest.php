@@ -45,27 +45,36 @@ TXT;
     {
         $this->command->execute(['--detailed' => true]);
 
-        $output = $this->command->getDisplay();
+        $namespace = 'GacelaTest\\Feature\\Console\\ListModules';
 
-        // Verify this is the detailed view (not the table view)
-        self::assertStringNotContainsString('┌────', $output, 'Should not contain table borders');
-        self::assertStringContainsString('============================', $output, 'Should contain detailed view separators');
-        self::assertStringContainsString('TestModule3Facade', $output);
-        self::assertStringContainsString('TestModule1Factory', $output);
-
-        self::assertStringContainsString('1.-', $output);
-        self::assertStringContainsString('2.-', $output);
-        self::assertStringContainsString('3.-', $output);
-        self::assertStringNotContainsString('0.-', $output);
-
-        // Test that missing classes show as space symbol, not the class name
-        self::assertStringContainsString('TestModule1Factory', $output);
-        self::assertStringContainsString('TestModule1Provider', $output);
-        // TestModule1 has no Config, so it should show "Config:  " (with just a space or empty)
-        self::assertMatchesRegularExpression('/Config:\s+\n/', $output);
-
-        // TestModule2 has only Facade, so Factory/Config/Provider should show spaces
-        self::assertStringContainsString('TestModule2Facade', $output);
+        self::assertSame([
+            '============================',
+            '1.- TestModule3',
+            '----------------------------',
+            'Facade: ' . $namespace . '\\LevelUp\\TestModule3\\TestModule3Facade',
+            'Factory: ' . $namespace . '\\LevelUp\\TestModule3\\TestModule3Factory',
+            'Config: ' . $namespace . '\\LevelUp\\TestModule3\\TestModule3Config',
+            // TestModule3 has no Provider, so the pillar renders as a blank cell.
+            'Provider:',
+            '============================',
+            '2.- TestModule1',
+            '----------------------------',
+            'Facade: ' . $namespace . '\\TestModule1\\TestModule1Facade',
+            'Factory: ' . $namespace . '\\TestModule1\\TestModule1Factory',
+            'Config:',
+            'Provider: ' . $namespace . '\\TestModule1\\TestModule1Provider',
+            '============================',
+            '3.- TestModule2',
+            '----------------------------',
+            'Facade: ' . $namespace . '\\TestModule2\\TestModule2Facade',
+            'Factory:',
+            'Config:',
+            'Provider:',
+            '',
+        ], array_map(
+            static fn (string $line): string => rtrim($line),
+            explode("\n", str_replace("\r\n", "\n", $this->command->getDisplay())),
+        ));
     }
 
     public function test_list_modules_not_detailed(): void

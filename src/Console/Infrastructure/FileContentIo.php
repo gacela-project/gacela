@@ -9,9 +9,6 @@ use RuntimeException;
 
 use function sprintf;
 
-/**
- * @codeCoverageIgnore
- */
 final class FileContentIo implements FileContentIoInterface
 {
     public function mkdir(string $directory): void

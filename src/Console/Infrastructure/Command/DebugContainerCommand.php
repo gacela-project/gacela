@@ -15,7 +15,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use function class_exists;
 use function count;
 use function sprintf;
-use function strlen;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -38,9 +37,8 @@ final class DebugContainerCommand extends Command
     {
         /** @var string|null $className */
         $className = $input->getArgument('class');
-        $showStats = (bool) $input->getOption('stats');
-        /** @var bool $showTree */
-        $showTree = (bool) $input->getOption('tree');
+        $showStats = $input->getOption('stats') === true;
+        $showTree = $input->getOption('tree') === true;
 
         // --stats takes precedence, even when combined with a class argument
         if ($showStats) {
@@ -104,36 +102,17 @@ final class DebugContainerCommand extends Command
 
         $counter = 1;
         foreach ($dependencyTree as $dependency) {
-            $indent = $this->getIndentLevel($dependency);
-            $cleanDependency = $this->cleanDependency($dependency);
-
-            $output->writeln(sprintf('%s%d. %s', str_repeat('  ', $indent), $counter, $cleanDependency));
+            $output->writeln(sprintf('%d. %s', $counter, $dependency));
             ++$counter;
         }
 
         $output->writeln('');
         $output->writeln(sprintf('<fg=cyan>Total Dependencies:</> %d', count($dependencyTree)));
         $output->writeln('');
-        $output->writeln('<comment>Note: Indentation shows dependency depth.</comment>');
         $output->writeln('<comment>This tree shows only user-defined dependencies.</comment>');
         $output->writeln('');
 
         return Command::SUCCESS;
-    }
-
-    private function getIndentLevel(string $dependency): int
-    {
-        $matches = [];
-        if (preg_match('/^(\s*)/', $dependency, $matches) === 1) {
-            return (int)(strlen($matches[1]) / 2);
-        }
-
-        return 0;
-    }
-
-    private function cleanDependency(string $dependency): string
-    {
-        return trim($dependency);
     }
 
     private function getHelpText(): string

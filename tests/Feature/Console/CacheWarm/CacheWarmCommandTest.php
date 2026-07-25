@@ -10,11 +10,17 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function bin2hex;
 use function dirname;
 use function file_exists;
+use function mkdir;
+use function putenv;
+use function random_bytes;
+use function sys_get_temp_dir;
 use function unlink;
 
 final class CacheWarmCommandTest extends TestCase
@@ -153,6 +159,100 @@ final class CacheWarmCommandTest extends TestCase
         self::assertStringContainsString('Cleared existing cache', $output);
         self::assertStringContainsString('Cache warming complete!', $output);
         self::assertSame(0, $this->command->getStatusCode());
+    }
+
+    public function test_cache_warm_reports_the_written_cache_files(): void
+    {
+        $this->command->execute([]);
+
+        $display = $this->command->getDisplay();
+
+        self::assertFileExists($this->cacheFile);
+        self::assertStringContainsString('Cache file: ' . $this->cacheFile, $display);
+        self::assertMatchesRegularExpression('/Cache size: [\d.]+ (B|KB|MB)/', $display);
+        self::assertStringContainsString('Merged config cache: ' . $this->mergedConfigCacheFile, $display);
+        self::assertMatchesRegularExpression('/Merged config size: [\d.]+ (B|KB|MB)/', $display);
+    }
+
+    public function test_cache_warm_warns_when_no_cache_file_is_written(): void
+    {
+        $this->withEmptyCacheDir(static function (): void {
+            $command = new CommandTester(new CacheWarmCommand());
+            $command->execute([]);
+
+            $display = $command->getDisplay();
+
+            self::assertStringContainsString(
+                'Warning: Cache file was not created. File caching might be disabled.',
+                $display,
+            );
+            self::assertStringContainsString('Enable file caching in your gacela.php configuration:', $display);
+            self::assertStringNotContainsString('Cache size:', $display);
+        });
+    }
+
+    public function test_cache_warm_with_clear_option_removes_the_previous_cache_file(): void
+    {
+        $this->withEmptyCacheDir(static function (string $cacheDir): void {
+            $staleCacheFile = $cacheDir . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
+            file_put_contents($staleCacheFile, '<?php return [];');
+
+            $command = new CommandTester(new CacheWarmCommand());
+            $command->execute(['--clear' => true]);
+
+            // File caching is off, so nothing writes the file back: whatever is
+            // left on disk is what --clear did.
+            self::assertFileDoesNotExist($staleCacheFile);
+            self::assertStringContainsString('Cleared existing cache', $command->getDisplay());
+        });
+    }
+
+    public function test_cache_warm_warns_when_modules_cannot_be_discovered(): void
+    {
+        $missingRoot = sys_get_temp_dir() . '/gacela-cache-warm-missing-' . bin2hex(random_bytes(4));
+
+        Gacela::bootstrap($missingRoot, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+        });
+
+        $command = new CommandTester(new CacheWarmCommand());
+        $command->execute([]);
+
+        $display = $command->getDisplay();
+
+        self::assertStringContainsString(
+            'Warning: Some modules could not be discovered due to errors',
+            $display,
+        );
+        self::assertStringContainsString('  Error: ', $display);
+        self::assertStringContainsString('Found 0 modules', $display);
+        self::assertSame(0, $command->getStatusCode());
+    }
+
+    /**
+     * Runs the given code against a cache directory this test owns and that
+     * nothing writes into, so the files found there are the ones it put there.
+     *
+     * @param callable(string):void $call
+     */
+    private function withEmptyCacheDir(callable $call): void
+    {
+        $cacheDir = sys_get_temp_dir() . '/gacela-cache-warm-' . bin2hex(random_bytes(4));
+        mkdir($cacheDir, 0777, true);
+        putenv('GACELA_CACHE_DIR=' . $cacheDir);
+
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->setFileCache(false);
+            });
+
+            $call($cacheDir);
+        } finally {
+            putenv('GACELA_CACHE_DIR');
+            DirectoryUtil::removeDir($cacheDir);
+        }
     }
 
     private function removeGeneratedCaches(): void

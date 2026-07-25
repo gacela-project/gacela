@@ -49,11 +49,11 @@ final class DebugModuleCommand extends Command
             return Command::FAILURE;
         }
 
-        if ((bool)$input->getOption('json')) {
+        if ($input->getOption('json') === true) {
             return $this->renderJson($output, $modules);
         }
 
-        $treeOnly = (bool)$input->getOption('tree');
+        $treeOnly = $input->getOption('tree') === true;
         foreach ($modules as $module) {
             $this->renderModule($output, $module, $treeOnly);
         }

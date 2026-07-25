@@ -43,7 +43,7 @@ final class DebugModulesCommand extends Command
     {
         /** @var string $filter */
         $filter = $input->getArgument('filter');
-        $detail = (bool) $input->getOption('detail');
+        $detail = $input->getOption('detail') === true;
 
         $pathFilter = $this->asPathFilter($filter);
         $namespaceFilter = $pathFilter === null ? $filter : '';
@@ -76,9 +76,6 @@ final class DebugModulesCommand extends Command
 
         foreach ($modules as $module) {
             $pillars = $this->existingPillarClasses($module);
-            if ($pillars === []) {
-                continue;
-            }
 
             ++$moduleCount;
             $output->writeln(sprintf('  <fg=green>%s</>', $module->fullModuleName()));
@@ -101,7 +98,8 @@ final class DebugModulesCommand extends Command
 
     private function asPathFilter(string $filter): ?string
     {
-        if ($filter === '' || !is_dir($filter)) {
+        // An empty filter is not a directory either, so it needs no case of its own.
+        if (!is_dir($filter)) {
             return null;
         }
 
@@ -116,7 +114,8 @@ final class DebugModulesCommand extends Command
      */
     private function filterModulesByPath(array $modules, string $path): array
     {
-        $prefix = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        // $path comes from realpath(), which never leaves a trailing separator.
+        $prefix = $path . DIRECTORY_SEPARATOR;
         $matching = [];
 
         foreach ($modules as $module) {
@@ -160,18 +159,14 @@ final class DebugModulesCommand extends Command
                 continue;
             }
 
-            if (!class_exists($pillar)) {
-                continue;
-            }
-
             $pillars[] = $pillar;
         }
 
-        return array_values(array_unique($pillars));
+        return $pillars;
     }
 
     /**
-     * @return array<string, ?string>
+     * @return array<string, ?class-string>
      */
     private function pillarsBySuffix(AppModule $module): array
     {
@@ -184,6 +179,11 @@ final class DebugModulesCommand extends Command
         ];
     }
 
+    /**
+     * @param class-string $facadeClass
+     *
+     * @return ?class-string
+     */
     private function classByConvention(string $facadeClass, string $suffix): ?string
     {
         if (!str_ends_with($facadeClass, 'Facade')) {

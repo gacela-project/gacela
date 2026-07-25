@@ -26,7 +26,6 @@
             // rest stays ignored until it gets the same treatment, rather than
             // being switched on and baselined.
             "Gacela\\Console\\Application\\*",
-            "Gacela\\Console\\Infrastructure\\*",
             "Gacela\\Console\\ConsoleConfig",
             "Gacela\\Console\\ConsoleFacade",
             "Gacela\\Console\\ConsoleFactory",
@@ -71,14 +70,28 @@
             '.*spl_object_id\\(\\$configItem->reader\\(\\)\\).*',
         ],
         // flock()-based locking and opcache invalidation are not observable in-process.
+        // warmInOneBatch(): batching only decides whether the cache files are written
+        // once at the end or on every put; the resulting cache is byte-identical, so
+        // neither dropping the begin/commit pair nor unwrapping the finally changes
+        // anything a test can see.
         UnwrapFinally: {
-            ignore: ["Gacela\\Framework\\Cache\\FileCache::commitBatch"],
+            ignore: [
+                "Gacela\\Console\\Infrastructure\\Command\\CacheWarmCommand::warmInOneBatch",
+                "Gacela\\Framework\\Cache\\FileCache::commitBatch",
+            ],
         },
         MethodCallRemoval: {
             ignore: [
+                "Gacela\\Console\\Infrastructure\\Command\\CacheWarmCommand::warmInOneBatch",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Cache\\FileCache::delete",
                 "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
+            ],
+            ignoreSourceCodeByRegex: [
+                // cache:warm --clear drops the merged config cache before warming,
+                // but the same run rewrites it unconditionally at the end, so the
+                // cache is identical with or without the upfront clear.
+                '.*Config::getInstance\\(\\)->clearMergedConfigCache\\(\\);.*',
             ],
         },
         IfNegation: {
@@ -111,8 +124,15 @@
         // above has already rejected. fullModuleName() handles a facade with no
         // namespace separator at all, unreachable from the finder because the
         // namespace guard rejects those first (see the global-namespace test).
+        // asPathFilter(): realpath() can only fail for a path is_dir() just
+        // accepted if the directory disappears in between -- the same race.
+        // facadeFilename(): getFileName() is only false for internal or eval'd
+        // classes, and module discovery reads facades off disk.
         FalseValue: {
             ignore: [
+                "Gacela\\Console\\Infrastructure\\Command\\InitCommand::readTemplate",
+                "Gacela\\Console\\Infrastructure\\Command\\DebugModulesCommand::asPathFilter",
+                "Gacela\\Console\\Infrastructure\\Command\\DebugModulesCommand::facadeFilename",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::createAppModule",
                 "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::getNamespace",
@@ -136,8 +156,13 @@
         },
         // WritableDirectory::probe() / containerTempDir(): mkdir-failure paths only
         // reachable through filesystem races (TOCTOU) or an unwritable system temp dir.
+        // readTemplate(): the gacela.php template ships inside the package, so it can
+        // only be unreadable on a broken installation, which no test can stage.
         Throw_: {
-            ignore: ["Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir"],
+            ignore: [
+                "Gacela\\Console\\Infrastructure\\Command\\InitCommand::readTemplate",
+                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
+            ],
         },
         PregQuote: {
             ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
@@ -193,6 +218,10 @@
         // The keys used by the lazy handler registry stringify identically via sprintf.
         CastString: {
             ignore: [
+                // resolveClassName(): file_get_contents() only returns false for a
+                // file is_file() just accepted if it turns unreadable in between --
+                // a filesystem race.
+                "Gacela\\Console\\Infrastructure\\Command\\DebugDependenciesCommand::resolveClassName",
                 "Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get",
                 // The cast is already annotated @psalm-suppress RedundantCast:
                 // reset() on a non-empty string list returns a string either way.
@@ -279,8 +308,14 @@
             ],
         },
         // Lookup-order swap between two stores that never share a key.
+        // pillarsBySuffix() is the same shape: what discovery resolved and what
+        // the conventional name probe finds are either the same class or only
+        // one of them exists, so which side wins cannot change the pillar list.
         Coalesce: {
-            ignore: ["Gacela\\Framework\\ClassResolver\\AbstractClassResolver::resolveCached"],
+            ignore: [
+                "Gacela\\Framework\\ClassResolver\\AbstractClassResolver::resolveCached",
+                "Gacela\\Console\\Infrastructure\\Command\\DebugModulesCommand::pillarsBySuffix",
+            ],
         },
         // AST node-type guards in the PHPStan rules: the analyser hands over
         // well-typed nodes, so the always-true/negated guard variants are

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\CacheClear;
 
+use Gacela\Console\Application\CacheWarm\CacheManager;
 use Gacela\Console\Infrastructure\Command\CacheClearCommand;
 use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Bootstrap\GacelaConfig;
@@ -20,6 +21,7 @@ use function file_exists;
 use function file_put_contents;
 use function is_dir;
 use function mkdir;
+use function sprintf;
 use function unlink;
 
 final class CacheClearCommandTest extends TestCase
@@ -98,7 +100,72 @@ final class CacheClearCommandTest extends TestCase
         $exitCode = $command->execute([]);
 
         self::assertSame(0, $exitCode);
-        self::assertStringContainsString('No cache files found.', $command->getDisplay());
+        self::assertSame([
+            'Clearing Gacela cache...',
+            '',
+            'No cache files found.',
+            '',
+        ], self::linesOf($command));
+    }
+
+    public function test_cache_clear_removes_the_merged_config_cache(): void
+    {
+        Config::getInstance()->writeMergedConfigCache();
+        self::assertFileExists($this->mergedConfigCacheFile);
+
+        $command = new CommandTester(new CacheClearCommand());
+        $exitCode = $command->execute([]);
+
+        self::assertSame(0, $exitCode);
+        self::assertSame([
+            'Clearing Gacela cache...',
+            '',
+            '✓ Cleared merged config cache: ' . $this->mergedConfigCacheFile,
+            '',
+            'Cache cleared successfully!',
+            '',
+        ], self::linesOf($command));
+        self::assertFileDoesNotExist($this->mergedConfigCacheFile);
+    }
+
+    public function test_cache_clear_lists_every_removed_cache_file_with_its_size(): void
+    {
+        $cacheDir = dirname($this->cacheFile);
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0777, true);
+        }
+
+        file_put_contents($this->cacheFile, '<?php return [];');
+        file_put_contents($this->customServicesCacheFile, '<?php return [];');
+
+        $sizes = (new CacheManager())->getExistingCacheFilesWithSize();
+        self::assertCount(2, $sizes);
+
+        $expected = ['Clearing Gacela cache...', ''];
+        foreach ($sizes as $file => $size) {
+            $expected[] = sprintf('✓ Cleared cache file: %s (%s)', $file, $size);
+        }
+
+        $expected[] = '';
+        $expected[] = 'Cache cleared successfully!';
+        $expected[] = '';
+
+        $command = new CommandTester(new CacheClearCommand());
+        $exitCode = $command->execute([]);
+
+        self::assertSame(0, $exitCode);
+        self::assertSame($expected, self::linesOf($command));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function linesOf(CommandTester $tester): array
+    {
+        return array_map(
+            static fn (string $line): string => rtrim($line),
+            explode("\n", $tester->getDisplay()),
+        );
     }
 
     private function removeGeneratedCaches(): void

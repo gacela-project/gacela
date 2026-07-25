@@ -13,6 +13,12 @@
 - PHPStan now **types** `getFacade()`/`getFactory()`/`getConfig()` from the `#[ServiceMap]` attribute that already declares them, instead of suppressing them as undefined methods. A suppressed call is not a typed one: it evaluated to `mixed`, which switched off analysis of the whole chain behind the accessor — a typo in a facade method reached through `getFacade()` produced no error at all. Nothing to configure beyond the existing `phpstan-gacela.neon` include; the suppression stays as a fallback for classes declaring neither `#[ServiceMap]` nor a `@method` docblock, and is scheduled for removal in 2.0
 - `debug:graph --compare-to=base-graph.json` diffs the module dependency graph against a previously captured one and reports new/removed dependencies as markdown with a mermaid diagram. Writes nothing when the graph is unchanged, so CI can post a comment only when a pull request actually moves a module boundary
 
+### Changed
+
+- `debug:container <class>` no longer prints the "Indentation shows dependency depth" note. The container reports a flat dependency list, so nothing was ever indented and the note described a format that did not exist
+- `validate:config` reports a binding whose class cannot even be autoloaded as `Could not resolve binding: <key> (<error>)` instead of a separate "Could not check circular dependencies" line, so the failure is attributed to the binding that caused it
+- `profile:report --format=json` and `debug:config` now raise a `JsonException` instead of silently printing an empty value when their payload cannot be encoded
+
 ## [1.20.0](https://github.com/gacela-project/gacela/compare/1.19.0...1.20.0) - 2026-07-25
 
 ### Added

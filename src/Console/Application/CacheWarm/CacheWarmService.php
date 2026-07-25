@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Console\Application\CacheWarm;
 
 use Exception;
-use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
@@ -17,6 +16,7 @@ use Gacela\Framework\ServiceResolver\ReflectionClassPool;
 use ReflectionMethod;
 
 use function array_filter;
+use function array_values;
 use function class_exists;
 use function str_contains;
 
@@ -24,11 +24,6 @@ final class CacheWarmService
 {
     /** @var list<AbstractClassResolver>|null */
     private ?array $classResolvers = null;
-
-    public function __construct(
-        private readonly ConsoleFacade $facade,
-    ) {
-    }
 
     /**
      * Eagerly resolve a module's Factory, Config, and Provider through Gacela's
@@ -55,21 +50,13 @@ final class CacheWarmService
     }
 
     /**
-     * @return list<AppModule>
-     */
-    public function discoverModules(): array
-    {
-        return $this->facade->findAllAppModules();
-    }
-
-    /**
      * @param list<AppModule> $modules
      *
      * @return list<AppModule>
      */
     public function filterProductionModules(array $modules): array
     {
-        return array_filter($modules, static function (\Gacela\Console\Domain\AllAppModules\AppModule $module): bool {
+        return array_values(array_filter($modules, static function (\Gacela\Console\Domain\AllAppModules\AppModule $module): bool {
             $className = $module->facadeClass();
             // Anchor to whole namespace segments (like \Fixtures\ / \Benchmark\); an unanchored
             // 'Test' substring dropped legitimate modules such as App\Testimonial\TestimonialFacade.
@@ -77,7 +64,7 @@ final class CacheWarmService
                 && !str_contains($className, '\\Tests\\')
                 && !str_contains($className, '\\Fixtures\\')
                 && !str_contains($className, '\\Benchmark\\');
-        });
+        }));
     }
 
     /**

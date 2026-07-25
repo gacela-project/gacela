@@ -40,7 +40,7 @@ final class DebugConfigCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $filter = (string)$input->getArgument('filter');
+        $filter = ConsoleInput::argument($input, 'filter');
 
         $values = Config::getInstance()->getAllValues();
         ksort($values);

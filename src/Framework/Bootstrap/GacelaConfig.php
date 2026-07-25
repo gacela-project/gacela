@@ -23,6 +23,9 @@ use function sprintf;
 /**
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type ServiceFactoryMap from ContainerConfigurationInterface
+ * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
+ * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
@@ -48,7 +51,7 @@ final class GacelaConfig
     /** @var list<string> */
     private ?array $appModulePaths = null;
 
-    /** @var array<string,mixed> */
+    /** @var ConfigKeyValues */
     private ?array $configKeyValues = null;
 
     private ?bool $areEventListenersEnabled = null;
@@ -68,13 +71,13 @@ final class GacelaConfig
     /** @var ServicesToExtendMap */
     private array $servicesToExtend = [];
 
-    /** @var array<string,Closure> */
+    /** @var ServiceFactoryMap */
     private array $factories = [];
 
-    /** @var array<string,Closure> */
+    /** @var ServiceFactoryMap */
     private array $protectedServices = [];
 
-    /** @var array<string,string> */
+    /** @var ServiceAliasMap */
     private array $aliases = [];
 
     /** @var ContextualBindingsMap */
@@ -83,7 +86,7 @@ final class GacelaConfig
     /** @var HandlerRegistriesMap */
     private array $handlerRegistries = [];
 
-    /** @var array<string,Closure> */
+    /** @var ServiceFactoryMap */
     private array $lazyServices = [];
 
     /**
@@ -306,7 +309,7 @@ final class GacelaConfig
     /**
      * Add/replace a list of existent configuration keys with a specific value.
      *
-     * @param array<string, mixed> $config
+     * @param ConfigKeyValues $config
      */
     public function addAppConfigKeyValues(array $config): self
     {
@@ -366,8 +369,7 @@ final class GacelaConfig
      * Unlike regular services (which are singletons), factory services return
      * a new instance every time they are resolved from the container.
      *
-     * @param string $id The service identifier (usually a class name or interface)
-     * @param Closure $factory The factory closure that creates the service instance
+     * The `$id` is usually a class name or interface.
      *
      * @return $this
      */
@@ -383,9 +385,6 @@ final class GacelaConfig
      * Protected services are stored as closures and won't be invoked by the container,
      * making them useful for storing callable configurations.
      *
-     * @param string $id The service identifier
-     * @param Closure $service The closure to protect
-     *
      * @return $this
      */
     public function addProtected(string $id, Closure $service): self
@@ -399,9 +398,6 @@ final class GacelaConfig
      * Create an alias for a service.
      * This allows you to reference the same service with different names.
      *
-     * @param string $alias The alias name
-     * @param string $id The actual service identifier
-     *
      * @return $this
      */
     public function addAlias(string $alias, string $id): self
@@ -412,9 +408,8 @@ final class GacelaConfig
     }
 
     /**
-     * Register a lazy-loaded service that is only instantiated when first accessed.
-     * This improves startup performance by deferring expensive service creation
-     * until they are actually needed.
+     * Register a lazy-loaded service that is only instantiated when first accessed,
+     * deferring expensive service creation until it is actually needed.
      *
      * Example:
      * ```php

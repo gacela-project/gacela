@@ -30,17 +30,6 @@ final class Locator implements LocatorInterface
     /**
      * @template T
      *
-     * @param class-string<T> $key
-     * @param T $value
-     */
-    public static function addSingleton(string $key, mixed $value): void
-    {
-        self::getInstance()->add($key, $value);
-    }
-
-    /**
-     * @template T
-     *
      * @param class-string<T> $className
      *
      * @return T|null

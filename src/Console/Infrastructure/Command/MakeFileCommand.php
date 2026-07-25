@@ -25,9 +25,9 @@ final class MakeFileCommand extends Command
     protected function configure(): void
     {
         $this->setName('make:file')
-            ->setDescription('Generate a ' . $this->getExpectedFilenames())
+            ->setDescription('Generate a ' . FilenameSanitizer::expectedFilenamesAsText())
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
-            ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, $this->getExpectedFilenames())
+            ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, FilenameSanitizer::expectedFilenamesAsText())
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
     }
 
@@ -56,10 +56,5 @@ final class MakeFileCommand extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    private function getExpectedFilenames(): string
-    {
-        return implode(', ', FilenameSanitizer::EXPECTED_FILENAMES);
     }
 }

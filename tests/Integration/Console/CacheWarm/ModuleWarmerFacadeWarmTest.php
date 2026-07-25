@@ -7,7 +7,6 @@ namespace GacelaTest\Integration\Console\CacheWarm;
 use Gacela\Console\Application\CacheWarm\CacheWarmOutputFormatter;
 use Gacela\Console\Application\CacheWarm\CacheWarmService;
 use Gacela\Console\Application\CacheWarm\ModuleWarmer;
-use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
@@ -52,7 +51,7 @@ final class ModuleWarmerFacadeWarmTest extends TestCase
     public function test_a_php_error_warming_one_module_facade_does_not_abort_the_remaining_modules(): void
     {
         $warmer = new ModuleWarmer(
-            new CacheWarmService(new ConsoleFacade()),
+            new CacheWarmService(),
             new CacheWarmOutputFormatter($output = new BufferedOutput()),
         );
 

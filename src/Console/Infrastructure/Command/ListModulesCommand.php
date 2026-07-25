@@ -42,7 +42,7 @@ final class ListModulesCommand extends Command
     {
         $this->output = $output;
 
-        $filter = (string)$input->getArgument('filter');
+        $filter = ConsoleInput::argument($input, 'filter');
         $modules = $this->getFacade()->findAllAppModules($filter);
 
         if ($modules === []) {

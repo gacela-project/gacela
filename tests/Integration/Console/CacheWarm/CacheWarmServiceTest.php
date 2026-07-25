@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Console\CacheWarm;
 
 use Gacela\Console\Application\CacheWarm\CacheWarmService;
-use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
@@ -45,7 +44,7 @@ final class CacheWarmServiceTest extends TestCase
 
     public function test_warm_class_resolution_populates_factory_config_and_provider_entries(): void
     {
-        $service = new CacheWarmService(new ConsoleFacade());
+        $service = new CacheWarmService();
 
         $service->warmClassResolution(Module1Facade::class);
 
@@ -58,7 +57,7 @@ final class CacheWarmServiceTest extends TestCase
 
     public function test_warm_class_resolution_is_idempotent(): void
     {
-        $service = new CacheWarmService(new ConsoleFacade());
+        $service = new CacheWarmService();
 
         $service->warmClassResolution(Module1Facade::class);
 
@@ -72,7 +71,7 @@ final class CacheWarmServiceTest extends TestCase
 
     public function test_warm_class_resolution_skips_when_facade_class_missing(): void
     {
-        $service = new CacheWarmService(new ConsoleFacade());
+        $service = new CacheWarmService();
 
         /** @var class-string $fake */
         $fake = 'Non\\Existing\\MissingFacade';
@@ -83,7 +82,7 @@ final class CacheWarmServiceTest extends TestCase
 
     public function test_filter_production_modules_only_drops_test_fixture_and_benchmark_namespace_segments(): void
     {
-        $service = new CacheWarmService(new ConsoleFacade());
+        $service = new CacheWarmService();
 
         $modules = array_map(
             static fn (string $facade): AppModule => new AppModule($facade, 'name', $facade),

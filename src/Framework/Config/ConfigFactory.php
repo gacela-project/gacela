@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
-use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory;
@@ -17,9 +15,13 @@ use Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy;
 use function sprintf;
 
 /**
- * @extends AbstractFactory<AbstractConfig>
+ * Assembles the configuration during bootstrap, before any module exists.
+ *
+ * Deliberately not an AbstractFactory: that base is for module factories and
+ * pulls in the container, the config resolver and the provider resolvers —
+ * none of which are available (or needed) this early.
  */
-final class ConfigFactory extends AbstractFactory
+final class ConfigFactory
 {
     private const GACELA_PHP_CONFIG_FILENAME = 'gacela';
 

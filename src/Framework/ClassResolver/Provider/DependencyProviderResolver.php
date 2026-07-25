@@ -9,7 +9,9 @@ use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\ClassInfo;
 
-use function function_exists;
+use function sprintf;
+
+use const E_USER_DEPRECATED;
 
 /**
  * @psalm-suppress DeprecatedClass
@@ -26,16 +28,21 @@ final class DependencyProviderResolver extends AbstractClassResolver
         /** @var ?AbstractDependencyProvider $resolved */
         $resolved = $this->doResolve($caller);
 
-        // `trigger_deprecation()` comes from symfony/deprecation-contracts, which is not a
-        // runtime dependency of gacela; skip the notice when the function is unavailable.
-        if ($resolved instanceof AbstractDependencyProvider && function_exists('trigger_deprecation')) {
-            trigger_deprecation(
-                'gacela-project/gacela',
-                '1.8',
-                "`%s` is deprecated and will be removed in version 2.0.\nUse `%s` instead. Where? Check your module `%s`",
-                AbstractDependencyProvider::class,
-                AbstractProvider::class,
-                ClassInfo::from($caller, self::TYPE)->getModuleName(),
+        if ($resolved instanceof AbstractDependencyProvider) {
+            // Emitted directly rather than through `trigger_deprecation()`: that function comes
+            // from symfony/deprecation-contracts, which is not a runtime dependency of gacela, so
+            // guarding on it silenced this notice for everyone without symfony installed. The
+            // message keeps the contract's "Since <package> <version>: " format, so deprecation
+            // collectors group it exactly as before.
+            @trigger_error(
+                sprintf(
+                    "Since gacela-project/gacela 1.8: `%s` is deprecated and will be removed in version 2.0.\n"
+                    . 'Use `%s` instead. Where? Check your module `%s`',
+                    AbstractDependencyProvider::class,
+                    AbstractProvider::class,
+                    ClassInfo::from($caller, self::TYPE)->getModuleName(),
+                ),
+                E_USER_DEPRECATED,
             );
         }
 

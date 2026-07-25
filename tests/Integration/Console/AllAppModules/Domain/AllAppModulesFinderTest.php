@@ -111,6 +111,25 @@ final class AllAppModulesFinderTest extends TestCase
         self::assertEquals($expected, $actual);
     }
 
+    /**
+     * A Windows-style relative entry keeps its backslash separator. It is not
+     * absolute — that is decided by a leading `/` or a `X:` drive prefix — so it
+     * has to be joined to the root with its leading separator stripped, or the
+     * backslash becomes part of the directory name on a POSIX filesystem.
+     */
+    public function test_app_module_paths_strips_a_leading_separator_before_joining(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->setAppModulePaths(['\\Module1']);
+        });
+        $this->consoleFacade = new ConsoleFacade();
+
+        $actual = $this->consoleFacade->findAllAppModules();
+
+        self::assertCount(1, $actual);
+        self::assertSame(Module1Facade::class, $actual[0]->facadeClass());
+    }
+
     public function test_app_module_paths_warns_and_skips_missing_directory(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {

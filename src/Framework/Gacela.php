@@ -29,7 +29,6 @@ use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Exception\ServiceNotFoundException;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
-use Gacela\Framework\ServiceResolver\ReflectionClassPool;
 
 use function is_string;
 use function sprintf;
@@ -207,7 +206,6 @@ final class Gacela
         ConfigFactory::resetCache();
         PathFinder::resetCache();
         ClassValidator::resetCache();
-        ReflectionClassPool::reset();
         // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();

@@ -25,6 +25,14 @@ use function class_exists;
  * first resolution: a long-running worker (RoadRunner, Swoole, queue consumers)
  * that re-bootstraps, code generation, or `cache:warm` emitting classes. The
  * module resolves to "not found" and nothing points at the stale answer.
+ *
+ * Only the negative answers are dropped. There is deliberately no test here for
+ * the positive ones surviving: once a class is defined, `class_exists()` never
+ * consults the autoloader again, so a test could not tell a kept entry from a
+ * cleared one and would pass either way. The property is observable only as
+ * cost, and `FileCacheBench::bench_without_cache` is what measures it -- it
+ * moved +20.07% when this cleared the whole cache, which is what the gate is
+ * for.
  */
 final class ClassValidatorResetTest extends TestCase
 {
@@ -53,4 +61,5 @@ final class ClassValidatorResetTest extends TestCase
             'Gacela::resetCache() must clear the memoized class_exists() answers',
         );
     }
+
 }

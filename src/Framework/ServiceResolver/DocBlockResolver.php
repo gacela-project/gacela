@@ -31,7 +31,7 @@ final class DocBlockResolver
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];
 
-    /** @var array<string,true> caller-and-method pairs already reported as deprecated */
+    /** @var array<string,array<string,string>> [callerClass][method] => strategy already reported */
     private static array $warned = [];
 
     /**
@@ -134,12 +134,15 @@ final class DocBlockResolver
         // every cache reset -- repeating an identical message, and charging
         // sprintf() to a cold-resolution path that measured +28.59% on
         // FileCacheBench::bench_without_cache when it did.
-        $key = $this->callerClass . '::' . $method;
-        if (isset(self::$warned[$key])) {
+        // Nested rather than a concatenated "class::method" key: building one
+        // string generates Concat mutants that no assertion can kill, because
+        // the separator and operand order cannot change which pairs are
+        // distinct. Two dimensions make the uniqueness structural instead.
+        if (isset(self::$warned[$this->callerClass][$method])) {
             return;
         }
 
-        self::$warned[$key] = true;
+        self::$warned[$this->callerClass][$method] = $strategy;
 
         trigger_error(
             sprintf(self::FALLBACK_DEPRECATION, $this->callerClass, $method, $strategy, $method),

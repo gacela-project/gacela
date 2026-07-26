@@ -8,6 +8,8 @@
 
 ### Changed (BREAKING — 2.0)
 
+- **The PHPStan suppression for undeclared pillar accessors is gone.** 1.x shipped an `ignoreErrors` entry in `phpstan-gacela.neon` silencing `Call to an undefined method ...::getFacade()`. A class resolving a pillar through `ServiceResolverAwareTrait` must now declare it with `#[ServiceMap]` (or a `@method` docblock, which PHPStan reads natively) or the call is reported. A suppressed call was never a typed one — it evaluated to `mixed`, which switched off checking of everything reached *through* the accessor. 1.21 shipped the `#[ServiceMap]` typing precisely so this migration can be done first
+
 - **`gacela-project/container` bumped to `^1.0`** (was `^0.10.0`). `Gacela\Container\Container` is now `final`, so `Gacela\Framework\Container\Container` decorates it by composition instead of extending it — which is what its docblock always claimed it did. It still implements `ContainerInterface` and gains the 1.0 additions (`when()`, `compile()`, `writeCompiledCache()`, `getStats()`, `ArrayAccess`). **Only affects code that passed a Gacela container where the concrete `Gacela\Container\Container` was type-hinted**; depend on `ContainerInterface` instead. Provider closures are unchanged: `static fn (Container $c) => $c->getLocator()->get(...)` still receives the Gacela container, not the inner one
 
 - **PHP floor raised to `>=8.3`** (was `>=8.1`). PHP 8.1 reached end of life in December 2025 and 8.2's security window closes in December 2026, so a 2.0 pinned to either would ship already needing another bump. Projects on 8.1 or 8.2 should stay on **1.21**, which is feature-complete and carries the tooling for this migration — `doctor`'s filename check, `FacadeInterfaceInSyncRule`, and the typed pillar accessors

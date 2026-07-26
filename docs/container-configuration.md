@@ -218,7 +218,7 @@ compiler pass is required to route `#[Inject]` parameters to Gacela before
 Symfony's autowire claims them. A dedicated `gacela/symfony-bridge` package
 ships this pass; adopt it in projects where Symfony owns the container.
 
-## Class Attributes: `#[Singleton]` and `#[Factory]`
+## Class Attributes: `#[Singleton]`, `#[Factory]` and `#[Lazy]`
 
 Instead of registering a binding or an `addFactory()` closure, module authors can
 annotate the service class itself. Any class resolved through the container —
@@ -254,6 +254,7 @@ instead of a `gacela.php` entry. Equivalent imperative registrations:
 | `#[Singleton]` on `Pool` | `$container->set(Pool::class, new Pool())` in a provider |
 | `#[Factory]` on `Builder` | `$config->addFactory(Builder::class, static fn() => new Builder())` |
 | `#[Inject(X::class)]` on a param | `$config->when(Consumer::class)->needs(Type::class)->give(X::class)` |
+| `#[Lazy]` on `Report` | no equivalent — defers construction until first use |
 
 Notes:
 
@@ -265,6 +266,11 @@ Notes:
   the fresh-instance intent explicitly.
 - Constructor params of attribute-annotated classes still go through the normal
   resolution order (bindings, contextual bindings, `#[Inject]`).
+- `#[Lazy]` returns a real instance of the class whose constructor has not run
+  yet; touching any property or method initializes it. Useful for an expensive
+  service a given request may never reach. **Requires PHP 8.4** for native lazy
+  objects — on 8.3 the class is constructed eagerly instead, which is
+  unobservable apart from the timing, so it is safe to annotate either way.
 
 ### Resolving domain objects by type with `make()`
 

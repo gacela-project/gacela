@@ -75,6 +75,11 @@ jobs:
         # --only-covering-test-cases narrows each mutant's run to the tests that
         # actually cover it, using coverage data.
         #
+        # --ignore-msi-with-no-mutations: a branch that changes only comments,
+        # docs or dependencies still has files in the diff but no *mutable*
+        # lines. Without this, infection generates zero mutants, computes MSI 0%
+        # and fails the 100% gate -- so a docblock fix could not be merged.
+        #
         # --map-source-class-to-test is deliberately NOT used. It picks test
         # files by *naming convention* (Foo -> FooTest), so a test named after
         # the behaviour rather than the class is dropped from the coverage run
@@ -89,6 +94,7 @@ jobs:
             --git-diff-lines \
             --git-diff-base=origin/${{ github.base_ref }} \
             --only-covering-test-cases \
+            --ignore-msi-with-no-mutations \
             --logger-github \
             --no-progress \
             --show-mutations

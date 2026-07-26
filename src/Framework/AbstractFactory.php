@@ -74,7 +74,7 @@ abstract class AbstractFactory
     /**
      * Resolve a class through the module container with autowiring, so its
      * constructor dependencies and the container DI attributes (#[Inject],
-     * #[Singleton], #[Factory]) are honored — letting a create*() method
+     * #[Singleton], #[Factory], #[Lazy]) are honored — letting a create*() method
      * resolve a domain object by type instead of hand-wiring it.
      *
      * Pass $params to override constructor arguments by name (top level only);

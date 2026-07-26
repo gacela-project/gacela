@@ -21,7 +21,6 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-use function array_slice;
 use function explode;
 use function json_decode;
 use function rtrim;
@@ -38,19 +37,21 @@ final class DebugModuleCommandTest extends TestCase
         $tester = $this->debugModule(['module' => 'CheckoutModule'], $this->withStripeBinding());
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            'Module: CheckoutModule',
-            '  Facade    → ' . CheckoutModuleFacade::class,
-            '  Factory   → ' . CheckoutModuleFactory::class,
-            '  Config    → ' . CheckoutModuleConfig::class,
-            '  Provider  → ' . CheckoutModuleProvider::class,
-            '  Bindings:',
-            sprintf('    %s => %s', PaymentGatewayInterface::class, StripeGateway::class),
-            '  Dependency tree (Facade):',
-            '    (no dependencies)',
-            '',
-            '',
-        ], self::linesOf($tester));
+        $display = $tester->getDisplay();
+
+        self::assertStringContainsString('Module: CheckoutModule', $display);
+
+        // Each pillar reports the class that was resolved for it.
+        self::assertPillarReports($display, 'Facade', CheckoutModuleFacade::class);
+        self::assertPillarReports($display, 'Factory', CheckoutModuleFactory::class);
+        self::assertPillarReports($display, 'Config', CheckoutModuleConfig::class);
+        self::assertPillarReports($display, 'Provider', CheckoutModuleProvider::class);
+
+        self::assertStringContainsString(
+            sprintf('%s => %s', PaymentGatewayInterface::class, StripeGateway::class),
+            $display,
+        );
+        self::assertStringContainsString('(no dependencies)', $display);
     }
 
     public function test_partial_module_marks_missing_types(): void
@@ -58,13 +59,15 @@ final class DebugModuleCommandTest extends TestCase
         $tester = $this->debugModule(['module' => 'GadgetModule'], $this->withStripeBinding());
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            'Module: GadgetModule',
-            '  Facade    → ' . GadgetModuleFacade::class,
-            '  Factory   → (not found)',
-            '  Config    → (not found)',
-            '  Provider  → (not found)',
-        ], array_slice(self::linesOf($tester), 0, 5));
+        $display = $tester->getDisplay();
+
+        self::assertStringContainsString('Module: GadgetModule', $display);
+        self::assertPillarReports($display, 'Facade', GadgetModuleFacade::class);
+
+        // A pillar the module does not define is called out rather than left blank.
+        self::assertPillarReports($display, 'Factory', '(not found)');
+        self::assertPillarReports($display, 'Config', '(not found)');
+        self::assertPillarReports($display, 'Provider', '(not found)');
     }
 
     public function test_reports_an_empty_container_as_having_no_bindings(): void
@@ -72,11 +75,7 @@ final class DebugModuleCommandTest extends TestCase
         $tester = $this->debugModule(['module' => 'CheckoutModule']);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '  Bindings:',
-            '    (none)',
-            '  Dependency tree (Facade):',
-        ], array_slice(self::linesOf($tester), 5, 3));
+        self::assertMatchesRegularExpression('/Bindings:\s*\R\s*\(none\)/', $tester->getDisplay());
     }
 
     public function test_reports_contextual_bindings_next_to_the_plain_ones(): void
@@ -88,36 +87,34 @@ final class DebugModuleCommandTest extends TestCase
         });
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '  Bindings:',
+
+        // A contextual binding names the class it applies to, so it cannot be
+        // mistaken for a plain one.
+        self::assertStringContainsString(
             sprintf(
-                '    %s (contextual for %s) => %s',
+                '%s (contextual for %s) => %s',
                 PaymentGatewayInterface::class,
                 CheckoutModuleFactory::class,
                 StripeGateway::class,
             ),
-            '  Dependency tree (Facade):',
-        ], array_slice(self::linesOf($tester), 5, 3));
+            $tester->getDisplay(),
+        );
     }
 
     public function test_lists_the_dependency_tree_of_a_wired_facade(): void
     {
         $tester = $this->debugModule(['module' => 'WiredModule']);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            'Module: WiredModule',
-            '  Facade    → ' . WiredModuleFacade::class,
-            '  Factory   → (not found)',
-            '  Config    → (not found)',
-            '  Provider  → (not found)',
-            '  Bindings:',
-            '    (none)',
-            '  Dependency tree (Facade):',
-            '    ' . WiredCollaborator::class,
-            '',
-            '',
-        ], self::linesOf($tester));
+        self::assertPillarReports($display, 'Facade', WiredModuleFacade::class);
+
+        // The facade's constructor dependency is reported under the tree.
+        self::assertMatchesRegularExpression(
+            '/Dependency tree \(Facade\):\s*\R\s*' . preg_quote(WiredCollaborator::class, '/') . '/',
+            $display,
+        );
     }
 
     public function test_every_matching_module_is_rendered(): void
@@ -141,10 +138,7 @@ final class DebugModuleCommandTest extends TestCase
         $tester = $this->debugModule(['module' => 'DoesNotExist']);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
-            'No module matches "DoesNotExist".',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('No module matches "DoesNotExist".', $tester->getDisplay());
     }
 
     public function test_json_option_emits_the_whole_module_description(): void
@@ -186,14 +180,15 @@ final class DebugModuleCommandTest extends TestCase
             $this->withStripeBinding(),
         );
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            'Module: CheckoutModule',
-            '  Dependency tree (Facade):',
-            '    (no dependencies)',
-            '',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('Module: CheckoutModule', $display);
+        self::assertStringContainsString('Dependency tree (Facade):', $display);
+
+        // --tree drops the pillar and binding sections entirely.
+        self::assertStringNotContainsString('Facade    →', $display);
+        self::assertStringNotContainsString('Bindings:', $display);
     }
 
     /**
@@ -223,6 +218,19 @@ final class DebugModuleCommandTest extends TestCase
         $tester->execute($input);
 
         return $tester;
+    }
+
+    /**
+     * Asserts the $pillar row reports $class, without pinning the arrow glyph or
+     * the column padding that separates them.
+     */
+    private static function assertPillarReports(string $display, string $pillar, string $class): void
+    {
+        self::assertMatchesRegularExpression(
+            '/' . $pillar . '\b[^\r\n]*' . preg_quote($class, '/') . '/',
+            $display,
+            sprintf('Expected the %s pillar to report "%s"', $pillar, $class),
+        );
     }
 
     /**

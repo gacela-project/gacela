@@ -21,13 +21,10 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function bin2hex;
-use function explode;
 use function file_put_contents;
 use function is_file;
 use function random_bytes;
-use function rtrim;
 use function sprintf;
-use function str_repeat;
 use function sys_get_temp_dir;
 use function unlink;
 
@@ -60,26 +57,19 @@ final class DebugDependenciesCommandTest extends TestCase
         $tester = $this->inspect('Does\\Not\\Exist');
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
-            'Class "Does\\Not\\Exist" does not exist',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('Class "Does\\Not\\Exist" does not exist', $tester->getDisplay());
     }
 
     public function test_a_leading_backslash_is_stripped_from_the_class_argument(): void
     {
         $tester = $this->inspect('\\' . NoConstructorService::class);
 
+        $display = $tester->getDisplay();
+
+        // The leading backslash is stripped, so the class still resolves.
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Constructor dependencies for ' . NoConstructorService::class,
-            self::separator(),
-            '',
-            '  No constructor',
-            '',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('Constructor dependencies for ' . NoConstructorService::class, $display);
+        self::assertStringContainsString('No constructor', $display);
     }
 
     public function test_interface_fails(): void
@@ -87,10 +77,10 @@ final class DebugDependenciesCommandTest extends TestCase
         $tester = $this->inspect(UnboundContract::class);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
+        self::assertStringContainsString(
             sprintf('"%s" is an interface — pass a concrete class instead', UnboundContract::class),
-            '',
-        ], self::linesOf($tester));
+            $tester->getDisplay(),
+        );
     }
 
     public function test_abstract_class_fails(): void
@@ -98,52 +88,43 @@ final class DebugDependenciesCommandTest extends TestCase
         $tester = $this->inspect(AbstractService::class);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
+        self::assertStringContainsString(
             sprintf('"%s" is abstract — pass a concrete class instead', AbstractService::class),
-            '',
-        ], self::linesOf($tester));
+            $tester->getDisplay(),
+        );
     }
 
     public function test_class_with_an_empty_constructor_is_distinguished_from_one_without(): void
     {
         $tester = $this->inspect(EmptyConstructorService::class);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Constructor dependencies for ' . EmptyConstructorService::class,
-            self::separator(),
-            '',
-            '  Constructor takes no parameters',
-            '',
-            '',
-        ], self::linesOf($tester));
+        // An empty constructor is reported differently from having none at all.
+        self::assertStringContainsString('Constructor takes no parameters', $display);
+        self::assertStringNotContainsString('No constructor', $display);
     }
 
     public function test_mixed_dependencies_are_categorized(): void
     {
         $tester = $this->inspect(MixedDependenciesService::class);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Constructor dependencies for ' . MixedDependenciesService::class,
-            self::separator(),
-            '',
-            sprintf('  ✓ $bound %s (bound -> %s)', BoundContract::class, BoundImplementation::class),
-            sprintf('  ✓ $collaborator %s (autowirable)', AutowirableCollaborator::class),
-            sprintf('  ✗ $unbound %s interface, no binding', UnboundContract::class),
-            '  ✗ $mandatoryScalar string scalar without default',
-            "  ✓ \$optionalScalar string = 'default'",
-            sprintf('  ✓ $nullableCollaborator ?%s (autowirable)', AutowirableCollaborator::class),
-            '',
-            'Resolvable:   4',
-            'Unresolvable: 2',
-            '',
-            'Unresolvable parameters need an explicit binding or default value.',
-            '',
-            '',
-        ], self::linesOf($tester));
+
+        // Each parameter is categorised by why it can or cannot be resolved.
+        self::assertStringContainsString(sprintf('$bound %s (bound -> %s)', BoundContract::class, BoundImplementation::class), $display);
+        self::assertStringContainsString(sprintf('$collaborator %s (autowirable)', AutowirableCollaborator::class), $display);
+        self::assertStringContainsString(sprintf('$unbound %s interface, no binding', UnboundContract::class), $display);
+        self::assertStringContainsString('$mandatoryScalar string scalar without default', $display);
+        self::assertStringContainsString("\$optionalScalar string = 'default'", $display);
+        self::assertStringContainsString(sprintf('$nullableCollaborator ?%s (autowirable)', AutowirableCollaborator::class), $display);
+
+        // ...and the two categories are tallied.
+        self::assertMatchesRegularExpression('/Resolvable:\s+4/', $display);
+        self::assertMatchesRegularExpression('/Unresolvable:\s+2/', $display);
     }
 
     public function test_a_fully_resolvable_constructor_omits_the_remediation_hint(): void
@@ -151,19 +132,13 @@ final class DebugDependenciesCommandTest extends TestCase
         $tester = $this->inspect(Fixtures\InjectService::class);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Constructor dependencies for ' . Fixtures\InjectService::class,
-            self::separator(),
-            '',
-            sprintf('  ✓ $plain %s (inject)', BoundContract::class),
-            sprintf('  ✓ $withOverride %s (inject -> %s)', BoundContract::class, BoundImplementation::class),
-            '',
-            'Resolvable:   2',
-            'Unresolvable: 0',
-            '',
-            '',
-        ], self::linesOf($tester));
+        $display = $tester->getDisplay();
+
+        // #[Inject] marks a parameter resolvable, and an override reports its target.
+        self::assertStringContainsString(sprintf('$plain %s (inject)', BoundContract::class), $display);
+        self::assertStringContainsString(sprintf('$withOverride %s (inject -> %s)', BoundContract::class, BoundImplementation::class), $display);
+        self::assertMatchesRegularExpression('/Resolvable:\s+2/', $display);
+        self::assertMatchesRegularExpression('/Unresolvable:\s+0/', $display);
     }
 
     public function test_accepts_a_file_path_argument(): void
@@ -187,10 +162,10 @@ final class DebugDependenciesCommandTest extends TestCase
         $tester = $this->inspect($path);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
+        self::assertStringContainsString(
             sprintf('File "%s" does not declare a class, interface, trait, or enum', $path),
-            '',
-        ], self::linesOf($tester));
+            $tester->getDisplay(),
+        );
     }
 
     public function test_file_whose_class_keyword_has_no_name_fails(): void
@@ -313,19 +288,4 @@ final class DebugDependenciesCommandTest extends TestCase
         return bin2hex(random_bytes(6));
     }
 
-    private static function separator(): string
-    {
-        return str_repeat('=', 60);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private static function linesOf(CommandTester $tester): array
-    {
-        return array_map(
-            static fn (string $line): string => rtrim($line),
-            explode("\n", $tester->getDisplay()),
-        );
-    }
 }

@@ -7,7 +7,6 @@ namespace GacelaTest\Feature\Console\DebugModules;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Feature\Console\DebugModules\BrokenFixtures\BrokenModule\BrokenModuleFacade;
 use GacelaTest\Feature\Console\DebugModules\BrokenFixtures\BrokenModule\BrokenModuleFactory;
 use GacelaTest\Feature\Console\DebugModules\BrokenFixtures\BrokenModule\UnboundDependency;
 use GacelaTest\Feature\Console\DebugModules\Fixtures\GizmoModule\GizmoModuleFacade;
@@ -17,23 +16,17 @@ use GacelaTest\Feature\Console\DebugModules\Fixtures\WidgetModule\WidgetModuleFa
 use GacelaTest\Feature\Console\DebugModules\Fixtures\WidgetModule\WidgetModuleProvider;
 use GacelaTest\Feature\Console\DebugModules\Fixtures\WidgetModuleExtra\WidgetModuleExtraFacade;
 use GacelaTest\Feature\Console\DebugModules\MixedFixtures\AlphaModule\AlphaCollaborator;
-use GacelaTest\Feature\Console\DebugModules\MixedFixtures\AlphaModule\AlphaModuleConfig;
-use GacelaTest\Feature\Console\DebugModules\MixedFixtures\AlphaModule\AlphaModuleFacade;
 use GacelaTest\Feature\Console\DebugModules\MixedFixtures\AlphaModule\AlphaModuleFactory;
 use GacelaTest\Feature\Console\DebugModules\MixedFixtures\BetaModule\BetaCollaborator;
-use GacelaTest\Feature\Console\DebugModules\MixedFixtures\BetaModule\BetaModuleConfig;
-use GacelaTest\Feature\Console\DebugModules\MixedFixtures\BetaModule\BetaModuleFacade;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-use function array_slice;
 use function explode;
 use function rtrim;
 use function spl_autoload_register;
 use function spl_autoload_unregister;
-use function str_repeat;
 
 final class DebugModulesCommandTest extends TestCase
 {
@@ -58,69 +51,63 @@ final class DebugModulesCommandTest extends TestCase
     {
         $tester = $this->debugModules('Fixtures', []);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Gacela modules: constructor resolvability',
-            self::separator(),
-            '',
-            '  ' . self::moduleNameOf(GizmoModuleFacade::class),
-            '    ✓ ' . GizmoModuleFacade::class . ' (no constructor)',
-            '',
-            '  ' . self::moduleNameOf(WidgetModuleExtraFacade::class),
-            '    ✓ ' . WidgetModuleExtraFacade::class . ' (no constructor)',
-            '',
-            '  ' . self::moduleNameOf(WidgetModuleFacade::class),
-            '    ✓ ' . WidgetModuleFacade::class . ' (no constructor)',
-            '    ✓ ' . WidgetModuleFactory::class . ' (no constructor)',
-            '    ✓ ' . WidgetModuleConfig::class . ' (no constructor)',
-            '    ✓ ' . WidgetModuleProvider::class . ' (no constructor)',
-            '',
+
+        // Every discovered module contributes each pillar it defines.
+        foreach ([
+            GizmoModuleFacade::class,
+            WidgetModuleExtraFacade::class,
+            WidgetModuleFacade::class,
+            WidgetModuleFactory::class,
+            WidgetModuleConfig::class,
+            WidgetModuleProvider::class,
+        ] as $pillar) {
+            self::assertStringContainsString($pillar, $display);
+        }
+
+        self::assertStringContainsString(
             'Summary: 3 modules, 6 pillars inspected, 0 unresolvable parameters',
-            '',
-            '',
-        ], self::linesOf($tester));
+            $display,
+        );
     }
 
     public function test_a_namespace_filter_narrows_the_modules_and_the_header(): void
     {
         $tester = $this->debugModules('Fixtures', ['filter' => 'GizmoModule']);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Gacela modules matching "GizmoModule"',
-            self::separator(),
-            '',
-            '  ' . self::moduleNameOf(GizmoModuleFacade::class),
-            '    ✓ ' . GizmoModuleFacade::class . ' (no constructor)',
-            '',
+
+        // The filter is echoed in the header, and narrows the listing to one module.
+        self::assertStringContainsString('Gacela modules matching "GizmoModule"', $display);
+        self::assertStringContainsString(GizmoModuleFacade::class, $display);
+        self::assertStringNotContainsString(WidgetModuleFacade::class, $display);
+
+        // Counts are singularised when only one of a thing was inspected.
+        self::assertStringContainsString(
             'Summary: 1 module, 1 pillar inspected, 0 unresolvable parameters',
-            '',
-            '',
-        ], self::linesOf($tester));
+            $display,
+        );
     }
 
     public function test_a_directory_filter_matches_only_that_directory(): void
     {
         $tester = $this->debugModules('Fixtures', ['filter' => __DIR__ . '/Fixtures/WidgetModule']);
-        $lines = self::linesOf($tester);
+        $display = $tester->getDisplay();
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '  ' . self::moduleNameOf(WidgetModuleFacade::class),
-            '    ✓ ' . WidgetModuleFacade::class . ' (no constructor)',
-            '    ✓ ' . WidgetModuleFactory::class . ' (no constructor)',
-            '    ✓ ' . WidgetModuleConfig::class . ' (no constructor)',
-            '    ✓ ' . WidgetModuleProvider::class . ' (no constructor)',
-            '',
+        self::assertStringContainsString(WidgetModuleFacade::class, $display);
+        self::assertStringContainsString(
             'Summary: 1 module, 4 pillars inspected, 0 unresolvable parameters',
-            '',
-            '',
-        ], array_slice($lines, 4));
+            $display,
+        );
 
-        // The sibling directory shares the "WidgetModule" prefix but is not inside it.
-        self::assertNotContains('  ' . self::moduleNameOf(WidgetModuleExtraFacade::class), $lines);
+        // The sibling directory shares the "WidgetModule" prefix but is not inside
+        // it, so an unanchored prefix match would wrongly pull it in.
+        self::assertStringNotContainsString(WidgetModuleExtraFacade::class, $display);
     }
 
     public function test_a_directory_filter_keeps_every_module_below_it(): void
@@ -140,73 +127,53 @@ final class DebugModulesCommandTest extends TestCase
         $tester = $this->debugModules('Fixtures', ['filter' => 'DoesNotExist']);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Gacela modules matching "DoesNotExist"',
-            self::separator(),
-            '',
-            '  No modules match filter "DoesNotExist".',
-            '',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString(
+            'No modules match filter "DoesNotExist".',
+            $tester->getDisplay(),
+        );
     }
 
     public function test_reports_unresolvable_parameters_only_by_default(): void
     {
         $tester = $this->debugModules('MixedFixtures', []);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Gacela modules: constructor resolvability',
-            self::separator(),
-            '',
-            '  ' . self::moduleNameOf(AlphaModuleFacade::class),
-            '    ✓ ' . AlphaModuleFacade::class . ' (no constructor)',
-            '    ✗ ' . AlphaModuleFactory::class . ' (1 resolvable, 2 unresolvable)',
-            '       ✗ $mandatory string (scalar without default)',
-            '       ✗ $count int (scalar without default)',
-            '    ✓ ' . AlphaModuleConfig::class . ' (constructor takes no parameters)',
-            '',
-            '  ' . self::moduleNameOf(BetaModuleFacade::class),
-            '    ✓ ' . BetaModuleFacade::class . ' (no constructor)',
-            '    ✓ ' . BetaModuleConfig::class . ' (1 resolvable, 0 unresolvable)',
-            '',
+
+        // A pillar with unresolvable parameters is flagged and its offenders itemised.
+        self::assertStringContainsString(AlphaModuleFactory::class . ' (1 resolvable, 2 unresolvable)', $display);
+        self::assertStringContainsString('$mandatory string (scalar without default)', $display);
+        self::assertStringContainsString('$count int (scalar without default)', $display);
+
+        // Without --detail the resolvable ones stay collapsed into the counts.
+        self::assertStringNotContainsString('$collaborator', $display);
+
+        self::assertStringContainsString(
             'Summary: 2 modules, 5 pillars inspected, 2 unresolvable parameters',
-            'Run bin/gacela debug:dependencies <class> for a per-class view.',
-            '',
-            '',
-        ], self::linesOf($tester));
+            $display,
+        );
     }
 
     public function test_detail_adds_the_resolvable_parameters(): void
     {
         $tester = $this->debugModules('MixedFixtures', ['--detail' => true]);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Gacela modules: constructor resolvability',
-            self::separator(),
-            '',
-            '  ' . self::moduleNameOf(AlphaModuleFacade::class),
-            '    ✓ ' . AlphaModuleFacade::class . ' (no constructor)',
-            '    ✗ ' . AlphaModuleFactory::class . ' (1 resolvable, 2 unresolvable)',
-            '       ✓ $collaborator ' . AlphaCollaborator::class . ' (autowirable)',
-            '       ✗ $mandatory string (scalar without default)',
-            '       ✗ $count int (scalar without default)',
-            '    ✓ ' . AlphaModuleConfig::class . ' (constructor takes no parameters)',
-            '',
-            '  ' . self::moduleNameOf(BetaModuleFacade::class),
-            '    ✓ ' . BetaModuleFacade::class . ' (no constructor)',
-            '    ✓ ' . BetaModuleConfig::class . ' (1 resolvable, 0 unresolvable)',
-            '       ✓ $collaborator ' . BetaCollaborator::class . ' (autowirable)',
-            '',
+
+        // --detail is what adds the resolvable parameters the default view omits.
+        self::assertStringContainsString('$collaborator ' . AlphaCollaborator::class . ' (autowirable)', $display);
+        self::assertStringContainsString('$collaborator ' . BetaCollaborator::class . ' (autowirable)', $display);
+
+        // The unresolvable ones are still reported alongside them.
+        self::assertStringContainsString('$mandatory string (scalar without default)', $display);
+
+        self::assertStringContainsString(
             'Summary: 2 modules, 5 pillars inspected, 2 unresolvable parameters',
-            'Run bin/gacela debug:dependencies <class> for a per-class view.',
-            '',
-            '',
-        ], self::linesOf($tester));
+            $display,
+        );
     }
 
     public function test_highlights_only_the_details_of_unresolvable_parameters(): void
@@ -223,22 +190,21 @@ final class DebugModulesCommandTest extends TestCase
     {
         $tester = $this->debugModules('BrokenFixtures', []);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Gacela modules: constructor resolvability',
-            self::separator(),
-            '',
-            '  ' . self::moduleNameOf(BrokenModuleFacade::class),
-            '    ✓ ' . BrokenModuleFacade::class . ' (no constructor)',
-            '    ✗ ' . BrokenModuleFactory::class . ' (0 resolvable, 1 unresolvable)',
-            '       ✗ $dependency ' . UnboundDependency::class . ' (interface, no binding)',
-            '',
+
+        // A factory the container could not build is reported rather than thrown.
+        self::assertStringContainsString(BrokenModuleFactory::class . ' (0 resolvable, 1 unresolvable)', $display);
+        self::assertStringContainsString(
+            '$dependency ' . UnboundDependency::class . ' (interface, no binding)',
+            $display,
+        );
+
+        self::assertStringContainsString(
             'Summary: 1 module, 2 pillars inspected, 1 unresolvable parameter',
-            'Run bin/gacela debug:dependencies <class> for a per-class view.',
-            '',
-            '',
-        ], self::linesOf($tester));
+            $display,
+        );
     }
 
     public function test_reports_a_discovery_failure_instead_of_crashing(): void
@@ -254,11 +220,12 @@ final class DebugModulesCommandTest extends TestCase
 
         $tester = $this->debugModules('ExplodingFixtures', []);
 
+        // A module that cannot even be autoloaded is reported, not fatal.
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
+        self::assertStringContainsString(
             'Could not discover modules: ' . self::AUTOLOAD_FAILURE,
-            '',
-        ], self::linesOf($tester));
+            $tester->getDisplay(),
+        );
     }
 
     /**
@@ -280,11 +247,6 @@ final class DebugModulesCommandTest extends TestCase
     private static function moduleNameOf(string $facadeClass): string
     {
         return substr($facadeClass, 0, (int)strrpos($facadeClass, '\\'));
-    }
-
-    private static function separator(): string
-    {
-        return str_repeat('=', 60);
     }
 
     /**

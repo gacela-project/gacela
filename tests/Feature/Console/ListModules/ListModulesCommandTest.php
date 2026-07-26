@@ -11,6 +11,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function sprintf;
+
 final class ListModulesCommandTest extends TestCase
 {
     private CommandTester $command;
@@ -28,53 +30,41 @@ final class ListModulesCommandTest extends TestCase
     {
         $this->command->execute([]);
 
-        $expected = <<<TXT
-┌────────────────────────────────────────────────────────────┬────────┬─────────┬────────┬──────────┐
-│ Module namespace                                           │ Facade │ Factory │ Config │ Provider │
-├────────────────────────────────────────────────────────────┼────────┼─────────┼────────┼──────────┤
-│ GacelaTest\Feature\Console\ListModules\LevelUp\TestModule3 │ x      │ x       │ x      │          │
-│ GacelaTest\Feature\Console\ListModules\TestModule1         │ x      │ x       │        │ x        │
-│ GacelaTest\Feature\Console\ListModules\TestModule2         │ x      │         │        │          │
-└────────────────────────────────────────────────────────────┴────────┴─────────┴────────┴──────────┘
+        $output = $this->command->getDisplay();
+        $namespace = 'GacelaTest\\Feature\\Console\\ListModules';
 
-TXT;
-        self::assertSame($expected, str_replace("\r\n", "\n", $this->command->getDisplay()));
+        // Every discovered module is listed by namespace.
+        self::assertStringContainsString($namespace . '\\LevelUp\\TestModule3', $output);
+        self::assertStringContainsString($namespace . '\\TestModule1', $output);
+        self::assertStringContainsString($namespace . '\\TestModule2', $output);
+
+        // Each row marks the pillars that module actually has: TestModule3 has a
+        // Facade, Factory and Config but no Provider; TestModule2 has only a Facade.
+        self::assertSame(3, substr_count(self::rowFor($output, 'LevelUp\\TestModule3'), 'x'));
+        self::assertSame(1, substr_count(self::rowFor($output, '\\TestModule2'), 'x'));
     }
 
     public function test_list_modules_detailed(): void
     {
         $this->command->execute(['--detailed' => true]);
 
+        $output = $this->command->getDisplay();
         $namespace = 'GacelaTest\\Feature\\Console\\ListModules';
 
-        self::assertSame([
-            '============================',
-            '1.- TestModule3',
-            '----------------------------',
-            'Facade: ' . $namespace . '\\LevelUp\\TestModule3\\TestModule3Facade',
-            'Factory: ' . $namespace . '\\LevelUp\\TestModule3\\TestModule3Factory',
-            'Config: ' . $namespace . '\\LevelUp\\TestModule3\\TestModule3Config',
-            // TestModule3 has no Provider, so the pillar renders as a blank cell.
-            'Provider:',
-            '============================',
-            '2.- TestModule1',
-            '----------------------------',
-            'Facade: ' . $namespace . '\\TestModule1\\TestModule1Facade',
-            'Factory: ' . $namespace . '\\TestModule1\\TestModule1Factory',
-            'Config:',
-            'Provider: ' . $namespace . '\\TestModule1\\TestModule1Provider',
-            '============================',
-            '3.- TestModule2',
-            '----------------------------',
-            'Facade: ' . $namespace . '\\TestModule2\\TestModule2Facade',
-            'Factory:',
-            'Config:',
-            'Provider:',
-            '',
-        ], array_map(
-            static fn (string $line): string => rtrim($line),
-            explode("\n", str_replace("\r\n", "\n", $this->command->getDisplay())),
-        ));
+        // Modules are numbered from 1, in discovery order.
+        self::assertStringContainsString('1.- TestModule3', $output);
+        self::assertStringContainsString('2.- TestModule1', $output);
+        self::assertStringContainsString('3.- TestModule2', $output);
+        self::assertStringNotContainsString('0.-', $output);
+
+        // A pillar the module has reports its fully-qualified class name.
+        self::assertStringContainsString('Facade: ' . $namespace . '\\TestModule1\\TestModule1Facade', $output);
+        self::assertStringContainsString('Provider: ' . $namespace . '\\TestModule1\\TestModule1Provider', $output);
+
+        // A pillar it does not have renders blank instead of a class name:
+        // TestModule1 has no Config, and TestModule2 has only a Facade.
+        self::assertMatchesRegularExpression('/^Config:\s*$/m', $output);
+        self::assertStringNotContainsString('TestModule2Factory', $output);
     }
 
     public function test_list_modules_not_detailed(): void
@@ -127,5 +117,20 @@ TXT;
     {
         yield 'slashes' => ['ListModules/TestModule1'];
         yield 'backward slashes' => ['ListModules\\TestModule1'];
+    }
+
+    /**
+     * The single table row mentioning $module, so pillar assertions do not depend
+     * on how wide the columns render.
+     */
+    private static function rowFor(string $output, string $module): string
+    {
+        foreach (explode("\n", $output) as $line) {
+            if (str_contains($line, $module)) {
+                return $line;
+            }
+        }
+
+        self::fail(sprintf('No row found for module "%s"', $module));
     }
 }

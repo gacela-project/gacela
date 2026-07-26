@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-use function array_slice;
 use function bin2hex;
 use function explode;
 use function is_dir;
@@ -27,7 +26,6 @@ use function random_bytes;
 use function rmdir;
 use function rtrim;
 use function sprintf;
-use function str_repeat;
 use function sys_get_temp_dir;
 use function unlink;
 
@@ -66,25 +64,11 @@ final class DoctorCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
-            '',
-            'Gacela Doctor',
-            self::separator(),
-            '',
             '✓ cache staleness',
-            '    all cache entries are fresh',
-            '',
             '✓ suffix configuration',
-            '    no modules discovered',
-            '',
             '✓ pillar filenames',
-            '    every pillar class matches its filename',
-            '',
-            '',
-            self::separator(),
             '✓ All checks passed',
-            '',
-            '',
-        ], self::linesOf($tester));
+        ], self::statusLinesOf($tester));
     }
 
     public function test_a_registered_health_check_is_appended_to_the_built_in_ones(): void
@@ -92,16 +76,10 @@ final class DoctorCommandTest extends TestCase
         $tester = $this->doctor([FakeHealthCheck::class]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '✓ module health: FakeModule',
-            '    FakeHealthCheck ran',
-            '',
-            '',
-            self::separator(),
-            '✓ All checks passed',
-            '',
-            '',
-        ], array_slice(self::linesOf($tester), 13));
+
+        // The registered check runs after the built-in ones, and its detail is shown.
+        self::assertSame('✓ module health: FakeModule', self::statusLinesOf($tester)[3]);
+        self::assertStringContainsString('FakeHealthCheck ran', $tester->getDisplay());
     }
 
     public function test_a_health_check_instance_is_accepted_too(): void
@@ -117,19 +95,16 @@ final class DoctorCommandTest extends TestCase
         $tester = $this->doctor([DegradedWithMetadataHealthCheck::class]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode(), 'degraded is a warning, not a failure');
-        self::assertSame([
-            '⚠ module health: DegradedModule',
-            '    Cache is stale',
-            '    stale-entries: 42',
-            '    oldest-entry: 2020-01-01',
-            '    raw-payload: array',
-            '',
-            '',
-            self::separator(),
-            '⚠ Doctor finished with warnings',
-            '',
-            '',
-        ], array_slice(self::linesOf($tester), 13));
+        $display = $tester->getDisplay();
+
+        // A degraded check warns rather than fails, and lists its metadata --
+        // including a non-scalar value, rendered as its type.
+        self::assertContains('⚠ module health: DegradedModule', self::statusLinesOf($tester));
+        self::assertStringContainsString('Cache is stale', $display);
+        self::assertStringContainsString('stale-entries: 42', $display);
+        self::assertStringContainsString('oldest-entry: 2020-01-01', $display);
+        self::assertStringContainsString('raw-payload: array', $display);
+        self::assertContains('⚠ Doctor finished with warnings', self::statusLinesOf($tester));
     }
 
     public function test_an_unhealthy_check_is_an_error_and_lists_its_metadata(): void
@@ -137,18 +112,14 @@ final class DoctorCommandTest extends TestCase
         $tester = $this->doctor([UnhealthyWithMetadataHealthCheck::class]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
-            '✗ module health: UnhealthyMetaModule',
-            '    Broker unreachable',
-            '    host: broker.internal',
-            '    attempts: 3',
-            '',
-            '',
-            self::separator(),
-            '✗ Doctor found errors',
-            '',
-            '',
-        ], array_slice(self::linesOf($tester), 13));
+        $display = $tester->getDisplay();
+
+        // An unhealthy check is an error, and its metadata is listed too.
+        self::assertContains('✗ module health: UnhealthyMetaModule', self::statusLinesOf($tester));
+        self::assertStringContainsString('Broker unreachable', $display);
+        self::assertStringContainsString('host: broker.internal', $display);
+        self::assertStringContainsString('attempts: 3', $display);
+        self::assertContains('✗ Doctor found errors', self::statusLinesOf($tester));
     }
 
     public function test_a_degraded_check_without_metadata_only_shows_its_detail(): void
@@ -156,11 +127,10 @@ final class DoctorCommandTest extends TestCase
         $tester = $this->doctor([DegradedWithoutMetadataHealthCheck::class]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '⚠ module health: DegradedBareModule',
-            '    Slow response times',
-            '',
-        ], array_slice(self::linesOf($tester), 13, 3));
+
+        // With no metadata the check shows its detail and nothing more.
+        self::assertContains('⚠ module health: DegradedBareModule', self::statusLinesOf($tester));
+        self::assertStringContainsString('Slow response times', $tester->getDisplay());
     }
 
     public function test_an_error_after_a_warning_still_fails(): void
@@ -228,17 +198,21 @@ final class DoctorCommandTest extends TestCase
 
         $tester = $this->doctor([]);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Gacela Doctor',
-            self::separator(),
-            '',
-            '⚠ cache staleness',
-            '    missing source: some-cache-key → Never\\Declared\\Klass (source file not found)',
-            '    → run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild',
-            '',
-        ], array_slice(self::linesOf($tester), 0, 8));
+
+        // A cache entry pointing at a class that no longer exists is a warning,
+        // and the check tells the user how to fix it.
+        self::assertContains('⚠ cache staleness', self::statusLinesOf($tester));
+        self::assertStringContainsString(
+            'missing source: some-cache-key → Never\\Declared\\Klass (source file not found)',
+            $display,
+        );
+        self::assertStringContainsString(
+            'run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild',
+            $display,
+        );
     }
 
     public function test_the_filter_argument_narrows_the_module_scoped_checks(): void
@@ -280,9 +254,18 @@ final class DoctorCommandTest extends TestCase
         return $tester;
     }
 
-    private static function separator(): string
+    /**
+     * The status lines only: which checks ran, how each came out, and the verdict.
+     * Keeps the assertions off the separators, blank lines and indentation around them.
+     *
+     * @return list<string>
+     */
+    private static function statusLinesOf(CommandTester $tester): array
     {
-        return str_repeat('=', 60);
+        return array_values(array_filter(
+            self::linesOf($tester),
+            static fn (string $line): bool => preg_match('/^[✓⚠✗] /u', $line) === 1,
+        ));
     }
 
     /**

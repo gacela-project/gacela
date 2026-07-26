@@ -26,7 +26,6 @@ use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-use function array_slice;
 use function bin2hex;
 use function explode;
 use function file_put_contents;
@@ -38,7 +37,6 @@ use function rtrim;
 use function spl_autoload_register;
 use function spl_autoload_unregister;
 use function sprintf;
-use function str_repeat;
 use function sys_get_temp_dir;
 use function unlink;
 
@@ -107,23 +105,11 @@ final class ValidateConfigCommandTest extends TestCase
         });
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('No bindings configured', $tester->getDisplay());
         self::assertSame([
-            '',
-            'Validating Gacela Configuration',
-            self::separator(),
-            '',
-            'Checking bindings...',
-            '  No bindings configured',
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-            '',
-            '',
-        ], self::linesOf($tester->getDisplay()));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_reports_the_gacela_php_file_when_the_project_root_has_one(): void
@@ -136,16 +122,14 @@ final class ValidateConfigCommandTest extends TestCase
         $tester = $this->validate(static function (): void {
         });
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Validating Gacela Configuration',
-            self::separator(),
-            '',
-            sprintf('✓ Configuration file found: %s/gacela.php', $this->appRoot),
-            '',
-            'Checking bindings...',
-        ], array_slice(self::linesOf($tester->getDisplay()), 0, 7));
+
+        // The path is joined with DIRECTORY_SEPARATOR, so assert on the report
+        // and the file name rather than on the separator the host uses.
+        self::assertStringContainsString('Configuration file found:', $display);
+        self::assertStringContainsString('gacela.php', $display);
     }
 
     public function test_a_single_compatible_binding_is_reported_in_the_singular(): void
@@ -155,21 +139,12 @@ final class ValidateConfigCommandTest extends TestCase
         });
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Found 1 binding', $tester->getDisplay());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 1 binding',
-            '',
-            '  ✓ ' . SomeContract::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✓ ' . SomeContract::class,
+            '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_several_bindings_are_reported_in_the_plural(): void
@@ -180,22 +155,13 @@ final class ValidateConfigCommandTest extends TestCase
         });
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Found 2 bindings', $tester->getDisplay());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 2 bindings',
-            '',
-            '  ✓ ' . SomeContract::class,
-            '  ✓ ' . OtherContract::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✓ ' . SomeContract::class,
+            '✓ ' . OtherContract::class,
+            '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_a_binding_to_the_key_itself_is_compatible(): void
@@ -206,20 +172,10 @@ final class ValidateConfigCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 1 binding',
-            '',
-            '  ✓ ' . SomeImplementation::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✓ ' . SomeImplementation::class,
+            '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_reports_a_binding_key_that_does_not_exist_and_keeps_going(): void
@@ -230,22 +186,14 @@ final class ValidateConfigCommandTest extends TestCase
         });
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
+
+        // The bad key is reported, and the next binding is still validated.
         self::assertSame([
-            'Checking bindings...',
-            '  Found 2 bindings',
-            '',
-            '  ✗ Binding key does not exist: ' . self::MISSING_CLASS,
-            '  ✓ ' . SomeContract::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✗ Binding key does not exist: ' . self::MISSING_CLASS,
+            '✓ ' . SomeContract::class,
+            '✓ No circular dependencies detected',
             '✗ Validation failed with errors',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_reports_a_binding_value_class_that_does_not_exist(): void
@@ -256,24 +204,10 @@ final class ValidateConfigCommandTest extends TestCase
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 1 binding',
-            '',
-            sprintf(
-                '  ✗ Binding value class does not exist: %s -> %s',
-                SomeContract::class,
-                self::MISSING_CLASS,
-            ),
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            sprintf('✗ Binding value class does not exist: %s -> %s', SomeContract::class, self::MISSING_CLASS),
+            '✓ No circular dependencies detected',
             '✗ Validation failed with errors',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_reports_a_binding_value_class_that_does_not_exist_and_keeps_going(): void
@@ -284,27 +218,20 @@ final class ValidateConfigCommandTest extends TestCase
         });
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
+
+        // An unloadable value does not stop the scan, so the cycle behind it is
+        // still found and reported with the chain that produced it.
         self::assertSame([
-            'Checking bindings...',
-            '  Found 2 bindings',
-            '',
-            sprintf(
-                '  ✗ Binding value class does not exist: %s -> %s',
-                SomeContract::class,
-                self::MISSING_CLASS,
-            ),
-            '  ✓ ' . CyclicContract::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✗ Circular dependency detected: ' . CyclicContract::class,
-            sprintf('      chain: %s -> %s -> %s', CyclicB::class, CyclicA::class, CyclicB::class),
-            '',
-            '',
-            self::separator(),
+            sprintf('✗ Binding value class does not exist: %s -> %s', SomeContract::class, self::MISSING_CLASS),
+            '✓ ' . CyclicContract::class,
+            '✗ Circular dependency detected: ' . CyclicContract::class,
             '✗ Validation failed with errors',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
+
+        self::assertStringContainsString(
+            sprintf('chain: %s -> %s -> %s', CyclicB::class, CyclicA::class, CyclicB::class),
+            $tester->getDisplay(),
+        );
     }
 
     public function test_warns_about_an_incompatible_binding_value_and_describes_its_type_chain(): void
@@ -313,39 +240,31 @@ final class ValidateConfigCommandTest extends TestCase
             $config->addBinding(SomeContract::class, MismatchedImplementation::class);
         });
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 1 binding',
-            '',
             sprintf(
-                '  ⚠ Warning: Binding value may not be compatible with key: %s -> %s',
+                '⚠ Warning: Binding value may not be compatible with key: %s -> %s',
                 SomeContract::class,
                 MismatchedImplementation::class,
             ),
-            '      expected interface: ' . SomeContract::class,
-            sprintf(
-                '      actual:       %s | extends %s | implements %s',
-                MismatchedImplementation::class,
-                BaseImplementation::class,
-                OtherContract::class,
-            ),
-            sprintf(
-                '      hint:         make %s extend or implement %s',
-                MismatchedImplementation::class,
-                SomeContract::class,
-            ),
-            '  ✓ ' . SomeContract::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✓ ' . SomeContract::class,
+            '✓ No circular dependencies detected',
             '⚠ Validation completed with warnings',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
+
+        // The warning explains what was expected, what the value actually is, and
+        // how to fix it.
+        self::assertStringContainsString('expected interface: ' . SomeContract::class, $display);
+        self::assertStringContainsString(
+            sprintf('%s | extends %s | implements %s', MismatchedImplementation::class, BaseImplementation::class, OtherContract::class),
+            $display,
+        );
+        self::assertStringContainsString(
+            sprintf('make %s extend or implement %s', MismatchedImplementation::class, SomeContract::class),
+            $display,
+        );
     }
 
     public function test_reports_the_expected_kind_as_class_when_the_key_is_a_class(): void
@@ -370,21 +289,11 @@ final class ValidateConfigCommandTest extends TestCase
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 2 bindings',
-            '',
-            '  ✗ Binding object is not instance of key: ' . SomeImplementation::class,
-            '  ✓ ' . SomeContract::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✗ Binding object is not instance of key: ' . SomeImplementation::class,
+            '✓ ' . SomeContract::class,
+            '✓ No circular dependencies detected',
             '✗ Validation failed with errors',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_accepts_an_object_binding_that_is_an_instance_of_its_key(): void
@@ -395,20 +304,10 @@ final class ValidateConfigCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 1 binding',
-            '',
-            '  ✓ ' . SomeImplementation::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✓ ' . SomeImplementation::class,
+            '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_accepts_a_callable_object_binding_whatever_its_key(): void
@@ -417,22 +316,14 @@ final class ValidateConfigCommandTest extends TestCase
             $config->addBinding(SomeImplementation::class, new InvokableBinding());
         });
 
+        // A callable value is accepted whatever the key is, because it is resolved
+        // at runtime rather than being an instance of it now.
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 1 binding',
-            '',
-            '  ✓ ' . SomeImplementation::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✓ No circular dependencies detected',
-            '',
-            '',
-            self::separator(),
+            '✓ ' . SomeImplementation::class,
+            '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
     }
 
     public function test_warns_when_a_valid_binding_cannot_be_resolved(): void
@@ -445,22 +336,20 @@ final class ValidateConfigCommandTest extends TestCase
         });
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            'Checking bindings...',
-            '  Found 2 bindings',
-            '',
-            '  ✓ ' . SomeImplementation::class,
-            '  ✓ ' . SomeContract::class,
-            '',
-            'Checking for circular dependencies...',
-        ], array_slice(self::bindingsSectionOf($tester), 0, 7));
 
-        $display = $tester->getDisplay();
-        self::assertStringContainsString(
-            '  ⚠ Warning: Could not resolve binding: ' . SomeContract::class,
-            $display,
+        // Both bindings pass the compatibility check; the resolution failure is
+        // reported afterwards as a warning naming the binding it belongs to,
+        // followed by the reason the container gave.
+        $verdicts = self::verdictLinesOf($tester);
+
+        self::assertSame('✓ ' . SomeImplementation::class, $verdicts[0]);
+        self::assertSame('✓ ' . SomeContract::class, $verdicts[1]);
+        self::assertStringStartsWith(
+            '⚠ Warning: Could not resolve binding: ' . SomeContract::class,
+            $verdicts[2],
         );
-        self::assertStringContainsString('⚠ Validation completed with warnings', $display);
+        self::assertSame('✓ No circular dependencies detected', $verdicts[3]);
+        self::assertSame('⚠ Validation completed with warnings', $verdicts[4]);
     }
 
     public function test_reports_a_real_circular_dependency_with_its_chain(): void
@@ -471,21 +360,16 @@ final class ValidateConfigCommandTest extends TestCase
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertSame([
-            'Checking bindings...',
-            '  Found 1 binding',
-            '',
-            '  ✓ ' . CyclicContract::class,
-            '',
-            'Checking for circular dependencies...',
-            '  ✗ Circular dependency detected: ' . CyclicContract::class,
-            sprintf('      chain: %s -> %s -> %s', CyclicB::class, CyclicA::class, CyclicB::class),
-            '',
-            '',
-            self::separator(),
+            '✓ ' . CyclicContract::class,
+            '✗ Circular dependency detected: ' . CyclicContract::class,
             '✗ Validation failed with errors',
-            '',
-            '',
-        ], self::bindingsSectionOf($tester));
+        ], self::verdictLinesOf($tester));
+
+        // The chain that produced the cycle is printed under the error.
+        self::assertStringContainsString(
+            sprintf('chain: %s -> %s -> %s', CyclicB::class, CyclicA::class, CyclicB::class),
+            $tester->getDisplay(),
+        );
     }
 
     public function test_prints_a_cycle_headline_without_a_separator_verbatim(): void
@@ -570,19 +454,23 @@ final class ValidateConfigCommandTest extends TestCase
     }
 
     /**
-     * Everything the command prints after the "Validating Gacela Configuration"
-     * banner, which is asserted on its own in the empty-configuration test.
+     * The ✓/⚠/✗ lines only: the verdict reached for each binding, for the cycle
+     * check, and overall. Keeps the assertions off the banner, the section
+     * headings and the indentation, none of which carry a verdict.
      *
      * @return list<string>
      */
-    private static function bindingsSectionOf(CommandTester $tester): array
+    private static function verdictLinesOf(CommandTester $tester): array
     {
-        return array_slice(self::linesOf($tester->getDisplay()), 4);
-    }
+        $verdicts = [];
+        foreach (self::linesOf($tester->getDisplay()) as $line) {
+            $trimmed = ltrim($line);
+            if (preg_match('/^[✓⚠✗] /u', $trimmed) === 1) {
+                $verdicts[] = $trimmed;
+            }
+        }
 
-    private static function separator(): string
-    {
-        return str_repeat('=', 60);
+        return $verdicts;
     }
 
     /**

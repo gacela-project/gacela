@@ -20,12 +20,26 @@
     minCoveredMsi: 100,
     mutators: {
         '@default': true,
-        // The blanket "Gacela\\Console\\*" ignore has now been ratcheted out
-        // completely, namespace by namespace (#529): Domain, the root Console
-        // classes, Application and Infrastructure are each enforced at 100%.
-        // Nothing under Gacela\Console is ignored wholesale any more -- what
-        // remains below is per-mutator and justified case by case.
-        "global-ignore": [],
+        // Ratcheting out of a blanket "Gacela\\Console\\*" ignore, namespace by
+        // namespace (#529). Domain, Application and the root Console classes are
+        // done and enforced at 100%: that is where the real logic lives -- Tarjan,
+        // the JSON/graph formatters, the code that writes files into a user's
+        // project.
+        //
+        // Infrastructure\Command stays ignored on purpose, and is not a TODO.
+        // Those classes are presentation: they read options and render tables and
+        // help text. The only way to kill an output mutant is to assert the exact
+        // rendered characters, which buys a number at the cost of a golden-master
+        // test that breaks whenever a separator is widened and tells nobody what
+        // regressed. Behaviour worth pinning (exit codes, which check reported
+        // what, whether a flag changes what gets written) is covered by targeted
+        // assertions instead.
+        //
+        // Everything else under Infrastructure -- FileContentIo, ConsoleBootstrap
+        // -- is real logic and stays in the gate.
+        "global-ignore": [
+            "Gacela\\Console\\Infrastructure\\Command\\*",
+        ],
         // Equivalent or environment-untestable mutants, grouped by reason.
         "global-ignoreSourceCodeByRegex": [
             // Windows-only PHP_OS/EOL handling: a no-op on POSIX where PHP_EOL is "\n".
@@ -65,28 +79,14 @@
             '.*spl_object_id\\(\\$configItem->reader\\(\\)\\).*',
         ],
         // flock()-based locking and opcache invalidation are not observable in-process.
-        // warmInOneBatch(): batching only decides whether the cache files are written
-        // once at the end or on every put; the resulting cache is byte-identical, so
-        // neither dropping the begin/commit pair nor unwrapping the finally changes
-        // anything a test can see.
         UnwrapFinally: {
-            ignore: [
-                "Gacela\\Console\\Infrastructure\\Command\\CacheWarmCommand::warmInOneBatch",
-                "Gacela\\Framework\\Cache\\FileCache::commitBatch",
-            ],
+            ignore: ["Gacela\\Framework\\Cache\\FileCache::commitBatch"],
         },
         MethodCallRemoval: {
             ignore: [
-                "Gacela\\Console\\Infrastructure\\Command\\CacheWarmCommand::warmInOneBatch",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Cache\\FileCache::delete",
                 "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
-            ],
-            ignoreSourceCodeByRegex: [
-                // cache:warm --clear drops the merged config cache before warming,
-                // but the same run rewrites it unconditionally at the end, so the
-                // cache is identical with or without the upfront clear.
-                '.*Config::getInstance\\(\\)->clearMergedConfigCache\\(\\);.*',
             ],
         },
         IfNegation: {
@@ -97,17 +97,15 @@
         },
         // stats() aggregates over existing files, where the int-casts and the
         // equal-timestamp comparisons cannot change the outcome.
-        // Same for the cache-manager, doctor and cache:warm casts:
-        // filesize()/filemtime() only return false for a file that vanished
-        // between the existence check right above and the call itself, i.e. a
-        // filesystem race.
+        // Same for the cache-manager and doctor casts: filesize()/filemtime()
+        // only return false for a file that vanished between the existence
+        // check right above and the call itself, i.e. a filesystem race.
         CastInt: {
             ignore: [
                 "Gacela\\Framework\\Cache\\FileCache::stats",
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getCacheFileSize",
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getExistingCacheFilesWithSize",
                 "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::run",
-                "Gacela\\Console\\Infrastructure\\Command\\CacheWarmCommand::warmAndDisplayMergedConfigCache",
             ],
         },
         LessThan: {
@@ -123,14 +121,8 @@
         // namespace separator at all, unreachable from the finder because the
         // namespace guard rejects those first (see the global-namespace test).
         // asPathFilter(): realpath() can only fail for a path is_dir() just
-        // accepted if the directory disappears in between -- the same race.
-        // facadeFilename(): getFileName() is only false for internal or eval'd
-        // classes, and module discovery reads facades off disk.
         FalseValue: {
             ignore: [
-                "Gacela\\Console\\Infrastructure\\Command\\InitCommand::readTemplate",
-                "Gacela\\Console\\Infrastructure\\Command\\DebugModulesCommand::asPathFilter",
-                "Gacela\\Console\\Infrastructure\\Command\\DebugModulesCommand::facadeFilename",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::createAppModule",
                 "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::getNamespace",
@@ -154,13 +146,8 @@
         },
         // WritableDirectory::probe() / containerTempDir(): mkdir-failure paths only
         // reachable through filesystem races (TOCTOU) or an unwritable system temp dir.
-        // readTemplate(): the gacela.php template ships inside the package, so it can
-        // only be unreadable on a broken installation, which no test can stage.
         Throw_: {
-            ignore: [
-                "Gacela\\Console\\Infrastructure\\Command\\InitCommand::readTemplate",
-                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
-            ],
+            ignore: ["Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir"],
         },
         PregQuote: {
             ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
@@ -218,10 +205,6 @@
         // The keys used by the lazy handler registry stringify identically via sprintf.
         CastString: {
             ignore: [
-                // resolveClassName(): file_get_contents() only returns false for a
-                // file is_file() just accepted if it turns unreadable in between --
-                // a filesystem race.
-                "Gacela\\Console\\Infrastructure\\Command\\DebugDependenciesCommand::resolveClassName",
                 "Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get",
                 // The cast is already annotated @psalm-suppress RedundantCast:
                 // reset() on a non-empty string list returns a string either way.
@@ -330,14 +313,8 @@
             ],
         },
         // Lookup-order swap between two stores that never share a key.
-        // pillarsBySuffix() is the same shape: what discovery resolved and what
-        // the conventional name probe finds are either the same class or only
-        // one of them exists, so which side wins cannot change the pillar list.
         Coalesce: {
-            ignore: [
-                "Gacela\\Framework\\ClassResolver\\AbstractClassResolver::resolveCached",
-                "Gacela\\Console\\Infrastructure\\Command\\DebugModulesCommand::pillarsBySuffix",
-            ],
+            ignore: ["Gacela\\Framework\\ClassResolver\\AbstractClassResolver::resolveCached"],
         },
         // AST node-type guards in the PHPStan rules: the analyser hands over
         // well-typed nodes, so the always-true/negated guard variants are

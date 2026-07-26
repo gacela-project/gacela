@@ -100,12 +100,7 @@ final class CacheClearCommandTest extends TestCase
         $exitCode = $command->execute([]);
 
         self::assertSame(0, $exitCode);
-        self::assertSame([
-            'Clearing Gacela cache...',
-            '',
-            'No cache files found.',
-            '',
-        ], self::linesOf($command));
+        self::assertStringContainsString('No cache files found.', $command->getDisplay());
     }
 
     public function test_cache_clear_removes_the_merged_config_cache(): void
@@ -116,15 +111,11 @@ final class CacheClearCommandTest extends TestCase
         $command = new CommandTester(new CacheClearCommand());
         $exitCode = $command->execute([]);
 
+        $display = $command->getDisplay();
+
         self::assertSame(0, $exitCode);
-        self::assertSame([
-            'Clearing Gacela cache...',
-            '',
-            '✓ Cleared merged config cache: ' . $this->mergedConfigCacheFile,
-            '',
-            'Cache cleared successfully!',
-            '',
-        ], self::linesOf($command));
+        self::assertStringContainsString('Cleared merged config cache', $display);
+        self::assertStringContainsString($this->mergedConfigCacheFile, $display);
         self::assertFileDoesNotExist($this->mergedConfigCacheFile);
     }
 
@@ -141,31 +132,20 @@ final class CacheClearCommandTest extends TestCase
         $sizes = (new CacheManager())->getExistingCacheFilesWithSize();
         self::assertCount(2, $sizes);
 
-        $expected = ['Clearing Gacela cache...', ''];
-        foreach ($sizes as $file => $size) {
-            $expected[] = sprintf('✓ Cleared cache file: %s (%s)', $file, $size);
-        }
-
-        $expected[] = '';
-        $expected[] = 'Cache cleared successfully!';
-        $expected[] = '';
-
         $command = new CommandTester(new CacheClearCommand());
         $exitCode = $command->execute([]);
+        $display = $command->getDisplay();
 
         self::assertSame(0, $exitCode);
-        self::assertSame($expected, self::linesOf($command));
-    }
 
-    /**
-     * @return list<string>
-     */
-    private static function linesOf(CommandTester $tester): array
-    {
-        return array_map(
-            static fn (string $line): string => rtrim($line),
-            explode("\n", $tester->getDisplay()),
-        );
+        // Every cache file that existed is reported with the size it had...
+        foreach ($sizes as $file => $size) {
+            self::assertStringContainsString(sprintf('Cleared cache file: %s (%s)', $file, $size), $display);
+        }
+
+        // ...and is actually gone afterwards.
+        self::assertFileDoesNotExist($this->cacheFile);
+        self::assertFileDoesNotExist($this->customServicesCacheFile);
     }
 
     private function removeGeneratedCaches(): void

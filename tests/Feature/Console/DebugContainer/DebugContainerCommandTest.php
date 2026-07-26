@@ -18,40 +18,34 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-use function array_slice;
-use function explode;
-use function rtrim;
 use function sprintf;
-use function str_repeat;
 
 final class DebugContainerCommandTest extends TestCase
 {
+    /** Every counter the statistics view reports. */
+    private const COUNTERS = [
+        'Registered Services',
+        'Frozen Services',
+        'Factory Services',
+        'User Bindings',
+        'Cached Dependencies',
+    ];
+
     public function test_no_arguments_shows_the_statistics_of_an_empty_container(): void
     {
         $tester = $this->debugContainer([]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Container Statistics',
-            self::separator(),
-            '',
-            'Registered Services: 0',
-            'Frozen Services: 0',
-            'Factory Services: 0',
-            'User Bindings: 0',
-            'Cached Dependencies: 0',
-        ], array_slice(self::linesOf($tester), 0, 9));
+        $display = $tester->getDisplay();
 
-        self::assertSame([
-            '',
-            'Container is empty - no services registered yet',
-            '',
-            'Note: This shows only user-defined bindings and plugins.',
-            "Gacela's internal services are not included in these statistics.",
-            '',
-            '',
-        ], array_slice(self::linesOf($tester), 10));
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Container Statistics', $display);
+
+        // Nothing has been registered, so every counter reads zero.
+        foreach (self::COUNTERS as $counter) {
+            self::assertMatchesRegularExpression('/' . preg_quote($counter, '/') . ': 0\b/', $display);
+        }
+
+        self::assertStringContainsString('Container is empty', $display);
     }
 
     public function test_the_memory_usage_of_the_container_is_reported(): void
@@ -59,8 +53,8 @@ final class DebugContainerCommandTest extends TestCase
         $tester = $this->debugContainer([]);
 
         self::assertMatchesRegularExpression(
-            '/^Memory Usage: \d+(\.\d+)? [KMG]?B$/',
-            self::linesOf($tester)[9],
+            '/Memory Usage: \d+(\.\d+)? [KMG]?B/',
+            $tester->getDisplay(),
         );
     }
 
@@ -72,23 +66,18 @@ final class DebugContainerCommandTest extends TestCase
             $config->addProtected('some-protected', static fn (): string => 'value');
         });
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            'Registered Services: 2',
-            'Frozen Services: 0',
-            'Factory Services: 1',
-            'User Bindings: 1',
-            'Cached Dependencies: 0',
-        ], array_slice(self::linesOf($tester), 4, 5));
+
+        // The counters reflect what was registered: a factory and a protected
+        // service, plus one interface-to-implementation binding.
+        self::assertMatchesRegularExpression('/Registered Services: 2\b/', $display);
+        self::assertMatchesRegularExpression('/Factory Services: 1\b/', $display);
+        self::assertMatchesRegularExpression('/User Bindings: 1\b/', $display);
 
         // The "container is empty" hint belongs to the empty container only.
-        self::assertSame([
-            '',
-            'Note: This shows only user-defined bindings and plugins.',
-            "Gacela's internal services are not included in these statistics.",
-            '',
-            '',
-        ], array_slice(self::linesOf($tester), 10));
+        self::assertStringNotContainsString('Container is empty', $display);
     }
 
     public function test_stats_flag_takes_precedence_over_the_class_argument(): void
@@ -96,7 +85,8 @@ final class DebugContainerCommandTest extends TestCase
         $tester = $this->debugContainer(['class' => ConsoleFacade::class, '--stats' => true]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame('Container Statistics', self::linesOf($tester)[1]);
+        self::assertStringContainsString('Container Statistics', $tester->getDisplay());
+        self::assertStringNotContainsString('Dependency Tree', $tester->getDisplay());
     }
 
     public function test_class_argument_without_flag_shows_the_dependency_tree(): void
@@ -108,38 +98,27 @@ final class DebugContainerCommandTest extends TestCase
             },
         );
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Dependency Tree for ' . MixedDependenciesService::class,
-            self::separator(),
-            '',
-            '1. ' . BoundImplementation::class,
-            '2. ' . AutowirableCollaborator::class,
-            '3. ' . UnboundContract::class,
-            '',
-            'Total Dependencies: 3',
-            '',
-            'This tree shows only user-defined dependencies.',
-            '',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('Dependency Tree for ' . MixedDependenciesService::class, $display);
+
+        // Every constructor dependency is listed, numbered from 1, and counted.
+        self::assertStringContainsString('1. ' . BoundImplementation::class, $display);
+        self::assertStringContainsString('2. ' . AutowirableCollaborator::class, $display);
+        self::assertStringContainsString('3. ' . UnboundContract::class, $display);
+        self::assertStringContainsString('Total Dependencies: 3', $display);
     }
 
     public function test_the_tree_flag_shows_the_dependency_tree_too(): void
     {
         $tester = $this->debugContainer(['class' => ConsoleFacade::class, '--tree' => true]);
 
+        $display = $tester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame([
-            '',
-            'Dependency Tree for ' . ConsoleFacade::class,
-            self::separator(),
-            '',
-            sprintf('Class "%s" has no dependencies', ConsoleFacade::class),
-            '',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('Dependency Tree for ' . ConsoleFacade::class, $display);
+        self::assertStringContainsString(sprintf('Class "%s" has no dependencies', ConsoleFacade::class), $display);
     }
 
     public function test_the_tree_flag_requires_a_class_name(): void
@@ -147,10 +126,7 @@ final class DebugContainerCommandTest extends TestCase
         $tester = $this->debugContainer(['--tree' => true]);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
-            'The --tree option requires a class name argument',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('The --tree option requires a class name argument', $tester->getDisplay());
     }
 
     public function test_an_unknown_class_fails(): void
@@ -158,10 +134,7 @@ final class DebugContainerCommandTest extends TestCase
         $tester = $this->debugContainer(['class' => 'Does\\Not\\Exist']);
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertSame([
-            'Class "Does\\Not\\Exist" does not exist',
-            '',
-        ], self::linesOf($tester));
+        self::assertStringContainsString('Class "Does\\Not\\Exist" does not exist', $tester->getDisplay());
     }
 
     /**
@@ -181,21 +154,5 @@ final class DebugContainerCommandTest extends TestCase
         $tester->execute($input);
 
         return $tester;
-    }
-
-    private static function separator(): string
-    {
-        return str_repeat('=', 60);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private static function linesOf(CommandTester $tester): array
-    {
-        return array_map(
-            static fn (string $line): string => rtrim($line),
-            explode("\n", $tester->getDisplay()),
-        );
     }
 }

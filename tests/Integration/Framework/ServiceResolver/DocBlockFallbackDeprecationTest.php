@@ -10,6 +10,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeAttributeCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFqcnDocBlockCommand;
 use PHPUnit\Framework\TestCase;
 
 use function restore_error_handler;
@@ -51,6 +52,32 @@ final class DocBlockFallbackDeprecationTest extends TestCase
         self::assertCount(1, $notices);
         self::assertStringContainsString('FakeCommand::getFacade()', $notices[0]);
         self::assertStringContainsString('#[ServiceMap(', $notices[0]);
+    }
+
+    /**
+     * The two fallbacks are separate call sites reporting different strategies.
+     * `FakeCommand` names its pillar unqualified, so it resolves through the
+     * use-statement scan; this one names it fully-qualified and stops at the
+     * docblock. Without both, one call site is never executed.
+     */
+    public function test_resolving_from_a_fully_qualified_docblock_names_the_docblock_strategy(): void
+    {
+        $notices = $this->capturingDeprecations(static function (): void {
+            (new FakeFqcnDocBlockCommand())->getFacade();
+        });
+
+        self::assertCount(1, $notices);
+        self::assertStringContainsString('@method docblock', $notices[0]);
+    }
+
+    public function test_the_use_statement_scan_reports_its_own_strategy(): void
+    {
+        $notices = $this->capturingDeprecations(static function (): void {
+            (new FakeCommand())->getFacade();
+        });
+
+        self::assertCount(1, $notices);
+        self::assertStringContainsString("the file's use statements", $notices[0]);
     }
 
     public function test_declaring_the_pillar_with_the_attribute_raises_nothing(): void

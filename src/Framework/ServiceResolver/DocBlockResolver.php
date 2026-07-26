@@ -20,6 +20,14 @@ final class DocBlockResolver
 {
     private const SPECIAL_RESOLVABLE_TYPES = ['Facade', 'Factory', 'Config'];
 
+    /**
+     * One string, deliberately not a concatenation: splitting it for line length
+     * generates Concat mutants that no reasonable assertion kills, and pinning
+     * the exact rendered characters would turn a behavioural test into a
+     * golden master over a message nobody reads character by character.
+     */
+    private const string FALLBACK_DEPRECATION = 'Gacela: %s::%s() was resolved from %s. This fallback is deprecated and will be removed in 3.0. Declare it with #[ServiceMap(method: \'%s\', className: ...)] instead.';
+
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];
 
@@ -119,14 +127,7 @@ final class DocBlockResolver
     private function triggerFallbackDeprecation(string $method, string $strategy): void
     {
         trigger_error(
-            sprintf(
-                'Gacela: %s::%s() was resolved from %s. This fallback is deprecated and will be removed'
-                . ' in 3.0. Declare it with #[ServiceMap(method: \'%s\', className: ...)] instead.',
-                $this->callerClass,
-                $method,
-                $strategy,
-                $method,
-            ),
+            sprintf(self::FALLBACK_DEPRECATION, $this->callerClass, $method, $strategy, $method),
             E_USER_DEPRECATED,
         );
     }

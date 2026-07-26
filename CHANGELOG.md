@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- `Gacela::resetCache()` now drops the memoized "this class does not exist" answers. `ClassValidator` caches the *negative* result of `class_exists()`, so a class that was not loadable when first resolved stayed "missing" for the life of the process — `Gacela::resetCache()` did not clear it, because `ClassValidator::resetCache()` was reachable only from its own unit test. Affects any process where the set of loadable classes changes after the first resolution: long-running workers (RoadRunner, Swoole, queue consumers) that re-bootstrap, code generation, and `cache:warm` emitting classes. Positive answers are kept — a class that exists cannot stop existing, so they never go stale
+
 ## [1.21.0](https://github.com/gacela-project/gacela/compare/1.20.0...1.21.0) - 2026-07-26
 
 Static analysis now **types** the pillar accessors instead of suppressing them, and the

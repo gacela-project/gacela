@@ -9,8 +9,9 @@ use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeAttributeCommand;
-use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFqcnDocBlockCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeRepeatedCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeUseStatementCommand;
 use PHPUnit\Framework\TestCase;
 
 use function restore_error_handler;
@@ -32,10 +33,7 @@ final class DocBlockFallbackDeprecationTest extends TestCase
 {
     protected function setUp(): void
     {
-        $this->resetGacela();
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->setFileCache(false);
-        });
+        $this->bootstrapFresh();
     }
 
     protected function tearDown(): void
@@ -43,14 +41,21 @@ final class DocBlockFallbackDeprecationTest extends TestCase
         $this->resetGacela();
     }
 
-    public function test_resolving_from_a_docblock_raises_a_deprecation(): void
+    /**
+     * Each test below uses its **own** fixture class. The notice is emitted once
+     * per caller-and-method for the life of the process, so two tests sharing a
+     * fixture would make the second one depend on running first -- and this
+     * suite runs in random order.
+     */
+    public function test_the_use_statement_scan_reports_its_own_strategy(): void
     {
         $notices = $this->capturingDeprecations(static function (): void {
-            (new FakeCommand())->getFacade();
+            (new FakeUseStatementCommand())->getFacade();
         });
 
         self::assertCount(1, $notices);
-        self::assertStringContainsString('FakeCommand::getFacade()', $notices[0]);
+        self::assertStringContainsString('FakeUseStatementCommand::getFacade()', $notices[0]);
+        self::assertStringContainsString("the file's use statements", $notices[0]);
         self::assertStringContainsString('#[ServiceMap(', $notices[0]);
     }
 
@@ -70,14 +75,23 @@ final class DocBlockFallbackDeprecationTest extends TestCase
         self::assertStringContainsString('@method docblock', $notices[0]);
     }
 
-    public function test_the_use_statement_scan_reports_its_own_strategy(): void
+    /**
+     * The resolved class is memoized, so a cache reset would otherwise re-emit
+     * an identical message and re-charge sprintf() to cold resolution --
+     * measured at +28.59% on `FileCacheBench::bench_without_cache` before this
+     * was deduped.
+     */
+    public function test_the_notice_is_emitted_once_per_caller_and_method(): void
     {
-        $notices = $this->capturingDeprecations(static function (): void {
-            (new FakeCommand())->getFacade();
+        $notices = $this->capturingDeprecations(function (): void {
+            $command = new FakeRepeatedCommand();
+            $command->getFacade();
+
+            $this->bootstrapFresh();
+            (new FakeRepeatedCommand())->getFacade();
         });
 
-        self::assertCount(1, $notices);
-        self::assertStringContainsString("the file's use statements", $notices[0]);
+        self::assertCount(1, $notices, 'the same caller and method must report once per process');
     }
 
     public function test_declaring_the_pillar_with_the_attribute_raises_nothing(): void
@@ -87,6 +101,14 @@ final class DocBlockFallbackDeprecationTest extends TestCase
         });
 
         self::assertSame([], $notices, 'the attribute is the primary path and must stay silent');
+    }
+
+    private function bootstrapFresh(): void
+    {
+        $this->resetGacela();
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+        });
     }
 
     /**

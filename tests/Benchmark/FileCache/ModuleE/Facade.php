@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\FileCache\ModuleE;
 
 use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Benchmark\FileCache\ModuleE\Infra\EntityManager;
 use GacelaTest\Benchmark\FileCache\ModuleE\Infra\Repository;
@@ -15,6 +16,8 @@ use GacelaTest\Benchmark\FileCache\ModuleE\Infra\Repository;
  * @method Repository getRepository()
  * @method EntityManager getEntityManager()
  */
+#[ServiceMap(method: 'getRepository', className: Repository::class)]
+#[ServiceMap(method: 'getEntityManager', className: EntityManager::class)]
 final class Facade extends AbstractFacade
 {
     use ServiceResolverAwareTrait;

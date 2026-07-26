@@ -31,6 +31,9 @@ final class DocBlockResolver
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];
 
+    /** @var array<string,true> caller-and-method pairs already reported as deprecated */
+    private static array $warned = [];
+
     /**
      * @param class-string $callerClass
      */
@@ -126,6 +129,18 @@ final class DocBlockResolver
      */
     private function triggerFallbackDeprecation(string $method, string $strategy): void
     {
+        // Once per caller-and-method for the life of the process. The resolved
+        // class is memoized, so without this the notice would fire again on
+        // every cache reset -- repeating an identical message, and charging
+        // sprintf() to a cold-resolution path that measured +28.59% on
+        // FileCacheBench::bench_without_cache when it did.
+        $key = $this->callerClass . '::' . $method;
+        if (isset(self::$warned[$key])) {
+            return;
+        }
+
+        self::$warned[$key] = true;
+
         trigger_error(
             sprintf(self::FALLBACK_DEPRECATION, $this->callerClass, $method, $strategy, $method),
             E_USER_DEPRECATED,

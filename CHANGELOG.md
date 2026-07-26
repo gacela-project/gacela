@@ -2,22 +2,31 @@
 
 ## Unreleased
 
+Static analysis now **types** the pillar accessors instead of suppressing them, and the
+console gained checks for the mistakes that were previously silent. Both are worth having
+before you migrate to 2.0.
+
 ### Added
 
-- `doctor` now reports pillar classes whose file is named differently from the class. Gacela resolves pillars by *filename* suffix, so a class renamed without its file stops resolving with nothing pointing at the cause — the step people miss migrating `AbstractDependencyProvider` to `AbstractProvider`, where `DependencyProvider.php` must also become `Provider.php`
+- `gacela init` scaffolds a project's `gacela.php` — the one file you had to copy from the docs before anything ran. Refuses to overwrite unless `--force`
+- PHPStan **types** `getFacade()`/`getFactory()`/`getConfig()` from `#[ServiceMap]` instead of suppressing them. A suppressed call is not a typed one: it evaluated to `mixed`, which switched off checking of everything reached *through* the accessor. Nothing to configure beyond the existing `phpstan-gacela.neon` include; the suppression stays as a fallback for classes declaring neither `#[ServiceMap]` nor a `@method` docblock, and goes away in 2.0
+- PHPStan types `getProvidedDependency(Foo::class)` as `Foo`, so the class-string form needs no hand-written `@var`. String keys stay `mixed`
+- `FacadeInterfaceInSyncRule` reports public Facade methods missing from the Facade's own `*FacadeInterface` — drift that is invisible until someone reads both files, by which point the fix is breaking. Only fires for a facade that implements the interface named after it
+- `doctor` reports pillar classes whose filename does not match the class. Pillars resolve by *filename* suffix, so migrating `AbstractDependencyProvider` means renaming `DependencyProvider.php` to `Provider.php` too — miss it and the module silently stops resolving
 - `doctor --strict` exits non-zero on warnings as well as errors, so it can gate CI
-- `gacela init` scaffolds a project's `gacela.php`. It was the one file you had to hand-write from the docs before anything ran; `composer require` → `gacela init` → `make:module` now gets you to working code. Refuses to overwrite an existing file unless `--force`
-- PHPStan now types `getProvidedDependency(Foo::class)` as `Foo`, so the class-string form needs no hand-written `@var`. String keys still return `mixed` — nothing in the type system says what they resolve to, and a guess the analyser trusts is worse than `mixed`. Documented alongside it: a Factory can declare its dependencies in its **constructor**, since pillars resolve through the container and autowiring applies to the Factory itself. That already worked and is now covered by a test
-- `debug:graph --check` exits non-zero on a module dependency cycle. `--allowed-cycles=file.json` records the cycles a reviewer has accepted, each with a mandatory `reason`. The allow list is self-invalidating: an entry that no longer matches a real cycle fails just as loudly as an undeclared cycle, because an allow-list that outlives what it allows stops being a record and becomes a mute button. `debug:graph` without `--check` stays exit-code-neutral
-- `FacadeInterfaceInSyncRule` reports public Facade methods missing from the Facade's own `*FacadeInterface`. Only that direction can drift — PHP already rejects a class that fails to implement an interface method — and it drifts silently until someone reads both files side by side, by which point the correction is breaking. Fires only for a facade that explicitly implements the interface named after it, so facades without one are unaffected
-- PHPStan now **types** `getFacade()`/`getFactory()`/`getConfig()` from the `#[ServiceMap]` attribute that already declares them, instead of suppressing them as undefined methods. A suppressed call is not a typed one: it evaluated to `mixed`, which switched off analysis of the whole chain behind the accessor — a typo in a facade method reached through `getFacade()` produced no error at all. Nothing to configure beyond the existing `phpstan-gacela.neon` include; the suppression stays as a fallback for classes declaring neither `#[ServiceMap]` nor a `@method` docblock, and is scheduled for removal in 2.0
-- `debug:graph --compare-to=base-graph.json` diffs the module dependency graph against a previously captured one and reports new/removed dependencies as markdown with a mermaid diagram. Writes nothing when the graph is unchanged, so CI can post a comment only when a pull request actually moves a module boundary
+- `debug:graph --check` exits non-zero on a module dependency cycle. `--allowed-cycles=file.json` records the ones a reviewer accepted, each with a mandatory `reason`, and an entry that no longer matches a real cycle fails just as loudly — an allow-list that outlives what it allows is a mute button. Without `--check` the command stays exit-code-neutral
+- `debug:graph --compare-to=base-graph.json` diffs against a previously captured graph and reports the change as markdown with a mermaid diagram. Writes nothing when the graph is unchanged, so CI can comment only when a pull request actually moves a boundary
 
 ### Changed
 
-- `debug:container <class>` no longer prints the "Indentation shows dependency depth" note. The container reports a flat dependency list, so nothing was ever indented and the note described a format that did not exist
-- `validate:config` reports a binding whose class cannot even be autoloaded as `Could not resolve binding: <key> (<error>)` instead of a separate "Could not check circular dependencies" line, so the failure is attributed to the binding that caused it
-- `profile:report --format=json` and `debug:config` now raise a `JsonException` instead of silently printing an empty value when their payload cannot be encoded
+- `profile:report --format=json` and `debug:config` now raise a `JsonException` instead of printing an empty value when their payload cannot be encoded
+- `validate:config` attributes an unloadable binding class to that binding (`Could not resolve binding: <key> (<error>)`) instead of reporting a separate "Could not check circular dependencies" line
+- `debug:container <class>` no longer prints "Indentation shows dependency depth" — the container returns a flat list, so nothing was ever indented
+
+### Documentation
+
+- A Factory can declare its dependencies in its **constructor**: pillars resolve through the container, so autowiring applies to the Factory itself. This already worked and is now documented and tested
+- `docs/rfc/0002` inventories every way to obtain a dependency (25 paths across 4 intents), as the basis for naming one primary path per intent in 2.0
 
 ## [1.20.0](https://github.com/gacela-project/gacela/compare/1.19.0...1.20.0) - 2026-07-25
 

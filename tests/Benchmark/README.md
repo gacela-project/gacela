@@ -32,9 +32,10 @@ compared against a base run that did a different amount of work in a different
 order; that mismatch alone moved a disk-bound subject by ~50%.
 
 Rule of thumb: if the subject's average time is below ~0.2μs, it belongs in
-`micro` — at that scale timer quantization alone moves the mode by ~10%, which
-would false-fail the gate on unrelated PRs. Subjects in the 0.2–1μs range can
-stay gated when their `rstdev` holds below ~3% (e.g. the warm-resolve benches).
+`informational` and is tagged `micro` — at that scale timer quantization alone
+moves the mode by ~10%, which would false-fail the gate on unrelated PRs.
+Subjects in the 0.2–1μs range can stay gated when their `rstdev` holds below
+~3% (e.g. the warm-resolve benches).
 
 **`rstdev` is not sufficient on its own.** It measures spread *within* one run,
 but the gate compares two runs made at different moments. An I/O-bound subject

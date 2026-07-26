@@ -9,12 +9,26 @@
 # Kill it by tightening the assertion, or -- when the mutant is genuinely
 # equivalent -- add a per-mutator `ignore` in infection.json5 with the reason,
 # which is the convention the existing entries follow.
+#
+# Two shapes, because a full run costs ~6.5 minutes and that is too slow to sit
+# on every pull request:
+#
+#   - pull requests mutate only the lines the branch changed. This is the run
+#     that matters: it fails on the PR that introduces an unkilled mutant, while
+#     the author still has the context to fix it.
+#   - a nightly (and every push to main) runs the whole suite at 100%. Drift is
+#     what this workflow was created for -- the score fell below the bar twice
+#     before anything enforced it -- and an incremental run cannot see a mutant
+#     that a *dependency* change resurrected in untouched code.
 
 on:
   pull_request:
   push:
     branches:
       - main
+  schedule:
+    # 03:17 UTC, off the hour to avoid the scheduling stampede.
+    - cron: '17 3 * * *'
 
 name: Infection
 
@@ -23,8 +37,65 @@ permissions:
 
 jobs:
 
-  mutation-guard:
-    name: "Mutation testing (min MSI 100%)"
+  incremental:
+    name: "Mutation testing (changed lines)"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Needs the base branch present to diff against.
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          # Infection needs line coverage to know which tests reach a mutant.
+          coverage: xdebug
+          tools: composer
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: "infection-php-8.4-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: "infection-php-8.4-"
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Assert every mutant on a changed line is killed
+        env:
+          XDEBUG_MODE: coverage
+        # --git-diff-lines restricts mutation to added/modified lines;
+        # --only-covering-test-cases narrows each mutant's run to the tests that
+        # actually cover it, using coverage data.
+        #
+        # --map-source-class-to-test is deliberately NOT used. It picks test
+        # files by *naming convention* (Foo -> FooTest), so a test named after
+        # the behaviour rather than the class is dropped from the coverage run
+        # and its mutants come back as escaped or uncovered. Measured on this
+        # very branch: 3 false results with it, 5/5 killed without it. A gate
+        # that reports mutants the suite does kill is worse than a slow one.
+        run: |
+          vendor/bin/infection \
+            --threads=max \
+            --min-msi=100 \
+            --min-covered-msi=100 \
+            --git-diff-lines \
+            --git-diff-base=origin/${{ github.base_ref }} \
+            --only-covering-test-cases \
+            --logger-github \
+            --no-progress \
+            --show-mutations
+
+  full:
+    name: "Mutation testing (full, min MSI 100%)"
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +103,6 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
-          # Infection needs line coverage to know which tests reach a mutant.
           coverage: xdebug
           tools: composer
 

@@ -19,7 +19,7 @@ and one domain group:
 | `micro` | marker | Sub-microsecond subject — the most common *reason* to be informational. Also selects the subset locally. |
 | `bootstrap` \| `resolve` \| `config` \| `container` \| `cache` \| `cacheable` | domain | For running subsets locally. |
 
-CI runs `phpbench run --ref=base-gate --group=gate` as the blocking step and
+CI runs `phpbench run --ref=base_gate --group=gate` as the blocking step and
 `--group=informational` as a `continue-on-error` step.
 
 A subject with no gating group runs in **neither** CI step and is silently
@@ -27,7 +27,7 @@ unmeasured — `CacheableBench` sat in that hole until it was given
 `informational`.
 
 Both sides of the comparison must run **the same group**. The baseline stores
-one tag per group (`base-gate`, `base-info`) precisely so a head run is never
+one tag per group (`base_gate`, `base_info`) precisely so a head run is never
 compared against a base run that did a different amount of work in a different
 order; that mismatch alone moved a disk-bound subject by ~50%.
 
@@ -106,8 +106,8 @@ Benches share one process per subject, and the repository shares one machine:
    composer phpbench                                       # full suite
    vendor/bin/phpbench run --group=gate --report=aggregate
    # simulate the CI guard -- same group on both sides
-   vendor/bin/phpbench run --tag=base-gate --store --group=gate
-   vendor/bin/phpbench run --ref=base-gate --group=gate
+   vendor/bin/phpbench run --tag=base_gate --store --group=gate
+   vendor/bin/phpbench run --ref=base_gate --group=gate
    ```
 
 ## Current inventory

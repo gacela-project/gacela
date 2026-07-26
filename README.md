@@ -9,12 +9,6 @@
   <a href="https://github.com/gacela-project/gacela/actions/workflows/tests.yml">
     <img src="https://github.com/gacela-project/gacela/actions/workflows/tests.yml/badge.svg" alt="GitHub Build Status">
   </a>
-  <a href="https://scrutinizer-ci.com/g/gacela-project/gacela/?branch=main">
-    <img src="https://scrutinizer-ci.com/g/gacela-project/gacela/badges/quality-score.png?b=main" alt="Scrutinizer Code Quality">
-  </a>
-  <a href="https://scrutinizer-ci.com/g/gacela-project/gacela/?branch=main">
-    <img src="https://scrutinizer-ci.com/g/gacela-project/gacela/badges/coverage.png?b=main" alt="Scrutinizer Code Coverage">
-  </a>
   <a href="https://shepherd.dev/github/gacela-project/gacela">
     <img src="https://shepherd.dev/github/gacela-project/gacela/coverage.svg" alt="Psalm Type-coverage Status">
   </a>

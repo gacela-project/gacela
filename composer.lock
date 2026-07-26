@@ -4,33 +4,35 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c24b1f9cafe4d30bae81bc489e5626a3",
+    "content-hash": "41c7ed6e07610dee6764304a47c42167",
     "packages": [
         {
             "name": "gacela-project/container",
-            "version": "0.10.0",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gacela-project/container.git",
-                "reference": "db13556a11f6892c852ef0f26a9915aee2a3ba4e"
+                "reference": "8bbb5b8ab80035bc4c15dd34e34a588df4bc5edd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gacela-project/container/zipball/db13556a11f6892c852ef0f26a9915aee2a3ba4e",
-                "reference": "db13556a11f6892c852ef0f26a9915aee2a3ba4e",
+                "url": "https://api.github.com/repos/gacela-project/container/zipball/8bbb5b8ab80035bc4c15dd34e34a588df4bc5edd",
+                "reference": "8bbb5b8ab80035bc4c15dd34e34a588df4bc5edd",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1",
-                "psr/container": ">=1.1"
+                "php": ">=8.3",
+                "psr/container": "^1.1 || ^2.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.75",
-                "phpstan/phpstan": "^1.12",
-                "phpunit/phpunit": "^10.5",
-                "psalm/plugin-phpunit": "^0.18",
-                "symfony/var-dumper": "^5.4",
-                "vimeo/psalm": "^5.26"
+                "infection/infection": "^0.31",
+                "phpbench/phpbench": "^1.4",
+                "phpstan/phpstan": "^2.2",
+                "phpunit/phpunit": "^12.5",
+                "psalm/plugin-phpunit": "^0.19",
+                "symfony/var-dumper": "^6.4 || ^7.0",
+                "vimeo/psalm": "^6.16"
             },
             "type": "library",
             "autoload": {
@@ -64,7 +66,7 @@
             ],
             "support": {
                 "issues": "https://github.com/gacela-project/container/issues",
-                "source": "https://github.com/gacela-project/container/tree/0.10.0"
+                "source": "https://github.com/gacela-project/container/tree/1.0.0"
             },
             "funding": [
                 {
@@ -72,7 +74,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-07-19T22:59:58+00:00"
+            "time": "2026-07-26T15:00:33+00:00"
         },
         {
             "name": "psr/container",

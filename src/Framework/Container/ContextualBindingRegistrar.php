@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Container;
 
-use Gacela\Container\Container as GacelaContainer;
+use Gacela\Container\ContainerInterface as GacelaContainerInterface;
 
 use function class_exists;
 use function interface_exists;
@@ -25,7 +25,7 @@ final class ContextualBindingRegistrar
      * @param class-string|string $abstract class name, or a '$parameterName' for scalar bindings
      */
     public static function register(
-        GacelaContainer $container,
+        GacelaContainerInterface $container,
         string $concrete,
         string $abstract,
         mixed $implementation,

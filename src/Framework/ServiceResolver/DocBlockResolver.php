@@ -12,6 +12,9 @@ use ReflectionAttribute;
 use ReflectionClass;
 
 use function sprintf;
+use function trigger_error;
+
+use const E_USER_DEPRECATED;
 
 final class DocBlockResolver
 {
@@ -83,11 +86,15 @@ final class DocBlockResolver
 
         $className = $this->searchClassOverDocBlock($reflectionClass, $method);
         if (class_exists($className)) {
+            $this->triggerFallbackDeprecation($method, '@method docblock');
+
             return $className;
         }
 
         $className = $this->searchClassOverUseStatements($reflectionClass, $className);
         if (class_exists($className)) {
+            $this->triggerFallbackDeprecation($method, "the file's use statements");
+
             return $className;
         }
 
@@ -96,6 +103,32 @@ final class DocBlockResolver
         }
 
         throw MissingClassDefinitionException::missingDefinition($this->callerClass, $method, $className);
+    }
+
+    /**
+     * Resolving a pillar from a `@method` docblock, or by scanning the caller's
+     * `use` statements, is deprecated. Declare the pillar with `#[ServiceMap]`
+     * instead: the attribute states the same fact where a reader and an
+     * analyser can both see it, rather than leaving it to be re-derived from
+     * source at runtime.
+     *
+     * Fires on a cold resolve only -- the answer is memoized per
+     * caller-and-method, so a warm cache stays silent. Run `gacela cache:clear`
+     * (or develop with the file cache off) to surface every occurrence.
+     */
+    private function triggerFallbackDeprecation(string $method, string $strategy): void
+    {
+        trigger_error(
+            sprintf(
+                'Gacela: %s::%s() was resolved from %s. This fallback is deprecated and will be removed'
+                . ' in 3.0. Declare it with #[ServiceMap(method: \'%s\', className: ...)] instead.',
+                $this->callerClass,
+                $method,
+                $strategy,
+                $method,
+            ),
+            E_USER_DEPRECATED,
+        );
     }
 
     /**

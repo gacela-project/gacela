@@ -6,14 +6,17 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function json_encode;
+
 use function sprintf;
 
 use const JSON_PRETTY_PRINT;
@@ -23,6 +26,7 @@ use const JSON_UNESCAPED_SLASHES;
 /**
  * @method ConsoleFacade getFacade()
  */
+#[ServiceMap(method: 'getFacade', className: ConsoleFacade::class)]
 final class DebugModuleCommand extends Command
 {
     use ServiceResolverAwareTrait;

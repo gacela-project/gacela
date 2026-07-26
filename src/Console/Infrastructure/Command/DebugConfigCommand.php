@@ -6,17 +6,20 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function count;
 use function is_bool;
 use function is_scalar;
 use function ksort;
+
 use function sprintf;
 
 use function str_contains;
@@ -27,6 +30,7 @@ use const JSON_UNESCAPED_SLASHES;
 /**
  * @method ConsoleFacade getFacade()
  */
+#[ServiceMap(method: 'getFacade', className: ConsoleFacade::class)]
 final class DebugConfigCommand extends Command
 {
     use ServiceResolverAwareTrait;

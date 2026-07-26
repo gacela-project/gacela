@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure;
 
 use Gacela\Console\ConsoleFactory;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
@@ -12,6 +13,7 @@ use Symfony\Component\Console\Command\Command;
 /**
  * @method ConsoleFactory getFactory()
  */
+#[ServiceMap(method: 'getFactory', className: ConsoleFactory::class)]
 final class ConsoleBootstrap extends Application
 {
     use ServiceResolverAwareTrait;

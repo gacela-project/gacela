@@ -16,10 +16,12 @@ use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+
 use Symfony\Component\Console\Output\OutputInterface;
 
 use Throwable;
@@ -31,6 +33,7 @@ use function filesize;
 /**
  * @method ConsoleFacade getFacade()
  */
+#[ServiceMap(method: 'getFacade', className: ConsoleFacade::class)]
 final class CacheWarmCommand extends Command
 {
     use EventDispatchingCapabilities;

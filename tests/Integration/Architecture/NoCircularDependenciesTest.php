@@ -137,6 +137,20 @@ final class NoCircularDependenciesTest extends TestCase
             . ' | Gacela\Framework\Event\ClassResolver\ClassNameFinder'
             . ' | Gacela\Framework\Health'
             . ' | Gacela\Framework\ServiceResolver',
+
+        // The console module's own shape: ConsoleProvider registers the commands,
+        // and each command calls back into ConsoleFacade. Cohesive by design --
+        // it is one module, and this is the pattern Gacela teaches.
+        //
+        // It appeared the moment the commands moved from `@method ConsoleFacade
+        // getFacade()` to `#[ServiceMap(className: ConsoleFacade::class)]`, but it
+        // is not new: this graph builds edges from real AST nodes, and a docblock
+        // is not one. The dependency always existed; declaring it made it visible.
+        // That is the argument for the attribute, not against it -- an analyser
+        // that cannot see a dependency cannot check it either.
+        'Gacela\Console'
+            . ' | Gacela\Console\Infrastructure'
+            . ' | Gacela\Console\Infrastructure\Command',
     ];
 
     public function test_source_tree_has_no_unexpected_class_cycles(): void

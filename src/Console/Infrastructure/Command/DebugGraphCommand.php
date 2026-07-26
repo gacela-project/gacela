@@ -7,12 +7,14 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\ModuleGraph\CycleAllowList;
 use Gacela\Console\Domain\ModuleGraph\MalformedCycleAllowListException;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use JsonException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function implode;
@@ -20,6 +22,7 @@ use function in_array;
 use function is_array;
 use function is_file;
 use function json_decode;
+
 use function sprintf;
 
 use const JSON_THROW_ON_ERROR;
@@ -27,6 +30,7 @@ use const JSON_THROW_ON_ERROR;
 /**
  * @method ConsoleFacade getFacade()
  */
+#[ServiceMap(method: 'getFacade', className: ConsoleFacade::class)]
 final class DebugGraphCommand extends Command
 {
     use ServiceResolverAwareTrait;

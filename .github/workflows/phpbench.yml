@@ -46,11 +46,17 @@ jobs:
           key: "phpbench-php-8.4-${{ hashFiles('**/composer.lock') }}"
           restore-keys: "phpbench-php-8.4-"
 
+      # Each group is stored under its own tag and compared against a head run
+      # of that same group. Benchmarking the whole suite here and only the
+      # `gate` group on the head would compare two runs that did different
+      # amounts of work in a different order -- which is enough, for a
+      # disk-bound subject, to move the mode by ~50% with no code change.
       - name: Benchmark base branch (${{ github.base_ref }}) and store as baseline
         run: |
           git checkout --detach "origin/${{ github.base_ref }}"
           composer install --no-interaction --no-progress
-          vendor/bin/phpbench run --tag=base --store --progress=none
+          vendor/bin/phpbench run --tag=base-gate --store --progress=none --group=gate
+          vendor/bin/phpbench run --tag=base-info --store --progress=none --group=informational
 
       - name: Restore PR head
         run: git checkout --detach "${{ github.event.pull_request.head.sha }}"
@@ -59,8 +65,8 @@ jobs:
         run: composer install --no-interaction --no-progress
 
       - name: Assert no >10% regression against the base baseline (gate group)
-        run: vendor/bin/phpbench run --ref=base --group=gate --report=aggregate --progress=none
+        run: vendor/bin/phpbench run --ref=base-gate --group=gate --report=aggregate --progress=none
 
-      - name: Report micro benches against the base baseline (informational, non-blocking)
+      - name: Report non-gating benches against the base baseline (informational, non-blocking)
         continue-on-error: true
-        run: vendor/bin/phpbench run --ref=base --group=micro --report=aggregate --progress=none
+        run: vendor/bin/phpbench run --ref=base-info --group=informational --report=aggregate --progress=none

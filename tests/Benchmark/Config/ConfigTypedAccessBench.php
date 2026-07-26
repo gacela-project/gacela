@@ -28,7 +28,7 @@ use PhpBench\Attributes\Revs;
  * @BeforeMethods("setUp")
  */
 #[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
-#[Groups(['micro', 'config'])]
+#[Groups(['informational', 'micro', 'config'])]
 #[Revs(1000)]
 #[Iterations(5)]
 final class ConfigTypedAccessBench

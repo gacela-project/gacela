@@ -9,7 +9,7 @@ use Gacela\Framework\Exception\ConfigException;
 
 interface ConfigInterface
 {
-    public const DEFAULT_CONFIG_VALUE = 'Gacela\Framework\Config::DEFAULT_CONFIG_VALUE';
+    public const string DEFAULT_CONFIG_VALUE = 'Gacela\Framework\Config::DEFAULT_CONFIG_VALUE';
 
     /**
      * @throws ConfigException

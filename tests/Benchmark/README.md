@@ -26,6 +26,22 @@ Rule of thumb: if the subject's average time is below ~0.2μs, it belongs in
 would false-fail the gate on unrelated PRs. Subjects in the 0.2–1μs range can
 stay gated when their `rstdev` holds below ~3% (e.g. the warm-resolve benches).
 
+**`rstdev` is not sufficient on its own.** It measures spread *within* one run,
+but the gate compares two runs made at different moments. An I/O-bound subject
+can hold `rstdev` under 2% and still drift well past 10% run-to-run, which is
+what `ScopedCacheBench` does — repeated runs of identical code moved its mode
+by −7.61%, then −16.36%, and CI has produced +14.70%. Before gating a subject that
+touches the disk, network, or clock, run it twice against itself:
+
+```bash
+vendor/bin/phpbench run <path> --tag=selfbase --store --progress=none
+vendor/bin/phpbench run <path> --ref=selfbase --report=aggregate --progress=none
+```
+
+If unchanged code drifts near the threshold, widen that class's tolerance with
+a class-level `#[Assert]` (as `ScopedCacheBench` does) rather than leaving a
+gate that fails on PRs which never touched it.
+
 ## Sampling and warmup
 
 Defaults come from `phpbench.json`: **200 revs, 10 iterations, warmup 2**.

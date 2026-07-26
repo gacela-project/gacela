@@ -47,7 +47,7 @@ final class InMemoryCache implements CacheInterface
      */
     public function getAll(): array
     {
-        return self::$cache[$this->key] ?? [];
+        return self::getAllFromKey($this->key);
     }
 
     public function has(string $cacheKey): bool

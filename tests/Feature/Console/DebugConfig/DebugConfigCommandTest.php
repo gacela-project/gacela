@@ -8,51 +8,97 @@ use Gacela\Console\Infrastructure\Command\DebugConfigCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class DebugConfigCommandTest extends TestCase
 {
-    private CommandTester $command;
-
-    protected function setUp(): void
+    public function test_renders_every_value_type_sorted_by_key(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-            $config->addAppConfigKeyValue('app_name', 'gacela-demo');
-            $config->addAppConfigKeyValue('debug_enabled', true);
-        });
+        // Declared out of order on purpose: the report sorts the keys itself.
+        $tester = $this->debugConfig([], [
+            'zeta' => 'last',
+            'alpha' => 'first',
+            'a_true' => true,
+            'b_false' => false,
+            'c_null' => null,
+            'd_number' => 42,
+            'e_list' => ['a/b', 'c'],
+        ]);
 
-        $this->command = new CommandTester(new DebugConfigCommand());
-    }
+        $display = $tester->getDisplay();
 
-    public function test_shows_all_config_values(): void
-    {
-        $this->command->execute([]);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
-        $output = $this->command->getDisplay();
+        // Each type renders in its literal form rather than PHP's cast of it:
+        // an empty cell for false/null would be indistinguishable from a missing key.
+        self::assertMatchesRegularExpression('/a_true\s*\|\s*true\b/', $display);
+        self::assertMatchesRegularExpression('/b_false\s*\|\s*false\b/', $display);
+        self::assertMatchesRegularExpression('/c_null\s*\|\s*null\b/', $display);
+        self::assertMatchesRegularExpression('/d_number\s*\|\s*42\b/', $display);
 
-        self::assertStringContainsString('app_name', $output);
-        self::assertStringContainsString('gacela-demo', $output);
-        self::assertStringContainsString('debug_enabled', $output);
-        self::assertStringContainsString('true', $output);
+        // Arrays render as JSON, with slashes left unescaped so paths stay readable.
+        self::assertStringContainsString('["a/b","c"]', $display);
+
+        // Keys are sorted, though they were declared out of order.
+        self::assertLessThan(strpos($display, 'zeta'), strpos($display, 'alpha'));
+
+        self::assertStringContainsString('7 configuration value(s).', $display);
     }
 
     public function test_filters_keys_by_substring(): void
     {
-        $this->command->execute(['filter' => 'app_name']);
+        // The matching key sorts last, so a skipped key has to be stepped over
+        // rather than end the scan.
+        $tester = $this->debugConfig(['filter' => 'zeta'], [
+            'zeta' => 'last',
+            'alpha' => 'first',
+        ]);
 
-        $output = $this->command->getDisplay();
+        $display = $tester->getDisplay();
 
-        self::assertStringContainsString('app_name', $output);
-        self::assertStringNotContainsString('debug_enabled', $output);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('zeta', $display);
+        self::assertStringNotContainsString('alpha', $display);
+        self::assertStringContainsString('1 configuration value(s).', $display);
     }
 
     public function test_reports_when_no_keys_match_the_filter(): void
     {
-        $this->command->execute(['filter' => 'nonexistent_key_xyz']);
+        $tester = $this->debugConfig(['filter' => 'nonexistent_key_xyz'], ['zeta' => 'last']);
 
-        $output = $this->command->getDisplay();
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString(
+            'No configuration keys match "nonexistent_key_xyz".',
+            $tester->getDisplay(),
+        );
+    }
 
-        self::assertStringContainsString('No configuration keys match', $output);
+    public function test_reports_an_empty_configuration(): void
+    {
+        $tester = $this->debugConfig([], []);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('No configuration values found.', $tester->getDisplay());
+    }
+
+    /**
+     * @param array<string, string> $input
+     * @param array<string, mixed> $values
+     */
+    private function debugConfig(array $input, array $values): CommandTester
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($values): void {
+            $config->resetInMemoryCache();
+            /** @var mixed $value */
+            foreach ($values as $key => $value) {
+                $config->addAppConfigKeyValue($key, $value);
+            }
+        });
+
+        $tester = new CommandTester(new DebugConfigCommand());
+        $tester->execute($input);
+
+        return $tester;
     }
 }

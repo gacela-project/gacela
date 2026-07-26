@@ -33,12 +33,13 @@ final class PropertyChangeTrackerTest extends TestCase
         self::assertFalse($tracker->isChanged('prop'));
     }
 
-    public function test_get_all_reports_both_changed_and_unchanged_entries(): void
+    public function test_properties_are_tracked_independently(): void
     {
         $tracker = new PropertyChangeTracker();
         $tracker->markAsChanged('a');
         $tracker->markAsUnchanged('b');
 
-        self::assertSame(['a' => true, 'b' => false], $tracker->getAll());
+        self::assertTrue($tracker->isChanged('a'));
+        self::assertFalse($tracker->isChanged('b'));
     }
 }

@@ -9,6 +9,69 @@
 - `DocBlockResolverAwareTrait` — use `ServiceResolverAwareTrait` instead
 - Internal `DependencyProviderResolver` and the `AbstractFactory` dual-resolver path. Provider classes named `*DependencyProvider` are no longer auto-resolved; rename them to `<Module>Provider` (extending `AbstractProvider`). Module resolution now goes through a single `ProviderResolver`.
 
+## [1.21.0](https://github.com/gacela-project/gacela/compare/1.20.0...1.21.0) - 2026-07-26
+
+Static analysis now **types** the pillar accessors instead of suppressing them, and the
+console gained checks for the mistakes that were previously silent. Both are worth having
+before you migrate to 2.0.
+
+### Added
+
+- `gacela init` scaffolds a project's `gacela.php` — the one file you had to copy from the docs before anything ran. Refuses to overwrite unless `--force`
+- PHPStan **types** `getFacade()`/`getFactory()`/`getConfig()` from `#[ServiceMap]` instead of suppressing them. A suppressed call is not a typed one: it evaluated to `mixed`, which switched off checking of everything reached *through* the accessor. Nothing to configure beyond the existing `phpstan-gacela.neon` include; the suppression stays as a fallback for classes declaring neither `#[ServiceMap]` nor a `@method` docblock, and goes away in 2.0
+- PHPStan types `getProvidedDependency(Foo::class)` as `Foo`, so the class-string form needs no hand-written `@var`. String keys stay `mixed`
+- `FacadeInterfaceInSyncRule` reports public Facade methods missing from the Facade's own `*FacadeInterface` — drift that is invisible until someone reads both files, by which point the fix is breaking. Only fires for a facade that implements the interface named after it
+- `doctor` reports pillar classes whose filename does not match the class. Pillars resolve by *filename* suffix, so migrating `AbstractDependencyProvider` means renaming `DependencyProvider.php` to `Provider.php` too — miss it and the module silently stops resolving
+- `doctor --strict` exits non-zero on warnings as well as errors, so it can gate CI
+- `debug:graph --check` exits non-zero on a module dependency cycle. `--allowed-cycles=file.json` records the ones a reviewer accepted, each with a mandatory `reason`, and an entry that no longer matches a real cycle fails just as loudly — an allow-list that outlives what it allows is a mute button. Without `--check` the command stays exit-code-neutral
+- `debug:graph --compare-to=base-graph.json` diffs against a previously captured graph and reports the change as markdown with a mermaid diagram. Writes nothing when the graph is unchanged, so CI can comment only when a pull request actually moves a boundary
+
+### Changed
+
+- `profile:report --format=json` and `debug:config` now raise a `JsonException` instead of printing an empty value when their payload cannot be encoded
+- `validate:config` attributes an unloadable binding class to that binding (`Could not resolve binding: <key> (<error>)`) instead of reporting a separate "Could not check circular dependencies" line
+- `debug:container <class>` no longer prints "Indentation shows dependency depth" — the container returns a flat list, so nothing was ever indented
+
+### Documentation
+
+- A Factory can declare its dependencies in its **constructor**: pillars resolve through the container, so autowiring applies to the Factory itself. This already worked and is now documented and tested
+- `docs/rfc/0002` inventories every way to obtain a dependency (25 paths across 4 intents), as the basis for naming one primary path per intent in 2.0
+
+## [1.20.0](https://github.com/gacela-project/gacela/compare/1.19.0...1.20.0) - 2026-07-25
+
+### Added
+
+- `AbstractFactory::make(class-string, params)`: build a domain object through the module container with autowiring, honouring `#[Inject]`/`#[Singleton]`/`#[Factory]`, with `params` overriding constructor arguments by name. Needs no bindings, so it works in a module with no Provider. Additive — `getProvidedDependency()` and hand-wired `create*()` are unchanged
+- `make:module --minimal` (alias `--template=minimal`): scaffolds Facade and Factory only. Config and Provider are optional at runtime
+
+### Changed
+
+- `make:module`'s provider template is now attribute-first, leading with a typed `#[Provides]` method. `provideModuleDependencies()` still works
+- The `AbstractDependencyProvider` deprecation notice now always fires. It went through `trigger_deprecation()` and was skipped when `symfony/deprecation-contracts` was absent — which is most apps, since it is not a runtime dependency. **Expect to start seeing this notice**; migrate to `AbstractProvider`
+- `GacelaConfig::addMappingInterface()` now emits `E_USER_DEPRECATED`. Deprecated since 1.2.0 with no runtime signal until now. Use `addBinding()` — same arguments
+- `make:module` and `make:file` now throw when a generated file cannot be written. A read-only target or full disk previously printed success, exited `0`, and wrote nothing
+- An unresolvable health check now throws `HealthCheckNotResolvableException` instead of being skipped. A typo in `addHealthCheck(SomeCheck::class)` previously produced a report that looked healthy while the check never ran
+
+### Removed
+
+- `Gacela\Framework\Container\Locator::addSingleton()` — no production caller, and `Locator` is `@internal`. Seed through a `Container` plus `Locator::getInstance($container)`
+
+### Fixed
+
+- A module's `provideModuleDependencies()` no longer runs twice. Both provider resolvers share a normalized cache slot, so a modern Provider was registered once via `register()` and again directly — running non-idempotent provider bodies (counters, external registrations, logging) twice
+- `validate:config` now detects circular dependencies. It matched the exception message case-sensitively against the wrong casing, so the check never fired once and a cyclic configuration exited `0`. It now catches `CircularDependencyException` by type and prints the full `A -> B -> A` chain. **Pre-existing cycles will now fail validation (exit `1`)** — if this runs in CI, expect it to surface them on the first run. Other resolution failures, previously discarded silently, are reported as warnings
+
+### Documentation
+
+- New `docs/upgrading.md`: every 1.x deprecation with its replacement. Note that migrating off `AbstractDependencyProvider` also requires renaming `DependencyProvider.php` to `Provider.php` — pillars resolve by filename suffix, so renaming only the class leaves the module unresolvable
+- Documented `make()` and attribute-first module DI in `docs/container-configuration.md`, and the optional Config/Provider pillars in `docs/getting-started.md`
+
+### Internal
+
+- Mutation testing now runs in CI. `infection.json5` has required an MSI of 100 for a while but no workflow ran it, so the score had drifted below the bar
+
+## [1.19.0](https://github.com/gacela-project/gacela/compare/1.18.0...1.19.0) - 2026-07-23
+
 ### Added
 
 - `GacelaConfig::addBindingIf(key, value)`: register a binding only when the key is not already bound, so plugins can ship an overridable default (register-unless-overridden)

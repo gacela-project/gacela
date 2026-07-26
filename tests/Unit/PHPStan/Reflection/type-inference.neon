@@ -1,0 +1,4 @@
+services:
+    -
+        class: Gacela\PHPStan\Reflection\GetProvidedDependencyReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]

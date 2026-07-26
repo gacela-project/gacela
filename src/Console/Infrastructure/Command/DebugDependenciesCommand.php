@@ -8,6 +8,7 @@ use Gacela\Console\Application\Debug\ConstructorInspection;
 use Gacela\Console\Application\Debug\ConstructorInspector;
 use Gacela\Console\Application\Debug\ParameterInspection;
 use Gacela\Console\Application\Debug\ParameterStatus;
+use PhpToken;
 use ReflectionClass;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,15 +17,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function class_exists;
 use function count;
-use function in_array;
 use function interface_exists;
-use function is_array;
 use function ltrim;
 use function sprintf;
 
-/**
- * @psalm-type TokenList = list<array{0: int, 1: string, 2: int}|string>
- */
 final class DebugDependenciesCommand extends Command
 {
     protected function configure(): void
@@ -141,103 +137,68 @@ final class DebugDependenciesCommand extends Command
         return $fqcn;
     }
 
+    /**
+     * Reports the first named class-like declaration in the source.
+     *
+     * The PHP 8 tokenizer emits a namespace and a declared name as one token
+     * each, so a single pass over the significant tokens is enough: nothing to
+     * accumulate, nothing to backtrack over.
+     */
     private function extractFqcnFromSource(string $source): ?string
     {
-        $tokens = token_get_all($source);
+        $tokens = $this->significantTokens($source);
         $namespace = '';
         $count = count($tokens);
 
         for ($i = 0; $i < $count; ++$i) {
             $token = $tokens[$i];
 
-            if (!is_array($token)) {
+            if ($token->is(T_NAMESPACE)) {
+                $namespace = $this->textAfter($tokens, $i, [T_STRING, T_NAME_QUALIFIED]) ?? '';
                 continue;
             }
 
-            if ($token[0] === T_NAMESPACE) {
-                $namespace = $this->readNamespaceName($tokens, $i);
+            if (!$token->is([T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM])) {
                 continue;
             }
 
-            if ($this->isClassLikeDeclaration($token[0]) && !$this->isAnonymousClass($tokens, $i)) {
-                $name = $this->readNextIdentifier($tokens, $i);
-                if ($name === null) {
-                    continue;
-                }
-
-                return $namespace === '' ? $name : $namespace . '\\' . $name;
+            // Only a declaration is followed by an identifier: `new class {}`
+            // and `Foo::class` are followed by punctuation or a keyword.
+            $name = $this->textAfter($tokens, $i, [T_STRING]);
+            if ($name === null) {
+                continue;
             }
+
+            return $namespace === '' ? $name : $namespace . '\\' . $name;
         }
 
         return null;
     }
 
     /**
-     * @param TokenList $tokens
+     * @return list<PhpToken>
      */
-    private function readNamespaceName(array $tokens, int $from): string
+    private function significantTokens(string $source): array
     {
-        $name = '';
-        $count = count($tokens);
-
-        for ($i = $from + 1; $i < $count; ++$i) {
-            $token = $tokens[$i];
-
-            if ($token === ';' || $token === '{') {
-                break;
-            }
-
-            if (!is_array($token)) {
-                continue;
-            }
-
-            if (in_array($token[0], [T_STRING, T_NS_SEPARATOR, T_NAME_QUALIFIED], true)) {
-                $name .= $token[1];
-            }
-        }
-
-        return trim($name, '\\');
-    }
-
-    private function isClassLikeDeclaration(int $tokenType): bool
-    {
-        return in_array($tokenType, [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true);
+        return array_values(array_filter(
+            PhpToken::tokenize($source),
+            static fn (PhpToken $token): bool => !$token->isIgnorable(),
+        ));
     }
 
     /**
-     * @param TokenList $tokens
+     * @param list<PhpToken> $tokens
+     * @param list<int> $types
      */
-    private function isAnonymousClass(array $tokens, int $index): bool
+    private function textAfter(array $tokens, int $index, array $types): ?string
     {
-        for ($j = $index - 1; $j >= 0; --$j) {
-            $previous = $tokens[$j];
+        $next = $tokens[$index + 1] ?? null;
 
-            if (is_array($previous) && $previous[0] === T_WHITESPACE) {
-                continue;
-            }
-
-            return is_array($previous) && $previous[0] === T_NEW;
+        if ($next === null || !$next->is($types)) {
+            return null;
         }
 
-        return false;
-    }
-
-    /**
-     * @param TokenList $tokens
-     */
-    private function readNextIdentifier(array $tokens, int $from): ?string
-    {
-        $count = count($tokens);
-
-        for ($i = $from + 1; $i < $count; ++$i) {
-            $token = $tokens[$i];
-
-            if (is_array($token) && $token[0] === T_STRING) {
-                return $token[1];
-            }
-        }
-
-        return null;
+        return $next->text;
     }
 
     private function getHelpText(): string

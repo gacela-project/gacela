@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Container\Exception\CircularDependencyException;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Command\Command;
@@ -154,33 +155,37 @@ final class ValidateConfigCommand extends Command
         $hasErrors = false;
         $hasWarnings = false;
 
-        try {
-            $bindings = $container->getBindings();
+        foreach ($container->getBindings() as $key => $value) {
+            if (!is_string($value)) {
+                continue;
+            }
 
-            foreach ($bindings as $key => $value) {
-                if (!is_string($value)) {
+            try {
+                if (!class_exists($value)) {
                     continue;
                 }
 
-                if (class_exists($value)) {
-                    try {
-                        // Resolving the binding surfaces circular/recursive dependency errors.
-                        $container->get($key);
-                    } catch (Throwable $throwable) {
-                        if (str_contains($throwable->getMessage(), 'circular') || str_contains($throwable->getMessage(), 'recursive')) {
-                            $output->writeln(sprintf('  <error>✗ Circular dependency detected:</> %s', $key));
-                            $hasErrors = true;
-                        }
-                    }
-                }
+                // Resolving the binding surfaces circular dependency errors.
+                $container->get($key);
+            } catch (CircularDependencyException $exception) {
+                $output->writeln(sprintf('  <error>✗ Circular dependency detected:</> %s', $key));
+                $output->writeln(sprintf('      chain: %s', $this->cycleChain($exception)));
+                $hasErrors = true;
+            } catch (Throwable $throwable) {
+                // Any other resolution failure -- including a class that cannot even
+                // be loaded -- is a real problem the developer needs to see;
+                // reporting it is the whole point of this command.
+                $output->writeln(sprintf(
+                    '  <fg=yellow>⚠ Warning: Could not resolve binding:</> %s (%s)',
+                    $key,
+                    $throwable->getMessage(),
+                ));
+                $hasWarnings = true;
             }
+        }
 
-            if (!$hasErrors) {
-                $output->writeln('  <fg=green>✓ No circular dependencies detected</fg=green>');
-            }
-        } catch (Throwable $throwable) {
-            $output->writeln(sprintf('  <fg=yellow>⚠ Warning: Could not check circular dependencies: %s</fg=yellow>', $throwable->getMessage()));
-            $hasWarnings = true;
+        if (!$hasErrors) {
+            $output->writeln('  <fg=green>✓ No circular dependencies detected</fg=green>');
         }
 
         $output->writeln('');
@@ -188,12 +193,25 @@ final class ValidateConfigCommand extends Command
         return ['errors' => $hasErrors, 'warnings' => $hasWarnings];
     }
 
+    /**
+     * Pull the `A -> B -> A` chain out of the exception headline, so the
+     * developer sees exactly which classes close the loop.
+     */
+    private function cycleChain(CircularDependencyException $exception): string
+    {
+        /** @var non-empty-list<string> $lines */
+        $lines = explode("\n", $exception->getMessage());
+        $headline = $lines[0];
+        $colonPos = strpos($headline, ':');
+
+        return $colonPos === false ? $headline : trim(substr($headline, $colonPos + 1));
+    }
+
+    /**
+     * @param class-string $className the caller has already checked it exists
+     */
     private function describeTypeChain(string $className): string
     {
-        if (!class_exists($className) && !interface_exists($className)) {
-            return $className;
-        }
-
         $parents = class_parents($className) ?: [];
         $interfaces = class_implements($className) ?: [];
 

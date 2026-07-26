@@ -11,7 +11,6 @@ use Gacela\Framework\Config\Config;
 
 use function array_filter;
 use function array_map;
-use function array_values;
 use function file_exists;
 use function filesize;
 
@@ -75,14 +74,14 @@ final class CacheManager
     }
 
     /**
-     * @return list<string>
+     * @return array<string>
      */
     private function existingCacheFiles(): array
     {
-        return array_values(array_filter(
+        return array_filter(
             $this->allCacheFilePaths(),
             static fn (string $cacheFile): bool => file_exists($cacheFile),
-        ));
+        );
     }
 
     /**

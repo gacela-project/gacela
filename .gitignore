@@ -23,3 +23,18 @@ gacela-merged-config.php
 .gacelagacela-*.php
 mutation-report.html
 gacela-merged-config-*.php
+
+# Mutation testing mangles sys_get_temp_dir() into a relative path, so a mutated
+# run writes its temp fixtures into the repo root instead of /tmp. The resulting
+# paths are invalid on Windows and break `git checkout` there if committed.
+gacela-uncreatable-*/
+gacela-filecache-test-*/
+gacela-scoped-bench-*/
+gacela-doctor-strict-*/
+
+# The patterns above only match the leaf directories. The whole tree hangs off a
+# mangled root -- a mutated `/var/folders/...` becomes `\\ar/folders/...` -- so
+# git reports that parent as untracked and the leaves are never consulted. This
+# is the directory that broke every Windows job once already: the name is not a
+# valid path there, so `git checkout` fails outright if it is ever committed.
+[\\]*

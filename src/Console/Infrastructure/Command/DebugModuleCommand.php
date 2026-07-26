@@ -40,7 +40,7 @@ final class DebugModuleCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $moduleName = (string)$input->getArgument('module');
+        $moduleName = ConsoleInput::argument($input, 'module');
         $modules = $this->getFacade()->findAllAppModules($moduleName);
 
         if ($modules === []) {
@@ -49,11 +49,11 @@ final class DebugModuleCommand extends Command
             return Command::FAILURE;
         }
 
-        if ((bool)$input->getOption('json')) {
+        if ($input->getOption('json') === true) {
             return $this->renderJson($output, $modules);
         }
 
-        $treeOnly = (bool)$input->getOption('tree');
+        $treeOnly = $input->getOption('tree') === true;
         foreach ($modules as $module) {
             $this->renderModule($output, $module, $treeOnly);
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap\Setup;
 
+use Closure;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
@@ -21,62 +22,37 @@ final class SetupMerger
 
     public function merge(SetupGacela $other): SetupGacela
     {
-        $this->overrideResetInMemoryCache($other);
-        $this->overrideFileCacheSettings($other);
+        $this->whenChanged($other, SetupGacela::shouldResetInMemoryCache, fn () => $this->original->setShouldResetInMemoryCache($other->shouldResetInMemoryCache()));
+        $this->whenChanged($other, SetupGacela::fileCacheEnabled, fn () => $this->original->setFileCacheEnabled($other->isFileCacheEnabled()));
+        $this->whenChanged($other, SetupGacela::fileCacheDirectory, fn () => $this->original->setFileCacheDirectory($other->getFileCacheDirectory()));
 
-        $this->mergeExternalServices($other);
-        $this->mergeProjectNamespaces($other);
-        $this->mergeConfigKeyValues($other);
+        $this->whenChanged($other, SetupGacela::externalServices, fn () => $this->original->mergeExternalServices($other->externalServices()));
+        $this->whenChanged($other, SetupGacela::projectNamespaces, fn () => $this->original->mergeProjectNamespaces($other->getProjectNamespaces()));
+        $this->whenChanged($other, SetupGacela::configKeyValues, fn () => $this->original->mergeConfigKeyValues($other->getConfigKeyValues()));
         $this->mergeEventDispatcher($other);
         $this->mergeServicesToExtend($other);
-        $this->mergeFactories($other);
-        $this->mergeProtectedServices($other);
-        $this->mergeAliases($other);
-        $this->mergeContextualBindings($other);
-        $this->mergeHandlerRegistries($other);
-        $this->mergeLazyServices($other);
-        $this->mergePlugins($other);
-        $this->mergeGacelaConfigsToExtend($other);
+        $this->whenChanged($other, SetupGacela::factories, fn () => $this->original->mergeFactories($other->getFactories()));
+        $this->whenChanged($other, SetupGacela::protectedServices, fn () => $this->original->mergeProtectedServices($other->getProtectedServices()));
+        $this->whenChanged($other, SetupGacela::aliases, fn () => $this->original->mergeAliases($other->getAliases()));
+        $this->whenChanged($other, SetupGacela::contextualBindings, fn () => $this->original->mergeContextualBindings($other->getContextualBindings()));
+        $this->whenChanged($other, SetupGacela::handlerRegistries, fn () => $this->original->mergeHandlerRegistries($other->getHandlerRegistries()));
+        $this->whenChanged($other, SetupGacela::lazyServices, fn () => $this->original->mergeLazyServices($other->getLazyServices()));
+        $this->whenChanged($other, SetupGacela::plugins, fn () => $this->original->mergePlugins($other->getPlugins()));
+        $this->whenChanged($other, SetupGacela::gacelaConfigsToExtend, fn () => $this->original->mergeGacelaConfigsToExtend($other->getGacelaConfigsToExtend()));
 
         return $this->original;
     }
 
-    private function overrideResetInMemoryCache(SetupGacela $other): void
+    /**
+     * Apply $merge only when $other explicitly set $property, so an untouched
+     * property on the incoming setup never overwrites the original's value.
+     *
+     * @param Closure():mixed $merge
+     */
+    private function whenChanged(SetupGacela $other, string $property, Closure $merge): void
     {
-        if ($other->isPropertyChanged(SetupGacela::shouldResetInMemoryCache)) {
-            $this->original->setShouldResetInMemoryCache($other->shouldResetInMemoryCache());
-        }
-    }
-
-    private function overrideFileCacheSettings(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::fileCacheEnabled)) {
-            $this->original->setFileCacheEnabled($other->isFileCacheEnabled());
-        }
-
-        if ($other->isPropertyChanged(SetupGacela::fileCacheDirectory)) {
-            $this->original->setFileCacheDirectory($other->getFileCacheDirectory());
-        }
-    }
-
-    private function mergeExternalServices(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::externalServices)) {
-            $this->original->mergeExternalServices($other->externalServices());
-        }
-    }
-
-    private function mergeProjectNamespaces(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::projectNamespaces)) {
-            $this->original->mergeProjectNamespaces($other->getProjectNamespaces());
-        }
-    }
-
-    private function mergeConfigKeyValues(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::configKeyValues)) {
-            $this->original->mergeConfigKeyValues($other->getConfigKeyValues());
+        if ($other->isPropertyChanged($property)) {
+            $merge();
         }
     }
 
@@ -110,62 +86,6 @@ final class SetupMerger
             foreach ($other->getServicesToExtend() as $serviceId => $otherServiceToExtend) {
                 $this->original->addServicesToExtend($serviceId, $otherServiceToExtend);
             }
-        }
-    }
-
-    private function mergePlugins(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::plugins)) {
-            $this->original->mergePlugins($other->getPlugins());
-        }
-    }
-
-    private function mergeGacelaConfigsToExtend(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::gacelaConfigsToExtend)) {
-            $this->original->mergeGacelaConfigsToExtend($other->getGacelaConfigsToExtend());
-        }
-    }
-
-    private function mergeFactories(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::factories)) {
-            $this->original->mergeFactories($other->getFactories());
-        }
-    }
-
-    private function mergeProtectedServices(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::protectedServices)) {
-            $this->original->mergeProtectedServices($other->getProtectedServices());
-        }
-    }
-
-    private function mergeAliases(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::aliases)) {
-            $this->original->mergeAliases($other->getAliases());
-        }
-    }
-
-    private function mergeContextualBindings(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::contextualBindings)) {
-            $this->original->mergeContextualBindings($other->getContextualBindings());
-        }
-    }
-
-    private function mergeHandlerRegistries(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::handlerRegistries)) {
-            $this->original->mergeHandlerRegistries($other->getHandlerRegistries());
-        }
-    }
-
-    private function mergeLazyServices(SetupGacela $other): void
-    {
-        if ($other->isPropertyChanged(SetupGacela::lazyServices)) {
-            $this->original->mergeLazyServices($other->getLazyServices());
         }
     }
 }

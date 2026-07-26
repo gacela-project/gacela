@@ -44,10 +44,13 @@ final class AllAppModulesFinder
 
     private function createAppModule(SplFileInfo $fileInfo, string $filter): ?AppModule
     {
-        if (!$fileInfo->isFile()
+        $realPath = $fileInfo->getRealPath();
+
+        if ($realPath === false
+            || !$fileInfo->isFile()
             || $fileInfo->getExtension() !== 'php'
             || str_starts_with($fileInfo->getFilename(), '.')
-            || str_contains($fileInfo->getRealPath(), 'vendor' . DIRECTORY_SEPARATOR)
+            || str_contains($realPath, 'vendor' . DIRECTORY_SEPARATOR)
         ) {
             return null;
         }
@@ -81,7 +84,12 @@ final class AllAppModulesFinder
 
     private function getNamespace(SplFileInfo $fileInfo): string
     {
-        $fileContent = file_get_contents($fileInfo->getRealPath());
+        $realPath = $fileInfo->getRealPath();
+        if ($realPath === false) {
+            return '';
+        }
+
+        $fileContent = file_get_contents($realPath);
         if ($fileContent === false) {
             return '';
         }

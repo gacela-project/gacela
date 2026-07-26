@@ -90,9 +90,9 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         $cache1->put('persisted', 'ClassP');
         TestPhpFileCache::clearStaticCache();
 
-        $cache2 = new TestPhpFileCache($this->cacheDir);
+        new TestPhpFileCache($this->cacheDir);
 
-        self::assertSame(['persisted' => 'ClassP'], $cache2->getAll());
+        self::assertSame(['persisted' => 'ClassP'], TestPhpFileCache::all());
     }
 
     public function test_constructor_loads_every_persisted_entry_not_just_the_first(): void
@@ -103,11 +103,11 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         $cache1->put('third', 'ClassThree');
         TestPhpFileCache::clearStaticCache();
 
-        $cache2 = new TestPhpFileCache($this->cacheDir);
+        new TestPhpFileCache($this->cacheDir);
 
         self::assertSame(
             ['first' => 'ClassOne', 'second' => 'ClassTwo', 'third' => 'ClassThree'],
-            $cache2->getAll(),
+            TestPhpFileCache::all(),
         );
     }
 
@@ -138,7 +138,7 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
 
         $cache = new TestPhpFileCache($dir);
 
-        self::assertSame(['warm' => 'ClassW'], $cache->getAll());
+        self::assertSame(['warm' => 'ClassW'], TestPhpFileCache::all());
 
         $warnings = $this->collectWarnings(static fn () => $cache->put('fresh', 'ClassF'));
 

@@ -11,7 +11,7 @@ use function sprintf;
 final class FinderRuleWithModulePrefix implements FinderRuleInterface
 {
     /**
-     * @return class-string
+     * @return non-empty-string
      */
     public function buildClassCandidate(string $projectNamespace, string $resolvableType, ClassInfo $classInfo): string
     {

@@ -1,0 +1,56 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+#
+# Mutation testing guard: infection.json5 sets minMsi and minCoveredMsi to 100,
+# but nothing enforced them, so the score drifted below the bar twice without
+# anyone noticing. This job runs the same thresholds the config already declares.
+#
+# A mutant that survives means the test suite asserts the shape of the code
+# rather than its behaviour: the line ran, but nothing checked the result.
+# Kill it by tightening the assertion, or -- when the mutant is genuinely
+# equivalent -- add a per-mutator `ignore` in infection.json5 with the reason,
+# which is the convention the existing entries follow.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+name: Infection
+
+permissions:
+  contents: read
+
+jobs:
+
+  mutation-guard:
+    name: "Mutation testing (min MSI 100%)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          # Infection needs line coverage to know which tests reach a mutant.
+          coverage: xdebug
+          tools: composer
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: "infection-php-8.4-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: "infection-php-8.4-"
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Assert the mutation score has not regressed
+        env:
+          XDEBUG_MODE: coverage
+        run: vendor/bin/infection --threads=max --min-msi=100 --min-covered-msi=100 --no-progress --show-mutations

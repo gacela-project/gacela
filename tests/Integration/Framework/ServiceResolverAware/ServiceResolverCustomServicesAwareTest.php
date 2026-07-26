@@ -48,13 +48,11 @@ final class ServiceResolverCustomServicesAwareTest extends TestCase
 
     public function test_existing_service_cached(): void
     {
-        // First call should populate the cache
         $dummy = new DummyServiceResolverAware();
         $dummy->getRepository()->findName();
 
         self::assertCount(1, CustomServicesPhpCache::all());
 
-        // Subsequent calls should reuse the cache without adding new entries
         $dummy->getRepository()->findName();
         $dummy->getRepository()->findName();
 

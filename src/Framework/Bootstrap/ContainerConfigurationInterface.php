@@ -8,13 +8,10 @@ use Closure;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 /**
- * Provides configuration for the dependency injection container.
- *
- * This interface defines the contract for configuring services, factories,
- * aliases, and contextual bindings within the DI container.
- *
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  *
+ * @psalm-type ServiceFactoryMap = array<string, Closure>
+ * @psalm-type ServiceAliasMap = array<string, string>
  * @psalm-type ServicesToExtendMap = array<string, list<Closure>>
  * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
  * @psalm-type ContextualBindingsMap = array<string, array<string, mixed>>
@@ -22,60 +19,46 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 interface ContainerConfigurationInterface
 {
     /**
-     * Get services that should be extended with decorators.
-     *
      * @return ServicesToExtendMap
      */
     public function getServicesToExtend(): array;
 
     /**
-     * Get factory definitions for creating services.
-     *
-     * @return array<string,Closure>
+     * @return ServiceFactoryMap
      */
     public function getFactories(): array;
 
     /**
-     * Get services that should be protected (not shared/singleton).
+     * Closures stored as-is: the container returns them uninvoked, and they cannot be extended.
      *
-     * @return array<string,Closure>
+     * @return ServiceFactoryMap
      */
     public function getProtectedServices(): array;
 
     /**
-     * Get service ID aliases.
-     *
-     * @return array<string,string>
+     * @return ServiceAliasMap
      */
     public function getAliases(): array;
 
     /**
-     * Get contextual bindings for dependency resolution.
-     *
-     * Contextual bindings allow different implementations to be injected
-     * based on the context (which class is requesting the dependency).
+     * Bindings selected by which class is requesting the dependency.
      *
      * @return ContextualBindingsMap
      */
     public function getContextualBindings(): array;
 
     /**
-     * Get handler registry declarations (build-time dispatch tables).
-     *
-     * Each entry maps a registry identifier to the declared handler classes.
-     * The registry is resolvable from the container under that identifier.
+     * Build-time dispatch tables: each entry maps a registry identifier to its
+     * declared handler classes, and is resolvable from the container under that identifier.
      *
      * @return HandlerRegistriesMap
      */
     public function getHandlerRegistries(): array;
 
     /**
-     * Get lazy-loaded service definitions.
+     * Services instantiated on first access rather than at container build.
      *
-     * Lazy services are only instantiated when first accessed,
-     * improving startup performance for expensive services.
-     *
-     * @return array<string,Closure>
+     * @return ServiceFactoryMap
      */
     public function getLazyServices(): array;
 }

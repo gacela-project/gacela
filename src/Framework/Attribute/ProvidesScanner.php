@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Attribute;
 
-use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Container\Container;
 use ReflectionClass;
 use ReflectionMethod;
@@ -20,10 +19,10 @@ use ReflectionNamedType;
  */
 final class ProvidesScanner
 {
-    /** @var array<class-string<AbstractProvider>, list<ProvidesEntry>> */
+    /** @var array<class-string, list<ProvidesEntry>> */
     private static array $cache = [];
 
-    public static function scan(AbstractProvider $provider, Container $container): void
+    public static function scan(object $provider, Container $container): void
     {
         foreach (self::resolveEntries($provider) as $entry) {
             $method = $entry['method'];
@@ -39,7 +38,7 @@ final class ProvidesScanner
     /**
      * @return list<ProvidesEntry>
      */
-    private static function resolveEntries(AbstractProvider $provider): array
+    private static function resolveEntries(object $provider): array
     {
         $class = $provider::class;
 

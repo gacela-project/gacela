@@ -24,6 +24,15 @@ abstract class AbstractFactory
     /** @var array<string,Container> */
     private static array $containers = [];
 
+    /**
+     * Modules that resolved no Provider at all. Their container is still usable
+     * for make(), which autowires by type, but getProvidedDependency() has
+     * nothing to read from and reports the missing Provider instead.
+     *
+     * @var array<string,bool>
+     */
+    private static array $providerless = [];
+
     /** @var array<string,mixed> */
     private array $instances = [];
 
@@ -33,6 +42,7 @@ abstract class AbstractFactory
     public static function resetCache(): void
     {
         self::$containers = [];
+        self::$providerless = [];
     }
 
     /**
@@ -52,7 +62,34 @@ abstract class AbstractFactory
 
     protected function getProvidedDependency(string $key): mixed
     {
-        return $this->getContainer()->get($key);
+        $container = $this->getContainer();
+
+        if (self::$providerless[static::class]) {
+            throw new ProviderNotFoundException(static::class);
+        }
+
+        return $container->get($key);
+    }
+
+    /**
+     * Resolve a class through the module container with autowiring, so its
+     * constructor dependencies and the container DI attributes (#[Inject],
+     * #[Singleton], #[Factory]) are honored — letting a create*() method
+     * resolve a domain object by type instead of hand-wiring it.
+     *
+     * Pass $params to override constructor arguments by name (top level only);
+     * the instance is then always built fresh.
+     *
+     * @template T of object
+     *
+     * @param class-string<T> $className
+     * @param array<string, mixed> $params
+     *
+     * @return T
+     */
+    protected function make(string $className, array $params = []): object
+    {
+        return $this->getContainer()->make($className, $params);
     }
 
     private function getContainer(): Container
@@ -71,12 +108,16 @@ abstract class AbstractFactory
         $container = Container::withConfig(Config::getInstance());
 
         $resolver = (new ProviderResolver())->resolve($this);
-        if ($resolver === null) {
-            throw new ProviderNotFoundException(static::class);
+        $resolver?->register($container);
+
+        if ($resolver !== null) {
+            $this->notifyProviderRegistered($resolver::class);
         }
 
-        $resolver->register($container);
-        $this->notifyProviderRegistered($resolver::class);
+        // A module without a Provider still gets a container: make() autowires by
+        // type and needs no bindings. Only getProvidedDependency() has nothing to
+        // read from, and it reports the missing Provider itself.
+        self::$providerless[static::class] = $resolver === null;
 
         return $container;
     }

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap\Setup;
 
-use Closure;
 use Gacela\Framework\Bootstrap\BuilderConfigurationInterface;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
 use function array_merge;
@@ -18,8 +18,11 @@ use function array_unique;
  *
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type ServiceFactoryMap from ContainerConfigurationInterface
+ * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
+ * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  */
 final class PropertyMerger
 {
@@ -47,7 +50,7 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,mixed> $list
+     * @param ConfigKeyValues $list
      */
     public function mergeConfigKeyValues(array $list): void
     {
@@ -76,7 +79,7 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,Closure> $list
+     * @param ServiceFactoryMap $list
      */
     public function mergeFactories(array $list): void
     {
@@ -85,7 +88,7 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,Closure> $list
+     * @param ServiceFactoryMap $list
      */
     public function mergeProtectedServices(array $list): void
     {
@@ -94,7 +97,7 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,string> $list
+     * @param ServiceAliasMap $list
      */
     public function mergeAliases(array $list): void
     {
@@ -123,7 +126,7 @@ final class PropertyMerger
     }
 
     /**
-     * @param array<string,Closure> $list
+     * @param ServiceFactoryMap $list
      */
     public function mergeLazyServices(array $list): void
     {

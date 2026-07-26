@@ -175,6 +175,6 @@ final class Profiler
 
     private function getCurrentTime(): float
     {
-        return (float)hrtime(true) / 1e9; // Convert nanoseconds to seconds
+        return (float)hrtime(true) / 1e9;
     }
 }

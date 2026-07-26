@@ -1,0 +1,116 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+#
+# Module dependency graph review aid: builds the graph on the PR base, builds it
+# again on the PR head, and reports the difference.
+#
+# Why: a new cross-module edge enters the diff as one more `use` statement,
+# indistinguishable from any other import. The graph makes it a picture.
+#
+# This job is NOT a gate. It never fails the PR, and it stays silent when the
+# graph did not change -- a bot that comments on every PR gets muted, and a
+# muted reviewer aid is worse than none. The PHPStan rules are the gate.
+
+on:
+  pull_request:
+
+name: Module graph
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+
+  graph-diff:
+    name: "Module dependency graph"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the base branch can be checked out for the baseline graph.
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+          tools: composer
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: "module-graph-php-8.4-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: "module-graph-php-8.4-"
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Capture the base branch graph (${{ github.base_ref }})
+        run: |
+          git checkout --detach "origin/${{ github.base_ref }}"
+          composer install --no-interaction --no-progress
+          php bin/gacela debug:graph --format=json > "${RUNNER_TEMP}/base-graph.json"
+
+      - name: Restore PR head
+        run: |
+          git checkout --detach "${{ github.event.pull_request.head.sha }}"
+          composer install --no-interaction --no-progress
+
+      - name: Diff the head graph against the base graph
+        run: |
+          php bin/gacela debug:graph --format=json > "${RUNNER_TEMP}/head-graph.json"
+          php bin/gacela debug:graph --compare-to="${RUNNER_TEMP}/base-graph.json" > "${RUNNER_TEMP}/graph-diff.md"
+
+      # Uploaded unconditionally: artifacts work on forked PRs, where the token
+      # is read-only and the comment step below cannot run.
+      - name: Upload the graph as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-graph
+          path: |
+            ${{ runner.temp }}/head-graph.json
+            ${{ runner.temp }}/graph-diff.md
+          if-no-files-found: error
+
+      - name: Comment the diff on the PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          marker='<!-- gacela-module-graph -->'
+          # --jq runs once per page, so this can emit one id per page; keep the
+          # first and let the rest be, rather than piping gh into head (pipefail
+          # turns the resulting SIGPIPE into a job failure).
+          matches=$(gh api "repos/${REPO}/issues/${PR}/comments" --paginate \
+            --jq "map(select(.body | startswith(\"${marker}\"))) | .[].id")
+          comment_id=$(printf '%s\n' "${matches}" | head -n 1)
+
+          if [ ! -s "${RUNNER_TEMP}/graph-diff.md" ]; then
+            echo "Graph unchanged."
+            # An earlier push may have changed the graph and a later one reverted
+            # it. Leaving the old comment up would describe a diff that no longer
+            # exists, so retract it rather than letting it go stale.
+            if [ -n "${comment_id}" ]; then
+              gh api -X DELETE "repos/${REPO}/issues/comments/${comment_id}"
+              echo "Removed the stale graph comment."
+            fi
+            exit 0
+          fi
+
+          if [ -n "${comment_id}" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${comment_id}" \
+              -F "body=@${RUNNER_TEMP}/graph-diff.md" > /dev/null
+            echo "Updated the existing graph comment."
+          else
+            gh api -X POST "repos/${REPO}/issues/${PR}/comments" \
+              -F "body=@${RUNNER_TEMP}/graph-diff.md" > /dev/null
+            echo "Posted the graph comment."
+          fi

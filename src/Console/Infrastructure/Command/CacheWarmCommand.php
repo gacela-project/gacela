@@ -48,14 +48,14 @@ final class CacheWarmCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $cacheManager = new CacheManager();
-        $cacheWarmService = new CacheWarmService($this->getFacade());
+        $cacheWarmService = new CacheWarmService();
         $formatter = new CacheWarmOutputFormatter($output);
         $metrics = new PerformanceMetrics();
 
         $formatter->writeHeader();
 
-        $clearCache = (bool) $input->getOption('clear');
-        $warmAttributes = (bool) $input->getOption('attributes');
+        $clearCache = $input->getOption('clear') === true;
+        $warmAttributes = $input->getOption('attributes') === true;
 
         if ($clearCache) {
             $cacheManager->clearCache();
@@ -63,19 +63,16 @@ final class CacheWarmCommand extends Command
             $formatter->writeCacheCleared();
         }
 
-        $modules = $this->discoverModules($cacheWarmService, $formatter);
+        $modules = $this->discoverModules($formatter);
         $modules = $cacheWarmService->filterProductionModules($modules);
 
         $formatter->writeModulesFound($modules);
 
-        AbstractPhpFileCache::beginBatch();
-
-        try {
-            $moduleWarmer = new ModuleWarmer($cacheWarmService, $formatter);
-            [$resolvedCount, $skippedCount] = $moduleWarmer->warmModules($modules, $warmAttributes);
-        } finally {
-            AbstractPhpFileCache::commitBatch();
-        }
+        [$resolvedCount, $skippedCount] = $this->warmInOneBatch(
+            new ModuleWarmer($cacheWarmService, $formatter),
+            $modules,
+            $warmAttributes,
+        );
 
         if (self::shouldDispatch(CacheWarmedEvent::class)) {
             self::dispatchEvent(new CacheWarmedEvent(count($modules), $skippedCount));
@@ -95,6 +92,26 @@ final class CacheWarmCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * Batching turns the per-class cache writes into a single atomic write per
+     * cache file. It is a write strategy, not a behaviour: the resulting cache
+     * is identical either way.
+     *
+     * @param list<AppModule> $modules
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function warmInOneBatch(ModuleWarmer $moduleWarmer, array $modules, bool $warmAttributes): array
+    {
+        AbstractPhpFileCache::beginBatch();
+
+        try {
+            return $moduleWarmer->warmModules($modules, $warmAttributes);
+        } finally {
+            AbstractPhpFileCache::commitBatch();
+        }
+    }
+
     private function warmAndDisplayMergedConfigCache(CacheWarmOutputFormatter $formatter): void
     {
         $filename = Config::getInstance()->writeMergedConfigCache();
@@ -110,11 +127,10 @@ final class CacheWarmCommand extends Command
      * @return list<AppModule>
      */
     private function discoverModules(
-        CacheWarmService $cacheWarmService,
         CacheWarmOutputFormatter $formatter,
     ): array {
         try {
-            return $cacheWarmService->discoverModules();
+            return $this->getFacade()->findAllAppModules();
         } catch (Throwable $throwable) {
             $formatter->writeModuleDiscoveryWarning($throwable->getMessage());
             return [];

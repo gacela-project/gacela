@@ -1,0 +1,9 @@
+[
+    {
+        "modules": [
+            "GacelaTest\\Feature\\Console\\DebugGraphCheck\\CycleA",
+            "GacelaTest\\Feature\\Console\\DebugGraphCheck\\CycleB"
+        ],
+        "reason": "Deliberate fixture cycle: it is the input DebugGraphCheckTest asserts the cycle check against. Removing these modules must also remove this entry, which the check enforces."
+    }
+]

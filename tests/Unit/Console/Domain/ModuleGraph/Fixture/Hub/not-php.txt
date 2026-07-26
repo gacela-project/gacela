@@ -1,0 +1,6 @@
+This file is not PHP, and the module scanner must not read it.
+
+use GacelaTest\Unit\Console\Domain\ModuleGraph\Fixture\Alpha\Facade;
+
+If the extension check stops working, the line above turns into a dependency
+on Alpha that no PHP file declares.

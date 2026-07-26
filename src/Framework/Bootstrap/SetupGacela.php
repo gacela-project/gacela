@@ -27,6 +27,9 @@ use function sprintf;
  *
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
+ * @psalm-import-type ServiceFactoryMap from ContainerConfigurationInterface
+ * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
+ * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
@@ -269,7 +272,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,mixed>
+     * @return ConfigKeyValues
      */
     public function getConfigKeyValues(): array
     {
@@ -290,7 +293,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,Closure>
+     * @return ServiceFactoryMap
      */
     public function getFactories(): array
     {
@@ -298,7 +301,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,Closure>
+     * @return ServiceFactoryMap
      */
     public function getProtectedServices(): array
     {
@@ -306,7 +309,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,string>
+     * @return ServiceAliasMap
      */
     public function getAliases(): array
     {
@@ -330,7 +333,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string,Closure>
+     * @return ServiceFactoryMap
      */
     public function getLazyServices(): array
     {
@@ -355,7 +358,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param ?array<string,mixed> $configKeyValues
+     * @param ?ConfigKeyValues $configKeyValues
      */
     public function setConfigKeyValues(?array $configKeyValues): self
     {
@@ -429,7 +432,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,mixed> $list
+     * @param ConfigKeyValues $list
      */
     public function mergeConfigKeyValues(array $list): void
     {
@@ -453,7 +456,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,Closure> $list
+     * @param ServiceFactoryMap $list
      */
     public function mergeFactories(array $list): void
     {
@@ -461,7 +464,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,Closure> $list
+     * @param ServiceFactoryMap $list
      */
     public function mergeProtectedServices(array $list): void
     {
@@ -469,7 +472,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,string> $list
+     * @param ServiceAliasMap $list
      */
     public function mergeAliases(array $list): void
     {
@@ -485,7 +488,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string,Closure> $list
+     * @param ServiceFactoryMap $list
      */
     public function mergeLazyServices(array $list): void
     {
@@ -581,7 +584,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,Closure> $list
+     * @param ?ServiceFactoryMap $list
      */
     public function setFactories(?array $list): self
     {
@@ -597,7 +600,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,Closure> $list
+     * @param ?ServiceFactoryMap $list
      */
     public function setProtectedServices(?array $list): self
     {
@@ -613,7 +616,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,string> $list
+     * @param ?ServiceAliasMap $list
      */
     public function setAliases(?array $list): self
     {
@@ -661,7 +664,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?array<string,Closure> $list
+     * @param ?ServiceFactoryMap $list
      */
     public function setLazyServices(?array $list): self
     {

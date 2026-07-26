@@ -7,7 +7,6 @@ namespace Gacela\Framework\ClassResolver;
 use function array_slice;
 use function count;
 use function is_object;
-use function is_string;
 use function sprintf;
 
 final class ClassInfo implements ClassInfoInterface
@@ -81,10 +80,9 @@ final class ClassInfo implements ClassInfoInterface
             return self::$callerClassCache[$callerClass][$resolvableType];
         }
 
-        /** @var list<string> $callerClassParts */
+        /** @var non-empty-list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-        $lastCallerClassPart = end($callerClassParts);
-        $filepath = is_string($lastCallerClassPart) ? $lastCallerClassPart : '';
+        $filepath = end($callerClassParts);
         $filename = self::normalizeFilename($filepath);
 
         if (str_contains($callerClass, 'anonymous')) {

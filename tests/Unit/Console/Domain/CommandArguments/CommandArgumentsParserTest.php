@@ -100,6 +100,26 @@ final class CommandArgumentsParserTest extends TestCase
         self::assertSame('modules/Test/SubModule', $args->directory());
     }
 
+    /**
+     * The psr-4 key and value are trimmed of their trailing separator by
+     * character, not by byte: with a multibyte path, cutting one byte leaves a
+     * broken sequence and the resulting directory no longer matches anything.
+     */
+    public function test_parse_with_a_multibyte_psr4_path(): void
+    {
+        $composerJson = json_decode(
+            '{"autoload":{"psr-4":{"Aplicación\\\\":"código/"}}}',
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        $args = (new CommandArgumentsParser($composerJson))->parse('Aplicación/TestModule');
+
+        self::assertSame('Aplicación\TestModule', $args->namespace());
+        self::assertSame('código/TestModule', $args->directory());
+    }
+
     private function exampleOneLevelComposerJson(): array
     {
         $composerJson = <<<'JSON'

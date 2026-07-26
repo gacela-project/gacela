@@ -97,15 +97,17 @@
         },
         // stats() aggregates over existing files, where the int-casts and the
         // equal-timestamp comparisons cannot change the outcome.
-        // Same for the cache-manager and doctor casts: filesize()/filemtime()
-        // only return false for a file that vanished between the existence
-        // check right above and the call itself, i.e. a filesystem race.
+        // Same for the cache-manager, doctor and cache:warm casts:
+        // filesize()/filemtime() only return false for a file that vanished
+        // between the existence check right above and the call itself, i.e. a
+        // filesystem race.
         CastInt: {
             ignore: [
                 "Gacela\\Framework\\Cache\\FileCache::stats",
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getCacheFileSize",
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getExistingCacheFilesWithSize",
                 "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::run",
+                "Gacela\\Console\\Infrastructure\\Command\\CacheWarmCommand::warmAndDisplayMergedConfigCache",
             ],
         },
         LessThan: {

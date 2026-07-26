@@ -7,6 +7,7 @@ namespace GacelaTest\Feature\Console\CacheWarm;
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
+use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Gacela;
@@ -15,6 +16,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function bin2hex;
+use function count;
 use function dirname;
 use function file_exists;
 use function mkdir;
@@ -31,6 +33,8 @@ final class CacheWarmCommandTest extends TestCase
 
     private string $mergedConfigCacheFile;
 
+    private string $customServicesCacheFile;
+
     protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
@@ -40,6 +44,8 @@ final class CacheWarmCommandTest extends TestCase
 
         $this->cacheFile = Config::getInstance()->getCacheDir() . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
         $this->mergedConfigCacheFile = Config::getInstance()->mergedConfigCacheFilename();
+        $this->customServicesCacheFile = Config::getInstance()->getCacheDir()
+            . DIRECTORY_SEPARATOR . CustomServicesPhpCache::FILENAME;
 
         $this->removeGeneratedCaches();
 
@@ -145,6 +151,28 @@ final class CacheWarmCommandTest extends TestCase
         self::assertStringContainsString('Warming Gacela cache', $output);
         self::assertStringContainsString('Cache warming complete!', $output);
         self::assertSame(0, $this->command->getStatusCode());
+    }
+
+    /**
+     * The --attributes flag is only observable through its side effect: warming the
+     * doc-block/attribute cache writes the custom-services cache file. Asserting on
+     * the command output alone cannot tell the two modes apart, because the flag
+     * adds no output of its own.
+     */
+    public function test_cache_warm_with_attributes_caches_more_docblock_services(): void
+    {
+        $this->command->execute([]);
+        $withoutAttributes = $this->customServicesCacheEntryCount();
+
+        $this->freshBootstrap();
+        (new CommandTester(new CacheWarmCommand()))->execute(['--attributes' => true]);
+        $withAttributes = $this->customServicesCacheEntryCount();
+
+        self::assertGreaterThan(
+            $withoutAttributes,
+            $withAttributes,
+            '--attributes must pre-resolve additional doc-block services',
+        );
     }
 
     public function test_cache_warm_with_all_options(): void
@@ -255,6 +283,28 @@ final class CacheWarmCommandTest extends TestCase
         }
     }
 
+    private function freshBootstrap(): void
+    {
+        $this->removeGeneratedCaches();
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->enableFileCache(__DIR__ . '/cache');
+        });
+    }
+
+    private function customServicesCacheEntryCount(): int
+    {
+        if (!file_exists($this->customServicesCacheFile)) {
+            return 0;
+        }
+
+        /** @var array<string,mixed> $entries */
+        $entries = require $this->customServicesCacheFile;
+
+        return count($entries);
+    }
+
     private function removeGeneratedCaches(): void
     {
         if (file_exists($this->cacheFile)) {
@@ -263,6 +313,10 @@ final class CacheWarmCommandTest extends TestCase
 
         if (file_exists($this->mergedConfigCacheFile)) {
             unlink($this->mergedConfigCacheFile);
+        }
+
+        if (file_exists($this->customServicesCacheFile)) {
+            unlink($this->customServicesCacheFile);
         }
     }
 }

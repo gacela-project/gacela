@@ -40,7 +40,7 @@ final class MakeModuleCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $template = ConsoleInput::option($input, 'template');
-        if ((bool)$input->getOption('minimal')) {
+        if ($input->getOption('minimal') === true) {
             $template = 'minimal';
         }
 
@@ -57,10 +57,10 @@ final class MakeModuleCommand extends Command
         /** @var string $path */
         $path = $input->getArgument('path');
         $commandArguments = $this->getFacade()->parseArguments($path);
-        $shortName = (bool)$input->getOption('short-name');
+        $shortName = $input->getOption('short-name') === true;
 
         if ($template === 'service') {
-            $this->generateServiceModule($commandArguments, $shortName, (bool)$input->getOption('with-tests'), $output);
+            $this->generateServiceModule($commandArguments, $shortName, $input->getOption('with-tests') === true, $output);
         } elseif ($template === 'minimal') {
             $this->generateMinimalModule($commandArguments, $shortName, $output);
         } else {

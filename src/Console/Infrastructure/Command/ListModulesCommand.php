@@ -52,7 +52,7 @@ final class ListModulesCommand extends Command
         }
 
         $this->generateListOfModules(
-            (bool)$input->getOption('detailed'),
+            $input->getOption('detailed') === true,
             $modules,
         );
 

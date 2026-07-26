@@ -166,6 +166,20 @@ final class DebugGraphCommandTest extends TestCase
         self::assertStringContainsString('is not valid JSON', $this->command->getDisplay());
     }
 
+    public function test_compare_to_a_file_holding_a_json_scalar_fails(): void
+    {
+        // Valid JSON, but not a graph: json_decode() hands back an int.
+        $baseline = $this->writeBaseline('123');
+
+        $exitCode = $this->command->execute(['--compare-to' => $baseline]);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString(
+            sprintf('"%s" must contain a JSON array or object.', $baseline),
+            $this->command->getDisplay(),
+        );
+    }
+
     private function writeBaseline(string $contents): string
     {
         $path = sys_get_temp_dir() . '/gacela-graph-baseline-' . bin2hex(random_bytes(4)) . '.json';

@@ -20,12 +20,25 @@
     minCoveredMsi: 100,
     mutators: {
         '@default': true,
+        // Ratcheting out of a blanket "Gacela\\Console\\*" ignore, namespace by
+        // namespace (#529). Domain, Application and the root Console classes are
+        // done and enforced at 100%: that is where the real logic lives -- Tarjan,
+        // the JSON/graph formatters, the code that writes files into a user's
+        // project.
+        //
+        // Infrastructure\Command stays ignored on purpose, and is not a TODO.
+        // Those classes are presentation: they read options and render tables and
+        // help text. The only way to kill an output mutant is to assert the exact
+        // rendered characters, which buys a number at the cost of a golden-master
+        // test that breaks whenever a separator is widened and tells nobody what
+        // regressed. Behaviour worth pinning (exit codes, which check reported
+        // what, whether a flag changes what gets written) is covered by targeted
+        // assertions instead.
+        //
+        // Everything else under Infrastructure -- FileContentIo, ConsoleBootstrap
+        // -- is real logic and stays in the gate.
         "global-ignore": [
-            // Ratcheting out of a blanket "Gacela\\Console\\*" ignore, namespace by
-            // namespace (#529). Domain is done and is now enforced at 100%; the
-            // rest stays ignored until it gets the same treatment, rather than
-            // being switched on and baselined.
-            "Gacela\\Console\\Infrastructure\\*",
+            "Gacela\\Console\\Infrastructure\\Command\\*",
         ],
         // Equivalent or environment-untestable mutants, grouped by reason.
         "global-ignoreSourceCodeByRegex": [
@@ -107,6 +120,7 @@
         // above has already rejected. fullModuleName() handles a facade with no
         // namespace separator at all, unreachable from the finder because the
         // namespace guard rejects those first (see the global-namespace test).
+        // asPathFilter(): realpath() can only fail for a path is_dir() just
         FalseValue: {
             ignore: [
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",

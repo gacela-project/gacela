@@ -135,7 +135,7 @@ final class ProfileReportCommand extends Command
             ];
         }
 
-        $output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $output->writeln(json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         $output->writeln('');
     }
 

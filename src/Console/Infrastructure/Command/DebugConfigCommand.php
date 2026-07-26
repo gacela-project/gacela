@@ -21,6 +21,7 @@ use function sprintf;
 
 use function str_contains;
 
+use const JSON_THROW_ON_ERROR;
 use const JSON_UNESCAPED_SLASHES;
 
 /**
@@ -88,7 +89,7 @@ final class DebugConfigCommand extends Command
             return (string)$value;
         }
 
-        return (string)json_encode($value, JSON_UNESCAPED_SLASHES);
+        return json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
     }
 
     private function getHelpText(): string

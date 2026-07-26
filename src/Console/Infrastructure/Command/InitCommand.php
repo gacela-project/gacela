@@ -50,12 +50,7 @@ final class InitCommand extends Command
             return self::FAILURE;
         }
 
-        $template = file_get_contents(self::TEMPLATE);
-        if ($template === false) {
-            throw new RuntimeException(sprintf('Template "%s" could not be read', self::TEMPLATE));
-        }
-
-        if (file_put_contents($target, $template) === false) {
+        if (file_put_contents($target, $this->readTemplate()) === false) {
             throw new RuntimeException(sprintf('File "%s" was not written', $target));
         }
 
@@ -64,5 +59,19 @@ final class InitCommand extends Command
         $output->writeln('Next: <comment>bin/gacela make:module App/YourModule --minimal</comment>');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The template ships with the package, so an unreadable one means a broken
+     * installation rather than anything the caller did.
+     */
+    private function readTemplate(): string
+    {
+        $template = file_get_contents(self::TEMPLATE);
+        if ($template === false) {
+            throw new RuntimeException(sprintf('Template "%s" could not be read', self::TEMPLATE));
+        }
+
+        return $template;
     }
 }

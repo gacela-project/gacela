@@ -113,12 +113,15 @@ final class DoctorCommand extends Command
 
     private function worseOf(CheckStatus $a, CheckStatus $b): CheckStatus
     {
-        $rank = static fn (CheckStatus $s): int => match ($s) {
-            CheckStatus::Ok => 0,
-            CheckStatus::Warn => 1,
-            CheckStatus::Error => 2,
-        };
-        return $rank($a) >= $rank($b) ? $a : $b;
+        if ($a === CheckStatus::Error || $b === CheckStatus::Error) {
+            return CheckStatus::Error;
+        }
+
+        if ($a === CheckStatus::Warn || $b === CheckStatus::Warn) {
+            return CheckStatus::Warn;
+        }
+
+        return CheckStatus::Ok;
     }
 
     private function finish(OutputInterface $output, string $line, int $code): int

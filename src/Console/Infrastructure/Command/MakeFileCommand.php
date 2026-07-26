@@ -44,7 +44,7 @@ final class MakeFileCommand extends Command
         /** @var string $path */
         $path = $input->getArgument('path');
         $commandArguments = $this->getFacade()->parseArguments($path);
-        $shortName = (bool)$input->getOption('short-name');
+        $shortName = $input->getOption('short-name') === true;
 
         foreach ($filenames as $filename) {
             $absolutePath = $this->getFacade()->generateFileContent(

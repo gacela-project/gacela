@@ -42,11 +42,33 @@ final class ServiceMapAnalysisTest extends TestCase
         self::assertStringNotContainsString('knownMethod', $errors);
     }
 
-    public function test_the_accessor_itself_is_never_an_undefined_method(): void
+    public function test_a_declared_accessor_is_never_an_undefined_method(): void
     {
         $errors = $this->analyseFixture();
 
-        self::assertStringNotContainsString('::getFacade()', $errors);
+        // Namespace-qualified on purpose: "Consumer::getFacade()" alone is also a
+        // substring of "UndeclaredConsumer::getFacade()", which must be reported.
+        self::assertStringNotContainsString('Fixture\Consumer::getFacade()', $errors);
+    }
+
+    /**
+     * The counterpart, and the reason 2.0 drops the `ignoreErrors` entry that
+     * 1.x shipped: a class declaring neither `#[ServiceMap]` nor a `@method`
+     * docblock is now reported instead of silenced.
+     *
+     * A suppressed call was never a typed one -- it evaluated to `mixed`, which
+     * switched off checking of everything reached through the accessor. This is
+     * the breaking half of the attribute-first move, so it is pinned rather than
+     * left as a property of a config file nobody reads.
+     */
+    public function test_an_undeclared_accessor_is_reported(): void
+    {
+        $errors = $this->analyseFixture();
+
+        self::assertStringContainsString(
+            'Call to an undefined method GacelaTest\Integration\PHPStan\Fixture\UndeclaredConsumer::getFacade().',
+            $errors,
+        );
     }
 
     private function analyseFixture(): string

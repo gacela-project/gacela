@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed (BREAKING — 2.0)
+
+- **PHP floor raised to `>=8.3`** (was `>=8.1`). PHP 8.1 reached end of life in December 2025 and 8.2's security window closes in December 2026, so a 2.0 pinned to either would ship already needing another bump. Projects on 8.1 or 8.2 should stay on **1.21**, which is feature-complete and carries the tooling for this migration — `doctor`'s filename check, `FacadeInterfaceInSyncRule`, and the typed pillar accessors
+- **`symfony/*` widened to `^7.0 || ^8.0`** (was `^6.4`). Gacela no longer decides a consumer's Symfony major for them
+
 ### Removed (BREAKING — 2.0)
 
 - `AbstractDependencyProvider` — extend `AbstractProvider` instead (identical API; it was a deprecated alias)

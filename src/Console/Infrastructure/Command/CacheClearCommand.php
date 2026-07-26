@@ -7,9 +7,11 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\Application\CacheWarm\CacheManager;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function file_exists;
@@ -18,6 +20,7 @@ use function sprintf;
 /**
  * @method ConsoleFacade getFacade()
  */
+#[ServiceMap(method: 'getFacade', className: ConsoleFacade::class)]
 final class CacheClearCommand extends Command
 {
     use ServiceResolverAwareTrait;

@@ -9,6 +9,7 @@ use Gacela\Console\Application\Debug\ConstructorInspector;
 use Gacela\Console\Application\Debug\ParameterInspection;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use ReflectionClass;
 use ReflectionException;
@@ -17,6 +18,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+
 use Throwable;
 
 use function class_exists;
@@ -26,6 +28,7 @@ use function strlen;
 /**
  * @method ConsoleFacade getFacade()
  */
+#[ServiceMap(method: 'getFacade', className: ConsoleFacade::class)]
 final class DebugModulesCommand extends Command
 {
     use ServiceResolverAwareTrait;

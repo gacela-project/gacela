@@ -2,6 +2,11 @@ includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
     - phpstan-baseline.neon
+    # Gacela analyses itself with the extension it ships. Without this the
+    # pillar accessors are only typed by `@method` docblocks, which is the
+    # duplication 2.0 removes -- and it meant the shipped extension was never
+    # exercised against Gacela's own source.
+    - phpstan-gacela.neon
 
 parameters:
     level: max
@@ -17,6 +22,16 @@ parameters:
         # (e.g. strrpos() returning a falsy 0) still shows up as an opt-out.
         disallowedShortTernary: false
     ignoreErrors:
+        # SuffixExtendsRule asks that a class named *Facade/*Factory/*Config/*Provider
+        # extends the matching pillar base class. That is the contract for a consumer's
+        # *modules*; Gacela's own framework internals reuse those words for things that
+        # are not pillars -- GacelaConfig is the bootstrap builder, ConfigFactory builds
+        # config objects, EventDispatcherProvider is a static holder. Scoped to
+        # src/Framework so the rule still applies to Gacela\Console, which is a real
+        # Gacela module and does satisfy it.
+        -
+            identifier: gacela.suffixExtends
+            path: src/Framework/*
         # Building a MethodReflection is unavoidable for a methodsClassReflectionExtension,
         # and PHPStan covers no way of doing it under its BC promise -- neither implementing
         # ExtendedMethodReflection nor constructing its own implementation of it. The class

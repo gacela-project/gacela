@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\FileCache\ModuleE;
 
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Benchmark\FileCache\ModuleE\Infra\EntityManager;
 use GacelaTest\Benchmark\FileCache\ModuleE\Infra\Repository;
@@ -15,6 +16,9 @@ use GacelaTest\Fixtures\StringValueInterface;
  * @method Repository getRepository()
  * @method EntityManager getEntityManager()
  */
+#[ServiceMap(method: 'getConfig', className: ConfigE::class)]
+#[ServiceMap(method: 'getRepository', className: Repository::class)]
+#[ServiceMap(method: 'getEntityManager', className: EntityManager::class)]
 final class FactoryE extends AbstractFactory
 {
     use ServiceResolverAwareTrait;

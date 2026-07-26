@@ -14,6 +14,10 @@
 
 - New `docs/getting-a-dependency.md`: names **one primary path per intent** — `#[ServiceMap]` + `getFacade()` to reach another module, `create*()`/`make()` for an own collaborator, `#[Provides]`/`addBinding()` for an external service, and the typed getters for config. The other paths are listed with the situation where each is genuinely the right answer. Nothing was removed: the 25-path inventory in `docs/rfc/0002` showed the problem was never the count — reading config has six methods for one intent and nobody complains, because they are the same path with typed variants
 
+### Deprecated
+
+- Resolving a pillar from a `@method` docblock, or by scanning the caller's `use` statements, now raises `E_USER_DEPRECATED` and is removed in 3.0. Declare the pillar with `#[ServiceMap(method: ..., className: ...)]` instead — the attribute is checked first, so adding it silences the notice. The notice fires on a **cold resolve only**, because the answer is memoized per caller-and-method; run `gacela cache:clear`, or develop with the file cache off, to surface every occurrence. **Keeping the `@method` docblock alongside the attribute is fine and recommended if you use Psalm or rely on IDE completion** — Gacela ships a PHPStan extension for `#[ServiceMap]` but no Psalm equivalent yet
+
 ### Changed (BREAKING — 2.0)
 
 - **The PHPStan suppression for undeclared pillar accessors is gone.** 1.x shipped an `ignoreErrors` entry in `phpstan-gacela.neon` silencing `Call to an undefined method ...::getFacade()`. A class resolving a pillar through `ServiceResolverAwareTrait` must now declare it with `#[ServiceMap]` (or a `@method` docblock, which PHPStan reads natively) or the call is reported. A suppressed call was never a typed one — it evaluated to `mixed`, which switched off checking of everything reached *through* the accessor. 1.21 shipped the `#[ServiceMap]` typing precisely so this migration can be done first

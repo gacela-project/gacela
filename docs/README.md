@@ -1,6 +1,7 @@
 # Gacela Documentation
 
 - [Getting started](getting-started.md) — install and build your first module
+- [Getting a dependency](getting-a-dependency.md) — one primary path per intent, and when the other paths are right
 - [Container configuration](container-configuration.md) — factories, aliases, contextual bindings
 - [Static analysis](static-analysis.md) — PHPStan and Psalm setup
 - [Module health checks](module-health-checks.md) — report module operational status

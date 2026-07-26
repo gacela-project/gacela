@@ -1,0 +1,157 @@
+# Getting a dependency
+
+Gacela supports many ways to obtain a dependency. This page names **one primary
+path per intent** — the one the docs teach, the one that is type-safe, and the
+one to reach for when you have no specific reason to do otherwise.
+
+The rest still work. They are listed at the bottom with the situations where
+they are genuinely the right answer, because "supported" is not "deprecated".
+
+| I want to… | Use |
+|---|---|
+| reach another module | `#[ServiceMap]` + `$this->getFacade()` |
+| get a collaborator inside my own module | a `create*()` method on the Factory, or `make()` when autowiring pays |
+| get an external / infrastructure service | `#[Provides]` in the Provider, or `addBinding()` for an interface |
+| read a config value | the typed getters on your `Config` |
+
+## Reach another module
+
+Declare the pillar with `#[ServiceMap]` and call the accessor:
+
+```php
+use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\ServiceResolver\ServiceMap;
+
+#[ServiceMap(method: 'getFacade', className: BillingFacade::class)]
+final class Factory extends AbstractFactory
+{
+    public function createInvoiceSender(): InvoiceSender
+    {
+        return new InvoiceSender($this->getFacade());
+    }
+}
+```
+
+**Why declare it.** The accessor works without the attribute — the runtime falls
+back to reading a `@method` docblock, and then to scanning your file's `use`
+statements. But an undeclared accessor is untyped: PHPStan reports it in 2.0,
+and before that it evaluated to `mixed`, which switched off checking of
+everything reached *through* it. A `@method` docblock is equally fine; PHPStan
+reads it natively.
+
+Cross-module access goes through the other module's **Facade**, never its
+Factory or internals. `CrossModuleViaFacadeRule` enforces this if you enable it.
+
+## Get a collaborator inside my own module
+
+Write a `create*()` method on your Factory:
+
+```php
+final class Factory extends AbstractFactory
+{
+    public function createInvoiceSender(): InvoiceSender
+    {
+        return new InvoiceSender($this->createPdfRenderer());
+    }
+}
+```
+
+When the wiring is pure type-based plumbing, `make()` autowires it through the
+module container instead — honouring `#[Inject]`, `#[Singleton]` and
+`#[Factory]`, and needing no Provider at all:
+
+```php
+public function createInvoiceSender(): InvoiceSender
+{
+    return $this->make(InvoiceSender::class);
+}
+```
+
+Use `create*()` when construction has decisions in it, `make()` when it does
+not. A Facade reaches its own Factory with `$this->getFactory()`, which is a
+real typed method — no attribute required.
+
+## Get an external / infrastructure service
+
+Declare it in the module's Provider with `#[Provides]`:
+
+```php
+use Gacela\Framework\AbstractProvider;
+use Gacela\Framework\Attribute\Provides;
+
+final class Provider extends AbstractProvider
+{
+    #[Provides(PaymentGateway::class)]
+    public function paymentGateway(): PaymentGateway
+    {
+        return new StripeGateway();
+    }
+}
+```
+
+Read it back in the Factory with the class-string form, which is typed:
+
+```php
+$gateway = $this->getProvidedDependency(PaymentGateway::class);
+```
+
+For "this interface means that implementation" across the whole app, use
+`addBinding()` in `gacela.php` instead — the container then autowires it
+everywhere, including through `make()`:
+
+```php
+$config->addBinding(PaymentGateway::class, StripeGateway::class);
+```
+
+## Read a config value
+
+The typed getters are `protected`, so they are used *inside* your `Config`
+class, which exposes intention-revealing methods to the rest of the module:
+
+```php
+final class Config extends AbstractConfig
+{
+    public function retryAttempts(): int
+    {
+        return $this->getInt('billing.retry-attempts', 3);
+    }
+}
+```
+
+`getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()` and the
+untyped `get()` are all available. This is the shape the other three intents are
+aiming for: one path, typed variants, impossible to use wrongly.
+
+## The other paths, and when they are right
+
+These are supported and are **not** deprecated. They are simply not the answer
+to "how do I get a dependency?" — reach for them when the situation below is
+actually yours.
+
+| Path | Reach for it when |
+|---|---|
+| `addBindingIf()` | shipping a plugin default an application may override |
+| `addFactory('id', fn)` | you need a **new instance per resolution**, not a shared one |
+| `addProtected('id', fn)` | the value *is* a closure and must not be invoked |
+| `addAlias('short', Full::class)` | a long id needs a short name |
+| `addLazy()` | construction is expensive and often unused |
+| `extendService('id', fn)` | decorating a service registered elsewhere |
+| `when(X)->needs(Y)->give(Z)` | one consumer needs a different implementation than everyone else |
+| `addExternalService()` | handing a framework object (Symfony kernel, PSR container) to Gacela at bootstrap |
+| `$container->get('id')` inside a Provider | wiring one provided service from another |
+| `#[Singleton]` / `#[Factory]` on a class | declaring **lifetime**, which is a different question from lookup |
+
+### Why none of them were removed
+
+The 2.0 inventory ([RFC-0002](rfc/0002-dependency-paths-inventory.md)) counted 25
+paths and the obvious conclusion was "delete most of them". That would have been
+the wrong lesson.
+
+Reading a config value has **six** methods for one intent and nobody has ever
+complained, because they are the same path with typed variants — discovered
+together, impossible to confuse. The problem in the other intents was never the
+count. It was that unrelated mechanisms competed for the same job with no
+indication which one you were supposed to use.
+
+Naming a primary path fixes that. Deleting working escape hatches would only
+have broken applications that had a good reason to use one.

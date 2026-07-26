@@ -6,6 +6,10 @@
 
 - `Gacela::resetCache()` now drops the memoized "this class does not exist" answers. `ClassValidator` caches the *negative* result of `class_exists()`, so a class that was not loadable when first resolved stayed "missing" for the life of the process — `Gacela::resetCache()` did not clear it, because `ClassValidator::resetCache()` was reachable only from its own unit test. Affects any process where the set of loadable classes changes after the first resolution: long-running workers (RoadRunner, Swoole, queue consumers) that re-bootstrap, code generation, and `cache:warm` emitting classes. Positive answers are kept — a class that exists cannot stop existing, so they never go stale, and clearing them cost ~20% on the no-file-cache bootstrap path for no correctness gain
 
+### Documentation
+
+- New `docs/getting-a-dependency.md`: names **one primary path per intent** — `#[ServiceMap]` + `getFacade()` to reach another module, `create*()`/`make()` for an own collaborator, `#[Provides]`/`addBinding()` for an external service, and the typed getters for config. The other paths are listed with the situation where each is genuinely the right answer. Nothing was removed: the 25-path inventory in `docs/rfc/0002` showed the problem was never the count — reading config has six methods for one intent and nobody complains, because they are the same path with typed variants
+
 ### Changed (BREAKING — 2.0)
 
 - **The PHPStan suppression for undeclared pillar accessors is gone.** 1.x shipped an `ignoreErrors` entry in `phpstan-gacela.neon` silencing `Call to an undefined method ...::getFacade()`. A class resolving a pillar through `ServiceResolverAwareTrait` must now declare it with `#[ServiceMap]` (or a `@method` docblock, which PHPStan reads natively) or the call is reported. A suppressed call was never a typed one — it evaluated to `mixed`, which switched off checking of everything reached *through* the accessor. 1.21 shipped the `#[ServiceMap]` typing precisely so this migration can be done first

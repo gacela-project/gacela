@@ -6,6 +6,10 @@
 
 - **`extendService()` on an id that names an autowirable class threw instead of scheduling the extension.** A regression in `gacela-project/container` 1.0, shipped in Gacela by the 1.0 bump: `has()` moved to the PSR-11 question ("will `get()` resolve this?"), which is `true` for any instantiable class, so `extend()` took the already-defined branch. Fixed by requiring container `^1.1`. Gacela's own tests missed it because every existing `extendService()` case uses a plain string id, and the bug only bites when the id happens to name a real class
 
+### Internal
+
+- `debug:container` reads six keys from the container's `getStats()`, whose shape upstream explicitly excludes from its BC policy. `ContainerStatsShapeTest` pins those keys, so a container upgrade that renames one fails Gacela's CI on the upgrade commit rather than a user's terminal
+
 ### Added
 
 - `#[Lazy]` (container 1.1) joins `#[Inject]`, `#[Singleton]` and `#[Factory]` as an attribute honoured by `AbstractFactory::make()` and container resolution. It defers construction until the instance is first used, which suits an expensive service a request may never reach. Requires PHP 8.4 for native lazy objects; on 8.3 the class is constructed eagerly, which is unobservable apart from the timing

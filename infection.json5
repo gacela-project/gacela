@@ -87,6 +87,16 @@
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Cache\\FileCache::delete",
                 "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
+                // warmUp() pre-resolves dependencies into the container's own
+                // cache. It is a performance hint with no observable behaviour:
+                // a class is exactly as resolvable, and returns exactly the same
+                // instance, whether or not it was warmed. The only way to kill
+                // this mutant is to assert the container's internal counters --
+                // and getStats() is explicitly not covered by upstream's BC
+                // policy ("do not build logic on it"), so a test reading it
+                // would break on an unrelated upstream release.
+                // Not a TODO. The forwarding itself is required by the interface.
+                "Gacela\\Framework\\Container\\Container::warmUp",
             ],
         },
         IfNegation: {

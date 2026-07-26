@@ -27,5 +27,9 @@ final class BytesFormatterTest extends TestCase
         yield 'largest kb rounds up to 1024.00' => [1048575, '1024.00 KB'];
         yield 'mb boundary' => [1048576, '1.00 MB'];
         yield 'large non-round mb' => [1572864, '1.50 MB'];
+        // 5243 MiB exactly. Big enough that dividing by 1048575 or 1048577
+        // instead of 1048576 already shifts the second decimal, so the divisor
+        // itself is pinned and not just the KB/MB threshold.
+        yield 'multi-gigabyte value pins the mb divisor' => [5497683968, '5243.00 MB'];
     }
 }

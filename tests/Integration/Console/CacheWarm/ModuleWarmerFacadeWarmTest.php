@@ -65,7 +65,11 @@ final class ModuleWarmerFacadeWarmTest extends TestCase
 
         self::assertStringContainsString('HealthyFactory', $resolved, 'warming must continue past the broken module');
         self::assertGreaterThanOrEqual(1, $skippedCount, 'the broken module must be counted as skipped');
-        self::assertStringContainsString('Broken', $output->fetch(), 'the failed module must be reported');
+        self::assertStringContainsString(
+            '✗ Failed Facade: ' . BrokenFacade::class,
+            $output->fetch(),
+            'the facade that could not be warmed must be named in the output',
+        );
     }
 
     private function removeCacheDir(): void

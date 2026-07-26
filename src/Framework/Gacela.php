@@ -14,6 +14,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
+use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
@@ -28,6 +29,7 @@ use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Exception\ServiceNotFoundException;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
+use Gacela\Framework\ServiceResolver\ReflectionClassPool;
 
 use function is_string;
 use function sprintf;
@@ -204,6 +206,9 @@ final class Gacela
         ClassResolverCache::resetCache();
         ConfigFactory::resetCache();
         PathFinder::resetCache();
+        ClassValidator::resetCache();
+        ReflectionClassPool::reset();
+        // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();
     }

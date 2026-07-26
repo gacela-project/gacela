@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- `Gacela::resetCache()` now clears the memoized `class_exists()` answers and the reflection pool. `ClassValidator` caches the *negative* answer too, so a class that was not loadable when first resolved stayed "missing" for the life of the process — `Gacela::resetCache()` did not clear it, because `ClassValidator::resetCache()` and `ReflectionClassPool::reset()` were reachable only from their own unit tests. Affects any process where the set of loadable classes changes after the first resolution: long-running workers (RoadRunner, Swoole, queue consumers) that re-bootstrap, code generation, and `cache:warm` emitting classes
+
 ### Changed (BREAKING — 2.0)
 
 - **PHP floor raised to `>=8.3`** (was `>=8.1`). PHP 8.1 reached end of life in December 2025 and 8.2's security window closes in December 2026, so a 2.0 pinned to either would ship already needing another bump. Projects on 8.1 or 8.2 should stay on **1.21**, which is feature-complete and carries the tooling for this migration — `doctor`'s filename check, `FacadeInterfaceInSyncRule`, and the typed pillar accessors

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.21.0](https://github.com/gacela-project/gacela/compare/1.20.0...1.21.0) - 2026-07-26
+
 Static analysis now **types** the pillar accessors instead of suppressing them, and the
 console gained checks for the mistakes that were previously silent. Both are worth having
 before you migrate to 2.0.

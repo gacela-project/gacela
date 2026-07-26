@@ -23,12 +23,4 @@ final class PropertyChangeTracker
     {
         return $this->changedProperties[$propertyName] ?? false;
     }
-
-    /**
-     * @return array<string,bool>
-     */
-    public function getAll(): array
-    {
-        return $this->changedProperties;
-    }
 }

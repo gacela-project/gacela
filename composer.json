@@ -26,13 +26,14 @@
         "issues": "https://github.com/gacela-project/gacela/issues"
     },
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.3",
         "gacela-project/container": "^0.10.0"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.50",
         "friendsofphp/php-cs-fixer": "^3.95",
         "infection/infection": "^0.29",
+        "nikic/php-parser": "^5.0",
         "phpbench/phpbench": "^1.4",
         "phpmetrics/phpmetrics": "^2.9",
         "phpstan/phpstan": "^2.0",
@@ -40,9 +41,9 @@
         "phpunit/phpunit": "^10.5",
         "psalm/plugin-phpunit": "^0.19.5",
         "rector/rector": "^2.0",
-        "symfony/console": "^6.4",
-        "symfony/dependency-injection": "^6.4",
-        "symfony/var-dumper": "^6.4",
+        "symfony/console": "^7.0 || ^8.0",
+        "symfony/dependency-injection": "^7.0 || ^8.0",
+        "symfony/var-dumper": "^7.0 || ^8.0",
         "vimeo/psalm": "^6.16"
     },
     "suggest": {
@@ -77,7 +78,7 @@
             "infection/extension-installer": true
         },
         "platform": {
-            "php": "8.1.31"
+            "php": "8.3.16"
         },
         "sort-packages": true
     },

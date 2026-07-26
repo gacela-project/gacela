@@ -52,6 +52,22 @@ final class ConstructorInspectorTest extends TestCase
         self::assertSame(ParameterStatus::MissingType, $inspection->parameters[2]->status);
     }
 
+    public function test_every_type_shape_is_rendered_the_way_php_writes_it(): void
+    {
+        $inspection = $this->inspector->inspect(UntypedAndUnionService::class);
+
+        self::assertSame('mixed', $inspection->parameters[0]->renderedType, 'an untyped parameter reads as mixed');
+        self::assertSame('string|int', $inspection->parameters[1]->renderedType);
+        self::assertSame('Totally\\Missing\\Type', $inspection->parameters[2]->renderedType);
+    }
+
+    public function test_a_nullable_type_keeps_its_question_mark(): void
+    {
+        $inspection = $this->inspector->inspect(MixedDependenciesService::class);
+
+        self::assertSame('?' . AutowirableCollaborator::class, $inspection->parameters[5]->renderedType);
+    }
+
     public function test_mixed_dependencies_are_categorized(): void
     {
         $inspection = $this->inspector->inspect(MixedDependenciesService::class);
@@ -112,5 +128,20 @@ final class ConstructorInspectorTest extends TestCase
         $override = $inspection->parameters[1];
         self::assertSame(ParameterStatus::Inject, $override->status);
         self::assertSame('inject -> ' . BoundImplementation::class, $override->detail);
+    }
+
+    public function test_a_binding_to_an_already_built_object_names_its_class(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addBinding(BoundContract::class, new BoundImplementation());
+        });
+
+        $inspection = (new ConstructorInspector())->inspect(MixedDependenciesService::class);
+
+        self::assertSame(
+            'bound -> ' . BoundImplementation::class . ' instance',
+            $inspection->parameters[0]->detail,
+        );
     }
 }

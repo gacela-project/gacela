@@ -8,6 +8,8 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
  * Main configuration interface for Gacela framework setup.
+ *
+ * @psalm-type ConfigKeyValues = array<string, mixed>
  */
 interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerConfigurationInterface, CacheConfigurationInterface
 {
@@ -29,7 +31,7 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
     /**
      * Get the list of key:value configuration.
      *
-     * @return array<string,mixed>
+     * @return ConfigKeyValues
      */
     public function getConfigKeyValues(): array;
 

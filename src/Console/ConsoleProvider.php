@@ -14,6 +14,7 @@ use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
 use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
+use Gacela\Console\Infrastructure\Command\InitCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
@@ -21,6 +22,8 @@ use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Attribute\Provides;
+use Gacela\Framework\Config\Config;
+use Symfony\Component\Console\Command\Command;
 
 /**
  * @extends AbstractProvider<ConsoleConfig>
@@ -34,7 +37,7 @@ final class ConsoleProvider extends AbstractProvider
     public const SERVICE_TEMPLATE_BY_FILENAME_MAP = 'SERVICE_TEMPLATE_FILENAME_MAP';
 
     /**
-     * @return list<object>
+     * @return list<Command>
      */
     #[Provides(self::COMMANDS)]
     public function commands(): array
@@ -54,6 +57,7 @@ final class ConsoleProvider extends AbstractProvider
             new ValidateConfigCommand(),
             new ProfileReportCommand(),
             new DoctorCommand(),
+            new InitCommand(Config::getInstance()->getAppRootDir()),
         ];
     }
 

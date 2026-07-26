@@ -102,12 +102,10 @@ final class AnonymousGlobal
         }
 
         $callerClass = $context::class;
-        /** @var list<string> $callerClassParts */
+        /** @var non-empty-list<string> $callerClassParts */
         $callerClassParts = explode('\\', $callerClass);
 
-        $lastCallerClassParts = end($callerClassParts);
-
-        return is_string($lastCallerClassParts) ? $lastCallerClassParts : '';
+        return end($callerClassParts);
     }
 
     private static function validateTypeForAnonymousGlobalRegistration(string $type): void

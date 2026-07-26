@@ -266,6 +266,38 @@ Notes:
 - Constructor params of attribute-annotated classes still go through the normal
   resolution order (bindings, contextual bindings, `#[Inject]`).
 
+### Resolving domain objects by type with `make()`
+
+`AbstractFactory::make()` gives a `create*()` method a typed, autowiring
+construction path through the same module container — so a factory can resolve a
+domain object by type instead of hand-`new`ing it and wiring each argument:
+
+```php
+final class CheckoutFactory extends AbstractFactory
+{
+    public function createCheckoutService(): CheckoutService
+    {
+        // Constructor autowired; #[Inject]/#[Singleton]/#[Factory] honored.
+        return $this->make(CheckoutService::class);
+    }
+}
+```
+
+- The return type is inferred from the class-string, so no `/** @var */` is
+  needed at the call site (unlike `getProvidedDependency()`, which returns
+  `mixed`).
+- Pass runtime overrides by parameter name to override specific constructor
+  arguments; the instance is then always built fresh:
+
+  ```php
+  $this->make(CheckoutService::class, ['currency' => 'EUR']);
+  ```
+
+  Scalars/config are best expressed as contextual bindings
+  (`when()->needs('$currency')->give(...)`) rather than string locator keys.
+- Additive and opt-in: existing `getProvidedDependency()` and hand-wired
+  `create*()` methods keep working unchanged.
+
 ## Quick Reference
 
 | Type | Behavior | Use Case |

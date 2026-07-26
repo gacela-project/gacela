@@ -14,73 +14,73 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
  */
 abstract class AbstractSetupGacela implements SetupGacelaInterface
 {
-    public const shouldResetInMemoryCache = 'shouldResetInMemoryCache';
+    public const string shouldResetInMemoryCache = 'shouldResetInMemoryCache';
 
-    public const fileCacheEnabled = 'fileCacheEnabled';
+    public const string fileCacheEnabled = 'fileCacheEnabled';
 
-    public const fileCacheDirectory = 'fileCacheDirectory';
+    public const string fileCacheDirectory = 'fileCacheDirectory';
 
-    public const externalServices = 'externalServices';
+    public const string externalServices = 'externalServices';
 
-    public const projectNamespaces = 'projectNamespaces';
+    public const string projectNamespaces = 'projectNamespaces';
 
-    public const appModulePaths = 'appModulePaths';
+    public const string appModulePaths = 'appModulePaths';
 
-    public const configKeyValues = 'configKeyValues';
+    public const string configKeyValues = 'configKeyValues';
 
-    public const servicesToExtend = 'servicesToExtend';
+    public const string servicesToExtend = 'servicesToExtend';
 
-    public const factories = 'factories';
+    public const string factories = 'factories';
 
-    public const protectedServices = 'protectedServices';
+    public const string protectedServices = 'protectedServices';
 
-    public const aliases = 'aliases';
+    public const string aliases = 'aliases';
 
-    public const contextualBindings = 'contextualBindings';
+    public const string contextualBindings = 'contextualBindings';
 
-    public const handlerRegistries = 'handlerRegistries';
+    public const string handlerRegistries = 'handlerRegistries';
 
-    public const lazyServices = 'lazyServices';
+    public const string lazyServices = 'lazyServices';
 
-    public const plugins = 'plugins';
+    public const string plugins = 'plugins';
 
-    public const gacelaConfigsToExtend = 'gacelaConfigsToExtend';
+    public const string gacelaConfigsToExtend = 'gacelaConfigsToExtend';
 
-    protected const DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
+    protected const bool DEFAULT_ARE_EVENT_LISTENERS_ENABLED = true;
 
-    protected const DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
+    protected const bool DEFAULT_SHOULD_RESET_IN_MEMORY_CACHE = false;
 
-    protected const DEFAULT_FILE_CACHE_ENABLED = GacelaFileCache::DEFAULT_ENABLED_VALUE;
+    protected const bool DEFAULT_FILE_CACHE_ENABLED = GacelaFileCache::DEFAULT_ENABLED_VALUE;
 
-    protected const DEFAULT_FILE_CACHE_DIRECTORY = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
+    protected const ?string DEFAULT_FILE_CACHE_DIRECTORY = GacelaFileCache::DEFAULT_DIRECTORY_VALUE;
 
-    protected const DEFAULT_PROJECT_NAMESPACES = [];
+    protected const array DEFAULT_PROJECT_NAMESPACES = [];
 
-    protected const DEFAULT_APP_MODULE_PATHS = [];
+    protected const array DEFAULT_APP_MODULE_PATHS = [];
 
-    protected const DEFAULT_CONFIG_KEY_VALUES = [];
+    protected const array DEFAULT_CONFIG_KEY_VALUES = [];
 
-    protected const DEFAULT_GENERIC_LISTENERS = [];
+    protected const array DEFAULT_GENERIC_LISTENERS = [];
 
-    protected const DEFAULT_SPECIFIC_LISTENERS = [];
+    protected const array DEFAULT_SPECIFIC_LISTENERS = [];
 
-    protected const DEFAULT_SERVICES_TO_EXTEND = [];
+    protected const array DEFAULT_SERVICES_TO_EXTEND = [];
 
-    protected const DEFAULT_FACTORIES = [];
+    protected const array DEFAULT_FACTORIES = [];
 
-    protected const DEFAULT_PROTECTED_SERVICES = [];
+    protected const array DEFAULT_PROTECTED_SERVICES = [];
 
-    protected const DEFAULT_ALIASES = [];
+    protected const array DEFAULT_ALIASES = [];
 
-    protected const DEFAULT_CONTEXTUAL_BINDINGS = [];
+    protected const array DEFAULT_CONTEXTUAL_BINDINGS = [];
 
-    protected const DEFAULT_HANDLER_REGISTRIES = [];
+    protected const array DEFAULT_HANDLER_REGISTRIES = [];
 
-    protected const DEFAULT_LAZY_SERVICES = [];
+    protected const array DEFAULT_LAZY_SERVICES = [];
 
-    protected const DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
+    protected const array DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
 
-    protected const DEFAULT_PLUGINS = [];
+    protected const array DEFAULT_PLUGINS = [];
 
     /**
      * Define different config sources.

@@ -24,7 +24,7 @@ use PhpBench\Attributes\Revs;
  */
 #[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
 #[BeforeMethods('setUp')]
-#[Groups(['micro', 'resolve'])]
+#[Groups(['informational', 'micro', 'resolve'])]
 #[Revs(1000)]
 #[Iterations(5)]
 final class ClassInfoBench

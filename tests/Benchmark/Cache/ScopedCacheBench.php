@@ -7,6 +7,7 @@ namespace GacelaTest\Benchmark\Cache;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\ScopedCache;
 use PhpBench\Attributes\AfterMethods;
+use PhpBench\Attributes\Assert;
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
@@ -25,10 +26,27 @@ use function unlink;
 /**
  * ScopedCache decorator cost: put/get overhead and dependsOn() cycle-detection
  * at increasing depths, on top of a real FileCache.
+ *
+ * Informational, not gating. Every subject here is disk-bound, and `rstdev`
+ * stays under 2% -- which measures spread *within* one run, not drift
+ * *between* the two runs the guard compares. This class was gated at +/-10%,
+ * then widened to +/-30% after repeated self-comparisons moved
+ * `bench_invalidate_leaf` by -7.61% and then -16.36%; CI then produced +48.96%
+ * on `bench_depends_on_wide_graph` for a PR that changed no runtime code. In
+ * that run the baseline ordered the subjects `no_dependencies` (1564us) >
+ * `linear_chain` (1160us) > `wide_graph` (826us) -- the inverse of the work
+ * they do, and the inverse of every clean run -- so it was the measurement,
+ * not the code, that moved.
+ *
+ * A tolerance wide enough to absorb that drift would only catch a >1.6x
+ * regression, which is not a gate. These numbers are still worth reading, so
+ * CI reports them; they just cannot block a merge.
+ * See tests/Benchmark/README.md.
  */
+#[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
 #[BeforeMethods('setUp')]
 #[AfterMethods('tearDown')]
-#[Groups(['gate', 'cache'])]
+#[Groups(['informational', 'cache'])]
 #[Revs(50)]
 #[Iterations(5)]
 final class ScopedCacheBench

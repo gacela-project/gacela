@@ -37,15 +37,6 @@ final class LocatorTest extends TestCase
         self::assertNull($nullValue);
     }
 
-    public function test_get_existing_singleton(): void
-    {
-        Locator::addSingleton(StringValue::class, new StringValue('str'));
-
-        $singleton = Locator::getSingleton(StringValue::class);
-
-        self::assertEquals(new StringValue('str'), $singleton);
-    }
-
     public function test_get_existing_singleton_from_container(): void
     {
         $container = new Container(bindings: [
@@ -75,18 +66,11 @@ final class LocatorTest extends TestCase
 
     public function test_get_required_returns_existing_service(): void
     {
-        Locator::addSingleton(StringValue::class, new StringValue('required'));
+        $container = new Container(bindings: [
+            StringValue::class => new StringValue('required'),
+        ]);
 
-        $singleton = Locator::getInstance()->getRequired(StringValue::class);
-
-        self::assertEquals(new StringValue('required'), $singleton);
-    }
-
-    public function test_get_required_singleton_returns_existing_service(): void
-    {
-        Locator::addSingleton(StringValue::class, new StringValue('required'));
-
-        $singleton = Locator::getRequiredSingleton(StringValue::class);
+        $singleton = Locator::getInstance($container)->getRequired(StringValue::class);
 
         self::assertEquals(new StringValue('required'), $singleton);
     }

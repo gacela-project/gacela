@@ -15,11 +15,14 @@ use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Domain\ModuleGraph\GraphDiffMarkdownFormatter;
 use Gacela\Console\Domain\ModuleGraph\GraphFormatterInterface;
 use Gacela\Console\Domain\ModuleGraph\GraphvizGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\JsonGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\MermaidGraphFormatter;
+use Gacela\Console\Domain\ModuleGraph\ModuleCycleDetector;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
+use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Framework\AbstractFactory;
@@ -58,12 +61,19 @@ final class ConsoleFactory extends AbstractFactory
 {
     /**
      * @return list<Command>
-     *
-     * @psalm-suppress MixedReturnTypeCoercion
      */
     public function getConsoleCommands(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleProvider::COMMANDS);
+        $commands = [];
+
+        /** @var mixed $command */
+        foreach ((array)$this->getProvidedDependency(ConsoleProvider::COMMANDS) as $command) {
+            if ($command instanceof Command) {
+                $commands[] = $command;
+            }
+        }
+
+        return $commands;
     }
 
     public function createCommandArgumentsParser(): CommandArgumentsParserInterface
@@ -105,6 +115,21 @@ final class ConsoleFactory extends AbstractFactory
     public function createModuleGraphBuilder(): ModuleGraphBuilder
     {
         return new ModuleGraphBuilder();
+    }
+
+    public function createModuleGraphDiffer(): ModuleGraphDiffer
+    {
+        return new ModuleGraphDiffer();
+    }
+
+    public function createModuleCycleDetector(): ModuleCycleDetector
+    {
+        return new ModuleCycleDetector();
+    }
+
+    public function createGraphDiffMarkdownFormatter(): GraphDiffMarkdownFormatter
+    {
+        return new GraphDiffMarkdownFormatter();
     }
 
     public function createModuleGraphFormatter(string $format): GraphFormatterInterface
@@ -240,23 +265,40 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
-     * @psalm-suppress MixedReturnTypeCoercion
-     *
      * @return array<string,string>
      */
     private function getTemplateByFilenameMap(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
+        return $this->stringMapDependency(ConsoleProvider::TEMPLATE_BY_FILENAME_MAP);
     }
 
     /**
-     * @psalm-suppress MixedReturnTypeCoercion
-     *
      * @return array<string,string>
      */
     private function getServiceTemplateByFilenameMap(): array
     {
-        return (array)$this->getProvidedDependency(ConsoleProvider::SERVICE_TEMPLATE_BY_FILENAME_MAP);
+        return $this->stringMapDependency(ConsoleProvider::SERVICE_TEMPLATE_BY_FILENAME_MAP);
+    }
+
+    /**
+     * Narrow a provided dependency to a string map, dropping any entry that is
+     * not a string-keyed string. Providers are user-supplied, so the container
+     * cannot guarantee the shape on its own.
+     *
+     * @return array<string,string>
+     */
+    private function stringMapDependency(string $key): array
+    {
+        $map = [];
+
+        /** @var mixed $value */
+        foreach ((array)$this->getProvidedDependency($key) as $name => $value) {
+            if (is_string($name) && is_string($value)) {
+                $map[$name] = $value;
+            }
+        }
+
+        return $map;
     }
 
     private function getMainContainer(): Container

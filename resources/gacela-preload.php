@@ -16,15 +16,15 @@
  *   - Faster bootstrap time
  *
  * Requirements:
- *   - PHP 8.1 or higher
+ *   - PHP 8.3 or higher
  *   - Opcache enabled
  *   - Production environment (not recommended for development)
  */
 
 declare(strict_types=1);
 
-if (PHP_VERSION_ID < 80100) {
-    throw new RuntimeException('Opcache preloading requires PHP 8.1 or higher');
+if (PHP_VERSION_ID < 80300) {
+    throw new RuntimeException('Opcache preloading requires PHP 8.3 or higher');
 }
 
 if (!\function_exists('opcache_compile_file')) {

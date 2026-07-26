@@ -1,9 +1,31 @@
 parameters:
     ignoreErrors:
-        # Ignore magic methods from Gacela ServiceResolverAwareTrait (resolved via #[ServiceMap] attributes)
-        - '#Call to an undefined method .+::(getFacade|getFactory|getConfig)\(\)\.$#'
+        # Fallback for classes that resolve a pillar through ServiceResolverAwareTrait
+        # without declaring it. A class carrying #[ServiceMap] no longer needs this:
+        # ServiceMapMethodsClassReflectionExtension (below) gives those accessors a
+        # real return type, and a suppressed call is not a typed one -- it degrades
+        # to mixed, which stops the analyser checking everything behind the accessor.
+        #
+        # Declare your pillars with #[ServiceMap] (or a @method docblock, which
+        # PHPStan reads natively) to get that checking back. This entry is scheduled
+        # for removal in 2.0; reportUnmatched keeps it from failing builds that have
+        # already stopped needing it.
+        -
+            message: '#Call to an undefined method .+::(getFacade|getFactory|getConfig)\(\)\.$#'
+            reportUnmatched: false
 
 services:
+    # Types getFacade()/getFactory()/getConfig() from the #[ServiceMap] attribute
+    # that already declares the method name and the class it resolves to.
+    -
+        class: Gacela\PHPStan\Reflection\ServiceMapMethodsClassReflectionExtension
+        tags: [phpstan.broker.methodsClassReflectionExtension]
+    # Types getProvidedDependency(Foo::class) as Foo, so the class-string form
+    # needs no hand-written @var. String keys still return mixed.
+    -
+        class: Gacela\PHPStan\Reflection\GetProvidedDependencyReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+
     -
         class: Gacela\PHPStan\Rules\SuffixExtendsRule
         tags: [phpstan.rules.rule]
@@ -33,6 +55,11 @@ services:
         tags: [phpstan.rules.rule]
     -
         class: Gacela\PHPStan\Rules\FactoryDoesNotCallFacadeRule
+        tags: [phpstan.rules.rule]
+    # Self-limiting: only fires for a facade that explicitly implements the
+    # interface named after it, so it costs nothing for facades without one.
+    -
+        class: Gacela\PHPStan\Rules\FacadeInterfaceInSyncRule
         tags: [phpstan.rules.rule]
     # Opt-in: enable by passing your project's root namespace (and, if needed,
     # how many segments beneath that root identify a module). Namespaces in

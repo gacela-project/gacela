@@ -22,7 +22,7 @@ use PhpBench\Attributes\Revs;
  * well within CI timer noise, so it must not fail the performance regression guard.
  */
 #[BeforeMethods('setUp')]
-#[Groups(['cacheable'])]
+#[Groups(['informational', 'cacheable'])]
 #[Revs(1000)]
 #[Iterations(5)]
 final class CacheableBench

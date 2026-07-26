@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace $NAMESPACE$;
 
+use DateTimeImmutable;
 use Gacela\Framework\AbstractProvider;
+use Gacela\Framework\Attribute\Provides;
 use Gacela\Framework\Container\Container;
 
 /**
@@ -12,6 +14,23 @@ use Gacela\Framework\Container\Container;
  */
 final class $CLASS_NAME$ extends AbstractProvider
 {
+    public const CLOCK = 'CLOCK';
+
+    /**
+     * Attribute-first: a typed #[Provides] method registers a lazy service
+     * under the given id. Resolve it from the Factory with
+     * $this->getProvidedDependency(self::CLOCK).
+     */
+    #[Provides(self::CLOCK)]
+    public function clock(): DateTimeImmutable
+    {
+        return new DateTimeImmutable();
+    }
+
+    /**
+     * Imperative registration is still available for edge cases; register
+     * services with $container->set('id', static fn () => ...).
+     */
     public function provideModuleDependencies(Container $container): void
     {
     }

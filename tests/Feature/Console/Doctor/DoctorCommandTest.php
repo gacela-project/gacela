@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Console\Doctor;
 
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithMetadataHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithoutMetadataHealthCheck;
@@ -16,117 +17,265 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function bin2hex;
+use function explode;
+use function is_dir;
+use function is_file;
+use function mkdir;
+use function random_bytes;
+use function rmdir;
+use function rtrim;
+use function sprintf;
+use function sys_get_temp_dir;
+use function unlink;
+
 final class DoctorCommandTest extends TestCase
 {
-    public function test_doctor_runs_registered_health_check_class_string(): void
+    private string $cacheDir = '';
+
+    protected function setUp(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-            $config->addHealthCheck(FakeHealthCheck::class);
-        });
-
-        $command = new CommandTester(new DoctorCommand());
-        $exitCode = $command->execute([]);
-
-        $output = $command->getDisplay();
-
-        self::assertStringContainsString('FakeModule', $output);
-        self::assertStringContainsString('FakeHealthCheck ran', $output);
-        self::assertSame(Command::SUCCESS, $exitCode);
+        // The default cache directory is `sys_get_temp_dir()`, which is shared
+        // with every other Gacela app on the machine -- CacheStalenessCheck then
+        // reports on someone else's entries and the exit code stops being a
+        // function of this test. Point the cache somewhere this test owns.
+        $this->cacheDir = sys_get_temp_dir() . '/gacela-doctor-' . bin2hex(random_bytes(4));
+        mkdir($this->cacheDir, 0777, true);
+        putenv('GACELA_CACHE_DIR=' . $this->cacheDir);
     }
 
-    public function test_doctor_runs_registered_health_check_instance(): void
+    protected function tearDown(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-            $config->addHealthCheck(new FakeHealthCheck());
-        });
+        putenv('GACELA_CACHE_DIR');
 
-        $command = new CommandTester(new DoctorCommand());
-        $command->execute([]);
+        $cacheFile = $this->cacheDir . '/' . ClassNamePhpCache::FILENAME;
+        if (is_file($cacheFile)) {
+            unlink($cacheFile);
+        }
 
-        $output = $command->getDisplay();
-
-        self::assertStringContainsString('FakeModule', $output);
+        if (is_dir($this->cacheDir)) {
+            rmdir($this->cacheDir);
+        }
     }
 
-    public function test_doctor_fails_when_registered_check_is_unhealthy(): void
+    public function test_reports_every_built_in_check_when_nothing_is_registered(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-            $config->addHealthCheck(UnhealthyHealthCheck::class);
-        });
+        $tester = $this->doctor([]);
 
-        $command = new CommandTester(new DoctorCommand());
-        $exitCode = $command->execute([]);
-
-        $output = $command->getDisplay();
-
-        self::assertStringContainsString('UnhealthyModule', $output);
-        self::assertStringContainsString('Service is down', $output);
-        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertSame([
+            '✓ cache staleness',
+            '✓ suffix configuration',
+            '✓ pillar filenames',
+            '✓ All checks passed',
+        ], self::statusLinesOf($tester));
     }
 
-    public function test_doctor_renders_degraded_check_with_detail_and_every_metadata_line(): void
+    public function test_a_registered_health_check_is_appended_to_the_built_in_ones(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-            $config->addHealthCheck(DegradedWithMetadataHealthCheck::class);
-        });
+        $tester = $this->doctor([FakeHealthCheck::class]);
 
-        $command = new CommandTester(new DoctorCommand());
-        $exitCode = $command->execute([]);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
-        $output = $command->getDisplay();
-
-        self::assertStringContainsString('Cache is stale', $output);
-        self::assertStringContainsString('stale-entries: 42', $output);
-        self::assertStringContainsString('oldest-entry: 2020-01-01', $output);
-        self::assertStringContainsString('raw-payload: array', $output);
-        self::assertSame(Command::SUCCESS, $exitCode, 'degraded is a warning, not a failure');
+        // The registered check runs after the built-in ones, and its detail is shown.
+        self::assertSame('✓ module health: FakeModule', self::statusLinesOf($tester)[3]);
+        self::assertStringContainsString('FakeHealthCheck ran', $tester->getDisplay());
     }
 
-    public function test_doctor_renders_unhealthy_check_with_detail_and_every_metadata_line(): void
+    public function test_a_health_check_instance_is_accepted_too(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-            $config->addHealthCheck(UnhealthyWithMetadataHealthCheck::class);
-        });
+        $tester = $this->doctor([new FakeHealthCheck()]);
 
-        $command = new CommandTester(new DoctorCommand());
-        $exitCode = $command->execute([]);
-
-        $output = $command->getDisplay();
-
-        self::assertStringContainsString('Broker unreachable', $output);
-        self::assertStringContainsString('host: broker.internal', $output);
-        self::assertStringContainsString('attempts: 3', $output);
-        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertContains('✓ module health: FakeModule', self::linesOf($tester));
     }
 
-    public function test_doctor_renders_degraded_check_detail_when_there_is_no_metadata(): void
+    public function test_a_degraded_check_is_a_warning_and_lists_its_metadata(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-            $config->resetInMemoryCache();
-            $config->addHealthCheck(DegradedWithoutMetadataHealthCheck::class);
-        });
+        $tester = $this->doctor([DegradedWithMetadataHealthCheck::class]);
 
-        $command = new CommandTester(new DoctorCommand());
-        $exitCode = $command->execute([]);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), 'degraded is a warning, not a failure');
+        $display = $tester->getDisplay();
 
-        self::assertStringContainsString('Slow response times', $command->getDisplay());
-        self::assertSame(Command::SUCCESS, $exitCode);
+        // A degraded check warns rather than fails, and lists its metadata --
+        // including a non-scalar value, rendered as its type.
+        self::assertContains('⚠ module health: DegradedModule', self::statusLinesOf($tester));
+        self::assertStringContainsString('Cache is stale', $display);
+        self::assertStringContainsString('stale-entries: 42', $display);
+        self::assertStringContainsString('oldest-entry: 2020-01-01', $display);
+        self::assertStringContainsString('raw-payload: array', $display);
+        self::assertContains('⚠ Doctor finished with warnings', self::statusLinesOf($tester));
     }
 
-    public function test_doctor_without_registered_checks_still_succeeds(): void
+    public function test_an_unhealthy_check_is_an_error_and_lists_its_metadata(): void
     {
-        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+        $tester = $this->doctor([UnhealthyWithMetadataHealthCheck::class]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        $display = $tester->getDisplay();
+
+        // An unhealthy check is an error, and its metadata is listed too.
+        self::assertContains('✗ module health: UnhealthyMetaModule', self::statusLinesOf($tester));
+        self::assertStringContainsString('Broker unreachable', $display);
+        self::assertStringContainsString('host: broker.internal', $display);
+        self::assertStringContainsString('attempts: 3', $display);
+        self::assertContains('✗ Doctor found errors', self::statusLinesOf($tester));
+    }
+
+    public function test_a_degraded_check_without_metadata_only_shows_its_detail(): void
+    {
+        $tester = $this->doctor([DegradedWithoutMetadataHealthCheck::class]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+
+        // With no metadata the check shows its detail and nothing more.
+        self::assertContains('⚠ module health: DegradedBareModule', self::statusLinesOf($tester));
+        self::assertStringContainsString('Slow response times', $tester->getDisplay());
+    }
+
+    public function test_an_error_after_a_warning_still_fails(): void
+    {
+        $tester = $this->doctor([
+            DegradedWithoutMetadataHealthCheck::class,
+            UnhealthyHealthCheck::class,
+        ]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertContains('✗ Doctor found errors', self::linesOf($tester));
+    }
+
+    public function test_a_warning_after_an_error_still_fails(): void
+    {
+        $tester = $this->doctor([
+            UnhealthyHealthCheck::class,
+            DegradedWithoutMetadataHealthCheck::class,
+        ]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertContains('✗ Doctor found errors', self::linesOf($tester));
+    }
+
+    public function test_a_passing_check_after_an_error_still_fails(): void
+    {
+        $tester = $this->doctor([
+            UnhealthyHealthCheck::class,
+            FakeHealthCheck::class,
+        ]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertContains('✗ Doctor found errors', self::linesOf($tester));
+    }
+
+    public function test_a_passing_check_after_a_warning_stays_a_warning(): void
+    {
+        $tester = $this->doctor([
+            DegradedWithoutMetadataHealthCheck::class,
+            FakeHealthCheck::class,
+        ]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertContains('⚠ Doctor finished with warnings', self::linesOf($tester));
+    }
+
+    public function test_strict_turns_a_warning_into_a_failure(): void
+    {
+        $tester = $this->doctor([DegradedWithoutMetadataHealthCheck::class], ['--strict' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertContains('⚠ Doctor finished with warnings', self::linesOf($tester));
+    }
+
+    public function test_strict_still_succeeds_when_everything_passes(): void
+    {
+        $tester = $this->doctor([FakeHealthCheck::class], ['--strict' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+    }
+
+    public function test_a_stale_cache_entry_is_reported_with_its_remediation(): void
+    {
+        $this->writeCacheEntry('some-cache-key', 'Never\\Declared\\Klass');
+
+        $tester = $this->doctor([]);
+
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+
+        // A cache entry pointing at a class that no longer exists is a warning,
+        // and the check tells the user how to fix it.
+        self::assertContains('⚠ cache staleness', self::statusLinesOf($tester));
+        self::assertStringContainsString(
+            'missing source: some-cache-key → Never\\Declared\\Klass (source file not found)',
+            $display,
+        );
+        self::assertStringContainsString(
+            'run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild',
+            $display,
+        );
+    }
+
+    public function test_the_filter_argument_narrows_the_module_scoped_checks(): void
+    {
+        $tester = $this->doctor([], ['filter' => 'DoesNotExist']);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertContains('    no modules discovered', self::linesOf($tester));
+    }
+
+    private function writeCacheEntry(string $key, string $className): void
+    {
+        file_put_contents(
+            $this->cacheDir . '/' . ClassNamePhpCache::FILENAME,
+            sprintf("<?php\n\nreturn %s;\n", var_export([$key => $className], true)),
+        );
+    }
+
+    /**
+     * @param list<object|string> $healthChecks
+     * @param array<string, bool|string> $input
+     */
+    private function doctor(array $healthChecks, array $input = []): CommandTester
+    {
+        $cacheDir = $this->cacheDir;
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($healthChecks, $cacheDir): void {
             $config->resetInMemoryCache();
+            $config->setFileCache(false, $cacheDir);
+            foreach ($healthChecks as $healthCheck) {
+                /** @psalm-suppress ArgumentTypeCoercion */
+                $config->addHealthCheck($healthCheck);
+            }
         });
 
-        $command = new CommandTester(new DoctorCommand());
-        $exitCode = $command->execute([]);
+        $tester = new CommandTester(new DoctorCommand());
+        $tester->execute($input);
 
-        self::assertSame(Command::SUCCESS, $exitCode);
+        return $tester;
+    }
+
+    /**
+     * The status lines only: which checks ran, how each came out, and the verdict.
+     * Keeps the assertions off the separators, blank lines and indentation around them.
+     *
+     * @return list<string>
+     */
+    private static function statusLinesOf(CommandTester $tester): array
+    {
+        return array_values(array_filter(
+            self::linesOf($tester),
+            static fn (string $line): bool => preg_match('/^[✓⚠✗] /u', $line) === 1,
+        ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function linesOf(CommandTester $tester): array
+    {
+        return array_map(
+            static fn (string $line): string => rtrim($line),
+            explode("\n", $tester->getDisplay()),
+        );
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
+use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
+use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
@@ -13,15 +15,13 @@ use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthCheckRegistry;
-use Gacela\Framework\Health\HealthLevel;
-use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function is_scalar;
 use function sprintf;
 
 /**
@@ -35,14 +35,16 @@ final class DoctorCommand extends Command
     {
         $this->setName('doctor')
             ->setDescription('Run environmental & wiring health checks for the current Gacela setup')
-            ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict module-scoped checks to this namespace', '');
+            ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict module-scoped checks to this namespace', '')
+            ->addOption('strict', null, InputOption::VALUE_NONE, 'Exit with a failure code on warnings too, for CI');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         ConsoleSection::title($output, 'Gacela Doctor');
 
-        $filter = (string) $input->getArgument('filter');
+        $filter = ConsoleInput::argument($input, 'filter');
+        $strict = $input->getOption('strict') === true;
         $checks = $this->buildChecks($filter);
         $worst = CheckStatus::Ok;
 
@@ -57,7 +59,11 @@ final class DoctorCommand extends Command
 
         return match ($worst) {
             CheckStatus::Error => $this->finish($output, '<error>✗ Doctor found errors</error>', Command::FAILURE),
-            CheckStatus::Warn => $this->finish($output, '<fg=yellow>⚠ Doctor finished with warnings</>', Command::SUCCESS),
+            CheckStatus::Warn => $this->finish(
+                $output,
+                '<fg=yellow>⚠ Doctor finished with warnings</>',
+                $strict ? Command::FAILURE : Command::SUCCESS,
+            ),
             CheckStatus::Ok => $this->finish($output, '<fg=green>✓ All checks passed</>', Command::SUCCESS),
         };
     }
@@ -74,56 +80,14 @@ final class DoctorCommand extends Command
         $checks = [
             new CacheStalenessCheck($config->getCacheDir()),
             new SuffixMismatchCheck($modules, $suffixTypes),
+            new FilenameMismatchCheck($modules),
         ];
 
         foreach (HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults() as $moduleName => $status) {
-            $checks[] = $this->toHealthCheck($moduleName, $status);
+            $checks[] = new ModuleHealthCheck($moduleName, $status);
         }
 
         return $checks;
-    }
-
-    private function toHealthCheck(string $moduleName, HealthStatus $status): HealthCheck
-    {
-        return new class($moduleName, $status) implements HealthCheck {
-            public function __construct(
-                private readonly string $moduleName,
-                private readonly HealthStatus $status,
-            ) {
-            }
-
-            public function name(): string
-            {
-                return $this->moduleName;
-            }
-
-            public function run(): CheckResult
-            {
-                $title = sprintf('module health: %s', $this->moduleName);
-                $detail = $this->status->message;
-                $metadata = $this->formatMetadata();
-
-                return match ($this->status->level) {
-                    HealthLevel::HEALTHY => CheckResult::ok($title, $detail),
-                    HealthLevel::DEGRADED => CheckResult::warn($title, $metadata === [] ? [$detail] : [$detail, ...$metadata]),
-                    HealthLevel::UNHEALTHY => CheckResult::error($title, $metadata === [] ? [$detail] : [$detail, ...$metadata]),
-                };
-            }
-
-            /**
-             * @return list<string>
-             */
-            private function formatMetadata(): array
-            {
-                $lines = [];
-                /** @var mixed $value */
-                foreach ($this->status->metadata as $key => $value) {
-                    $lines[] = sprintf('%s: %s', $key, is_scalar($value) ? (string) $value : get_debug_type($value));
-                }
-
-                return $lines;
-            }
-        };
     }
 
     private function renderResult(CheckResult $result, OutputInterface $output): void
@@ -149,12 +113,15 @@ final class DoctorCommand extends Command
 
     private function worseOf(CheckStatus $a, CheckStatus $b): CheckStatus
     {
-        $rank = static fn (CheckStatus $s): int => match ($s) {
-            CheckStatus::Ok => 0,
-            CheckStatus::Warn => 1,
-            CheckStatus::Error => 2,
-        };
-        return $rank($a) >= $rank($b) ? $a : $b;
+        if ($a === CheckStatus::Error || $b === CheckStatus::Error) {
+            return CheckStatus::Error;
+        }
+
+        if ($a === CheckStatus::Warn || $b === CheckStatus::Warn) {
+            return CheckStatus::Warn;
+        }
+
+        return CheckStatus::Ok;
     }
 
     private function finish(OutputInterface $output, string $line, int $code): int

@@ -11,7 +11,6 @@ use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
 use ReflectionAttribute;
 use ReflectionClass;
 
-use function is_string;
 use function sprintf;
 
 final class DocBlockResolver
@@ -160,13 +159,9 @@ final class DocBlockResolver
 
     private function normalizeResolvableType(string $resolvableType): string
     {
-        /** @var list<string> $resolvableTypeParts */
+        /** @var non-empty-list<string> $resolvableTypeParts */
         $resolvableTypeParts = explode('\\', $resolvableType);
-        $normalizedResolvableType = end($resolvableTypeParts);
-
-        $result = is_string($normalizedResolvableType)
-            ? $normalizedResolvableType
-            : $resolvableType;
+        $result = end($resolvableTypeParts);
 
         foreach (self::SPECIAL_RESOLVABLE_TYPES as $specialName) {
             if (str_contains($result, $specialName)) {

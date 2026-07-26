@@ -10,9 +10,11 @@
 - [Cacheable methods](cacheable-methods.md) — cache facade method results with `#[Cacheable]`
 - [Opcache preload](opcache-preload.md) — production performance tuning
 - [Production performance](production-performance.md) — full checklist to run Gacela fast in production
+- [Upgrading](upgrading.md) — what is deprecated in 1.x, and what to replace it with
 
 ## RFCs
 
 - [RFC-0001: `#[Inject]` + `#[ServiceMapTyped]` — Symfony DI interop](rfc/0001-inject-symfony-di-interop.md)
+- [RFC-0002: How many ways are there to obtain a dependency?](rfc/0002-dependency-paths-inventory.md) — the 25-path inventory behind the 2.0 "one primary path" question
 
 Full reference: [gacela-project.com](https://gacela-project.com/)

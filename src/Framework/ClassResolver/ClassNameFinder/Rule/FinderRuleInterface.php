@@ -9,7 +9,10 @@ use Gacela\Framework\ClassResolver\ClassInfo;
 interface FinderRuleInterface
 {
     /**
-     * @return class-string
+     * Builds a speculative class name. The candidate is not guaranteed to name
+     * an existing class; validate it before treating it as a `class-string`.
+     *
+     * @return non-empty-string
      */
     public function buildClassCandidate(string $projectNamespace, string $resolvableType, ClassInfo $classInfo): string;
 }

@@ -27,6 +27,14 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
     ];
 
     /**
+     * The expected filenames rendered for console help text.
+     */
+    public static function expectedFilenamesAsText(): string
+    {
+        return implode(', ', self::EXPECTED_FILENAMES);
+    }
+
+    /**
      * @return list<string>
      */
     public function getExpectedFilenames(): array

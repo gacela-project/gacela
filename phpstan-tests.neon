@@ -7,6 +7,15 @@ parameters:
         - %currentWorkingDirectory%/tests/
     excludePaths:
         - %currentWorkingDirectory%/tests/Unit/PHPStan/Rules/Fixture/*
+        # Fixtures that are deliberately wrong: an attribute pointing at a class
+        # that does not exist, and a call to a method that does not exist. Both
+        # are the input the reflection extension is asserted against.
+        - %currentWorkingDirectory%/tests/Unit/PHPStan/Reflection/Fixture/*
+        # assertType() data file: its assertions only hold with phpstan-gacela.neon
+        # loaded, which this config does not include. It is checked by
+        # GetProvidedDependencyTypeInferenceTest, which does load the extension.
+        - %currentWorkingDirectory%/tests/Unit/PHPStan/Reflection/TypeFixture/*
+        - %currentWorkingDirectory%/tests/Integration/PHPStan/Fixture/*
     ignoreErrors:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
         - '#has invalid type Totally\\Missing\\Type#'

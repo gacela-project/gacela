@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Event\Dispatcher;
 
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
@@ -24,6 +25,22 @@ final class EventDispatcherProviderTest extends TestCase
 
     public function test_returns_a_null_dispatcher_before_any_resolver_is_set(): void
     {
+        self::assertInstanceOf(NullEventDispatcher::class, EventDispatcherProvider::get());
+    }
+
+    /**
+     * Config owns the bootstrap that installed the resolver, so resetting the
+     * config must drop the dispatcher with it. Otherwise the next bootstrap
+     * keeps dispatching to the previous setup's listeners.
+     */
+    public function test_resetting_the_config_instance_also_resets_the_dispatcher(): void
+    {
+        $dispatcher = new ConfigurableEventDispatcher();
+        EventDispatcherProvider::setResolver(static fn (): EventDispatcherInterface => $dispatcher);
+        self::assertSame($dispatcher, EventDispatcherProvider::get());
+
+        Config::resetInstance();
+
         self::assertInstanceOf(NullEventDispatcher::class, EventDispatcherProvider::get());
     }
 

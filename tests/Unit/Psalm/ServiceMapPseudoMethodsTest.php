@@ -71,6 +71,49 @@ final class ServiceMapPseudoMethodsTest extends TestCase
         self::assertSame(['getfacade', 'getconfig'], array_keys($storage->pseudo_methods));
     }
 
+    public function test_it_keeps_scanning_after_an_unrelated_attribute_in_the_same_group(): void
+    {
+        // `#[SomethingElse, ServiceMap(...)]` — one group, two attributes. The
+        // scan has to skip the first and carry on, not stop at it.
+        $unrelated = new Name('SomethingElse');
+        $unrelated->setAttribute('resolvedName', 'App\SomethingElse');
+
+        $storage = $this->visitGroup(
+            new Attribute($unrelated, []),
+            $this->serviceMapAttribute('getFacade', self::FACADE),
+        );
+
+        self::assertArrayHasKey('getfacade', $storage->pseudo_methods);
+    }
+
+    public function test_it_keeps_scanning_after_an_incomplete_service_map_in_the_same_group(): void
+    {
+        // The first attribute is a ServiceMap but unusable, so it is skipped for
+        // a different reason than the one above — and the scan must still reach
+        // the second.
+        $storage = $this->visitGroup(
+            $this->attributeWithArgs([new Arg(new String_('getFacade'), name: new Identifier('method'))]),
+            $this->serviceMapAttribute('getConfig', 'App\Billing\BillingConfig'),
+        );
+
+        self::assertArrayHasKey('getconfig', $storage->pseudo_methods);
+    }
+
+    public function test_it_honours_named_arguments_given_out_of_order(): void
+    {
+        // `#[ServiceMap(className: X::class, method: 'getFacade')]`. Reading the
+        // names is what makes this work; inferring from position would read the
+        // class constant as `method` and the string as `className`, and register
+        // nothing.
+        $storage = $this->visit($this->attributeWithArgs([
+            new Arg($this->classConstFetch(self::FACADE), name: new Identifier('className')),
+            new Arg(new String_('getFacade'), name: new Identifier('method')),
+        ]));
+
+        self::assertArrayHasKey('getfacade', $storage->pseudo_methods);
+        self::assertSame(self::FACADE, (string)$storage->pseudo_methods['getfacade']->return_type);
+    }
+
     public function test_it_ignores_an_unrelated_attribute(): void
     {
         $other = new Name('SomethingElse');
@@ -173,15 +216,34 @@ final class ServiceMapPseudoMethodsTest extends TestCase
         self::assertSame([], $storage->pseudo_methods);
     }
 
+    /**
+     * One group per attribute, as stacked `#[A]` `#[B]` lines produce.
+     */
     private function visit(Attribute ...$attributes): ClassLikeStorage
     {
         $groups = [];
         foreach ($attributes as $attribute) {
-            // One group per attribute: repeated attributes may be written either
-            // stacked or comma-separated, and both reach here as groups.
             $groups[] = new AttributeGroup([$attribute]);
         }
 
+        return $this->visitGroups($groups);
+    }
+
+    /**
+     * All attributes in a single group, as comma-separated `#[A, B]` produces.
+     * Distinct from visit() because only this shape exercises the inner loop
+     * more than once.
+     */
+    private function visitGroup(Attribute ...$attributes): ClassLikeStorage
+    {
+        return $this->visitGroups([new AttributeGroup($attributes)]);
+    }
+
+    /**
+     * @param list<AttributeGroup> $groups
+     */
+    private function visitGroups(array $groups): ClassLikeStorage
+    {
         $storage = new ClassLikeStorage('App\Billing\Consumer');
         ServiceMapPseudoMethods::afterClassLikeVisit(
             $this->event(new Class_('Consumer', ['attrGroups' => $groups]), $storage),

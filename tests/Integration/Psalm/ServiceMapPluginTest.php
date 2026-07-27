@@ -10,6 +10,10 @@ use function escapeshellarg;
 use function shell_exec;
 use function sprintf;
 
+use const E_ALL;
+use const E_DEPRECATED;
+use const PHP_BINARY;
+
 /**
  * Runs Psalm for real against a fixture that declares its pillar with
  * `#[ServiceMap]` and **no** `@method` docblock.
@@ -43,8 +47,15 @@ final class ServiceMapPluginTest extends TestCase
 
     private function analyseFixture(): string
     {
+        // Deprecations are silenced in the subprocess, not filtered afterwards.
+        // At --prefer-lowest on PHP 8.5 the amphp packages -- transitive
+        // dependencies of infection, nothing to do with Psalm -- emit
+        // "Implicitly marking parameter as nullable" notices on load, and with
+        // 2>&1 they drown the findings this test asserts on.
         $command = sprintf(
-            '%s --config=%s --no-progress --no-cache --output-format=text 2>&1',
+            '%s -d error_reporting=%s %s --config=%s --no-progress --no-cache --output-format=text 2>&1',
+            escapeshellarg(PHP_BINARY),
+            escapeshellarg((string)(E_ALL & ~E_DEPRECATED)),
             escapeshellarg(self::ROOT . '/vendor/bin/psalm'),
             escapeshellarg(__DIR__ . '/Fixture/psalm-fixture.xml'),
         );

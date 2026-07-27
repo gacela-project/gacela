@@ -442,6 +442,12 @@ final class Container implements ContainerInterface
             );
         }
 
+        // After the ids they name are registered, so a tagged binding is already
+        // resolvable; before lazy services only because tagging never resolves.
+        foreach ($containerConfig->getTags() as $tag => $ids) {
+            $container->tag($ids, $tag);
+        }
+
         foreach ($containerConfig->getLazyServices() as $id => $lazyFactory) {
             $container->set($id, $container->factory(static fn (): mixed => $lazyFactory($container)));
             self::notifyBindingRegistered($id);

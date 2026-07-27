@@ -18,6 +18,7 @@ use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use InvalidArgumentException;
 
 use function array_key_exists;
+use function is_array;
 use function sprintf;
 
 /**
@@ -28,6 +29,7 @@ use function sprintf;
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
@@ -85,6 +87,9 @@ final class GacelaConfig
 
     /** @var HandlerRegistriesMap */
     private array $handlerRegistries = [];
+
+    /** @var TagsMap */
+    private array $tags = [];
 
     /** @var ServiceFactoryMap */
     private array $lazyServices = [];
@@ -458,6 +463,46 @@ final class GacelaConfig
     }
 
     /**
+     * Group service identifiers under a label so a module can ask for "every
+     * service tagged X" without knowing who registered them. Resolve the group
+     * with `Container::tagged($tag)`, which instantiates each id lazily, in the
+     * order it was tagged.
+     *
+     * Example:
+     * ```php
+     * $config->tag([EmailValidator::class, SmsValidator::class], 'validators');
+     *
+     * // in a Provider
+     * $container->set('validators', static fn (Container $c) => $c->tagged('validators'));
+     * ```
+     *
+     * Declared here, a tag reaches every module's container, so any module can
+     * consume it. A module that wants to *add* to a tag calls `Container::tag()`
+     * in its own Provider: that stays local to that module's container, which is
+     * what keeps one module's contribution from leaking into a sibling's.
+     *
+     * Complementary to {@see addHandlerRegistry()}, not a replacement for it: a
+     * registry is keyed and answers "the handler for this key" (a command bus);
+     * a tag is unkeyed and answers "every implementation of this" (validators,
+     * listeners). See docs/getting-a-dependency.md.
+     *
+     * Repeated calls add to the tag rather than replacing it. An id tagged twice
+     * is only yielded once -- deduplication is left to the container's tag
+     * registry, which does it anyway, rather than done again here.
+     *
+     * @param string|list<string> $ids one identifier, or several, to put under the tag
+     * @param string $tag the label the group is resolved by
+     */
+    public function tag(string|array $ids, string $tag): self
+    {
+        foreach (is_array($ids) ? $ids : [$ids] as $id) {
+            $this->tags[$tag][] = $id;
+        }
+
+        return $this;
+    }
+
+    /**
      * Add a new invokable class that can extend the GacelaConfig object.
      *
      * This configClass will receive the GacelaConfig object as argument to the __invoke() method.
@@ -546,6 +591,7 @@ final class GacelaConfig
             $this->contextualBindings,
             $this->handlerRegistries,
             $this->lazyServices,
+            $this->tags,
         );
     }
 

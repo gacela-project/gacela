@@ -40,6 +40,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string handlerRegistries = 'handlerRegistries';
 
+    public const string tags = 'tags';
+
     public const string lazyServices = 'lazyServices';
 
     public const string plugins = 'plugins';
@@ -75,6 +77,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_CONTEXTUAL_BINDINGS = [];
 
     protected const array DEFAULT_HANDLER_REGISTRIES = [];
+
+    protected const array DEFAULT_TAGS = [];
 
     protected const array DEFAULT_LAZY_SERVICES = [];
 

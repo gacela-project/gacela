@@ -21,6 +21,7 @@ use function array_unique;
  * @psalm-import-type ServiceFactoryMap from ContainerConfigurationInterface
  * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  */
@@ -123,6 +124,24 @@ final class PropertyMerger
         $this->setup->setHandlerRegistries(
             $this->mergeNested($this->setup->getHandlerRegistries(), $list),
         );
+    }
+
+    /**
+     * A tag is a collection, so the later setup adds to it rather than replacing
+     * it -- and an id both setups declared appears once, matching what the
+     * container's own tag registry does.
+     *
+     * @param TagsMap $list
+     */
+    public function mergeTags(array $list): void
+    {
+        $merged = $this->setup->getTags();
+
+        foreach ($list as $tag => $ids) {
+            $merged[$tag] = array_values(array_unique(array_merge($merged[$tag] ?? [], $ids)));
+        }
+
+        $this->setup->setTags($merged);
     }
 
     /**

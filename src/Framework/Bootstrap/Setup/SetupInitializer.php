@@ -40,6 +40,7 @@ final class SetupInitializer
             ->setAliases($dto->aliases)
             ->setContextualBindings($dto->contextualBindings)
             ->setHandlerRegistries($dto->handlerRegistries)
+            ->setTags($dto->tags)
             ->setLazyServices($dto->lazyServices);
     }
 }

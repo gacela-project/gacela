@@ -10,6 +10,16 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run 
 
 ### Added
 
+- **`GacelaConfig::tag()` makes container tagging reachable.** The container has shipped `tag()`/`tagged()` for a while and Gacela's decorator forwarded both, but nothing could reach them: `GacelaConfig` had `addBinding`, `addFactory`, `addAlias`, `addLazy`, `extendService` and `when` — no `tag`. So the only collection primitive a user could actually reach was `addHandlerRegistry()`, which is **keyed**, and had to be bent into jobs it does not fit.
+  ```php
+  // gacela.php — reaches every module's container
+  $config->tag([NotEmptyValidator::class, EmailValidator::class], 'validators');
+
+  // a module adds its own, in its Provider
+  $container->tag(CardValidator::class, 'validators');
+  $container->set('validators', static fn (): array => [...$container->tagged('validators')]);
+  ```
+  A module-local contribution stays in that module's container: two modules tagging under the same label each see the app-wide set plus their own, and never each other's. That is the behaviour, not a limitation — module containers are separate, and a tag is not a back channel between modules. Tags from two config sources are merged, not overwritten. The two collection primitives now each have one intent: `tag()` for an unkeyed set you iterate (validators, listeners), `addHandlerRegistry()` for a keyed lookup that throws on a miss (a command bus). `docs/getting-a-dependency.md` gains a "collect several implementations" section, which had no primary path before
 - **`debug:dependencies --tree` answers from the container instead of from reflection.** Without it the command reports one level of constructor parameters, re-derived from type hints. With it, the transitive tree is taken from `Container::getDependencyTree()` — the same walk the resolver performs — so bindings, contextual bindings and attributes are already applied, and a bound interface is listed as the concrete that will actually be built. Every node is marked with how the container will supply it: `binding`, `instance`, `autowired`, or `unresolvable`. That last distinction is new information: it comes from `Container::provides()`, which asks whether the container *owns* something for an id, where `has()` is also true of anything merely autowirable — so an interface with a binding used to read exactly like one without. An unresolvable node is printed, never thrown; the command stays a diagnostic. See [container configuration](docs/container-configuration.md#visibility-in-tooling)
 - **`Gacela\Framework\Container\Container::provides()`** forwards container 1.3's `provides()`. Like `stats()`, it is declared on the concrete class rather than `ContainerInterface`, so the decorator needs an explicit forwarder
 - **A Psalm plugin that types the pillar accessors from `#[ServiceMap]`** (`Gacela\Psalm\Plugin`), the counterpart of the PHPStan extension. Register it in `psalm.xml`:

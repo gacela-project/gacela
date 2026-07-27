@@ -32,6 +32,7 @@ use function sprintf;
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
@@ -330,6 +331,14 @@ final class SetupGacela extends AbstractSetupGacela
     public function getHandlerRegistries(): array
     {
         return $this->properties->handlerRegistries ?? self::DEFAULT_HANDLER_REGISTRIES;
+    }
+
+    /**
+     * @return TagsMap
+     */
+    public function getTags(): array
+    {
+        return $this->properties->tags ?? self::DEFAULT_TAGS;
     }
 
     /**
@@ -659,6 +668,30 @@ final class SetupGacela extends AbstractSetupGacela
         );
 
         return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?TagsMap $list
+     */
+    public function setTags(?array $list): self
+    {
+        $this->properties->tags = $this->setPropertyWithTracking(
+            self::tags,
+            $list,
+            self::DEFAULT_TAGS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param TagsMap $list
+     */
+    public function mergeTags(array $list): void
+    {
+        $this->propertyMerger->mergeTags($list);
     }
 
     /**

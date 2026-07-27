@@ -241,7 +241,8 @@ actually yours.
 | `addProtected('id', fn)` | the value *is* a closure and must not be invoked |
 | `addAlias('short', Full::class)` | a long id needs a short name |
 | `addLazy()` | construction is expensive and often unused |
-| `extendService('id', fn)` | decorating a service registered elsewhere |
+| `extendService('id', fn)` | decorating a service registered elsewhere — *replacing* what comes out |
+| `afterResolving('id', fn)` | touching an instance after it is built without rebuilding it, e.g. a setter on every implementation of an interface |
 | `when(X)->needs(Y)->give(Z)` | one consumer needs a different implementation than everyone else |
 | `addExternalService()` | handing a framework object (Symfony kernel, PSR container) to Gacela at bootstrap |
 | `$container->get('id')` inside a Provider | wiring one provided service from another |

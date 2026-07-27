@@ -41,6 +41,7 @@ final class SetupInitializer
             ->setContextualBindings($dto->contextualBindings)
             ->setHandlerRegistries($dto->handlerRegistries)
             ->setTags($dto->tags)
+            ->setAfterResolvingCallbacks($dto->afterResolvingCallbacks)
             ->setLazyServices($dto->lazyServices);
     }
 }

@@ -105,7 +105,9 @@ final class Container implements ContainerInterface
             self::dispatchEvent(new ServiceResolvedEvent($id));
         }
 
-        $this->fireAfterResolving($id, $service);
+        if ($this->afterResolvingHooks !== []) {
+            $this->fireAfterResolving($id, $service);
+        }
 
         return $service;
     }
@@ -115,7 +117,9 @@ final class Container implements ContainerInterface
         /** @var mixed $service */
         $service = $this->inner->getOrFail($id);
 
-        $this->fireAfterResolving($id, $service);
+        if ($this->afterResolvingHooks !== []) {
+            $this->fireAfterResolving($id, $service);
+        }
 
         return $service;
     }
@@ -132,7 +136,9 @@ final class Container implements ContainerInterface
     {
         $instance = $this->inner->make($className, $parameters);
 
-        $this->fireAfterResolving($className, $instance);
+        if ($this->afterResolvingHooks !== []) {
+            $this->fireAfterResolving($className, $instance);
+        }
 
         return $instance;
     }
@@ -492,11 +498,15 @@ final class Container implements ContainerInterface
      * A hook that throws takes the instance out of the container with it: a
      * service whose post-construction wiring failed must not be served to the
      * next caller as though it had succeeded.
+     *
+     * Callers check `afterResolvingHooks` before calling, the way the event
+     * dispatch above is guarded: resolution is the hottest path there is, and a
+     * container with no hooks should not pay even a call for a feature it does
+     * not use.
      */
     private function fireAfterResolving(string $id, mixed $instance): void
     {
-        // Guard first so a container with no hooks pays nothing per resolution.
-        if ($this->afterResolvingHooks === [] || !is_object($instance)) {
+        if (!is_object($instance)) {
             return;
         }
 

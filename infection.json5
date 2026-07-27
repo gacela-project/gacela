@@ -370,6 +370,16 @@
         // the same injected value, so the or-variant mutants on the registrar's
         // object/callable pass-through are observationally equivalent.
         LogicalOr: {
+            // processNode()'s first guard reads `!isPublic() || isAbstract() ||
+            // stmts === null`. Turning the second `||` into `&&` only differs for
+            // a method that is public, concrete and body-less -- an interface
+            // method -- and those return [] two guards later at extendsClass()
+            // anyway. Matched by the mutated source rather than by method name:
+            // the sibling mutant on the same line IS killed, and a method-scoped
+            // ignore would drop it silently.
+            ignoreSourceCodeByRegex: [
+                '.*\\$node->isAbstract\\(\\) && \\$node->stmts === null.*',
+            ],
             ignore: [
                 "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation",
                 "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",

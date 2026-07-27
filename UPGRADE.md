@@ -19,7 +19,7 @@ The whole runtime change is two lines, and almost everything below follows from 
 
 **Static analysis that fails instead of shrugging.** 1.21 let you *write* `#[ServiceMap]`. 2.0 makes omitting it an error, because the PHPStan suppression Gacela used to ship is gone — and adds a Psalm plugin doing the same job. The gap is wider than it sounds: a suppressed accessor evaluated to `mixed`, which switched off checking of everything reached *through* it. On 1.x, `$this->getFacade()->typoMethod()` passes.
 
-**Three fixed state leaks** that exist only on the 2.0 line. The sharpest: `ClassValidator` memoized the *negative* `class_exists()` answer and never cleared it, so a class that became loadable stayed "missing" for the life of the process. That bites long-running workers, code generation, and `cache:warm`.
+**Three fixed state leaks that will never reach 1.x.** 1.21.0 is the final 1.x release, so these are upgrade-only. The sharpest: `ClassValidator` memoized the *negative* `class_exists()` answer and never cleared it, so a class that became loadable stayed "missing" for the life of the process. That bites long-running workers, code generation, and `cache:warm`.
 
 ### What this release is not
 
@@ -27,13 +27,17 @@ The whole runtime change is two lines, and almost everything below follows from 
 - **Not the "one container" release.** That was the original headline and it moved to 2.1 — it needs a parent/child container primitive that does not exist yet ([container#106](https://github.com/gacela-project/container/issues/106)). 2.0 is the foundation that makes it possible, not the thing itself
 - **Not a Symfony unblock.** Symfony is a dev dependency of Gacela, never a runtime one. A Symfony 7 or 8 application already works on 1.21
 
-**So who should wait?** If you are on PHP 8.3 already, not running long-lived workers, and not using Psalm, your reason to move today is thin — 1.21 is feature-complete and supported. The counter-argument is cost: this migration is three mechanical renames, and `doctor` catches the only one that fails silently. It is a cheap major to take early rather than under pressure later.
+**So who should wait?** If you are on PHP 8.3 already, not running long-lived workers, and not using Psalm, your reason to move *today* is thin.
+
+But be clear about what waiting means: **1.21.0 is the final 1.x release.** There will be no 1.22. Fixes land on 2.0 and later only — including the two cache-reset bugs fixed during this release, which affect long-running workers and are not coming to 1.x. Staying is a supported position, not a maintained one.
+
+Set against that, the cost of moving is three mechanical renames, and `doctor` catches the only one that fails silently. It is a cheap major to take deliberately now rather than under pressure later.
 
 ## 1.21 → 2.0
 
 Ordered by how likely each change is to affect you: the PHP floor, then three mechanical renames a project of any size will hit, then the static-analysis change, then four that only bite specific shapes of code.
 
-If you are not ready, **1.21 is feature-complete** and deliberately ships the tooling for this migration — the typed pillar accessors, `FacadeInterfaceInSyncRule`, and `doctor`'s filename check all landed in 1.x so you can do the work *before* the major, not as a reward for taking it.
+If you are not ready, **1.21 is feature-complete** and deliberately ships the tooling for this migration — the typed pillar accessors, `FacadeInterfaceInSyncRule`, and `doctor`'s filename check all landed in 1.x so you can do the work *before* the major, not as a reward for taking it. It is also the last 1.x release, so treat it as a staging post rather than a destination.
 
 ### Before you start
 
@@ -65,7 +69,7 @@ grep -rn "DocBlockResolverAwareTrait" src/
 
 The floor is `>=8.3` (was `>=8.1`). PHP 8.1 reached end of life in December 2025 and 8.2's security window closes in December 2026, so a 2.0 pinned to either would ship already needing another bump.
 
-Nothing to change in your code — but if you cannot move off 8.1 or 8.2, stay on 1.21.
+Nothing to change in your code — but if you cannot move off 8.1 or 8.2, 1.21 is where you stop, and it will not receive further releases. Both of those PHP versions are themselves past or near end of life, so this is a reason to plan the runtime upgrade, not a place to settle.
 
 ### 2. `*DependencyProvider` → `*Provider`
 

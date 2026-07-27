@@ -29,6 +29,10 @@ on:
   schedule:
     # 03:17 UTC, off the hour to avoid the scheduling stampede.
     - cron: '17 3 * * *'
+  # The full run is otherwise reachable only by merging to main or waiting for
+  # the nightly, so a fix for a full-run failure could not be verified before
+  # it landed. Dispatch runs the `full` job against any branch.
+  workflow_dispatch:
 
 name: Infection
 

@@ -20,3 +20,13 @@ parameters:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
         - '#has invalid type Totally\\Missing\\Type#'
         - '#Access to constant on internal class Gacela\\Framework\\Container\\Locator.#'
+        # Psalm exposes no public way to observe that a plugin registered a hook;
+        # the registration lands in its internal event dispatcher. Driving the
+        # entry point in-process is what puts it under the mutation gate at all,
+        # so the coupling is deliberate and confined to this one test.
+        -
+            identifier: new.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php
+        -
+            identifier: parameter.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php

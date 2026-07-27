@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<psalm errorLevel="1" resolveFromConfigFile="true" findUnusedBaselineEntry="false" findUnusedCode="false">
+    <projectFiles>
+        <directory name="."/>
+    </projectFiles>
+    <plugins>
+        <pluginClass class="Gacela\Psalm\Plugin"/>
+    </plugins>
+</psalm>

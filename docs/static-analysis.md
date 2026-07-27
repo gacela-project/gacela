@@ -200,6 +200,28 @@ look alike.
         </InvalidArgument>
     </issueHandlers>
 </psalm>
+
+### Type the pillar accessors instead of suppressing them
+
+`psalm-gacela.xml` only *suppresses* `UndefinedMagicMethod`. A suppressed call
+is not a typed one — it evaluates to `mixed`, which switches off checking of
+everything reached through the accessor. Register the plugin to get a real
+return type from `#[ServiceMap]`:
+
+```xml
+<plugins>
+    <pluginClass class="Gacela\Psalm\Plugin"/>
+</plugins>
+```
+
+It reads `#[ServiceMap(method: 'getFacade', className: MyFacade::class)]` off
+the calling class and declares `getFacade()` as returning `MyFacade`, so calls
+made *on* the resolved facade are checked. This is the Psalm counterpart of the
+PHPStan extension in `phpstan-gacela.neon`.
+
+The plugin cannot be delivered through the XInclude above: XInclude replaces a
+single element, and `<plugins>` lives elsewhere in your config.
+
 ```
 
 The `InvalidArgument` suppression is required — Gacela resolves concrete types at runtime that Psalm can't infer statically. Suppress inline if you prefer narrower scope:

@@ -8,8 +8,6 @@ use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
-use stdClass;
-
 use function class_alias;
 use function class_exists;
 
@@ -51,7 +49,9 @@ final class ClassValidatorResetTest extends TestCase
             'precondition: the class must not exist yet, so the negative answer gets memoized',
         );
 
-        class_alias(stdClass::class, self::LATE_BOUND_CLASS);
+        // A user-defined source class, not stdClass: PHP < 8.3 refuses to alias
+        // an internal class, and 1.x still supports 8.1.
+        class_alias(LateBoundSource::class, self::LATE_BOUND_CLASS);
         self::assertTrue(class_exists(self::LATE_BOUND_CLASS), 'precondition: the class is now loadable');
 
         Gacela::resetCache();
@@ -62,4 +62,12 @@ final class ClassValidatorResetTest extends TestCase
         );
     }
 
+}
+
+/**
+ * Aliased above to make a class loadable mid-process. Its shape is irrelevant;
+ * only that it is user-defined.
+ */
+final class LateBoundSource
+{
 }

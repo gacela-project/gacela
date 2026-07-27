@@ -222,7 +222,12 @@ final class AllAppModulesFinderTest extends TestCase
         require_once $filePath;
 
         $finder = new AllAppModulesFinder(
-            $this->iteratorFor($this->fileInfoFor($filePath, 'VendorFacade.php')),
+            // The guard looks for `vendor` . DIRECTORY_SEPARATOR in the real
+            // path, so the separator has to be the platform's own one.
+            $this->iteratorFor($this->fileInfoFor(
+                str_replace('/', DIRECTORY_SEPARATOR, $filePath),
+                'VendorFacade.php',
+            )),
             $this->createAppModuleCreator(),
         );
 

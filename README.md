@@ -15,7 +15,7 @@
   <a href="https://dashboard.stryker-mutator.io/reports/github.com/gacela-project/gacela/main">
     <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fgacela-project%2Fgacela%2Fmain" alt="Mutation testing badge">
   </a>
-  <a href="https://github.com/gacela-project/gacela/blob/master/LICENSE">
+  <a href="https://github.com/gacela-project/gacela/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT Software License">
   </a>
 </p>

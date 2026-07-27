@@ -10,7 +10,7 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 ## Any contributions you make will be under the MIT License
 
-When you submit code changes, your submissions are understood to be under the same [MIT](https://github.com/gacela-project/gacela/blob/master/LICENSE) that covers the project. By contributing to this project, you agree that your contributions will be licensed under its MIT.
+When you submit code changes, your submissions are understood to be under the same [MIT](https://github.com/gacela-project/gacela/blob/main/LICENSE) that covers the project. By contributing to this project, you agree that your contributions will be licensed under its MIT.
 
 ## Write bug reports with detail, background, and sample code
 

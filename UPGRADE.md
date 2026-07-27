@@ -6,7 +6,7 @@ The whole runtime change is two lines, and almost everything below follows from 
 
 ```diff
 -"php": ">=8.1",  "gacela-project/container": "^0.10.0"
-+"php": ">=8.3",  "gacela-project/container": "^1.2.1"
++"php": ">=8.3",  "gacela-project/container": "^1.3.0"
 ```
 
 **Your container stops being a 0.x.** This is the reason, and it is not available to you on 1.x at any version — `Gacela\Container\Container` became `final` at 1.0, so crossing that line is breaking by construction. What it buys:
@@ -158,7 +158,7 @@ This is worth doing regardless of the error. A suppressed call was never a *type
 
 ### 6. Only if you type-hinted the concrete container
 
-`gacela-project/container` moved to `^1.2.1` (was `^0.10.0`), and `Gacela\Container\Container` is `final` from 1.0. `Gacela\Framework\Container\Container` therefore decorates it by composition instead of extending it — which is what its docblock always claimed it did.
+`gacela-project/container` moved to `^1.3.0` (was `^0.10.0`), and `Gacela\Container\Container` is `final` from 1.0. `Gacela\Framework\Container\Container` therefore decorates it by composition instead of extending it — which is what its docblock always claimed it did.
 
 It still implements `ContainerInterface`. **This only affects code that passed a Gacela container somewhere the concrete `Gacela\Container\Container` was type-hinted:**
 

@@ -185,11 +185,87 @@ final class AllAppModulesFinderTest extends TestCase
         }
     }
 
-    private function fileInfoFor(string $path, string $filename): SplFileInfo
+    /**
+     * A file the finder must skip only because of its extension: the class it
+     * declares is loaded, so anything else about it would make it a module.
+     */
+    public function test_skips_a_loadable_facade_stored_in_a_non_php_file(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('textextension');
+        $filePath = $tempDir . '/TextFacade.txt';
+
+        $this->writeTempFacadeFile($filePath, 'TempTextExtension\\TextFacade');
+        require_once $filePath;
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($filePath, 'TextFacade.txt', 'txt')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    /**
+     * Counterpart to the `vendormodule` case: a real `vendor/` path segment is
+     * skipped even when the file behind it is a perfectly loadable facade.
+     */
+    public function test_skips_a_loadable_facade_inside_a_vendor_directory(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('vendor');
+        $filePath = $tempDir . '/VendorFacade.php';
+
+        $this->writeTempFacadeFile($filePath, 'TempVendorSegment\\VendorFacade');
+        require_once $filePath;
+
+        $finder = new AllAppModulesFinder(
+            // The guard looks for `vendor` . DIRECTORY_SEPARATOR in the real
+            // path, so the separator has to be the platform's own one.
+            $this->iteratorFor($this->fileInfoFor(
+                str_replace('/', DIRECTORY_SEPARATOR, $filePath),
+                'VendorFacade.php',
+            )),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    /**
+     * The file is never required, so its namespace and class name parse but the
+     * class itself cannot be autoloaded -- reflecting over it would blow up.
+     */
+    public function test_skips_a_php_file_whose_class_cannot_be_autoloaded(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('notautoloadable');
+        $filePath = $tempDir . '/UnloadableFacade.php';
+
+        $this->writeTempFacadeFile($filePath, 'TempNotAutoloadable\\UnloadableFacade');
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($filePath, 'UnloadableFacade.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    private function fileInfoFor(string $path, string $filename, string $extension = 'php'): SplFileInfo
     {
         $fileInfo = $this->createMock(SplFileInfo::class);
         $fileInfo->method('isFile')->willReturn(true);
-        $fileInfo->method('getExtension')->willReturn('php');
+        $fileInfo->method('getExtension')->willReturn($extension);
         $fileInfo->method('getRealPath')->willReturn($path);
         $fileInfo->method('getFilename')->willReturn($filename);
 

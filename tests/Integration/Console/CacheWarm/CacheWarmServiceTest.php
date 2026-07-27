@@ -10,10 +10,12 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Facade;
 use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmRepository;
 use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmService;
+use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmServiceInterface;
 use PHPUnit\Framework\TestCase;
 
 use function array_values;
@@ -76,12 +78,27 @@ final class CacheWarmServiceTest extends TestCase
 
     public function test_warm_class_resolution_skips_when_facade_class_missing(): void
     {
+        $resolverEvents = [];
+        $cacheDir = $this->cacheDir;
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheDir, &$resolverEvents): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(true, $cacheDir);
+            $config->registerGenericListener(static function (GacelaEventInterface $event) use (&$resolverEvents): void {
+                if (str_starts_with($event::class, 'Gacela\\Framework\\Event\\ClassResolver\\')) {
+                    $resolverEvents[] = $event::class;
+                }
+            });
+        });
+
         $service = new CacheWarmService();
 
         /** @var class-string $fake */
         $fake = 'Non\\Existing\\MissingFacade';
         $service->warmClassResolution($fake);
 
+        // A missing class never reaches the on-disk cache either way, so only the
+        // event stream shows the resolvers were never entered at all.
+        self::assertSame([], $resolverEvents);
         self::assertSame([], ClassNamePhpCache::all());
     }
 
@@ -188,6 +205,17 @@ final class CacheWarmServiceTest extends TestCase
         /** @var class-string $fake */
         $fake = 'Non\\Existing\\MissingService';
         (new CacheWarmService())->warmAttributeCache($fake);
+
+        self::assertSame([], CustomServicesPhpCache::all());
+    }
+
+    public function test_warm_attribute_cache_skips_an_interface(): void
+    {
+        CustomServicesPhpCache::clearStaticCache();
+
+        // ReflectionClass happily reflects an interface, so dropping the
+        // class_exists() guard would cache a service for a method no instance has.
+        (new CacheWarmService())->warmAttributeCache(AttributeWarmServiceInterface::class);
 
         self::assertSame([], CustomServicesPhpCache::all());
     }

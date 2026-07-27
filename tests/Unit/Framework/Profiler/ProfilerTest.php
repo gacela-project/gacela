@@ -115,6 +115,27 @@ final class ProfilerTest extends TestCase
         self::assertCount(0, $this->profiler->getEntries());
     }
 
+    public function test_start_while_disabled_leaves_nothing_for_a_later_enabled_stop_to_close(): void
+    {
+        $this->profiler->disable();
+        $this->profiler->start('operation1', 'subject1');
+
+        $this->profiler->enable();
+        $this->profiler->stop('operation1', 'subject1');
+
+        self::assertSame([], $this->profiler->getEntries());
+    }
+
+    public function test_stop_while_disabled_does_not_close_an_operation_started_while_enabled(): void
+    {
+        $this->profiler->start('operation1', 'subject1');
+
+        $this->profiler->disable();
+        $this->profiler->stop('operation1', 'subject1');
+
+        self::assertSame([], $this->profiler->getEntries());
+    }
+
     public function test_profiler_handles_missing_stop(): void
     {
         $this->profiler->start('operation1', 'subject1');

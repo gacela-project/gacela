@@ -91,6 +91,20 @@ final class BadFacade extends AbstractFacade
         return $this->cached('not-a-closure');
     }
 
+    public function cachedOnNullsafeThis(): string
+    {
+        return $this?->cached(fn (): string => $this->getFactory()->createService()->run());
+    }
+
+    public function cachedClosureWithLeadingDelegation(): string
+    {
+        return $this->cached(function (): string {
+            $this->getFactory()->createService()->run();
+
+            return $this->getConfig()->getEndpoint();
+        });
+    }
+
     private function notCached(callable $callback): string
     {
         return (string) $callback();

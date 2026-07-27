@@ -16,6 +16,7 @@ use GacelaTest\Unit\Framework\Attribute\Providers\ProviderWithoutAttributes;
 use GacelaTest\Unit\Framework\Attribute\Providers\ProviderWithPrivateAttribute;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use ReflectionProperty;
 
 final class ProvidesScannerTest extends TestCase
 {
@@ -105,6 +106,16 @@ final class ProvidesScannerTest extends TestCase
         self::assertSame('hello', $containerB->get('string_service'));
     }
 
+    public function test_second_scan_reuses_the_memoized_reflection_entries(): void
+    {
+        ProvidesScanner::scan(new ProviderWithAttributesOnly(), new Container());
+        $memoizedEntries = self::memoizedEntriesFor(ProviderWithAttributesOnly::class);
+
+        ProvidesScanner::scan(new ProviderWithAttributesOnly(), new Container());
+
+        self::assertSame($memoizedEntries, self::memoizedEntriesFor(ProviderWithAttributesOnly::class));
+    }
+
     public function test_register_is_final_to_protect_the_provides_scan(): void
     {
         // register() runs ProvidesScanner::scan(); overriding it would silently
@@ -140,5 +151,21 @@ final class ProvidesScannerTest extends TestCase
         (new ProviderDefaultEmpty())->register($container);
 
         self::assertSame([], $container->getRegisteredServices());
+    }
+
+    /**
+     * The memo is only observable through its own storage: a re-scan rebuilds
+     * entries that compare equal but hold fresh ReflectionMethod instances.
+     *
+     * @param class-string $provider
+     *
+     * @return list<array{id: string, method: ReflectionMethod, needsContainer: bool}>
+     */
+    private static function memoizedEntriesFor(string $provider): array
+    {
+        /** @var array<class-string, list<array{id: string, method: ReflectionMethod, needsContainer: bool}>> $cache */
+        $cache = (new ReflectionProperty(ProvidesScanner::class, 'cache'))->getValue();
+
+        return $cache[$provider];
     }
 }

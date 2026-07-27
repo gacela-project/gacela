@@ -6,17 +6,21 @@ namespace GacelaTest\Unit\Framework\Cache;
 
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\WritableDirectory;
+use GacelaTest\Fixtures\FailingWriteStreamWrapper;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\WarningCollectorTrait;
 use PHPUnit\Framework\TestCase;
 
+use function dirname;
 use function file_get_contents;
 use function file_put_contents;
 use function glob;
+use function mkdir;
 use function sha1;
 use function sprintf;
 use function sys_get_temp_dir;
 use function uniqid;
+use function unlink;
 use function var_export;
 
 final class FileCacheDegradationTest extends TestCase
@@ -146,6 +150,37 @@ final class FileCacheDegradationTest extends TestCase
 
         self::assertSame([], $warnings);
         self::assertFalse($written);
+    }
+
+    public function test_write_contents_atomically_honours_the_memoized_unusable_verdict(): void
+    {
+        $dir = $this->uncreatableDir('memoized-verdict');
+        self::assertFalse(WritableDirectory::isUsable($dir));
+
+        // The blocker disappears and the directory shows up, as a concurrent
+        // process could make happen; the verdict stands for the whole process.
+        unlink(dirname($dir));
+        mkdir($dir, 0o777, true);
+
+        self::assertFalse(FileCache::writeContentsAtomically($dir . '/raw.php', 'content'));
+        self::assertFileDoesNotExist($dir . '/raw.php');
+    }
+
+    public function test_write_contents_atomically_does_not_promote_a_stage_file_that_failed_to_write(): void
+    {
+        FailingWriteStreamWrapper::register();
+
+        try {
+            $written = FileCache::writeContentsAtomically(
+                FailingWriteStreamWrapper::DIRECTORY . '/raw.php',
+                'content',
+            );
+        } finally {
+            FailingWriteStreamWrapper::unregister();
+        }
+
+        self::assertFalse($written);
+        self::assertFalse(FailingWriteStreamWrapper::$renamed, 'a half-written stage file must never reach the target');
     }
 
     public function test_write_contents_atomically_returns_true_on_success(): void

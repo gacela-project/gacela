@@ -11,6 +11,7 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 final class AnonymousGlobalTest extends TestCase
 {
@@ -77,6 +78,29 @@ final class AnonymousGlobalTest extends TestCase
         yield 'starting with \ and not using the module prefix in the class' => [
             '\App\Module\ClassNameFacade',
         ];
+    }
+
+    /**
+     * The normalizing fallback below can only ever find keys that start with a
+     * `\`, so an entry stored verbatim is reachable through the exact-key
+     * lookup alone. Injecting one is the only way to tell the two apart: every
+     * key the framework itself writes is already normalized.
+     */
+    public function test_get_by_key_returns_an_exact_key_hit_without_normalizing_it(): void
+    {
+        $instance = new class() {
+        };
+        $cache = new ReflectionProperty(AnonymousGlobal::class, 'cachedGlobalInstances');
+        /** @var array<string,object> $originalCache */
+        $originalCache = $cache->getValue();
+
+        $cache->setValue(null, ['App\Module\Facade' => $instance] + $originalCache);
+
+        try {
+            self::assertSame($instance, AnonymousGlobal::getByKey('App\Module\Facade'));
+        } finally {
+            $cache->setValue(null, $originalCache);
+        }
     }
 
     public function test_get_by_key_normalizes_missing_leading_backslash(): void

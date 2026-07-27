@@ -50,7 +50,14 @@ final class FacadeOnlyDelegatesRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if (!$node->isPublic() || $node->isAbstract() || $node->stmts === null) {
+        if (!$node->isPublic() || $node->isAbstract()) {
+            return [];
+        }
+
+        // Separate from the guard above: a concrete public method without a body
+        // is an interface method, and folding the two into one `||` chain makes
+        // an equivalent mutant nothing can distinguish.
+        if ($node->stmts === null) {
             return [];
         }
 
@@ -151,12 +158,7 @@ final class FacadeOnlyDelegatesRule implements Rule
             return false;
         }
 
-        $args = $expr->getArgs();
-        if ($args === []) {
-            return false;
-        }
-
-        $callback = $args[0]->value;
+        $callback = $expr->getArgs()[0]->value ?? null;
 
         if ($callback instanceof Expr\ArrowFunction) {
             return $this->isDelegateChain($callback->expr);

@@ -57,6 +57,14 @@ final class ClassInfoTest extends TestCase
         self::assertSame('\GacelaTest\Fixtures\Factory', $actual->getCacheKey(), 'cache key');
     }
 
+    public function test_repeated_lookups_return_the_memoized_instance(): void
+    {
+        $first = ClassInfo::from(ClassInfoTestingFacade::class, 'Factory');
+        $second = ClassInfo::from(new ClassInfoTestingFacade(), 'Factory');
+
+        self::assertSame($first, $second, 'the caller-class cache must hand back the very same instance');
+    }
+
     public function test_string_class_with_leading_backslash_is_normalized(): void
     {
         $actual = ClassInfo::from('\\' . ClassInfoTestingFacade::class, 'Factory');

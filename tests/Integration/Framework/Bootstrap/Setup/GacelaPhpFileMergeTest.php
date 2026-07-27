@@ -56,6 +56,34 @@ PHP;
         self::assertNotSame($instance1, $instance2, 'Factory should return new instances');
     }
 
+    public function test_gacela_php_file_listener_receives_the_bootstrap_started_event(): void
+    {
+        // GacelaBootstrapStartedEvent is dispatched before Config::init() merges
+        // the gacela.php setup, so it only reaches this listener if bootstrap
+        // built its setup from the file itself.
+        $gacelaPhpContent = <<<'PHP'
+<?php
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
+
+return static function (GacelaConfig $config): void {
+    $config->registerSpecificListener(
+        GacelaBootstrapStartedEvent::class,
+        static function (GacelaBootstrapStartedEvent $event): void {
+            file_put_contents(__DIR__ . '/started-event.txt', $event->appRootDir());
+        },
+    );
+};
+PHP;
+
+        file_put_contents($this->tempDir . '/gacela.php', $gacelaPhpContent);
+
+        Gacela::bootstrap($this->tempDir);
+
+        self::assertFileExists($this->tempDir . '/started-event.txt');
+        self::assertStringEqualsFile($this->tempDir . '/started-event.txt', $this->tempDir);
+    }
+
     public function test_protected_services_from_gacela_php_file_survive_merge(): void
     {
         $callable = static fn (): string => 'protected-value';

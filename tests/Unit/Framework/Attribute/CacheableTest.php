@@ -252,6 +252,20 @@ final class CacheableTest extends TestCase
         );
     }
 
+    public function test_argument_less_method_uses_the_no_args_cache_key(): void
+    {
+        $storage = new RecordingCacheStorage();
+        CacheableConfig::setStorage($storage);
+
+        $facade = new TestFacadeWithCache();
+        $facade->getExpensiveData();
+
+        self::assertSame(
+            TestFacadeWithCache::class . '::getExpensiveData::no-args',
+            $storage->sets[0]['key'],
+        );
+    }
+
     public function test_non_scalar_arg_falls_back_to_serialized_hash(): void
     {
         $storage = new RecordingCacheStorage();

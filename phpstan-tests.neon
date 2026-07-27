@@ -30,3 +30,13 @@ parameters:
         -
             identifier: parameter.internalClass
             path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php
+        # ProvidesScanner's memo is a private static with no public accessor, and
+        # reading it is the only way to observe that a repeated scan is skipped.
+        -
+            identifier: classConstant.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Framework/Attribute/ProvidesScannerTest.php
+        # Same shape: AnonymousGlobal's instance cache is a private static, and an
+        # un-normalized key can only be planted in it directly.
+        -
+            identifier: classConstant.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Framework/ClassResolver/GlobalInstance/AnonymousGlobalTest.php

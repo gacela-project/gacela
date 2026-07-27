@@ -22,6 +22,7 @@ use function glob;
 use function is_dir;
 use function mkdir;
 use function restore_error_handler;
+use function scandir;
 use function set_error_handler;
 use function sys_get_temp_dir;
 use function uniqid;
@@ -413,6 +414,11 @@ final class FileCacheTest extends TestCase
         $this->cache->commitBatch();
 
         self::assertCount(0, glob($this->cacheDir . '/*.php') ?: []);
+        self::assertSame(
+            ['.', '..'],
+            scandir($this->cacheDir) ?: [],
+            'an empty batch must not even open the index lock file',
+        );
     }
 
     public function test_batch_leaves_no_tmp_files(): void

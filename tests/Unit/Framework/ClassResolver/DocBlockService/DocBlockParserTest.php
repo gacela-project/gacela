@@ -22,6 +22,12 @@ final class DocBlockParserTest extends TestCase
         self::assertSame('', $this->parser->getClassFromMethod($input, 'getClass()'));
     }
 
+    public function test_empty_doc_block_never_falls_back_to_a_default_class(): void
+    {
+        self::assertSame('', $this->parser->getClassFromMethod('', 'getFactory'));
+        self::assertSame('', $this->parser->getClassFromMethod('', 'getConfig'));
+    }
+
     public function test_get_class_from_method(): void
     {
         $input = <<<TXT

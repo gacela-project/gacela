@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 use function getcwd;
+use function putenv;
 use function sys_get_temp_dir;
 
 final class ConfigTest extends TestCase
@@ -129,6 +130,26 @@ final class ConfigTest extends TestCase
             $appRoot . DIRECTORY_SEPARATOR . 'relative/cache/path',
             Config::getInstance()->getCacheDir(),
         );
+    }
+
+    public function test_get_cache_dir_is_resolved_once_and_memoized(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setFileCache(true, '/memoized-cache'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir('/apps');
+
+        $firstResolved = $config->getCacheDir();
+        putenv('GACELA_CACHE_DIR=/env-override');
+
+        try {
+            self::assertSame('/apps/memoized-cache', $firstResolved);
+            self::assertSame($firstResolved, $config->getCacheDir());
+        } finally {
+            putenv('GACELA_CACHE_DIR');
+        }
     }
 
     public function test_get_cache_dir_returns_windows_style_absolute_path_unchanged(): void

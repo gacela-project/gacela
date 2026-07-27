@@ -189,6 +189,22 @@ final class AbstractPhpFileCacheBatchTest extends TestCase
         self::assertSame($contentBefore, file_get_contents($this->cacheFile()));
     }
 
+    public function test_commit_does_not_flush_a_cache_left_dirty_by_a_cancelled_batch(): void
+    {
+        $cache = new TestPhpFileCache($this->cacheDir);
+
+        AbstractPhpFileCache::beginBatch();
+        $cache->put('key', 'ClassA');
+
+        // clearStaticCache() ends the shared batch but only drops its own
+        // dirty flag, so TestPhpFileCache stays dirty with no batch open.
+        ClassNamePhpCache::clearStaticCache();
+
+        AbstractPhpFileCache::commitBatch();
+
+        self::assertFileDoesNotExist($this->cacheFile());
+    }
+
     public function test_batch_flush_leaves_no_tmp_files_behind(): void
     {
         $cache = new TestPhpFileCache($this->cacheDir);

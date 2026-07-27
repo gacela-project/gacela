@@ -388,6 +388,35 @@
         AssignCoalesce: {
             ignore: ["Gacela\\Console\\Application\\CacheWarm\\CacheWarmService::classResolvers"],
         },
+        // ReturnRemoval arrived with infection 0.34 and reads every early
+        // return as behaviour. These two are allocation guards, not behaviour.
+        ReturnRemoval: {
+            ignore: [
+                // commitBatch() opens with `if (!$this->batching) { return; }`.
+                // $batchPending is only ever filled inside `if ($this->batching)`,
+                // so a non-empty batch implies batching === true, and the two
+                // statements after the guard already handle the empty case.
+                "Gacela\\Framework\\Cache\\FileCache::commitBatch",
+                // extend() returns early on an empty extension list, skipping a
+                // Container nobody then reads. The only in-process signal is the
+                // garbage it would have left behind, and a test asserting on
+                // collectable cycles pins the container's internals, not this class.
+                "Gacela\\Framework\\Bootstrap\\Setup\\GacelaConfigExtender::extend",
+                // suggestSimilar() returns '' early on an empty option list. With
+                // the guard gone, findSimilar() iterates nothing and the next
+                // guard returns the identical '' -- a fast path, not a branch.
+                "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::suggestSimilar",
+                // The guard makes the shutdown hook register once instead of once
+                // per temp dir. The cleanup is idempotent, PHP cannot enumerate
+                // registered shutdown functions, and the difference only shows
+                // after the script body ends -- i.e. never inside a mutant run.
+                "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
+                // mkdir() returning true means the directory exists, so the
+                // is_dir() check two lines down returns for exactly the same
+                // inputs. Only a TOCTOU race distinguishes them.
+                "Gacela\\Console\\Infrastructure\\FileContentIo::mkdir",
+            ],
+        },
         LogicalOrSingleSubExprNegation: {
             ignoreSourceCodeByRegex: [
                 '.*is_object\\(\\$implementation\\) \\|\\| is_callable\\(\\$implementation\\).*',

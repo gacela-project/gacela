@@ -151,12 +151,7 @@ final class FacadeOnlyDelegatesRule implements Rule
             return false;
         }
 
-        $args = $expr->getArgs();
-        if ($args === []) {
-            return false;
-        }
-
-        $callback = $args[0]->value;
+        $callback = $expr->getArgs()[0]->value ?? null;
 
         if ($callback instanceof Expr\ArrowFunction) {
             return $this->isDelegateChain($callback->expr);

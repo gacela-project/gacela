@@ -10,6 +10,7 @@ use GacelaTest\Fixtures\WarningCollectorTrait;
 use PHPUnit\Framework\TestCase;
 
 use function chmod;
+use function file_put_contents;
 use function mkdir;
 use function sys_get_temp_dir;
 use function uniqid;
@@ -64,6 +65,14 @@ final class WritableDirectoryTest extends TestCase
         $dir = $this->createReadOnlyDirOrSkip('writable-dir-readonly');
 
         self::assertFalse(WritableDirectory::isUsable($dir));
+    }
+
+    public function test_path_occupied_by_a_regular_file_is_not_usable(): void
+    {
+        $path = $this->tempPath('writable-dir-is-a-file');
+        file_put_contents($path, 'not a directory');
+
+        self::assertFalse(WritableDirectory::isUsable($path), 'a writable file is still not a directory');
     }
 
     public function test_verdict_is_memoized_until_reset(): void

@@ -123,6 +123,39 @@ final class ContainerDelegationTest extends TestCase
         self::assertSame(['A', 'B'], [...$container->tagged('letters')]);
     }
 
+    /**
+     * `has()` answers "would get() resolve this", which is true of anything
+     * instantiable. `provides()` answers the narrower question the debug
+     * commands actually need: does the container own something for this id.
+     * Forwarding one to the other would go unnoticed everywhere but here.
+     */
+    public function test_provides_is_narrower_than_has(): void
+    {
+        $container = new Container();
+
+        self::assertTrue($container->has(stdClass::class), 'an instantiable class satisfies has()');
+        self::assertFalse($container->provides(stdClass::class), '...but the container owns nothing for it');
+
+        $container->set(stdClass::class, static fn (): stdClass => new stdClass());
+
+        self::assertTrue($container->provides(stdClass::class));
+    }
+
+    public function test_provides_reports_a_registered_binding(): void
+    {
+        $container = new Container();
+        $container->bind(StringValueInterface::class, static fn (): StringValue => new StringValue('x'));
+
+        self::assertTrue($container->provides(StringValueInterface::class));
+    }
+
+    public function test_provides_is_false_for_an_interface_with_no_binding(): void
+    {
+        $container = new Container();
+
+        self::assertFalse($container->provides(StringValueInterface::class));
+    }
+
     public function test_warm_up_leaves_the_class_resolvable(): void
     {
         $container = new Container();

@@ -266,10 +266,74 @@ final class DebugDependenciesCommandTest extends TestCase
         );
     }
 
-    private function inspect(string $argument): CommandTester
+    public function test_the_transitive_tree_is_off_by_default(): void
+    {
+        $tester = $this->inspect(Fixtures\NestedRootService::class);
+
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        // Only the constructor parameter, none of what it drags in.
+        self::assertStringContainsString('$mid ' . Fixtures\NestedMidService::class, $display);
+        self::assertStringNotContainsString('Dependency tree', $display);
+        self::assertStringNotContainsString(AutowirableCollaborator::class, $display);
+    }
+
+    public function test_tree_option_adds_the_transitive_view_below_the_constructor_view(): void
+    {
+        $tester = $this->inspect(Fixtures\NestedRootService::class, ['--tree' => true]);
+
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        // The one-level view is kept, and the tree is appended to it.
+        self::assertStringContainsString('Constructor dependencies for', $display);
+        self::assertStringContainsString('Dependency tree for ' . Fixtures\NestedRootService::class, $display);
+
+        // Each node carries how the container will actually supply it.
+        self::assertStringContainsString(Fixtures\NestedMidService::class . ' (autowired)', $display);
+        self::assertStringContainsString(BoundImplementation::class . ' (autowired)', $display);
+        self::assertStringContainsString(UnboundContract::class . ' (unresolvable)', $display);
+        self::assertMatchesRegularExpression('/Dependencies:\s+4/', $display);
+    }
+
+    public function test_tree_option_marks_a_node_the_container_already_owns(): void
+    {
+        Gacela::container()->set(AutowirableCollaborator::class, new AutowirableCollaborator());
+
+        $tester = $this->inspect(Fixtures\NestedRootService::class, ['--tree' => true]);
+
+        self::assertStringContainsString(
+            AutowirableCollaborator::class . ' (instance)',
+            $tester->getDisplay(),
+        );
+    }
+
+    public function test_tree_option_on_a_class_with_no_dependencies_says_so(): void
+    {
+        $tester = $this->inspect(NoConstructorService::class, ['--tree' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('No transitive dependencies', $tester->getDisplay());
+    }
+
+    public function test_tree_option_reports_an_unresolvable_node_without_failing(): void
+    {
+        $tester = $this->inspect(MixedDependenciesService::class, ['--tree' => true]);
+
+        // The command stays a diagnostic: an unresolvable dependency is
+        // something to print, never something to throw or fail on.
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString(UnboundContract::class . ' (unresolvable)', $tester->getDisplay());
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function inspect(string $argument, array $options = []): CommandTester
     {
         $tester = new CommandTester(new DebugDependenciesCommand());
-        $tester->execute(['class' => $argument]);
+        $tester->execute(['class' => $argument] + $options);
 
         return $tester;
     }

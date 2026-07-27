@@ -6,6 +6,9 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Debug\ConstructorInspection;
 use Gacela\Console\Application\Debug\ConstructorInspector;
+use Gacela\Console\Application\Debug\DependencyNode;
+use Gacela\Console\Application\Debug\DependencyTreeInspection;
+use Gacela\Console\Application\Debug\DependencyTreeInspector;
 use Gacela\Console\Application\Debug\ParameterInspection;
 use Gacela\Console\Application\Debug\ParameterStatus;
 use PhpToken;
@@ -13,6 +16,7 @@ use ReflectionClass;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function class_exists;
@@ -28,7 +32,8 @@ final class DebugDependenciesCommand extends Command
         $this->setName('debug:dependencies')
             ->setDescription('Show the constructor parameters of a class and their resolvability through the container')
             ->setHelp($this->getHelpText())
-            ->addArgument('class', InputArgument::REQUIRED, 'Fully qualified class name or a path to a PHP file declaring the class');
+            ->addArgument('class', InputArgument::REQUIRED, 'Fully qualified class name or a path to a PHP file declaring the class')
+            ->addOption('tree', null, InputOption::VALUE_NONE, 'Also show the transitive dependency tree as the container resolves it');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -58,11 +63,45 @@ final class DebugDependenciesCommand extends Command
             return Command::FAILURE;
         }
 
-        $inspection = (new ConstructorInspector())->inspect($className);
+        $this->renderInspection($output, (new ConstructorInspector())->inspect($className));
 
-        $this->renderInspection($output, $inspection);
+        if ($input->getOption('tree') === true) {
+            $this->renderTree($output, (new DependencyTreeInspector())->inspect($className));
+        }
 
         return Command::SUCCESS;
+    }
+
+    private function renderTree(OutputInterface $output, DependencyTreeInspection $inspection): void
+    {
+        ConsoleSection::title($output, sprintf('Dependency tree for %s', $inspection->className));
+
+        if (!$inspection->containerAvailable) {
+            $output->writeln('  <comment>No container available — bootstrap Gacela to resolve the tree.</comment>');
+            $output->writeln('');
+            return;
+        }
+
+        if ($inspection->nodes === []) {
+            $output->writeln('  <fg=cyan>No transitive dependencies</>');
+            $output->writeln('');
+            return;
+        }
+
+        foreach ($inspection->nodes as $node) {
+            $output->writeln('  ' . $this->formatNode($node));
+        }
+
+        $output->writeln('');
+        $output->writeln(sprintf('<fg=cyan>Dependencies:</> %d', count($inspection->nodes)));
+        $output->writeln('');
+    }
+
+    private function formatNode(DependencyNode $node): string
+    {
+        $marker = $node->isProvided() ? '<fg=green>✓</>' : '<fg=red>✗</>';
+
+        return sprintf('%s %s (%s)', $marker, $node->className, $node->status->value);
     }
 
     private function renderInspection(OutputInterface $output, ConstructorInspection $inspection): void
@@ -219,9 +258,19 @@ declares the target class.
   <fg=red>✗ interface</fg=red>    interface type with no binding
   <fg=red>✗ missing</fg=red>      type does not exist
 
+<info>--tree</info> appends the transitive dependency tree, taken from the container
+rather than re-derived from type hints, so bindings and contextual bindings are
+already applied. Each node reports how the container will supply it:
+
+  <fg=green>✓ binding</fg=green>      an explicit binding is registered for the id
+  <fg=green>✓ instance</fg=green>     the container already holds an instance or resolved singleton
+  <fg=green>✓ autowired</fg=green>    nothing registered, but the class will be constructed on demand
+  <fg=red>✗ unresolvable</fg=red> the container owns nothing and the class cannot be built
+
 <info>Examples:</info>
   bin/gacela debug:dependencies "App\MyModule\MyFactory"
   bin/gacela debug:dependencies src/MyModule/MyFactory.php
+  bin/gacela debug:dependencies "App\MyModule\MyFactory" --tree
 HELP;
     }
 }

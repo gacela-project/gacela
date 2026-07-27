@@ -127,6 +127,20 @@ final class Container implements ContainerInterface
         return $this->inner->has($id);
     }
 
+    /**
+     * Whether the container actually owns something for this id -- a binding, a
+     * stored instance, or a singleton it has already resolved.
+     *
+     * Narrower than {@see has()}, which is also true of anything merely
+     * autowirable. New in container 1.3 and, like {@see stats()}, declared on
+     * the concrete class rather than ContainerInterface, so it is forwarded
+     * explicitly here.
+     */
+    public function provides(string $id): bool
+    {
+        return $this->inner->provides($id);
+    }
+
     public function afterResolving(string $id, Closure $callback): void
     {
         $this->inner->afterResolving($id, $callback);

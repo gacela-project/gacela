@@ -219,6 +219,45 @@ with the override concrete rendered inline when present:
 ✓ $cache CacheInterface (inject -> App\Cache\RedisCache)
 ```
 
+That view stops at the constructor, and it is derived from type hints. Add
+`--tree` to append the **transitive** dependencies, taken from the container's
+own resolution view rather than re-derived — so bindings and contextual
+bindings are already applied, and a bound interface is listed as the concrete
+that will actually be built:
+
+```
+bin/gacela debug:dependencies "App\Catalog\CatalogService" --tree
+```
+
+```
+Dependency tree for App\Catalog\CatalogService
+============================================================
+
+  ✓ App\Catalog\ProductRepository (autowired)
+  ✓ App\Cache\RedisCache (binding)
+  ✓ Psr\Log\LoggerInterface (instance)
+  ✗ App\Search\IndexerInterface (unresolvable)
+
+Dependencies: 4
+```
+
+Each node reports how the container will supply it:
+
+| Marker | Meaning |
+|---|---|
+| `binding` | an explicit binding is registered for the id |
+| `instance` | the container already holds an instance, or a singleton it resolved |
+| `autowired` | nothing registered, but the class will be constructed on demand |
+| `unresolvable` | the container owns nothing and the class cannot be built |
+
+The distinction comes from `Container::provides()`, which asks whether the
+container *owns* something for an id. That is narrower than `has()`, which is
+also true of anything merely autowirable — and it is the difference the
+one-level view could not express, because an interface with a binding read the
+same as one without.
+
+An unresolvable node is printed, not thrown: the command stays a diagnostic.
+
 ### Migration from `ServiceResolverAwareTrait`
 
 Before:

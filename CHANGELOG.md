@@ -10,6 +10,8 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run 
 
 ### Added
 
+- **`debug:dependencies --tree` answers from the container instead of from reflection.** Without it the command reports one level of constructor parameters, re-derived from type hints. With it, the transitive tree is taken from `Container::getDependencyTree()` — the same walk the resolver performs — so bindings, contextual bindings and attributes are already applied, and a bound interface is listed as the concrete that will actually be built. Every node is marked with how the container will supply it: `binding`, `instance`, `autowired`, or `unresolvable`. That last distinction is new information: it comes from `Container::provides()`, which asks whether the container *owns* something for an id, where `has()` is also true of anything merely autowirable — so an interface with a binding used to read exactly like one without. An unresolvable node is printed, never thrown; the command stays a diagnostic. See [container configuration](docs/container-configuration.md#visibility-in-tooling)
+- **`Gacela\Framework\Container\Container::provides()`** forwards container 1.3's `provides()`. Like `stats()`, it is declared on the concrete class rather than `ContainerInterface`, so the decorator needs an explicit forwarder
 - **A Psalm plugin that types the pillar accessors from `#[ServiceMap]`** (`Gacela\Psalm\Plugin`), the counterpart of the PHPStan extension. Register it in `psalm.xml`:
   ```xml
   <plugins>

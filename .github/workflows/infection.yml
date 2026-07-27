@@ -101,7 +101,7 @@ jobs:
             --ignore-msi-with-no-mutations \
             --logger-github \
             --no-progress \
-            --show-mutations
+            --show-mutations=max
 
   full:
     name: "Mutation testing (full, min MSI 100%)"
@@ -133,4 +133,4 @@ jobs:
       - name: Assert the mutation score has not regressed
         env:
           XDEBUG_MODE: coverage
-        run: vendor/bin/infection --threads=max --min-msi=100 --min-covered-msi=100 --no-progress --show-mutations
+        run: vendor/bin/infection --threads=max --min-msi=100 --min-covered-msi=100 --no-progress --show-mutations=max

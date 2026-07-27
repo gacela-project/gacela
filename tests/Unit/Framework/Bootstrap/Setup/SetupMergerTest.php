@@ -206,6 +206,43 @@ final class SetupMergerTest extends TestCase
         self::assertSame('RedisCache', $contextualBindings[stdClass::class]['CacheInterface']);
     }
 
+    public function test_merge_tags_from_two_setups(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->tag('service-a', 'tag-a');
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->tag('service-b', 'tag-b');
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        $tags = $merged->getTags();
+        self::assertSame(['service-a'], $tags['tag-a'] ?? null);
+        self::assertSame(['service-b'], $tags['tag-b'] ?? null);
+    }
+
+    public function test_merge_the_same_tag_from_two_setups_unions_its_ids(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->tag(['service-a', 'shared'], 'validators');
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->tag(['shared', 'service-b'], 'validators');
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        // A tag is a collection, so the later setup adds to it rather than
+        // replacing it -- and an id both setups declared appears once.
+        self::assertSame(
+            ['service-a', 'shared', 'service-b'],
+            $merged->getTags()['validators'] ?? null,
+        );
+    }
+
     public function test_merge_handler_registries_from_two_setups(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

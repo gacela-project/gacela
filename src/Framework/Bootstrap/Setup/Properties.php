@@ -23,6 +23,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
  * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
@@ -98,6 +99,9 @@ final class Properties
 
     /** @var ?HandlerRegistriesMap */
     public ?array $handlerRegistries = null;
+
+    /** @var ?TagsMap */
+    public ?array $tags = null;
 
     public function __construct()
     {

@@ -23,7 +23,15 @@ use function sprintf;
  */
 final class LazyHandlerRegistry implements HandlerRegistry
 {
-    /** @var array<string|int, object> */
+    /**
+     * Deliberately a second cache, not an oversight: the container caches by
+     * binding style, so a handler bound as a factory would be rebuilt on every
+     * `get()`. The registry's own contract is that a key resolves to one handler
+     * for the registry's lifetime, and that has to hold regardless of how the
+     * handler happens to be bound.
+     *
+     * @var array<string|int, object>
+     */
     private array $resolved = [];
 
     /**

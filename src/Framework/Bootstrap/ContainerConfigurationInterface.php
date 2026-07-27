@@ -14,6 +14,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
  * @psalm-type ServiceAliasMap = array<string, string>
  * @psalm-type ServicesToExtendMap = array<string, list<Closure>>
  * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
+ * @psalm-type TagsMap = array<string, list<string>>
  * @psalm-type ContextualBindingsMap = array<string, array<string, mixed>>
  */
 interface ContainerConfigurationInterface
@@ -54,6 +55,15 @@ interface ContainerConfigurationInterface
      * @return HandlerRegistriesMap
      */
     public function getHandlerRegistries(): array;
+
+    /**
+     * Service identifiers grouped under a label, resolvable together through
+     * `Container::tagged()`. Unkeyed, where a handler registry is keyed: a tag
+     * answers "every implementation of this", not "the one for this key".
+     *
+     * @return TagsMap
+     */
+    public function getTags(): array;
 
     /**
      * Services instantiated on first access rather than at container build.

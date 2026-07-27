@@ -12,6 +12,7 @@ they are genuinely the right answer, because "supported" is not "deprecated".
 | reach another module | from an entry point: `ServiceResolverAwareTrait` + `#[ServiceMap]` + `$this->getFacade()`. From a Factory: `#[Provides]` + `getProvidedDependency()` |
 | get a collaborator inside my own module | a `create*()` method on the Factory, or `make()` when autowiring pays |
 | get an external / infrastructure service | `#[Provides]` in the Provider, or `addBinding()` for an interface |
+| collect several implementations | `tag()` when the set is unkeyed, `addHandlerRegistry()` when you look one up by key |
 | read a config value | the typed getters on your `Config` |
 
 ## Reach another module
@@ -133,6 +134,80 @@ everywhere, including through `make()`:
 ```php
 $config->addBinding(PaymentGateway::class, StripeGateway::class);
 ```
+
+## Collect several implementations
+
+Two shapes, and which one you want is decided by a single question: **do you
+look a member up, or do you use all of them?**
+
+### Unkeyed — every implementation of something
+
+A set of validators, listeners or rules, where the consumer iterates the whole
+collection. Group them with `tag()` in `gacela.php`:
+
+```php
+$config->tag([NotEmptyValidator::class, EmailValidator::class], 'validators');
+```
+
+Resolve the group with `tagged()`, which instantiates each id lazily, in the
+order it was tagged. A Provider is where you turn it into a provided dependency:
+
+```php
+final class Provider extends AbstractProvider
+{
+    public const VALIDATORS = 'CHECKOUT_VALIDATORS';
+
+    public function provideModuleDependencies(Container $container): void
+    {
+        $container->set(
+            self::VALIDATORS,
+            static fn (): array => [...$container->tagged('validators')],
+        );
+    }
+}
+```
+
+A tag declared in `gacela.php` reaches **every** module's container, so a module
+can consume a tag it did not declare — which is what makes a tag an extension
+point rather than just a list.
+
+A module that wants to *add* to a tag calls `Container::tag()` in its own
+Provider:
+
+```php
+public function provideModuleDependencies(Container $container): void
+{
+    $container->tag(CardValidator::class, 'validators');
+    // tagged('validators') here now yields the app-wide ids plus CardValidator
+}
+```
+
+That contribution stays in **that module's** container. Two modules tagging
+under the same label do not collide and do not see each other's additions; each
+sees the app-wide set plus its own. That is deliberate — module containers are
+separate, and a tag is not a back channel between modules.
+
+### Keyed — the one implementation for this key
+
+A command bus, a message dispatcher, anything that picks a handler by a business
+key. Use `addHandlerRegistry()`:
+
+```php
+$config->addHandlerRegistry(HandlerRegistry::class, [
+    'email' => EmailHandler::class,
+    'sms' => SmsHandler::class,
+]);
+```
+
+```php
+$registry = $this->getProvidedDependency(HandlerRegistry::class);
+$handler = $registry->get('email');
+```
+
+Both resolve their members through the container and both instantiate lazily.
+They are not two ways to do one thing: a registry answers *"the handler for this
+key"* and throws on an unknown one, while a tag answers *"all of these"* and has
+no notion of a key to miss.
 
 ## Read a config value
 

@@ -200,6 +200,7 @@ final class Gacela
         AbstractClassResolver::resetCache();
         InMemoryCache::resetCache();
         GacelaFileCache::resetCache();
+        AbstractPhpFileCache::resetCache();
         WritableDirectory::resetCache();
         DocBlockResolverCache::resetCache();
         ClassResolverCache::resetCache();

@@ -38,19 +38,43 @@ abstract class AbstractPhpFileCache implements CacheInterface
      */
     public static function all(): array
     {
-        return self::$cache[static::class];
+        return self::$cache[static::class] ?? [];
     }
 
     /**
-     * Clears this class's in-memory cache entries and any shared batch state.
-     * Intended for tests to ensure isolation across runs in the same PHP process.
+     * Clears the in-memory entries of *every* file-backed cache, so
+     * `Gacela::resetCache()` does not leave a subclass serving what it read
+     * from disk before the reset.
      *
-     * The filename registry is intentionally preserved: the absolute cache file
-     * path is a deterministic function of the cache directory and subclass, so
-     * it stays valid across clear/reconstruct cycles. Dropping it here would
-     * strand any already-constructed instance held by an outer cache holder
-     * (e.g. ClassResolverCache::$cache) without a way to recover the filename
-     * on a subsequent put().
+     * The per-subclass {@see clearStaticCache()} below has existed since the
+     * batching work, but nothing outside the test suite ever called it: the
+     * central reset cannot name concrete subclasses, and a caller that could
+     * would have to know all of them. This one is keyless, so it does not need
+     * to.
+     *
+     * Nothing is kept back, including the filename registry: `put()` re-registers
+     * the filename of whatever it writes, and `all()` reads through a missing
+     * slot as empty.
+     *
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$cache = [];
+        self::$filenames = [];
+        self::$dirty = [];
+        self::$batching = false;
+    }
+
+    /**
+     * Clears one subclass's in-memory cache entries and any shared batch state,
+     * leaving the other subclasses alone. Intended for tests that need to
+     * isolate a single cache within a process; {@see resetCache()} is what the
+     * framework calls.
+     *
+     * The filename registry is left alone here, and that is now a detail rather
+     * than a constraint: `put()` re-registers the filename on every write, so
+     * dropping it would be safe too.
      *
      * @internal
      */
@@ -131,6 +155,13 @@ abstract class AbstractPhpFileCache implements CacheInterface
         }
 
         self::$cache[static::class][$cacheKey] = $className;
+
+        // Re-registered on every write, not just in the constructor: the
+        // registry is what commitBatch() -- which is static, and so has no
+        // instance to ask -- resolves the file from, and resetCache() empties
+        // it. Without this, a put() after a reset would mark the cache dirty
+        // and then be silently dropped by the next commit.
+        self::$filenames[static::class] = $this->computeAbsoluteFilename();
 
         if (self::$batching) {
             self::$dirty[static::class] = true;

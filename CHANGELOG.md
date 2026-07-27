@@ -4,10 +4,13 @@
 
 ### Fixed
 
+- **The in-memory copy of the file-backed caches survived `Gacela::resetCache()`.** With `gacela-cache-enabled`, entries that `ClassNamePhpCache` and friends had read from disk kept answering after an explicit reset, so `GacelaConfig::resetInMemoryCache()` did not reset that layer. `AbstractPhpFileCache::clearStaticCache()` had existed since the batching work and was unit-tested, but it clears one subclass at a time and the central reset cannot name concrete subclasses, so the only callers were the tests themselves. `AbstractPhpFileCache::resetCache()` now clears every subclass at once and `Gacela::resetCache()` calls it. The seventeenth of the cache bugs tracked in #539, and the first one found by a guard rather than by a user
+
 - **`extendService()` on an id that names an autowirable class threw instead of scheduling the extension.** A regression in `gacela-project/container` 1.0, shipped in Gacela by the 1.0 bump: `has()` moved to the PSR-11 question ("will `get()` resolve this?"), which is `true` for any instantiable class, so `extend()` took the already-defined branch. Fixed by requiring container `^1.1`. Gacela's own tests missed it because every existing `extendService()` case uses a plain string id, and the bug only bites when the id happens to name a real class
 
 ### Internal
 
+- `StaticStateCoverageTest` guards process-global state from the opposite end to `ResetCacheCoverageTest`: it enumerates every `static` property under `src/`, populates them by resolving a real module, calls `Gacela::resetCache()` and requires each one to be back at its declared default or listed with the reason its lifetime is not cache lifetime. The existing guard starts from the resets that exist, so by construction it cannot see a class holding state with no reset at all — seven of those are what #539 measured, and an eighth (above) was found by writing this one
 - Raised the `nikic/php-parser` floor to `^5.4`. Psalm 6.16 declares `^5.0.0` but reads `Property::$hooks`, which only exists from 5.4, so a `--prefer-lowest` install produced a Psalm that crashes on any file containing a property. Nothing had noticed because nothing ran Psalm from inside the test suite until the plugin test did
 - `debug:container` reads six keys from the container's `getStats()`, whose shape upstream explicitly excludes from its BC policy. `ContainerStatsShapeTest` pins those keys, so a container upgrade that renames one fails Gacela's CI on the upgrade commit rather than a user's terminal
 

@@ -63,7 +63,7 @@ return static function (GacelaConfig $config): void {
 
 `addHealthCheck()` accepts either a `class-string<ModuleHealthCheckInterface>` (resolved through the container) or a ready-made `ModuleHealthCheckInterface` instance:
 
-```php
+```
 public function addHealthCheck(string|ModuleHealthCheckInterface $check): self
 ```
 
@@ -116,7 +116,7 @@ public function healthCheck(): Response
 
 `$report->toArray()` returns:
 
-```php
+```
 [
     'overall' => 'degraded',
     'modules' => [
@@ -155,8 +155,8 @@ public function getModuleName(): string;
 
 ### `HealthStatus`
 
-```php
-HealthStatus::healthy(string $message = '', array $metadata = []): self
+```
+HealthStatus::healthy(string $message = 'Module is healthy', array $metadata = []): self
 HealthStatus::degraded(string $message, array $metadata = []): self
 HealthStatus::unhealthy(string $message, array $metadata = []): self
 
@@ -171,14 +171,14 @@ $status->toArray(): array
 
 ### `HealthChecker`
 
-```php
+```
 $checker->checkAll(): HealthCheckReport
 $checker->count(): int
 ```
 
 ### `GacelaConfig`
 
-```php
+```
 // Register a check to run under `bin/gacela doctor`
 $config->addHealthCheck(string|ModuleHealthCheckInterface $check): self
 ```

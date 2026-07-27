@@ -9,35 +9,66 @@ they are genuinely the right answer, because "supported" is not "deprecated".
 
 | I want to… | Use |
 |---|---|
-| reach another module | `#[ServiceMap]` + `$this->getFacade()` |
+| reach another module | from an entry point: `ServiceResolverAwareTrait` + `#[ServiceMap]` + `$this->getFacade()`. From a Factory: `#[Provides]` + `getProvidedDependency()` |
 | get a collaborator inside my own module | a `create*()` method on the Factory, or `make()` when autowiring pays |
 | get an external / infrastructure service | `#[Provides]` in the Provider, or `addBinding()` for an interface |
 | read a config value | the typed getters on your `Config` |
 
 ## Reach another module
 
-Declare the pillar with `#[ServiceMap]` and call the accessor:
+From an **entry-point class** — a Command, a Controller, anything outside the
+four pillars — `use ServiceResolverAwareTrait` and declare the pillar with
+`#[ServiceMap]`:
 
 ```php
-use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ServiceResolver\ServiceMap;
+use Gacela\Framework\ServiceResolverAwareTrait;
 
 #[ServiceMap(method: 'getFacade', className: BillingFacade::class)]
-final class Factory extends AbstractFactory
+final class SendInvoiceController
 {
-    public function createInvoiceSender(): InvoiceSender
+    use ServiceResolverAwareTrait;
+
+    public function __invoke(): void
     {
-        return new InvoiceSender($this->getFacade());
+        $this->getFacade()->sendInvoice();
     }
 }
 ```
 
-**Why declare it.** The accessor works without the attribute — the runtime falls
-back to reading a `@method` docblock, and then to scanning your file's `use`
-statements. But an undeclared accessor is untyped: PHPStan reports it in 2.0,
-and before that it evaluated to `mixed`, which switched off checking of
-everything reached *through* it. A `@method` docblock is equally fine; PHPStan
-reads it natively.
+The trait is what supplies the `__call()` that reads the attribute. Without it
+`$this->getFacade()` is a plain undefined method, attribute or no attribute.
+
+**From inside a Factory, do not do this.** A Factory reaches another module
+through its own **Provider**, not by calling `getFacade()` on itself:
+
+```php
+// Provider
+#[Provides(self::BILLING_FACADE)]
+public function billingFacade(): BillingFacade
+{
+    return $this->getLocator()->get(BillingFacade::class);
+}
+
+// Factory
+public function createInvoiceSender(): InvoiceSender
+{
+    return new InvoiceSender($this->getProvidedDependency(Provider::BILLING_FACADE));
+}
+```
+
+`FactoryDoesNotCallFacadeRule` enforces that, and it is registered by default in
+`phpstan-gacela.neon`: *"Factory must not call `$this->getFacade()`; same-module
+access goes through the Factory itself, cross-module access goes through the
+Provider."*
+
+**Why declare the pillar.** The accessor works without the attribute — the
+runtime falls back to reading a `@method` docblock, and then to scanning your
+file's `use` statements, both of which now raise a deprecation. But an
+undeclared accessor is also untyped: 2.0 reports it, and before that it
+evaluated to `mixed`, which switched off checking of everything reached
+*through* it. A `@method` docblock is equally fine for typing; PHPStan reads it
+natively, and it is still worth keeping alongside the attribute for IDEs.
 
 Cross-module access goes through the other module's **Facade**, never its
 Factory or internals. `CrossModuleViaFacadeRule` enforces this if you enable it.

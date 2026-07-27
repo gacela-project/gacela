@@ -37,6 +37,8 @@ Each module exposes four classes:
 composer require gacela-project/gacela
 ```
 
+Requires PHP 8.3+. Coming from 1.x? See [UPGRADE.md](UPGRADE.md).
+
 ## Module structure
 
 ```
@@ -53,6 +55,7 @@ app/
 
 ## Documentation
 
+- [Upgrading from 1.x](UPGRADE.md)
 - [Getting started](docs/getting-started.md)
 - [Container configuration](docs/container-configuration.md)
 - [Static analysis (PHPStan / Psalm)](docs/static-analysis.md)

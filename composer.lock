@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3c386348b0fe74b9f8f1428903efa128",
+    "content-hash": "65367a61e77af395c2d886907ba5f776",
     "packages": [
         {
             "name": "gacela-project/container",
-            "version": "1.2.0",
+            "version": "dev-fix/duplicate-reflection-on-cold-resolve",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gacela-project/container.git",
-                "reference": "8b77f3e07dd6f2964e131ab60bbe83734a388459"
+                "reference": "f5f412934c03265b48f1d72045a9cb3a0e6d5696"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gacela-project/container/zipball/8b77f3e07dd6f2964e131ab60bbe83734a388459",
-                "reference": "8b77f3e07dd6f2964e131ab60bbe83734a388459",
+                "url": "https://api.github.com/repos/gacela-project/container/zipball/f5f412934c03265b48f1d72045a9cb3a0e6d5696",
+                "reference": "f5f412934c03265b48f1d72045a9cb3a0e6d5696",
                 "shasum": ""
             },
             "require": {
@@ -40,7 +40,75 @@
                     "Gacela\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "GacelaTest\\": "tests/",
+                    "GacelaBench\\": "benchmarks/"
+                }
+            },
+            "scripts": {
+                "post-install-cmd": [
+                    ".github/git-hooks/init.sh"
+                ],
+                "ctal": [
+                    "@static-clear-cache",
+                    "@csfix",
+                    "@test-all"
+                ],
+                "test": [
+                    "@test-all"
+                ],
+                "test-all": [
+                    "@quality",
+                    "@phpunit"
+                ],
+                "quality": [
+                    "@csrun",
+                    "@psalm",
+                    "@phpstan"
+                ],
+                "phpunit": [
+                    "@test-phpunit"
+                ],
+                "static-clear-cache": [
+                    "XDEBUG_MODE=off vendor/bin/psalm --clear-cache",
+                    "XDEBUG_MODE=off vendor/bin/phpstan clear-result-cache"
+                ],
+                "test-phpunit": [
+                    "XDEBUG_MODE=off ./vendor/bin/phpunit"
+                ],
+                "test-coverage": [
+                    "XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html=data/coverage-html"
+                ],
+                "test-coverage-check": [
+                    "XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-clover=coverage.xml",
+                    "php tools/check-coverage.php coverage.xml 95"
+                ],
+                "infection": [
+                    "XDEBUG_MODE=coverage ./vendor/bin/infection --threads=max --no-interaction"
+                ],
+                "bench": [
+                    "vendor/bin/phpbench run --report=aggregate"
+                ],
+                "bench-baseline": [
+                    "vendor/bin/phpbench run --tag=baseline --store --progress=none"
+                ],
+                "psalm": [
+                    "XDEBUG_MODE=off ./vendor/bin/psalm"
+                ],
+                "phpstan": [
+                    "XDEBUG_MODE=off ./vendor/bin/phpstan analyze"
+                ],
+                "fix": [
+                    "@csfix"
+                ],
+                "csfix": [
+                    "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix"
+                ],
+                "csrun": [
+                    "XDEBUG_MODE=off ./vendor/bin/php-cs-fixer fix --dry-run"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -66,15 +134,15 @@
             ],
             "support": {
                 "issues": "https://github.com/gacela-project/container/issues",
-                "source": "https://github.com/gacela-project/container/tree/1.2.0"
+                "source": "https://github.com/gacela-project/container/tree/fix/duplicate-reflection-on-cold-resolve"
             },
             "funding": [
                 {
-                    "url": "https://chemaclass.com/sponsor",
-                    "type": "custom"
+                    "type": "custom",
+                    "url": "https://chemaclass.com/sponsor"
                 }
             ],
-            "time": "2026-07-27T05:42:30+00:00"
+            "time": "2026-07-27T07:35:43+00:00"
         },
         {
             "name": "psr/container",
@@ -8890,9 +8958,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "gacela-project/container",
+            "version": "dev-fix/duplicate-reflection-on-cold-resolve",
+            "alias": "1.2.99",
+            "alias_normalized": "1.2.99.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "gacela-project/container": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -8902,5 +8979,5 @@
     "platform-overrides": {
         "php": "8.3.16"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

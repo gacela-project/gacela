@@ -25,9 +25,15 @@
     "support": {
         "issues": "https://github.com/gacela-project/gacela/issues"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/gacela-project/container"
+        }
+    ],
     "require": {
         "php": ">=8.3",
-        "gacela-project/container": "^1.2"
+        "gacela-project/container": "dev-fix/duplicate-reflection-on-cold-resolve as 1.2.99"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.50",

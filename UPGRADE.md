@@ -1,8 +1,37 @@
 # Upgrading
 
+## Why upgrade to 2.0
+
+The whole runtime change is two lines, and almost everything below follows from the second one:
+
+```diff
+-"php": ">=8.1",  "gacela-project/container": "^0.10.0"
++"php": ">=8.3",  "gacela-project/container": "^1.2.1"
+```
+
+**Your container stops being a 0.x.** This is the reason, and it is not available to you on 1.x at any version — `Gacela\Container\Container` became `final` at 1.0, so crossing that line is breaking by construction. What it buys:
+
+- `#[Lazy]` — defer construction until first use, for an expensive service a request may never reach
+- `#[Inject]` on properties, for classes whose constructor is not yours to change
+- `has()` answering the PSR-11 question ("will `get()` resolve this?") rather than "was this registered?"
+- Container exceptions naming the problem, where 0.x emitted raw PHP errors from inside the container — an unwritable cache path, an unreadable cache file, a `get()` on an abstract class
+- A stability promise. 0.x had none
+
+**Static analysis that fails instead of shrugging.** 1.21 let you *write* `#[ServiceMap]`. 2.0 makes omitting it an error, because the PHPStan suppression Gacela used to ship is gone — and adds a Psalm plugin doing the same job. The gap is wider than it sounds: a suppressed accessor evaluated to `mixed`, which switched off checking of everything reached *through* it. On 1.x, `$this->getFacade()->typoMethod()` passes.
+
+**Three fixed state leaks** that exist only on the 2.0 line. The sharpest: `ClassValidator` memoized the *negative* `class_exists()` answer and never cleared it, so a class that became loadable stayed "missing" for the life of the process. That bites long-running workers, code generation, and `cache:warm`.
+
+### What this release is not
+
+- **Not a performance release.** The three perf spikes on the roadmap were measured and came out sub-millisecond, so they were closed rather than shipped. Container gains are single-digit percent. If you are here for speed, there is nothing to collect
+- **Not the "one container" release.** That was the original headline and it moved to 2.1 — it needs a parent/child container primitive that does not exist yet ([container#106](https://github.com/gacela-project/container/issues/106)). 2.0 is the foundation that makes it possible, not the thing itself
+- **Not a Symfony unblock.** Symfony is a dev dependency of Gacela, never a runtime one. A Symfony 7 or 8 application already works on 1.21
+
+**So who should wait?** If you are on PHP 8.3 already, not running long-lived workers, and not using Psalm, your reason to move today is thin — 1.21 is feature-complete and supported. The counter-argument is cost: this migration is three mechanical renames, and `doctor` catches the only one that fails silently. It is a cheap major to take early rather than under pressure later.
+
 ## 1.21 → 2.0
 
-Ordered by how likely each change is to affect you. The first three are mechanical renames a project of any size will hit; the last two only bite specific shapes of code.
+Ordered by how likely each change is to affect you: the PHP floor, then three mechanical renames a project of any size will hit, then the static-analysis change, then three that only bite specific shapes of code.
 
 If you are not ready, **1.21 is feature-complete** and deliberately ships the tooling for this migration — the typed pillar accessors, `FacadeInterfaceInSyncRule`, and `doctor`'s filename check all landed in 1.x so you can do the work *before* the major, not as a reward for taking it.
 

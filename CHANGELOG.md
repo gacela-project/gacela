@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+A foundation major. The runtime change is two lines — PHP `>=8.3` and `gacela-project/container` `^1.2.1`, up from a `0.x` — and most of what follows comes from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`, and container exceptions where 0.x emitted raw PHP errors. Alongside it, the PHPStan suppression Gacela used to ship for undeclared pillar accessors is gone and a Psalm plugin joins the PHPStan extension, so an accessor you have not declared is now reported rather than silently typed `mixed`.
+
+Two things it is deliberately not. It is **not a performance release** — the three perf spikes on the roadmap were measured at sub-millisecond and closed rather than shipped. And it is **not the "one container" release**: that was the original headline for 2.0 and it moved to 2.1, because it needs a parent/child container primitive that does not exist yet ([container#106](https://github.com/gacela-project/container/issues/106)).
+
+Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run `vendor/bin/gacela doctor` on 1.21 first, because one of the three fails silently.
+
 ### Added
 
 - **A Psalm plugin that types the pillar accessors from `#[ServiceMap]`** (`Gacela\Psalm\Plugin`), the counterpart of the PHPStan extension. Register it in `psalm.xml`:

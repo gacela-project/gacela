@@ -14,7 +14,7 @@ final class ClassInfo implements ClassInfoInterface
     public const MODULE_NAME_ANONYMOUS = 'module-name@anonymous';
 
     /** @var array<string,array<string,self>> */
-    private static array $callerClassCache;
+    private static array $callerClassCache = [];
 
     public function __construct(
         private readonly string $callerModuleNamespace,

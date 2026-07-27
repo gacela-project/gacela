@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+Two cache-reset bugs, backported from the 2.0 line so they do not require taking a major. Both bite the same way — state that survives an explicit `Gacela::resetCache()` — and both were found by guards written while auditing process-global state, not by a user report.
+
+### Fixed
+
+- **`Gacela::resetCache()` did not drop the memoized "this class does not exist" answers.** `ClassValidator` caches the *negative* result of `class_exists()`, so a class that was not loadable when first resolved stayed "missing" for the life of the process. `ClassValidator::resetCache()` existed but was reachable only from its own unit test, so the central reset never called it. Affects any process where the set of loadable classes changes after the first resolution: long-running workers (RoadRunner, Swoole, queue consumers) that re-bootstrap, code generation, and `cache:warm` emitting classes. Positive answers are deliberately kept — a class that exists cannot stop existing, so they never go stale, and clearing them cost ~20% on the no-file-cache bootstrap path for no correctness gain
+- **The in-memory copy of the file-backed caches survived `Gacela::resetCache()`.** With `gacela-cache-enabled`, entries that `ClassNamePhpCache` and friends had read from disk kept answering after an explicit reset, so `GacelaConfig::resetInMemoryCache()` did not reset that layer. `AbstractPhpFileCache::clearStaticCache()` had existed since the batching work and was unit-tested, but it clears one subclass at a time and the central reset cannot name concrete subclasses, so the only callers were the tests themselves. `AbstractPhpFileCache::resetCache()` now clears every subclass at once and `Gacela::resetCache()` calls it
+
+### Internal
+
+- `ResetCacheCoverageTest` and `StaticStateCoverageTest` backported alongside the fixes, so the 1.x line keeps the guards that found them. The first checks that every declared reset is actually reached by `Gacela::resetCache()`; the second enumerates every `static` property under `src/` and requires it to be back at its declared default after a reset, or listed with the reason its lifetime is not cache lifetime
+
 ## [1.21.0](https://github.com/gacela-project/gacela/compare/1.20.0...1.21.0) - 2026-07-26
 
 Static analysis now **types** the pillar accessors instead of suppressing them, and the

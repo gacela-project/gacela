@@ -9,6 +9,7 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
 use PhpBench\Attributes\AfterClassMethods;
+use PhpBench\Attributes\Assert;
 use PhpBench\Attributes\BeforeClassMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
@@ -23,7 +24,25 @@ use function unlink;
  * relying on the implicit default (sys_get_temp_dir()) made the bench pick up
  * merged-config cache files written by unrelated test runs on the same
  * machine, which poisoned the enabled-cache path with foreign config values.
+ *
+ * TEMPORARY tolerance, to be restored to the default +/-10% once `2.0` carries
+ * the new baseline. See #541.
+ *
+ * `bench_without_cache` moved +21.79% when `Gacela::resetCache()` started
+ * dropping the memoized "this class does not exist" answers. That is not a
+ * regression: this bench asks for `resetInMemoryCache()` on every rev and
+ * registers 15 custom suffix types, so each of the seven modules probes many
+ * candidate class names that do not exist. `ClassValidator` was ignoring the
+ * reset, so revs 2..50 reused rev 1's misses -- the cross-rev state bleed this
+ * suite's README explicitly forbids. The bench is now paying honestly for the
+ * work it always claimed to do, and the old number was the wrong one.
+ *
+ * The gate cannot express "intentional, reviewed change", and the base branch
+ * still measures the leaky behaviour, so every run of this PR would fail
+ * against it. Widened only until the merge makes the two sides comparable
+ * again.
  */
+#[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 35%')]
 #[BeforeClassMethods('removeCacheFiles')]
 #[AfterClassMethods('removeCacheFiles')]
 #[Groups(['gate', 'bootstrap'])]

@@ -14,6 +14,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
+use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
@@ -199,11 +200,14 @@ final class Gacela
         AbstractClassResolver::resetCache();
         InMemoryCache::resetCache();
         GacelaFileCache::resetCache();
+        AbstractPhpFileCache::resetCache();
         WritableDirectory::resetCache();
         DocBlockResolverCache::resetCache();
         ClassResolverCache::resetCache();
         ConfigFactory::resetCache();
         PathFinder::resetCache();
+        ClassValidator::resetCache();
+        // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();
     }

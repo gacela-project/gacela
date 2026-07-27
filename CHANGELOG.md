@@ -8,10 +8,18 @@
 
 ### Internal
 
+- Raised the `nikic/php-parser` floor to `^5.4`. Psalm 6.16 declares `^5.0.0` but reads `Property::$hooks`, which only exists from 5.4, so a `--prefer-lowest` install produced a Psalm that crashes on any file containing a property. Nothing had noticed because nothing ran Psalm from inside the test suite until the plugin test did
 - `debug:container` reads six keys from the container's `getStats()`, whose shape upstream explicitly excludes from its BC policy. `ContainerStatsShapeTest` pins those keys, so a container upgrade that renames one fails Gacela's CI on the upgrade commit rather than a user's terminal
 
 ### Added
 
+- **A Psalm plugin that types the pillar accessors from `#[ServiceMap]`** (`Gacela\Psalm\Plugin`), the counterpart of the PHPStan extension. Register it in `psalm.xml`:
+  ```xml
+  <plugins>
+      <pluginClass class="Gacela\Psalm\Plugin"/>
+  </plugins>
+  ```
+  Until now `psalm-gacela.xml` only *suppressed* `UndefinedMagicMethod`, so the accessor evaluated to `mixed` and everything reached through it went unchecked. With the plugin, `$this->getFacade()->typoMethod()` is reported. The suppressions stay as a fallback for classes declaring neither `#[ServiceMap]` nor a `@method` docblock, and are scheduled for removal in 3.0. The plugin cannot be delivered through the existing XInclude, because XInclude replaces a single element and `<plugins>` lives elsewhere in your config
 - `#[Lazy]` (container 1.1) joins `#[Inject]`, `#[Singleton]` and `#[Factory]` as an attribute honoured by `AbstractFactory::make()` and container resolution. It defers construction until the instance is first used, which suits an expensive service a request may never reach. Requires PHP 8.4 for native lazy objects; on 8.3 the class is constructed eagerly, which is unobservable apart from the timing
 
 ### Internal

@@ -1,16 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Gacela Psalm Configuration
+    Gacela Psalm configuration — fallback suppressions.
 
-    This file contains issue handler suppressions for Gacela's dynamic resolution patterns.
-    Include this in your psalm.xml using XInclude:
+    Include it from your psalm.xml with XInclude:
 
-    <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
+        <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
 
-    This suppresses UndefinedMagicMethod for getFacade(), getFactory(), and getConfig().
+    PREFER THE PLUGIN. This file only *suppresses* UndefinedMagicMethod for the
+    pillar accessors, and a suppressed call is not a typed one: it evaluates to
+    mixed, which switches off checking of everything reached through it.
+
+    Registering the plugin instead gives the accessors a real return type from
+    the #[ServiceMap] attribute, so calls made *on* the resolved pillar are
+    checked:
+
+        <plugins>
+            <pluginClass class="Gacela\Psalm\Plugin"/>
+        </plugins>
+
+    The plugin cannot be delivered through this include, because XInclude
+    replaces a single element and <plugins> lives elsewhere in your config —
+    hence the manual step.
+
+    These suppressions remain for classes that declare neither #[ServiceMap] nor
+    a @method docblock, and are scheduled for removal in 3.0 (PHPStan's
+    equivalent was already removed in 2.0).
 -->
 <issueHandlers xmlns="https://getpsalm.org/schema/config">
-    <!-- Ignore magic methods from Gacela ServiceResolverAwareTrait (resolved via #[ServiceMap] attributes) -->
     <UndefinedMagicMethod>
         <errorLevel type="suppress">
             <referencedMethod name="*::getFacade" />

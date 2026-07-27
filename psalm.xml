@@ -19,6 +19,9 @@
 
     <plugins>
         <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+        <!-- Gacela analyses itself with the plugin it ships, the same way
+             phpstan.neon includes phpstan-gacela.neon. -->
+        <pluginClass class="Gacela\Psalm\Plugin"/>
     </plugins>
 
     <issueHandlers>

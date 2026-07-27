@@ -33,6 +33,7 @@ use function sprintf;
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
+ * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
@@ -339,6 +340,14 @@ final class SetupGacela extends AbstractSetupGacela
     public function getTags(): array
     {
         return $this->properties->tags ?? self::DEFAULT_TAGS;
+    }
+
+    /**
+     * @return AfterResolvingMap
+     */
+    public function getAfterResolvingCallbacks(): array
+    {
+        return $this->properties->afterResolvingCallbacks ?? self::DEFAULT_AFTER_RESOLVING_CALLBACKS;
     }
 
     /**
@@ -692,6 +701,30 @@ final class SetupGacela extends AbstractSetupGacela
     public function mergeTags(array $list): void
     {
         $this->propertyMerger->mergeTags($list);
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?AfterResolvingMap $list
+     */
+    public function setAfterResolvingCallbacks(?array $list): self
+    {
+        $this->properties->afterResolvingCallbacks = $this->setPropertyWithTracking(
+            self::afterResolvingCallbacks,
+            $list,
+            self::DEFAULT_AFTER_RESOLVING_CALLBACKS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param AfterResolvingMap $list
+     */
+    public function mergeAfterResolvingCallbacks(array $list): void
+    {
+        $this->propertyMerger->mergeAfterResolvingCallbacks($list);
     }
 
     /**

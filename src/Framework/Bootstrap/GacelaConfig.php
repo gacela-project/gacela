@@ -30,6 +30,7 @@ use function sprintf;
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
+ * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
@@ -90,6 +91,9 @@ final class GacelaConfig
 
     /** @var TagsMap */
     private array $tags = [];
+
+    /** @var AfterResolvingMap */
+    private array $afterResolvingCallbacks = [];
 
     /** @var ServiceFactoryMap */
     private array $lazyServices = [];
@@ -358,6 +362,47 @@ final class GacelaConfig
     }
 
     /**
+     * Run a callback on an instance after the container builds it, receiving the
+     * instance and the container. Callbacks run in registration order.
+     *
+     * Example:
+     * ```php
+     * $config->afterResolving(
+     *     LoggerAwareInterface::class,
+     *     static fn (LoggerAwareInterface $s) => $s->setLogger($logger),
+     * );
+     * ```
+     *
+     * `$id` may name an **interface**, which is the point: the match is made
+     * against the resolved instance, not by looking the requested id up in a
+     * map, so one registration covers every implementation. A concrete class
+     * name works too and matches only that class.
+     *
+     * Distinct from the two adjacent tools, which solve different problems:
+     * {@see extendService()} *replaces* what comes out, so it is right for
+     * decoration and wrong for "call a setter on every instance of this"; the
+     * event listeners *observe*, and `BindingRegisteredEvent` fires at
+     * registration rather than at resolution.
+     *
+     * Hooks fire on container-level resolution -- `get()`, `getOrFail()` and
+     * `make()`. A class the inner container autowires as a nested constructor
+     * dependency is not resolved at this level, so hooks do not fire for it.
+     *
+     * A callback that throws removes the instance from the container rather
+     * than leaving a half-wired one behind for the next caller.
+     *
+     * @param string $id a concrete class, or an interface every implementation of which should match
+     * @param Closure $callback receives (object $instance, Container $container)
+     */
+    public function afterResolving(string $id, Closure $callback): self
+    {
+        $this->afterResolvingCallbacks[$id] ??= [];
+        $this->afterResolvingCallbacks[$id][] = $callback;
+
+        return $this;
+    }
+
+    /**
      * Register a factory service that creates a new instance on each call.
      * Unlike regular services (which are singletons), factory services return
      * a new instance every time they are resolved from the container.
@@ -592,6 +637,7 @@ final class GacelaConfig
             $this->handlerRegistries,
             $this->lazyServices,
             $this->tags,
+            $this->afterResolvingCallbacks,
         );
     }
 

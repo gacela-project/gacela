@@ -15,6 +15,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
  * @psalm-type ServicesToExtendMap = array<string, list<Closure>>
  * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
  * @psalm-type TagsMap = array<string, list<string>>
+ * @psalm-type AfterResolvingMap = array<string, list<Closure>>
  * @psalm-type ContextualBindingsMap = array<string, array<string, mixed>>
  */
 interface ContainerConfigurationInterface
@@ -64,6 +65,15 @@ interface ContainerConfigurationInterface
      * @return TagsMap
      */
     public function getTags(): array;
+
+    /**
+     * Callbacks to run on a resolved instance, keyed by the id they match. The
+     * id may name a concrete class or an interface, so the match is made
+     * against the instance rather than by looking the requested id up.
+     *
+     * @return AfterResolvingMap
+     */
+    public function getAfterResolvingCallbacks(): array;
 
     /**
      * Services instantiated on first access rather than at container build.

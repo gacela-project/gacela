@@ -10,6 +10,14 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run 
 
 ### Added
 
+- **`GacelaConfig::afterResolving()` — a post-construction hook.** There was no supported way to say "after anything implementing `LoggerAwareInterface` is built, hand it the logger". The two adjacent tools solve adjacent but different problems: `extendService()` *replaces* what comes out, which is right for decoration and wrong for calling a setter on an instance you would have to know and rebuild to touch; and the event listeners *observe*, with `BindingRegisteredEvent` firing at registration rather than at resolution and handing you an event object rather than the instance.
+  ```php
+  $config->afterResolving(
+      LoggerAwareInterface::class,
+      static fn (LoggerAwareInterface $s) => $s->setLogger($logger),
+  );
+  ```
+  **The id may name an interface**, which is the point — one registration covers every implementation. That is why the match is made against the resolved instance rather than by looking the requested id up in a map, and it is also why this cannot simply forward to the container's own `afterResolving()`, which keys on the exact id. Hooks fire on container-level resolution — `get()`, `getOrFail()` and `make()` — in registration order, and a container with no hooks pays nothing per resolution. A class the inner container autowires as a nested constructor dependency is not resolved at this level, so hooks do not fire for it. A callback that throws removes the instance from the container rather than leaving a half-wired one for the next caller
 - **`GacelaConfig::tag()` makes container tagging reachable.** The container has shipped `tag()`/`tagged()` for a while and Gacela's decorator forwarded both, but nothing could reach them: `GacelaConfig` had `addBinding`, `addFactory`, `addAlias`, `addLazy`, `extendService` and `when` — no `tag`. So the only collection primitive a user could actually reach was `addHandlerRegistry()`, which is **keyed**, and had to be bent into jobs it does not fit.
   ```php
   // gacela.php — reaches every module's container

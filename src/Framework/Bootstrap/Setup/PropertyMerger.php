@@ -22,6 +22,7 @@ use function array_unique;
  * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
+ * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  */
@@ -142,6 +143,23 @@ final class PropertyMerger
         }
 
         $this->setup->setTags($merged);
+    }
+
+    /**
+     * Hooks accumulate per id and keep their registration order: a second setup
+     * adding a hook for an id must not silence the first setup's.
+     *
+     * @param AfterResolvingMap $list
+     */
+    public function mergeAfterResolvingCallbacks(array $list): void
+    {
+        $merged = $this->setup->getAfterResolvingCallbacks();
+
+        foreach ($list as $id => $callbacks) {
+            $merged[$id] = array_merge($merged[$id] ?? [], $callbacks);
+        }
+
+        $this->setup->setAfterResolvingCallbacks($merged);
     }
 
     /**

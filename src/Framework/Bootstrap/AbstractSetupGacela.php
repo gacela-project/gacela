@@ -42,6 +42,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string tags = 'tags';
 
+    public const string afterResolvingCallbacks = 'afterResolvingCallbacks';
+
     public const string lazyServices = 'lazyServices';
 
     public const string plugins = 'plugins';
@@ -79,6 +81,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_HANDLER_REGISTRIES = [];
 
     protected const array DEFAULT_TAGS = [];
+
+    protected const array DEFAULT_AFTER_RESOLVING_CALLBACKS = [];
 
     protected const array DEFAULT_LAZY_SERVICES = [];
 

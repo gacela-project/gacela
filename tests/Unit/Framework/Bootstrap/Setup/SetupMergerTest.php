@@ -243,6 +243,45 @@ final class SetupMergerTest extends TestCase
         );
     }
 
+    public function test_merge_after_resolving_callbacks_from_two_setups(): void
+    {
+        $first = static function (): void {};
+        $second = static function (): void {};
+
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config) use ($first): void {
+            $config->afterResolving(stdClass::class, $first);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config) use ($second): void {
+            $config->afterResolving(stdClass::class, $second);
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        // Hooks accumulate per id and keep registration order: the second setup
+        // adds to the first's rather than silencing it.
+        self::assertSame([$first, $second], $merged->getAfterResolvingCallbacks()[stdClass::class] ?? null);
+    }
+
+    public function test_merge_after_resolving_callbacks_for_different_ids(): void
+    {
+        $onStdClass = static function (): void {};
+        $onOther = static function (): void {};
+
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config) use ($onStdClass): void {
+            $config->afterResolving(stdClass::class, $onStdClass);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config) use ($onOther): void {
+            $config->afterResolving('OtherClass', $onOther);
+        });
+
+        $callbacks = $setup1->merge($setup2)->getAfterResolvingCallbacks();
+
+        self::assertSame([$onStdClass], $callbacks[stdClass::class] ?? null);
+        self::assertSame([$onOther], $callbacks['OtherClass'] ?? null);
+    }
+
     public function test_merge_handler_registries_from_two_setups(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

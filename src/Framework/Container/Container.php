@@ -16,9 +16,11 @@ use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 use SplObjectStorage;
+use Throwable;
 
 use function array_keys;
 use function array_map;
+use function is_object;
 
 /**
  * Decorates the decoupled Container, adding the Locator and the service
@@ -34,6 +36,7 @@ use function array_map;
  * @psalm-import-type BindingsMap from \Gacela\Container\ContainerInterface as ContainerBindingsMap
  * @psalm-import-type StatsArray from \Gacela\Container\ContainerInterface
  * @psalm-import-type CompiledPlans from \Gacela\Container\DependencyResolver
+ * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  */
 final class Container implements ContainerInterface
 {
@@ -53,6 +56,15 @@ final class Container implements ContainerInterface
 
     /** @var array<string, true> */
     private array $resolvedServiceIds = [];
+
+    /**
+     * Instance state, not static: `Gacela::resetCache()` rebuilds the container,
+     * which is what clears these -- so no reset of its own to keep in step with
+     * `ResetCacheCoverageTest`.
+     *
+     * @var AfterResolvingMap
+     */
+    private array $afterResolvingHooks = [];
 
     /**
      * @param ContainerBindingsMap $bindings
@@ -93,12 +105,23 @@ final class Container implements ContainerInterface
             self::dispatchEvent(new ServiceResolvedEvent($id));
         }
 
+        if ($this->afterResolvingHooks !== []) {
+            $this->fireAfterResolving($id, $service);
+        }
+
         return $service;
     }
 
     public function getOrFail(string $id): mixed
     {
-        return $this->inner->getOrFail($id);
+        /** @var mixed $service */
+        $service = $this->inner->getOrFail($id);
+
+        if ($this->afterResolvingHooks !== []) {
+            $this->fireAfterResolving($id, $service);
+        }
+
+        return $service;
     }
 
     /**
@@ -111,7 +134,13 @@ final class Container implements ContainerInterface
      */
     public function make(string $className, array $parameters = []): object
     {
-        return $this->inner->make($className, $parameters);
+        $instance = $this->inner->make($className, $parameters);
+
+        if ($this->afterResolvingHooks !== []) {
+            $this->fireAfterResolving($className, $instance);
+        }
+
+        return $instance;
     }
 
     /**
@@ -448,12 +477,53 @@ final class Container implements ContainerInterface
             $container->tag($ids, $tag);
         }
 
+        $container->afterResolvingHooks = $containerConfig->getAfterResolvingCallbacks();
+
         foreach ($containerConfig->getLazyServices() as $id => $lazyFactory) {
             $container->set($id, $container->factory(static fn (): mixed => $lazyFactory($container)));
             self::notifyBindingRegistered($id);
         }
 
         return $container;
+    }
+
+    /**
+     * Run the hooks matching a freshly resolved instance.
+     *
+     * The match is `instanceof`, not a lookup on the requested id, because the
+     * useful registration is an interface -- "after anything implementing
+     * LoggerAwareInterface is built". That is also why this cannot delegate to
+     * the inner container's own `afterResolving()`, which keys on the exact id.
+     *
+     * A hook that throws takes the instance out of the container with it: a
+     * service whose post-construction wiring failed must not be served to the
+     * next caller as though it had succeeded.
+     *
+     * Callers check `afterResolvingHooks` before calling, the way the event
+     * dispatch above is guarded: resolution is the hottest path there is, and a
+     * container with no hooks should not pay even a call for a feature it does
+     * not use.
+     */
+    private function fireAfterResolving(string $id, mixed $instance): void
+    {
+        if (!is_object($instance)) {
+            return;
+        }
+
+        foreach ($this->afterResolvingHooks as $hookId => $callbacks) {
+            if ($hookId !== $id && !$instance instanceof $hookId) {
+                continue;
+            }
+
+            foreach ($callbacks as $callback) {
+                try {
+                    $callback($instance, $this);
+                } catch (Throwable $exception) {
+                    $this->remove($id);
+                    throw $exception;
+                }
+            }
+        }
     }
 
     private static function notifyBindingRegistered(string $id): void

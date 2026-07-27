@@ -4,53 +4,66 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\Container;
 
+use Gacela\Container\ContainerStats;
 use Gacela\Framework\Container\Container;
 use PHPUnit\Framework\TestCase;
 
+use function array_diff;
+use function array_map;
+use function implode;
+use function sprintf;
+
 /**
- * Pins the `getStats()` keys that `debug:container` reads.
+ * `debug:container` used to index six keys of the array returned by
+ * `getStats()`, whose shape upstream explicitly carves out of its backward
+ * compatibility promise: *"Do not build logic on it."* This test existed to
+ * move the resulting breakage onto Gacela's CI, on the upgrade commit, instead
+ * of into a user's terminal as an undefined-array-key error.
  *
- * Upstream states the return shape of `getStats()` is **not** covered by its
- * backward-compatibility policy: *"Do not build logic on it."* Gacela does
- * build on it -- `ConsoleFactory::getContainerStats()` hands it to
- * `DebugContainerCommand`, which indexes six keys directly.
+ * Container 1.2 removed the need for that trade. `stats()` returns a
+ * `final readonly ContainerStats` whose properties **are** covered, so the
+ * command now reads typed properties and a rename fails the build at analysis
+ * time rather than at runtime.
  *
- * That is a defensible trade for a debug command, but it means a container
- * release may rename a key and break `debug:container` at runtime, in a user's
- * terminal, with an undefined-array-key error. This test moves that failure to
- * our CI on the upgrade commit instead, which is the whole point of depending
- * on an unstable shape deliberately rather than accidentally.
- *
- * If this fails after a container bump: fix `DebugContainerCommand` to read the
- * new shape, and update the list below.
+ * What is left worth pinning is narrower, and it is not the shape: it is that
+ * Gacela's own `Container` still forwards `stats()` at all. `stats()` lives on
+ * the concrete `Container` and not on `ContainerInterface`, so unlike every
+ * other method here it is not held in place by the interface -- which is the
+ * mechanism the forwarding relies on everywhere else.
  */
 final class ContainerStatsShapeTest extends TestCase
 {
-    /**
-     * Exactly the keys indexed in `DebugContainerCommand::execute()`.
-     *
-     * @var list<string>
-     */
-    private const array KEYS_DEBUG_CONTAINER_READS = [
-        'bindings',
-        'cached_dependencies',
-        'factory_services',
-        'frozen_services',
-        'memory_usage',
-        'registered_services',
-    ];
-
-    public function test_get_stats_still_provides_every_key_debug_container_reads(): void
+    public function test_the_typed_stats_are_forwarded_from_the_inner_container(): void
     {
-        $stats = (new Container())->getStats();
+        $container = new Container();
+        $container->set('a-service', static fn (): string => 'value');
 
-        foreach (self::KEYS_DEBUG_CONTAINER_READS as $key) {
-            self::assertArrayHasKey(
-                $key,
-                $stats,
-                "debug:container reads \$stats['{$key}']; the container no longer provides it",
-            );
-        }
+        $stats = $container->stats();
+
+        self::assertInstanceOf(ContainerStats::class, $stats);
+        self::assertSame(1, $stats->registeredServices);
     }
 
+    /**
+     * `ContainerInterface` does not declare `stats()`, so nothing makes the
+     * delegation fail to compile if upstream adds a property to
+     * `ContainerStats` and the command starts reading it. Naming the properties
+     * the command relies on keeps that failure in CI.
+     */
+    public function test_every_property_debug_container_reads_still_exists(): void
+    {
+        $stats = (new Container())->stats();
+
+        $missing = array_diff(
+            ['registeredServices', 'frozenServices', 'factoryServices', 'bindings', 'cachedDependencies'],
+            array_map(strval(...), array_keys(get_object_vars($stats))),
+        );
+
+        self::assertSame([], $missing, sprintf(
+            'debug:container reads these properties, and ContainerStats no longer has them: %s',
+            implode(', ', $missing),
+        ));
+
+        self::assertNotSame('', $stats->memoryUsageFormatted());
+    }
 }

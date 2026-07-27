@@ -66,15 +66,15 @@ final class DebugContainerCommand extends Command
 
         $stats = $this->getFacade()->getContainerStats();
 
-        $output->writeln(sprintf('<fg=cyan>Registered Services:</> %d', $stats['registered_services']));
-        $output->writeln(sprintf('<fg=cyan>Frozen Services:</> %d', $stats['frozen_services']));
-        $output->writeln(sprintf('<fg=cyan>Factory Services:</> %d', $stats['factory_services']));
-        $output->writeln(sprintf('<fg=cyan>User Bindings:</> %d', $stats['bindings']));
-        $output->writeln(sprintf('<fg=cyan>Cached Dependencies:</> %d', $stats['cached_dependencies']));
-        $output->writeln(sprintf('<fg=cyan>Memory Usage:</> %s', $stats['memory_usage']));
+        $output->writeln(sprintf('<fg=cyan>Registered Services:</> %d', $stats->registeredServices));
+        $output->writeln(sprintf('<fg=cyan>Frozen Services:</> %d', $stats->frozenServices));
+        $output->writeln(sprintf('<fg=cyan>Factory Services:</> %d', $stats->factoryServices));
+        $output->writeln(sprintf('<fg=cyan>User Bindings:</> %d', $stats->bindings));
+        $output->writeln(sprintf('<fg=cyan>Cached Dependencies:</> %d', $stats->cachedDependencies));
+        $output->writeln(sprintf('<fg=cyan>Memory Usage:</> %s', $stats->memoryUsageFormatted()));
         $output->writeln('');
 
-        if ($stats['registered_services'] === 0) {
+        if ($stats->registeredServices === 0) {
             $output->writeln('<comment>Container is empty - no services registered yet</comment>');
             $output->writeln('');
         }

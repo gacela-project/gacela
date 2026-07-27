@@ -6,6 +6,7 @@ namespace Gacela\Framework\Container;
 
 use Closure;
 use Gacela\Container\Container as GacelaContainer;
+use Gacela\Container\ContainerStats;
 use Gacela\Container\ContextualBindingBuilder;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
@@ -31,7 +32,7 @@ use function array_map;
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  * @psalm-import-type Binding from \Gacela\Container\ContainerInterface
  * @psalm-import-type BindingsMap from \Gacela\Container\ContainerInterface as ContainerBindingsMap
- * @psalm-import-type ContainerStats from \Gacela\Container\ContainerInterface
+ * @psalm-import-type StatsArray from \Gacela\Container\ContainerInterface
  * @psalm-import-type CompiledPlans from \Gacela\Container\DependencyResolver
  */
 final class Container implements ContainerInterface
@@ -300,11 +301,25 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * @return ContainerStats
+     * Superseded by {@see stats()}, whose shape upstream does cover with its
+     * backward compatibility promise. Kept for the whole of 1.x because the
+     * interface still declares it.
+     *
+     * @return StatsArray
      */
     public function getStats(): array
     {
         return $this->inner->getStats();
+    }
+
+    /**
+     * The same counters as {@see getStats()} as a typed object rather than an
+     * array. Not on ContainerInterface -- 1.x promises nothing is added to it --
+     * so it is forwarded explicitly here.
+     */
+    public function stats(): ContainerStats
+    {
+        return $this->inner->stats();
     }
 
     public function offsetExists(mixed $offset): bool

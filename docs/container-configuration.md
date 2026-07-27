@@ -176,15 +176,28 @@ resolution stack, so it is not a way around the diagnostic.
 
 For `#[Inject($override)] Type $p` on a class `Consumer`, the container tries:
 
-1. `$override` set → resolve `$override`.
-2. `$config->when(Consumer)->needs(Type)->give(X)` → resolve `X`.
-3. `$config->addBinding(Type, X)` → resolve `X`.
-4. `Type` is an instantiable class → `new Type(...)` with recursive autowire.
-5. `$p` has a default → use it.
-6. Otherwise → throw `ServiceNotFoundException`.
+1. A runtime override passed to `make()` under `$p`'s name → use it
+   (top-level parameters only).
+2. `$config->when(Consumer)->needs('$p')->give(X)` (a **named** contextual
+   binding, matched on the parameter name) → resolve `X`.
+3. `#[Inject($override)]` set → resolve `$override`.
+4. **`$p` has a default value → use the default.**
+5. `$config->when(Consumer)->needs(Type)->give(X)` → resolve `X`.
+6. `$config->addBinding(Type, X)` → resolve `X`.
+7. `Type` is an instantiable class → `new Type(...)` with recursive autowire.
+8. Otherwise → throw `DependencyNotFoundException`.
 
-Nullable parameters (`?Foo`) with no binding and no default resolve to `null`.
-Every other miss is an exception.
+> **A default beats the type-based bindings below it.** Step 4 returns before
+> the container looks at contextual bindings by type or at `addBinding()`. So
+> `__construct(?Engine $engine = null)` resolves to `null` even with
+> `addBinding(Engine::class, RealEngine::class)` registered — the binding is
+> silently not applied. Leave the default off a parameter you expect the
+> container to fill, or name it explicitly with `#[Inject]`, which is checked
+> first.
+
+Nullability changes nothing on its own: a `?Foo` with no default and no binding
+is **not** resolved to `null`, it throws `DependencyNotFoundException` like any
+other unresolvable parameter. Only a default produces `null`.
 
 ### Interactions
 

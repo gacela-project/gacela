@@ -20,7 +20,7 @@ Restart PHP-FPM:
 sudo systemctl restart php8.3-fpm
 ```
 
-Verify in the logs: `Gacela Opcache Preload: 34 files preloaded successfully`.
+Verify in the logs: `Gacela Opcache Preload: 32 files preloaded successfully, 0 failed`.
 
 ## Preload your own files
 

@@ -39,8 +39,11 @@ the accessor itself. A typo in `placeOrder()` produced no error at all.
 A `@method CheckoutFacade getFacade()` docblock works too — PHPStan reads those
 natively — but then the same fact is written twice, and the copies drift.
 
-The suppression is still in `phpstan-gacela.neon` as a fallback for classes that
-declare neither, and is scheduled for removal in 2.0.
+**The PHPStan suppression is gone as of 2.0.** `phpstan-gacela.neon` no longer
+carries an `ignoreErrors` entry for undeclared pillar accessors, so a class that
+declares neither `#[ServiceMap]` nor a `@method` docblock has its
+`$this->getFacade()` reported as an undefined method. Psalm still ships its
+suppression in `psalm-gacela.xml` as a fallback, scheduled for removal in 3.0.
 
 ### Typed provided dependencies
 

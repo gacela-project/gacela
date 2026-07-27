@@ -31,7 +31,7 @@ The whole runtime change is two lines, and almost everything below follows from 
 
 ## 1.21 → 2.0
 
-Ordered by how likely each change is to affect you: the PHP floor, then three mechanical renames a project of any size will hit, then the static-analysis change, then three that only bite specific shapes of code.
+Ordered by how likely each change is to affect you: the PHP floor, then three mechanical renames a project of any size will hit, then the static-analysis change, then four that only bite specific shapes of code.
 
 If you are not ready, **1.21 is feature-complete** and deliberately ships the tooling for this migration — the typed pillar accessors, `FacadeInterfaceInSyncRule`, and `doctor`'s filename check all landed in 1.x so you can do the work *before* the major, not as a reward for taking it.
 
@@ -173,6 +173,23 @@ Class constants on `AbstractSetupGacela` and `ConfigInterface` now declare types
 
 `symfony/*` is now `^7.0 || ^8.0` (was `^6.4`). Gacela no longer decides your Symfony major for you. If you were on Symfony 6, move to 7 or 8.
 
+### 9. Only if you read `getContainerStats()`
+
+`ConsoleFacade::getContainerStats()` and `ConsoleFactory::getContainerStats()` return a `ContainerStats` object instead of an array:
+
+```diff
+-$stats = $facade->getContainerStats();
+-echo $stats['registered_services'], ' services, ', $stats['memory_usage'];
++$stats = $facade->getContainerStats();
++echo $stats->registeredServices, ' services, ', $stats->memoryUsageFormatted();
+```
+
+`ContainerStats` is `final readonly` and does not implement `ArrayAccess`, so array indexing fatals rather than degrading. The keys were snake_case; the properties are camelCase: `registeredServices`, `frozenServices`, `factoryServices`, `bindings`, `cachedDependencies`, `memoryUsageBytes` — plus `memoryUsageFormatted()` for the human-readable string the old `memory_usage` key held.
+
+That is the point of the change. The array came straight from the container package, which explicitly excludes its shape from backward compatibility ("do not build logic on it"), so indexing it was never safe — this makes a rename fail at analysis time instead of in a user's terminal.
+
+Not to be confused with `Container::getStats()`, a different method on the container itself, which still returns the array and is unchanged for all of 1.x.
+
 ---
 
 ## Deprecated in 2.0, removed in 3.0
@@ -193,5 +210,5 @@ or develop with the file cache off.
 
 ## Not changing
 
-- **`getStats()`** on the container still works and is unchanged for all of 1.x. Gacela's own `debug:container` moved to the typed `stats(): ContainerStats`, because upstream excludes the array's shape from its backward-compatibility promise — good advice for your code too, but nothing is forcing it
+- **`Container::getStats()`** — the method on the container itself — still returns its array and is unchanged for all of 1.x. Gacela's own `debug:container` moved to the typed `stats(): ContainerStats`, because upstream excludes the array's shape from its backward-compatibility promise; that is good advice for your code too, but nothing is forcing it. Do not confuse this with `ConsoleFacade::getContainerStats()`, which **did** change — see step 9 above
 - **Config, facades, factories, `#[Provides]`, contextual bindings** — untouched

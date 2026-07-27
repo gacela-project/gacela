@@ -8,6 +8,7 @@
 
 ### Internal
 
+- Raised the `nikic/php-parser` floor to `^5.4`. Psalm 6.16 declares `^5.0.0` but reads `Property::$hooks`, which only exists from 5.4, so a `--prefer-lowest` install produced a Psalm that crashes on any file containing a property. Nothing had noticed because nothing ran Psalm from inside the test suite until the plugin test did
 - `debug:container` reads six keys from the container's `getStats()`, whose shape upstream explicitly excludes from its BC policy. `ContainerStatsShapeTest` pins those keys, so a container upgrade that renames one fails Gacela's CI on the upgrade commit rather than a user's terminal
 
 ### Added

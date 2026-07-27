@@ -7,12 +7,11 @@ namespace Gacela\Console;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffResult;
+use Gacela\Container\ContainerStats;
 use Gacela\Framework\AbstractFacade;
 
 /**
  * @extends AbstractFacade<ConsoleFactory>
- *
- * @psalm-import-type ContainerStats from ConsoleFactory
  */
 final class ConsoleFacade extends AbstractFacade
 {
@@ -128,10 +127,7 @@ final class ConsoleFacade extends AbstractFacade
             ->format($diff, $head);
     }
 
-    /**
-     * @return ContainerStats
-     */
-    public function getContainerStats(): array
+    public function getContainerStats(): ContainerStats
     {
         return $this->getFactory()->getContainerStats();
     }

@@ -25,6 +25,7 @@ use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
 use Gacela\Console\Infrastructure\FileContentIo;
+use Gacela\Container\ContainerStats;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
@@ -47,15 +48,6 @@ use function trigger_error;
 
 /**
  * @extends AbstractFactory<ConsoleConfig>
- *
- * @psalm-type ContainerStats = array{
- *     registered_services: int,
- *     frozen_services: int,
- *     factory_services: int,
- *     bindings: int,
- *     cached_dependencies: int,
- *     memory_usage: string,
- * }
  */
 final class ConsoleFactory extends AbstractFactory
 {
@@ -151,12 +143,9 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
-    /**
-     * @return ContainerStats
-     */
-    public function getContainerStats(): array
+    public function getContainerStats(): ContainerStats
     {
-        return $this->getMainContainer()->getStats();
+        return $this->getMainContainer()->stats();
     }
 
     /**

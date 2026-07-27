@@ -135,6 +135,43 @@ final class CatalogService
 - `#[Inject(RedisCache::class)]` routes this specific parameter to
   `RedisCache`, independent of any global `addBinding` for `CacheInterface`.
 
+### On properties
+
+`#[Inject]` also targets properties, for classes whose constructor is not yours
+to change — a base class from a vendor package, or one whose signature is fixed
+by a framework contract.
+
+```php
+final class CatalogController extends VendorController
+{
+    #[Inject]
+    private LoggerInterface $logger;
+
+    #[Inject(RedisCache::class)]
+    private CacheInterface $cache;
+}
+```
+
+Private, protected and inherited properties all work. Constructor injection
+stays the default for everything else: a dependency in the signature is visible
+to a reader, and to a plain `new` outside the container.
+
+Three cases are rejected by name rather than by a raw PHP error, because none
+of them can work:
+
+- `readonly` — only writable from inside the declaring class. Promote it to a
+  constructor parameter, which keeps it readonly.
+- untyped or scalar-typed — there is nothing for the container to resolve.
+- `static` — ignored entirely; state shared by every instance is not a
+  dependency of any one of them.
+
+A property promoted in the constructor is injected by the constructor, not
+twice.
+
+A cycle reached through an injected property still raises
+`CircularDependencyException`: property injection runs inside the same
+resolution stack, so it is not a way around the diagnostic.
+
 ### Resolution order
 
 For `#[Inject($override)] Type $p` on a class `Consumer`, the container tries:

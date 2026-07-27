@@ -17,7 +17,9 @@ final class FileContentIo implements FileContentIoInterface
             return;
         }
 
-        if (mkdir($directory)) {
+        // Recursive: the first module of a new project has no src/ parent yet,
+        // so the documented `init` then `make:module` flow created nothing.
+        if (mkdir($directory, recursive: true)) {
             return;
         }
 

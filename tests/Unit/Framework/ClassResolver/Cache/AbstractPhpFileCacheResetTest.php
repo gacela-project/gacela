@@ -71,8 +71,8 @@ final class AbstractPhpFileCacheResetTest extends TestCase
 
     /**
      * The registry of absolute filenames is cleared with everything else, which
-     * is only safe because an instance can recompute its own. Without that, an
-     * instance held across a reset -- and one always is, inside
+     * is only safe because `put()` re-registers what it writes. Without that,
+     * an instance held across a reset -- and one always is, inside
      * ClassResolverCache -- would fail on its next write instead.
      */
     public function test_an_instance_can_still_write_after_its_filename_registry_was_cleared(): void
@@ -84,6 +84,29 @@ final class AbstractPhpFileCacheResetTest extends TestCase
         $cache->put('written-after-reset', 'AnyClassName');
 
         self::assertSame(['written-after-reset' => 'AnyClassName'], TestPhpFileCache::all());
+        self::assertFileExists($this->cacheDir . '/' . TestPhpFileCache::FILENAME);
+    }
+
+    /**
+     * The batched path is where a cleared registry bites hardest, because it
+     * fails silently rather than loudly: `commitBatch()` is static, so it has
+     * no instance to ask for a filename and skips any class it cannot resolve.
+     * A batch opened after a reset would mark the cache dirty and then be
+     * dropped on commit, losing the writes with no error anywhere.
+     */
+    public function test_a_batch_opened_after_a_reset_is_still_flushed_to_disk(): void
+    {
+        $cache = new TestPhpFileCache($this->cacheDir);
+
+        Gacela::resetCache();
+
+        AbstractPhpFileCache::beginBatch();
+        $cache->put('batched-after-reset', 'AnyClassName');
+        AbstractPhpFileCache::commitBatch();
+
+        $filename = $this->cacheDir . '/' . TestPhpFileCache::FILENAME;
+        self::assertFileExists($filename);
+        self::assertSame(['batched-after-reset' => 'AnyClassName'], require $filename);
     }
 
     public function test_reset_cache_cancels_an_open_batch(): void

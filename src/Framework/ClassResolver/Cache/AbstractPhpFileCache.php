@@ -52,9 +52,9 @@ abstract class AbstractPhpFileCache implements CacheInterface
      * would have to know all of them. This one is keyless, so it does not need
      * to.
      *
-     * Nothing is kept back, including the filename registry: an instance that
-     * survives the reset recomputes its filename on the next write, and `all()`
-     * reads through a missing slot as empty.
+     * Nothing is kept back, including the filename registry: `put()` re-registers
+     * the filename of whatever it writes, and `all()` reads through a missing
+     * slot as empty.
      *
      * @internal
      */
@@ -73,8 +73,8 @@ abstract class AbstractPhpFileCache implements CacheInterface
      * framework calls.
      *
      * The filename registry is left alone here, and that is now a detail rather
-     * than a constraint: {@see filenameForWrite()} recomputes a missing entry,
-     * so dropping it would be safe too.
+     * than a constraint: `put()` re-registers the filename on every write, so
+     * dropping it would be safe too.
      *
      * @internal
      */
@@ -156,27 +156,22 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
         self::$cache[static::class][$cacheKey] = $className;
 
+        // Re-registered on every write, not just in the constructor: the
+        // registry is what commitBatch() -- which is static, and so has no
+        // instance to ask -- resolves the file from, and resetCache() empties
+        // it. Without this, a put() after a reset would mark the cache dirty
+        // and then be silently dropped by the next commit.
+        self::$filenames[static::class] = $this->computeAbsoluteFilename();
+
         if (self::$batching) {
             self::$dirty[static::class] = true;
             return;
         }
 
-        FileCache::writeAtomically($this->filenameForWrite(), self::$cache[static::class]);
+        FileCache::writeAtomically(self::$filenames[static::class], self::$cache[static::class]);
     }
 
     abstract protected function getCacheFilename(): string;
-
-    /**
-     * The registry is a memo, not the source of truth: the absolute filename is
-     * a function of this instance's cache directory and its subclass, so an
-     * instance that outlived a reset can always recompute its own.
-     */
-    private function filenameForWrite(): string
-    {
-        $class = static::class;
-
-        return self::$filenames[$class] ??= $this->computeAbsoluteFilename();
-    }
 
     /**
      * @return array<string,string>

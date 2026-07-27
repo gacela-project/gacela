@@ -204,7 +204,7 @@ final class Container implements ContainerInterface
      */
     public function protect(Closure $instance): Closure
     {
-        $this->doNotWrap->attach($instance);
+        $this->doNotWrap->offsetSet($instance);
 
         return $this->inner->protect($instance);
     }
@@ -367,14 +367,14 @@ final class Container implements ContainerInterface
             $args,
         ));
 
-        $this->doNotWrap->attach($wrapper);
+        $this->doNotWrap->offsetSet($wrapper);
 
         return $wrapper;
     }
 
     private function decorateIfUserClosure(mixed $instance): mixed
     {
-        if ($instance instanceof Closure && !$this->doNotWrap->contains($instance)) {
+        if ($instance instanceof Closure && !$this->doNotWrap->offsetExists($instance)) {
             return $this->withDecorator($instance);
         }
 

@@ -11,15 +11,11 @@ use RuntimeException;
 use function bin2hex;
 use function file_get_contents;
 use function file_put_contents;
-use function is_dir;
-use function is_file;
 use function random_bytes;
 use function restore_error_handler;
-use function rmdir;
 use function set_error_handler;
 use function sprintf;
 use function sys_get_temp_dir;
-use function unlink;
 
 final class FileContentIoTest extends TestCase
 {
@@ -37,20 +33,7 @@ final class FileContentIoTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach (['file.txt', 'nested'] as $entry) {
-            $path = $this->workingDir . '/' . $entry;
-            if (is_file($path)) {
-                unlink($path);
-            }
-
-            if (is_dir($path)) {
-                rmdir($path);
-            }
-        }
-
-        if (is_dir($this->workingDir)) {
-            rmdir($this->workingDir);
-        }
+        self::removeRecursively($this->workingDir);
     }
 
     public function test_it_creates_a_missing_directory(): void
@@ -79,9 +62,25 @@ final class FileContentIoTest extends TestCase
         self::assertDirectoryExists($this->workingDir);
     }
 
+    public function test_it_creates_missing_parent_directories(): void
+    {
+        // The first module of a new project: `src/` does not exist yet, so a
+        // non-recursive mkdir() left `init` then `make:module` creating nothing.
+        $directory = $this->workingDir . '/src/Hello';
+
+        $this->io->mkdir($directory);
+
+        self::assertDirectoryExists($directory);
+    }
+
     public function test_it_fails_when_the_directory_cannot_be_created(): void
     {
-        $directory = $this->workingDir . '/missing-parent/nested';
+        // A file where a parent directory should be: mkdir() cannot recurse
+        // through it, and unlike chmod this behaves the same on Windows.
+        $blocker = $this->workingDir . '/blocker';
+        file_put_contents($blocker, 'not a directory');
+
+        $directory = $blocker . '/nested';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(sprintf('Directory "%s" was not created', $directory));
@@ -116,6 +115,26 @@ final class FileContentIoTest extends TestCase
         $this->io->filePutContents($path, 'after');
 
         self::assertSame('after', file_get_contents($path));
+    }
+
+    private static function removeRecursively(string $path): void
+    {
+        if (is_file($path)) {
+            unlink($path);
+            return;
+        }
+
+        if (!is_dir($path)) {
+            return;
+        }
+
+        foreach (scandir($path) ?: [] as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                self::removeRecursively($path . '/' . $entry);
+            }
+        }
+
+        rmdir($path);
     }
 
     /**

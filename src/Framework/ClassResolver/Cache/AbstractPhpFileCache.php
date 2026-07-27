@@ -38,19 +38,43 @@ abstract class AbstractPhpFileCache implements CacheInterface
      */
     public static function all(): array
     {
-        return self::$cache[static::class];
+        return self::$cache[static::class] ?? [];
     }
 
     /**
-     * Clears this class's in-memory cache entries and any shared batch state.
-     * Intended for tests to ensure isolation across runs in the same PHP process.
+     * Clears the in-memory entries of *every* file-backed cache, so
+     * `Gacela::resetCache()` does not leave a subclass serving what it read
+     * from disk before the reset.
      *
-     * The filename registry is intentionally preserved: the absolute cache file
-     * path is a deterministic function of the cache directory and subclass, so
-     * it stays valid across clear/reconstruct cycles. Dropping it here would
-     * strand any already-constructed instance held by an outer cache holder
-     * (e.g. ClassResolverCache::$cache) without a way to recover the filename
-     * on a subsequent put().
+     * The per-subclass {@see clearStaticCache()} below has existed since the
+     * batching work, but nothing outside the test suite ever called it: the
+     * central reset cannot name concrete subclasses, and a caller that could
+     * would have to know all of them. This one is keyless, so it does not need
+     * to.
+     *
+     * Nothing is kept back, including the filename registry: an instance that
+     * survives the reset recomputes its filename on the next write, and `all()`
+     * reads through a missing slot as empty.
+     *
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$cache = [];
+        self::$filenames = [];
+        self::$dirty = [];
+        self::$batching = false;
+    }
+
+    /**
+     * Clears one subclass's in-memory cache entries and any shared batch state,
+     * leaving the other subclasses alone. Intended for tests that need to
+     * isolate a single cache within a process; {@see resetCache()} is what the
+     * framework calls.
+     *
+     * The filename registry is left alone here, and that is now a detail rather
+     * than a constraint: {@see filenameForWrite()} recomputes a missing entry,
+     * so dropping it would be safe too.
      *
      * @internal
      */
@@ -137,10 +161,22 @@ abstract class AbstractPhpFileCache implements CacheInterface
             return;
         }
 
-        FileCache::writeAtomically(self::$filenames[static::class], self::$cache[static::class]);
+        FileCache::writeAtomically($this->filenameForWrite(), self::$cache[static::class]);
     }
 
     abstract protected function getCacheFilename(): string;
+
+    /**
+     * The registry is a memo, not the source of truth: the absolute filename is
+     * a function of this instance's cache directory and its subclass, so an
+     * instance that outlived a reset can always recompute its own.
+     */
+    private function filenameForWrite(): string
+    {
+        $class = static::class;
+
+        return self::$filenames[$class] ??= $this->computeAbsoluteFilename();
+    }
 
     /**
      * @return array<string,string>

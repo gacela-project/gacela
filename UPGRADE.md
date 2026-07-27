@@ -43,7 +43,21 @@ vendor/bin/gacela doctor                        # names the files 2.0 will stop 
 vendor/bin/gacela cache:clear                   # deprecation notices are memoized per caller
 ```
 
-Run your test suite on 1.21 with deprecations visible. Every `E_USER_DEPRECATED` from Gacela is a thing 2.0 either changed or will remove in 3.0.
+Run your test suite on 1.21 with deprecations visible — `error_reporting(E_ALL)` if your test bootstrap narrows it. Every `E_USER_DEPRECATED` from Gacela is a thing 2.0 either changed or will remove in 3.0.
+
+The three removals have been deprecated for a while, and each still runs on 1.21:
+
+| Removed in 2.0 | Replacement | Deprecated since |
+|---|---|---|
+| `AbstractDependencyProvider` | `AbstractProvider` | 1.8.0 |
+| `GacelaConfig::addMappingInterface()` | `GacelaConfig::addBinding()` | 1.2.0 |
+| `DocBlockResolverAwareTrait` | `ServiceResolverAwareTrait` | 1.12.0 |
+
+Two of the three emit a runtime notice. `DocBlockResolverAwareTrait` cannot — PHP gives no hook for "a trait was used" — so grep for that one directly:
+
+```bash
+grep -rn "DocBlockResolverAwareTrait" src/
+```
 
 ---
 
@@ -73,6 +87,21 @@ Gacela resolves pillars by *filename* suffix, so a class renamed without its fil
 
 This fails quietly rather than loudly: the provider simply never runs, and you find out when a dependency it registered comes back missing. `vendor/bin/gacela doctor` names every mismatched file for you — run it on 1.21, before you upgrade.
 
+`provideModuleDependencies()` keeps working on `AbstractProvider`, unchanged. If you would rather register by attribute, `#[Provides]` is the attribute-first path:
+
+```php
+final class MyModuleProvider extends AbstractProvider
+{
+    #[Provides]
+    public function someService(): SomeService
+    {
+        return new SomeService();
+    }
+}
+```
+
+**A side effect worth knowing:** on 1.x a module's `provideModuleDependencies()` could run **twice**, because the two provider resolvers shared a normalized cache slot. With the dual path gone it runs once. If your provider body is not idempotent — counters, external registrations, logging — that changes its behaviour for the better, but it does change it.
+
 ### 3. `addMappingInterface()` → `addBinding()`
 
 ```diff
@@ -89,7 +118,7 @@ Same arguments, same behaviour.
 +use Gacela\Framework\ServiceResolverAwareTrait;
 ```
 
-The trait was renamed in 1.x and the old name kept as an alias; 2.0 drops the alias.
+On 1.x `DocBlockResolverAwareTrait` was nothing but `use ServiceResolverAwareTrait;`, so swapping it changes no behaviour. 2.0 drops the alias.
 
 Note the guts are still `DocBlock*`-named internally. That is deliberate and cosmetic — `DocBlockParser` genuinely parses docblocks, so a blanket rename would make it *less* accurate.
 

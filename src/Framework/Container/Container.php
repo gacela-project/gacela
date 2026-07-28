@@ -292,7 +292,10 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * @param string|list<string> $ids
+     * A map gives the entries keys, readable with {@see self::taggedByKey()};
+     * a list leaves them addressable only through {@see self::tagged()}.
+     *
+     * @param string|array<array-key, string> $ids
      */
     public function tag(string|array $ids, string $tag): void
     {
@@ -300,11 +303,34 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * @return iterable<mixed>
+     * Keyed entries come back under their key, unkeyed ones under their position.
+     *
+     * @return iterable<array-key, mixed>
      */
     public function tagged(string $tag): iterable
     {
         return $this->inner->tagged($tag);
+    }
+
+    /**
+     * The one service registered under $key in $tag, resolved on its own --
+     * a keyed tag is a lookup table, so the rest of the tag is never built.
+     * Throws naming the keys that exist when $key is not one of them.
+     */
+    public function taggedByKey(string $tag, string $key): mixed
+    {
+        return $this->inner->taggedByKey($tag, $key);
+    }
+
+    /**
+     * The keys registered under $tag, in insertion order. Unkeyed entries
+     * have no key and are not listed.
+     *
+     * @return list<string>
+     */
+    public function taggedKeys(string $tag): array
+    {
+        return $this->inner->taggedKeys($tag);
     }
 
     /**

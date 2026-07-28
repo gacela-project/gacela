@@ -124,6 +124,38 @@ final class ContainerDelegationTest extends TestCase
     }
 
     /**
+     * A keyed tag is a lookup table: asking for one key must build that entry
+     * and nothing else. Forwarding `taggedByKey()` to `tagged()` and indexing
+     * the result would pass an equality assertion while building the whole tag,
+     * so the other entries are made to fail if they are ever resolved.
+     */
+    public function test_tagged_by_key_resolves_only_the_entry_asked_for(): void
+    {
+        $container = new Container();
+        $container->set('email', static fn (): string => 'EMAIL');
+        $container->set('sms', static function (): string {
+            self::fail('an unrequested keyed entry must not be resolved');
+        });
+
+        $container->tag(['email' => 'email', 'sms' => 'sms'], 'handlers');
+
+        self::assertSame('EMAIL', $container->taggedByKey('handlers', 'email'));
+    }
+
+    public function test_tagged_keys_lists_only_the_keyed_entries(): void
+    {
+        $container = new Container();
+        $container->set('a', static fn (): string => 'A');
+        $container->set('b', static fn (): string => 'B');
+
+        $container->tag(['first' => 'a'], 'mixed');
+        $container->tag(['b'], 'mixed');
+
+        self::assertSame(['first'], $container->taggedKeys('mixed'));
+        self::assertSame(['first' => 'A', 0 => 'B'], [...$container->tagged('mixed')]);
+    }
+
+    /**
      * `has()` answers "would get() resolve this", which is true of anything
      * instantiable. `provides()` answers the narrower question the debug
      * commands actually need: does the container own something for this id.

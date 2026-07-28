@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Container\ContextualBindingRegistrar;
+use Gacela\Framework\Container\SharedPlanCache;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
@@ -161,6 +162,7 @@ abstract class AbstractClassResolver
         if (!self::$container instanceof Container) {
             self::$container = new Container(
                 $this->getGacelaConfigFile()->getBindings(),
+                planCache: SharedPlanCache::getInstance(),
             );
 
             foreach (Config::getInstance()->getSetupGacela()->getContextualBindings() as $concrete => $needs) {

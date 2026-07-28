@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Gacela\Framework\Container;
 
 use Closure;
+use Gacela\Container\CompilationReport;
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Container\ContainerStats;
 use Gacela\Container\ContextualBindingBuilder;
+use Gacela\Container\PlanCache;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
@@ -27,9 +29,13 @@ use function is_object;
  * lifecycle events.
  *
  * Composition rather than inheritance: `Gacela\Container\Container` is `final`
- * as of 1.0. Every method here forwards to the inner container, and
- * implementing the interface is what keeps that forwarding honest -- a method
- * added upstream fails compilation here instead of silently going missing.
+ * as of 1.0. Every method here forwards to the inner container.
+ *
+ * Implementing the interface does *not* keep that forwarding honest, which it
+ * was once assumed to: 1.x promises never to extend `ContainerInterface`, so
+ * every capability added since 1.0 landed on the concrete class, where an
+ * unforwarded method compiles fine and is simply unreachable. What keeps this
+ * honest is {@see \GacelaTest\Integration\Architecture\ContainerForwardingCoverageTest}.
  *
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
  * @psalm-import-type Binding from \Gacela\Container\ContainerInterface
@@ -70,13 +76,21 @@ final class Container implements ContainerInterface
      * @param ContainerBindingsMap $bindings
      * @param array<string, list<Closure>> $instancesToExtend
      * @param CompiledPlans $compiledPlans
+     * @param PlanCache|null $planCache defaults to the process-wide cache every
+     *   Gacela container shares; pass one to isolate a container instead
      */
     public function __construct(
         array $bindings = [],
         array $instancesToExtend = [],
         array $compiledPlans = [],
+        ?PlanCache $planCache = null,
     ) {
-        $this->inner = new GacelaContainer($bindings, $instancesToExtend, $compiledPlans);
+        $this->inner = new GacelaContainer(
+            $bindings,
+            $instancesToExtend,
+            $compiledPlans,
+            $planCache ?? SharedPlanCache::getInstance(),
+        );
         $this->doNotWrap = new SplObjectStorage();
     }
 
@@ -364,9 +378,56 @@ final class Container implements ContainerInterface
     /**
      * @param list<class-string> $classNames
      */
-    public function writeCompiledCache(array $classNames, string $file): void
+    public function writeCompiledCache(array $classNames, string $file, ?string $buildStamp = null): void
     {
-        $this->inner->writeCompiledCache($classNames, $file);
+        $this->inner->writeCompiledCache($classNames, $file, $buildStamp);
+    }
+
+    /**
+     * Generate plain `new` expressions for the classes whose construction is
+     * knowable ahead of time, taking the resolver off the path for them.
+     *
+     * @param list<class-string> $classNames
+     *
+     * @return list<class-string> the classes that were compiled
+     */
+    public function writeCompiledFactories(array $classNames, string $file, ?string $buildStamp = null): array
+    {
+        return $this->inner->writeCompiledFactories($classNames, $file, $buildStamp);
+    }
+
+    /**
+     * What {@see writeCompiledFactories()} would make of these classes, and why
+     * it refuses the ones it refuses. Writes nothing.
+     *
+     * @param list<class-string> $classNames
+     */
+    public function compileReport(array $classNames): CompilationReport
+    {
+        return $this->inner->compileReport($classNames);
+    }
+
+    /**
+     * @param array<class-string, callable(): object> $factories
+     */
+    public function useCompiledFactories(array $factories): void
+    {
+        $this->inner->useCompiledFactories($factories);
+    }
+
+    /**
+     * Defer construction until the instance is first used, without needing
+     * `#[Lazy]` on a class you may not own.
+     *
+     * The closure form is wrapped like every other user closure, so a provider
+     * written as `static fn (Container $c) => ...` is handed this decorator and
+     * can still reach {@see getLocator()}.
+     */
+    public function lazy(string $abstract, string|callable|null $concrete = null): void
+    {
+        /** @var string|callable|null $decorated */
+        $decorated = $this->decorateIfUserClosure($concrete);
+        $this->inner->lazy($abstract, $decorated);
     }
 
     /**

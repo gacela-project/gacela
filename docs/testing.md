@@ -1,8 +1,8 @@
 # Testing
 
 Gacela ships testing utilities under `Gacela\Framework\Testing` so module tests
-need near-zero boilerplate. They require `phpunit/phpunit` (a dev dependency of
-your project, not of gacela).
+need near-zero boilerplate. They require `phpunit/phpunit`, which gacela only
+*suggests* — it never becomes a runtime dependency of your application.
 
 ## GacelaTestCase
 

@@ -13,7 +13,11 @@ Gacela caches at three different levels. Each solves a different problem — the
 Gacela resolves classes by convention: `Facade` → `Factory` → `Provider` → `Config`. Those lookups walk namespaces and files, and the merged configuration is reassembled from every `config/*.php` file. All of it is memoised once per process, and can additionally be persisted to disk between runs.
 
 - **In-memory** (default): `InMemoryCache` holds resolved class names for the life of the process.
-- **On-disk**: `ClassNamePhpCache` and `CustomServicesPhpCache` persist the same data to `gacela-class-names.php` / `gacela-custom-services.php`; `MergedConfigCache` persists the merged configuration to `gacela-merged-config[{env}].php`.
+- **On-disk**: `ClassNamePhpCache` and `CustomServicesPhpCache` persist the same data to `gacela-class-names.php` / `gacela-custom-services.php`; `MergedConfigCache` persists the merged configuration to `gacela-merged-config-{appRootHash}[-{env}].php` — the hash keeps two apps sharing one cache dir from serving each other's config.
+
+Finding the class is half the work; building it is the other half. Every module gets its own container, and without help each would reflect the classes they have in common — so they all share one constructor-plan cache, which is what keeps a tenth module's container from re-reflecting what the first nine already described. It lives for the process and costs nothing to have.
+
+There is no on-disk equivalent switched on for you: persisting those plans was measured for 2.0 and the file costs more to load than the reflection it saves. The container's own `writeCompiledFactories()` / `useCompiledFactories()` are forwarded for an application that has measured its own case — see [the numbers](container-configuration.md#underlying-container-features-gacela-does-not-expose).
 
 Configure at bootstrap:
 
@@ -23,13 +27,13 @@ use Gacela\Framework\Gacela;
 
 Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
     $config->enableFileCache();                  // use the default cache dir
-    // $config->enableFileCache('/custom/dir');  // or pick one
+    // $config->enableFileCache('var/cache');    // or pick one, relative to the app root
     // $config->setFileCache(false);             // explicitly off
     // $config->resetInMemoryCache();            // wipe static caches (tests)
 });
 ```
 
-The directory can also be overridden at runtime with the `GACELA_CACHE_DIR` environment variable — handy when the same image is reused across environments.
+A path given here is resolved **relative to the app root**, and a leading `/` does not escape it: `enableFileCache('/var/cache/gacela')` writes to `{appRoot}/var/cache/gacela`. To point the cache at a genuinely absolute path outside the project, use the `GACELA_CACHE_DIR` environment variable, which is read first and taken verbatim — also the handy way to reuse one image across environments.
 
 Typical wiring:
 
@@ -67,8 +71,8 @@ Storage is `InMemoryCacheStorage` by default, which means entries die with the r
 Clear selectively:
 
 ```php
-CatalogFacade::clearMethodCache();                        // all of this facade
 CatalogFacade::clearMethodCacheFor('getPopularProducts'); // one method, any args
+CatalogFacade::clearMethodCache();                        // the whole shared store, every facade
 ```
 
 Full reference: [Cacheable methods](cacheable-methods.md).

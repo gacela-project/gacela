@@ -15,6 +15,9 @@ the framework.
 - Registering any listener switches to a `ConfigurableEventDispatcher`. Listeners are plain
   callables receiving the event object; they are notify-only (events are immutable, there is no
   propagation stopping).
+- `GacelaConfig::disableEventListeners()` turns the whole mechanism off regardless of what was
+  registered — the dispatcher is never built, so registered listeners silently do not run. That is
+  the point in production, and the first thing to check when a listener appears dead.
 
 Two kinds of listeners:
 
@@ -130,7 +133,7 @@ All four resolver events extend `AbstractGacelaClassResolverEvent` and expose `c
 | Event | Fires when | Payload | Hot path |
 |---|---|---|---|
 | `CacheClearedEvent` | a Gacela cache file is deleted | `cacheFile()` | no |
-| `CacheWarmedEvent` | `bin/gacela cache:warm` finished | `moduleCount()`, `failedCount()` | no |
+| `CacheWarmedEvent` | `vendor/bin/gacela cache:warm` finished | `moduleCount()`, `failedCount()` — the latter counts classes the warm *skipped*, which includes modules that legitimately have no Provider | no |
 
 ## Cookbook
 

@@ -193,6 +193,10 @@ look alike.
         <directory name="src"/>
     </projectFiles>
 
+    <plugins>
+        <pluginClass class="Gacela\Psalm\Plugin"/>
+    </plugins>
+
     <xi:include href="vendor/gacela-project/gacela/psalm-gacela.xml"/>
 
     <issueHandlers>
@@ -203,13 +207,23 @@ look alike.
         </InvalidArgument>
     </issueHandlers>
 </psalm>
+```
+
+The `InvalidArgument` suppression is required — Gacela resolves concrete types at
+runtime that Psalm can't infer statically. Suppress inline if you prefer narrower
+scope:
+
+```php
+/** @psalm-suppress InvalidArgument */
+return new YourService($this->getConfig());
+```
 
 ### Type the pillar accessors instead of suppressing them
 
 `psalm-gacela.xml` only *suppresses* `UndefinedMagicMethod`. A suppressed call
 is not a typed one — it evaluates to `mixed`, which switches off checking of
-everything reached through the accessor. Register the plugin to get a real
-return type from `#[ServiceMap]`:
+everything reached through the accessor. The `<plugins>` block above is what
+replaces that with a real return type from `#[ServiceMap]`:
 
 ```xml
 <plugins>
@@ -225,14 +239,6 @@ PHPStan extension in `phpstan-gacela.neon`.
 The plugin cannot be delivered through the XInclude above: XInclude replaces a
 single element, and `<plugins>` lives elsewhere in your config.
 
-```
-
-The `InvalidArgument` suppression is required — Gacela resolves concrete types at runtime that Psalm can't infer statically. Suppress inline if you prefer narrower scope:
-
-```php
-/** @psalm-suppress InvalidArgument */
-return new YourService($this->getConfig());
-```
 
 ## Troubleshooting
 

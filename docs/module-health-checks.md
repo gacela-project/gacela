@@ -46,9 +46,12 @@ $checker = new HealthChecker([
 $report = $checker->checkAll();
 ```
 
-## CLI integration (`bin/gacela doctor`)
+## CLI integration (`vendor/bin/gacela doctor`)
 
-Register a check with `GacelaConfig::addHealthCheck()` in your `gacela.php` and it runs automatically as part of `bin/gacela doctor`, alongside the built-in cache-staleness and suffix-mismatch checks.
+Register a check with `GacelaConfig::addHealthCheck()` in your `gacela.php` and it runs automatically as part of `vendor/bin/gacela doctor`, alongside the built-in cache-staleness, suffix-mismatch and filename-mismatch checks.
+
+`doctor` takes an optional namespace argument to restrict module-scoped checks, and `--strict` to
+exit non-zero on warnings too, which is the form CI wants.
 
 ```php
 // gacela.php
@@ -70,7 +73,7 @@ public function addHealthCheck(string|ModuleHealthCheckInterface $check): self
 Running the command surfaces each registered check as a `module health: <module name>` line:
 
 ```
-$ bin/gacela doctor
+$ vendor/bin/gacela doctor
 
 Gacela Doctor
 ============================================================
@@ -141,7 +144,8 @@ $report->toArray();
 
 - **Be fast** — checks should complete in under a second. Prefer a quick ping (`SELECT 1`) over full queries.
 - **Include metadata** — latency, error codes, retry counts help diagnose issues.
-- **Catch exceptions** — never let a failing check crash the health endpoint.
+- **Let exceptions go** — you do not need a `try`/`catch`. `HealthChecker` turns any `Throwable` out
+  of a check into an `unhealthy` result carrying the exception, file and line as metadata.
 - **Pick the right level** — reserve `unhealthy` for real outages; use `degraded` for slow-but-working.
 
 ## API reference
@@ -149,8 +153,12 @@ $report->toArray();
 ### `ModuleHealthCheckInterface`
 
 ```php
-public function checkHealth(): HealthStatus;
-public function getModuleName(): string;
+interface ModuleHealthCheckInterface
+{
+    public function checkHealth(): HealthStatus;
+
+    public function getModuleName(): string;
+}
 ```
 
 ### `HealthStatus`
@@ -179,6 +187,6 @@ $checker->count(): int
 ### `GacelaConfig`
 
 ```
-// Register a check to run under `bin/gacela doctor`
+// Register a check to run under `vendor/bin/gacela doctor`
 $config->addHealthCheck(string|ModuleHealthCheckInterface $check): self
 ```

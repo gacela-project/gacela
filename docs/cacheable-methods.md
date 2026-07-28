@@ -47,7 +47,9 @@ public function findUser(int $id): User
         $this->getFactory()->createRepository()->find($id),
     );
 }
+```
 
+```php
 $facade->findUser(1); // runs callback, caches under key ending in "::1"
 $facade->findUser(1); // cache hit
 $facade->findUser(2); // runs callback, separate entry
@@ -74,14 +76,23 @@ A bare string with no placeholders is args-agnostic — every call shares the sa
 ## Clearing the cache
 
 ```php
-// Clear everything for this facade class
-CatalogFacade::clearMethodCache();
-
 // Clear all entries for a specific method (any args)
 CatalogFacade::clearMethodCacheFor('getPopularProducts');
+
+// Clear the WHOLE shared store — every facade, not just this one
+CatalogFacade::clearMethodCache();
 ```
 
+`clearMethodCache()` is called on a facade but is **not scoped to it**: it calls
+`clear()` on the shared storage, so on a backend shared with other facades — or with
+the rest of your application, if you wired APCu or Redis — it removes everything.
+Reach for `clearMethodCacheFor()` unless you genuinely mean "drop the entire cache".
+
 `clearMethodCacheFor()` matches on the exact `Class::method::` prefix. Passing `'get'` does **not** clear every method whose name starts with `get`.
+
+It also cannot see entries written under a custom `key:` template — those keys are the
+interpolated template (`user:42`), which carries no `Class::method::` prefix to match.
+A method with a custom key has to be invalidated through the storage backend directly.
 
 ## Pluggable storage backend
 

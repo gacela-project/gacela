@@ -24,12 +24,12 @@
 
 Gacela normalizes module boundaries so parts of your application communicate through a single entry point, without leaking internals.
 
-Each module exposes four classes:
+Each module is built from four pillars — only the first two are required:
 
 - [**Facade**](https://gacela-project.com/docs/facade/) — public API, the only way in
 - [**Factory**](https://gacela-project.com/docs/factory/) — creates internal services
-- [**Provider**](https://gacela-project.com/docs/provider/) — wires external dependencies
-- [**Config**](https://gacela-project.com/docs/config/) — reads project config
+- [**Provider**](https://gacela-project.com/docs/provider/) — wires external dependencies *(optional)*
+- [**Config**](https://gacela-project.com/docs/config/) — reads project config *(optional)*
 
 ## Installation
 
@@ -53,17 +53,32 @@ app/
         └── Config.php
 ```
 
+## CLI
+
+```bash
+vendor/bin/gacela init                  # scaffold gacela.php
+vendor/bin/gacela make:module App/Blog  # scaffold a module
+vendor/bin/gacela                       # every command
+```
+
+Modules can be inspected, validated and prepared for production — see
+[CLI commands](docs/cli.md).
+
 ## Documentation
 
+Start with [getting started](docs/getting-started.md), then
+[getting a dependency](docs/getting-a-dependency.md) — the one that answers "how do I
+reach *that* from *here*". [`docs/`](docs/README.md) is the full index; the rest:
+
 - [Upgrading from 1.x](UPGRADE.md)
-- [Getting started](docs/getting-started.md)
-- [Container configuration](docs/container-configuration.md)
+- [CLI commands](docs/cli.md)
+- [Container configuration](docs/container-configuration.md) — bindings, contextual bindings, attributes, hooks
+- [Caching](docs/caching.md) and [cacheable methods](docs/cacheable-methods.md)
 - [Static analysis (PHPStan / Psalm)](docs/static-analysis.md)
 - [Module health checks](docs/module-health-checks.md)
 - [Events](docs/events.md)
 - [Testing](docs/testing.md)
-- [Opcache preload](docs/opcache-preload.md)
-- [Production performance](docs/production-performance.md)
+- [Opcache preload](docs/opcache-preload.md) and [production performance](docs/production-performance.md)
 - Full reference: [gacela-project.com](https://gacela-project.com/)
 - Examples:
   - [gacela-example](https://github.com/gacela-project/gacela-example)

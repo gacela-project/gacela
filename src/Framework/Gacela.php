@@ -6,7 +6,6 @@ namespace Gacela\Framework;
 
 use Closure;
 use Composer\InstalledVersions;
-use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
@@ -210,10 +209,6 @@ final class Gacela
         PathFinder::resetCache();
         ClassValidator::resetCache();
         SharedPlanCache::resetCache();
-        // The container's own class-shape memos are static, so dropping every
-        // container Gacela holds still leaves them. Nothing in them can go
-        // stale; this is the reset contract and the memory, not a correctness fix.
-        GacelaContainer::resetStaticCaches();
         // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();

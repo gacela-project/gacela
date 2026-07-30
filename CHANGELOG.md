@@ -6,7 +6,7 @@ A foundation major. The runtime change is two lines — PHP `>=8.3` and `gacela-
 
 It is **not the "one container" release**: that was the original headline for 2.0 and it moved to 2.1. No longer for want of the primitive — container 1.3 shipped `createScope()` and closed [container#106](https://github.com/gacela-project/container/issues/106) — but because the consolidation lands on top of the cache-regression suite this release builds, and stays reviewable only if it ships alone.
 
-It was not meant to be a performance release either, and mostly is not: the three perf spikes on the roadmap were measured at sub-millisecond and closed rather than shipped, and writing compiled constructor plans to disk was measured a **net loss** and left unwired. One win survived contact with a benchmark — the containers now share a single constructor-plan cache, worth ~37-41% of resolution time and peak memory to a request that touches many modules.
+It was not meant to be a performance release either, and mostly is not: the three perf spikes on the roadmap were measured at sub-millisecond and closed rather than shipped, and writing compiled constructor plans to disk was measured a **net loss** and left unwired. One win survived contact with a benchmark — the containers now share a single constructor-plan cache, worth ~36-41% of resolution time to a request that touches many modules.
 
 Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run `vendor/bin/gacela doctor` on 1.21 first, because one of the three fails silently.
 

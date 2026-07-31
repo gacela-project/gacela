@@ -77,6 +77,32 @@ final class CacheWarmCommandTest extends TestCase
         self::assertInstanceOf(CacheWarmedEvent::class, $warmedEvents[0]);
         self::assertGreaterThanOrEqual(0, $warmedEvents[0]->moduleCount());
         self::assertGreaterThanOrEqual(0, $warmedEvents[0]->failedCount());
+        self::assertGreaterThanOrEqual(0, $warmedEvents[0]->skippedCount());
+    }
+
+    /**
+     * The event is the only place a listener can see the outcome, and a listener
+     * alerting on `failedCount() > 0` has to stay quiet on a healthy warm. This
+     * application warms without a single failure, so anything above zero here is
+     * the skipped count wearing the wrong name.
+     */
+    public function test_a_healthy_warm_reports_no_failures(): void
+    {
+        $warmedEvents = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$warmedEvents): void {
+            $config->resetInMemoryCache();
+            $config->enableFileCache(__DIR__ . '/cache');
+            $config->registerSpecificListener(
+                CacheWarmedEvent::class,
+                static function (CacheWarmedEvent $event) use (&$warmedEvents): void {
+                    $warmedEvents[] = $event;
+                },
+            );
+        });
+
+        $this->command->execute([]);
+
+        self::assertSame(0, $warmedEvents[0]->failedCount());
     }
 
     public function test_cache_warm_creates_cache_file(): void
@@ -90,6 +116,7 @@ final class CacheWarmCommandTest extends TestCase
         self::assertStringContainsString('Modules processed:', $output);
         self::assertStringContainsString('Classes resolved:', $output);
         self::assertStringContainsString('Classes skipped:', $output);
+        self::assertStringContainsString('Classes failed:', $output);
         self::assertStringContainsString('Time taken:', $output);
         self::assertStringContainsString('Memory used:', $output);
     }
@@ -131,6 +158,7 @@ final class CacheWarmCommandTest extends TestCase
         self::assertMatchesRegularExpression('/Modules processed:\s+\d+/', $output);
         self::assertMatchesRegularExpression('/Classes resolved:\s+\d+/', $output);
         self::assertMatchesRegularExpression('/Classes skipped:\s+\d+/', $output);
+        self::assertMatchesRegularExpression('/Classes failed:\s+\d+/', $output);
         self::assertMatchesRegularExpression('/Time taken:\s+[\d.]+\s+seconds/', $output);
         self::assertMatchesRegularExpression('/Memory used:\s+[\d.]+\s+(B|KB|MB)/', $output);
     }

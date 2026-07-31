@@ -8,6 +8,10 @@ Two things it is deliberately not. It is **not a performance release** — the t
 
 Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run `vendor/bin/gacela doctor` on 1.21 first, because one of the three fails silently.
 
+### Fixed
+
+- **`CacheWarmedEvent` reported skipped modules as failed.** `cache:warm` passed its *skipped* count into the `failedCount` parameter, so any listener alerting on `failedCount() > 0` fired on a **successful** deploy. The two were never distinguished in the counters at all — `ModuleWarmer` incremented one `$skippedCount` both for a pillar class that is not there and for a pillar whose autoloading threw, even though the per-class output has always printed `⚠ Skipped` and `✗ Failed` separately. They are counted apart now: `failedCount()` is the number worth alerting on, and `CacheWarmedEvent::skippedCount()` reports the healthy one. Fixed before 2.0 because the event is public API and correcting the meaning of a getter after the tag would be a breaking change. The `cache:warm` summary gains a `Classes failed:` line for the same reason — the number exists now, and folding it into `Classes skipped:` was the same mislabelling in the other output channel
+
 ### Added
 
 - **`GacelaConfig::loadDefinitions()` — wiring as data.** The container has shipped `load(array)` and `loadFile(string)` since 1.0 and nothing in Gacela could reach either, so every binding had to be a method call inside a PHP closure. That is fine when a human writes it and wrong when the wiring is generated, shared between environments, or reviewed as a diff.

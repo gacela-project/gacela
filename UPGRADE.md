@@ -194,6 +194,23 @@ That is the point of the change. The array came straight from the container pack
 
 Not to be confused with `Container::getStats()`, a different method on the container itself, which still returns the array and is unchanged for all of 1.x.
 
+### 10. Only if you listen to `CacheWarmedEvent`
+
+`failedCount()` now means what it says. In 1.x it received the **skipped** count, so a listener alerting on it fired on a healthy `cache:warm` — any module with a pillar class that is simply not there. The two are separate now:
+
+```php
+$config->registerSpecificListener(CacheWarmedEvent::class, static function (CacheWarmedEvent $event): void {
+    // 1.x: also true for a healthy warm. 2.0: only for a real failure.
+    if ($event->failedCount() > 0) {
+        alert($event->failedCount() . ' pillars failed to resolve');
+    }
+
+    $event->skippedCount(); // new: the pillars a module does not have
+});
+```
+
+No signature to change — `skippedCount` is a third constructor argument defaulting to `0`. If you were treating `failedCount()` as "skipped", read `skippedCount()` instead. The `cache:warm` summary gains a matching `Classes failed:` line, so anything scraping that output sees one extra row.
+
 ---
 
 ## Deprecated in 2.0, removed in 3.0

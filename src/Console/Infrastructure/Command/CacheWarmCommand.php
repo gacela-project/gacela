@@ -71,20 +71,21 @@ final class CacheWarmCommand extends Command
 
         $formatter->writeModulesFound($modules);
 
-        [$resolvedCount, $skippedCount] = $this->warmInOneBatch(
+        [$resolvedCount, $skippedCount, $failedCount] = $this->warmInOneBatch(
             new ModuleWarmer($cacheWarmService, $formatter),
             $modules,
             $warmAttributes,
         );
 
         if (self::shouldDispatch(CacheWarmedEvent::class)) {
-            self::dispatchEvent(new CacheWarmedEvent(count($modules), $skippedCount));
+            self::dispatchEvent(new CacheWarmedEvent(count($modules), $failedCount, $skippedCount));
         }
 
         $formatter->writeSummary(
             count($modules),
             $resolvedCount,
             $skippedCount,
+            $failedCount,
             $metrics->formatElapsedTime(),
             $metrics->formatMemoryUsed(),
         );
@@ -102,7 +103,7 @@ final class CacheWarmCommand extends Command
      *
      * @param list<AppModule> $modules
      *
-     * @return array{0: int, 1: int}
+     * @return array{0: int, 1: int, 2: int} [resolvedCount, skippedCount, failedCount]
      */
     private function warmInOneBatch(ModuleWarmer $moduleWarmer, array $modules, bool $warmAttributes): array
     {

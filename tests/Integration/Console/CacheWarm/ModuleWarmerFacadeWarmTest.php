@@ -59,12 +59,13 @@ final class ModuleWarmerFacadeWarmTest extends TestCase
         $broken = new AppModule('Broken', 'Broken', BrokenFacade::class);
         $healthy = new AppModule('Healthy', 'Healthy', HealthyFacade::class, HealthyFactory::class);
 
-        [, $skippedCount] = $warmer->warmModules([$broken, $healthy], warmAttributes: false);
+        [, $skippedCount, $failedCount] = $warmer->warmModules([$broken, $healthy], warmAttributes: false);
 
         $resolved = implode('|', array_values(ClassNamePhpCache::all()));
 
         self::assertStringContainsString('HealthyFactory', $resolved, 'warming must continue past the broken module');
-        self::assertGreaterThanOrEqual(1, $skippedCount, 'the broken module must be counted as skipped');
+        self::assertGreaterThanOrEqual(1, $failedCount, 'the broken module must be counted as failed');
+        self::assertSame(0, $skippedCount, 'a facade that blew up is a failure, not a skip');
         self::assertStringContainsString(
             '✗ Failed Facade: ' . BrokenFacade::class,
             $output->fetch(),

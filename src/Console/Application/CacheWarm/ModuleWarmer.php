@@ -12,7 +12,12 @@ use Throwable;
  * optionally pre-warms its attribute cache, and reports progress through
  * the output formatter.
  *
- * @psalm-type WarmStats = array{int, int}
+ * A skip and a failure are counted apart. A pillar class that is not there is a
+ * normal module shape; a pillar whose autoloading throws is not. They already
+ * read differently in the output, and folding them into one counter is what let
+ * `CacheWarmedEvent` report a healthy warm as a broken one.
+ *
+ * @psalm-type WarmStats = array{int, int, int}
  */
 final class ModuleWarmer
 {
@@ -27,31 +32,34 @@ final class ModuleWarmer
      *
      * @param list<AppModule> $modules
      *
-     * @return WarmStats [resolvedCount, skippedCount]
+     * @return WarmStats [resolvedCount, skippedCount, failedCount]
      */
     public function warmModules(array $modules, bool $warmAttributes): array
     {
         $resolvedCount = 0;
         $skippedCount = 0;
+        $failedCount = 0;
 
         foreach ($modules as $module) {
-            [$resolved, $skipped] = $this->warmModule($module, $warmAttributes);
+            [$resolved, $skipped, $failed] = $this->warmModule($module, $warmAttributes);
             $resolvedCount += $resolved;
             $skippedCount += $skipped;
+            $failedCount += $failed;
         }
 
-        return [$resolvedCount, $skippedCount];
+        return [$resolvedCount, $skippedCount, $failedCount];
     }
 
     /**
      * Warm a single module's cache.
      *
-     * @return WarmStats [resolvedCount, skippedCount]
+     * @return WarmStats [resolvedCount, skippedCount, failedCount]
      */
     public function warmModule(AppModule $module, bool $warmAttributes): array
     {
         $resolvedCount = 0;
         $skippedCount = 0;
+        $failedCount = 0;
 
         $this->formatter->writeModuleName($module->moduleName());
 
@@ -72,7 +80,7 @@ final class ModuleWarmer
                 ++$skippedCount;
             } catch (Throwable $e) {
                 $this->formatter->writeClassFailed($classInfo['type'], $classInfo['className'], $e->getMessage());
-                ++$skippedCount;
+                ++$failedCount;
             }
         }
 
@@ -80,13 +88,13 @@ final class ModuleWarmer
             $this->cacheWarmService->warmClassResolution($module->facadeClass());
         } catch (Throwable $e) {
             // A module that cannot be resolved during warm (even via a PHP Error) must be
-            // reported and skipped, not abort warming for every remaining module.
+            // reported and counted as failed, not abort warming for every remaining module.
             $this->formatter->writeClassFailed('Facade', $module->facadeClass(), $e->getMessage());
-            ++$skippedCount;
+            ++$failedCount;
         }
 
         $this->formatter->writeEmptyLine();
 
-        return [$resolvedCount, $skippedCount];
+        return [$resolvedCount, $skippedCount, $failedCount];
     }
 }

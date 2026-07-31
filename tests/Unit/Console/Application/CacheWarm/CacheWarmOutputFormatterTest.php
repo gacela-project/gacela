@@ -112,7 +112,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
 
     public function test_summary_lists_every_counter(): void
     {
-        $this->formatter->writeSummary(3, 7, 2, '0.123 seconds', '1.00 KB');
+        $this->formatter->writeSummary(3, 7, 2, 1, '0.123 seconds', '1.00 KB');
 
         self::assertSame(
             self::lines(
@@ -122,6 +122,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
                 'Modules processed: 3',
                 'Classes resolved: 7',
                 'Classes skipped: 2',
+                'Classes failed: 1',
                 'Time taken: 0.123 seconds',
                 'Memory used: 1.00 KB',
                 '',

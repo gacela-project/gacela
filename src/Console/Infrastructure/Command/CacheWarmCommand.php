@@ -78,16 +78,22 @@ final class CacheWarmCommand extends Command
         );
 
         if (self::shouldDispatch(CacheWarmedEvent::class)) {
-            self::dispatchEvent(new CacheWarmedEvent(count($modules), $failedCount, $skippedCount));
+            // Named, because three same-typed counters read positionally is what
+            // put the skipped count into failedCount in the first place.
+            self::dispatchEvent(new CacheWarmedEvent(
+                moduleCount: count($modules),
+                failedCount: $failedCount,
+                skippedCount: $skippedCount,
+            ));
         }
 
         $formatter->writeSummary(
-            count($modules),
-            $resolvedCount,
-            $skippedCount,
-            $failedCount,
-            $metrics->formatElapsedTime(),
-            $metrics->formatMemoryUsed(),
+            modulesCount: count($modules),
+            resolvedCount: $resolvedCount,
+            skippedCount: $skippedCount,
+            failedCount: $failedCount,
+            timeTaken: $metrics->formatElapsedTime(),
+            memoryUsed: $metrics->formatMemoryUsed(),
         );
 
         $this->displayCacheInfo($cacheManager, $formatter);

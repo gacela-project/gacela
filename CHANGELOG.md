@@ -10,6 +10,17 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run 
 
 ### Added
 
+- **`GacelaConfig::loadDefinitions()` — wiring as data.** The container has shipped `load(array)` and `loadFile(string)` since 1.0 and nothing in Gacela could reach either, so every binding had to be a method call inside a PHP closure. That is fine when a human writes it and wrong when the wiring is generated, shared between environments, or reviewed as a diff.
+  ```php
+  // gacela.php
+  $config->loadDefinitions([
+      LoggerInterface::class => FileLogger::class,
+      Database::class => ['singleton' => DatabasePool::class],
+      'db.dsn' => ['value' => 'pgsql://localhost/app'],
+  ]);
+  $config->loadDefinitions(__DIR__ . '/config/services.json');
+  ```
+  Each entry ends up calling the registration method it stands for, so a definition behaves exactly like the imperative call it replaces. Applies **app-wide**, reaching every module container, the way `addBinding()` already does; `Container::load()`/`loadFile()` are now forwarded on the decorator too, so a Provider can scope definitions to its own module. Sources apply in declaration order and **after** the imperative registrations — a later source overrides an earlier one, and a definitions file overrides `addBinding()`, which is the whole job of an environment override file; `tags` accumulate instead. Paths are used **as given**, not rebased under the app root the way `enableFileCache()` rebases its directory, so write them with `__DIR__`. YAML stays out: neither the container nor Gacela takes a parser dependency for it — pass `Yaml::parseFile(...)` as the array
 - **`GacelaConfig::afterResolving()` — a post-construction hook.** There was no supported way to say "after anything implementing `LoggerAwareInterface` is built, hand it the logger". The two adjacent tools solve adjacent but different problems: `extendService()` *replaces* what comes out, which is right for decoration and wrong for calling a setter on an instance you would have to know and rebuild to touch; and the event listeners *observe*, with `BindingRegisteredEvent` firing at registration rather than at resolution and handing you an event object rather than the instance.
   ```php
   $config->afterResolving(

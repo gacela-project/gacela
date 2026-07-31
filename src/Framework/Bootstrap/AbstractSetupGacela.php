@@ -46,6 +46,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string lazyServices = 'lazyServices';
 
+    public const string definitions = 'definitions';
+
     public const string plugins = 'plugins';
 
     public const string gacelaConfigsToExtend = 'gacelaConfigsToExtend';
@@ -85,6 +87,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_AFTER_RESOLVING_CALLBACKS = [];
 
     protected const array DEFAULT_LAZY_SERVICES = [];
+
+    protected const array DEFAULT_DEFINITIONS = [];
 
     protected const array DEFAULT_GACELA_CONFIGS_TO_EXTEND = [];
 

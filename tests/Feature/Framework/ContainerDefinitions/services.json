@@ -1,0 +1,3 @@
+{
+    "GacelaTest\\Feature\\Framework\\ContainerDefinitions\\Notifying\\NotifierInterface": "GacelaTest\\Feature\\Framework\\ContainerDefinitions\\Notifying\\SmsNotifier"
+}

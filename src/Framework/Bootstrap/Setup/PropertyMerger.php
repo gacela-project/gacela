@@ -23,6 +23,7 @@ use function array_unique;
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
+ * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  */
@@ -160,6 +161,18 @@ final class PropertyMerger
         }
 
         $this->setup->setAfterResolvingCallbacks($merged);
+    }
+
+    /**
+     * Sources are an ordered layer stack, not a keyed map, so the later setup's
+     * sources go on top: they are the overrides, and the container applies the
+     * last one to register.
+     *
+     * @param DefinitionSources $list
+     */
+    public function mergeDefinitions(array $list): void
+    {
+        $this->setup->setDefinitions([...$this->setup->getDefinitions(), ...$list]);
     }
 
     /**

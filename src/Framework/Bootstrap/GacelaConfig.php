@@ -31,6 +31,7 @@ use function sprintf;
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
+ * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
@@ -97,6 +98,9 @@ final class GacelaConfig
 
     /** @var ServiceFactoryMap */
     private array $lazyServices = [];
+
+    /** @var DefinitionSources */
+    private array $definitions = [];
 
     /**
      * @param ExternalServicesMap $externalServices
@@ -469,6 +473,51 @@ final class GacelaConfig
     }
 
     /**
+     * Register a whole set of bindings from *data* rather than from a closure,
+     * so wiring that is generated, shared between environments, or diffed in
+     * review does not have to be written as a sequence of method calls.
+     *
+     * Pass the definitions inline, or the path of a '.php' file returning an
+     * array or a '.json' file holding an object:
+     * ```php
+     * $config->loadDefinitions([
+     *     LoggerInterface::class => FileLogger::class,
+     *     Database::class => ['singleton' => DatabasePool::class],
+     *     'db.dsn' => ['value' => 'pgsql://localhost/app'],
+     * ]);
+     * $config->loadDefinitions(__DIR__ . '/services.json');
+     * ```
+     *
+     * Applies app-wide, reaching every module's container, which is how
+     * {@see addBinding()} already behaves. A module that wants definitions of
+     * its own calls `Container::load()` in its Provider, keeping them local to
+     * that module's container.
+     *
+     * Every entry ends up calling the registration method it stands for, so a
+     * definition behaves exactly like the imperative call it replaces. Sources
+     * are applied in the order declared, and *after* the imperative
+     * registrations: a later source overrides an earlier one, and a definitions
+     * file overrides `addBinding()`, which is what a per-environment override
+     * file is loaded to do. Tags accumulate instead of overriding.
+     *
+     * The path is used as given -- unlike {@see enableFileCache()} it is not
+     * rebased under the application root, so write it with `__DIR__`. A missing
+     * or unparsable file throws rather than leaving the wiring half-applied.
+     *
+     * YAML is deliberately not supported: there is no parser in the container,
+     * and neither it nor Gacela takes a second runtime dependency for one. Pass
+     * `Yaml::parseFile('services.yaml')` as the array instead.
+     *
+     * @param string|array<array-key, mixed> $definitions a definitions array, or the path of a '.php'/'.json' file holding one
+     */
+    public function loadDefinitions(string|array $definitions): self
+    {
+        $this->definitions[] = $definitions;
+
+        return $this;
+    }
+
+    /**
      * Define contextual bindings - different implementations based on the requesting class.
      * This allows you to provide different implementations of an interface depending on
      * which class is requesting it.
@@ -638,6 +687,7 @@ final class GacelaConfig
             $this->lazyServices,
             $this->tags,
             $this->afterResolvingCallbacks,
+            $this->definitions,
         );
     }
 

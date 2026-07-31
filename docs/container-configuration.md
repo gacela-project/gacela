@@ -233,13 +233,22 @@ bin/gacela debug:dependencies "App\Catalog\CatalogService" --tree
 Dependency tree for App\Catalog\CatalogService
 ============================================================
 
-  ✓ App\Catalog\ProductRepository (autowired)
-  ✓ App\Cache\RedisCache (binding)
-  ✓ Psr\Log\LoggerInterface (instance)
-  ✗ App\Search\IndexerInterface (unresolvable)
+  ├── ✓ $repository: App\Catalog\ProductRepository (autowired)
+  │   └── ✗ $indexer: App\Search\IndexerInterface (unresolvable)
+  ├── ✓ $cache: App\Cache\RedisCache (binding)
+  └── ✓ $logger: Psr\Log\LoggerInterface (instance)
 
 Dependencies: 4
 ```
+
+Nodes are drawn where they sit and labelled with the constructor parameter that
+pulled them in, so a missing dependency several levels down says *whose* it is —
+`IndexerInterface` above is the repository's problem, not the service's. A
+constructor cycle is marked `(cycle)` and cut rather than followed, because a
+broken graph is exactly what this command gets opened for.
+
+`Dependencies` counts distinct classes, so one pulled in by three parents counts
+once and is drawn three times.
 
 Each node reports how the container will supply it:
 

@@ -207,6 +207,14 @@ final class Gacela
         ConfigFactory::resetCache();
         PathFinder::resetCache();
         ClassValidator::resetCache();
+        // Deliberately NOT Container::resetStaticCaches(). Those memos are
+        // reflection output keyed by class name, and upstream is explicit that
+        // clearing them "is not a correctness crutch: calling this only ever
+        // costs the reflection it throws away" -- only positives are stored, so
+        // nothing goes stale across a re-bootstrap. This runs on every
+        // resetInMemoryCache() bootstrap, where throwing that reflection away
+        // measured 15-23% on a seven-module bootstrap and bought nothing.
+        // cache:clear is where the process-global reset belongs.
         // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();

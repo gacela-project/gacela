@@ -6,9 +6,9 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Debug\ConstructorInspection;
 use Gacela\Console\Application\Debug\ConstructorInspector;
-use Gacela\Console\Application\Debug\DependencyNode;
 use Gacela\Console\Application\Debug\DependencyTreeInspection;
 use Gacela\Console\Application\Debug\DependencyTreeInspector;
+use Gacela\Console\Application\Debug\DependencyTreeNode;
 use Gacela\Console\Application\Debug\ParameterInspection;
 use Gacela\Console\Application\Debug\ParameterStatus;
 use PhpToken;
@@ -88,20 +88,41 @@ final class DebugDependenciesCommand extends Command
             return;
         }
 
-        foreach ($inspection->nodes as $node) {
-            $output->writeln('  ' . $this->formatNode($node));
-        }
+        $this->renderBranch($output, $inspection->tree, '');
 
         $output->writeln('');
+        // Counted off the flat list, not the branches: a class three parents
+        // pull in is one dependency drawn three times.
         $output->writeln(sprintf('<fg=cyan>Dependencies:</> %d', count($inspection->nodes)));
         $output->writeln('');
     }
 
-    private function formatNode(DependencyNode $node): string
+    /**
+     * @param list<DependencyTreeNode> $nodes
+     */
+    private function renderBranch(OutputInterface $output, array $nodes, string $prefix): void
+    {
+        $lastIndex = count($nodes) - 1;
+
+        foreach ($nodes as $index => $node) {
+            $isLast = $index === $lastIndex;
+            $output->writeln('  ' . $prefix . ($isLast ? '└── ' : '├── ') . $this->formatNode($node));
+
+            $this->renderBranch($output, $node->children, $prefix . ($isLast ? '    ' : '│   '));
+        }
+    }
+
+    /**
+     * A cut cycle is called out: a branch that simply stopped reads like one
+     * with nothing more to say.
+     */
+    private function formatNode(DependencyTreeNode $node): string
     {
         $marker = $node->isProvided() ? '<fg=green>✓</>' : '<fg=red>✗</>';
+        $parameter = $node->parameter === null ? '' : sprintf('$%s: ', $node->parameter);
+        $cycle = $node->repeated ? ' <fg=yellow>(cycle)</>' : '';
 
-        return sprintf('%s %s (%s)', $marker, $node->className, $node->status->value);
+        return sprintf('%s %s%s (%s)%s', $marker, $parameter, $node->className, $node->status->value, $cycle);
     }
 
     private function renderInspection(OutputInterface $output, ConstructorInspection $inspection): void
@@ -266,6 +287,12 @@ already applied. Each node reports how the container will supply it:
   <fg=green>✓ instance</fg=green>     the container already holds an instance or resolved singleton
   <fg=green>✓ autowired</fg=green>    nothing registered, but the class will be constructed on demand
   <fg=red>✗ unresolvable</fg=red> the container owns nothing and the class cannot be built
+
+Nodes are drawn where they sit, labelled with the constructor parameter that
+pulled them in, so a missing dependency four levels down says whose it is. A
+constructor cycle is marked <fg=yellow>(cycle)</fg=yellow> and cut rather than
+followed. The <info>Dependencies</info> count is of distinct classes, so one
+pulled in by three parents counts once and is drawn three times.
 
 <info>Examples:</info>
   bin/gacela debug:dependencies "App\MyModule\MyFactory"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\Debug;
 
+use Gacela\Container\DependencyNode as ContainerDependencyNode;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Gacela;
@@ -16,6 +17,10 @@ use function class_exists;
  * {@see ConstructorInspector} re-derives one level of the answer from type
  * hints; this asks the container for the tree it will actually walk, so
  * bindings, contextual bindings and attributes are already accounted for.
+ *
+ * Both views come off one `dependencyGraph()` call: the flat list of classes
+ * reached, and the shape that says who reached them. Deriving the flat list
+ * from the graph rather than asking twice is what keeps them from disagreeing.
  */
 final class DependencyTreeInspector
 {
@@ -30,13 +35,44 @@ final class DependencyTreeInspector
         }
 
         $bindings = $container->getBindings();
-        $nodes = [];
+        $graph = $container->dependencyGraph($className);
 
-        foreach ($container->getDependencyTree($className) as $dependency) {
+        $nodes = [];
+        foreach ($graph->flatten() as $dependency) {
             $nodes[] = new DependencyNode($dependency, $this->classify($container, $bindings, $dependency));
         }
 
-        return new DependencyTreeInspection($className, $nodes);
+        return new DependencyTreeInspection(
+            $className,
+            $nodes,
+            $this->toTree($container, $bindings, $graph->children),
+        );
+    }
+
+    /**
+     * The root itself is dropped: it is what was asked about, not something it
+     * depends on -- the same reason `flatten()` leaves it out.
+     *
+     * @param array<string, mixed> $bindings
+     * @param list<ContainerDependencyNode> $children
+     *
+     * @return list<DependencyTreeNode>
+     */
+    private function toTree(Container $container, array $bindings, array $children): array
+    {
+        $nodes = [];
+
+        foreach ($children as $child) {
+            $nodes[] = new DependencyTreeNode(
+                $child->className,
+                $child->parameter,
+                $this->classify($container, $bindings, $child->className),
+                $this->toTree($container, $bindings, $child->children),
+                $child->repeated,
+            );
+        }
+
+        return $nodes;
     }
 
     /**

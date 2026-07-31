@@ -282,6 +282,43 @@ final class SetupMergerTest extends TestCase
         self::assertSame([$onOther], $callbacks['OtherClass'] ?? null);
     }
 
+    public function test_merge_definitions_from_two_setups(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->loadDefinitions(['id' => ['value' => 'base']]);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->loadDefinitions(['id' => ['value' => 'override']]);
+        });
+
+        $merged = $setup1->merge($setup2);
+
+        // Sources are an ordered layer stack, not a keyed map: the later setup's
+        // source goes on top rather than replacing the stack, so the container
+        // still applies the base before the override.
+        self::assertSame(
+            [['id' => ['value' => 'base']], ['id' => ['value' => 'override']]],
+            $merged->getDefinitions(),
+        );
+    }
+
+    public function test_a_setup_that_declares_no_definitions_does_not_drop_the_originals(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->loadDefinitions(['id' => ['value' => 'base']]);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addAppConfigKeyValue('unrelated', true);
+        });
+
+        self::assertSame(
+            [['id' => ['value' => 'base']]],
+            $setup1->merge($setup2)->getDefinitions(),
+        );
+    }
+
     public function test_merge_handler_registries_from_two_setups(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

@@ -393,6 +393,65 @@ final class CheckoutFactory extends AbstractFactory
 - Additive and opt-in: existing `getProvidedDependency()` and hand-wired
   `create*()` methods keep working unchanged.
 
+## Definitions as Data
+
+Every binding above is a method call in a closure. When the wiring is generated,
+shared between environments, or reviewed as a diff, you want it as *data* instead
+— `loadDefinitions()` takes a definitions array, or the path of a `.php` file
+returning one or a `.json` file holding one:
+
+```php
+return static function (GacelaConfig $config): void {
+    $config->loadDefinitions([
+        LoggerInterface::class => FileLogger::class,              // interface => concrete
+        Database::class => ['singleton' => DatabasePool::class],  // explicit lifetime
+        'db.dsn' => ['value' => 'pgsql://localhost/app'],         // a config value
+        'logger' => ['alias' => LoggerInterface::class],
+        Metrics::class => ['singleton' => Metrics::class, 'tags' => ['reporters']],
+    ]);
+
+    $config->loadDefinitions(__DIR__ . '/config/services.json');
+};
+```
+
+Each entry ends up calling the registration method it stands for, so a definition
+behaves exactly like the imperative call it replaces.
+
+**Ordering.** Sources apply in the order declared, and *after* the imperative
+registrations — so a later source overrides an earlier one, and a definitions file
+overrides `addBinding()`. That is the point: an environment override file that lost
+to the code it is meant to override could not do its job. `tags` accumulate instead
+of overriding, the way `tag()` does.
+
+**Scope.** App-wide, reaching every module container, like `addBinding()`. For
+definitions local to one module, call `Container::load()` in that module's Provider:
+
+```php
+final class Provider extends AbstractProvider
+{
+    public function provideModuleDependencies(Container $container): void
+    {
+        $container->load([Clock::class => SystemClock::class]);
+    }
+}
+```
+
+**Paths are used as given.** Unlike `enableFileCache()`, a definitions path is not
+rebased under the application root — write it with `__DIR__`. A missing, unreadable
+or unparsable file throws rather than leaving the wiring half-applied.
+
+**No `BindingRegisteredEvent`.** Definitions register bindings but do not announce
+them: the loader is an upstream internal, so naming what a source registered would
+mean reconstructing it from the container's registries — which misses aliases. A
+listener counting registrations sees the imperative ones only.
+
+**No YAML.** Neither the container nor gacela takes a parser dependency for it. Pass
+the parsed array instead:
+
+```php
+$config->loadDefinitions(Yaml::parseFile(__DIR__ . '/services.yaml'));
+```
+
 ## Quick Reference
 
 | Type | Behavior | Use Case |
@@ -406,6 +465,7 @@ final class CheckoutFactory extends AbstractFactory
 | `#[Inject]` | Constructor-param opt-in | Explicit concrete override, tool visibility |
 | `#[Singleton]` | One cached instance per container | Shared stateful services, no registration needed |
 | `#[Factory]` | New instance each resolution | Explicit fresh-instance intent on the class |
+| `loadDefinitions()` | Bindings described as data | Generated, shared or per-environment wiring |
 
 ## Example
 
@@ -432,12 +492,9 @@ return static function (GacelaConfig $config): void {
 The `gacela-project/container` package offers a few capabilities that gacela
 deliberately keeps internal, to avoid two ways of doing the same thing:
 
-- **Service tagging** (`tag()` / `tagged()`): use [`addHandlerRegistry()`](events.md)
-  instead. Handler registries are a superset — lazily resolved, keyed dispatch
-  tables, frozen after boot — so a flat tag group would only duplicate a weaker
-  version of the same idea.
-- **`afterResolving()` hooks**: use the [`ServiceResolvedEvent`](events.md) instead.
-  It is the gacela-native, zero-cost-when-unused way to react to resolution.
+- **`createScope()`**: request-lifetime containers need a parent/child primitive
+  the container does not have yet, and a scope seam gacela has not drawn. Tracked
+  in the 2.1 consolidation.
 - **`make()` with runtime parameters**: kept internal. One-off construction with
   ad-hoc overrides encourages service location; resolve through your module's
   Factory instead.

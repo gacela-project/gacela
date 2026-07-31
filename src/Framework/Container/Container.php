@@ -21,6 +21,7 @@ use Throwable;
 use function array_keys;
 use function array_map;
 use function is_object;
+use function is_string;
 
 /**
  * Decorates the decoupled Container, adding the Locator and the service
@@ -37,6 +38,7 @@ use function is_object;
  * @psalm-import-type StatsArray from \Gacela\Container\ContainerInterface
  * @psalm-import-type CompiledPlans from \Gacela\Container\DependencyResolver
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
+ * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  */
 final class Container implements ContainerInterface
 {
@@ -344,6 +346,54 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * Register a whole definition set from data rather than from a closure --
+     * the counterpart of `addBinding`/`addAlias`/`tag` for wiring that is
+     * generated, shared between environments, or diffed in review.
+     *
+     * ```php
+     * $container->load([
+     *     LoggerInterface::class => FileLogger::class,
+     *     'db.dsn' => ['value' => 'pgsql://localhost/app'],
+     * ]);
+     * ```
+     *
+     * Every entry ends up calling the registration method it stands for, so a
+     * definition behaves exactly like its imperative equivalent. Later keys
+     * override earlier ones, which is what makes layering base + overrides
+     * work; 'tags' accumulate instead, the way `tag()` does.
+     *
+     * Like {@see provides()} and {@see stats()}, declared on the concrete
+     * container upstream rather than on ContainerInterface -- 1.x promises
+     * nothing is added there -- so it is forwarded explicitly here.
+     *
+     * @param array<array-key, mixed> $definitions
+     */
+    public function load(array $definitions): void
+    {
+        $this->inner->load($definitions);
+    }
+
+    /**
+     * Load definitions from a '.php' file returning an array, or a '.json' file.
+     *
+     * The path is used as given. Unlike `GacelaConfig::enableFileCache()`, it is
+     * not rebased under the application root: a definitions file is referenced
+     * from the config that names it, so `__DIR__` is the honest way to write it
+     * and a silent rebase would only move where the failure appears.
+     *
+     * YAML stays out on purpose -- there is no parser in the container, and
+     * adding one means a second runtime dependency. Once here, the documented
+     * path is `$container->load(Yaml::parseFile('services.yaml'))`.
+     *
+     * @throws \Gacela\Container\Exception\ContainerException when the file is
+     *         missing, unreadable, of an unsupported type, or does not hold an array
+     */
+    public function loadFile(string $file): void
+    {
+        $this->inner->loadFile($file);
+    }
+
+    /**
      * @param class-string|list<class-string> $concrete
      */
     public function when(string|array $concrete): ContextualBindingBuilder
@@ -510,7 +560,38 @@ final class Container implements ContainerInterface
             self::notifyBindingRegistered($id);
         }
 
+        // Last, so the data layer wins: a definitions file is loaded to override
+        // what the config declares imperatively, and could not do that from any
+        // earlier position. Sources apply in declaration order, so the last one
+        // wins among themselves too.
+        $container->loadDefinitions($containerConfig->getDefinitions());
+
         return $container;
+    }
+
+    /**
+     * Apply the declared definition sources, in the order they were declared.
+     *
+     * No `BindingRegisteredEvent` is dispatched, deliberately. The loader is an
+     * upstream internal, so the only way to name what a source registered is to
+     * reconstruct it: a file's contents are not in hand here, and reading the
+     * ids back off the container catches `bind()` and `set()` definitions but
+     * not the aliases, which live in a third registry. A listener that counts
+     * registrations is better served by nothing than by an undercount it cannot
+     * see the shape of. Tracked against the upstream loader growing a way to
+     * report what it registered.
+     *
+     * @param DefinitionSources $sources
+     */
+    private function loadDefinitions(array $sources): void
+    {
+        foreach ($sources as $definitions) {
+            if (is_string($definitions)) {
+                $this->loadFile($definitions);
+            } else {
+                $this->load($definitions);
+            }
+        }
     }
 
     /**

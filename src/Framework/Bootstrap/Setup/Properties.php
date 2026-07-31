@@ -25,6 +25,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
+ * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
@@ -106,6 +107,9 @@ final class Properties
 
     /** @var ?AfterResolvingMap */
     public ?array $afterResolvingCallbacks = null;
+
+    /** @var ?DefinitionSources */
+    public ?array $definitions = null;
 
     public function __construct()
     {

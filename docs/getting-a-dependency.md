@@ -244,6 +244,7 @@ actually yours.
 | `extendService('id', fn)` | decorating a service registered elsewhere — *replacing* what comes out |
 | `afterResolving('id', fn)` | touching an instance after it is built without rebuilding it, e.g. a setter on every implementation of an interface |
 | `when(X)->needs(Y)->give(Z)` | one consumer needs a different implementation than everyone else |
+| `loadDefinitions([...])` / `loadDefinitions('file.json')` | the wiring is generated, shared between environments, or reviewed as a diff — see [container-configuration](container-configuration.md#definitions-as-data) |
 | `addExternalService()` | handing a framework object (Symfony kernel, PSR container) to Gacela at bootstrap |
 | `$container->get('id')` inside a Provider | wiring one provided service from another |
 | `#[Singleton]` / `#[Factory]` on a class | declaring **lifetime**, which is a different question from lookup |

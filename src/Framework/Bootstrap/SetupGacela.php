@@ -34,6 +34,7 @@ use function sprintf;
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
+ * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
@@ -356,6 +357,14 @@ final class SetupGacela extends AbstractSetupGacela
     public function getLazyServices(): array
     {
         return $this->properties->lazyServices ?? self::DEFAULT_LAZY_SERVICES;
+    }
+
+    /**
+     * @return DefinitionSources
+     */
+    public function getDefinitions(): array
+    {
+        return $this->properties->definitions ?? self::DEFAULT_DEFINITIONS;
     }
 
     public function setFileCacheEnabled(?bool $flag): self
@@ -741,6 +750,30 @@ final class SetupGacela extends AbstractSetupGacela
         );
 
         return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?DefinitionSources $list
+     */
+    public function setDefinitions(?array $list): self
+    {
+        $this->properties->definitions = $this->setPropertyWithTracking(
+            self::definitions,
+            $list,
+            self::DEFAULT_DEFINITIONS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param DefinitionSources $list
+     */
+    public function mergeDefinitions(array $list): void
+    {
+        $this->propertyMerger->mergeDefinitions($list);
     }
 
     /**

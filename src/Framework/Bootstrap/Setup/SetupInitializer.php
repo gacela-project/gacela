@@ -42,6 +42,7 @@ final class SetupInitializer
             ->setHandlerRegistries($dto->handlerRegistries)
             ->setTags($dto->tags)
             ->setAfterResolvingCallbacks($dto->afterResolvingCallbacks)
-            ->setLazyServices($dto->lazyServices);
+            ->setLazyServices($dto->lazyServices)
+            ->setDefinitions($dto->definitions);
     }
 }

@@ -16,6 +16,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
  * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
  * @psalm-type TagsMap = array<string, list<string>>
  * @psalm-type AfterResolvingMap = array<string, list<Closure>>
+ * @psalm-type DefinitionSources = list<string|array<array-key, mixed>>
  * @psalm-type ContextualBindingsMap = array<string, array<string, mixed>>
  */
 interface ContainerConfigurationInterface
@@ -81,4 +82,13 @@ interface ContainerConfigurationInterface
      * @return ServiceFactoryMap
      */
     public function getLazyServices(): array;
+
+    /**
+     * Wiring described as data instead of as a closure: each source is either a
+     * definitions array or the path of a '.php'/'.json' file holding one, in the
+     * order they were declared.
+     *
+     * @return DefinitionSources
+     */
+    public function getDefinitions(): array;
 }

@@ -3,25 +3,22 @@
 ## Unreleased
 
 A foundation major. The runtime change is two lines — PHP `>=8.3` and
-`gacela-project/container` `^1.5.0`, up from a `0.x` — and most of what follows
-comes from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct
-`has()`, and container exceptions where 0.x emitted raw PHP errors.
+`gacela-project/container` `^1.5.0`, up from a `0.x`. Most of what follows comes
+from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`,
+and container exceptions where 0.x emitted raw PHP errors.
 
-The PHPStan suppression Gacela shipped for undeclared pillar accessors is gone,
-and a Psalm plugin joins the PHPStan extension: an accessor you have not
-declared is reported rather than silently typed `mixed`.
-
-It is **not a performance release** — the three perf spikes on the roadmap
-measured sub-millisecond and were closed rather than shipped. It is also not the
-"one container" release; that moved to 2.1 (#539).
+It is **not** a performance release — the three perf spikes measured
+sub-millisecond and were closed rather than shipped. It is **not** the "one
+container" release either; that moved to 2.1 (#539).
 
 Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 `vendor/bin/gacela doctor` on 1.21 first — one of the three fails silently.
 
 ### Added
 
-- **`GacelaConfig::loadDefinitions()` — wiring as data.** Register a whole
-  definition set from an array, or a `.php`/`.json` file:
+- **`GacelaConfig::loadDefinitions()`** registers a whole definition set from an
+  array, or a `.php`/`.json` file, for wiring that is generated, shared between
+  environments, or reviewed as a diff:
   ```php
   $config->loadDefinitions([
       LoggerInterface::class => FileLogger::class,
@@ -30,171 +27,102 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   ]);
   $config->loadDefinitions(__DIR__ . '/config/services.json');
   ```
-  Each entry performs the registration call it stands for, so a definition
-  behaves exactly like the imperative one it replaces.
+  App-wide, like `addBinding()`; `Container::load()`/`loadFile()` are forwarded
+  so a Provider can scope definitions to one module. Sources apply in order and
+  **after** the imperative registrations, so a file overrides `addBinding()` —
+  which is what an override file is for. Tags accumulate instead. Paths are used
+  as given: write them with `__DIR__`. No YAML — pass `Yaml::parseFile(...)`.
 
-  App-wide, like `addBinding()`. `Container::load()`/`loadFile()` are forwarded
-  too, so a Provider can scope definitions to one module.
-
-  Sources apply in declaration order and **after** the imperative
-  registrations — a later source wins, and a file overrides `addBinding()`,
-  which is what an environment override file is for. Tags accumulate instead.
-
-  Paths are used as given, not rebased under the app root; write them with
-  `__DIR__`. YAML stays out — pass `Yaml::parseFile(...)` as the array.
-
-- **`GacelaConfig::afterResolving()` — a post-construction hook.**
+- **`GacelaConfig::afterResolving()`** runs a callback on an instance after the
+  container builds it:
   ```php
   $config->afterResolving(
       LoggerAwareInterface::class,
       static fn (LoggerAwareInterface $s) => $s->setLogger($logger),
   );
   ```
-  The id may name an **interface**, which is the point: one registration covers
-  every implementation. That is why the match is made against the resolved
-  instance, and why it cannot forward to the container's own `afterResolving()`,
-  which keys on the exact id.
+  The id may name an **interface**, so one registration covers every
+  implementation. Fires on `get()`, `getOrFail()` and `make()` in registration
+  order, costs nothing when unused, and does not fire for a nested constructor
+  dependency. A callback that throws evicts the instance.
 
-  Distinct from its neighbours: `extendService()` *replaces* what comes out;
-  the event listeners *observe*, and fire at registration, not resolution.
-
-  Hooks fire on `get()`, `getOrFail()` and `make()`, in registration order. A
-  container with no hooks pays nothing. A nested constructor dependency is not
-  resolved at this level, so hooks do not fire for it. A callback that throws
-  evicts the instance rather than leaving a half-wired one behind.
-
-- **`GacelaConfig::tag()` makes container tagging reachable.**
+- **`GacelaConfig::tag()`** groups services under a label, reaching every
+  module's container:
   ```php
-  // gacela.php — reaches every module's container
   $config->tag([NotEmptyValidator::class, EmailValidator::class], 'validators');
-
-  // a module adds its own, in its Provider
-  $container->tag(CardValidator::class, 'validators');
   ```
-  A module-local contribution stays in that module's container: two modules
-  tagging under one label each see the app-wide set plus their own, never each
-  other's. Tags from two config sources merge rather than overwrite.
+  A module adding to a tag in its own Provider stays local to that module. Use
+  `tag()` for an unkeyed set you iterate, `addHandlerRegistry()` for a keyed
+  lookup that throws on a miss.
 
-  The two collection primitives now have one intent each: `tag()` for an
-  unkeyed set you iterate, `addHandlerRegistry()` for a keyed lookup that throws
-  on a miss.
-
-- **`debug:dependencies --tree` draws an actual tree.** The transitive view is
-  taken from the container rather than re-derived from type hints, so bindings
-  and contextual bindings are already applied. It printed a flat list until now,
-  because `getDependencyTree()` returns one; container 1.5's
-  `dependencyGraph()` keeps the shape:
+- **`debug:dependencies --tree` draws an actual tree**, taken from the container
+  so bindings and contextual bindings are already applied:
   ```
   ├── ✓ $cacheWarmService: …\CacheWarmService (autowired)
   └── ✓ $formatter: …\CacheWarmOutputFormatter (autowired)
       └── ✗ $output: Symfony\…\OutputInterface (unresolvable)
   ```
   A missing dependency now says *whose* it is. A cycle is marked `(cycle)` and
-  cut rather than followed.
+  cut. `Dependencies` counts distinct classes, so one pulled in by three parents
+  counts once and is drawn three times.
 
-  Both views come off one `dependencyGraph()` call, so they cannot disagree.
-  `Dependencies` counts distinct classes: one pulled in by three parents counts
-  once and is drawn three times. `Container::dependencyGraph()` is forwarded.
+- **`cache:clear` also clears the container's in-process memos** — reflection
+  output held in statics that outlive every container and that no file holds.
 
-- **`cache:clear` clears the container's process-global memos.** The container
-  keeps reflection output — property plans, `#[Lazy]`, `#[Singleton]`,
-  instantiability — in statics that outlive every container and that no file
-  holds, so the largest cache in the process was the one `cache:clear` missed.
-
-  It runs before the "no cache files found" check, since nothing on disk says
-  anything about in-process memos. Deliberately **not** in
-  `Gacela::resetCache()`: that runs per bootstrap, upstream is explicit these
-  never go stale, and it measured 15–23% on a seven-module bootstrap for nothing.
-
-- **`Container::provides()`** forwards container 1.3's `provides()`.
-- **Keyed tags reach a Provider**: `taggedByKey()` and `taggedKeys()` forward
-  container 1.4's additions.
-- **A Psalm plugin typing the pillar accessors from `#[ServiceMap]`**
-  (`Gacela\Psalm\Plugin`), the counterpart of the PHPStan extension:
+- **A Psalm plugin typing the pillar accessors from `#[ServiceMap]`**, the
+  counterpart of the PHPStan extension. Before, `psalm-gacela.xml` only
+  *suppressed* the error, so the accessor evaluated to `mixed`:
   ```xml
   <plugins>
       <pluginClass class="Gacela\Psalm\Plugin"/>
   </plugins>
   ```
-  `psalm-gacela.xml` only *suppressed* `UndefinedMagicMethod` before, so the
-  accessor evaluated to `mixed` and everything through it went unchecked.
-- **`#[Inject]` targets properties as well as constructor parameters**
-  (container 1.2), for classes whose constructor is not yours to change.
-- `#[Lazy]` (container 1.1) joins `#[Inject]`, `#[Singleton]` and `#[Factory]`
-  as an attribute honoured by `AbstractFactory::make()`.
+
+- **`#[Inject]` targets properties**, not only constructor parameters, for
+  classes whose constructor is not yours to change.
+- `#[Lazy]` joins `#[Inject]`, `#[Singleton]` and `#[Factory]` as an attribute
+  honoured by `AbstractFactory::make()`.
+- `Container::provides()`, `taggedByKey()` and `taggedKeys()` are forwarded.
 
 ### Changed
 
-- **`gacela-project/container` `^1.5.0`** (was `^1.4.0`). A drop-in; the bump is
-  for what it carries. Two fixes land in Gacela's own path: a binding was tested
-  with `is_callable()` before `is_string()`, so a class-string sharing a name
-  with a function was *invoked* instead of instantiated; and `has()` remembered
-  a negative, so a class declared after the first probe stayed invisible — the
-  same shape as the `ClassValidator` leak #540 fixed here. A container is also
-  no longer a nine-object reference cycle.
-
-### Fixed
-
-- **The container decorator retained every closure it was ever handed.** The
-  decorator marks each closure wrapper so `set()` does not wrap it twice and
-  drop the factory/protected flag. That mark lived in an `SplObjectStorage`,
-  which holds keys **strongly**, and nothing removes an entry.
-
-  So a container held every closure passed to `set()`, `bind()`, `extend()`,
-  `factory()` or `protect()`, with everything each closed over. Overwriting one
-  id 5000 times retained 5000 wrappers and **6.1 MB** for one live binding;
-  `set()` then `remove()` retained all of them with **zero** bindings left.
-
-  Now a `WeakMap`: the same measurements are **1.8 KB** and **0.7 KB**. Bounded
-  in a normal bootstrap; it bit anything re-registering on a long-lived
-  container, which `createScope()` makes a documented pattern. The
-  `factory()`/`protect()` paths stay retained by the container's own
-  `FactoryManager`, which has the identical defect
-  ([container#167](https://github.com/gacela-project/container/issues/167));
-  a test pins that residual so it fails when upstream lands the fix.
-
-- **`CacheWarmedEvent` reported skipped modules as failed.** `cache:warm` passed
-  its *skipped* count into `failedCount`, so a listener alerting on
-  `failedCount() > 0` fired on a successful deploy.
-
-  The counters never told the two apart: `ModuleWarmer` incremented one
-  `$skippedCount` both for a pillar class that is not there and for one whose
-  autoloading threw, though the output has always printed them separately.
-
-  Counted apart now — `failedCount()` is the number worth alerting on, and
-  `skippedCount()` reports the healthy one. Fixed before 2.0 because the event
-  is public API. The summary gains a `Classes failed:` line for the same reason.
-
-- **`make:module` and `make:file` failed on a brand-new project.**
-  `FileContentIo::mkdir()` omitted the recursive flag, so it could only create a
-  directory whose parent already existed.
-- **`Container` emitted PHP 8.5 deprecation notices on a core path.**
-  `SplObjectStorage::attach()`/`::contains()` are deprecated as of 8.5.
-- **The in-memory copy of the file-backed caches survived `Gacela::resetCache()`.**
-  Entries read from disk kept answering after the reset.
-- **`extendService()` on an id naming an autowirable class threw** instead of
-  scheduling the extension — a container 1.0 regression.
-- `Gacela::resetCache()` now drops the memoized "this class does not exist"
-  answers. `ClassValidator` caches the *negative* `class_exists()` result.
-
-### Changed (BREAKING — 2.0)
-
-See [UPGRADE.md](UPGRADE.md), ordered by how likely each is to affect you.
-
-- **The PHPStan suppression for undeclared pillar accessors is gone.** 1.x
-  shipped an `ignoreErrors` entry silencing `Call to an undefined method
-  ...::getFacade()`.
-- **`gacela-project/container` bumped from `^0.10.0`.**
-  `Gacela\Container\Container` is `final`, so Gacela's `Container` decorates it
-  by composition instead of extending it.
+- **`gacela-project/container` `^1.5.0`** (was `^0.10.0`). `Container` is now
+  `final`, so Gacela decorates it by composition. Two of its fixes land in
+  Gacela's own path: a class-string sharing a name with a function was *invoked*
+  instead of instantiated, and `has()` remembered a negative, so a class
+  declared after the first probe stayed invisible.
 - **PHP floor raised to `>=8.3`** (was `>=8.1`). 8.1 is end of life and 8.2's
   security window closes in December 2026.
 - **`symfony/*` widened to `^7.0 || ^8.0`** (was `^6.4`). Gacela no longer
   decides a consumer's Symfony major.
-- Class constants on `AbstractSetupGacela` and `ConfigInterface` declare types,
-  so a subclass redeclaring one is checked at compile time.
 - **`ConsoleFacade::getContainerStats()` and `ConsoleFactory::getContainerStats()`
   return `ContainerStats`** instead of an array.
+- **The PHPStan suppression for undeclared pillar accessors is gone.** An
+  accessor you have not declared is reported rather than silently typed `mixed`.
+- Class constants on `AbstractSetupGacela` and `ConfigInterface` declare types,
+  so a subclass redeclaring one is checked at compile time.
+
+### Fixed
+
+- **The container retained every closure it was ever handed.** The mark that
+  stops a wrapper being wrapped twice held its keys strongly and was never
+  cleaned, so `set()`, `bind()`, `extend()`, `factory()` and `protect()` leaked
+  their closures and everything each captured. Overwriting one id 5000 times
+  held 6.1 MB for a single live binding; it is 1.8 KB now. Bounded in a normal
+  bootstrap, but it bit anything re-registering on a long-lived container.
+- **`CacheWarmedEvent` reported skipped modules as failed**, so a listener
+  alerting on `failedCount() > 0` fired on a successful deploy. A missing pillar
+  class and one whose autoloading threw now count separately, and
+  `skippedCount()` reports the healthy one. `cache:warm` gains a
+  `Classes failed:` line.
+- **`make:module` and `make:file` failed on a brand-new project** —
+  `FileContentIo::mkdir()` omitted the recursive flag.
+- **`Container` emitted PHP 8.5 deprecation notices on a core path.**
+- **The in-memory copy of the file-backed caches survived `Gacela::resetCache()`**,
+  so entries read from disk kept answering after a reset.
+- **`extendService()` on an id naming an autowirable class threw** instead of
+  scheduling the extension.
+- `Gacela::resetCache()` drops the memoized "this class does not exist" answers.
 
 ### Deprecated
 
@@ -202,7 +130,7 @@ See [UPGRADE.md](UPGRADE.md), ordered by how likely each is to affect you.
   `use` statements, raises `E_USER_DEPRECATED` and is removed in 3.0. Declare it
   with `#[ServiceMap]`.
 
-### Removed (BREAKING — 2.0)
+### Removed (BREAKING)
 
 - `AbstractDependencyProvider` — extend `AbstractProvider` instead.
 - `GacelaConfig::addMappingInterface()` — use `addBinding()`.
@@ -213,30 +141,28 @@ See [UPGRADE.md](UPGRADE.md), ordered by how likely each is to affect you.
 ### Documentation
 
 - New `UPGRADE.md`: the 1.21 → 2.0 migration, ordered by likelihood of hitting
-  you — the PHP floor, the three mechanical renames, then static analysis.
+  you — the PHP floor, the three renames, then static analysis.
 - New `docs/getting-a-dependency.md`: one primary path per intent, with the rest
-  listed alongside the situation where each is genuinely right.
+  listed alongside the situation where each is right.
 
 ### Internal
 
-- `StaticStateCoverageTest` guards process-global state from the opposite end to
-  `ResetCacheCoverageTest`: it enumerates every `static` property under `src/`,
+- `StaticStateCoverageTest` enumerates every `static` property under `src/`,
   populates them by resolving a real module, and requires each to be back at its
-  declared default after a reset.
-- Raised the `nikic/php-parser` floor to `^5.4`. Psalm 6.16 declares `^5.0.0`
-  but reads `Property::$hooks`, which only exists from 5.4.
+  declared default after a reset — guarding from the opposite end to
+  `ResetCacheCoverageTest`.
 - `debug:container` reads `stats(): ContainerStats` instead of the untyped
   `getStats()` array, whose shape upstream excludes from BC.
 - Infection 0.34's `ReturnRemoval` mutator reads every early `return` as
-  behaviour; the full run came back at 98.85% against a 100% gate with 33
-  escaped mutants in untouched code.
-- Both Infection jobs run `--show-mutations=max`; the default caps the list at
-  20, so the first run named 20 of the 33 and the rest were invisible.
+  behaviour; both jobs run `--show-mutations=max`, since the default caps the
+  list at 20 and hid 13 of 33 escapes.
+- Raised the `nikic/php-parser` floor to `^5.4`: Psalm 6.16 reads
+  `Property::$hooks`, which only exists from 5.4.
 - Refreshed the toolchain: `infection` `^0.29` → `^0.34`, plus phpstan and
   rector. `phpunit` stays on `^10.5`.
 - `symfony-bridge/composer.json` matches the root package it ships from.
-- Removed Scrutinizer. It duplicated PHPStan, Psalm and php-cs-fixer, all of
-  which already gate every pull request.
+- Removed Scrutinizer; it duplicated PHPStan, Psalm and php-cs-fixer, which
+  already gate every pull request.
 
 ## [1.21.0](https://github.com/gacela-project/gacela/compare/1.20.0...1.21.0) - 2026-07-26
 

@@ -16,8 +16,8 @@ use Gacela\Framework\Event\Container\BindingRegisteredEvent;
 use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
-use SplObjectStorage;
 use Throwable;
+use WeakMap;
 
 use function array_keys;
 use function array_map;
@@ -53,9 +53,18 @@ final class Container implements ContainerInterface
      * upstream, so wrapping them again would give set() a different object and
      * silently drop the factory/protected mark.
      *
-     * @var SplObjectStorage<Closure, null>
+     * A WeakMap rather than an SplObjectStorage, which holds its keys strongly.
+     * Nothing removes a mark -- there is no hook that fires when a binding is
+     * overwritten or removed -- so strong keys made this a monotonically growing
+     * set: every closure ever handed to set(), factory(), extend() or protect()
+     * was retained for the container's lifetime, with everything it closed over,
+     * whether or not its binding still existed. Held weakly, a mark lasts
+     * exactly as long as the closure it marks is reachable, which is precisely
+     * as long as the question "is this one of ours?" can still be asked.
+     *
+     * @var WeakMap<Closure, true>
      */
-    private readonly SplObjectStorage $doNotWrap;
+    private readonly WeakMap $doNotWrap;
 
     /** @var array<string, true> */
     private array $resolvedServiceIds = [];
@@ -80,7 +89,9 @@ final class Container implements ContainerInterface
         array $compiledPlans = [],
     ) {
         $this->inner = new GacelaContainer($bindings, $instancesToExtend, $compiledPlans);
-        $this->doNotWrap = new SplObjectStorage();
+        /** @var WeakMap<Closure, true> $doNotWrap */
+        $doNotWrap = new WeakMap();
+        $this->doNotWrap = $doNotWrap;
     }
 
     public static function withConfig(Config $config): self
@@ -250,7 +261,7 @@ final class Container implements ContainerInterface
      */
     public function protect(Closure $instance): Closure
     {
-        $this->doNotWrap->offsetSet($instance);
+        $this->doNotWrap->offsetSet($instance, true);
 
         return $this->inner->protect($instance);
     }
@@ -504,7 +515,7 @@ final class Container implements ContainerInterface
             $args,
         ));
 
-        $this->doNotWrap->offsetSet($wrapper);
+        $this->doNotWrap->offsetSet($wrapper, true);
 
         return $wrapper;
     }

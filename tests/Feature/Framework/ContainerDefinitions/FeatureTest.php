@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Framework\ContainerDefinitions;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Event\Container\BindingRegisteredEvent;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\ContainerDefinitions\Notifying\EmailNotifier;
 use GacelaTest\Feature\Framework\ContainerDefinitions\Notifying\NotifierInterface;
@@ -90,6 +91,31 @@ final class FeatureTest extends TestCase
         });
 
         self::assertSame('sms', (new Greeting\Facade())->notifierName());
+    }
+
+    /**
+     * Pins the documented gap rather than hiding it: a definition registers a
+     * binding but does not announce one, because naming what a source
+     * registered means reconstructing it from the container's registries and
+     * the aliases are not in them. Fails loudly if that ever becomes reportable.
+     */
+    public function test_a_definition_does_not_announce_a_binding_registration(): void
+    {
+        $registered = [];
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$registered): void {
+            $config->registerSpecificListener(
+                BindingRegisteredEvent::class,
+                static function (BindingRegisteredEvent $event) use (&$registered): void {
+                    $registered[] = $event->id();
+                },
+            );
+            $config->loadDefinitions([NotifierInterface::class => EmailNotifier::class]);
+        });
+
+        (new Greeting\Facade())->notifierName();
+
+        self::assertNotContains(NotifierInterface::class, $registered);
     }
 
     private function bootstrapWith(callable $configure): void

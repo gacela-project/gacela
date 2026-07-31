@@ -38,6 +38,7 @@ use function is_string;
  * @psalm-import-type StatsArray from \Gacela\Container\ContainerInterface
  * @psalm-import-type CompiledPlans from \Gacela\Container\DependencyResolver
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
+ * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  */
 final class Container implements ContainerInterface
 {
@@ -563,13 +564,34 @@ final class Container implements ContainerInterface
         // what the config declares imperatively, and could not do that from any
         // earlier position. Sources apply in declaration order, so the last one
         // wins among themselves too.
-        foreach ($containerConfig->getDefinitions() as $definitions) {
-            is_string($definitions)
-                ? $container->loadFile($definitions)
-                : $container->load($definitions);
-        }
+        $container->loadDefinitions($containerConfig->getDefinitions());
 
         return $container;
+    }
+
+    /**
+     * Apply the declared definition sources, in the order they were declared.
+     *
+     * No `BindingRegisteredEvent` is dispatched, deliberately. The loader is an
+     * upstream internal, so the only way to name what a source registered is to
+     * reconstruct it: a file's contents are not in hand here, and reading the
+     * ids back off the container catches `bind()` and `set()` definitions but
+     * not the aliases, which live in a third registry. A listener that counts
+     * registrations is better served by nothing than by an undercount it cannot
+     * see the shape of. Tracked against the upstream loader growing a way to
+     * report what it registered.
+     *
+     * @param DefinitionSources $sources
+     */
+    private function loadDefinitions(array $sources): void
+    {
+        foreach ($sources as $definitions) {
+            if (is_string($definitions)) {
+                $this->loadFile($definitions);
+            } else {
+                $this->load($definitions);
+            }
+        }
     }
 
     /**

@@ -14,6 +14,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function dirname;
@@ -26,6 +27,13 @@ use function unlink;
 
 final class CacheClearCommandTest extends TestCase
 {
+    /**
+     * Named as a string rather than `::class`: the class is `@internal`
+     * upstream, and reaching into it is the point -- there is no public way to
+     * observe a process-global memo being cleared.
+     */
+    private const string CONTAINER_CACHE_MANAGER = 'Gacela\Container\DependencyCacheManager';
+
     private string $cacheFile;
 
     private string $customServicesCacheFile;
@@ -101,6 +109,51 @@ final class CacheClearCommandTest extends TestCase
 
         self::assertSame(0, $exitCode);
         self::assertStringContainsString('No cache files found.', $command->getDisplay());
+    }
+
+    /**
+     * The container memoizes reflection output -- property plans, `#[Lazy]`,
+     * `#[Singleton]`/`#[Factory]`, instantiability -- in statics that outlive
+     * every container and that no file on disk holds. A command called
+     * `cache:clear` that leaves the largest cache in the process untouched is
+     * answering a narrower question than its name.
+     *
+     * Deliberately not done by `Gacela::resetCache()`: that runs on every
+     * `resetInMemoryCache()` bootstrap, and upstream is explicit these memos
+     * never go stale, so throwing the reflection away there costs and buys
+     * nothing. Here the process ends a moment later.
+     */
+    public function test_cache_clear_also_clears_the_containers_process_global_memos(): void
+    {
+        $instantiable = new ReflectionProperty(self::CONTAINER_CACHE_MANAGER, 'instantiable');
+
+        Gacela::container()->get(CacheClearCommand::class);
+        self::assertNotSame([], $instantiable->getValue(), sprintf(
+            'Precondition: resolving a class must populate %s::$instantiable, or this test proves nothing.',
+            self::CONTAINER_CACHE_MANAGER,
+        ));
+
+        (new CommandTester(new CacheClearCommand()))->execute([]);
+
+        self::assertSame([], $instantiable->getValue());
+    }
+
+    /**
+     * Nothing on disk says anything about the in-process memos, so the reset has
+     * to happen before the command decides there is nothing to do.
+     */
+    public function test_the_process_global_memos_are_cleared_even_with_no_cache_files(): void
+    {
+        $instantiable = new ReflectionProperty(self::CONTAINER_CACHE_MANAGER, 'instantiable');
+
+        Gacela::container()->get(CacheClearCommand::class);
+        self::assertNotSame([], $instantiable->getValue());
+
+        $command = new CommandTester(new CacheClearCommand());
+        $command->execute([]);
+
+        self::assertStringContainsString('No cache files found.', $command->getDisplay());
+        self::assertSame([], $instantiable->getValue());
     }
 
     public function test_cache_clear_removes_the_merged_config_cache(): void

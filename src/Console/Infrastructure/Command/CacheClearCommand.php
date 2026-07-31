@@ -6,6 +6,7 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\CacheWarm\CacheManager;
 use Gacela\Console\ConsoleFacade;
+use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
@@ -41,6 +42,16 @@ final class CacheClearCommand extends Command
 
         $output->writeln('<info>Clearing Gacela cache...</info>');
         $output->writeln('');
+
+        // The container memoizes reflection output -- property plans, #[Lazy],
+        // #[Singleton]/#[Factory], instantiability -- statically, so it outlives
+        // every container and no file on disk holds it. Cleared before the
+        // file-count check, since "no cache files found" says nothing about the
+        // in-process memos, and unconditionally because clearing caches is this
+        // command's whole job. Free here, where the process ends a moment later;
+        // Gacela::resetCache() deliberately skips it, running per bootstrap for
+        // memos that never go stale.
+        GacelaContainer::resetStaticCaches();
 
         $clearedFiles = $cacheManager->getExistingCacheFilesWithSize();
 

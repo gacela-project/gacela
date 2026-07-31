@@ -6,7 +6,6 @@ namespace Gacela\Framework;
 
 use Closure;
 use Composer\InstalledVersions;
-use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
@@ -208,11 +207,14 @@ final class Gacela
         ConfigFactory::resetCache();
         PathFinder::resetCache();
         ClassValidator::resetCache();
-        // The container memoizes class facts -- property plans, #[Lazy],
-        // #[Singleton]/#[Factory], instantiability -- for the whole process,
-        // outliving every container. A Gacela reset is a re-bootstrap, which is
-        // the case those caches document as needing a clear.
-        GacelaContainer::resetStaticCaches();
+        // Deliberately NOT Container::resetStaticCaches(). Those memos are
+        // reflection output keyed by class name, and upstream is explicit that
+        // clearing them "is not a correctness crutch: calling this only ever
+        // costs the reflection it throws away" -- only positives are stored, so
+        // nothing goes stale across a re-bootstrap. This runs on every
+        // resetInMemoryCache() bootstrap, where throwing that reflection away
+        // measured 15-23% on a seven-module bootstrap and bought nothing.
+        // cache:clear is where the process-global reset belongs.
         // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();

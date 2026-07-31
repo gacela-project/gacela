@@ -21,13 +21,17 @@ final class DependencyTreeNode
      * @param list<DependencyTreeNode> $children one per constructor parameter that takes a class
      * @param bool $repeated the class is already its own ancestor here, so the
      *        graph was cut rather than recursed into
+     *
+     * No defaults: every node is built from a container graph node that always
+     * has an answer for both, and a default nobody omits is a value no test can
+     * reach
      */
     public function __construct(
         public readonly string $className,
         public readonly ?string $parameter,
         public readonly ProvisionStatus $status,
-        public readonly array $children = [],
-        public readonly bool $repeated = false,
+        public readonly array $children,
+        public readonly bool $repeated,
     ) {
     }
 

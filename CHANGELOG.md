@@ -8,8 +8,23 @@ Two things it is deliberately not. It is **not a performance release** — the t
 
 Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run `vendor/bin/gacela doctor` on 1.21 first, because one of the three fails silently.
 
+### Changed
+
+- **`gacela-project/container` `^1.5.0`** (was `^1.4.0`). Nothing in Gacela had to change to take it — the bump is here for what it carries. Two fixes land straight in Gacela's path: a binding was tested with `is_callable()` before `is_string()`, so a class-string sharing a name with a defined function was *invoked* instead of instantiated; and `has()` remembered a negative, so a class declared after the first probe stayed invisible for the life of the container — the same shape as the `ClassValidator` leak #540 fixed on this side. Plus a container is no longer a nine-object reference cycle, so dropping one frees it without waiting for the collector
+
+### Added
+
+- **`debug:dependencies --tree` draws an actual tree.** The flag has been printing a flat list since it shipped, because `getDependencyTree()` returns one — and flattening removes what a dependency inspector is opened for. Container 1.5's `dependencyGraph()` keeps the shape, so nodes are now drawn where they sit and labelled with the constructor parameter that pulled them in:
+  ```
+  ├── ✓ $cacheWarmService: Gacela\Console\Application\CacheWarm\CacheWarmService (autowired)
+  └── ✓ $formatter: Gacela\Console\Application\CacheWarm\CacheWarmOutputFormatter (autowired)
+      └── ✗ $output: Symfony\Component\Console\Output\OutputInterface (unresolvable)
+  ```
+  A missing dependency now says *whose* it is instead of only that it is missing. A constructor cycle is marked `(cycle)` and cut rather than followed, since a broken graph is exactly what the command gets run on. Both views come off one `dependencyGraph()` call — the flat list is derived from the graph rather than fetched separately, so the two cannot disagree — and `Dependencies` still counts distinct classes, so one pulled in by three parents counts once and is drawn three times. `Container::dependencyGraph()` is forwarded on the decorator
+
 ### Fixed
 
+- **`Gacela::resetCache()` left the container's process-global caches behind.** The container memoizes class facts for the whole process — property plans, `#[Lazy]`, `#[Singleton]`/`#[Factory]`, instantiability, `declares __invoke` — outliving every container, and documents "a worker that re-bootstraps" as the case for clearing them. That is what `Gacela::resetCache()` is, and it never called `Container::resetStaticCaches()`. This is the same defect `ResetCacheCoverageTest` was written for — a working reset that nothing calls — with the reset living in a dependency, which is why that test could not see it: it only scans `src/`. It now asserts this call by name
 - **`CacheWarmedEvent` reported skipped modules as failed.** `cache:warm` passed its *skipped* count into the `failedCount` parameter, so any listener alerting on `failedCount() > 0` fired on a **successful** deploy. The two were never distinguished in the counters at all — `ModuleWarmer` incremented one `$skippedCount` both for a pillar class that is not there and for a pillar whose autoloading threw, even though the per-class output has always printed `⚠ Skipped` and `✗ Failed` separately. They are counted apart now: `failedCount()` is the number worth alerting on, and `CacheWarmedEvent::skippedCount()` reports the healthy one. Fixed before 2.0 because the event is public API and correcting the meaning of a getter after the tag would be a breaking change. The `cache:warm` summary gains a `Classes failed:` line for the same reason — the number exists now, and folding it into `Classes skipped:` was the same mislabelling in the other output channel
 
 ### Added

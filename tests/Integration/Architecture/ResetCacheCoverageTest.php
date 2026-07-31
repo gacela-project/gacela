@@ -69,6 +69,27 @@ final class ResetCacheCoverageTest extends TestCase
     }
 
     /**
+     * The scanner above only walks `src/`, so the container's own process-global
+     * reflection caches are invisible to it -- and they are the largest pile of
+     * memoized class facts in a Gacela process: property plans, `#[Lazy]`,
+     * `#[Singleton]`/`#[Factory]`, instantiability, `declares __invoke`.
+     *
+     * The container documents "a worker that re-bootstraps" as exactly the case
+     * for clearing them, which is what `Gacela::resetCache()` is. Leaving them
+     * behind is the same defect this whole test exists for -- a working reset
+     * nothing calls -- with the reset living in a dependency.
+     */
+    public function test_the_containers_process_global_caches_are_reached_by_reset_cache(): void
+    {
+        self::assertContains(
+            'GacelaContainer',
+            $this->classesReachedByResetCache(),
+            'Gacela::resetCache() must call Gacela\Container\Container::resetStaticCaches(): '
+            . 'the container memoizes class facts for the whole process, and a Gacela reset is a re-bootstrap.',
+        );
+    }
+
+    /**
      * An exemption for a class that no longer declares a reset, or that is now
      * reset centrally after all, is stale — and a stale exemption is how the
      * next leak gets waved through.

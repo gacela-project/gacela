@@ -8,6 +8,7 @@ use Closure;
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Container\ContainerStats;
 use Gacela\Container\ContextualBindingBuilder;
+use Gacela\Container\DependencyNode;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
@@ -343,6 +344,23 @@ final class Container implements ContainerInterface
     public function getDependencyTree(string $className): array
     {
         return $this->inner->getDependencyTree($className);
+    }
+
+    /**
+     * The dependency graph as a tree, where {@see getDependencyTree()} returns
+     * the same classes flattened and deduplicated.
+     *
+     * Flattening removes what a dependency inspector is opened for: how deep
+     * something sits, which constructor parameter asked for it, that several
+     * parents pull in the same class, and where a cycle closes. A cycle is
+     * marked and cut rather than thrown, since inspecting a broken graph is
+     * exactly when this gets reached for.
+     *
+     * @param class-string $className
+     */
+    public function dependencyGraph(string $className): DependencyNode
+    {
+        return $this->inner->dependencyGraph($className);
     }
 
     /**

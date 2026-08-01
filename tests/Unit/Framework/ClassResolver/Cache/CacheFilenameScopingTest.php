@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 use function basename;
 use function dirname;
 
+use const DIRECTORY_SEPARATOR;
+
 /**
  * The cache directory defaults to the system temp dir, so it is shared by every
  * application on the machine. The app-root hash in the filename is the only
@@ -39,7 +41,7 @@ final class CacheFilenameScopingTest extends TestCase
     public function test_no_app_root_yields_the_unscoped_name(): void
     {
         self::assertSame(
-            self::DIR . '/' . ClassNamePhpCache::FILENAME,
+            self::DIR . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME,
             AbstractPhpFileCache::absoluteFilename(self::DIR, ClassNamePhpCache::FILENAME, ''),
         );
     }

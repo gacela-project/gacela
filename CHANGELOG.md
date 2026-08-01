@@ -61,16 +61,21 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   `tag()` for an unkeyed set you iterate, `addHandlerRegistry()` for a keyed
   lookup that throws on a miss.
 
-- **`debug:dependencies --tree` draws an actual tree**, taken from the container
-  so bindings and contextual bindings are already applied:
+- **The dependency tree is an actual tree**, taken from the container so
+  bindings and contextual bindings are already applied:
   ```
   ├── ✓ $cacheWarmService: …\CacheWarmService (autowired)
   └── ✓ $formatter: …\CacheWarmOutputFormatter (autowired)
       └── ✗ $output: Symfony\…\OutputInterface (unresolvable)
   ```
   A missing dependency now says *whose* it is. A cycle is marked `(cycle)` and
-  cut. `Dependencies` counts distinct classes, so one pulled in by three parents
-  counts once and is drawn three times.
+  cut. Counts are of distinct classes, so one pulled in by three parents counts
+  once and is drawn three times.
+
+  All three commands that report it draw the same tree — `debug:dependencies
+  --tree`, `debug:module` and `debug:container`. The latter two printed a flat
+  list under a heading that said "tree", `debug:container` numbering it `1. 2.
+  3.`, and each rendered it its own way.
 
 - **`cache:clear` also clears the container's in-process memos** — reflection
   output held in statics that outlive every container and that no file holds.
@@ -191,6 +196,10 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 - Refreshed the toolchain: `infection` `^0.29` → `^0.34`, plus phpstan and
   rector. `phpunit` stays on `^10.5`.
 - `symfony-bridge/composer.json` matches the root package it ships from.
+- A root `gacela.php` scoping the console to `src`. Without it `doctor` walked
+  the whole repository and reported two errors on a clean checkout: `tests/`
+  holds fixtures that are deliberately separate applications, several declaring
+  their own pillar suffixes, which look misnamed under the root config.
 - Removed Scrutinizer; it duplicated PHPStan, Psalm and php-cs-fixer, which
   already gate every pull request.
 

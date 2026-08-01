@@ -110,9 +110,10 @@ final class DebugModuleCommandTest extends TestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertPillarReports($display, 'Facade', WiredModuleFacade::class);
 
-        // The facade's constructor dependency is reported under the tree.
+        // The facade's constructor dependency is drawn under the tree, labelled
+        // with the parameter that pulled it in.
         self::assertMatchesRegularExpression(
-            '/Dependency tree \(Facade\):\s*\R\s*' . preg_quote(WiredCollaborator::class, '/') . '/',
+            '/Dependency tree \(Facade\):\s*\R\s*└── ✓ \$\w+: ' . preg_quote(WiredCollaborator::class, '/') . '/u',
             $display,
         );
     }

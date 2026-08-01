@@ -103,10 +103,15 @@ final class DebugContainerCommandTest extends TestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertStringContainsString('Dependency Tree for ' . MixedDependenciesService::class, $display);
 
-        // Every constructor dependency is listed, numbered from 1, and counted.
-        self::assertStringContainsString('1. ' . BoundImplementation::class, $display);
-        self::assertStringContainsString('2. ' . AutowirableCollaborator::class, $display);
-        self::assertStringContainsString('3. ' . UnboundContract::class, $display);
+        // Drawn where each sits, labelled with the parameter that pulled it in,
+        // and marked by whether the container can supply it.
+        self::assertStringContainsString('├── ✓ $bound: ' . BoundImplementation::class, $display);
+        self::assertStringContainsString('├── ✓ $collaborator: ' . AutowirableCollaborator::class, $display);
+        self::assertStringContainsString('├── ✗ $unbound: ' . UnboundContract::class, $display);
+
+        // The count is of distinct classes: AutowirableCollaborator satisfies
+        // two parameters, so it is drawn twice and counted once.
+        self::assertStringContainsString('└── ✓ $nullableCollaborator: ' . AutowirableCollaborator::class, $display);
         self::assertStringContainsString('Total Dependencies: 3', $display);
     }
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Console\Application\Debug\DependencyTreeInspector;
+use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
@@ -95,22 +97,22 @@ final class DebugContainerCommand extends Command
 
         ConsoleSection::title($output, sprintf('Dependency Tree for %s', $className));
 
-        $dependencyTree = $this->getFacade()->getContainerDependencyTree($className);
+        $inspection = (new DependencyTreeInspector())->inspect($className);
 
-        if ($dependencyTree === []) {
+        if ($inspection->nodes === []) {
             $output->writeln(sprintf('Class "%s" has no dependencies', $className));
             $output->writeln('');
             return Command::SUCCESS;
         }
 
-        $counter = 1;
-        foreach ($dependencyTree as $dependency) {
-            $output->writeln(sprintf('%d. %s', $counter, $dependency));
-            ++$counter;
+        foreach ((new DependencyTreeRenderer())->render($inspection->tree) as $line) {
+            $output->writeln($line);
         }
 
         $output->writeln('');
-        $output->writeln(sprintf('<fg=cyan>Total Dependencies:</> %d', count($dependencyTree)));
+        // Distinct classes, so one pulled in by three parents counts once and
+        // is drawn three times.
+        $output->writeln(sprintf('<fg=cyan>Total Dependencies:</> %d', count($inspection->nodes)));
         $output->writeln('');
         $output->writeln('<comment>This tree shows only user-defined dependencies.</comment>');
         $output->writeln('');

@@ -651,26 +651,36 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * Apply the declared definition sources, in the order they were declared.
+     * Apply the declared definition sources, in the order they were declared,
+     * announcing each id they register.
      *
-     * No `BindingRegisteredEvent` is dispatched, deliberately. The loader is an
-     * upstream internal, so the only way to name what a source registered is to
-     * reconstruct it: a file's contents are not in hand here, and reading the
-     * ids back off the container catches `bind()` and `set()` definitions but
-     * not the aliases, which live in a third registry. A listener that counts
-     * registrations is better served by nothing than by an undercount it cannot
-     * see the shape of. Tracked against the upstream loader growing a way to
-     * report what it registered.
+     * Definitions used to register silently. Naming what a source registered
+     * meant reconstructing it -- a file's contents are not in hand here, and
+     * reading the ids back off the container catches `bind()` and `set()`
+     * entries but misses the aliases, which live in a third registry -- so an
+     * undercount was traded for no count at all. Container 2.0 reports them
+     * directly, which closes it: a listener counting registrations now sees
+     * definitions and imperative bindings alike.
      *
      * @param DefinitionSources $sources
      */
     private function loadDefinitions(array $sources): void
     {
+        if ($sources === []) {
+            return;
+        }
+
+        // Guarded like every other dispatch site, so a container with no
+        // listener does not pay for a per-id callback it will never use.
+        $onRegistered = self::shouldDispatch(BindingRegisteredEvent::class)
+            ? static fn (string $id): null => self::dispatchEvent(new BindingRegisteredEvent($id))
+            : null;
+
         foreach ($sources as $definitions) {
             if (is_string($definitions)) {
-                $this->loadFile($definitions);
+                $this->loadFile($definitions, $onRegistered);
             } else {
-                $this->load($definitions);
+                $this->load($definitions, $onRegistered);
             }
         }
     }

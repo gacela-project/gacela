@@ -94,12 +94,15 @@ final class FeatureTest extends TestCase
     }
 
     /**
-     * Pins the documented gap rather than hiding it: a definition registers a
-     * binding but does not announce one, because naming what a source
-     * registered means reconstructing it from the container's registries and
-     * the aliases are not in them. Fails loudly if that ever becomes reportable.
+     * A definition registers a binding, so it announces one -- otherwise
+     * anything counting registrations reports a smaller container than the one
+     * that was built.
+     *
+     * This used to assert the opposite, pinning a documented gap: naming what a
+     * source registered meant reconstructing it from the container's
+     * registries, which misses aliases. Container 2.0 reports the ids directly.
      */
-    public function test_a_definition_does_not_announce_a_binding_registration(): void
+    public function test_a_definition_announces_what_it_registered(): void
     {
         $registered = [];
 
@@ -115,7 +118,7 @@ final class FeatureTest extends TestCase
 
         (new Greeting\Facade())->notifierName();
 
-        self::assertNotContains(NotifierInterface::class, $registered);
+        self::assertContains(NotifierInterface::class, $registered);
     }
 
     private function bootstrapWith(callable $configure): void

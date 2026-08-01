@@ -134,7 +134,9 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
     Locator and the lifecycle events.
 
   `load()`/`loadFile()` return the ids they registered and take an optional
-  per-id callback. `ContainerStats::memoryUsageFormatted()` is
+  per-id callback, which closes a gap `loadDefinitions()` shipped with:
+  definitions now emit `BindingRegisteredEvent` like every other registration,
+  where naming them previously meant reconstructing the ids and missing aliases. `ContainerStats::memoryUsageFormatted()` is
   `processMemoryFormatted()` — `debug:container` labels it **Process Memory**,
   which is what it always measured.
 - **PHP floor raised to `>=8.3`** (was `>=8.1`). 8.1 is end of life and 8.2's

@@ -208,6 +208,13 @@ final class Gacela
         ConfigFactory::resetCache();
         PathFinder::resetCache();
         ClassValidator::resetCache();
+        // Dropping the shared plan cache is cheap -- one null assignment -- and
+        // hands back the memory it holds. Not to be confused with
+        // Container::resetStaticCaches(), which is deliberately NOT called
+        // here: that one throws away reflection output that must then be
+        // rebuilt, measured 15-23% on a seven-module bootstrap, and buys
+        // nothing, since only positives are stored and nothing goes stale
+        // across a re-bootstrap. cache:clear is where that one belongs.
         SharedPlanCache::resetCache();
         // Resets EventDispatcherProvider too.
         Config::resetInstance();

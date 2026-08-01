@@ -39,6 +39,7 @@ final class SetupMerger
         $this->whenChanged($other, SetupGacela::tags, fn () => $this->original->mergeTags($other->getTags()));
         $this->whenChanged($other, SetupGacela::afterResolvingCallbacks, fn () => $this->original->mergeAfterResolvingCallbacks($other->getAfterResolvingCallbacks()));
         $this->whenChanged($other, SetupGacela::lazyServices, fn () => $this->original->mergeLazyServices($other->getLazyServices()));
+        $this->whenChanged($other, SetupGacela::definitions, fn () => $this->original->mergeDefinitions($other->getDefinitions()));
         $this->whenChanged($other, SetupGacela::plugins, fn () => $this->original->mergePlugins($other->getPlugins()));
         $this->whenChanged($other, SetupGacela::gacelaConfigsToExtend, fn () => $this->original->mergeGacelaConfigsToExtend($other->getGacelaConfigsToExtend()));
 

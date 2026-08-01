@@ -86,9 +86,37 @@ final class LifecycleEventGettersTest extends TestCase
 
     public function test_cache_warmed_event_exposes_counts(): void
     {
-        $event = new CacheWarmedEvent(10, 2);
+        $event = new CacheWarmedEvent(10, 2, 3);
 
         self::assertSame(10, $event->moduleCount());
         self::assertSame(2, $event->failedCount());
+        self::assertSame(3, $event->skippedCount());
+    }
+
+    /**
+     * `skippedCount` is a third argument with a default so that constructing the
+     * event the 1.x way keeps working. The default has to be zero: anything else
+     * would have a listener reading a skip that never happened.
+     */
+    public function test_cache_warmed_event_defaults_the_skipped_count_to_zero(): void
+    {
+        $event = new CacheWarmedEvent(10, 2);
+
+        self::assertSame(0, $event->skippedCount());
+    }
+
+    /**
+     * A skip and a failure are not the same event -- a pillar class a module
+     * does not have is a normal shape, not an error -- so the two counts have to
+     * be readable apart from each other and from the string form.
+     */
+    public function test_cache_warmed_event_tells_skipped_and_failed_apart_in_its_string_form(): void
+    {
+        $event = new CacheWarmedEvent(10, 2, 3);
+
+        self::assertSame(
+            CacheWarmedEvent::class . ' {moduleCount:10, failedCount:2, skippedCount:3}',
+            $event->toString(),
+        );
     }
 }

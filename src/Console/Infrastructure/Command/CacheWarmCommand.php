@@ -71,22 +71,29 @@ final class CacheWarmCommand extends Command
 
         $formatter->writeModulesFound($modules);
 
-        [$resolvedCount, $skippedCount] = $this->warmInOneBatch(
+        [$resolvedCount, $skippedCount, $failedCount] = $this->warmInOneBatch(
             new ModuleWarmer($cacheWarmService, $formatter),
             $modules,
             $warmAttributes,
         );
 
         if (self::shouldDispatch(CacheWarmedEvent::class)) {
-            self::dispatchEvent(new CacheWarmedEvent(count($modules), $skippedCount));
+            // Named, because three same-typed counters read positionally is what
+            // put the skipped count into failedCount in the first place.
+            self::dispatchEvent(new CacheWarmedEvent(
+                moduleCount: count($modules),
+                failedCount: $failedCount,
+                skippedCount: $skippedCount,
+            ));
         }
 
         $formatter->writeSummary(
-            count($modules),
-            $resolvedCount,
-            $skippedCount,
-            $metrics->formatElapsedTime(),
-            $metrics->formatMemoryUsed(),
+            modulesCount: count($modules),
+            resolvedCount: $resolvedCount,
+            skippedCount: $skippedCount,
+            failedCount: $failedCount,
+            timeTaken: $metrics->formatElapsedTime(),
+            memoryUsed: $metrics->formatMemoryUsed(),
         );
 
         $this->displayCacheInfo($cacheManager, $formatter);
@@ -102,7 +109,7 @@ final class CacheWarmCommand extends Command
      *
      * @param list<AppModule> $modules
      *
-     * @return array{0: int, 1: int}
+     * @return array{0: int, 1: int, 2: int} [resolvedCount, skippedCount, failedCount]
      */
     private function warmInOneBatch(ModuleWarmer $moduleWarmer, array $modules, bool $warmAttributes): array
     {

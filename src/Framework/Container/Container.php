@@ -9,6 +9,7 @@ use Gacela\Container\CompilationReport;
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Container\ContainerStats;
 use Gacela\Container\ContextualBindingBuilder;
+use Gacela\Container\DependencyNode;
 use Gacela\Container\PlanCache;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
@@ -17,12 +18,13 @@ use Gacela\Framework\Event\Container\BindingRegisteredEvent;
 use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
-use SplObjectStorage;
 use Throwable;
+use WeakMap;
 
 use function array_keys;
 use function array_map;
 use function is_object;
+use function is_string;
 
 /**
  * Decorates the decoupled Container, adding the Locator and the service
@@ -43,6 +45,7 @@ use function is_object;
  * @psalm-import-type StatsArray from \Gacela\Container\ContainerInterface
  * @psalm-import-type CompiledPlans from \Gacela\Container\DependencyResolver
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
+ * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  */
 final class Container implements ContainerInterface
 {
@@ -56,9 +59,18 @@ final class Container implements ContainerInterface
      * upstream, so wrapping them again would give set() a different object and
      * silently drop the factory/protected mark.
      *
-     * @var SplObjectStorage<Closure, null>
+     * A WeakMap rather than an SplObjectStorage, which holds its keys strongly.
+     * Nothing removes a mark -- there is no hook that fires when a binding is
+     * overwritten or removed -- so strong keys made this a monotonically growing
+     * set: every closure ever handed to set(), factory(), extend() or protect()
+     * was retained for the container's lifetime, with everything it closed over,
+     * whether or not its binding still existed. Held weakly, a mark lasts
+     * exactly as long as the closure it marks is reachable, which is precisely
+     * as long as the question "is this one of ours?" can still be asked.
+     *
+     * @var WeakMap<Closure, true>
      */
-    private readonly SplObjectStorage $doNotWrap;
+    private readonly WeakMap $doNotWrap;
 
     /** @var array<string, true> */
     private array $resolvedServiceIds = [];
@@ -91,7 +103,9 @@ final class Container implements ContainerInterface
             $compiledPlans,
             $planCache ?? SharedPlanCache::getInstance(),
         );
-        $this->doNotWrap = new SplObjectStorage();
+        /** @var WeakMap<Closure, true> $doNotWrap */
+        $doNotWrap = new WeakMap();
+        $this->doNotWrap = $doNotWrap;
     }
 
     public static function withConfig(Config $config): self
@@ -261,7 +275,7 @@ final class Container implements ContainerInterface
      */
     public function protect(Closure $instance): Closure
     {
-        $this->doNotWrap->offsetSet($instance);
+        $this->doNotWrap->offsetSet($instance, true);
 
         return $this->inner->protect($instance);
     }
@@ -355,6 +369,71 @@ final class Container implements ContainerInterface
     public function getDependencyTree(string $className): array
     {
         return $this->inner->getDependencyTree($className);
+    }
+
+    /**
+     * The dependency graph as a tree, where {@see getDependencyTree()} returns
+     * the same classes flattened and deduplicated.
+     *
+     * Flattening removes what a dependency inspector is opened for: how deep
+     * something sits, which constructor parameter asked for it, that several
+     * parents pull in the same class, and where a cycle closes. A cycle is
+     * marked and cut rather than thrown, since inspecting a broken graph is
+     * exactly when this gets reached for.
+     *
+     * @param class-string $className
+     */
+    public function dependencyGraph(string $className): DependencyNode
+    {
+        return $this->inner->dependencyGraph($className);
+    }
+
+    /**
+     * Register a whole definition set from data rather than from a closure --
+     * the counterpart of `addBinding`/`addAlias`/`tag` for wiring that is
+     * generated, shared between environments, or diffed in review.
+     *
+     * ```php
+     * $container->load([
+     *     LoggerInterface::class => FileLogger::class,
+     *     'db.dsn' => ['value' => 'pgsql://localhost/app'],
+     * ]);
+     * ```
+     *
+     * Every entry ends up calling the registration method it stands for, so a
+     * definition behaves exactly like its imperative equivalent. Later keys
+     * override earlier ones, which is what makes layering base + overrides
+     * work; 'tags' accumulate instead, the way `tag()` does.
+     *
+     * Like {@see provides()} and {@see stats()}, declared on the concrete
+     * container upstream rather than on ContainerInterface -- 1.x promises
+     * nothing is added there -- so it is forwarded explicitly here.
+     *
+     * @param array<array-key, mixed> $definitions
+     */
+    public function load(array $definitions): void
+    {
+        $this->inner->load($definitions);
+    }
+
+    /**
+     * Load definitions from a '.php' file returning an array, or a '.json' file.
+     *
+     * The path is used as given. Unlike `GacelaConfig::enableFileCache()`, it is
+     * not rebased under the application root: a definitions file is referenced
+     * from the config that names it, so `__DIR__` is the honest way to write it
+     * and a silent rebase would only move where the failure appears.
+     *
+     * YAML stays out on purpose -- there is no parser in the container, and
+     * adding one means a second runtime dependency. Once here, the documented
+     * path is `$container->load(Yaml::parseFile('services.yaml'))`.
+     *
+     * @throws \Gacela\Container\Exception\ContainerException when the file is
+     *         missing, unreadable, of an unsupported type, or does not hold an array
+     */
+    public function loadFile(string $file): void
+    {
+        $this->inner->loadFile($file);
     }
 
     /**
@@ -497,7 +576,7 @@ final class Container implements ContainerInterface
             $args,
         ));
 
-        $this->doNotWrap->offsetSet($wrapper);
+        $this->doNotWrap->offsetSet($wrapper, true);
 
         return $wrapper;
     }
@@ -571,7 +650,38 @@ final class Container implements ContainerInterface
             self::notifyBindingRegistered($id);
         }
 
+        // Last, so the data layer wins: a definitions file is loaded to override
+        // what the config declares imperatively, and could not do that from any
+        // earlier position. Sources apply in declaration order, so the last one
+        // wins among themselves too.
+        $container->loadDefinitions($containerConfig->getDefinitions());
+
         return $container;
+    }
+
+    /**
+     * Apply the declared definition sources, in the order they were declared.
+     *
+     * No `BindingRegisteredEvent` is dispatched, deliberately. The loader is an
+     * upstream internal, so the only way to name what a source registered is to
+     * reconstruct it: a file's contents are not in hand here, and reading the
+     * ids back off the container catches `bind()` and `set()` definitions but
+     * not the aliases, which live in a third registry. A listener that counts
+     * registrations is better served by nothing than by an undercount it cannot
+     * see the shape of. Tracked against the upstream loader growing a way to
+     * report what it registered.
+     *
+     * @param DefinitionSources $sources
+     */
+    private function loadDefinitions(array $sources): void
+    {
+        foreach ($sources as $definitions) {
+            if (is_string($definitions)) {
+                $this->loadFile($definitions);
+            } else {
+                $this->load($definitions);
+            }
+        }
     }
 
     /**

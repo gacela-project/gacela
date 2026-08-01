@@ -2,100 +2,197 @@
 
 ## Unreleased
 
-A foundation major. The runtime change is two lines — PHP `>=8.3` and `gacela-project/container` `^1.4.0`, up from a `0.x` — and most of what follows comes from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`, and container exceptions where 0.x emitted raw PHP errors. Alongside it, the PHPStan suppression Gacela used to ship for undeclared pillar accessors is gone and a Psalm plugin joins the PHPStan extension, so an accessor you have not declared is now reported rather than silently typed `mixed`.
+A foundation major. The runtime change is two lines — PHP `>=8.3` and
+`gacela-project/container` `^1.5.0`, up from a `0.x`. Most of what follows comes
+from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`,
+and container exceptions where 0.x emitted raw PHP errors.
 
-It is **not the "one container" release**: that was the original headline for 2.0 and it moved to 2.1. No longer for want of the primitive — container 1.3 shipped `createScope()` and closed [container#106](https://github.com/gacela-project/container/issues/106) — but because the consolidation lands on top of the cache-regression suite this release builds, and stays reviewable only if it ships alone.
+It is **not** the "one container" release; that moved to 2.1 (#539). No longer
+for want of the primitive — container 1.3 shipped `createScope()` and closed
+[container#106](https://github.com/gacela-project/container/issues/106) — but
+because the consolidation only stays reviewable if it ships alone.
 
-It was not meant to be a performance release either, and mostly is not: the three perf spikes on the roadmap were measured at sub-millisecond and closed rather than shipped, and writing compiled constructor plans to disk was measured a **net loss** and left unwired. One win survived contact with a benchmark — the containers now share a single constructor-plan cache, worth ~36-41% of resolution time to a request that touches many modules.
+It was not meant to be a performance release either, and mostly is not: the
+three perf spikes measured sub-millisecond and were closed rather than shipped,
+and writing compiled plans to disk measured a **net loss**. One win survived a
+benchmark — every container now shares one constructor-plan cache.
 
-Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md) — and run `vendor/bin/gacela doctor` on 1.21 first, because one of the three fails silently.
+Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
+`vendor/bin/gacela doctor` on 1.21 first — one of the three fails silently.
 
 ### Added
 
-- **`GacelaConfig::afterResolving()` — a post-construction hook.** There was no supported way to say "after anything implementing `LoggerAwareInterface` is built, hand it the logger". The two adjacent tools solve adjacent but different problems: `extendService()` *replaces* what comes out, which is right for decoration and wrong for calling a setter on an instance you would have to know and rebuild to touch; and the event listeners *observe*, with `BindingRegisteredEvent` firing at registration rather than at resolution and handing you an event object rather than the instance.
+- **`GacelaConfig::loadDefinitions()`** registers a whole definition set from an
+  array, or a `.php`/`.json` file, for wiring that is generated, shared between
+  environments, or reviewed as a diff:
+  ```php
+  $config->loadDefinitions([
+      LoggerInterface::class => FileLogger::class,
+      Database::class => ['singleton' => DatabasePool::class],
+      'db.dsn' => ['value' => 'pgsql://localhost/app'],
+  ]);
+  $config->loadDefinitions(__DIR__ . '/config/services.json');
+  ```
+  App-wide, like `addBinding()`; `Container::load()`/`loadFile()` are forwarded
+  so a Provider can scope definitions to one module. Sources apply in order and
+  **after** the imperative registrations, so a file overrides `addBinding()` —
+  which is what an override file is for. Tags accumulate instead. Paths are used
+  as given: write them with `__DIR__`. No YAML — pass `Yaml::parseFile(...)`.
+
+- **`GacelaConfig::afterResolving()`** runs a callback on an instance after the
+  container builds it:
   ```php
   $config->afterResolving(
       LoggerAwareInterface::class,
       static fn (LoggerAwareInterface $s) => $s->setLogger($logger),
   );
   ```
-  **The id may name an interface**, which is the point — one registration covers every implementation. That is why the match is made against the resolved instance rather than by looking the requested id up in a map, and it is also why this cannot simply forward to the container's own `afterResolving()`, which keys on the exact id. Hooks fire on container-level resolution — `get()`, `getOrFail()` and `make()` — in registration order, and a container with no hooks pays nothing per resolution. A class the inner container autowires as a nested constructor dependency is not resolved at this level, so hooks do not fire for it. A callback that throws removes the instance from the container rather than leaving a half-wired one for the next caller
-- **`GacelaConfig::tag()` makes container tagging reachable.** The container has shipped `tag()`/`tagged()` for a while and Gacela's decorator forwarded both, but nothing could reach them: `GacelaConfig` had `addBinding`, `addFactory`, `addAlias`, `addLazy`, `extendService` and `when` — no `tag`. So the only collection primitive a user could actually reach was `addHandlerRegistry()`, which is **keyed**, and had to be bent into jobs it does not fit.
-  ```php
-  // gacela.php — reaches every module's container
-  $config->tag([NotEmptyValidator::class, EmailValidator::class], 'validators');
+  The id may name an **interface**, so one registration covers every
+  implementation. Fires on `get()`, `getOrFail()` and `make()` in registration
+  order, costs nothing when unused, and does not fire for a nested constructor
+  dependency. A callback that throws evicts the instance.
 
-  // a module adds its own, in its Provider
-  $container->tag(CardValidator::class, 'validators');
-  $container->set('validators', static fn (): array => [...$container->tagged('validators')]);
+- **`GacelaConfig::tag()`** groups services under a label, reaching every
+  module's container:
+  ```php
+  $config->tag([NotEmptyValidator::class, EmailValidator::class], 'validators');
   ```
-  A module-local contribution stays in that module's container: two modules tagging under the same label each see the app-wide set plus their own, and never each other's. That is the behaviour, not a limitation — module containers are separate, and a tag is not a back channel between modules. Tags from two config sources are merged, not overwritten. The two collection primitives now each have one intent: `tag()` for an unkeyed set you iterate (validators, listeners), `addHandlerRegistry()` for a keyed lookup that throws on a miss (a command bus). `docs/getting-a-dependency.md` gains a "collect several implementations" section, which had no primary path before
-- **`debug:dependencies --tree` answers from the container instead of from reflection.** Without it the command reports one level of constructor parameters, re-derived from type hints. With it, the transitive tree is taken from `Container::getDependencyTree()` — the same walk the resolver performs — so bindings, contextual bindings and attributes are already applied, and a bound interface is listed as the concrete that will actually be built. Every node is marked with how the container will supply it: `binding`, `instance`, `autowired`, or `unresolvable`. That last distinction is new information: it comes from `Container::provides()`, which asks whether the container *owns* something for an id, where `has()` is also true of anything merely autowirable — so an interface with a binding used to read exactly like one without. An unresolvable node is printed, never thrown; the command stays a diagnostic. See [container configuration](docs/container-configuration.md#visibility-in-tooling)
-- **`Gacela\Framework\Container\Container::provides()`** forwards container 1.3's `provides()`. Like `stats()`, it is declared on the concrete class rather than `ContainerInterface`, so the decorator needs an explicit forwarder
-- **Keyed tags reach a Provider**: `Container::taggedByKey()` and `Container::taggedKeys()` forward container 1.4's additions, and `Container::tag()` accepts a map (`['email' => EmailHandler::class]`) as well as a list. A keyed tag resolves *the* entry asked for and leaves the rest of the tag unbuilt, so it is a lookup table of ids rather than a second place instances live; an unknown key throws naming the keys that exist. `GacelaConfig::tag()` stays list-only on purpose — app-wide, the keyed job belongs to `addHandlerRegistry()`, which is what the one-intent-each split in this release is about
-- **A Psalm plugin that types the pillar accessors from `#[ServiceMap]`** (`Gacela\Psalm\Plugin`), the counterpart of the PHPStan extension. Register it in `psalm.xml`:
+  A module adding to a tag in its own Provider stays local to that module. Use
+  `tag()` for an unkeyed set you iterate, `addHandlerRegistry()` for a keyed
+  lookup that throws on a miss.
+
+- **`debug:dependencies --tree` draws an actual tree**, taken from the container
+  so bindings and contextual bindings are already applied:
+  ```
+  ├── ✓ $cacheWarmService: …\CacheWarmService (autowired)
+  └── ✓ $formatter: …\CacheWarmOutputFormatter (autowired)
+      └── ✗ $output: Symfony\…\OutputInterface (unresolvable)
+  ```
+  A missing dependency now says *whose* it is. A cycle is marked `(cycle)` and
+  cut. `Dependencies` counts distinct classes, so one pulled in by three parents
+  counts once and is drawn three times.
+
+- **`cache:clear` also clears the container's in-process memos** — reflection
+  output held in statics that outlive every container and that no file holds.
+
+- **A Psalm plugin typing the pillar accessors from `#[ServiceMap]`**, the
+  counterpart of the PHPStan extension. Before, `psalm-gacela.xml` only
+  *suppressed* the error, so the accessor evaluated to `mixed`:
   ```xml
   <plugins>
       <pluginClass class="Gacela\Psalm\Plugin"/>
   </plugins>
   ```
-  Until now `psalm-gacela.xml` only *suppressed* `UndefinedMagicMethod`, so the accessor evaluated to `mixed` and everything reached through it went unchecked. With the plugin, `$this->getFacade()->typoMethod()` is reported. The suppressions stay as a fallback for classes declaring neither `#[ServiceMap]` nor a `@method` docblock, and are scheduled for removal in 3.0. The plugin cannot be delivered through the existing XInclude, because XInclude replaces a single element and `<plugins>` lives elsewhere in your config
-- **`#[Inject]` now targets properties as well as constructor parameters** (container 1.2), for classes whose constructor is not yours to change — a base class from a vendor package, or one whose signature is fixed by a framework contract. Private, protected and inherited properties are supported. Constructor injection stays the default everywhere else, because a dependency in the signature is visible to a reader and to a plain `new`. `readonly`, untyped and scalar-typed properties are rejected by name with a `DependencyInvalidArgumentException` instead of a raw PHP error, and a cycle reached through an injected property still raises `CircularDependencyException`. See [container configuration](docs/container-configuration.md#on-properties)
-- `#[Lazy]` (container 1.1) joins `#[Inject]`, `#[Singleton]` and `#[Factory]` as an attribute honoured by `AbstractFactory::make()` and container resolution. It defers construction until the instance is first used, which suits an expensive service a request may never reach. Requires PHP 8.4 for native lazy objects; on 8.3 the class is constructed eagerly, which is unobservable apart from the timing
-- **One constructor-plan cache for every container** (container 1.4's `PlanCache`). Gacela's containers are sibling roots, not a tree: `AbstractFactory` keeps one per Factory class, and the class resolver and `Gacela::container()` hold one more each. They are configured from the same `gacela.php`, so they resolve many of the same classes — and each one used to reflect them again. They now share one plan cache, and what travels through it is reflection output only: bindings, contextual bindings, aliases, tags, singletons and stored instances stay private to each container, so this cannot make one module resolve like another. Ten containers resolving one four-level chain drop **~36-41% in time**. The most controlled measurement is CI, which runs both subjects on one runner: 90.3μs to 58.0μs, **-35.8%**, at ±0.5-1.1% rstdev. Two local runs gave -36.7% (40.0μs to 25.3μs) and -41.2% (81.8μs to 48.1μs); the absolute timings move with the machine, which is why `SharedPlanCacheBench` interleaves the two subjects in one process rather than trusting a stored baseline. Peak memory dropped ~37% locally (20.1mb to 12.7mb) — not yet confirmed on CI, where the bench has no baseline on `main` to diff against and the column reports `ERR`. Pass a `PlanCache` of your own as the container's fourth argument to opt one out
-- **`Container::lazy()`, `writeCompiledFactories()`, `useCompiledFactories()` and `compileReport()`** are forwarded by the decorator, and `writeCompiledCache()` gained container 1.4's build-stamp argument. `lazy()` defers construction until first use without needing `#[Lazy]` on a class you do not own, and its closure form is wrapped like every other user closure, so a provider written as `static fn (Container $c) => …` still reaches `getLocator()`. The compilation methods are forwarded but nothing in Gacela calls them: writing the plans to disk was measured for this release and is a **net loss** — materialising a 300-class plans file costs ~1.4ms per process against ~0.2ms saved by resolving all 300, because compiling a class costs roughly six times the reflection it avoids. A build stamp does not change that; the cost is hydrating the array, not the per-class `stat`. They are reachable for an application that has measured its own case, and `docs/container-configuration.md` records the numbers
+- **One constructor-plan cache for every container** (container 1.4's
+  `PlanCache`). Gacela's containers are sibling roots, not a tree, and they are
+  configured from the same `gacela.php`, so each used to reflect the same
+  classes again. Ten containers resolving one four-level chain drop **~36%** in
+  time, measured on CI at 90.3μs → 58.0μs. Only reflection output is shared:
+  bindings, aliases, tags, singletons and stored instances stay private to each
+  container. Pass your own `PlanCache` as the container's fourth argument to opt
+  one out.
+- **`Container::lazy()`, `writeCompiledFactories()`, `useCompiledFactories()`
+  and `compileReport()`** are forwarded, and `writeCompiledCache()` gained
+  container 1.4's build-stamp argument. Nothing in Gacela calls the compilation
+  methods — writing plans to disk was measured a net loss — but they are
+  reachable for an application that has measured its own case.
 
-### Changed (BREAKING — 2.0)
+- **`#[Inject]` targets properties**, not only constructor parameters, for
+  classes whose constructor is not yours to change.
+- `#[Lazy]` joins `#[Inject]`, `#[Singleton]` and `#[Factory]` as an attribute
+  honoured by `AbstractFactory::make()`.
+- `Container::provides()`, `taggedByKey()` and `taggedKeys()` are forwarded.
 
-See [UPGRADE.md](UPGRADE.md) for the migration, ordered by how likely each is to affect you.
+### Changed
 
-- **The PHPStan suppression for undeclared pillar accessors is gone.** 1.x shipped an `ignoreErrors` entry in `phpstan-gacela.neon` silencing `Call to an undefined method ...::getFacade()`. A class resolving a pillar through `ServiceResolverAwareTrait` must now declare it with `#[ServiceMap]` (or a `@method` docblock, which PHPStan reads natively) or the call is reported. A suppressed call was never a typed one — it evaluated to `mixed`, which switched off checking of everything reached *through* the accessor. 1.21 shipped the `#[ServiceMap]` typing precisely so this migration can be done first
-- **`gacela-project/container` bumped to `^1.4.0`** (was `^0.10.0`). `Gacela\Container\Container` is now `final`, so `Gacela\Framework\Container\Container` decorates it by composition instead of extending it — which is what its docblock always claimed it did. It still implements `ContainerInterface` and gains the 1.0 additions (`when()`, `compile()`, `writeCompiledCache()`, `getStats()`, `ArrayAccess`). **Only affects code that passed a Gacela container where the concrete `Gacela\Container\Container` was type-hinted**; depend on `ContainerInterface` instead. Provider closures are unchanged: `static fn (Container $c) => $c->getLocator()->get(...)` still receives the Gacela container, not the inner one
-- **PHP floor raised to `>=8.3`** (was `>=8.1`). PHP 8.1 reached end of life in December 2025 and 8.2's security window closes in December 2026, so a 2.0 pinned to either would ship already needing another bump. Projects on 8.1 or 8.2 should stay on **1.21**, which is feature-complete and carries the tooling for this migration — `doctor`'s filename check, `FacadeInterfaceInSyncRule`, and the typed pillar accessors
-- **`symfony/*` widened to `^7.0 || ^8.0`** (was `^6.4`). Gacela no longer decides a consumer's Symfony major for them
-- Class constants on `AbstractSetupGacela` and `ConfigInterface` now declare types (PHP 8.3 typed class constants), so a subclass redeclaring one is checked at compile time instead of silently changing the shape a builder reads. Only affects code that overrides them with a different type
-- **`ConsoleFacade::getContainerStats()` and `ConsoleFactory::getContainerStats()` return `ContainerStats` instead of an array.** Both are public methods on a public facade, so a caller doing `$facade->getContainerStats()['registered_services']` now fatals — `ContainerStats` is `final readonly` and does not implement `ArrayAccess`. Read the typed properties instead (`->registeredServices`, `->frozenServices`, `->factoryServices`, `->bindings`, `->cachedDependencies`, `->memoryUsageBytes`), or `->memoryUsageFormatted()` for display. The array's keys were snake_case; the properties are camelCase. This is the point of the change: the array's shape was explicitly outside the container package's backward-compatibility promise, so indexing it was never safe. `Container::getStats()` — a different method, on the container rather than the Console facade — is untouched and still returns the array
-
-### Deprecated
-
-- Resolving a pillar from a `@method` docblock, or by scanning the caller's `use` statements, now raises `E_USER_DEPRECATED` and is removed in 3.0. Declare the pillar with `#[ServiceMap(method: ..., className: ...)]` instead — the attribute is checked first, so adding it silences the notice. The notice fires on a **cold resolve only**, because the answer is memoized per caller-and-method; run `gacela cache:clear`, or develop with the file cache off, to surface every occurrence. **Keeping the `@method` docblock alongside the attribute is fine if you rely on IDE completion**, though it is no longer needed for static analysis — this release ships a Psalm plugin to go with the PHPStan extension, so both analysers type the accessor from the attribute alone
-
-### Removed (BREAKING — 2.0)
-
-- `AbstractDependencyProvider` — extend `AbstractProvider` instead (identical API; it was a deprecated alias)
-- `GacelaConfig::addMappingInterface()` — use `addBinding()` instead
-- `DocBlockResolverAwareTrait` — use `ServiceResolverAwareTrait` instead
-- Internal `DependencyProviderResolver` and the `AbstractFactory` dual-resolver path. Provider classes named `*DependencyProvider` are no longer auto-resolved; rename them to `<Module>Provider` (extending `AbstractProvider`). Module resolution now goes through a single `ProviderResolver`.
+- **`gacela-project/container` `^1.5.0`** (was `^0.10.0`). `Container` is now
+  `final`, so Gacela decorates it by composition. Two of its fixes land in
+  Gacela's own path: a class-string sharing a name with a function was *invoked*
+  instead of instantiated, and `has()` remembered a negative, so a class
+  declared after the first probe stayed invisible.
+- **PHP floor raised to `>=8.3`** (was `>=8.1`). 8.1 is end of life and 8.2's
+  security window closes in December 2026.
+- **`symfony/*` widened to `^7.0 || ^8.0`** (was `^6.4`). Gacela no longer
+  decides a consumer's Symfony major.
+- **`ConsoleFacade::getContainerStats()` and `ConsoleFactory::getContainerStats()`
+  return `ContainerStats`** instead of an array.
+- **The PHPStan suppression for undeclared pillar accessors is gone.** An
+  accessor you have not declared is reported rather than silently typed `mixed`.
+- Class constants on `AbstractSetupGacela` and `ConfigInterface` declare types,
+  so a subclass redeclaring one is checked at compile time.
 
 ### Fixed
 
-- **`make:module` and `make:file` failed on a brand-new project.** `FileContentIo::mkdir()` called `mkdir()` without the recursive flag, so it could only create a directory whose parent already existed. In a fresh project there is no `src/` yet, which made the flow the tooling itself prints — `gacela init`, then `gacela make:module App/YourModule --minimal` — fail with a PHP warning and `Directory "src/Hello" was not created`. It only worked once some directory under `src/` existed, which is why later runs looked fine and nothing caught it. The unit test asserted the broken behaviour as if intended; it now pins the opposite, and the cannot-create case is exercised with a file standing in for a parent directory rather than a missing one
-- **`Container` emitted PHP 8.5 deprecation notices on a core path.** `SplObjectStorage::attach()` and `::contains()` are deprecated as of 8.5; the closure-decoration bookkeeping called both, so `protect()` and every wrapped `set()`/`factory()`/`extend()` raised a notice on 8.5. Now `offsetSet()`/`offsetExists()`, which are behaviour-identical. `gacela-project/container` made the same change at 0.8.1 — Gacela's own decorator was missed because the test matrix runs 8.5 but deprecations are not errors there
-- **The in-memory copy of the file-backed caches survived `Gacela::resetCache()`.** With `gacela-cache-enabled`, entries that `ClassNamePhpCache` and friends had read from disk kept answering after an explicit reset, so `GacelaConfig::resetInMemoryCache()` did not reset that layer. `AbstractPhpFileCache::clearStaticCache()` had existed since the batching work and was unit-tested, but it clears one subclass at a time and the central reset cannot name concrete subclasses, so the only callers were the tests themselves. `AbstractPhpFileCache::resetCache()` now clears every subclass at once and `Gacela::resetCache()` calls it. The seventeenth of the cache bugs tracked in #539, and the first one found by a guard rather than by a user
-- **`extendService()` on an id that names an autowirable class threw instead of scheduling the extension.** A regression in `gacela-project/container` 1.0, shipped in Gacela by the 1.0 bump: `has()` moved to the PSR-11 question ("will `get()` resolve this?"), which is `true` for any instantiable class, so `extend()` took the already-defined branch. Fixed by requiring container `^1.1`. Gacela's own tests missed it because every existing `extendService()` case uses a plain string id, and the bug only bites when the id happens to name a real class
-- `Gacela::resetCache()` now drops the memoized "this class does not exist" answers. `ClassValidator` caches the *negative* result of `class_exists()`, so a class that was not loadable when first resolved stayed "missing" for the life of the process — `Gacela::resetCache()` did not clear it, because `ClassValidator::resetCache()` was reachable only from its own unit test. Affects any process where the set of loadable classes changes after the first resolution: long-running workers (RoadRunner, Swoole, queue consumers) that re-bootstrap, code generation, and `cache:warm` emitting classes. Positive answers are kept — a class that exists cannot stop existing, so they never go stale, and clearing them cost ~20% on the no-file-cache bootstrap path for no correctness gain
+- **The container retained every closure it was ever handed.** The mark that
+  stops a wrapper being wrapped twice held its keys strongly and was never
+  cleaned, so `set()`, `bind()`, `extend()`, `factory()` and `protect()` leaked
+  their closures and everything each captured. Overwriting one id 5000 times
+  held 6.1 MB for a single live binding; it is 1.8 KB now. Bounded in a normal
+  bootstrap, but it bit anything re-registering on a long-lived container.
+- **`CacheWarmedEvent` reported skipped modules as failed**, so a listener
+  alerting on `failedCount() > 0` fired on a successful deploy. A missing pillar
+  class and one whose autoloading threw now count separately, and
+  `skippedCount()` reports the healthy one. `cache:warm` gains a
+  `Classes failed:` line.
+- **`make:module` and `make:file` failed on a brand-new project** —
+  `FileContentIo::mkdir()` omitted the recursive flag.
+- **`Container` emitted PHP 8.5 deprecation notices on a core path.**
+- **The in-memory copy of the file-backed caches survived `Gacela::resetCache()`**,
+  so entries read from disk kept answering after a reset.
+- **`extendService()` on an id naming an autowirable class threw** instead of
+  scheduling the extension.
+- `Gacela::resetCache()` drops the memoized "this class does not exist" answers.
+
+### Deprecated
+
+- Resolving a pillar from a `@method` docblock, or by scanning the caller's
+  `use` statements, raises `E_USER_DEPRECATED` and is removed in 3.0. Declare it
+  with `#[ServiceMap]`.
+
+### Removed (BREAKING)
+
+- `AbstractDependencyProvider` — extend `AbstractProvider` instead.
+- `GacelaConfig::addMappingInterface()` — use `addBinding()`.
+- `DocBlockResolverAwareTrait` — use `ServiceResolverAwareTrait`.
+- Internal `DependencyProviderResolver` and the `AbstractFactory` dual-resolver
+  path. `*DependencyProvider` classes are no longer auto-resolved; rename them.
 
 ### Documentation
 
-- New `UPGRADE.md`: the 1.21 → 2.0 migration, ordered by how likely each change is to affect you — the PHP floor, then the three mechanical renames every project hits, then the static-analysis change, then four that only bite specific shapes of code
-- New `docs/getting-a-dependency.md`: names **one primary path per intent** — `#[ServiceMap]` + `getFacade()` to reach another module, `create*()`/`make()` for an own collaborator, `#[Provides]`/`addBinding()` for an external service, and the typed getters for config. The other paths are listed with the situation where each is genuinely the right answer. Nothing was removed: the 25-path inventory in `docs/rfc/0002` showed the problem was never the count — reading config has six methods for one intent and nobody complains, because they are the same path with typed variants
+- New `UPGRADE.md`: the 1.21 → 2.0 migration, ordered by likelihood of hitting
+  you — the PHP floor, the three renames, then static analysis.
+- New `docs/getting-a-dependency.md`: one primary path per intent, with the rest
+  listed alongside the situation where each is right.
 
 ### Internal
 
-- `StaticStateCoverageTest` guards process-global state from the opposite end to `ResetCacheCoverageTest`: it enumerates every `static` property under `src/`, populates them by resolving a real module, calls `Gacela::resetCache()` and requires each one to be back at its declared default or listed with the reason its lifetime is not cache lifetime. The existing guard starts from the resets that exist, so by construction it cannot see a class holding state with no reset at all — seven of those are what #539 measured, and an eighth (above) was found by writing this one
-- `Gacela::resetCache()` clears the shared plan cache, so `StaticStateCoverageTest`'s invariant still holds: every `static` under `src/` is back at its declared default after a reset. The practical consequence is that plans are shared *within* a bootstrap, not across one — a process that re-bootstraps refills the cache, which is the right trade, because the plans are what make the first resolution of each class cheap and there is no way to know the next bootstrap wants the same classes.
-
-  Container 1.4 also exposes `Container::resetStaticCaches()` for the class-shape memos that are `static` and outlive every container, and Gacela deliberately **does not** call it. It was tried and measured: `FileCacheBench` lost 11-17% because every `bootstrap()` with `resetInMemoryCache()` then re-reflected everything the previous one had already seen. Unlike the `ClassValidator` defect above, which memoized *negatives*, those memos are positives keyed on a class name and a class's shape cannot change within a process — so clearing them buys no correctness, only memory, and it charges that memory to exactly the workload that reset-heavy processes care about. Infection agreed from the other side: the mutant deleting the call escaped, because there is nothing observable to assert. Call it yourself if a long-lived process needs the memory more than the reflection
-- `ContainerForwardingCoverageTest` reflects over `Gacela\Container\Container` and requires every public method to be either forwarded by the decorator or listed as a deliberate decision with its reason. The decorator's docblock used to argue that implementing `ContainerInterface` made this unnecessary — an upstream addition would fail compilation. That was never true for the methods that matter: 1.x promises never to extend the interface, so every capability since 1.0 landed on the concrete class, where an unforwarded method compiles fine and is simply unreachable. `createScope()` shipped that way in 1.3, and `writeCompiledCache()`'s new argument drifted the same way in 1.4. The docblock now says what actually holds. `createScope()`, `load()` and `loadFile()` are the three recorded non-forwards
-- Raised the `nikic/php-parser` floor to `^5.4`. Psalm 6.16 declares `^5.0.0` but reads `Property::$hooks`, which only exists from 5.4, so a `--prefer-lowest` install produced a Psalm that crashes on any file containing a property. Nothing had noticed because nothing ran Psalm from inside the test suite until the plugin test did
-- Requires container `^1.2.1`, not `^1.2`. The instantiability guard container added in 1.1.1 built a `ReflectionClass` of its own to answer a question `DependencyResolver` resolves off the class plan it builds a moment later anyway, and memoized the verdict per container — so every `get()` on a cold container reflected twice. Nothing here had noticed, because the lockfile still pinned 1.1.0; moving the floor is what exposed it, as a 10-18% regression across all four `ContainerResolutionBench` subjects. Fixed upstream in [container#105](https://github.com/gacela-project/container/pull/105), which puts cold resolution back inside the gate with peak memory at parity
-- `debug:container` no longer reads the untyped `getStats()` array. Container 1.2 added `stats(): ContainerStats`, a `final readonly` object whose properties **are** covered by backward compatibility — unlike the array, whose shape upstream explicitly excludes from its BC policy — so a renamed counter now fails at analysis time instead of reaching a user's terminal as an undefined-array-key error. `Container::stats()` is forwarded explicitly, since `stats()` lives on the concrete container rather than on `ContainerInterface`. `getStats()` is untouched and keeps working for all of 1.x
-- Infection 0.34's `ReturnRemoval` mutator reads every early `return` as behaviour, and the full run came back at 98.85% MSI against a 100% gate: **33 escaped mutants in untouched code**, each one a guard clause nothing exercised. 28 are now killed by tests — among them `FileCache`'s staging-failure branch (reached with a stream wrapper whose writes produce zero bytes and whose `unlink()` fails), `CacheWarmService`'s missing-class guard (the old assertion held under the mutant; the new one asserts the ClassResolver event stream is empty, and the mutant leaks 13 events building default pillars for a class that does not exist), and two `LogicalOr` positions in `AllAppModulesFinder` that the existing dotfile test could not reach. 5 are equivalent and ignored by name with the reason, following the convention already in `infection.json5`. One was neither: `FacadeOnlyDelegatesRule` had a dead `$args === []` guard whose fall-through returned the same `false`, so it is deleted rather than ignored — an ignore there is method-scoped and would have swallowed two live mutants in the same method
-- Both Infection jobs now run `--show-mutations=max`. The default caps the list at 20, so the first full run named 20 of the 33 escapes and the rest were invisible until the next one
-- Refreshed the development toolchain: `infection/infection` `^0.29` → `^0.34`, plus `phpstan` 2.2.6 and `rector` 2.5.8 in the lockfile. `phpunit/phpunit` stays on `^10.5`: under PHPUnit 12 Rector's `bootstrap.php` preloads its own bundled `nikic/php-parser`, which fatals with `Cannot redeclare interface PhpParser\NodeVisitor` against the copy this repo requires directly for the PHPStan rules. `psalm/plugin-phpunit` stays on `^0.19` because `0.20` requires Psalm 7, which is still in beta
-- `symfony-bridge/composer.json` now matches the root package it ships from — `php >=8.3` (was `^8.1`), `symfony/dependency-injection` `^7.0 || ^8.0` (was `^6.4 || ^7.0`) and container `^1.4.0` (was `*`). It is autoloaded by the root `composer.json`, so its own constraints were never exercised locally and had silently drifted a major behind
-- Container `^1.4.0` (was `^1.2.1`). 1.3 adds `createScope()` — the parent/child primitive [container#106](https://github.com/gacela-project/container/issues/106) that #539 was blocked on — and `provides()`, and fixes a resolver bug where the bindings map was snapshotted by value, so a `bind()` after the first resolve was invisible to nested constructor resolution. 1.4 fixes the two follow-ups to those: a `when()` call made *after* `createScope()` was invisible to that scope, which kept resolving the unbound implementation — a wrong object injected with a green test suite — and `#[Lazy]` was consulted only when the class was the id being resolved, so a lazy service injected into another constructor was built eagerly with its whole subtree, which is the case the attribute exists for. Gacela does not expose scopes yet — that is #539, unblocked by 1.3 and scheduled for 2.1
-- Removed Scrutinizer. Its `checks: php` and `php_cs_fixer` duplicated PHPStan (level max), Psalm (level 1) and php-cs-fixer, all of which already gate every pull request, and its analysis had become a permanently-exempt check rather than one anyone acted on. `gacela-project/container` dropped it at 1.0 for the same reason. Type coverage (Shepherd) and mutation score (Stryker) badges remain — a 100% MSI gate is a stronger claim than a line-coverage percentage, since a mutant cannot be killed by a line that is merely executed
+- `StaticStateCoverageTest` enumerates every `static` property under `src/`,
+  populates them by resolving a real module, and requires each to be back at its
+  declared default after a reset — guarding from the opposite end to
+  `ResetCacheCoverageTest`.
+- `ContainerForwardingCoverageTest` requires every public method of
+  `Gacela\Container\Container` to be forwarded or listed with its reason. The
+  decorator's docblock claimed implementing `ContainerInterface` made this
+  unnecessary; that was never true, since 1.x promises never to extend the
+  interface, so every capability since 1.0 landed on the concrete class where an
+  unforwarded method compiles fine and is simply unreachable. `createScope()` is
+  the one recorded non-forward.
+- `Gacela::resetCache()` clears the shared plan cache, so plans are shared
+  *within* a bootstrap rather than across one. It deliberately does **not** call
+  `Container::resetStaticCaches()`: that was tried and cost `FileCacheBench`
+  11-17%, for memory rather than correctness.
+- `debug:container` reads `stats(): ContainerStats` instead of the untyped
+  `getStats()` array, whose shape upstream excludes from BC.
+- Infection 0.34's `ReturnRemoval` mutator reads every early `return` as
+  behaviour; both jobs run `--show-mutations=max`, since the default caps the
+  list at 20 and hid 13 of 33 escapes.
+- Raised the `nikic/php-parser` floor to `^5.4`: Psalm 6.16 reads
+  `Property::$hooks`, which only exists from 5.4.
+- Refreshed the toolchain: `infection` `^0.29` → `^0.34`, plus phpstan and
+  rector. `phpunit` stays on `^10.5`.
+- `symfony-bridge/composer.json` matches the root package it ships from.
+- Removed Scrutinizer; it duplicated PHPStan, Psalm and php-cs-fixer, which
+  already gate every pull request.
 
 ## [1.21.0](https://github.com/gacela-project/gacela/compare/1.20.0...1.21.0) - 2026-07-26
 

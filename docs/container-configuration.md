@@ -259,13 +259,22 @@ bin/gacela debug:dependencies "App\Catalog\CatalogService" --tree
 Dependency tree for App\Catalog\CatalogService
 ============================================================
 
-  ✓ App\Catalog\ProductRepository (autowired)
-  ✓ App\Cache\RedisCache (binding)
-  ✓ Psr\Log\LoggerInterface (instance)
-  ✗ App\Search\IndexerInterface (unresolvable)
+  ├── ✓ $repository: App\Catalog\ProductRepository (autowired)
+  │   └── ✗ $indexer: App\Search\IndexerInterface (unresolvable)
+  ├── ✓ $cache: App\Cache\RedisCache (binding)
+  └── ✓ $logger: Psr\Log\LoggerInterface (instance)
 
 Dependencies: 4
 ```
+
+Nodes are drawn where they sit and labelled with the constructor parameter that
+pulled them in, so a missing dependency several levels down says *whose* it is —
+`IndexerInterface` above is the repository's problem, not the service's. A
+constructor cycle is marked `(cycle)` and cut rather than followed, because a
+broken graph is exactly what this command gets opened for.
+
+`Dependencies` counts distinct classes, so one pulled in by three parents counts
+once and is drawn three times.
 
 Each node reports how the container will supply it:
 
@@ -419,6 +428,65 @@ final class CheckoutFactory extends AbstractFactory
 - Additive and opt-in: existing `getProvidedDependency()` and hand-wired
   `create*()` methods keep working unchanged.
 
+## Definitions as Data
+
+Every binding above is a method call in a closure. When the wiring is generated,
+shared between environments, or reviewed as a diff, you want it as *data* instead
+— `loadDefinitions()` takes a definitions array, or the path of a `.php` file
+returning one or a `.json` file holding one:
+
+```php
+return static function (GacelaConfig $config): void {
+    $config->loadDefinitions([
+        LoggerInterface::class => FileLogger::class,              // interface => concrete
+        Database::class => ['singleton' => DatabasePool::class],  // explicit lifetime
+        'db.dsn' => ['value' => 'pgsql://localhost/app'],         // a config value
+        'logger' => ['alias' => LoggerInterface::class],
+        Metrics::class => ['singleton' => Metrics::class, 'tags' => ['reporters']],
+    ]);
+
+    $config->loadDefinitions(__DIR__ . '/config/services.json');
+};
+```
+
+Each entry ends up calling the registration method it stands for, so a definition
+behaves exactly like the imperative call it replaces.
+
+**Ordering.** Sources apply in the order declared, and *after* the imperative
+registrations — so a later source overrides an earlier one, and a definitions file
+overrides `addBinding()`. That is the point: an environment override file that lost
+to the code it is meant to override could not do its job. `tags` accumulate instead
+of overriding, the way `tag()` does.
+
+**Scope.** App-wide, reaching every module container, like `addBinding()`. For
+definitions local to one module, call `Container::load()` in that module's Provider:
+
+```php
+final class Provider extends AbstractProvider
+{
+    public function provideModuleDependencies(Container $container): void
+    {
+        $container->load([Clock::class => SystemClock::class]);
+    }
+}
+```
+
+**Paths are used as given.** Unlike `enableFileCache()`, a definitions path is not
+rebased under the application root — write it with `__DIR__`. A missing, unreadable
+or unparsable file throws rather than leaving the wiring half-applied.
+
+**No `BindingRegisteredEvent`.** Definitions register bindings but do not announce
+them: the loader is an upstream internal, so naming what a source registered would
+mean reconstructing it from the container's registries — which misses aliases. A
+listener counting registrations sees the imperative ones only.
+
+**No YAML.** Neither the container nor gacela takes a parser dependency for it. Pass
+the parsed array instead:
+
+```php
+$config->loadDefinitions(Yaml::parseFile(__DIR__ . '/services.yaml'));
+```
+
 ## Quick Reference
 
 | Type | Behavior | Use Case |
@@ -432,6 +500,7 @@ final class CheckoutFactory extends AbstractFactory
 | `#[Inject]` | Constructor-param opt-in | Explicit concrete override, tool visibility |
 | `#[Singleton]` | One cached instance per container | Shared stateful services, no registration needed |
 | `#[Factory]` | New instance each resolution | Explicit fresh-instance intent on the class |
+| `loadDefinitions()` | Bindings described as data | Generated, shared or per-environment wiring |
 
 ## Example
 
@@ -465,13 +534,9 @@ override a constructor argument.
 
 What is left out, and why:
 
-- **`createScope()`**, the container's per-request child container. Gacela has no
-  request lifecycle to hang it on yet — who creates the scope and who drops it is
-  the open design question, not the forwarding. Tracked for a later release.
-- **`load()` / `loadFile()`**, registration from a plain array or JSON file.
-  `gacela.php` plus `GacelaConfig` already own registration end to end; a second
-  vocabulary for the same job would be the "two ways of doing the same thing" this
-  section exists to prevent.
+- **`createScope()`**, the container's per-request child container. The primitive
+  exists (container 1.3), so what is missing is Gacela's side: who creates the
+  scope and who drops it. Tracked in the 2.1 consolidation.
 - **Compiled constructor plans on disk** (`writeCompiledCache()` and the generated
   factories that go with it): re-measured for 2.0 and still not worth it, now with
   a sharper reason than "the saving is small". The saving is real but *smaller than

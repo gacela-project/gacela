@@ -75,6 +75,7 @@ final class CacheWarmOutputFormatter
         int $modulesCount,
         int $resolvedCount,
         int $skippedCount,
+        int $failedCount,
         string $timeTaken,
         string $memoryUsed,
     ): void {
@@ -84,6 +85,7 @@ final class CacheWarmOutputFormatter
         $this->output->writeln(sprintf('<fg=cyan>Modules processed:</> %d', $modulesCount));
         $this->output->writeln(sprintf('<fg=cyan>Classes resolved:</> %d', $resolvedCount));
         $this->output->writeln(sprintf('<fg=cyan>Classes skipped:</> %d', $skippedCount));
+        $this->output->writeln(sprintf('<fg=cyan>Classes failed:</> %d', $failedCount));
         $this->output->writeln(sprintf('<fg=cyan>Time taken:</> %s', $timeTaken));
         $this->output->writeln(sprintf('<fg=cyan>Memory used:</> %s', $memoryUsed));
         $this->output->writeln('');

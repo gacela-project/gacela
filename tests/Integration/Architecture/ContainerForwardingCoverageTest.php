@@ -11,7 +11,9 @@ use ReflectionClass;
 use ReflectionMethod;
 
 use function array_diff;
+use function array_intersect;
 use function array_map;
+use function array_values;
 use function implode;
 use function in_array;
 use function sort;
@@ -43,10 +45,6 @@ final class ContainerForwardingCoverageTest extends TestCase
         // provider signature -- would fatal. Needs a request-lifetime design
         // first; see the scopes discussion in the container docs.
         'createScope',
-        // A second registration path for something Gacela already owns end to
-        // end through gacela.php and GacelaConfig.
-        'load',
-        'loadFile',
     ];
 
     /**
@@ -86,6 +84,25 @@ final class ContainerForwardingCoverageTest extends TestCase
 
         self::assertSame([], $gone, 'These are recorded as deliberate decisions but no longer exist upstream: '
             . implode(', ', $gone));
+    }
+
+    /**
+     * The list above is an allow-list, so an entry that stops being true stops
+     * guarding anything: the method is forwarded, and the record quietly excuses
+     * it anyway. `load` and `loadFile` were listed here and forwarded in #578
+     * without the list noticing, which is what this asserts against.
+     */
+    public function test_no_recorded_decision_is_actually_forwarded(): void
+    {
+        $forwarded = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            (new ReflectionClass(Decorator::class))->getMethods(ReflectionMethod::IS_PUBLIC),
+        );
+
+        $stale = array_intersect(self::NOT_FORWARDED, $forwarded);
+
+        self::assertSame([], array_values($stale), 'These are recorded as deliberately not forwarded, but '
+            . Decorator::class . ' forwards them — drop them from self::NOT_FORWARDED: ' . implode(', ', $stale));
     }
 
     /**

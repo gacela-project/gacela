@@ -297,6 +297,32 @@ final class DebugDependenciesCommandTest extends TestCase
         self::assertMatchesRegularExpression('/Dependencies:\s+4/', $display);
     }
 
+    /**
+     * The flag is called `--tree`, and until the container could report a graph
+     * it printed a flat list. Nesting and the parameter that pulled each class
+     * in are the difference between "something is missing" and knowing where.
+     */
+    public function test_tree_option_draws_the_nesting_and_names_the_parameter(): void
+    {
+        $display = $this->inspect(Fixtures\NestedRootService::class, ['--tree' => true])->getDisplay();
+
+        self::assertStringContainsString('└── ✓ $mid: ' . Fixtures\NestedMidService::class, $display);
+        // One level deeper, hanging off the mid service rather than the root:
+        // the four-space indent is what says so.
+        self::assertStringContainsString('    ├── ✓ $bound: ' . BoundImplementation::class, $display);
+        self::assertStringContainsString('    └── ✗ $unbound: ' . UnboundContract::class, $display);
+    }
+
+    public function test_tree_option_marks_where_a_cycle_closes(): void
+    {
+        $tester = $this->inspect(Fixtures\CyclicLeftService::class, ['--tree' => true]);
+
+        // Reported, not thrown: a broken graph is what the command is for.
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString(Fixtures\CyclicLeftService::class, $tester->getDisplay());
+        self::assertStringContainsString('(cycle)', $tester->getDisplay());
+    }
+
     public function test_tree_option_marks_a_node_the_container_already_owns(): void
     {
         Gacela::container()->set(AutowirableCollaborator::class, new AutowirableCollaborator());

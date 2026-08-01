@@ -74,10 +74,11 @@ final class ModuleWarmerTest extends TestCase
     {
         $module = new AppModule('Healthy', 'Healthy', HealthyFacade::class, HealthyFactory::class);
 
-        [$resolved, $skipped] = $this->warmer->warmModule($module, warmAttributes: false);
+        [$resolved, $skipped, $failed] = $this->warmer->warmModule($module, warmAttributes: false);
 
         self::assertSame(2, $resolved);
         self::assertSame(0, $skipped);
+        self::assertSame(0, $failed);
         self::assertSame(self::lines(
             'Processing: Healthy',
             '  ✓ Resolved Facade: ' . HealthyFacade::class,
@@ -92,10 +93,11 @@ final class ModuleWarmerTest extends TestCase
         $missingFactory = 'Missing\\Factory';
         $module = new AppModule('Healthy', 'Healthy', HealthyFacade::class, $missingFactory);
 
-        [$resolved, $skipped] = $this->warmer->warmModule($module, warmAttributes: false);
+        [$resolved, $skipped, $failed] = $this->warmer->warmModule($module, warmAttributes: false);
 
         self::assertSame(1, $resolved);
         self::assertSame(1, $skipped);
+        self::assertSame(0, $failed);
         self::assertSame(self::lines(
             'Processing: Healthy',
             '  ✓ Resolved Facade: ' . HealthyFacade::class,
@@ -116,13 +118,16 @@ final class ModuleWarmerTest extends TestCase
         try {
             $module = new AppModule('Healthy', 'Healthy', HealthyFacade::class, self::EXPLODING_CLASS);
 
-            [$resolved, $skipped] = $this->warmer->warmModule($module, warmAttributes: false);
+            [$resolved, $skipped, $failed] = $this->warmer->warmModule($module, warmAttributes: false);
         } finally {
             spl_autoload_unregister($autoloader);
         }
 
         self::assertSame(1, $resolved);
-        self::assertSame(1, $skipped);
+        // A failure is not a skip. Counting it as one is what made
+        // `CacheWarmedEvent` report a healthy deploy as a broken one.
+        self::assertSame(0, $skipped);
+        self::assertSame(1, $failed);
         self::assertSame(self::lines(
             'Processing: Healthy',
             '  ✓ Resolved Facade: ' . HealthyFacade::class,
@@ -155,7 +160,24 @@ final class ModuleWarmerTest extends TestCase
         $first = new AppModule('Healthy', 'Healthy', HealthyFacade::class, HealthyFactory::class);
         $second = new AppModule('Healthy', 'Healthy', HealthyFacade::class, $missingFactory);
 
-        self::assertSame([3, 1], $this->warmer->warmModules([$first, $second], warmAttributes: false));
+        self::assertSame([3, 1, 0], $this->warmer->warmModules([$first, $second], warmAttributes: false));
+    }
+
+    /**
+     * The test above has only one module skipping anything, so `+=` and `=`
+     * produce the same total and nothing distinguishes accumulating from
+     * overwriting -- which is exactly the mutant that escaped the full run.
+     * Two modules skipping one pillar each tell them apart: 2, not 1.
+     */
+    public function test_skipped_counts_accumulate_rather_than_overwrite(): void
+    {
+        /** @var class-string $missingFactory */
+        $missingFactory = 'Missing\\Factory';
+
+        $first = new AppModule('Healthy', 'Healthy', HealthyFacade::class, $missingFactory);
+        $second = new AppModule('Healthy', 'Healthy', HealthyFacade::class, $missingFactory);
+
+        self::assertSame([2, 2, 0], $this->warmer->warmModules([$first, $second], warmAttributes: false));
     }
 
     private static function lines(string ...$lines): string

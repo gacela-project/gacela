@@ -12,6 +12,8 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\AutowirableCollaborator;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundContract;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundImplementation;
+use GacelaTest\Feature\Console\DebugDependencies\Fixtures\CyclicLeftService;
+use GacelaTest\Feature\Console\DebugDependencies\Fixtures\CyclicRightService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NestedMidService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NestedRootService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NoConstructorService;
@@ -61,6 +63,64 @@ final class DependencyTreeInspectorTest extends TestCase
             ],
             self::classNames($inspection),
         );
+    }
+
+    /**
+     * The flat list says a class is reached; the tree says by whom. A missing
+     * dependency four levels down is only actionable with the second answer.
+     */
+    public function test_the_tree_keeps_the_shape_the_flat_list_throws_away(): void
+    {
+        $inspection = $this->inspector->inspect(NestedRootService::class);
+
+        self::assertCount(1, $inspection->tree);
+
+        $mid = $inspection->tree[0];
+        self::assertSame(NestedMidService::class, $mid->className);
+        self::assertSame('mid', $mid->parameter);
+
+        self::assertSame(
+            [BoundImplementation::class, AutowirableCollaborator::class, UnboundContract::class],
+            array_map(static fn (object $node): string => $node->className, $mid->children),
+        );
+        self::assertSame(
+            ['bound', 'collaborator', 'unbound'],
+            array_map(static fn (object $node): string => $node->parameter, $mid->children),
+        );
+    }
+
+    public function test_a_tree_node_carries_the_same_status_as_the_flat_list(): void
+    {
+        $inspection = $this->inspector->inspect(NestedRootService::class);
+
+        $unbound = $inspection->tree[0]->children[2];
+
+        self::assertSame(UnboundContract::class, $unbound->className);
+        self::assertSame(ProvisionStatus::Unresolvable, $unbound->status);
+        self::assertFalse($unbound->isProvided());
+    }
+
+    /**
+     * A cycle is marked and cut, not thrown: inspecting a broken graph is
+     * precisely when this command gets run.
+     */
+    public function test_a_constructor_cycle_is_marked_rather_than_recursed_forever(): void
+    {
+        $inspection = $this->inspector->inspect(CyclicLeftService::class);
+
+        $right = $inspection->tree[0];
+        self::assertSame(CyclicRightService::class, $right->className);
+        self::assertFalse($right->repeated);
+
+        $backToLeft = $right->children[0];
+        self::assertSame(CyclicLeftService::class, $backToLeft->className);
+        self::assertTrue($backToLeft->repeated);
+        self::assertSame([], $backToLeft->children);
+    }
+
+    public function test_a_class_without_dependencies_has_an_empty_tree_branch(): void
+    {
+        self::assertSame([], $this->inspector->inspect(NoConstructorService::class)->tree);
     }
 
     public function test_a_bound_interface_is_reported_as_its_concrete_target(): void

@@ -195,8 +195,14 @@
                 "Gacela\\PHPStan\\Rules\\ClassReflectionHelperTrait::shortClassName",
             ],
         },
+        // absoluteFilename() slices 12 hex characters out of a sha1 to scope a
+        // cache file to its app root. Which 12 is arbitrary: any fixed offset
+        // is equally stable, equally unique per root, and equally long, so
+        // moving it changes nothing observable. Killing it would mean asserting
+        // the digest, which pins the implementation rather than the behaviour.
         IncrementInteger: {
             ignore: [
+                "Gacela\\Framework\\ClassResolver\\Cache\\AbstractPhpFileCache::absoluteFilename",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",

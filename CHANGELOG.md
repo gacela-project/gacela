@@ -142,6 +142,17 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
     container. A scope is now a decorator like its parent, so it keeps the
     Locator and the lifecycle events.
 
+  One caveat, measured and reported rather than absorbed quietly: container
+  2.0 resolves 11-28% slower **cold** than 1.5.0 —
+  [container#181](https://github.com/gacela-project/container/issues/181),
+  root-caused to the per-class argument builder being composed on a class's
+  first resolution, so a container that builds a class once pays for a shortcut
+  it never takes. Gacela's own benchmarks are unaffected: bootstrap, config
+  init, class resolution, the resolver cache, event dispatch and the file
+  caches all moved within ±8% and bootstrap came out ~3% faster. Only the
+  benchmarks that construct raw containers in a loop show it, and those are
+  reported rather than gating until it is fixed.
+
   `load()`/`loadFile()` return the ids they registered and take an optional
   per-id callback, which closes a gap `loadDefinitions()` shipped with:
   definitions now emit `BindingRegisteredEvent` like every other registration,

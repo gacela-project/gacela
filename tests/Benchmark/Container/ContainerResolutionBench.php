@@ -33,6 +33,13 @@ use PhpBench\Attributes\Groups;
  * They still run and still get reported on every pull request; they are simply
  * not a merge blocker while the number they track belongs to someone else.
  * Move back to `gate` once #181 lands and the floor is stable again.
+ *
+ * This demotes one measurement, not the guard. Every subject that times
+ * Gacela's own paths stays in `gate` -- bootstrap, config init, class
+ * resolution, the resolver cache, event dispatch, the file caches -- and on the
+ * 2.0 bump each of those moved within +-8%, most within +-4%, with bootstrap
+ * ~3% faster. The regression is confined to constructing raw containers in a
+ * tight loop, which is what these four do and what Gacela does not.
  */
 #[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
 #[Groups(['informational', 'container'])]

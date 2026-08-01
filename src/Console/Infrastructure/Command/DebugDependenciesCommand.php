@@ -8,7 +8,7 @@ use Gacela\Console\Application\Debug\ConstructorInspection;
 use Gacela\Console\Application\Debug\ConstructorInspector;
 use Gacela\Console\Application\Debug\DependencyTreeInspection;
 use Gacela\Console\Application\Debug\DependencyTreeInspector;
-use Gacela\Console\Application\Debug\DependencyTreeNode;
+use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\Application\Debug\ParameterInspection;
 use Gacela\Console\Application\Debug\ParameterStatus;
 use PhpToken;
@@ -88,41 +88,15 @@ final class DebugDependenciesCommand extends Command
             return;
         }
 
-        $this->renderBranch($output, $inspection->tree, '');
+        foreach ((new DependencyTreeRenderer())->render($inspection->tree, '  ') as $line) {
+            $output->writeln($line);
+        }
 
         $output->writeln('');
         // Counted off the flat list, not the branches: a class three parents
         // pull in is one dependency drawn three times.
         $output->writeln(sprintf('<fg=cyan>Dependencies:</> %d', count($inspection->nodes)));
         $output->writeln('');
-    }
-
-    /**
-     * @param list<DependencyTreeNode> $nodes
-     */
-    private function renderBranch(OutputInterface $output, array $nodes, string $prefix): void
-    {
-        $lastIndex = count($nodes) - 1;
-
-        foreach ($nodes as $index => $node) {
-            $isLast = $index === $lastIndex;
-            $output->writeln('  ' . $prefix . ($isLast ? '└── ' : '├── ') . $this->formatNode($node));
-
-            $this->renderBranch($output, $node->children, $prefix . ($isLast ? '    ' : '│   '));
-        }
-    }
-
-    /**
-     * A cut cycle is called out: a branch that simply stopped reads like one
-     * with nothing more to say.
-     */
-    private function formatNode(DependencyTreeNode $node): string
-    {
-        $marker = $node->isProvided() ? '<fg=green>✓</>' : '<fg=red>✗</>';
-        $parameter = $node->parameter === null ? '' : sprintf('$%s: ', $node->parameter);
-        $cycle = $node->repeated ? ' <fg=yellow>(cycle)</>' : '';
-
-        return sprintf('%s %s%s (%s)%s', $marker, $parameter, $node->className, $node->status->value, $cycle);
     }
 
     private function renderInspection(OutputInterface $output, ConstructorInspection $inspection): void

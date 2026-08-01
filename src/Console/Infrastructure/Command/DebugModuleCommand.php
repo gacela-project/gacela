@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Console\Application\Debug\DependencyTreeInspector;
+use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ServiceResolver\ServiceMap;
@@ -145,16 +147,16 @@ final class DebugModuleCommand extends Command
     {
         $output->writeln('  <fg=cyan>Dependency tree</> (Facade):');
 
-        $dependencyTree = $this->getFacade()->getContainerDependencyTree($module->facadeClass());
+        $inspection = (new DependencyTreeInspector())->inspect($module->facadeClass());
 
-        if ($dependencyTree === []) {
+        if ($inspection->tree === []) {
             $output->writeln('    (no dependencies)');
 
             return;
         }
 
-        foreach ($dependencyTree as $dependency) {
-            $output->writeln('    ' . $dependency);
+        foreach ((new DependencyTreeRenderer())->render($inspection->tree, '    ') as $line) {
+            $output->writeln($line);
         }
     }
 }

@@ -247,6 +247,7 @@ final class Gacela
     private static function runPlugins(Config $config): void
     {
         self::$mainContainer = Container::withConfig($config);
+        AbstractFactory::useAppContainer(self::$mainContainer);
 
         $plugins = $config->getSetupGacela()->getPlugins();
 

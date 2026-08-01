@@ -54,6 +54,21 @@ abstract class AbstractFactory
     private array $instances = [];
 
     /**
+     * Adopt the container bootstrap already built from this configuration,
+     * instead of walking `gacela.php` a second time to reach the same result.
+     *
+     * Pushed in by {@see Gacela::bootstrap()} rather than pulled: a Factory
+     * reaching for `Gacela::container()` would make the framework's entry point
+     * a dependency of every module's factory, which is a cycle.
+     *
+     * @internal
+     */
+    public static function useAppContainer(Container $container): void
+    {
+        self::$appContainer = $container;
+    }
+
+    /**
      * @internal
      */
     public static function resetCache(): void
@@ -172,7 +187,15 @@ abstract class AbstractFactory
      */
     private static function appContainer(): Container
     {
-        return self::$appContainer ??= Container::withConfig(Config::getInstance());
+        if (self::$appContainer instanceof Container) {
+            return self::$appContainer;
+        }
+
+        // Only reached when nothing bootstrapped: `Gacela::bootstrap()` hands
+        // its container down through useAppContainer(), so a bootstrapped
+        // application walks `gacela.php` once and modules become scopes of what
+        // it already built.
+        return self::$appContainer = Container::withConfig(Config::getInstance());
     }
 
     private function notifyProviderRegistered(string $providerClass): void

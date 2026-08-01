@@ -81,7 +81,7 @@ final class DoctorCommand extends Command
         $suffixTypes = $config->getFactory()->createGacelaFileConfig()->getSuffixTypes();
 
         $checks = [
-            new CacheStalenessCheck($config->getCacheDir()),
+            new CacheStalenessCheck($config->getCacheDir(), null, $config->getAppRootDir()),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules),
         ];

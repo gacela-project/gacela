@@ -102,8 +102,17 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   methods — writing plans to disk was measured a net loss — but they are
   reachable for an application that has measured its own case.
 
-- **`#[Inject]` targets properties**, not only constructor parameters, for
-  classes whose constructor is not yours to change.
+- **`Gacela\Framework\Attribute\Inject`** — application code no longer imports
+  a vendor namespace for the one attribute-first surface that required it. It
+  subclasses the container's attribute, and since attributes are read with
+  `ReflectionAttribute::IS_INSTANCEOF` both imports work side by side.
+
+  RFC-0001 planned this as a `class_alias()` and withdrew it the same day: an
+  exact-FQN read follows neither an alias nor a subclass, and the failure is
+  **silent** — the parameter simply never injected. Subclassing is supported
+  because the container now reads for it.
+- **`#[Inject]` targets properties and setters**, not only constructor
+  parameters, for classes whose constructor is not yours to change.
 - `#[Lazy]` joins `#[Inject]`, `#[Singleton]` and `#[Factory]` as an attribute
   honoured by `AbstractFactory::make()`.
 - `Container::provides()`, `taggedByKey()` and `taggedKeys()` are forwarded.

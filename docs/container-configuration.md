@@ -140,12 +140,17 @@ when the value should be built lazily.
 The container autowires constructor parameters by type-hint. For most cases
 that's all you need — declare the type, the container resolves it.
 
+`Gacela\Framework\Attribute\Inject` is the import to reach for — the same
+namespace as every other Gacela attribute. It subclasses the container's own,
+and the container reads attributes with `ReflectionAttribute::IS_INSTANCEOF`, so
+either import works and both may appear in one codebase.
+
 `#[Inject]` is the opt-in for the two cases autowiring alone can't express:
 disambiguating an interface with multiple possible concretes, and marking a
 parameter as explicitly container-owned for tooling like `debug:dependencies`.
 
 ```php
-use Gacela\Container\Attribute\Inject;
+use Gacela\Framework\Attribute\Inject;
 
 final class CatalogService
 {
@@ -314,7 +319,7 @@ final class PhelRunCommand extends Command
 After:
 
 ```php
-use Gacela\Container\Attribute\Inject;
+use Gacela\Framework\Attribute\Inject;
 
 final class PhelRunCommand extends Command
 {

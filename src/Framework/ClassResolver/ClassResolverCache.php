@@ -43,7 +43,7 @@ final class ClassResolverCache
             if (self::shouldDispatch(ClassNamePhpCacheCreatedEvent::class)) {
                 self::dispatchEvent(new ClassNamePhpCacheCreatedEvent($cacheDir));
             }
-            $cache = new ClassNamePhpCache($cacheDir);
+            $cache = new ClassNamePhpCache($cacheDir, Config::getInstance()->getAppRootDir());
         } else {
             if (self::shouldDispatch(ClassNameInMemoryCacheCreatedEvent::class)) {
                 self::dispatchEvent(new ClassNameInMemoryCacheCreatedEvent());

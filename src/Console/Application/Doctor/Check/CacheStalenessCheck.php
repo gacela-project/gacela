@@ -7,6 +7,7 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use ReflectionClass;
@@ -24,6 +25,7 @@ final class CacheStalenessCheck implements HealthCheck
     public function __construct(
         private readonly string $cacheDir,
         ?Closure $sourceFileResolver = null,
+        private readonly string $appRootDir = '',
     ) {
         $this->sourceFileResolver = $sourceFileResolver ?? static function (string $className): ?string {
             if (!class_exists($className) && !interface_exists($className)) {
@@ -51,7 +53,7 @@ final class CacheStalenessCheck implements HealthCheck
         $missing = [];
 
         foreach ([ClassNamePhpCache::FILENAME, CustomServicesPhpCache::FILENAME] as $filename) {
-            $cacheFile = $this->cacheDir . DIRECTORY_SEPARATOR . $filename;
+            $cacheFile = AbstractPhpFileCache::absoluteFilename($this->cacheDir, $filename, $this->appRootDir);
             if (!is_file($cacheFile)) {
                 continue;
             }

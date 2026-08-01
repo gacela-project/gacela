@@ -11,7 +11,6 @@ use GacelaTest\Benchmark\Container\Fixtures\DeepD;
 use GacelaTest\Benchmark\Container\Fixtures\InjectConsumer;
 use GacelaTest\Benchmark\Container\Fixtures\ServiceInterface;
 use GacelaTest\Benchmark\Container\Fixtures\SimpleClass;
-use PhpBench\Attributes\Assert;
 use PhpBench\Attributes\Groups;
 
 /**
@@ -22,27 +21,22 @@ use PhpBench\Attributes\Groups;
  *
  * Sampling: inherits the phpbench.json defaults — see tests/Benchmark/README.md.
  *
- * **Informational, not gating.** Every subject here times
- * `gacela-project/container`'s resolution path rather than Gacela's own code,
- * so its floor moves whenever that package does — and the guard compares
- * against the *base branch*, which makes a dependency major an automatic
- * failure no change on this side can answer. Adopting container 2.0 measured
- * +11-28% across these four, reported upstream as
- * [container#181](https://github.com/gacela-project/container/issues/181).
+ * Every subject here times `gacela-project/container`'s resolution path rather
+ * than Gacela's own code, so its floor moves whenever that package does — and
+ * the guard compares against the *base branch*, which makes a dependency major
+ * an automatic failure no change on this side can answer. That is what
+ * happened on the container 2.0 bump: these four measured +11-28%, they were
+ * demoted to `informational` while the number they track belonged to someone
+ * else, and the cause was
+ * [container#181](https://github.com/gacela-project/container/issues/181) — a
+ * per-class argument builder composed on a class's *first* resolution, which a
+ * container built once per revolution pays for and never uses again.
  *
- * They still run and still get reported on every pull request; they are simply
- * not a merge blocker while the number they track belongs to someone else.
- * Move back to `gate` once #181 lands and the floor is stable again.
- *
- * This demotes one measurement, not the guard. Every subject that times
- * Gacela's own paths stays in `gate` -- bootstrap, config init, class
- * resolution, the resolver cache, event dispatch, the file caches -- and on the
- * 2.0 bump each of those moved within +-8%, most within +-4%, with bootstrap
- * ~3% faster. The regression is confined to constructing raw containers in a
- * tight loop, which is what these four do and what Gacela does not.
+ * Fixed in container 2.0.1 and gating again: against 1.5.0 the four now measure
+ * +2.1 to +3.5% (20 paired samples), inside the 10% budget. Expect to demote
+ * them again for the next container major, and to restore them the same way.
  */
-#[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
-#[Groups(['informational', 'container'])]
+#[Groups(['gate', 'container'])]
 final class ContainerResolutionBench
 {
     /**

@@ -6,7 +6,7 @@ The whole runtime change is two lines, and almost everything below follows from 
 
 ```diff
 -"php": ">=8.1",  "gacela-project/container": "^0.10.0"
-+"php": ">=8.3",  "gacela-project/container": "^1.4.0"
++"php": ">=8.3",  "gacela-project/container": "^2.0.0"
 ```
 
 **Your container stops being a 0.x.** This is the reason, and it is not available to you on 1.x at any version — `Gacela\Container\Container` became `final` at 1.0, so crossing that line is breaking by construction. What it buys:
@@ -24,7 +24,7 @@ The whole runtime change is two lines, and almost everything below follows from 
 ### What this release is not
 
 - **Barely a performance release.** The three perf spikes on the roadmap were measured and came out sub-millisecond, so they were closed rather than shipped, and writing compiled constructor plans to disk measured a net loss. One exception is real but narrow: module containers now share a constructor-plan cache, worth ~36-41% of resolution time to a request that touches many modules — measured on CI at -35.8%, with peak memory down ~37% locally but not yet confirmed there. A handful of modules collects little
-- **Not the "one container" release.** That was the original headline and it moved to 2.1 — not blocked any more, since container 1.3 shipped the `createScope()` primitive and [container#106](https://github.com/gacela-project/container/issues/106) is closed, but deliberately sequenced after the cache-regression suite this release builds. 2.0 is the foundation that makes it possible, not the thing itself
+- **Not the "one container" release.** That was the original headline and it moved to 2.1 — not blocked any more, since the container shipped `createScope()` and this release forwards it, but deliberately sequenced after the cache-regression suite this release builds. This is the foundation that makes it possible, not the thing itself
 - **Not a Symfony unblock.** Symfony is a dev dependency of Gacela, never a runtime one. A Symfony 7 or 8 application already works on 1.21
 
 **So who should wait?** If you are on PHP 8.3 already, not running long-lived workers, and not using Psalm, your reason to move *today* is thin.
@@ -158,7 +158,7 @@ This is worth doing regardless of the error. A suppressed call was never a *type
 
 ### 6. Only if you type-hinted the concrete container
 
-`gacela-project/container` moved to `^1.4.0` (was `^0.10.0`), and `Gacela\Container\Container` is `final` from 1.0. `Gacela\Framework\Container\Container` therefore decorates it by composition instead of extending it — which is what its docblock always claimed it did.
+`gacela-project/container` moved to `^2.0.0` (was `^0.10.0`), and `Gacela\Container\Container` is `final` from 1.0. `Gacela\Framework\Container\Container` therefore decorates it by composition instead of extending it — which is what its docblock always claimed it did.
 
 It still implements `ContainerInterface`. **This only affects code that passed a Gacela container somewhere the concrete `Gacela\Container\Container` was type-hinted:**
 
@@ -185,10 +185,12 @@ Class constants on `AbstractSetupGacela` and `ConfigInterface` now declare types
 -$stats = $facade->getContainerStats();
 -echo $stats['registered_services'], ' services, ', $stats['memory_usage'];
 +$stats = $facade->getContainerStats();
-+echo $stats->registeredServices, ' services, ', $stats->memoryUsageFormatted();
++echo $stats->registeredServices, ' services, ', $stats->processMemoryFormatted();
 ```
 
-`ContainerStats` is `final readonly` and does not implement `ArrayAccess`, so array indexing fatals rather than degrading. The keys were snake_case; the properties are camelCase: `registeredServices`, `frozenServices`, `factoryServices`, `bindings`, `cachedDependencies`, `memoryUsageBytes` — plus `memoryUsageFormatted()` for the human-readable string the old `memory_usage` key held.
+`ContainerStats` is `final readonly` and does not implement `ArrayAccess`, so array indexing fatals rather than degrading. The keys were snake_case; the properties are camelCase: `registeredServices`, `frozenServices`, `factoryServices`, `bindings`, `cachedDependencies`, `processMemoryBytes` — plus `processMemoryFormatted()` for the human-readable string the old `memory_usage` key held.
+
+**That last one is named for what it measures.** It is `memory_get_usage(true)` for the whole PHP process, not this container's footprint — two containers in the same process report the same number, and it moves when anything anywhere allocates. It was `memoryUsage*` until the container renamed it, because the old name invited exactly the wrong reading.
 
 That is the point of the change. The array came straight from the container package, which explicitly excludes its shape from backward compatibility ("do not build logic on it"), so indexing it was never safe — this makes a rename fail at analysis time instead of in a user's terminal.
 

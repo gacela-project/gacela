@@ -119,6 +119,29 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 
 ### Changed
 
+- **Module containers are scopes of one app container.** `AbstractFactory` built
+  one container per Factory class through `Container::withConfig()`, which walks
+  the whole of `gacela.php` — every binding, factory, alias, contextual binding,
+  tag and hook — and did it again for each. 79 walks in this repository alone,
+  and the cost grows with an application's wiring rather than with its number of
+  modules. Each module now gets a **scope** of one shared app container,
+  carrying only its own Provider.
+
+  Registration is not copied and a miss falls through, so a module still cannot
+  see a sibling's provider keys — which is what keeps two providers using the
+  same un-namespaced key from colliding. Module isolation is unchanged: two
+  modules resolving the same app-wide binding still get one instance each.
+
+  `extendService()` is app-wide configuration but often decorates a service a
+  *module's* Provider registers, into that module's scope where a parent-held
+  extension cannot reach it. Each scope now schedules those itself, skipping
+  ids the parent owns.
+
+  The saving is on container construction and scales with how much there is to
+  re-walk: 79 containers against 25 app-wide entries go 1.55ms → 0.06ms, and
+  against 300 entries 18.0ms → 0.07ms — the scope column is flat. An application
+  with little configuration sees none of that and pays ~2.5% on warm class
+  resolution for the fall-through.
 - **`gacela-project/container` `^2.0.1`** (was `^0.10.0`). `Container` is
   `final`, so Gacela decorates it by composition. Two of its fixes land in
   Gacela's own path: a class-string sharing a name with a function was *invoked*

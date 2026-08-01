@@ -64,6 +64,8 @@ final class ContainerStatsShapeTest extends TestCase
             implode(', ', $missing),
         ));
 
-        self::assertNotSame('', $stats->memoryUsageFormatted());
+        // Renamed in container 2.0: it always reported the whole PHP process,
+        // never this container's footprint, and `memoryUsage` read as the latter.
+        self::assertNotSame('', $stats->processMemoryFormatted());
     }
 }

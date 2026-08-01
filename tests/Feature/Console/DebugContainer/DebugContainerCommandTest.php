@@ -48,12 +48,17 @@ final class DebugContainerCommandTest extends TestCase
         self::assertStringContainsString('Container is empty', $display);
     }
 
-    public function test_the_memory_usage_of_the_container_is_reported(): void
+    /**
+     * Labelled "Process Memory" since container 2.0 renamed the field it reads.
+     * The number always covered the whole PHP process rather than this
+     * container, and the old label read as the opposite.
+     */
+    public function test_the_process_memory_is_reported(): void
     {
         $tester = $this->debugContainer([]);
 
         self::assertMatchesRegularExpression(
-            '/Memory Usage: \d+(\.\d+)? [KMG]?B/',
+            '/Process Memory: \d+(\.\d+)? [KMG]?B/',
             $tester->getDisplay(),
         );
     }

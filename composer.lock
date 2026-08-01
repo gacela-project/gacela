@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e5d00333badc662cc492dcd547a16bd4",
+    "content-hash": "a131edc92f2d6d073245e9d7af304007",
     "packages": [
         {
             "name": "gacela-project/container",
-            "version": "1.5.0",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gacela-project/container.git",
-                "reference": "4382b3e8404b84ceec63873ec18d222626a8afdc"
+                "reference": "bd2b021019de16d2078146fb42cf6ac96c3ba8b7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gacela-project/container/zipball/4382b3e8404b84ceec63873ec18d222626a8afdc",
-                "reference": "4382b3e8404b84ceec63873ec18d222626a8afdc",
+                "url": "https://api.github.com/repos/gacela-project/container/zipball/bd2b021019de16d2078146fb42cf6ac96c3ba8b7",
+                "reference": "bd2b021019de16d2078146fb42cf6ac96c3ba8b7",
                 "shasum": ""
             },
             "require": {
@@ -32,7 +32,11 @@
                 "phpunit/phpunit": "^12.5",
                 "psalm/plugin-phpunit": "^0.19",
                 "symfony/var-dumper": "^6.4 || ^7.0",
+                "symfony/yaml": "^6.4 || ^7.0",
                 "vimeo/psalm": "^6.16"
+            },
+            "suggest": {
+                "symfony/yaml": "To load container definitions from .yaml/.yml files with loadFile(); not required — parse it yourself and use load()"
             },
             "bin": [
                 "bin/gacela-container"
@@ -69,7 +73,7 @@
             ],
             "support": {
                 "issues": "https://github.com/gacela-project/container/issues",
-                "source": "https://github.com/gacela-project/container/tree/1.5.0"
+                "source": "https://github.com/gacela-project/container/tree/2.0.0"
             },
             "funding": [
                 {
@@ -77,7 +81,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-07-31T22:06:03+00:00"
+            "time": "2026-08-01T11:59:07+00:00"
         },
         {
             "name": "psr/container",

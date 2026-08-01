@@ -366,17 +366,8 @@
                 "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
             ],
         },
-        // The decorator's WeakMap is a set: only the key's presence is ever
-        // read, through offsetExists(). WeakMap::offsetSet() requires a value,
-        // so one is passed and never looked at -- true and false are
-        // observationally identical, and a test asserting which was stored
-        // would assert the literal rather than any behaviour.
         TrueValue: {
-            ignore: [
-                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement",
-                "Gacela\\Framework\\Container\\Container::protect",
-                "Gacela\\Framework\\Container\\Container::withDecorator",
-            ],
+            ignore: ["Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement"],
         },
         // Closures are objects and the container evaluates wrapped closures to
         // the same injected value, so the or-variant mutants on the registrar's

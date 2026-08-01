@@ -3,7 +3,7 @@
 ## Unreleased
 
 A foundation major. The runtime change is two lines — PHP `>=8.3` and
-`gacela-project/container` `^2.0.0`, up from a `0.x`. Most of what follows comes
+`gacela-project/container` `^2.0.1`, up from a `0.x`. Most of what follows comes
 from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`,
 and container exceptions where 0.x emitted raw PHP errors.
 
@@ -119,7 +119,7 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 
 ### Changed
 
-- **`gacela-project/container` `^2.0.0`** (was `^0.10.0`). `Container` is
+- **`gacela-project/container` `^2.0.1`** (was `^0.10.0`). `Container` is
   `final`, so Gacela decorates it by composition. Two of its fixes land in
   Gacela's own path: a class-string sharing a name with a function was *invoked*
   instead of instantiated, and `has()` remembered a negative, so a class
@@ -142,16 +142,17 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
     container. A scope is now a decorator like its parent, so it keeps the
     Locator and the lifecycle events.
 
-  One caveat, measured and reported rather than absorbed quietly: container
-  2.0 resolves 11-28% slower **cold** than 1.5.0 —
+  One caveat, measured and reported rather than absorbed quietly, and since
+  fixed: container 2.0.0 resolved 11-28% slower **cold** than 1.5.0 —
   [container#181](https://github.com/gacela-project/container/issues/181),
   root-caused to the per-class argument builder being composed on a class's
-  first resolution, so a container that builds a class once pays for a shortcut
-  it never takes. Gacela's own benchmarks are unaffected: bootstrap, config
-  init, class resolution, the resolver cache, event dispatch and the file
-  caches all moved within ±8% and bootstrap came out ~3% faster. Only the
-  benchmarks that construct raw containers in a loop show it, and those are
-  reported rather than gating until it is fixed.
+  first resolution, so a container that builds a class once paid for a shortcut
+  it never takes. **Container 2.0.1 defers composition to the second
+  construction**; the four benchmarks that show it now measure +2.1 to +3.5%
+  against 1.5.0 over 20 paired samples, and are gating again. Gacela's own
+  benchmarks never moved: bootstrap, config init, class resolution, the
+  resolver cache, event dispatch and the file caches all stayed within ±8% and
+  bootstrap came out ~3% faster.
 
   `load()`/`loadFile()` return the ids they registered and take an optional
   per-id callback, which closes a gap `loadDefinitions()` shipped with:

@@ -163,6 +163,23 @@ final class ModuleWarmerTest extends TestCase
         self::assertSame([3, 1, 0], $this->warmer->warmModules([$first, $second], warmAttributes: false));
     }
 
+    /**
+     * The test above has only one module skipping anything, so `+=` and `=`
+     * produce the same total and nothing distinguishes accumulating from
+     * overwriting -- which is exactly the mutant that escaped the full run.
+     * Two modules skipping one pillar each tell them apart: 2, not 1.
+     */
+    public function test_skipped_counts_accumulate_rather_than_overwrite(): void
+    {
+        /** @var class-string $missingFactory */
+        $missingFactory = 'Missing\\Factory';
+
+        $first = new AppModule('Healthy', 'Healthy', HealthyFacade::class, $missingFactory);
+        $second = new AppModule('Healthy', 'Healthy', HealthyFacade::class, $missingFactory);
+
+        self::assertSame([2, 2, 0], $this->warmer->warmModules([$first, $second], warmAttributes: false));
+    }
+
     private static function lines(string ...$lines): string
     {
         return implode(PHP_EOL, $lines) . PHP_EOL;

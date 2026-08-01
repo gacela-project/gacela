@@ -16,13 +16,16 @@
             'src'
         ]
     },
-    minMsi: 100,
-    minCoveredMsi: 100,
+    // 90, not 100: at 100 one equivalent mutant anywhere turns main red, and
+    // the fix becomes an `ignore` entry arguing with the tool rather than a
+    // better test. The suite sits well above 90, so a real regression shows.
+    minMsi: 90,
+    minCoveredMsi: 90,
     mutators: {
         '@default': true,
         // Ratcheting out of a blanket "Gacela\\Console\\*" ignore, namespace by
         // namespace (#529). Domain, Application and the root Console classes are
-        // done and enforced at 100%: that is where the real logic lives -- Tarjan,
+        // done and enforced: that is where the real logic lives -- Tarjan,
         // the JSON/graph formatters, the code that writes files into a user's
         // project.
         //

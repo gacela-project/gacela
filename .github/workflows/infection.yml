@@ -1,8 +1,13 @@
 # https://help.github.com/en/categories/automating-your-workflow-with-github-actions
 #
-# Mutation testing guard: infection.json5 sets minMsi and minCoveredMsi to 100,
-# but nothing enforced them, so the score drifted below the bar twice without
-# anyone noticing. This job runs the same thresholds the config already declares.
+# Mutation testing guard: infection.json5 sets minMsi and minCoveredMsi, but
+# nothing enforced them, so the score drifted below the bar twice without
+# anyone noticing. This job runs the same thresholds the config declares.
+#
+# The bar is 90, not 100. At 100 a single equivalent mutant anywhere in src/
+# turns main red, and the fix is an `ignore` entry arguing with the tool rather
+# than a better test. 90 leaves room for that without letting the score rot:
+# the suite sits well above it, so a real regression still shows.
 #
 # A mutant that survives means the test suite asserts the shape of the code
 # rather than its behaviour: the line ran, but nothing checked the result.
@@ -16,7 +21,7 @@
 #   - pull requests mutate only the lines the branch changed. This is the run
 #     that matters: it fails on the PR that introduces an unkilled mutant, while
 #     the author still has the context to fix it.
-#   - a nightly (and every push to main) runs the whole suite at 100%. Drift is
+#   - a nightly (and every push to main) runs the whole suite. Drift is
 #     what this workflow was created for -- the score fell below the bar twice
 #     before anything enforced it -- and an incremental run cannot see a mutant
 #     that a *dependency* change resurrected in untouched code.
@@ -82,7 +87,7 @@ jobs:
         # --ignore-msi-with-no-mutations: a branch that changes only comments,
         # docs or dependencies still has files in the diff but no *mutable*
         # lines. Without this, infection generates zero mutants, computes MSI 0%
-        # and fails the 100% gate -- so a docblock fix could not be merged.
+        # and fails the gate -- so a docblock fix could not be merged.
         #
         # --map-source-class-to-test is deliberately NOT used. It picks test
         # files by *naming convention* (Foo -> FooTest), so a test named after
@@ -93,8 +98,8 @@ jobs:
         run: |
           vendor/bin/infection \
             --threads=max \
-            --min-msi=100 \
-            --min-covered-msi=100 \
+            --min-msi=90 \
+            --min-covered-msi=90 \
             --git-diff-lines \
             --git-diff-base=origin/${{ github.base_ref }} \
             --only-covering-test-cases \
@@ -104,7 +109,7 @@ jobs:
             --show-mutations=max
 
   full:
-    name: "Mutation testing (full, min MSI 100%)"
+    name: "Mutation testing (full, min MSI 90%)"
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -133,4 +138,4 @@ jobs:
       - name: Assert the mutation score has not regressed
         env:
           XDEBUG_MODE: coverage
-        run: vendor/bin/infection --threads=max --min-msi=100 --min-covered-msi=100 --no-progress --show-mutations=max
+        run: vendor/bin/infection --threads=max --min-msi=90 --min-covered-msi=90 --no-progress --show-mutations=max

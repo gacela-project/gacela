@@ -1,6 +1,6 @@
 # Opcache Preload
 
-Gacela ships a preload script that loads its core files into shared memory at PHP startup. In production this typically gives a 20–30% throughput boost and lower per-request memory.
+Gacela ships a preload script that loads its core files into shared memory at PHP startup. In production it removes the per-request cost of compiling those files and lowers per-request memory. The size of the win depends on your request volume and file count — measure it on your own workload rather than trusting a headline number.
 
 **Requires** PHP 8.3+ with opcache enabled.
 

@@ -22,6 +22,7 @@ use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\PathFinder;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
+use Gacela\Framework\Container\SharedPlanCache;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
@@ -207,14 +208,14 @@ final class Gacela
         ConfigFactory::resetCache();
         PathFinder::resetCache();
         ClassValidator::resetCache();
-        // Deliberately NOT Container::resetStaticCaches(). Those memos are
-        // reflection output keyed by class name, and upstream is explicit that
-        // clearing them "is not a correctness crutch: calling this only ever
-        // costs the reflection it throws away" -- only positives are stored, so
-        // nothing goes stale across a re-bootstrap. This runs on every
-        // resetInMemoryCache() bootstrap, where throwing that reflection away
-        // measured 15-23% on a seven-module bootstrap and bought nothing.
-        // cache:clear is where the process-global reset belongs.
+        // Dropping the shared plan cache is cheap -- one null assignment -- and
+        // hands back the memory it holds. Not to be confused with
+        // Container::resetStaticCaches(), which is deliberately NOT called
+        // here: that one throws away reflection output that must then be
+        // rebuilt, measured 15-23% on a seven-module bootstrap, and buys
+        // nothing, since only positives are stored and nothing goes stale
+        // across a re-bootstrap. cache:clear is where that one belongs.
+        SharedPlanCache::resetCache();
         // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();

@@ -9,7 +9,7 @@ behaviour stays isolated.
 
 ## Build, Test, and Development Commands
 
-- `composer install` — install PHP 8.1+ dependencies and trigger repo git hooks.
+- `composer install` — install PHP 8.3+ dependencies and trigger repo git hooks.
 - `composer test` — run linting, static analysis, and the full PHPUnit matrix (`unit`, `integration`, `feature`).
 - `composer quality` — quick guardrail: php-cs-fixer dry run, Psalm, then PHPStan.
 - `composer csfix` / `composer csrun` — auto-fix or check formatting with php-cs-fixer config.
@@ -19,8 +19,8 @@ behaviour stays isolated.
 ## Coding Style & Naming Conventions
 
 We follow PSR-12 with 4-space indentation, one statement per line, and trailing commas on multiline arrays. Classes and
-interfaces use StudlyCase (`ModuleConfig.php`), services use explicit suffixes (`*Factory`, `*Facade`,
-`*DependencyProvider`). Keep constructors typed, return types explicit, and favor `final` classes when extensibility is
+interfaces use StudlyCase (`ModuleConfig.php`), services use explicit suffixes (`*Facade`, `*Factory`, `*Provider`,
+`*Config`). Keep constructors typed, return types explicit, and favor `final` classes when extensibility is
 not required. Run `composer csrun` before pushing; `phpstan.neon`, `psalm.xml`, and `rector.php` codify stricter rules
 than vanilla PSR guidelines.
 
@@ -34,7 +34,7 @@ reports before merging substantial changes.
 
 ## Commit & Pull Request Guidelines
 
-Commit messages follow short, imperative prefixes (`feat:`, `fix:`, `refactor:`, `docs:`, `deps:`). Keep subject ≤72
+Commit messages follow short, imperative prefixes (`feat:`, `fix:`, `ref:`, `chore:`, `docs:`, `test:`). Keep subject ≤72
 characters and add context in the body when behaviour changes. For pull requests: describe the problem, highlight
 solution scope, list validation commands (at minimum `composer test`), and link issues or discussions. Include
 screenshots when updating docs or CLI output. Ensure PRs stay scoped to a single concern to simplify review and release

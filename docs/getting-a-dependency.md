@@ -45,10 +45,12 @@ through its own **Provider**, not by calling `getFacade()` on itself:
 
 ```php
 // Provider
+public const BILLING_FACADE = 'BILLING_FACADE';
+
 #[Provides(self::BILLING_FACADE)]
-public function billingFacade(): BillingFacade
+public function billingFacade(Container $container): BillingFacade
 {
-    return $this->getLocator()->get(BillingFacade::class);
+    return $container->getLocator()->get(BillingFacade::class);
 }
 
 // Factory

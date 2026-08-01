@@ -7,9 +7,15 @@ A foundation major. The runtime change is two lines — PHP `>=8.3` and
 from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`,
 and container exceptions where 0.x emitted raw PHP errors.
 
-It is **not** a performance release — the three perf spikes measured
-sub-millisecond and were closed rather than shipped. It is **not** the "one
-container" release either; that moved to 2.1 (#539).
+It is **not** the "one container" release; that moved to 2.1 (#539). No longer
+for want of the primitive — container 1.3 shipped `createScope()` and closed
+[container#106](https://github.com/gacela-project/container/issues/106) — but
+because the consolidation only stays reviewable if it ships alone.
+
+It was not meant to be a performance release either, and mostly is not: the
+three perf spikes measured sub-millisecond and were closed rather than shipped,
+and writing compiled plans to disk measured a **net loss**. One win survived a
+benchmark — every container now shares one constructor-plan cache.
 
 Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 `vendor/bin/gacela doctor` on 1.21 first — one of the three fails silently.
@@ -77,6 +83,19 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
       <pluginClass class="Gacela\Psalm\Plugin"/>
   </plugins>
   ```
+- **One constructor-plan cache for every container** (container 1.4's
+  `PlanCache`). Gacela's containers are sibling roots, not a tree, and they are
+  configured from the same `gacela.php`, so each used to reflect the same
+  classes again. Ten containers resolving one four-level chain drop **~36%** in
+  time, measured on CI at 90.3μs → 58.0μs. Only reflection output is shared:
+  bindings, aliases, tags, singletons and stored instances stay private to each
+  container. Pass your own `PlanCache` as the container's fourth argument to opt
+  one out.
+- **`Container::lazy()`, `writeCompiledFactories()`, `useCompiledFactories()`
+  and `compileReport()`** are forwarded, and `writeCompiledCache()` gained
+  container 1.4's build-stamp argument. Nothing in Gacela calls the compilation
+  methods — writing plans to disk was measured a net loss — but they are
+  reachable for an application that has measured its own case.
 
 - **`#[Inject]` targets properties**, not only constructor parameters, for
   classes whose constructor is not yours to change.
@@ -151,6 +170,17 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   populates them by resolving a real module, and requires each to be back at its
   declared default after a reset — guarding from the opposite end to
   `ResetCacheCoverageTest`.
+- `ContainerForwardingCoverageTest` requires every public method of
+  `Gacela\Container\Container` to be forwarded or listed with its reason. The
+  decorator's docblock claimed implementing `ContainerInterface` made this
+  unnecessary; that was never true, since 1.x promises never to extend the
+  interface, so every capability since 1.0 landed on the concrete class where an
+  unforwarded method compiles fine and is simply unreachable. `createScope()` is
+  the one recorded non-forward.
+- `Gacela::resetCache()` clears the shared plan cache, so plans are shared
+  *within* a bootstrap rather than across one. It deliberately does **not** call
+  `Container::resetStaticCaches()`: that was tried and cost `FileCacheBench`
+  11-17%, for memory rather than correctness.
 - `debug:container` reads `stats(): ContainerStats` instead of the untyped
   `getStats()` array, whose shape upstream excludes from BC.
 - Infection 0.34's `ReturnRemoval` mutator reads every early `return` as

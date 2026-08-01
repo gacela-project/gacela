@@ -23,8 +23,8 @@ The whole runtime change is two lines, and almost everything below follows from 
 
 ### What this release is not
 
-- **Not a performance release.** The three perf spikes on the roadmap were measured and came out sub-millisecond, so they were closed rather than shipped. Container gains are single-digit percent. If you are here for speed, there is nothing to collect
-- **Not the "one container" release.** That was the original headline and it moved to 2.1 — it needs a parent/child container primitive that does not exist yet ([container#106](https://github.com/gacela-project/container/issues/106)). 2.0 is the foundation that makes it possible, not the thing itself
+- **Barely a performance release.** The three perf spikes on the roadmap were measured and came out sub-millisecond, so they were closed rather than shipped, and writing compiled constructor plans to disk measured a net loss. One exception is real but narrow: module containers now share a constructor-plan cache, worth ~36-41% of resolution time to a request that touches many modules — measured on CI at -35.8%, with peak memory down ~37% locally but not yet confirmed there. A handful of modules collects little
+- **Not the "one container" release.** That was the original headline and it moved to 2.1 — not blocked any more, since container 1.3 shipped the `createScope()` primitive and [container#106](https://github.com/gacela-project/container/issues/106) is closed, but deliberately sequenced after the cache-regression suite this release builds. 2.0 is the foundation that makes it possible, not the thing itself
 - **Not a Symfony unblock.** Symfony is a dev dependency of Gacela, never a runtime one. A Symfony 7 or 8 application already works on 1.21
 
 **So who should wait?** If you are on PHP 8.3 already, not running long-lived workers, and not using Psalm, your reason to move *today* is thin.

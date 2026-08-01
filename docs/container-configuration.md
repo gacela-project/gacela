@@ -32,6 +32,32 @@ $db = $factory(); // Invoke when needed
 
 Protected services cannot be extended via `extendService()`.
 
+## Post-construction Hooks
+
+Run a callback against an instance the moment it is built, without rebuilding it.
+
+```php
+return static function (GacelaConfig $config): void {
+    $config->afterResolving(
+        LoggerAwareInterface::class,
+        static fn (LoggerAwareInterface $service) => $service->setLogger($logger),
+    );
+};
+```
+
+**The id may name an interface**, which is the point: one registration covers every
+implementation, because the match is made against the resolved instance rather than
+by looking the requested id up in a map.
+
+Hooks fire on container-level resolution — `get()`, `getOrFail()` and `make()` — in
+registration order. A class the container autowires as a *nested* constructor
+dependency is not resolved at this level, so hooks do not fire for it. A callback
+that throws removes the instance rather than leaving a half-wired one for the next
+caller, and a container with no hooks pays nothing per resolution.
+
+Reach for `extendService()` instead when you need to *replace* what comes out, and
+for a [`ServiceResolvedEvent`](events.md) listener when you only want to observe.
+
 ## Service Aliases
 
 Reference the same service with different names.
@@ -201,7 +227,7 @@ other unresolvable parameter. Only a default produces `null`.
 
 ### Interactions
 
-- Contextual bindings win over global `addBinding` (step 2 before step 3).
+- Contextual bindings win over global `addBinding` — by name at step 2, by type at step 5, both before `addBinding` at step 6.
 - Protected services (`addProtected`) cannot be injected — they're stored
   as raw closures and the container won't instantiate them.
 - `#[Inject]` does not replace `#[ServiceMap]` or `ServiceResolverAwareTrait`
@@ -210,7 +236,7 @@ other unresolvable parameter. Only a default produces `null`.
 
 ### Visibility in tooling
 
-`bin/gacela debug:dependencies <Class>` lists every constructor parameter
+`vendor/bin/gacela debug:dependencies <Class>` lists every constructor parameter
 with its resolution kind. `#[Inject]` parameters show up tagged `inject`,
 with the override concrete rendered inline when present:
 
@@ -352,7 +378,7 @@ instead of a `gacela.php` entry. Equivalent imperative registrations:
 | `#[Singleton]` on `Pool` | `$container->set(Pool::class, new Pool())` in a provider |
 | `#[Factory]` on `Builder` | `$config->addFactory(Builder::class, static fn() => new Builder())` |
 | `#[Inject(X::class)]` on a param | `$config->when(Consumer::class)->needs(Type::class)->give(X::class)` |
-| `#[Lazy]` on `Report` | no equivalent — defers construction until first use |
+| `#[Lazy]` on `Report` | `$config->addLazy(Report::class, static fn() => new Report())`, or `$container->lazy(Report::class)` in a provider for a class you cannot annotate |
 
 Notes:
 
@@ -498,16 +524,28 @@ return static function (GacelaConfig $config): void {
 
 ## Underlying container features gacela does not expose
 
-The `gacela-project/container` package offers a few capabilities that gacela
-deliberately keeps internal, to avoid two ways of doing the same thing:
+Almost everything `gacela-project/container` offers now has a gacela entry point.
+Three things that used to be listed here no longer belong to it: **service
+tagging** is `GacelaConfig::tag()` (see
+[getting a dependency](getting-a-dependency.md#collect-several-implementations)),
+**post-construction hooks** are `GacelaConfig::afterResolving()` (above), and
+**`make()` with runtime parameters** is documented above as the supported way to
+override a constructor argument.
 
-- **`createScope()`**: request-lifetime containers need a parent/child primitive
-  the container does not have yet, and a scope seam gacela has not drawn. Tracked
-  in the 2.1 consolidation.
-- **`make()` with runtime parameters**: kept internal. One-off construction with
-  ad-hoc overrides encourages service location; resolve through your module's
-  Factory instead.
-- **Compiled constructor plans**: measured on gacela's instance-cached resolution,
-  the reflection saved is sub-microsecond per class, so the cache-file lifecycle is
-  not worth its complexity today. May be revisited if bootstrap reflection ever
-  shows up as a real hotspot for large applications.
+What is left out, and why:
+
+- **`createScope()`**, the container's per-request child container. The primitive
+  exists (container 1.3), so what is missing is Gacela's side: who creates the
+  scope and who drops it. Tracked in the 2.1 consolidation.
+- **Compiled constructor plans on disk** (`writeCompiledCache()` and the generated
+  factories that go with it): re-measured for 2.0 and still not worth it, now with
+  a sharper reason than "the saving is small". The saving is real but *smaller than
+  the file*: materialising a 300-class plans file costs ~1.4ms per process, while
+  resolving all 300 of those classes saves ~0.2ms. Compiling a class costs about six
+  times the reflection it avoids, so no subset of classes makes it pay, and a build
+  stamp does not rescue it — the cost is hydrating the array, not the per-class
+  `stat` it replaces. What removes the repeated reflection is the shared plan cache,
+  which is on by default and costs nothing. Nothing is hidden, though: the decorator
+  forwards `writeCompiledCache()`, `writeCompiledFactories()`, `useCompiledFactories()`
+  and `compileReport()`, each taking an optional build stamp, so an application that
+  has measured its own case can wire the files up itself.

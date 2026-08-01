@@ -10,6 +10,8 @@ composer require gacela-project/gacela
 
 ## 2. Create the `gacela.php` bootstrap file
 
+`vendor/bin/gacela init` scaffolds it for you. To write it by hand:
+
 ```php
 <?php
 declare(strict_types=1);
@@ -30,8 +32,11 @@ When the same key appears in several places, later sources win:
 3. the local file (second argument of `addAppConfig(...)`, conventionally `config/local.php`; not env-suffixed, meant for per-machine overrides)
 4. values set in code via `GacelaConfig::addAppConfigKeyValue(s)`
 
-On the first boot the merged result is cached to a single PHP file (per `APP_ENV`
-and app root), so warm boots skip the file scan entirely; `cache:clear` drops it.
+Every boot re-reads and re-merges these files. That is what you want while developing,
+and what you do not want in production: `enableFileCache()` collapses the merged result
+into a single PHP file per app root and `APP_ENV`, so warm boots skip the scan entirely,
+and `cache:clear` drops it. It is **off by default** — see
+[production performance](production-performance.md).
 
 ## 3. Add your first module
 

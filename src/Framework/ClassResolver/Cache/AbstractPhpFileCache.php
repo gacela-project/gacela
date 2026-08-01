@@ -8,6 +8,9 @@ use Gacela\Framework\Cache\FileCache;
 
 use function array_keys;
 use function file_exists;
+use function sha1;
+use function str_ends_with;
+use function substr;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -26,6 +29,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
     public function __construct(
         private readonly string $cacheDir,
+        private readonly string $appRootDir = '',
     ) {
         self::$cache[static::class] = $this->getExistingCache();
         self::$filenames[static::class] = $this->computeAbsoluteFilename();
@@ -171,6 +175,33 @@ abstract class AbstractPhpFileCache implements CacheInterface
         FileCache::writeAtomically(self::$filenames[static::class], self::$cache[static::class]);
     }
 
+    /**
+     * Where a cache file for this app lives.
+     *
+     * The cache dir can be shared between applications -- it defaults to the
+     * system temp dir -- so the filename embeds a hash of the app root. Without
+     * it two applications on one machine read and write the same file, and one
+     * silently serves the other's resolved class names. That is the defect
+     * `MergedConfigCache` was given this treatment for; these two caches were
+     * left behind, and a fresh install picking up another project's fixtures is
+     * what surfaced it.
+     *
+     * Public and static so the console agrees with the cache on the path:
+     * `cache:clear` and the staleness check have to look where `put()` wrote.
+     */
+    public static function absoluteFilename(string $cacheDir, string $baseFilename, string $appRootDir): string
+    {
+        if ($appRootDir === '') {
+            return $cacheDir . DIRECTORY_SEPARATOR . $baseFilename;
+        }
+
+        $base = str_ends_with($baseFilename, '.php')
+            ? substr($baseFilename, 0, -4)
+            : $baseFilename;
+
+        return $cacheDir . DIRECTORY_SEPARATOR . $base . '-' . substr(sha1($appRootDir), 0, 12) . '.php';
+    }
+
     abstract protected function getCacheFilename(): string;
 
     /**
@@ -192,6 +223,6 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
     private function computeAbsoluteFilename(): string
     {
-        return $this->cacheDir . DIRECTORY_SEPARATOR . $this->getCacheFilename();
+        return self::absoluteFilename($this->cacheDir, $this->getCacheFilename(), $this->appRootDir);
     }
 }

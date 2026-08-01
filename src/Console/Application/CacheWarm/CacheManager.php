@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Gacela\Console\Application\CacheWarm;
 
 use Gacela\Framework\Cache\FileCache;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\Config;
 
 use function array_filter;
 use function array_map;
+use function array_merge;
 use function file_exists;
 use function filesize;
 
@@ -33,7 +35,11 @@ final class CacheManager
      */
     public function getCacheFilePath(): string
     {
-        return $this->cacheDir() . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
+        return AbstractPhpFileCache::absoluteFilename(
+            $this->cacheDir(),
+            ClassNamePhpCache::FILENAME,
+            Config::getInstance()->getAppRootDir(),
+        );
     }
 
     public function cacheFileExists(): bool
@@ -90,10 +96,20 @@ final class CacheManager
     private function allCacheFilePaths(): array
     {
         $cacheDir = $this->cacheDir();
+        $appRoot = Config::getInstance()->getAppRootDir();
 
-        return array_map(
-            static fn (string $filename): string => $cacheDir . DIRECTORY_SEPARATOR . $filename,
-            self::CACHE_FILENAMES,
+        // Both spellings: the app-scoped name `put()` writes, and the unscoped
+        // one written before the caches were scoped. `cache:clear` that left a
+        // legacy file behind would leave the stale answers it holds reachable.
+        return array_merge(
+            array_map(
+                static fn (string $filename): string => AbstractPhpFileCache::absoluteFilename($cacheDir, $filename, $appRoot),
+                self::CACHE_FILENAMES,
+            ),
+            array_map(
+                static fn (string $filename): string => $cacheDir . DIRECTORY_SEPARATOR . $filename,
+                self::CACHE_FILENAMES,
+            ),
         );
     }
 

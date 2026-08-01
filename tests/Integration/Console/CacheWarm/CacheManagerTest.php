@@ -6,6 +6,7 @@ namespace GacelaTest\Integration\Console\CacheWarm;
 
 use Gacela\Console\Application\CacheWarm\CacheManager;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\Config;
@@ -53,11 +54,30 @@ final class CacheManagerTest extends TestCase
         @rmdir($this->cacheDir);
     }
 
-    public function test_cache_file_path_points_at_the_class_name_cache(): void
+    /**
+     * The path carries a hash of the app root. The cache dir can be shared --
+     * it defaults to the system temp dir -- and without the hash two
+     * applications on one machine read and write the same file.
+     */
+    public function test_cache_file_path_points_at_the_app_scoped_class_name_cache(): void
     {
         self::assertSame(
-            Config::getInstance()->getCacheDir() . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME,
+            AbstractPhpFileCache::absoluteFilename(
+                Config::getInstance()->getCacheDir(),
+                ClassNamePhpCache::FILENAME,
+                Config::getInstance()->getAppRootDir(),
+            ),
             $this->cacheManager->getCacheFilePath(),
+        );
+    }
+
+    public function test_two_app_roots_do_not_share_a_cache_file(): void
+    {
+        $dir = Config::getInstance()->getCacheDir();
+
+        self::assertNotSame(
+            AbstractPhpFileCache::absoluteFilename($dir, ClassNamePhpCache::FILENAME, '/srv/app-one'),
+            AbstractPhpFileCache::absoluteFilename($dir, ClassNamePhpCache::FILENAME, '/srv/app-two'),
         );
     }
 
@@ -117,7 +137,11 @@ final class CacheManagerTest extends TestCase
 
     private function writeCacheFile(string $filename, int $bytes): string
     {
-        $path = Config::getInstance()->getCacheDir() . DIRECTORY_SEPARATOR . $filename;
+        $path = AbstractPhpFileCache::absoluteFilename(
+            Config::getInstance()->getCacheDir(),
+            $filename,
+            Config::getInstance()->getAppRootDir(),
+        );
 
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0o777, true);

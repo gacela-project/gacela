@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Console\CacheWarm;
 
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\Config;
@@ -42,10 +43,17 @@ final class CacheWarmCommandTest extends TestCase
             $config->enableFileCache(__DIR__ . '/cache');
         });
 
-        $this->cacheFile = Config::getInstance()->getCacheDir() . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME;
+        $this->cacheFile = AbstractPhpFileCache::absoluteFilename(
+            Config::getInstance()->getCacheDir(),
+            ClassNamePhpCache::FILENAME,
+            Config::getInstance()->getAppRootDir(),
+        );
         $this->mergedConfigCacheFile = Config::getInstance()->mergedConfigCacheFilename();
-        $this->customServicesCacheFile = Config::getInstance()->getCacheDir()
-            . DIRECTORY_SEPARATOR . CustomServicesPhpCache::FILENAME;
+        $this->customServicesCacheFile = AbstractPhpFileCache::absoluteFilename(
+            Config::getInstance()->getCacheDir(),
+            CustomServicesPhpCache::FILENAME,
+            Config::getInstance()->getAppRootDir(),
+        );
 
         $this->removeGeneratedCaches();
 

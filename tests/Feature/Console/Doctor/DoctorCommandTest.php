@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Console\Doctor;
 
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithMetadataHealthCheck;
@@ -48,7 +49,7 @@ final class DoctorCommandTest extends TestCase
     {
         putenv('GACELA_CACHE_DIR');
 
-        $cacheFile = $this->cacheDir . '/' . ClassNamePhpCache::FILENAME;
+        $cacheFile = AbstractPhpFileCache::absoluteFilename($this->cacheDir, ClassNamePhpCache::FILENAME, __DIR__);
         if (is_file($cacheFile)) {
             unlink($cacheFile);
         }
@@ -226,7 +227,7 @@ final class DoctorCommandTest extends TestCase
     private function writeCacheEntry(string $key, string $className): void
     {
         file_put_contents(
-            $this->cacheDir . '/' . ClassNamePhpCache::FILENAME,
+            AbstractPhpFileCache::absoluteFilename($this->cacheDir, ClassNamePhpCache::FILENAME, __DIR__),
             sprintf("<?php\n\nreturn %s;\n", var_export([$key => $className], true)),
         );
     }

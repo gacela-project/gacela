@@ -73,7 +73,9 @@ final class DebugContainerCommand extends Command
         $output->writeln(sprintf('<fg=cyan>Factory Services:</> %d', $stats->factoryServices));
         $output->writeln(sprintf('<fg=cyan>User Bindings:</> %d', $stats->bindings));
         $output->writeln(sprintf('<fg=cyan>Cached Dependencies:</> %d', $stats->cachedDependencies));
-        $output->writeln(sprintf('<fg=cyan>Memory Usage:</> %s', $stats->memoryUsageFormatted()));
+        // Whole-process memory, not this container's footprint -- the 2.0 rename
+        // says so, where `memoryUsage` invited the wrong reading.
+        $output->writeln(sprintf('<fg=cyan>Process Memory:</> %s', $stats->processMemoryFormatted()));
         $output->writeln('');
 
         if ($stats->registeredServices === 0) {

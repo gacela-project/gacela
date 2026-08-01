@@ -20,32 +20,29 @@ use function sort;
 use function sprintf;
 
 /**
- * The decorator's own docblock used to argue that implementing
- * `ContainerInterface` keeps the forwarding honest -- a method added upstream
- * would fail compilation here. That only holds for methods ON the interface,
- * and 1.x promises never to add one: every capability since 1.0 (`stats`,
- * `provides`, `createScope`, `taggedByKey`, `lazy`, the compiled-factory pair)
- * landed on the concrete class instead, where nothing notices it going
- * unforwarded. Two of them shipped unreachable before anyone did.
+ * Container 2.0 put the whole surface on `ContainerInterface`, so the compiler
+ * does now catch an unforwarded method -- which was the argument the decorator's
+ * docblock made all along, and which was false for the whole of 1.x: every
+ * capability added after 1.0 landed on the concrete class, where an unforwarded
+ * method compiles fine and is simply unreachable. Two shipped that way.
  *
- * So the guard is here rather than in the type system. A new upstream method
- * fails this test until it is either forwarded or listed below as a decision.
+ * This stays because the compiler only covers what the interface declares.
+ * Anything upstream adds to the concrete class first -- which is how 1.x grew --
+ * is still invisible to it, and still visible here.
  */
 final class ContainerForwardingCoverageTest extends TestCase
 {
     /**
      * Deliberately not forwarded, each for a reason that outlives the version
      * that introduced it.
+     *
+     * Empty since container 2.0: `createScope()` was the last entry, and
+     * `withSelfReference()` is what made it forwardable -- the scope can be
+     * decorated in turn and still hand this decorator to service closures.
+     *
+     * @var list<string>
      */
-    private const NOT_FORWARDED = [
-        // Returns a child `Gacela\Container\Container`, which the decorator has
-        // no way to wrap: $inner is readonly and assigned in the constructor.
-        // Forwarding it raw would hand callers a container whose closures are
-        // passed the inner instance, so `$c->getLocator()` -- the documented
-        // provider signature -- would fatal. Needs a request-lifetime design
-        // first; see the scopes discussion in the container docs.
-        'createScope',
-    ];
+    private const NOT_FORWARDED = [];
 
     /**
      * Statics are not inherited and need no forwarder: a caller reaches them on

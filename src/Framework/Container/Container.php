@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Gacela\Framework\Container;
 
 use Closure;
+use Gacela\Container\ClassSource;
 use Gacela\Container\CompilationReport;
 use Gacela\Container\Container as GacelaContainer;
+use Gacela\Container\ContainerInterface as GacelaContainerInterface;
 use Gacela\Container\ContainerStats;
 use Gacela\Container\ContextualBindingBuilder;
 use Gacela\Container\DependencyNode;
 use Gacela\Container\PlanCache;
+use Gacela\Container\ValidationReport;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
@@ -19,10 +22,8 @@ use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 use Throwable;
-use WeakMap;
 
 use function array_keys;
-use function array_map;
 use function is_object;
 use function is_string;
 
@@ -51,34 +52,25 @@ final class Container implements ContainerInterface
 {
     use EventDispatchingCapabilities;
 
-    private readonly GacelaContainer $inner;
-
     /**
-     * Closures set() must pass through untouched: the wrappers this class
-     * produced, and closures handed to protect(). Both are marked by *identity*
-     * upstream, so wrapping them again would give set() a different object and
-     * silently drop the factory/protected mark.
-     *
-     * A WeakMap rather than an SplObjectStorage, which holds its keys strongly.
-     * Nothing removes a mark -- there is no hook that fires when a binding is
-     * overwritten or removed -- so strong keys made this a monotonically growing
-     * set: every closure ever handed to set(), factory(), extend() or protect()
-     * was retained for the container's lifetime, with everything it closed over,
-     * whether or not its binding still existed. Held weakly, a mark lasts
-     * exactly as long as the closure it marks is reachable, which is precisely
-     * as long as the question "is this one of ours?" can still be asked.
-     *
-     * @var WeakMap<Closure, true>
+     * Not `readonly`: {@see decorating()} wraps a scope the inner container
+     * built, which arrives after this object does.
      */
-    private readonly WeakMap $doNotWrap;
+    private GacelaContainer $inner;
 
     /** @var array<string, true> */
     private array $resolvedServiceIds = [];
 
     /**
+     * Kept local rather than delegated to the inner container, whose 2.0
+     * `afterResolving()` matches instances the same way but fires for *any*
+     * resolved value. A post-construction hook handed a string cannot wire it,
+     * and a typed callback would TypeError -- see the object guard in
+     * {@see fireAfterResolving()}. Reconciling the two is a behaviour decision,
+     * not part of a dependency bump.
+     *
      * Instance state, not static: `Gacela::resetCache()` rebuilds the container,
-     * which is what clears these -- so no reset of its own to keep in step with
-     * `ResetCacheCoverageTest`.
+     * which is what clears these.
      *
      * @var AfterResolvingMap
      */
@@ -97,15 +89,12 @@ final class Container implements ContainerInterface
         array $compiledPlans = [],
         ?PlanCache $planCache = null,
     ) {
-        $this->inner = new GacelaContainer(
+        $this->inner = (new GacelaContainer(
             $bindings,
             $instancesToExtend,
             $compiledPlans,
             $planCache ?? SharedPlanCache::getInstance(),
-        );
-        /** @var WeakMap<Closure, true> $doNotWrap */
-        $doNotWrap = new WeakMap();
-        $this->doNotWrap = $doNotWrap;
+        ))->withSelfReference($this);
     }
 
     public static function withConfig(Config $config): self
@@ -208,9 +197,7 @@ final class Container implements ContainerInterface
      */
     public function bind(string $abstract, string|callable|object $concrete): void
     {
-        /** @var Binding $decorated */
-        $decorated = $this->decorateIfUserClosure($concrete);
-        $this->inner->bind($abstract, $decorated);
+        $this->inner->bind($abstract, $concrete);
     }
 
     /**
@@ -218,9 +205,7 @@ final class Container implements ContainerInterface
      */
     public function singleton(string $abstract, string|callable|object|null $concrete = null): void
     {
-        /** @var Binding|null $decorated */
-        $decorated = $this->decorateIfUserClosure($concrete);
-        $this->inner->singleton($abstract, $decorated);
+        $this->inner->singleton($abstract, $concrete);
     }
 
     public function bound(string $id): bool
@@ -233,9 +218,7 @@ final class Container implements ContainerInterface
      */
     public function bindIf(string $abstract, string|callable|object $concrete): void
     {
-        /** @var Binding $decorated */
-        $decorated = $this->decorateIfUserClosure($concrete);
-        $this->inner->bindIf($abstract, $decorated);
+        $this->inner->bindIf($abstract, $concrete);
     }
 
     /**
@@ -243,14 +226,12 @@ final class Container implements ContainerInterface
      */
     public function singletonIf(string $abstract, string|callable|object|null $concrete = null): void
     {
-        /** @var Binding|null $decorated */
-        $decorated = $this->decorateIfUserClosure($concrete);
-        $this->inner->singletonIf($abstract, $decorated);
+        $this->inner->singletonIf($abstract, $concrete);
     }
 
     public function set(string $id, mixed $instance): void
     {
-        $this->inner->set($id, $this->decorateIfUserClosure($instance));
+        $this->inner->set($id, $instance);
     }
 
     public function remove(string $id): void
@@ -260,24 +241,56 @@ final class Container implements ContainerInterface
 
     public function factory(Closure $instance): Closure
     {
-        return $this->inner->factory($this->withDecorator($instance));
+        return $this->inner->factory($instance);
     }
 
     public function extend(string $id, Closure $instance): Closure
     {
-        return $this->inner->extend($id, $this->withDecorator($instance));
+        return $this->inner->extend($id, $instance);
+    }
+
+    public function protect(Closure $instance): Closure
+    {
+        return $this->inner->protect($instance);
     }
 
     /**
-     * Deliberately not wrapped: a protected closure is never invoked by the
-     * container, it is handed back verbatim. There is no container argument to
-     * substitute, and wrapping would break the identity callers rely on.
+     * A child container that resolves everything this one resolves, plus what
+     * is registered on it directly. Decorated in turn, so a scope keeps the
+     * Locator and the lifecycle events -- `createScope(): static` is typed that
+     * way upstream precisely so a decorator's scope is a decorator.
+     *
+     * Gacela does not yet create scopes of its own: which lifetime owns one is
+     * the open design question, not the forwarding.
      */
-    public function protect(Closure $instance): Closure
+    public function createScope(): static
     {
-        $this->doNotWrap->offsetSet($instance, true);
+        return self::decorating($this->inner->createScope());
+    }
 
-        return $this->inner->protect($instance);
+    /**
+     * Prove these classes resolve, without resolving them.
+     *
+     * @param list<class-string>|ClassSource $classNames
+     */
+    public function validate(array|ClassSource $classNames): ValidationReport
+    {
+        return $this->inner->validate($classNames);
+    }
+
+    /**
+     * Hand $facade to service closures instead of this container.
+     *
+     * Forwarded for completeness rather than for Gacela's own use: the
+     * constructor already points the inner container at this decorator, which
+     * is what lets a provider written as `static fn (Container $c) => ...`
+     * reach {@see getLocator()}. Calling this again redirects it somewhere else.
+     */
+    public function withSelfReference(GacelaContainerInterface $facade): self
+    {
+        $this->inner->withSelfReference($facade);
+
+        return $this;
     }
 
     /**
@@ -405,15 +418,18 @@ final class Container implements ContainerInterface
      * override earlier ones, which is what makes layering base + overrides
      * work; 'tags' accumulate instead, the way `tag()` does.
      *
-     * Like {@see provides()} and {@see stats()}, declared on the concrete
-     * container upstream rather than on ContainerInterface -- 1.x promises
-     * nothing is added there -- so it is forwarded explicitly here.
+     * Returns the ids it registered, which is the only reliable answer to
+     * "what did this source register": reading them back off the container
+     * afterwards catches `bind()` and `set()` entries and misses the aliases.
      *
      * @param array<array-key, mixed> $definitions
+     * @param (callable(string):void)|null $onRegistered called per id, as each is registered
+     *
+     * @return list<string>
      */
-    public function load(array $definitions): void
+    public function load(array $definitions, ?callable $onRegistered = null): array
     {
-        $this->inner->load($definitions);
+        return $this->inner->load($definitions, $onRegistered);
     }
 
     /**
@@ -428,12 +444,16 @@ final class Container implements ContainerInterface
      * adding one means a second runtime dependency. Once here, the documented
      * path is `$container->load(Yaml::parseFile('services.yaml'))`.
      *
+     * @param (callable(string):void)|null $onRegistered called per id, as each is registered
+     *
      * @throws \Gacela\Container\Exception\ContainerException when the file is
      *         missing, unreadable, of an unsupported type, or does not hold an array
+     *
+     * @return list<string>
      */
-    public function loadFile(string $file): void
+    public function loadFile(string $file, ?callable $onRegistered = null): array
     {
-        $this->inner->loadFile($file);
+        return $this->inner->loadFile($file, $onRegistered);
     }
 
     /**
@@ -497,16 +517,10 @@ final class Container implements ContainerInterface
     /**
      * Defer construction until the instance is first used, without needing
      * `#[Lazy]` on a class you may not own.
-     *
-     * The closure form is wrapped like every other user closure, so a provider
-     * written as `static fn (Container $c) => ...` is handed this decorator and
-     * can still reach {@see getLocator()}.
      */
     public function lazy(string $abstract, string|callable|null $concrete = null): void
     {
-        /** @var string|callable|null $decorated */
-        $decorated = $this->decorateIfUserClosure($concrete);
-        $this->inner->lazy($abstract, $decorated);
+        $this->inner->lazy($abstract, $concrete);
     }
 
     /**
@@ -556,38 +570,15 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * Service closures are invoked by the inner container, which passes
-     * *itself*. Under inheritance that used to be this object; under
-     * composition it is not, and the documented provider signature
-     * `static fn (Container $c) => $c->getLocator()->get(...)` would break --
-     * `getLocator()` exists only here.
-     *
-     * So every user closure is wrapped to substitute this decorator wherever
-     * the inner container is passed. Argument-position agnostic, because
-     * set(), factory(), protect() and extend() all call with different shapes.
+     * Wrap an inner container this class did not build -- the scope returned by
+     * {@see createScope()}, which arrives already made.
      */
-    private function withDecorator(Closure $closure): Closure
+    private static function decorating(GacelaContainer $inner): self
     {
-        $self = $this;
-        $inner = $this->inner;
+        $decorator = new self();
+        $decorator->inner = $inner->withSelfReference($decorator);
 
-        $wrapper = static fn (mixed ...$args): mixed => $closure(...array_map(
-            static fn (mixed $arg): mixed => ($arg === $inner) ? $self : $arg,
-            $args,
-        ));
-
-        $this->doNotWrap->offsetSet($wrapper, true);
-
-        return $wrapper;
-    }
-
-    private function decorateIfUserClosure(mixed $instance): mixed
-    {
-        if ($instance instanceof Closure && !$this->doNotWrap->offsetExists($instance)) {
-            return $this->withDecorator($instance);
-        }
-
-        return $instance;
+        return $decorator;
     }
 
     /**
@@ -660,26 +651,36 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * Apply the declared definition sources, in the order they were declared.
+     * Apply the declared definition sources, in the order they were declared,
+     * announcing each id they register.
      *
-     * No `BindingRegisteredEvent` is dispatched, deliberately. The loader is an
-     * upstream internal, so the only way to name what a source registered is to
-     * reconstruct it: a file's contents are not in hand here, and reading the
-     * ids back off the container catches `bind()` and `set()` definitions but
-     * not the aliases, which live in a third registry. A listener that counts
-     * registrations is better served by nothing than by an undercount it cannot
-     * see the shape of. Tracked against the upstream loader growing a way to
-     * report what it registered.
+     * Definitions used to register silently. Naming what a source registered
+     * meant reconstructing it -- a file's contents are not in hand here, and
+     * reading the ids back off the container catches `bind()` and `set()`
+     * entries but misses the aliases, which live in a third registry -- so an
+     * undercount was traded for no count at all. Container 2.0 reports them
+     * directly, which closes it: a listener counting registrations now sees
+     * definitions and imperative bindings alike.
      *
      * @param DefinitionSources $sources
      */
     private function loadDefinitions(array $sources): void
     {
+        if ($sources === []) {
+            return;
+        }
+
+        // Guarded like every other dispatch site, so a container with no
+        // listener does not pay for a per-id callback it will never use.
+        $onRegistered = self::shouldDispatch(BindingRegisteredEvent::class)
+            ? static fn (string $id): null => self::dispatchEvent(new BindingRegisteredEvent($id))
+            : null;
+
         foreach ($sources as $definitions) {
             if (is_string($definitions)) {
-                $this->loadFile($definitions);
+                $this->loadFile($definitions, $onRegistered);
             } else {
-                $this->load($definitions);
+                $this->load($definitions, $onRegistered);
             }
         }
     }
@@ -689,17 +690,11 @@ final class Container implements ContainerInterface
      *
      * The match is `instanceof`, not a lookup on the requested id, because the
      * useful registration is an interface -- "after anything implementing
-     * LoggerAwareInterface is built". That is also why this cannot delegate to
-     * the inner container's own `afterResolving()`, which keys on the exact id.
+     * LoggerAwareInterface is built".
      *
      * A hook that throws takes the instance out of the container with it: a
      * service whose post-construction wiring failed must not be served to the
      * next caller as though it had succeeded.
-     *
-     * Callers check `afterResolvingHooks` before calling, the way the event
-     * dispatch above is guarded: resolution is the hottest path there is, and a
-     * container with no hooks should not pay even a call for a feature it does
-     * not use.
      */
     private function fireAfterResolving(string $id, mixed $instance): void
     {

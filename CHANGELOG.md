@@ -3,7 +3,7 @@
 ## Unreleased
 
 A foundation major. The runtime change is two lines — PHP `>=8.3` and
-`gacela-project/container` `^1.5.0`, up from a `0.x`. Most of what follows comes
+`gacela-project/container` `^2.0.0`, up from a `0.x`. Most of what follows comes
 from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`,
 and container exceptions where 0.x emitted raw PHP errors.
 
@@ -110,11 +110,35 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 
 ### Changed
 
-- **`gacela-project/container` `^1.5.0`** (was `^0.10.0`). `Container` is now
+- **`gacela-project/container` `^2.0.0`** (was `^0.10.0`). `Container` is
   `final`, so Gacela decorates it by composition. Two of its fixes land in
   Gacela's own path: a class-string sharing a name with a function was *invoked*
   instead of instantiated, and `has()` remembered a negative, so a class
   declared after the first probe stayed invisible.
+
+  2.0 puts the whole surface on `ContainerInterface`, so an unforwarded method
+  is now a compile error rather than something silently unreachable. Two more
+  of its additions replace code here outright:
+
+  - **`withSelfReference()` removes the closure-wrapping layer.** Because the
+    inner container passed *itself* to service closures, every user closure was
+    re-wrapped so `static fn (Container $c) => $c->getLocator()` kept working —
+    and because `factory()` and `protect()` mark closures by identity, each
+    wrapper had to be tracked in a `WeakMap` so `set()` would not wrap it twice
+    and drop the mark. That is roughly 50 lines and 29 touchpoints, replaced by
+    telling the container which object to hand out. The `WeakMap` goes with it,
+    and so does the leak it was fixed for.
+  - **`createScope()` is forwarded**, which was impossible while a scope could
+    not be decorated: the raw child would have handed its closures the inner
+    container. A scope is now a decorator like its parent, so it keeps the
+    Locator and the lifecycle events.
+
+  `load()`/`loadFile()` return the ids they registered and take an optional
+  per-id callback, which closes a gap `loadDefinitions()` shipped with:
+  definitions now emit `BindingRegisteredEvent` like every other registration,
+  where naming them previously meant reconstructing the ids and missing aliases. `ContainerStats::memoryUsageFormatted()` is
+  `processMemoryFormatted()` — `debug:container` labels it **Process Memory**,
+  which is what it always measured.
 - **PHP floor raised to `>=8.3`** (was `>=8.1`). 8.1 is end of life and 8.2's
   security window closes in December 2026.
 - **`symfony/*` widened to `^7.0 || ^8.0`** (was `^6.4`). Gacela no longer

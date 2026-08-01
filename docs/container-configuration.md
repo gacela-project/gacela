@@ -475,10 +475,9 @@ final class Provider extends AbstractProvider
 rebased under the application root — write it with `__DIR__`. A missing, unreadable
 or unparsable file throws rather than leaving the wiring half-applied.
 
-**No `BindingRegisteredEvent`.** Definitions register bindings but do not announce
-them: the loader is an upstream internal, so naming what a source registered would
-mean reconstructing it from the container's registries — which misses aliases. A
-listener counting registrations sees the imperative ones only.
+**Definitions announce themselves.** Each id a source registers emits a
+`BindingRegisteredEvent`, the same as an imperative binding, so a listener
+counting registrations sees the whole container.
 
 **No YAML.** Neither the container nor gacela takes a parser dependency for it. Pass
 the parsed array instead:

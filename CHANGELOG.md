@@ -262,7 +262,19 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 - Raised the `nikic/php-parser` floor to `^5.4`: Psalm 6.16 reads
   `Property::$hooks`, which only exists from 5.4.
 - Refreshed the toolchain: `infection` `^0.29` → `^0.34`, plus phpstan and
-  rector. `phpunit` stays on `^10.5`.
+  rector. Two majors are held, each re-verified against the current lockfile
+  rather than taken on trust:
+
+  - **`phpunit` stays on `^10.5`.** Rector ships a composer `files` autoload
+    that preloads its own bundled `nikic/php-parser`, gated on
+    `PHPUnit\Runner\Version::id() >= 12` — so it activates only under PHPUnit
+    12. This package requires `nikic/php-parser` directly for its PHPStan
+    rules, so whichever loads first, the other redeclares:
+    `Cannot redeclare interface PhpParser\NodeVisitor`. Reproduced on
+    `phpunit/phpunit:^12.0`; the whole unit suite fatals before the first test.
+  - **`psalm/plugin-phpunit` stays on `^0.19`.** `0.20` requires
+    `psalm/psalm-plugin-api ^0.1`, which conflicts with `vimeo/psalm <7.0.0`,
+    and Psalm 7 is still at `7.0.0-beta19`.
 - `symfony-bridge/composer.json` matches the root package it ships from.
 - A root `gacela.php` scoping the console to `src`. Without it `doctor` walked
   the whole repository and reported two errors on a clean checkout: `tests/`

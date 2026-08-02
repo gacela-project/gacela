@@ -126,7 +126,7 @@ trait ContainerFixture
      *
      * This resets the current singletons first and then re-applies the
      * captured in-memory cache. It does not rerun the bootstrap cycle,
-     * so any derived caches (e.g. DocBlockResolverCache) stay empty and
+     * so any derived caches (e.g. ServiceResolverCache) stay empty and
      * will be lazily rebuilt.
      */
     protected function restoreContainerState(ContainerSnapshot $snapshot): void

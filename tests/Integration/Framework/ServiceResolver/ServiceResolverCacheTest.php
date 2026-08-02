@@ -12,10 +12,10 @@ use Gacela\Framework\Event\ClassResolver\Cache\CustomServicesInMemoryCacheCreate
 use Gacela\Framework\Event\ClassResolver\Cache\CustomServicesPhpCacheCreatedEvent;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
-use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
+use Gacela\Framework\ServiceResolver\ServiceResolverCache;
 use PHPUnit\Framework\TestCase;
 
-final class DocBlockResolverCacheTest extends TestCase
+final class ServiceResolverCacheTest extends TestCase
 {
     /** @var list<class-string> */
     private static array $inMemoryEvents = [];
@@ -45,7 +45,7 @@ final class DocBlockResolverCacheTest extends TestCase
 
     public function test_no_project_cached_enabled(): void
     {
-        DocBlockResolverCache::getCacheInstance();
+        ServiceResolverCache::getCacheInstance();
 
         self::assertSame([
             CustomServicesInMemoryCacheCreatedEvent::class,
@@ -54,8 +54,8 @@ final class DocBlockResolverCacheTest extends TestCase
 
     public function test_no_project_cached_enabled_and_cached(): void
     {
-        DocBlockResolverCache::getCacheInstance();
-        DocBlockResolverCache::getCacheInstance();
+        ServiceResolverCache::getCacheInstance();
+        ServiceResolverCache::getCacheInstance();
 
         self::assertSame([
             CustomServicesInMemoryCacheCreatedEvent::class,
@@ -71,7 +71,7 @@ final class DocBlockResolverCacheTest extends TestCase
                 $config->enableFileCache();
             }));
 
-        DocBlockResolverCache::getCacheInstance();
+        ServiceResolverCache::getCacheInstance();
 
         self::assertSame([
             CustomServicesPhpCacheCreatedEvent::class,

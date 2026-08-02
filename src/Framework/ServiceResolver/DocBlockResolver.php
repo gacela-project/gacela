@@ -68,7 +68,7 @@ final class DocBlockResolver
     private function getClassName(string $method): string
     {
         $cacheKey = $this->generateCacheKey($method);
-        $cache = DocBlockResolverCache::getCacheInstance();
+        $cache = ServiceResolverCache::getCacheInstance();
 
         if (!$cache->has($cacheKey)) {
             $className = $this->getClassFromDoc($method);

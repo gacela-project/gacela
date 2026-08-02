@@ -14,7 +14,18 @@ use Gacela\Framework\Event\ClassResolver\Cache\CustomServicesInMemoryCacheCreate
 use Gacela\Framework\Event\ClassResolver\Cache\CustomServicesPhpCacheCreatedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
-final class DocBlockResolverCache
+/**
+ * Holds the cache of resolved custom services, and decides what backs it: a
+ * PHP file when the project has file caching on, an in-memory map otherwise.
+ *
+ * The counterpart of {@see \Gacela\Framework\ClassResolver\ClassResolverCache},
+ * which does the same for resolved class names.
+ *
+ * Was `DocBlockResolverCache`, which named the wrong thing: nothing here is
+ * docblock-specific, and every symbol it touches says custom services --
+ * `CustomServicesPhpCache` and the three `CustomServices*` events.
+ */
+final class ServiceResolverCache
 {
     use EventDispatchingCapabilities;
 

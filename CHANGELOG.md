@@ -275,6 +275,12 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   - **`psalm/plugin-phpunit` stays on `^0.19`.** `0.20` requires
     `psalm/psalm-plugin-api ^0.1`, which conflicts with `vimeo/psalm <7.0.0`,
     and Psalm 7 is still at `7.0.0-beta19`.
+- `DocBlockResolverCache` is `ServiceResolverCache`. It caches resolved custom
+  services and decides whether a PHP file or an in-memory map backs them --
+  nothing about it is docblock-specific, and every symbol it touches says so
+  (`CustomServicesPhpCache`, and the three `CustomServices*` events). The name
+  now matches both what it does and its counterpart, `ClassResolverCache`.
+  Internal, so no migration.
 - `symfony-bridge/composer.json` matches the root package it ships from.
 - A root `gacela.php` scoping the console to `src`. Without it `doctor` walked
   the whole repository and reported two errors on a clean checkout: `tests/`

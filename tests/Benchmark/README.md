@@ -84,7 +84,7 @@ resolution), say so in the class docblock.
 Benches share one process per subject, and the repository shares one machine:
 
 - Reset global state in setup (`resetInMemoryCache()`, `Config::resetInstance()`,
-  `DocBlockResolverCache::resetCache()`, ...) so subjects don't leak into each
+  `ServiceResolverCache::resetCache()`, ...) so subjects don't leak into each
   other.
 - **Never enable the file cache without an explicit directory.** With no
   directory the cache falls back to `sys_get_temp_dir()`, which is shared with

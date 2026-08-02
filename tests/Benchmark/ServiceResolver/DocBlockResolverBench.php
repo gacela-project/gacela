@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\ServiceResolver;
 
 use Gacela\Framework\Gacela;
-use Gacela\Framework\ServiceResolver\DocBlockResolverCache;
+use Gacela\Framework\ServiceResolver\ServiceResolverCache;
 use PhpBench\Attributes\AfterMethods;
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 
 /**
  * Attribute-based vs phpdoc-based service resolution, single and repeated
- * (repeated variants exercise the DocBlockResolverCache).
+ * (repeated variants exercise the ServiceResolverCache).
  *
  * Sampling: inherits the phpbench.json defaults — see tests/Benchmark/README.md.
  */
@@ -25,12 +25,12 @@ final class DocBlockResolverBench
     {
         Gacela::bootstrap(__DIR__);
 
-        DocBlockResolverCache::resetCache();
+        ServiceResolverCache::resetCache();
     }
 
     public function tearDown(): void
     {
-        DocBlockResolverCache::resetCache();
+        ServiceResolverCache::resetCache();
     }
 
     /**

@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": ">=8.3",
-        "gacela-project/container": "^1.4.0",
+        "gacela-project/container": "^2.0.2",
         "symfony/dependency-injection": "^7.0 || ^8.0"
     },
     "require-dev": {

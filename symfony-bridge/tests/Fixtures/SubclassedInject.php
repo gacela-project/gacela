@@ -17,4 +17,6 @@ use Gacela\Container\Attribute\Inject;
  * ReflectionAttribute::IS_INSTANCEOF for exactly this reason.
  */
 #[Attribute(Attribute::TARGET_PARAMETER | Attribute::TARGET_PROPERTY | Attribute::TARGET_METHOD)]
-final class SubclassedInject extends Inject {}
+final class SubclassedInject extends Inject
+{
+}

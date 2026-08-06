@@ -75,7 +75,7 @@ jobs:
         run: ./vendor/bin/psalm --config=psalm.xml --no-progress --shepherd --show-info=false --stats --output-format=github
 
       - name: Run phpstan
-        run: ./vendor/bin/phpstan analyze -c phpstan.neon src
+        run: ./vendor/bin/phpstan analyze -c phpstan.neon --no-progress
 
       - name: Run phpstan (tests)
-        run: ./vendor/bin/phpstan analyze -c phpstan-tests.neon --no-progress
+        run: ./vendor/bin/phpstan analyze -c phpstan-tests.neon --no-progress --memory-limit=1G

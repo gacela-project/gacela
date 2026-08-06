@@ -12,6 +12,7 @@
 >
     <projectFiles>
         <directory name="src"/>
+        <directory name="symfony-bridge/src"/>
         <ignoreFiles>
             <directory name="vendor"/>
         </ignoreFiles>

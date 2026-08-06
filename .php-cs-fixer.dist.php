@@ -9,6 +9,10 @@ $finder = Finder::create()
     ->files()
     ->in(__DIR__ . '/src')
     ->in(__DIR__ . '/tests')
+    // symfony-bridge ships from this repo as its own package, so it is held to
+    // the same style and analysis as src/ and tests/.
+    ->in(__DIR__ . '/symfony-bridge/src')
+    ->in(__DIR__ . '/symfony-bridge/tests')
     ->ignoreVCSIgnored(true);
 
 return (new Config())

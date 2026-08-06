@@ -11,5 +11,6 @@ final class ServiceWithSubclassedInject
         public readonly FooInterface $foo,
         #[SubclassedInject(ConcreteBar::class)]
         public readonly BarInterface $bar,
-    ) {}
+    ) {
+    }
 }

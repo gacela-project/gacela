@@ -12,6 +12,7 @@ parameters:
     level: max
     paths:
         - %currentWorkingDirectory%/src/
+        - %currentWorkingDirectory%/symfony-bridge/src/
     parallel:
         maximumNumberOfProcesses: 4
     excludePaths:

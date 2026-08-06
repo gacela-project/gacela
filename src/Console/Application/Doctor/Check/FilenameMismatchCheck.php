@@ -247,10 +247,21 @@ final class FilenameMismatchCheck implements HealthCheck
 
     private function directoryOf(string $file): string
     {
-        $parts = explode('/', str_replace('\\', '/', $file));
+        $parts = $this->pathSegments($file);
         array_pop($parts);
 
         return implode('/', $parts);
+    }
+
+    /**
+     * Splits on both separators, so a Windows path is handled the same as a
+     * POSIX one — `getFileName()` reports whichever the platform uses.
+     *
+     * @return non-empty-list<string>
+     */
+    private function pathSegments(string $file): array
+    {
+        return explode('/', str_replace('\\', '/', $file));
     }
 
     /**
@@ -282,7 +293,7 @@ final class FilenameMismatchCheck implements HealthCheck
 
     private function basename(string $file): string
     {
-        $parts = explode('/', str_replace('\\', '/', $file));
+        $parts = $this->pathSegments($file);
         $filename = $parts[count($parts) - 1];
 
         return str_ends_with($filename, '.php')

@@ -110,24 +110,14 @@ final class GacelaInjectCompilerPassTest extends TestCase
         $this->pass->process($this->container);
     }
 
-    public function test_abstract_definition_is_skipped(): void
-    {
-        $this->container
-            ->register('app.abstract', ServiceWithInject::class)
-            ->setAbstract(true);
-
-        $this->pass->process($this->container);
-
-        // Still no arguments set — abstract definitions are not rewritten.
-        self::assertSame([], $this->container->getDefinition('app.abstract')->getArguments());
-    }
-
     /**
-     * Skipping an abstract definition must not stop the scan. The definitions
-     * are walked in registration order, so an abstract one registered first
-     * would hide every service after it.
+     * Two things at once, because they share a setup and the second is what the
+     * first is for: an abstract definition is not rewritten, and skipping it
+     * does not stop the scan. Definitions are walked in registration order, so
+     * an abstract one registered first would otherwise hide every service after
+     * it.
      */
-    public function test_an_abstract_definition_does_not_stop_later_ones_being_rewritten(): void
+    public function test_an_abstract_definition_is_skipped_without_stopping_the_scan(): void
     {
         $this->container
             ->register('app.abstract', ServiceWithInject::class)

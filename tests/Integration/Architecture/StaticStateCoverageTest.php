@@ -233,16 +233,20 @@ final class StaticStateCoverageTest extends TestCase
             if (!$file->isFile()) {
                 continue;
             }
+
             if (!str_ends_with((string)$path, '.php')) {
                 continue;
             }
+
             $fqcn = $this->fqcnFor((string)$path);
             if (interface_exists($fqcn)) {
                 continue;
             }
+
             if (trait_exists($fqcn)) {
                 continue;
             }
+
             if (!class_exists($fqcn)) {
                 continue;
             }

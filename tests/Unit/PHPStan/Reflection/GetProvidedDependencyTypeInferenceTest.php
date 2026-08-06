@@ -17,10 +17,9 @@ final class GetProvidedDependencyTypeInferenceTest extends TypeInferenceTestCase
     }
 
     /**
-     * @dataProvider dataFileAsserts
-     *
      * @param mixed ...$args
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('dataFileAsserts')]
     public function test_file_asserts(string $assertType, string $file, ...$args): void
     {
         $this->assertFileAsserts($assertType, $file, ...$args);

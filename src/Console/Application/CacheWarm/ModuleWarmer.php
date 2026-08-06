@@ -86,10 +86,10 @@ final class ModuleWarmer
 
         try {
             $this->cacheWarmService->warmClassResolution($module->facadeClass());
-        } catch (Throwable $e) {
+        } catch (Throwable $throwable) {
             // A module that cannot be resolved during warm (even via a PHP Error) must be
             // reported and counted as failed, not abort warming for every remaining module.
-            $this->formatter->writeClassFailed('Facade', $module->facadeClass(), $e->getMessage());
+            $this->formatter->writeClassFailed('Facade', $module->facadeClass(), $throwable->getMessage());
             ++$failedCount;
         }
 

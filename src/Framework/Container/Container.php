@@ -260,12 +260,15 @@ final class Container implements ContainerInterface
      * Locator and the lifecycle events -- `createScope(): static` is typed that
      * way upstream precisely so a decorator's scope is a decorator.
      *
-     * Gacela does not yet create scopes of its own: which lifetime owns one is
-     * the open design question, not the forwarding.
+     * This is how a module container is built: {@see \Gacela\Framework\AbstractFactory}
+     * takes one scope of the app container per Factory class, which is what
+     * makes `gacela.php` a once-per-bootstrap walk rather than a once-per-Factory
+     * one. A scope inherits the parent's plan registry, so the reflection a
+     * sibling already paid for is not paid again.
      */
     public function createScope(): static
     {
-        return self::decorating($this->inner->createScope());
+        return $this->decorating($this->inner->createScope());
     }
 
     /**
@@ -573,7 +576,7 @@ final class Container implements ContainerInterface
      * Wrap an inner container this class did not build -- the scope returned by
      * {@see createScope()}, which arrives already made.
      */
-    private static function decorating(GacelaContainer $inner): self
+    private function decorating(GacelaContainer $inner): self
     {
         $decorator = new self();
         $decorator->inner = $inner->withSelfReference($decorator);

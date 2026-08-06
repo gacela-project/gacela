@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\SymfonyBridge;
 
 use Gacela\Container\Attribute\Inject;
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -31,8 +32,7 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
 {
     public function __construct(
         private readonly string $gacelaServiceId = 'gacela.container',
-    ) {
-    }
+    ) {}
 
     public function process(ContainerBuilder $container): void
     {
@@ -60,7 +60,10 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
 
     private function rewriteIfInjected(string $id, Definition $definition, ReflectionParameter $parameter): void
     {
-        $attributes = $parameter->getAttributes(Inject::class);
+        // IS_INSTANCEOF, so a subclass re-presenting the attribute under another
+        // namespace is honoured too, as `Gacela\Framework\Attribute\Inject` does.
+        // An exact match would drop it silently and let Symfony autowire instead.
+        $attributes = $parameter->getAttributes(Inject::class, ReflectionAttribute::IS_INSTANCEOF);
         if ($attributes === []) {
             return;
         }

@@ -42,10 +42,10 @@ final class DebugModuleCommandTest extends TestCase
         self::assertStringContainsString('Module: CheckoutModule', $display);
 
         // Each pillar reports the class that was resolved for it.
-        self::assertPillarReports($display, 'Facade', CheckoutModuleFacade::class);
-        self::assertPillarReports($display, 'Factory', CheckoutModuleFactory::class);
-        self::assertPillarReports($display, 'Config', CheckoutModuleConfig::class);
-        self::assertPillarReports($display, 'Provider', CheckoutModuleProvider::class);
+        $this->assertPillarReports($display, 'Facade', CheckoutModuleFacade::class);
+        $this->assertPillarReports($display, 'Factory', CheckoutModuleFactory::class);
+        $this->assertPillarReports($display, 'Config', CheckoutModuleConfig::class);
+        $this->assertPillarReports($display, 'Provider', CheckoutModuleProvider::class);
 
         self::assertStringContainsString(
             sprintf('%s => %s', PaymentGatewayInterface::class, StripeGateway::class),
@@ -62,12 +62,12 @@ final class DebugModuleCommandTest extends TestCase
         $display = $tester->getDisplay();
 
         self::assertStringContainsString('Module: GadgetModule', $display);
-        self::assertPillarReports($display, 'Facade', GadgetModuleFacade::class);
+        $this->assertPillarReports($display, 'Facade', GadgetModuleFacade::class);
 
         // A pillar the module does not define is called out rather than left blank.
-        self::assertPillarReports($display, 'Factory', '(not found)');
-        self::assertPillarReports($display, 'Config', '(not found)');
-        self::assertPillarReports($display, 'Provider', '(not found)');
+        $this->assertPillarReports($display, 'Factory', '(not found)');
+        $this->assertPillarReports($display, 'Config', '(not found)');
+        $this->assertPillarReports($display, 'Provider', '(not found)');
     }
 
     public function test_reports_an_empty_container_as_having_no_bindings(): void
@@ -108,7 +108,7 @@ final class DebugModuleCommandTest extends TestCase
         $display = $tester->getDisplay();
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertPillarReports($display, 'Facade', WiredModuleFacade::class);
+        $this->assertPillarReports($display, 'Facade', WiredModuleFacade::class);
 
         // The facade's constructor dependency is drawn under the tree, labelled
         // with the parameter that pulled it in.
@@ -121,7 +121,7 @@ final class DebugModuleCommandTest extends TestCase
     public function test_every_matching_module_is_rendered(): void
     {
         $tester = $this->debugModule(['module' => 'Module']);
-        $lines = self::linesOf($tester);
+        $lines = $this->linesOf($tester);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
@@ -210,7 +210,7 @@ final class DebugModuleCommandTest extends TestCase
     {
         Gacela::bootstrap(__DIR__ . '/Fixtures', static function (GacelaConfig $config) use ($configFn): void {
             $config->resetInMemoryCache();
-            if ($configFn !== null) {
+            if ($configFn instanceof Closure) {
                 $configFn($config);
             }
         });
@@ -225,7 +225,7 @@ final class DebugModuleCommandTest extends TestCase
      * Asserts the $pillar row reports $class, without pinning the arrow glyph or
      * the column padding that separates them.
      */
-    private static function assertPillarReports(string $display, string $pillar, string $class): void
+    private function assertPillarReports(string $display, string $pillar, string $class): void
     {
         self::assertMatchesRegularExpression(
             '/' . $pillar . '\b[^\r\n]*' . preg_quote($class, '/') . '/',
@@ -237,10 +237,10 @@ final class DebugModuleCommandTest extends TestCase
     /**
      * @return list<string>
      */
-    private static function linesOf(CommandTester $tester): array
+    private function linesOf(CommandTester $tester): array
     {
         return array_map(
-            static fn (string $line): string => rtrim($line),
+            rtrim(...),
             explode("\n", $tester->getDisplay()),
         );
     }

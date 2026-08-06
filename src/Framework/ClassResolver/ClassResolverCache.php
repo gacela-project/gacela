@@ -35,6 +35,7 @@ final class ClassResolverCache
             if (self::shouldDispatch(ClassNameCacheCachedEvent::class)) {
                 self::dispatchEvent(new ClassNameCacheCachedEvent());
             }
+
             return $cache;
         }
 
@@ -43,11 +44,13 @@ final class ClassResolverCache
             if (self::shouldDispatch(ClassNamePhpCacheCreatedEvent::class)) {
                 self::dispatchEvent(new ClassNamePhpCacheCreatedEvent($cacheDir));
             }
+
             $cache = new ClassNamePhpCache($cacheDir, Config::getInstance()->getAppRootDir());
         } else {
             if (self::shouldDispatch(ClassNameInMemoryCacheCreatedEvent::class)) {
                 self::dispatchEvent(new ClassNameInMemoryCacheCreatedEvent());
             }
+
             $cache = new InMemoryCache(ClassNamePhpCache::class);
         }
 

@@ -56,7 +56,7 @@ final class FilenameMismatchCheck implements HealthCheck
         $mismatches = [];
 
         foreach ($this->modules as $module) {
-            foreach (self::pillarsOf($module) as $pillarClass) {
+            foreach ($this->pillarsOf($module) as $pillarClass) {
                 $mismatch = $this->inspect($pillarClass);
                 if ($mismatch !== null) {
                     $mismatches[] = $mismatch;
@@ -79,7 +79,7 @@ final class FilenameMismatchCheck implements HealthCheck
     /**
      * @return array<class-string>
      */
-    private static function pillarsOf(AppModule $module): array
+    private function pillarsOf(AppModule $module): array
     {
         return array_filter(
             [
@@ -102,8 +102,8 @@ final class FilenameMismatchCheck implements HealthCheck
             return null;
         }
 
-        $expected = self::shortName($pillarClass);
-        $actual = self::basename($file);
+        $expected = $this->shortName($pillarClass);
+        $actual = $this->basename($file);
 
         if ($actual === $expected) {
             return null;
@@ -112,14 +112,14 @@ final class FilenameMismatchCheck implements HealthCheck
         return sprintf('%s is declared in %s.php, expected %s.php', $pillarClass, $actual, $expected);
     }
 
-    private static function shortName(string $className): string
+    private function shortName(string $className): string
     {
         $parts = explode('\\', $className);
 
         return $parts[count($parts) - 1];
     }
 
-    private static function basename(string $file): string
+    private function basename(string $file): string
     {
         $parts = explode('/', str_replace('\\', '/', $file));
         $filename = $parts[count($parts) - 1];

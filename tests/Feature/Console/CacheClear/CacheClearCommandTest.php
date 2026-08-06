@@ -74,6 +74,7 @@ final class CacheClearCommandTest extends TestCase
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0777, true);
         }
+
         file_put_contents($this->cacheFile, '<?php return [];');
 
         $command = new CommandTester(new CacheClearCommand());
@@ -91,6 +92,7 @@ final class CacheClearCommandTest extends TestCase
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0777, true);
         }
+
         file_put_contents($this->customServicesCacheFile, '<?php return [];');
 
         $command = new CommandTester(new CacheClearCommand());

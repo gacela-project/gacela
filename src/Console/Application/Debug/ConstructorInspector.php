@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\Debug;
 
+use Gacela\Container\Attribute\Inject;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Gacela;
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -120,7 +122,7 @@ final class ConstructorInspector
     }
 
     /**
-     * @param class-string|callable|object $target
+     * @param callable|class-string|object $target
      */
     private function renderBindingTarget(string|object|callable $target): string
     {
@@ -149,7 +151,10 @@ final class ConstructorInspector
 
     private function readInject(ReflectionParameter $parameter): ?string
     {
-        $attributes = $parameter->getAttributes(\Gacela\Container\Attribute\Inject::class);
+        // IS_INSTANCEOF, so the framework's `Inject`, which subclasses this one to
+        // re-present it under `Gacela\Framework`, reports the same. An exact match
+        // would show an injected parameter as plain autowiring.
+        $attributes = $parameter->getAttributes(Inject::class, ReflectionAttribute::IS_INSTANCEOF);
         if ($attributes === []) {
             return null;
         }

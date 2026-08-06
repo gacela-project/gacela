@@ -48,7 +48,7 @@ final class BootstrapBatchesFileCacheTest extends TestCase
         try {
             Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
                 $config->resetInMemoryCache();
-                $config->addPlugin(static function (): void {
+                $config->addPlugin(static function (): never {
                     throw new RuntimeException('plugin boom');
                 });
             });

@@ -48,7 +48,11 @@ final class BenchmarkGroupsTest extends TestCase
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root));
 
         foreach ($files as $path => $file) {
-            if (!$file->isFile() || !str_ends_with((string)$path, 'Bench.php')) {
+            if (!$file->isFile()) {
+                continue;
+            }
+
+            if (!str_ends_with((string)$path, 'Bench.php')) {
                 continue;
             }
 

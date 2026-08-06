@@ -96,7 +96,7 @@ final class ModuleCycleDetector
 
                     // No `?? false` default: reaching here means $next has an
                     // $index, and $index and $onStack are written together.
-                    if ($onStack[$next] === true) {
+                    if ($onStack[$next]) {
                         $low[$node] = min($low[$node], $index[$next]);
                     }
                 }

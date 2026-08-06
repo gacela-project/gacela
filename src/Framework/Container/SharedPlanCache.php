@@ -9,11 +9,14 @@ use Gacela\Container\PlanCache;
 /**
  * One constructor-plan cache for every container Gacela builds.
  *
- * Gacela's containers are sibling roots, not a tree: {@see \Gacela\Framework\AbstractFactory}
- * keeps one per Factory class, and {@see \Gacela\Framework\ClassResolver\AbstractClassResolver}
- * and {@see \Gacela\Framework\Gacela} each hold one more. Without a shared cache
- * every one of them reflects the classes they have in common -- and they have
- * plenty in common, because the bindings from `gacela.php` reach all of them.
+ * Module containers no longer need it: {@see \Gacela\Framework\AbstractFactory}
+ * takes a scope of the app container per Factory class, and a scope inherits its
+ * parent's plan registry. What this still covers is the roots that are unrelated
+ * to that tree and to each other -- {@see \Gacela\Framework\ClassResolver\AbstractClassResolver},
+ * {@see Locator}, {@see \Gacela\Framework\Bootstrap\Setup\GacelaConfigExtender}
+ * and {@see \Gacela\Framework\Gacela}'s own. Without it each would reflect the
+ * classes they have in common, and they have plenty in common, because the
+ * bindings from `gacela.php` reach all of them.
  *
  * Only reflection output travels through it: constructor parameters,
  * instantiability, `#[Inject]` properties. Bindings, contextual bindings,

@@ -138,8 +138,8 @@ abstract class AbstractFactory
 
     private function createContainerWithProvidedDependencies(): Container
     {
-        $container = self::appContainer()->createScope();
-        self::scheduleAppWideExtensions($container);
+        $container = $this->appContainer()->createScope();
+        $this->scheduleAppWideExtensions($container);
 
         $resolver = (new ProviderResolver())->resolve($this);
         $resolver?->register($container);
@@ -165,9 +165,9 @@ abstract class AbstractFactory
      * already owns: the parent applies those, and asking a scope to extend an
      * inherited instance is refused upstream rather than silently ignored.
      */
-    private static function scheduleAppWideExtensions(Container $scope): void
+    private function scheduleAppWideExtensions(Container $scope): void
     {
-        $parent = self::appContainer();
+        $parent = $this->appContainer();
 
         foreach (Config::getInstance()->getSetupGacela()->getServicesToExtend() as $id => $extensions) {
             if ($parent->provides($id)) {
@@ -185,7 +185,7 @@ abstract class AbstractFactory
      * a Factory -- a console command reading config, say -- should not pay to
      * assemble the container every module would have shared.
      */
-    private static function appContainer(): Container
+    private function appContainer(): Container
     {
         if (self::$appContainer instanceof Container) {
             return self::$appContainer;

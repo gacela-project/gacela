@@ -37,7 +37,6 @@ final class ContainerArrayAccessTest extends TestCase
         $container['my-service'] = new StringValue('via-array-access');
 
         self::assertTrue(isset($container['my-service']));
-        /** @var StringValue $service */
         $service = $container['my-service'];
         self::assertSame('via-array-access', $service->value());
 

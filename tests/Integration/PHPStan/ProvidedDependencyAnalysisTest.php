@@ -26,7 +26,7 @@ final class ProvidedDependencyAnalysisTest extends TestCase
     public function test_a_call_on_a_class_string_dependency_is_checked(): void
     {
         self::assertStringContainsString(
-            'Call to an undefined method GacelaTest\Integration\PHPStan\Fixture\ProvidedClock::nooow().',
+            'Call to an undefined method ' . \GacelaTest\Integration\PHPStan\Fixture\ProvidedClock::class . '::nooow().',
             $this->analyseFixture(),
             'the class-string key must resolve to that class, not to mixed',
         );

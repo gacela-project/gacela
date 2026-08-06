@@ -9,6 +9,7 @@ use GacelaTest\SymfonyBridge\Fixtures\ConcreteBar;
 use GacelaTest\SymfonyBridge\Fixtures\FooInterface;
 use GacelaTest\SymfonyBridge\Fixtures\ServiceWithInject;
 use GacelaTest\SymfonyBridge\Fixtures\ServiceWithoutInject;
+use GacelaTest\SymfonyBridge\Fixtures\ServiceWithSubclassedInject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -45,6 +46,28 @@ final class GacelaInjectCompilerPassTest extends TestCase
         self::assertInstanceOf(Definition::class, $bar);
         self::assertSame(ConcreteBar::class, $bar->getClass());
         self::assertSame([ConcreteBar::class], $bar->getArguments());
+    }
+
+    /**
+     * The container's attribute is deliberately not `final`, so a consumer can
+     * re-present it under its own namespace, and `Gacela\Framework\Attribute\Inject`
+     * does. Reading for an exact FQN honours neither, and the failure is silent:
+     * the argument is simply never rewritten and Symfony autowires it instead.
+     */
+    public function test_a_subclass_of_the_inject_attribute_is_honored(): void
+    {
+        $this->container->register('app.subclassed', ServiceWithSubclassedInject::class);
+
+        $this->pass->process($this->container);
+
+        $foo = $this->argumentFor('app.subclassed', '$foo');
+        self::assertInstanceOf(Definition::class, $foo);
+        self::assertSame(FooInterface::class, $foo->getClass());
+        self::assertFactoryRoutesTo($foo, 'gacela.container');
+
+        $bar = $this->argumentFor('app.subclassed', '$bar');
+        self::assertInstanceOf(Definition::class, $bar);
+        self::assertSame(ConcreteBar::class, $bar->getClass());
     }
 
     public function test_service_without_inject_is_left_untouched(): void

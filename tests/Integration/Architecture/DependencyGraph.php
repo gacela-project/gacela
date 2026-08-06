@@ -66,7 +66,7 @@ final class DependencyGraph
      */
     public function classCycles(): array
     {
-        return self::cyclesOf($this->classEdges);
+        return $this->cyclesOf($this->classEdges);
     }
 
     /**
@@ -74,7 +74,7 @@ final class DependencyGraph
      */
     public function namespaceCycles(): array
     {
-        return self::cyclesOf($this->namespaceEdges);
+        return $this->cyclesOf($this->namespaceEdges);
     }
 
     /**
@@ -82,17 +82,19 @@ final class DependencyGraph
      *
      * @return list<string>
      */
-    private static function cyclesOf(array $edges): array
+    private function cyclesOf(array $edges): array
     {
         $cycles = [];
 
-        foreach (self::stronglyConnectedComponents($edges) as $component) {
+        foreach ($this->stronglyConnectedComponents($edges) as $component) {
             if (count($component) < 2) {
                 continue;
             }
+
             sort($component);
             $cycles[] = implode(' | ', $component);
         }
+
         sort($cycles);
 
         return $cycles;
@@ -123,7 +125,7 @@ final class DependencyGraph
                     return null;
                 }
 
-                foreach (self::referencesOf($node) as $reference) {
+                foreach ($this->referencesOf($node) as $reference) {
                     $this->addEdge($current, $reference);
                 }
 
@@ -132,7 +134,7 @@ final class DependencyGraph
 
             public function leaveNode(Node $node): ?Node
             {
-                if ($node instanceof Node\Stmt\ClassLike && $node->namespacedName !== null) {
+                if ($node instanceof Node\Stmt\ClassLike && $node->namespacedName instanceof \PhpParser\Node\Name) {
                     array_pop($this->stack);
                 }
 
@@ -142,17 +144,20 @@ final class DependencyGraph
             /**
              * @return list<string>
              */
-            private static function referencesOf(Node $node): array
+            private function referencesOf(Node $node): array
             {
                 if ($node instanceof Node\Stmt\TraitUse) {
-                    return self::names($node->traits);
+                    return $this->names($node->traits);
                 }
+
                 if ($node instanceof Node\Stmt\Catch_) {
-                    return self::names($node->types);
+                    return $this->names($node->types);
                 }
+
                 if ($node instanceof Node\Attribute) {
                     return [$node->name->toString()];
                 }
+
                 if ($node instanceof Node\Expr\New_
                     || $node instanceof Node\Expr\StaticCall
                     || $node instanceof Node\Expr\StaticPropertyFetch
@@ -161,12 +166,15 @@ final class DependencyGraph
                 ) {
                     return $node->class instanceof Node\Name ? [$node->class->toString()] : [];
                 }
+
                 if ($node instanceof Node\Param) {
                     return self::typeNames($node->type);
                 }
+
                 if ($node instanceof Node\Stmt\Property) {
                     return self::typeNames($node->type);
                 }
+
                 if ($node instanceof Node\FunctionLike) {
                     return self::typeNames($node->getReturnType());
                 }
@@ -179,7 +187,7 @@ final class DependencyGraph
              *
              * @return list<string>
              */
-            private static function names(array $names): array
+            private function names(array $names): array
             {
                 $out = [];
                 foreach ($names as $name) {
@@ -197,9 +205,11 @@ final class DependencyGraph
                 if ($type instanceof Node\Name) {
                     return [$type->toString()];
                 }
+
                 if ($type instanceof Node\NullableType) {
                     return self::typeNames($type->type);
                 }
+
                 if ($type instanceof Node\UnionType || $type instanceof Node\IntersectionType) {
                     $out = [];
                     foreach ($type->types as $inner) {
@@ -216,7 +226,7 @@ final class DependencyGraph
 
             private function enterClassLike(Node\Stmt\ClassLike $node): void
             {
-                if ($node->namespacedName === null) {
+                if (!$node->namespacedName instanceof \PhpParser\Node\Name) {
                     return;
                 }
 
@@ -228,13 +238,15 @@ final class DependencyGraph
                 if ($node instanceof Node\Stmt\Class_ && $node->extends instanceof Node\Name) {
                     $this->addEdge($fqn, $node->extends->toString());
                 }
+
                 if ($node instanceof Node\Stmt\Interface_) {
-                    foreach (self::names($node->extends) as $name) {
+                    foreach ($this->names($node->extends) as $name) {
                         $this->addEdge($fqn, $name);
                     }
                 }
+
                 if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Enum_) {
-                    foreach (self::names($node->implements) as $name) {
+                    foreach ($this->names($node->implements) as $name) {
                         $this->addEdge($fqn, $name);
                     }
                 }
@@ -250,9 +262,11 @@ final class DependencyGraph
                 if ($from === $to || !str_starts_with($to, 'Gacela\\')) {
                     return;
                 }
+
                 if (in_array($to, $this->edges[$from] ?? [], true)) {
                     return;
                 }
+
                 $this->edges[$from][] = $to;
             }
         };
@@ -317,9 +331,14 @@ final class DependencyGraph
 
             foreach ($targets as $to) {
                 $toNamespace = self::namespaceOf($to);
-                if ($fromNamespace === $toNamespace || in_array($toNamespace, $edges[$fromNamespace], true)) {
+                if ($fromNamespace === $toNamespace) {
                     continue;
                 }
+
+                if (in_array($toNamespace, $edges[$fromNamespace], true)) {
+                    continue;
+                }
+
                 $edges[$fromNamespace][] = $toNamespace;
             }
         }
@@ -341,7 +360,7 @@ final class DependencyGraph
      *
      * @return list<list<string>>
      */
-    private static function stronglyConnectedComponents(array $edges): array
+    private function stronglyConnectedComponents(array $edges): array
     {
         $index = [];
         $low = [];
@@ -376,13 +395,15 @@ final class DependencyGraph
                     if (!isset($edges[$next])) {
                         continue;
                     }
+
                     if (!isset($index[$next])) {
                         $work[count($work) - 1] = [$node, $i + 1];
                         $work[] = [$next, 0];
                         $recursed = true;
                         break;
                     }
-                    if (($onStack[$next] ?? false) === true) {
+
+                    if ($onStack[$next] ?? false) {
                         $low[$node] = min($low[$node], $index[$next]);
                     }
                 }
@@ -398,6 +419,7 @@ final class DependencyGraph
                         $onStack[$w] = false;
                         $component[] = $w;
                     } while ($w !== $node);
+
                     $result[] = $component;
                 }
 

@@ -79,12 +79,7 @@ final class ModuleWarmerTest extends TestCase
         self::assertSame(2, $resolved);
         self::assertSame(0, $skipped);
         self::assertSame(0, $failed);
-        self::assertSame(self::lines(
-            'Processing: Healthy',
-            '  ✓ Resolved Facade: ' . HealthyFacade::class,
-            '  ✓ Resolved Factory: ' . HealthyFactory::class,
-            '',
-        ), $this->output->fetch());
+        self::assertSame($this->lines('Processing: Healthy', '  ✓ Resolved Facade: ' . HealthyFacade::class, '  ✓ Resolved Factory: ' . HealthyFactory::class, ''), $this->output->fetch());
     }
 
     public function test_a_missing_pillar_class_is_skipped_not_failed(): void
@@ -98,12 +93,7 @@ final class ModuleWarmerTest extends TestCase
         self::assertSame(1, $resolved);
         self::assertSame(1, $skipped);
         self::assertSame(0, $failed);
-        self::assertSame(self::lines(
-            'Processing: Healthy',
-            '  ✓ Resolved Facade: ' . HealthyFacade::class,
-            '  ⚠ Skipped Factory: Missing\\Factory (class not found)',
-            '',
-        ), $this->output->fetch());
+        self::assertSame($this->lines('Processing: Healthy', '  ✓ Resolved Facade: ' . HealthyFacade::class, '  ⚠ Skipped Factory: Missing\\Factory (class not found)', ''), $this->output->fetch());
     }
 
     public function test_a_pillar_whose_autoloading_throws_is_reported_as_failed(): void
@@ -128,12 +118,7 @@ final class ModuleWarmerTest extends TestCase
         // `CacheWarmedEvent` report a healthy deploy as a broken one.
         self::assertSame(0, $skipped);
         self::assertSame(1, $failed);
-        self::assertSame(self::lines(
-            'Processing: Healthy',
-            '  ✓ Resolved Facade: ' . HealthyFacade::class,
-            '  ✗ Failed Factory: ' . self::EXPLODING_CLASS . ' (autoloading blew up)',
-            '',
-        ), $this->output->fetch());
+        self::assertSame($this->lines('Processing: Healthy', '  ✓ Resolved Facade: ' . HealthyFacade::class, '  ✗ Failed Factory: ' . self::EXPLODING_CLASS . ' (autoloading blew up)', ''), $this->output->fetch());
     }
 
     public function test_attribute_warming_only_happens_when_it_is_asked_for(): void
@@ -180,7 +165,7 @@ final class ModuleWarmerTest extends TestCase
         self::assertSame([2, 2, 0], $this->warmer->warmModules([$first, $second], warmAttributes: false));
     }
 
-    private static function lines(string ...$lines): string
+    private function lines(string ...$lines): string
     {
         return implode(PHP_EOL, $lines) . PHP_EOL;
     }

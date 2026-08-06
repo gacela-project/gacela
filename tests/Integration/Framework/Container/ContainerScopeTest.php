@@ -19,8 +19,10 @@ use PHPUnit\Framework\TestCase;
  * Container 2.0's `withSelfReference()` is what closes that, so these pin the
  * two halves: a scope is decorated like its parent, and it behaves like a scope.
  *
- * Gacela does not create scopes of its own yet -- which lifetime owns one is an
- * open design question -- but the primitive is reachable now.
+ * Both halves are load-bearing now rather than latent: {@see \Gacela\Framework\AbstractFactory}
+ * builds every module container as a scope of the app container, so a scope that
+ * came back undecorated would break the documented provider signature on each
+ * one of them.
  */
 final class ContainerScopeTest extends TestCase
 {

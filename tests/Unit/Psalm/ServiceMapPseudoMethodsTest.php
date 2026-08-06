@@ -9,7 +9,6 @@ use Gacela\Psalm\ServiceMapPseudoMethods;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
@@ -293,7 +292,7 @@ final class ServiceMapPseudoMethodsTest extends TestCase
      */
     private function attributeWithArgs(array $args, ?Name $attributeName = null): Attribute
     {
-        if ($attributeName === null) {
+        if (!$attributeName instanceof \PhpParser\Node\Name) {
             // How an imported `#[ServiceMap]` reaches the hook: the short name in
             // the source, the resolved one left on the node by the resolver.
             $attributeName = new Name('ServiceMap');
@@ -303,7 +302,7 @@ final class ServiceMapPseudoMethodsTest extends TestCase
         return new Attribute($attributeName, $args);
     }
 
-    private function classConstFetch(string $className): Expr
+    private function classConstFetch(string $className): \PhpParser\Node\Expr\ClassConstFetch
     {
         $fetch = new ClassConstFetch(new Name('BillingFacade'), new Identifier('class'));
         $fetch->class->setAttribute('resolvedName', $className);

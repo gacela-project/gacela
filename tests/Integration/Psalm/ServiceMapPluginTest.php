@@ -29,7 +29,7 @@ final class ServiceMapPluginTest extends TestCase
         $this->skipIfPsalmCannotRun($errors);
 
         self::assertStringContainsString(
-            'Method GacelaTest\Integration\Psalm\Fixture\ConsumerFacade::typoMethod does not exist',
+            'Method ' . \GacelaTest\Integration\Psalm\Fixture\ConsumerFacade::class . '::typoMethod does not exist',
             $errors,
             'the accessor must resolve to the facade, so calls made through it are checked',
         );

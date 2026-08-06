@@ -114,6 +114,7 @@ final class ContainerForwardingCoverageTest extends TestCase
             if ($method->isStatic()) {
                 continue;
             }
+
             if ($method->isConstructor()) {
                 continue;
             }

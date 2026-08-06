@@ -243,6 +243,17 @@ silently.
   concrete class, where an unforwarded method compiles fine and stays
   unreachable. The exemption list is empty now. `createScope()` was its last
   entry.
+- `AttributeReadCoverageTest` requires every read of a non-`final` attribute to
+  pass `ReflectionAttribute::IS_INSTANCEOF`. An attribute is left non-`final`
+  precisely so it can be subclassed, and a reader naming the parent without the
+  flag matches the parent and nothing else. `debug:dependencies`, `debug:module`
+  and `debug:container` read that way, and so did the Symfony bridge, so
+  `Gacela\Framework\Attribute\Inject` was honoured by the container and by
+  nothing else: the parameter showed as plain autowiring, and Symfony autowired
+  it. Both attribute docblocks name this failure and call it silent. What hid it
+  is that the container's own three reads were already correct, and every test
+  went through `Container::make()`. Both readers pass the flag now, with a test
+  each that reads through the surface rather than the container.
 - `Gacela::resetCache()` clears the shared plan cache, so plans are shared
   *within* a bootstrap rather than across one. It deliberately does **not** call
   `Container::resetStaticCaches()`. That was tried, and cost `FileCacheBench`
@@ -278,6 +289,32 @@ silently.
   - **`psalm/plugin-phpunit` stays on `^0.19`.** `0.20` requires
     `psalm/psalm-plugin-api ^0.1`, which conflicts with `vimeo/psalm <7.0.0`.
     Psalm 7 is still at `7.0.0-beta19`.
+- That rector refresh left `rector.php` naming `SetList::STRICT_BOOLEANS`, which
+  2.x removed, so `composer rector` and `composer fix` both died on an undefined
+  constant and the entire ruleset went unapplied. Nothing caught it: rector was
+  in neither `composer quality` nor any workflow. It is in both now, as
+  `composer rectorrun`, alongside `phpstan-tests`, which was also configured and
+  also never run in CI. Re-applying the ruleset touched 60 files, all internal;
+  the only `src/` signature changes are nine `private static` methods becoming
+  `private`.
+
+  Six dead-code rules and `ReadOnlyPropertyRector` are now bounded to `src/`.
+  Fixtures are shaped on purpose, and dead-code removal reads that intent as
+  waste: it stripped `stream_close()` and `stream_open()`'s by-ref `$openedPath`
+  from a stream wrapper PHP calls by contract, emptied the fixtures named
+  `EmptyConstructorService` and `UntypedAndUnionService`, and dropped the
+  assignments keeping a benchmark's subject from being optimised away.
+  `StringClassNameToClassConstantRector` is off for `CacheClearCommandTest`,
+  whose docblock already said why it names an `@internal` class as a string.
+
+  `LevelSetList` deliberately stays at `UP_TO_PHP_81`, under the `>=8.3` floor.
+  Going to 8.3 turns 60 changed files into 223, and what it adds is BC-hostile:
+  `ReadOnlyClassRector` alone marks 103 classes `readonly`, which a non-readonly
+  child may not extend, and that is every downstream `AbstractFacade`,
+  `AbstractFactory`, `AbstractConfig` and `AbstractProvider`.
+
+  `composer fix` ran `csfix` before `rector`, so rector's own output went
+  unformatted and left the tree failing `csrun`. Reordered.
 - A root `gacela.php` scoping the console to `src`. Without it, `doctor` walked
   the whole repository and reported two errors on a clean checkout. `tests/`
   holds fixtures that are deliberately separate applications, several declaring

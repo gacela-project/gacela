@@ -97,11 +97,11 @@
         "fix": [
             "@static-clear-cache",
             "@composer normalize",
-            "@csfix",
-            "@rector"
+            "@rector",
+            "@csfix"
         ],
         "infection": [
-            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=100 --min-covered-msi=100",
+            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max",
             "@static-clear-cache"
         ],
         "metrics-report": [
@@ -121,11 +121,13 @@
         "psalm": "XDEBUG_MODE=off ./vendor/bin/psalm",
         "quality": [
             "@csrun",
+            "@rectorrun",
             "@psalm",
             "@phpstan",
             "@phpstan-tests"
         ],
-        "rector": "./vendor/bin/rector",
+        "rector": "XDEBUG_MODE=off ./vendor/bin/rector",
+        "rectorrun": "XDEBUG_MODE=off ./vendor/bin/rector --dry-run",
         "static-clear-cache": [
             "@clear-cache-psalm",
             "@clear-cache-phpstan",

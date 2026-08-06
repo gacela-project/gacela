@@ -206,6 +206,7 @@ OUT;
 
         $bootstrap = new ConsoleBootstrap();
         $bootstrap->setAutoExit(false);
+
         $exitCode = $bootstrap->run($input, $output);
 
         self::assertSame(0, $exitCode);
@@ -256,7 +257,7 @@ OUT;
         // exception thrown, and not the anonymous fallback factory).
         $factory = (new $facadeClass())->getFactory();
         self::assertInstanceOf(AbstractFactory::class, $factory);
-        self::assertSame($factoryClass, $factory::class);
+        self::assertSame($factory::class, $factoryClass);
     }
 
     public function test_make_module_with_unknown_template_fails(): void
@@ -266,6 +267,7 @@ OUT;
 
         $bootstrap = new ConsoleBootstrap();
         $bootstrap->setAutoExit(false);
+
         $exitCode = $bootstrap->run($input, $output);
 
         self::assertSame(1, $exitCode);

@@ -90,12 +90,16 @@ final class GraphDiffMarkdownFormatter
 
         foreach ($head as $module => $dependencies) {
             foreach ($dependencies as $dependency) {
-                if (!in_array($module, $affected, true) || !in_array($dependency, $affected, true)) {
+                if (!in_array($module, $affected, true)) {
+                    continue;
+                }
+
+                if (!in_array($dependency, $affected, true)) {
                     continue;
                 }
 
                 $arrow = in_array(['from' => $module, 'to' => $dependency], $diff->addedEdges, true) ? '==>' : '-->';
-                $edges[] = sprintf('    %s %s %s', self::nodeId($module), $arrow, self::nodeId($dependency));
+                $edges[] = sprintf('    %s %s %s', $this->nodeId($module), $arrow, $this->nodeId($dependency));
                 $connected[] = $module;
                 $connected[] = $dependency;
             }
@@ -105,7 +109,7 @@ final class GraphDiffMarkdownFormatter
         // back in — a dependency that disappeared is the half of the diff a
         // reviewer cannot see anywhere else.
         foreach ($diff->removedEdges as $edge) {
-            $edges[] = sprintf('    %s -.-> %s', self::nodeId($edge['from']), self::nodeId($edge['to']));
+            $edges[] = sprintf('    %s -.-> %s', $this->nodeId($edge['from']), $this->nodeId($edge['to']));
             $connected[] = $edge['from'];
             $connected[] = $edge['to'];
         }
@@ -115,7 +119,7 @@ final class GraphDiffMarkdownFormatter
         $isolated = [];
         foreach ($affected as $module) {
             if (!in_array($module, $connected, true)) {
-                $isolated[] = sprintf('    %s', self::nodeId($module));
+                $isolated[] = sprintf('    %s', $this->nodeId($module));
             }
         }
 
@@ -145,7 +149,7 @@ final class GraphDiffMarkdownFormatter
         return array_values($modules);
     }
 
-    private static function nodeId(string $module): string
+    private function nodeId(string $module): string
     {
         return str_replace('\\', '.', $module);
     }

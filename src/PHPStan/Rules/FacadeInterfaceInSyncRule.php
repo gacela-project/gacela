@@ -52,7 +52,7 @@ final class FacadeInterfaceInSyncRule implements Rule
         }
 
         $facadeInterface = $this->matchingInterface($classReflection);
-        if ($facadeInterface === null) {
+        if (!$facadeInterface instanceof \PHPStan\Reflection\ClassReflection) {
             return [];
         }
 
@@ -60,8 +60,11 @@ final class FacadeInterfaceInSyncRule implements Rule
 
         foreach ($node->getOriginalNode()->getMethods() as $method) {
             $methodName = $method->name->toString();
+            if (!$method->isPublic()) {
+                continue;
+            }
 
-            if (!$method->isPublic() || str_starts_with($methodName, '__')) {
+            if (str_starts_with($methodName, '__')) {
                 continue;
             }
 

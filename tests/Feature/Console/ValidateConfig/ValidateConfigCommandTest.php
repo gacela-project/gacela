@@ -109,7 +109,7 @@ final class ValidateConfigCommandTest extends TestCase
         self::assertSame([
             '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_reports_the_gacela_php_file_when_the_project_root_has_one(): void
@@ -144,7 +144,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . SomeContract::class,
             '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_several_bindings_are_reported_in_the_plural(): void
@@ -161,7 +161,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . OtherContract::class,
             '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_a_binding_to_the_key_itself_is_compatible(): void
@@ -175,7 +175,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . SomeImplementation::class,
             '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_reports_a_binding_key_that_does_not_exist_and_keeps_going(): void
@@ -193,7 +193,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . SomeContract::class,
             '✓ No circular dependencies detected',
             '✗ Validation failed with errors',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_reports_a_binding_value_class_that_does_not_exist(): void
@@ -207,7 +207,7 @@ final class ValidateConfigCommandTest extends TestCase
             sprintf('✗ Binding value class does not exist: %s -> %s', SomeContract::class, self::MISSING_CLASS),
             '✓ No circular dependencies detected',
             '✗ Validation failed with errors',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_reports_a_binding_value_class_that_does_not_exist_and_keeps_going(): void
@@ -226,7 +226,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . CyclicContract::class,
             '✗ Circular dependency detected: ' . CyclicContract::class,
             '✗ Validation failed with errors',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
 
         self::assertStringContainsString(
             sprintf('chain: %s -> %s -> %s', CyclicB::class, CyclicA::class, CyclicB::class),
@@ -252,7 +252,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . SomeContract::class,
             '✓ No circular dependencies detected',
             '⚠ Validation completed with warnings',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
 
         // The warning explains what was expected, what the value actually is, and
         // how to fix it.
@@ -293,7 +293,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . SomeContract::class,
             '✓ No circular dependencies detected',
             '✗ Validation failed with errors',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_accepts_an_object_binding_that_is_an_instance_of_its_key(): void
@@ -307,7 +307,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . SomeImplementation::class,
             '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_accepts_a_callable_object_binding_whatever_its_key(): void
@@ -323,7 +323,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . SomeImplementation::class,
             '✓ No circular dependencies detected',
             '✓ Configuration is valid!',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
     }
 
     public function test_warns_when_a_valid_binding_cannot_be_resolved(): void
@@ -340,7 +340,7 @@ final class ValidateConfigCommandTest extends TestCase
         // Both bindings pass the compatibility check; the resolution failure is
         // reported afterwards as a warning naming the binding it belongs to,
         // followed by the reason the container gave.
-        $verdicts = self::verdictLinesOf($tester);
+        $verdicts = $this->verdictLinesOf($tester);
 
         self::assertSame('✓ ' . SomeImplementation::class, $verdicts[0]);
         self::assertSame('✓ ' . SomeContract::class, $verdicts[1]);
@@ -363,7 +363,7 @@ final class ValidateConfigCommandTest extends TestCase
             '✓ ' . CyclicContract::class,
             '✗ Circular dependency detected: ' . CyclicContract::class,
             '✗ Validation failed with errors',
-        ], self::verdictLinesOf($tester));
+        ], $this->verdictLinesOf($tester));
 
         // The chain that produced the cycle is printed under the error.
         self::assertStringContainsString(
@@ -460,10 +460,10 @@ final class ValidateConfigCommandTest extends TestCase
      *
      * @return list<string>
      */
-    private static function verdictLinesOf(CommandTester $tester): array
+    private function verdictLinesOf(CommandTester $tester): array
     {
         $verdicts = [];
-        foreach (self::linesOf($tester->getDisplay()) as $line) {
+        foreach ($this->linesOf($tester->getDisplay()) as $line) {
             $trimmed = ltrim($line);
             if (preg_match('/^[✓⚠✗] /u', $trimmed) === 1) {
                 $verdicts[] = $trimmed;
@@ -476,10 +476,10 @@ final class ValidateConfigCommandTest extends TestCase
     /**
      * @return list<string>
      */
-    private static function linesOf(string $display): array
+    private function linesOf(string $display): array
     {
         return array_map(
-            static fn (string $line): string => rtrim($line),
+            rtrim(...),
             explode("\n", $display),
         );
     }

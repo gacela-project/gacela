@@ -98,6 +98,7 @@ final class BinGacelaTest extends TestCase
                 unlink($cwd . '/vendor/autoload.php');
                 rmdir($cwd . '/vendor');
             }
+
             rmdir($cwd);
         }
     }

@@ -29,7 +29,7 @@ final class ServiceMapAnalysisTest extends TestCase
         $errors = $this->analyseFixture();
 
         self::assertStringContainsString(
-            'Call to an undefined method GacelaTest\Integration\PHPStan\Fixture\ConsumerFacade::typoMethod().',
+            'Call to an undefined method ' . \GacelaTest\Integration\PHPStan\Fixture\ConsumerFacade::class . '::typoMethod().',
             $errors,
             'the accessor must resolve to the facade, not to mixed',
         );
@@ -66,7 +66,7 @@ final class ServiceMapAnalysisTest extends TestCase
         $errors = $this->analyseFixture();
 
         self::assertStringContainsString(
-            'Call to an undefined method GacelaTest\Integration\PHPStan\Fixture\UndeclaredConsumer::getFacade().',
+            'Call to an undefined method ' . \GacelaTest\Integration\PHPStan\Fixture\UndeclaredConsumer::class . '::getFacade().',
             $errors,
         );
     }

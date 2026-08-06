@@ -42,10 +42,11 @@ final class ClassNameFinderTest extends TestCase
 
     public function test_rule_but_no_resolvable_types(): void
     {
+        // With no resolvable types there is no candidate to build, so the
+        // validator must not be consulted at all. The willReturn(true) this
+        // used to carry was dead: the call it described never happened.
         $classValidator = $this->createMock(ClassValidatorInterface::class);
-        $classValidator->method('isClassNameValid')
-            ->with('\valid\class\name')
-            ->willReturn(true);
+        $classValidator->expects(self::never())->method('isClassNameValid');
 
         $finderRule = $this->createStub(FinderRuleInterface::class);
         $finderRule->method('buildClassCandidate')->willReturn('\valid\class\name');
@@ -67,7 +68,8 @@ final class ClassNameFinderTest extends TestCase
     public function test_rule_returns_invalid_class_name(): void
     {
         $classValidator = $this->createMock(ClassValidatorInterface::class);
-        $classValidator->method('isClassNameValid')
+        $classValidator->expects(self::atLeastOnce())
+            ->method('isClassNameValid')
             ->with('\valid\class\name')
             ->willReturn(false);
 
@@ -91,7 +93,8 @@ final class ClassNameFinderTest extends TestCase
     public function test_rule_returns_valid_class_name(): void
     {
         $classValidator = $this->createMock(ClassValidatorInterface::class);
-        $classValidator->method('isClassNameValid')
+        $classValidator->expects(self::atLeastOnce())
+            ->method('isClassNameValid')
             ->with('\valid\class\name')
             ->willReturn(true);
 
@@ -114,7 +117,7 @@ final class ClassNameFinderTest extends TestCase
 
     public function test_caching_valid_class_name(): void
     {
-        $classValidator = $this->createMock(ClassValidatorInterface::class);
+        $classValidator = $this->createStub(ClassValidatorInterface::class);
         $classValidator->method('isClassNameValid')->willReturn(true);
 
         $finderRule = $this->createMock(FinderRuleInterface::class);

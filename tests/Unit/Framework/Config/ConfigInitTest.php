@@ -27,7 +27,7 @@ final class ConfigInitTest extends TestCase
 
     public function test_one_reader_linked_to_unsupported_type_is_ignored(): void
     {
-        $pathFinder = $this->createMock(PathFinderInterface::class);
+        $pathFinder = $this->createStub(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
         $configInit = new ConfigLoader(
@@ -41,7 +41,7 @@ final class ConfigInitTest extends TestCase
 
     public function test_no_readers_returns_empty_array(): void
     {
-        $pathFinder = $this->createMock(PathFinderInterface::class);
+        $pathFinder = $this->createStub(PathFinderInterface::class);
         $pathFinder->method('matchingPattern')->willReturn(['path1']);
 
         $configInit = new ConfigLoader(

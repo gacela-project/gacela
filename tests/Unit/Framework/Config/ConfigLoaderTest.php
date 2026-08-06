@@ -33,7 +33,7 @@ final class ConfigLoaderTest extends TestCase
 
         $configItem = new GacelaConfigItem('', '', $reader);
 
-        $normalizer = $this->createMock(PathNormalizerInterface::class);
+        $normalizer = $this->createStub(PathNormalizerInterface::class);
         $normalizer->method('normalizePathPattern')->willReturn('pattern');
         $normalizer->method('normalizePathPatternWithEnvironment')->willReturn('pattern-env');
         $normalizer->method('normalizePathLocal')->willReturn('/project/config/local.php');

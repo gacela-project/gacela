@@ -79,7 +79,7 @@ final class GetProvidedDependencyReturnTypeExtensionTest extends TestCase
 
     public function test_a_call_without_exactly_one_argument_is_left_alone(): void
     {
-        $scope = $this->createMock(Scope::class);
+        $scope = $this->createStub(Scope::class);
         $scope->method('getType')->willReturn(new ConstantStringType(MappedFacade::class));
 
         $noArgs = new MethodCall(new Variable('this'), new Identifier('getProvidedDependency'), []);
@@ -94,7 +94,7 @@ final class GetProvidedDependencyReturnTypeExtensionTest extends TestCase
 
     private function typeFor(Type $argumentType, string $rawValue): ?Type
     {
-        $scope = $this->createMock(Scope::class);
+        $scope = $this->createStub(Scope::class);
         $scope->method('getType')->willReturn($argumentType);
 
         $methodCall = new MethodCall(
@@ -108,7 +108,7 @@ final class GetProvidedDependencyReturnTypeExtensionTest extends TestCase
 
     private function method(string $name): MethodReflection
     {
-        $method = $this->createMock(MethodReflection::class);
+        $method = $this->createStub(MethodReflection::class);
         $method->method('getName')->willReturn($name);
 
         return $method;

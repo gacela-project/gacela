@@ -5,6 +5,7 @@ parameters:
     level: 0
     paths:
         - %currentWorkingDirectory%/tests/
+        - %currentWorkingDirectory%/symfony-bridge/tests/
     excludePaths:
         - %currentWorkingDirectory%/tests/Unit/PHPStan/Rules/Fixture/*
         # Fixtures that are deliberately wrong: an attribute pointing at a class

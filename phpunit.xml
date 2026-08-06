@@ -30,6 +30,7 @@
   <source>
     <include>
       <directory suffix=".php">src</directory>
+      <directory suffix=".php">symfony-bridge/src</directory>
     </include>
   </source>
 </phpunit>

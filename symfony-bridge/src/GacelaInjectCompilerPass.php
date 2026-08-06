@@ -32,18 +32,27 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
 {
     public function __construct(
         private readonly string $gacelaServiceId = 'gacela.container',
-    ) {}
+    ) {
+    }
 
     public function process(ContainerBuilder $container): void
     {
         foreach ($container->getDefinitions() as $id => $definition) {
-            if ($definition->isAbstract() || $definition->isSynthetic()) {
+            if ($definition->isAbstract()) {
+                continue;
+            }
+
+            if ($definition->isSynthetic()) {
                 continue;
             }
 
             /** @var class-string|null $class */
             $class = $definition->getClass();
-            if ($class === null || !class_exists($class)) {
+            if ($class === null) {
+                continue;
+            }
+
+            if (!class_exists($class)) {
                 continue;
             }
 

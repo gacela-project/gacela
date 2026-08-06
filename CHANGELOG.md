@@ -185,6 +185,20 @@ silently.
 
 ### Fixed
 
+- **`symfony-bridge` was outside every static analysis tool and the coverage
+  gate.** It ships from this repo as its own package, and phpstan, psalm,
+  php-cs-fixer, rector and phpunit's `<source>` all scoped to `src/` and
+  `tests/`, so only its 7 tests ran and nothing ever looked at the file. That is
+  how the `#[Inject]` subclass bug reached `main` — `GacelaInjectCompilerPass`
+  read the attribute by exact FQN, silently dropping every
+  `Gacela\Framework\Attribute\Inject` — and how the disjoint
+  `gacela-project/container: ^1.4.0` constraint survived. Both are now under all
+  five tools plus coverage and the mutation gate. The first run put the bridge at
+  87.8% MSI, under the 90 floor; the five escaped mutants are killed by tests
+  covering behaviour nobody asserted — that the generated argument definition is
+  private, that skipping an abstract definition does not stop the scan, and that
+  a builtin-typed `#[Inject]` parameter is left for Symfony. The bridge is at
+  100% MSI now.
 - **`doctor`'s filename check could not see the mismatch it exists to catch.**
   `FilenameMismatchCheck` drove off resolved pillar classes, and a class whose
   file basename does not match its short name does not autoload under PSR-4. So

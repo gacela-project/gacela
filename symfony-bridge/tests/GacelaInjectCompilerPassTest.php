@@ -7,6 +7,7 @@ namespace GacelaTest\SymfonyBridge;
 use Gacela\SymfonyBridge\GacelaInjectCompilerPass;
 use GacelaTest\SymfonyBridge\Fixtures\ConcreteBar;
 use GacelaTest\SymfonyBridge\Fixtures\FooInterface;
+use GacelaTest\SymfonyBridge\Fixtures\ServiceWithBuiltinTypedInject;
 use GacelaTest\SymfonyBridge\Fixtures\ServiceWithInject;
 use GacelaTest\SymfonyBridge\Fixtures\ServiceWithoutInject;
 use GacelaTest\SymfonyBridge\Fixtures\ServiceWithSubclassedInject;
@@ -39,7 +40,7 @@ final class GacelaInjectCompilerPassTest extends TestCase
         self::assertInstanceOf(Definition::class, $foo);
         self::assertSame(FooInterface::class, $foo->getClass());
         self::assertSame([FooInterface::class], $foo->getArguments());
-        self::assertFactoryRoutesTo($foo, 'gacela.container');
+        $this->assertFactoryRoutesTo($foo, 'gacela.container');
 
         // #[Inject(Concrete::class)] → routes the override instead.
         $bar = $this->argumentFor('app.service', '$bar');
@@ -63,7 +64,7 @@ final class GacelaInjectCompilerPassTest extends TestCase
         $foo = $this->argumentFor('app.subclassed', '$foo');
         self::assertInstanceOf(Definition::class, $foo);
         self::assertSame(FooInterface::class, $foo->getClass());
-        self::assertFactoryRoutesTo($foo, 'gacela.container');
+        $this->assertFactoryRoutesTo($foo, 'gacela.container');
 
         $bar = $this->argumentFor('app.subclassed', '$bar');
         self::assertInstanceOf(Definition::class, $bar);
@@ -86,8 +87,13 @@ final class GacelaInjectCompilerPassTest extends TestCase
             ->setArgument('$foo', 'already-set-by-symfony');
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('app.service');
-        $this->expectExceptionMessage('$foo');
+        // Asserted whole rather than by fragment: the message names the service
+        // and the parameter so a build failure points at the line to change, and
+        // half of it going missing still contains every fragment worth grepping.
+        $this->expectExceptionMessage(
+            'Gacela #[Inject] conflicts with an existing Symfony argument on service "app.service" '
+            . 'parameter "$foo". Remove the Symfony argument or drop the #[Inject] attribute.',
+        );
 
         $this->pass->process($this->container);
     }
@@ -116,6 +122,55 @@ final class GacelaInjectCompilerPassTest extends TestCase
         self::assertSame([], $this->container->getDefinition('app.abstract')->getArguments());
     }
 
+    /**
+     * Skipping an abstract definition must not stop the scan. The definitions
+     * are walked in registration order, so an abstract one registered first
+     * would hide every service after it.
+     */
+    public function test_an_abstract_definition_does_not_stop_later_ones_being_rewritten(): void
+    {
+        $this->container
+            ->register('app.abstract', ServiceWithInject::class)
+            ->setAbstract(true);
+        $this->container->register('app.service', ServiceWithInject::class);
+
+        $this->pass->process($this->container);
+
+        self::assertSame([], $this->container->getDefinition('app.abstract')->getArguments());
+        self::assertInstanceOf(Definition::class, $this->argumentFor('app.service', '$foo'));
+    }
+
+    /**
+     * The generated factory definition is an implementation detail of the
+     * argument it fills, so it has no business being reachable from the
+     * container by id.
+     */
+    public function test_the_generated_argument_definition_is_not_public(): void
+    {
+        $this->container->register('app.service', ServiceWithInject::class);
+
+        $this->pass->process($this->container);
+
+        $foo = $this->argumentFor('app.service', '$foo');
+        self::assertInstanceOf(Definition::class, $foo);
+        self::assertFalse($foo->isPublic());
+    }
+
+    /**
+     * `#[Inject]` with no override on a builtin-typed parameter names no class,
+     * so there is nothing for Gacela to resolve and the argument is left for
+     * Symfony. Rewriting it would ask the container for a service called
+     * "string".
+     */
+    public function test_a_builtin_typed_parameter_is_left_alone(): void
+    {
+        $this->container->register('app.builtin', ServiceWithBuiltinTypedInject::class);
+
+        $this->pass->process($this->container);
+
+        self::assertSame([], $this->container->getDefinition('app.builtin')->getArguments());
+    }
+
     public function test_synthetic_definition_is_skipped(): void
     {
         $this->container
@@ -137,7 +192,7 @@ final class GacelaInjectCompilerPassTest extends TestCase
 
         $argument = $this->argumentFor('app.service', '$foo');
         self::assertInstanceOf(Definition::class, $argument);
-        self::assertFactoryRoutesTo($argument, 'custom.gacela.container');
+        $this->assertFactoryRoutesTo($argument, 'custom.gacela.container');
     }
 
     private function argumentFor(string $serviceId, string $namedKey): mixed
@@ -145,7 +200,7 @@ final class GacelaInjectCompilerPassTest extends TestCase
         return $this->container->getDefinition($serviceId)->getArgument($namedKey);
     }
 
-    private static function assertFactoryRoutesTo(Definition $argument, string $expectedServiceId): void
+    private function assertFactoryRoutesTo(Definition $argument, string $expectedServiceId): void
     {
         /** @var array{0: Reference, 1: string} $factory */
         $factory = $argument->getFactory();

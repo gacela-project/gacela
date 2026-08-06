@@ -44,7 +44,7 @@ use function is_string;
  * @psalm-import-type Binding from \Gacela\Container\ContainerInterface
  * @psalm-import-type BindingsMap from \Gacela\Container\ContainerInterface as ContainerBindingsMap
  * @psalm-import-type StatsArray from \Gacela\Container\ContainerInterface
- * @psalm-import-type CompiledPlans from \Gacela\Container\DependencyResolver
+ * @psalm-import-type CompiledPlans from \Gacela\Container\PlanRegistry
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  */

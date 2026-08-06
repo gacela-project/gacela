@@ -182,6 +182,16 @@ silently.
 
 ### Fixed
 
+- **A second `Gacela::bootstrap()` served the first one's config.**
+  `ConfigFactory` memoized the merged config in a `private static` and returned
+  it before looking at the setup it was constructed with, so re-bootstrapping in
+  one process silently kept the first bootstrap's merged config, bindings
+  included. The only escape was `resetInMemoryCache()`, which
+  `docs/production-performance.md` tells you not to use in production — while
+  `UPGRADE.md` names long-running workers that re-bootstrap (RoadRunner, Swoole,
+  queue consumers) as a target scenario. The memo is now keyed on the app root
+  and the setup instance it was built from, so a different config rebuilds and an
+  identical one still hits the memo. Present since 1.0.1.
 - **The container retained every closure it was ever handed.** The mark that
   stops a wrapper being wrapped twice held its keys strongly, and was never
   cleaned. So `set()`, `bind()`, `extend()`, `factory()` and `protect()` leaked

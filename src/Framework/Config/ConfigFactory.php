@@ -29,6 +29,18 @@ final class ConfigFactory
 
     private static ?GacelaConfigFileInterface $gacelaFileConfig = null;
 
+    /**
+     * What the memo above was built from. The memo is keyed on identity rather
+     * than served unconditionally, because a second `Gacela::bootstrap()` in
+     * one process builds a new setup and used to be handed the first one's
+     * merged config — bindings included — unless the caller opted into
+     * `resetInMemoryCache()`. Holding the instance rather than a hash of it
+     * keeps the comparison exact and rules out `spl_object_id()` reuse.
+     */
+    private static ?SetupGacelaInterface $memoizedSetup = null;
+
+    private static ?string $memoizedAppRootDir = null;
+
     public function __construct(
         private readonly string $appRootDir,
         private readonly SetupGacelaInterface $setup,
@@ -38,6 +50,8 @@ final class ConfigFactory
     public static function resetCache(): void
     {
         self::$gacelaFileConfig = null;
+        self::$memoizedSetup = null;
+        self::$memoizedAppRootDir = null;
     }
 
     public function createConfigLoader(): ConfigLoader
@@ -51,7 +65,10 @@ final class ConfigFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        if (self::$gacelaFileConfig instanceof GacelaConfigFileInterface) {
+        if (self::$gacelaFileConfig instanceof GacelaConfigFileInterface
+            && self::$memoizedSetup === $this->setup
+            && self::$memoizedAppRootDir === $this->appRootDir
+        ) {
             return self::$gacelaFileConfig;
         }
 
@@ -73,6 +90,9 @@ final class ConfigFactory
             $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
             $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
+
+        self::$memoizedSetup = $this->setup;
+        self::$memoizedAppRootDir = $this->appRootDir;
 
         self::$gacelaFileConfig = array_reduce(
             $gacelaConfigFiles,

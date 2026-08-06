@@ -37,6 +37,43 @@ final class AfterResolvingHookTest extends TestCase
         self::assertSame('file', $service->logger());
     }
 
+    /**
+     * Pins the semantics rather than asserting they are ideal. The hook fires
+     * per *resolution*, not per construction: a shared instance fetched three
+     * times runs the callback three times, on the one object the constructor
+     * built once.
+     *
+     * The container documents this upstream ("this runs on every resolution");
+     * what was wrong was Gacela's own construction-flavoured wording around it.
+     * A callback that is not idempotent — appending to a collection, bumping a
+     * counter, registering a listener — has to account for it.
+     */
+    public function test_a_hook_fires_once_per_resolution_not_once_per_instance(): void
+    {
+        $calls = 0;
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$calls): void {
+            // Bound as an already-built instance, so the container hands the
+            // same object back every time and construction cannot be what
+            // drives the callback count.
+            $config->addBinding(ReportService::class, new ReportService());
+            $config->afterResolving(
+                ReportService::class,
+                static function () use (&$calls): void {
+                    ++$calls;
+                },
+            );
+        });
+
+        $container = Gacela::container();
+        $first = $container->get(ReportService::class);
+        $container->get(ReportService::class);
+        $third = $container->get(ReportService::class);
+
+        self::assertSame($first, $third, 'the container hands back one shared instance');
+        self::assertSame(3, $calls, 'but the hook ran once per get()');
+    }
+
     public function test_a_hook_registered_for_an_interface_runs_for_every_implementation(): void
     {
         $this->bootstrapWith(static function (GacelaConfig $config): void {
@@ -50,8 +87,8 @@ final class AfterResolvingHookTest extends TestCase
 
         // This is the case the issue opens with, and the reason the hook checks
         // each instance rather than doing a map lookup on the requested id.
-        self::assertSame('file', $container->get(ReportService::class)?->logger());
-        self::assertSame('file', $container->get(InvoiceService::class)?->logger());
+        self::assertSame('file', $this->resolvedReportService()->logger());
+        self::assertSame('file', $this->resolvedInvoiceService()->logger());
     }
 
     public function test_a_service_that_does_not_match_is_left_alone(): void
@@ -81,7 +118,7 @@ final class AfterResolvingHookTest extends TestCase
             );
         });
 
-        self::assertSame(Container::class, Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame(Container::class, $this->resolvedReportService()->logger());
     }
 
     public function test_several_hooks_for_one_id_run_in_registration_order(): void
@@ -93,7 +130,7 @@ final class AfterResolvingHookTest extends TestCase
             ));
         });
 
-        self::assertSame('first+second', Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame('first+second', $this->resolvedReportService()->logger());
     }
 
     public function test_a_hook_runs_for_a_service_built_through_make(): void
@@ -168,7 +205,7 @@ final class AfterResolvingHookTest extends TestCase
             );
         });
 
-        self::assertSame('file', Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame('file', $this->resolvedReportService()->logger());
     }
 
     public function test_a_hook_does_not_fire_for_a_service_that_is_not_an_object(): void
@@ -209,19 +246,39 @@ final class AfterResolvingHookTest extends TestCase
             );
         });
 
-        self::assertSame('file', Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame('file', $this->resolvedReportService()->logger());
 
         // Re-bootstrapping without the hook must not keep firing the old one.
         $this->bootstrapWith(static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
 
-        self::assertNull(Gacela::container()->get(ReportService::class)?->logger());
+        self::assertNull($this->resolvedReportService()->logger());
     }
 
     /**
      * @param callable(GacelaConfig):void $configFn
      */
+    /**
+     * Resolving through `?->` made a service that failed to resolve read as a
+     * null logger, so the assertion failed on the value instead of on the cause.
+     */
+    private function resolvedReportService(): ReportService
+    {
+        $service = Gacela::container()->get(ReportService::class);
+        self::assertInstanceOf(ReportService::class, $service);
+
+        return $service;
+    }
+
+    private function resolvedInvoiceService(): InvoiceService
+    {
+        $service = Gacela::container()->get(InvoiceService::class);
+        self::assertInstanceOf(InvoiceService::class, $service);
+
+        return $service;
+    }
+
     private function bootstrapWith(callable $configFn): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($configFn): void {

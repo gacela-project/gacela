@@ -64,7 +64,7 @@ final class Container implements ContainerInterface
     /**
      * Kept local rather than delegated to the inner container, whose 2.0
      * `afterResolving()` matches instances the same way but fires for *any*
-     * resolved value. A post-construction hook handed a string cannot wire it,
+     * resolved value. A resolution hook handed a string cannot wire it,
      * and a typed callback would TypeError -- see the object guard in
      * {@see fireAfterResolving()}. Reconciling the two is a behaviour decision,
      * not part of a dependency bump.
@@ -696,8 +696,8 @@ final class Container implements ContainerInterface
      * LoggerAwareInterface is built".
      *
      * A hook that throws takes the instance out of the container with it: a
-     * service whose post-construction wiring failed must not be served to the
-     * next caller as though it had succeeded.
+     * service whose hook wiring failed must not be served to the next caller as
+     * though it had succeeded.
      */
     private function fireAfterResolving(string $id, mixed $instance): void
     {

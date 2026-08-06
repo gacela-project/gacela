@@ -37,7 +37,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeHeader();
 
         self::assertSame(
-            self::lines('', 'Warming Gacela cache...', str_repeat('=', self::SEPARATOR_WIDTH), ''),
+            $this->lines('', 'Warming Gacela cache...', str_repeat('=', self::SEPARATOR_WIDTH), ''),
             $this->output->fetch(),
         );
     }
@@ -46,7 +46,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
     {
         $this->formatter->writeCacheCleared();
 
-        self::assertSame(self::lines('Cleared existing cache', ''), $this->output->fetch());
+        self::assertSame($this->lines('Cleared existing cache', ''), $this->output->fetch());
     }
 
     public function test_module_discovery_warning_surfaces_the_underlying_error(): void
@@ -54,10 +54,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeModuleDiscoveryWarning('composer.json is not readable');
 
         self::assertSame(
-            self::lines(
-                'Warning: Some modules could not be discovered due to errors',
-                '  Error: composer.json is not readable',
-            ),
+            $this->lines('Warning: Some modules could not be discovered due to errors', '  Error: composer.json is not readable'),
             $this->output->fetch(),
         );
     }
@@ -66,21 +63,21 @@ final class CacheWarmOutputFormatterTest extends TestCase
     {
         $this->formatter->writeModulesFound(['a', 'b', 'c']);
 
-        self::assertSame(self::lines('Found 3 modules', ''), $this->output->fetch());
+        self::assertSame($this->lines('Found 3 modules', ''), $this->output->fetch());
     }
 
     public function test_module_name_is_prefixed_with_processing(): void
     {
         $this->formatter->writeModuleName('Foo');
 
-        self::assertSame(self::lines('Processing: Foo'), $this->output->fetch());
+        self::assertSame($this->lines('Processing: Foo'), $this->output->fetch());
     }
 
     public function test_resolved_class_is_reported_with_its_type(): void
     {
         $this->formatter->writeClassResolved('Factory', 'App\\Foo\\FooFactory');
 
-        self::assertSame(self::lines('  ✓ Resolved Factory: App\\Foo\\FooFactory'), $this->output->fetch());
+        self::assertSame($this->lines('  ✓ Resolved Factory: App\\Foo\\FooFactory'), $this->output->fetch());
     }
 
     public function test_skipped_class_explains_why_it_was_skipped(): void
@@ -88,7 +85,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeClassSkipped('Config', 'App\\Foo\\FooConfig');
 
         self::assertSame(
-            self::lines('  ⚠ Skipped Config: App\\Foo\\FooConfig (class not found)'),
+            $this->lines('  ⚠ Skipped Config: App\\Foo\\FooConfig (class not found)'),
             $this->output->fetch(),
         );
     }
@@ -98,7 +95,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeClassFailed('Provider', 'App\\Foo\\FooProvider', 'cannot construct');
 
         self::assertSame(
-            self::lines('  ✗ Failed Provider: App\\Foo\\FooProvider (cannot construct)'),
+            $this->lines('  ✗ Failed Provider: App\\Foo\\FooProvider (cannot construct)'),
             $this->output->fetch(),
         );
     }
@@ -115,18 +112,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeSummary(3, 7, 2, 1, '0.123 seconds', '1.00 KB');
 
         self::assertSame(
-            self::lines(
-                str_repeat('=', self::SEPARATOR_WIDTH),
-                'Cache warming complete!',
-                '',
-                'Modules processed: 3',
-                'Classes resolved: 7',
-                'Classes skipped: 2',
-                'Classes failed: 1',
-                'Time taken: 0.123 seconds',
-                'Memory used: 1.00 KB',
-                '',
-            ),
+            $this->lines(str_repeat('=', self::SEPARATOR_WIDTH), 'Cache warming complete!', '', 'Modules processed: 3', 'Classes resolved: 7', 'Classes skipped: 2', 'Classes failed: 1', 'Time taken: 0.123 seconds', 'Memory used: 1.00 KB', ''),
             $this->output->fetch(),
         );
     }
@@ -136,11 +122,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeCacheInfo('/tmp/gacela/class-name-cache.php', '1.00 KB');
 
         self::assertSame(
-            self::lines(
-                'Cache file: /tmp/gacela/class-name-cache.php',
-                'Cache size: 1.00 KB',
-                '',
-            ),
+            $this->lines('Cache file: /tmp/gacela/class-name-cache.php', 'Cache size: 1.00 KB', ''),
             $this->output->fetch(),
         );
     }
@@ -150,11 +132,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeMergedConfigCacheInfo('/tmp/gacela/merged-config.php', '2.00 KB');
 
         self::assertSame(
-            self::lines(
-                'Merged config cache: /tmp/gacela/merged-config.php',
-                'Merged config size: 2.00 KB',
-                '',
-            ),
+            $this->lines('Merged config cache: /tmp/gacela/merged-config.php', 'Merged config size: 2.00 KB', ''),
             $this->output->fetch(),
         );
     }
@@ -164,17 +142,12 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeCacheWarning();
 
         self::assertSame(
-            self::lines(
-                'Warning: Cache file was not created. File caching might be disabled.',
-                'Enable file caching in your gacela.php configuration:',
-                '  $config->enableFileCache();',
-                '',
-            ),
+            $this->lines('Warning: Cache file was not created. File caching might be disabled.', 'Enable file caching in your gacela.php configuration:', '  $config->enableFileCache();', ''),
             $this->output->fetch(),
         );
     }
 
-    private static function lines(string ...$lines): string
+    private function lines(string ...$lines): string
     {
         return implode(PHP_EOL, $lines) . PHP_EOL;
     }

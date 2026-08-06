@@ -412,8 +412,6 @@ final class GacelaConfig
      * a new instance every time they are resolved from the container.
      *
      * The `$id` is usually a class name or interface.
-     *
-     * @return $this
      */
     public function addFactory(string $id, Closure $factory): self
     {
@@ -426,8 +424,6 @@ final class GacelaConfig
      * Register a protected service that cannot be extended.
      * Protected services are stored as closures and won't be invoked by the container,
      * making them useful for storing callable configurations.
-     *
-     * @return $this
      */
     public function addProtected(string $id, Closure $service): self
     {
@@ -439,8 +435,6 @@ final class GacelaConfig
     /**
      * Create an alias for a service.
      * This allows you to reference the same service with different names.
-     *
-     * @return $this
      */
     public function addAlias(string $alias, string $id): self
     {
@@ -462,8 +456,6 @@ final class GacelaConfig
      *
      * @param string $id The service identifier
      * @param Closure $factory The factory closure that creates the service when needed
-     *
-     * @return $this
      */
     public function addLazy(string $id, Closure $factory): self
     {

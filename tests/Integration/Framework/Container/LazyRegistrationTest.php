@@ -58,6 +58,7 @@ final class LazyRegistrationTest extends TestCase
 
         $container = new Container();
         $container->lazy(LazySpy::class);
+
         $instance = $container->get(LazySpy::class);
 
         self::assertSame(0, LazySpy::$constructed, 'resolving a lazy service must not construct it');
@@ -73,11 +74,10 @@ final class LazySpy
 {
     public static int $constructed = 0;
 
-    public string $marker;
+    public string $marker = 'built';
 
     public function __construct()
     {
         ++self::$constructed;
-        $this->marker = 'built';
     }
 }

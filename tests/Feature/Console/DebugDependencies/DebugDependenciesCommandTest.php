@@ -17,7 +17,9 @@ use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NoConstructorService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\UnboundContract;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use stdClass;
 use Symfony\Component\Console\Command\Command;
+
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function bin2hex;
@@ -181,7 +183,7 @@ final class DebugDependenciesCommandTest extends TestCase
 
     public function test_reads_a_class_declared_in_the_global_namespace(): void
     {
-        $class = 'GlobalScopeService' . self::suffix();
+        $class = 'GlobalScopeService' . $this->suffix();
         $path = $this->writeSource(sprintf("<?php\n\nclass %s\n{\n}\n", $class));
 
         $tester = $this->inspect($path);
@@ -192,7 +194,7 @@ final class DebugDependenciesCommandTest extends TestCase
 
     public function test_reads_a_class_in_a_single_segment_namespace(): void
     {
-        $namespace = 'SingleSegment' . self::suffix();
+        $namespace = 'SingleSegment' . $this->suffix();
         $path = $this->writeSource(sprintf("<?php\n\nnamespace %s;\n\nclass Service\n{\n}\n", $namespace));
 
         $tester = $this->inspect($path);
@@ -206,9 +208,17 @@ final class DebugDependenciesCommandTest extends TestCase
 
     public function test_skips_an_anonymous_class_and_a_class_constant_before_the_declaration(): void
     {
-        $namespace = 'SkipNoise' . self::suffix();
+        $namespace = 'SkipNoise' . $this->suffix();
         $path = $this->writeSource(sprintf(
-            "<?php\n\nnamespace %s\\Nested;\n\n\$anonymous = new class {\n};\n\$reference = \\stdClass::class;\n\n"
+            '<?php
+
+namespace %s\Nested;
+
+$anonymous = new class {
+};
+$reference = ' . stdClass::class . '::class;
+
+'
             . "class Real\n{\n}\n",
             $namespace,
         ));
@@ -224,7 +234,7 @@ final class DebugDependenciesCommandTest extends TestCase
 
     public function test_recognises_an_interface_declaration(): void
     {
-        $namespace = 'DeclaredInterface' . self::suffix();
+        $namespace = 'DeclaredInterface' . $this->suffix();
         $path = $this->writeSource(sprintf("<?php\n\nnamespace %s;\n\ninterface Contract\n{\n}\n", $namespace));
 
         $tester = $this->inspect($path);
@@ -238,7 +248,7 @@ final class DebugDependenciesCommandTest extends TestCase
 
     public function test_recognises_a_trait_declaration(): void
     {
-        $namespace = 'DeclaredTrait' . self::suffix();
+        $namespace = 'DeclaredTrait' . $this->suffix();
         $path = $this->writeSource(sprintf("<?php\n\nnamespace %s;\n\ntrait Helper\n{\n}\n", $namespace));
 
         $tester = $this->inspect($path);
@@ -254,7 +264,7 @@ final class DebugDependenciesCommandTest extends TestCase
 
     public function test_recognises_an_enum_declaration(): void
     {
-        $namespace = 'DeclaredEnum' . self::suffix();
+        $namespace = 'DeclaredEnum' . $this->suffix();
         $path = $this->writeSource(sprintf("<?php\n\nnamespace %s;\n\nenum Suit\n{\n}\n", $namespace));
 
         $tester = $this->inspect($path);
@@ -366,14 +376,14 @@ final class DebugDependenciesCommandTest extends TestCase
 
     private function writeSource(string $source): string
     {
-        $path = sys_get_temp_dir() . '/gacela-debug-deps-' . self::suffix() . '.php';
+        $path = sys_get_temp_dir() . '/gacela-debug-deps-' . $this->suffix() . '.php';
         file_put_contents($path, $source);
         $this->sourceFiles[] = $path;
 
         return $path;
     }
 
-    private static function suffix(): string
+    private function suffix(): string
     {
         return bin2hex(random_bytes(6));
     }

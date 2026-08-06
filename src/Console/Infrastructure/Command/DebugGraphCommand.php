@@ -182,8 +182,8 @@ final class DebugGraphCommand extends Command
 
         try {
             $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            $output->writeln(sprintf('<error>"%s" is not valid JSON: %s</error>', $path, $exception->getMessage()));
+        } catch (JsonException $jsonException) {
+            $output->writeln(sprintf('<error>"%s" is not valid JSON: %s</error>', $path, $jsonException->getMessage()));
 
             return null;
         }

@@ -40,8 +40,8 @@ final class ListModulesCommandTest extends TestCase
 
         // Each row marks the pillars that module actually has: TestModule3 has a
         // Facade, Factory and Config but no Provider; TestModule2 has only a Facade.
-        self::assertSame(3, substr_count(self::rowFor($output, 'LevelUp\\TestModule3'), 'x'));
-        self::assertSame(1, substr_count(self::rowFor($output, '\\TestModule2'), 'x'));
+        self::assertSame(3, substr_count($this->rowFor($output, 'LevelUp\\TestModule3'), 'x'));
+        self::assertSame(1, substr_count($this->rowFor($output, '\\TestModule2'), 'x'));
     }
 
     public function test_list_modules_detailed(): void
@@ -123,7 +123,7 @@ final class ListModulesCommandTest extends TestCase
      * The single table row mentioning $module, so pillar assertions do not depend
      * on how wide the columns render.
      */
-    private static function rowFor(string $output, string $module): string
+    private function rowFor(string $output, string $module): string
     {
         foreach (explode("\n", $output) as $line) {
             if (str_contains($line, $module)) {

@@ -134,7 +134,7 @@ final class AfterResolvingHookTest extends TestCase
             // *stored* instance -- bindings and factories build a new one per
             // resolution, so only this one has a cache to be left dirty.
             $config->addHandlerRegistry('dispatcher', ['a' => ReportService::class]);
-            $config->afterResolving('dispatcher', static function (object $service) use (&$seen): void {
+            $config->afterResolving('dispatcher', static function (object $service) use (&$seen): never {
                 $seen[] = $service;
                 throw new RuntimeException('hook failed');
             });
@@ -145,8 +145,8 @@ final class AfterResolvingHookTest extends TestCase
         try {
             $container->get('dispatcher');
             self::fail('the hook was expected to throw');
-        } catch (RuntimeException $exception) {
-            self::assertSame('hook failed', $exception->getMessage());
+        } catch (RuntimeException $runtimeException) {
+            self::assertSame('hook failed', $runtimeException->getMessage());
         }
 
         self::assertCount(1, $seen);
@@ -161,7 +161,7 @@ final class AfterResolvingHookTest extends TestCase
         $this->bootstrapWith(static function (GacelaConfig $config): void {
             // Registered first and matching nothing here: iteration has to skip
             // it and keep going, not give up on the rest.
-            $config->afterResolving(PlainService::class, static fn (PlainService $s) => $s);
+            $config->afterResolving(PlainService::class, static fn (PlainService $s): \GacelaTest\Integration\Framework\Container\Resolving\PlainService => $s);
             $config->afterResolving(
                 ReportService::class,
                 static fn (ReportService $service) => $service->setLogger('file'),

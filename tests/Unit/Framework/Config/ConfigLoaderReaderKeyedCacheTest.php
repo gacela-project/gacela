@@ -43,12 +43,12 @@ final class ConfigLoaderReaderKeyedCacheTest extends TestCase
         self::assertSame(
             1,
             $this->readsPerReader['b'] ?? 0,
-            'the second reader must be asked to read, not handed the first reader\'s parse',
+            "the second reader must be asked to read, not handed the first reader's parse",
         );
         self::assertArrayHasKey(
             'only-known-to-b',
             $all,
-            'the second reader\'s interpretation of the file must reach the merged config',
+            "the second reader's interpretation of the file must reach the merged config",
         );
         self::assertSame('from-reader-b', $all['shared-key']);
     }

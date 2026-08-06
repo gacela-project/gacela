@@ -301,6 +301,7 @@ final class ConfigTest extends TestCase
 
         // First access initialises and builds the internal ConfigFactory.
         $config->getAllValues();
+
         $firstFactory = $config->getFactory();
 
         // A second access on an empty merged config must not re-run init(),

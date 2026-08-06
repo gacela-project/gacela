@@ -35,7 +35,7 @@ final class DependencyTreeRendererTest extends TestCase
     public function test_a_child_is_drawn_under_its_parent(): void
     {
         $lines = $this->renderer->render([
-            self::node('Parent', 'p', [self::node('Child', 'c')]),
+            $this->node('Parent', 'p', [$this->node('Child', 'c')]),
         ]);
 
         self::assertCount(2, $lines);
@@ -53,8 +53,8 @@ final class DependencyTreeRendererTest extends TestCase
     public function test_a_non_last_child_keeps_the_trunk_open_for_its_own_children(): void
     {
         $lines = $this->renderer->render([
-            self::node('First', 'a', [self::node('Nested', 'n')]),
-            self::node('Second', 'b'),
+            $this->node('First', 'a', [$this->node('Nested', 'n')]),
+            $this->node('Second', 'b'),
         ]);
 
         self::assertStringContainsString('│', $lines[1], 'the grandchild hangs off a trunk that continues');
@@ -70,11 +70,11 @@ final class DependencyTreeRendererTest extends TestCase
     public function test_the_prefix_accumulates_through_every_level_under_the_indent(): void
     {
         $lines = $this->renderer->render([
-            self::node('A', 'a', [
-                self::node('A1', 'a1', [self::node('A1a', 'a1a')]),
-                self::node('A2', 'a2'),
+            $this->node('A', 'a', [
+                $this->node('A1', 'a1', [$this->node('A1a', 'a1a')]),
+                $this->node('A2', 'a2'),
             ]),
-            self::node('B', 'b'),
+            $this->node('B', 'b'),
         ], '  ');
 
         self::assertSame(
@@ -95,7 +95,7 @@ final class DependencyTreeRendererTest extends TestCase
     public function test_an_unprovided_node_is_marked_differently(): void
     {
         $lines = $this->renderer->render([
-            self::node('Missing', 'm', [], ProvisionStatus::Unresolvable),
+            $this->node('Missing', 'm', [], ProvisionStatus::Unresolvable),
         ]);
 
         self::assertStringContainsString('✗', $lines[0]);
@@ -106,7 +106,7 @@ final class DependencyTreeRendererTest extends TestCase
     public function test_a_cut_cycle_says_so(): void
     {
         $lines = $this->renderer->render([
-            self::node('Loop', 'l', [], ProvisionStatus::Autowired, repeated: true),
+            $this->node('Loop', 'l', [], ProvisionStatus::Autowired, repeated: true),
         ]);
 
         // Without this, a branch that stopped because it looped reads exactly
@@ -116,7 +116,7 @@ final class DependencyTreeRendererTest extends TestCase
 
     public function test_a_root_node_without_a_parameter_is_not_labelled_with_one(): void
     {
-        $lines = $this->renderer->render([self::node('Bare', null)]);
+        $lines = $this->renderer->render([$this->node('Bare', null)]);
 
         self::assertStringNotContainsString('$', $lines[0]);
         self::assertStringContainsString('Bare', $lines[0]);
@@ -125,7 +125,7 @@ final class DependencyTreeRendererTest extends TestCase
     public function test_the_indent_is_applied_to_every_line(): void
     {
         $lines = $this->renderer->render([
-            self::node('Parent', 'p', [self::node('Child', 'c')]),
+            $this->node('Parent', 'p', [$this->node('Child', 'c')]),
         ], '    ');
 
         foreach ($lines as $line) {
@@ -136,7 +136,7 @@ final class DependencyTreeRendererTest extends TestCase
     /**
      * @param list<DependencyTreeNode> $children
      */
-    private static function node(
+    private function node(
         string $className,
         ?string $parameter,
         array $children = [],

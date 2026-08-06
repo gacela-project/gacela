@@ -55,11 +55,9 @@ final class FilenameMismatchCheckTest extends TestCase
             'App\\Foo\\Provider',
         );
 
-        $check = new FilenameMismatchCheck([$module], static function (string $class): string {
-            return $class === 'App\\Foo\\Provider'
-                ? '/app/Foo/DependencyProvider.php'
-                : '/app/Foo/' . self::shortName($class) . '.php';
-        });
+        $check = new FilenameMismatchCheck([$module], static fn (string $class): string => $class === 'App\\Foo\\Provider'
+            ? '/app/Foo/DependencyProvider.php'
+            : '/app/Foo/' . self::shortName($class) . '.php');
 
         $result = $check->run();
 
@@ -86,7 +84,7 @@ final class FilenameMismatchCheckTest extends TestCase
         $module = new AppModule(
             'GacelaTest\\Fixtures',
             'Fixtures',
-            'GacelaTest\\Unit\\Console\\Application\\Doctor\\Check\\Fixtures\\Provider',
+            \GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\Provider::class,
         );
 
         $result = (new FilenameMismatchCheck([$module]))->run();

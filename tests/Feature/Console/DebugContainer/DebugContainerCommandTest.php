@@ -155,7 +155,7 @@ final class DebugContainerCommandTest extends TestCase
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($configFn): void {
             $config->resetInMemoryCache();
-            if ($configFn !== null) {
+            if ($configFn instanceof Closure) {
                 $configFn($config);
             }
         });

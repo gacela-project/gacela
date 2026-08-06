@@ -51,11 +51,13 @@ final class ServiceResolverCache
             if (self::shouldDispatch(CustomServicesPhpCacheCreatedEvent::class)) {
                 self::dispatchEvent(new CustomServicesPhpCacheCreatedEvent());
             }
+
             $cache = new CustomServicesPhpCache(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir());
         } else {
             if (self::shouldDispatch(CustomServicesInMemoryCacheCreatedEvent::class)) {
                 self::dispatchEvent(new CustomServicesInMemoryCacheCreatedEvent());
             }
+
             $cache = new InMemoryCache(CustomServicesPhpCache::class);
         }
 

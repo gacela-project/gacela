@@ -109,11 +109,11 @@ final class ProvidesScannerTest extends TestCase
     public function test_second_scan_reuses_the_memoized_reflection_entries(): void
     {
         ProvidesScanner::scan(new ProviderWithAttributesOnly(), new Container());
-        $memoizedEntries = self::memoizedEntriesFor(ProviderWithAttributesOnly::class);
+        $memoizedEntries = $this->memoizedEntriesFor(ProviderWithAttributesOnly::class);
 
         ProvidesScanner::scan(new ProviderWithAttributesOnly(), new Container());
 
-        self::assertSame($memoizedEntries, self::memoizedEntriesFor(ProviderWithAttributesOnly::class));
+        self::assertSame($memoizedEntries, $this->memoizedEntriesFor(ProviderWithAttributesOnly::class));
     }
 
     public function test_register_is_final_to_protect_the_provides_scan(): void
@@ -161,7 +161,7 @@ final class ProvidesScannerTest extends TestCase
      *
      * @return list<array{id: string, method: ReflectionMethod, needsContainer: bool}>
      */
-    private static function memoizedEntriesFor(string $provider): array
+    private function memoizedEntriesFor(string $provider): array
     {
         /** @var array<class-string, list<array{id: string, method: ReflectionMethod, needsContainer: bool}>> $cache */
         $cache = (new ReflectionProperty(ProvidesScanner::class, 'cache'))->getValue();

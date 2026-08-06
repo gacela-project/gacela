@@ -86,7 +86,7 @@ final class CacheManager
     {
         return array_filter(
             $this->allCacheFilePaths(),
-            static fn (string $cacheFile): bool => file_exists($cacheFile),
+            file_exists(...),
         );
     }
 

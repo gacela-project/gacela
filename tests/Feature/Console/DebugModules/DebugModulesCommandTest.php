@@ -113,12 +113,12 @@ final class DebugModulesCommandTest extends TestCase
     public function test_a_directory_filter_keeps_every_module_below_it(): void
     {
         $tester = $this->debugModules('Fixtures', ['filter' => __DIR__ . '/Fixtures']);
-        $lines = self::linesOf($tester);
+        $lines = $this->linesOf($tester);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertContains('  ' . self::moduleNameOf(GizmoModuleFacade::class), $lines);
-        self::assertContains('  ' . self::moduleNameOf(WidgetModuleExtraFacade::class), $lines);
-        self::assertContains('  ' . self::moduleNameOf(WidgetModuleFacade::class), $lines);
+        self::assertContains('  ' . $this->moduleNameOf(GizmoModuleFacade::class), $lines);
+        self::assertContains('  ' . $this->moduleNameOf(WidgetModuleExtraFacade::class), $lines);
+        self::assertContains('  ' . $this->moduleNameOf(WidgetModuleFacade::class), $lines);
         self::assertContains('Summary: 3 modules, 6 pillars inspected, 0 unresolvable parameters', $lines);
     }
 
@@ -244,7 +244,7 @@ final class DebugModulesCommandTest extends TestCase
         return $tester;
     }
 
-    private static function moduleNameOf(string $facadeClass): string
+    private function moduleNameOf(string $facadeClass): string
     {
         return substr($facadeClass, 0, (int)strrpos($facadeClass, '\\'));
     }
@@ -252,10 +252,10 @@ final class DebugModulesCommandTest extends TestCase
     /**
      * @return list<string>
      */
-    private static function linesOf(CommandTester $tester): array
+    private function linesOf(CommandTester $tester): array
     {
         return array_map(
-            static fn (string $line): string => rtrim($line),
+            rtrim(...),
             explode("\n", $tester->getDisplay()),
         );
     }

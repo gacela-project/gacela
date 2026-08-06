@@ -181,24 +181,24 @@ final class SetupGacelaTest extends TestCase
     {
         $setup = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->extendService('service', static fn (ArrayObject $ao) => $ao->append(1)),
+                ->extendService('service', static fn (ArrayObject $ao): null => $ao->append(1)),
         );
 
         $setup2 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())
-                ->extendService('service', static fn (ArrayObject $ao) => $ao->append(2))
-                ->extendService('service-2', static fn (ArrayObject $ao) => $ao->append(3)),
+                ->extendService('service', static fn (ArrayObject $ao): null => $ao->append(2))
+                ->extendService('service-2', static fn (ArrayObject $ao): null => $ao->append(3)),
         );
 
         $setup->merge($setup2);
 
         self::assertEquals([
             'service' => [
-                static fn (ArrayObject $ao) => $ao->append(1),
-                static fn (ArrayObject $ao) => $ao->append(2),
+                static fn (ArrayObject $ao): null => $ao->append(1),
+                static fn (ArrayObject $ao): null => $ao->append(2),
             ],
             'service-2' => [
-                static fn (ArrayObject $ao) => $ao->append(3),
+                static fn (ArrayObject $ao): null => $ao->append(3),
             ],
         ], $setup->getServicesToExtend());
     }

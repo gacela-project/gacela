@@ -85,7 +85,7 @@ final class FileContentIoTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(sprintf('Directory "%s" was not created', $directory));
 
-        self::silenced(fn (): mixed => $this->io->mkdir($directory));
+        $this->silenced(fn (): mixed => $this->io->mkdir($directory));
     }
 
     public function test_it_writes_the_file_contents(): void
@@ -104,7 +104,7 @@ final class FileContentIoTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(sprintf('File "%s" was not written', $path));
 
-        self::silenced(fn (): mixed => $this->io->filePutContents($path, 'written'));
+        $this->silenced(fn (): mixed => $this->io->filePutContents($path, 'written'));
     }
 
     public function test_it_overwrites_an_existing_file(): void
@@ -143,7 +143,7 @@ final class FileContentIoTest extends TestCase
      *
      * @param callable():mixed $call
      */
-    private static function silenced(callable $call): void
+    private function silenced(callable $call): void
     {
         set_error_handler(static fn (): bool => true);
 

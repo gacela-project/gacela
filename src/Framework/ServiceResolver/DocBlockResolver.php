@@ -26,7 +26,7 @@ final class DocBlockResolver
      * the exact rendered characters would turn a behavioural test into a
      * golden master over a message nobody reads character by character.
      */
-    private const string FALLBACK_DEPRECATION = 'Gacela: %s::%s() was resolved from %s. This fallback is deprecated and will be removed in 3.0. Declare it with #[ServiceMap(method: \'%s\', className: ...)] instead.';
+    private const string FALLBACK_DEPRECATION = "Gacela: %s::%s() was resolved from %s. This fallback is deprecated and will be removed in 3.0. Declare it with #[ServiceMap(method: '%s', className: ...)] instead.";
 
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];

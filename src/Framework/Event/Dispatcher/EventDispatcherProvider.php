@@ -17,7 +17,7 @@ final class EventDispatcherProvider
     private static ?NullEventDispatcher $preBootstrapDispatcher = null;
 
     /** @var (callable(): EventDispatcherInterface)|null */
-    private static $resolver = null;
+    private static $resolver;
 
     /**
      * @param callable(): EventDispatcherInterface $resolver

@@ -265,7 +265,7 @@ final class Container implements ContainerInterface
      */
     public function createScope(): static
     {
-        return self::decorating($this->inner->createScope());
+        return $this->decorating($this->inner->createScope());
     }
 
     /**
@@ -573,7 +573,7 @@ final class Container implements ContainerInterface
      * Wrap an inner container this class did not build -- the scope returned by
      * {@see createScope()}, which arrives already made.
      */
-    private static function decorating(GacelaContainer $inner): self
+    private function decorating(GacelaContainer $inner): self
     {
         $decorator = new self();
         $decorator->inner = $inner->withSelfReference($decorator);

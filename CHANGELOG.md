@@ -278,6 +278,32 @@ silently.
   - **`psalm/plugin-phpunit` stays on `^0.19`.** `0.20` requires
     `psalm/psalm-plugin-api ^0.1`, which conflicts with `vimeo/psalm <7.0.0`.
     Psalm 7 is still at `7.0.0-beta19`.
+- That rector refresh left `rector.php` naming `SetList::STRICT_BOOLEANS`, which
+  2.x removed, so `composer rector` and `composer fix` both died on an undefined
+  constant and the entire ruleset went unapplied. Nothing caught it: rector was
+  in neither `composer quality` nor any workflow. It is in both now, as
+  `composer rectorrun`, alongside `phpstan-tests`, which was also configured and
+  also never run in CI. Re-applying the ruleset touched 60 files, all internal;
+  the only `src/` signature changes are nine `private static` methods becoming
+  `private`.
+
+  Six dead-code rules and `ReadOnlyPropertyRector` are now bounded to `src/`.
+  Fixtures are shaped on purpose, and dead-code removal reads that intent as
+  waste: it stripped `stream_close()` and `stream_open()`'s by-ref `$openedPath`
+  from a stream wrapper PHP calls by contract, emptied the fixtures named
+  `EmptyConstructorService` and `UntypedAndUnionService`, and dropped the
+  assignments keeping a benchmark's subject from being optimised away.
+  `StringClassNameToClassConstantRector` is off for `CacheClearCommandTest`,
+  whose docblock already said why it names an `@internal` class as a string.
+
+  `LevelSetList` deliberately stays at `UP_TO_PHP_81`, under the `>=8.3` floor.
+  Going to 8.3 turns 60 changed files into 223, and what it adds is BC-hostile:
+  `ReadOnlyClassRector` alone marks 103 classes `readonly`, which a non-readonly
+  child may not extend, and that is every downstream `AbstractFacade`,
+  `AbstractFactory`, `AbstractConfig` and `AbstractProvider`.
+
+  `composer fix` ran `csfix` before `rector`, so rector's own output went
+  unformatted and left the tree failing `csrun`. Reordered.
 - A root `gacela.php` scoping the console to `src`. Without it, `doctor` walked
   the whole repository and reported two errors on a clean checkout. `tests/`
   holds fixtures that are deliberately separate applications, several declaring

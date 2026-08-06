@@ -68,6 +68,7 @@ final class FileCacheTest extends TestCase
         if (!is_dir($this->cacheDir)) {
             mkdir($this->cacheDir, 0777, true);
         }
+
         $file = $this->cacheDir . '/some-cache.php';
         file_put_contents($file, '<?php return [];');
 

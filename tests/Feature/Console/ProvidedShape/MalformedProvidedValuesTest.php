@@ -80,9 +80,7 @@ final class MalformedProvidedValuesTest extends TestCase
 
         $commands = (new ConsoleBootstrap())->all();
 
-        foreach ($commands as $command) {
-            self::assertInstanceOf(Command::class, $command);
-        }
+        self::assertContainsOnlyInstancesOf(Command::class, $commands);
     }
 
     /**

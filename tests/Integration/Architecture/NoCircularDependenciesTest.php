@@ -66,7 +66,7 @@ final class NoCircularDependenciesTest extends TestCase
         //     types, and SetupMerger alone reads 17 of its constants.
         //   - Container + Locator: a container and its service locator, both
         //     @internal, one concept split across two classes.
-        'Gacela\Framework\Bootstrap\AbstractSetupGacela'
+        \Gacela\Framework\Bootstrap\AbstractSetupGacela::class
             . ' | Gacela\Framework\Bootstrap\GacelaConfig'
             . ' | Gacela\Framework\Bootstrap\SetupEventDispatcher'
             . ' | Gacela\Framework\Bootstrap\SetupGacela'
@@ -155,45 +155,29 @@ final class NoCircularDependenciesTest extends TestCase
 
     public function test_source_tree_has_no_unexpected_class_cycles(): void
     {
-        self::assertNoUnexpectedCycles(
-            DependencyGraph::fromDirectory(self::SRC)->classCycles(),
-            self::ALLOWED_CLASS_CYCLES,
-            'class',
-        );
+        $this->assertNoUnexpectedCycles(DependencyGraph::fromDirectory(self::SRC)->classCycles(), self::ALLOWED_CLASS_CYCLES, 'class');
     }
 
     public function test_source_tree_has_no_unexpected_namespace_cycles(): void
     {
-        self::assertNoUnexpectedCycles(
-            DependencyGraph::fromDirectory(self::SRC)->namespaceCycles(),
-            self::ALLOWED_NAMESPACE_CYCLES,
-            'namespace',
-        );
+        $this->assertNoUnexpectedCycles(DependencyGraph::fromDirectory(self::SRC)->namespaceCycles(), self::ALLOWED_NAMESPACE_CYCLES, 'namespace');
     }
 
     public function test_allow_listed_class_cycles_still_exist(): void
     {
-        self::assertAllowListIsNotStale(
-            DependencyGraph::fromDirectory(self::SRC)->classCycles(),
-            self::ALLOWED_CLASS_CYCLES,
-            'ALLOWED_CLASS_CYCLES',
-        );
+        $this->assertAllowListIsNotStale(DependencyGraph::fromDirectory(self::SRC)->classCycles(), self::ALLOWED_CLASS_CYCLES, 'ALLOWED_CLASS_CYCLES');
     }
 
     public function test_allow_listed_namespace_cycles_still_exist(): void
     {
-        self::assertAllowListIsNotStale(
-            DependencyGraph::fromDirectory(self::SRC)->namespaceCycles(),
-            self::ALLOWED_NAMESPACE_CYCLES,
-            'ALLOWED_NAMESPACE_CYCLES',
-        );
+        $this->assertAllowListIsNotStale(DependencyGraph::fromDirectory(self::SRC)->namespaceCycles(), self::ALLOWED_NAMESPACE_CYCLES, 'ALLOWED_NAMESPACE_CYCLES');
     }
 
     /**
      * @param list<string> $found
      * @param list<string> $allowed
      */
-    private static function assertNoUnexpectedCycles(array $found, array $allowed, string $level): void
+    private function assertNoUnexpectedCycles(array $found, array $allowed, string $level): void
     {
         $unexpected = array_values(array_diff($found, $allowed));
 
@@ -216,7 +200,7 @@ final class NoCircularDependenciesTest extends TestCase
      * @param list<string> $found
      * @param list<string> $allowed
      */
-    private static function assertAllowListIsNotStale(array $found, array $allowed, string $constant): void
+    private function assertAllowListIsNotStale(array $found, array $allowed, string $constant): void
     {
         foreach ($allowed as $cycle) {
             self::assertContains(

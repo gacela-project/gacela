@@ -3,12 +3,17 @@
 declare(strict_types=1);
 
 use Rector\CodeQuality\Rector\Identical\FlipTypeControlToUseExclusiveTypeRector;
-use Rector\CodingStyle\Rector\Encapsed\EncapsedStringsToSprintfRector;
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\Assign\RemoveUnusedVariableAssignRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveEmptyClassMethodRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveParentDelegatingClassMethodRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedConstructorParamRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\DeadCode\Rector\Node\RemoveNonExistingVarAnnotationRector;
 use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
+use Rector\Php81\Rector\Property\ReadOnlyPropertyRector;
 use Rector\PHPUnit\CodeQuality\Rector\Class_\PreferPHPUnitThisCallRector;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
@@ -29,6 +34,9 @@ return static function (RectorConfig $rectorConfig): void {
         PreferPHPUnitThisCallRector::class,
         StringClassNameToClassConstantRector::class => [
             __DIR__ . '/tests/Feature/Framework/ListeningEvents/ClassResolver/GacelaClassResolverGeneralListenerTest.php',
+            // Names an `@internal` upstream class on purpose; `::class` makes it a
+            // real reference and phpstan-tests then reports classConstant.internalClass.
+            __DIR__ . '/tests/Feature/Console/CacheClear/CacheClearCommandTest.php',
         ],
         FlipTypeControlToUseExclusiveTypeRector::class => [
             __DIR__ . '/src/Framework/AbstractFactory.php',
@@ -45,14 +53,28 @@ return static function (RectorConfig $rectorConfig): void {
             __DIR__ . '/src/Console/Application/Debug/ConstructorInspector.php',
             __DIR__ . '/src/Console/Infrastructure/Command/DebugContainerCommand.php',
             __DIR__ . '/src/Framework/Attribute/CacheableTrait.php',
+            __DIR__ . '/src/Framework/Bootstrap/GacelaConfig.php',
+            __DIR__ . '/src/Framework/Container/Container.php',
             __DIR__ . '/src/Framework/Health/HealthCheckRegistry.php',
+            __DIR__ . '/src/Framework/Testing/ContainerFixture.php',
+            __DIR__ . '/src/Psalm/ServiceMapPseudoMethods.php',
         ],
-        // These tests embed PHP source inside heredocs; keeping interpolation makes
-        // the embedded snippets readable. sprintf() obscures them for no benefit.
-        EncapsedStringsToSprintfRector::class => [
-            __DIR__ . '/tests/Unit/Framework/Cache/FileCacheConcurrencyTest.php',
-            __DIR__ . '/tests/Unit/Framework/Cache/FileCacheTest.php',
-        ],
+        // Fixtures and benchmarks are shaped on purpose: an "unused" constructor
+        // parameter, an empty method or a discarded assignment is the thing under
+        // test. Dead-code removal reads that intent as waste and deletes it:
+        // it strips stream_close() and stream_open()'s by-ref $openedPath from a
+        // stream wrapper PHP calls by contract, empties the very fixtures named
+        // EmptyConstructorService and UntypedAndUnionService, and drops the
+        // assignments that stop a benchmark's subject from being optimised away.
+        RemoveEmptyClassMethodRector::class => [__DIR__ . '/tests'],
+        RemoveUnusedPublicMethodParameterRector::class => [__DIR__ . '/tests'],
+        RemoveUnusedConstructorParamRector::class => [__DIR__ . '/tests'],
+        RemoveParentDelegatingClassMethodRector::class => [__DIR__ . '/tests'],
+        RemoveUnusedVariableAssignRector::class => [__DIR__ . '/tests'],
+        // The container writes `#[Inject]` properties through
+        // ReflectionProperty::setValue(); readonly would make those fixtures
+        // untestable for the mechanism they exist to cover.
+        ReadOnlyPropertyRector::class => [__DIR__ . '/tests'],
         // `#[Before]`-attributed setup methods are invoked reflectively by PHPUnit;
         // rector sees them as unused. Removing them silently drops test isolation.
         RemoveUnusedPrivateMethodRector::class => [
@@ -71,7 +93,13 @@ return static function (RectorConfig $rectorConfig): void {
         SetList::TYPE_DECLARATION,
         SetList::EARLY_RETURN,
         SetList::INSTANCEOF,
-        SetList::STRICT_BOOLEANS,
+        // Deliberately below the >=8.3 floor in composer.json. Going up to 8.3
+        // turns 60 changed files into 223, and what it adds is BC-hostile for a
+        // framework: ReadOnlyClassRector alone marks 103 classes readonly, which
+        // a non-readonly child class may not extend, and that is every downstream
+        // AbstractFacade, AbstractFactory, AbstractConfig and AbstractProvider.
+        // AddTypeToConstRector types 74 public constants, fixing their type for
+        // subclasses that redeclare them. Raise this only as its own decision.
         LevelSetList::UP_TO_PHP_81,
         PHPUnitSetList::PHPUNIT_100,
         PHPUnitSetList::PHPUNIT_CODE_QUALITY,

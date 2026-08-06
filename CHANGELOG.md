@@ -283,7 +283,10 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
     rules, so whichever loads first, the other redeclares:
     `Cannot redeclare interface PhpParser\NodeVisitor`. Re-reproduced on
     `phpunit/phpunit:12.5.33` against `rector/rector:2.6.1`, which still ships
-    the gate; the whole unit suite fatals before the first test.
+    the gate; the whole unit suite fatals before the first test. It is a
+    coexistence problem, not an incompatibility: with rector removed, 12.5.33
+    installs and runs, and the suite is three unit tests and a batch of notices
+    short of green — integration and feature pass whole.
   - **`psalm/plugin-phpunit` stays on `^0.19`.** `0.20` requires
     `psalm/psalm-plugin-api ^0.1`, which conflicts with `vimeo/psalm <7.0.0`,
     and Psalm 7 is still at `7.0.0-beta19`.

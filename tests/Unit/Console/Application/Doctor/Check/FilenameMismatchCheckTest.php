@@ -7,6 +7,7 @@ namespace GacelaTest\Unit\Console\Application\Doctor\Check;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\BrokenModule\BrokenModuleFacade;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -85,6 +86,29 @@ final class FilenameMismatchCheckTest extends TestCase
             'GacelaTest\\Fixtures',
             'Fixtures',
             \GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\Provider::class,
+        );
+
+        $result = (new FilenameMismatchCheck([$module]))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertStringContainsString(
+            'is declared in DependencyProvider.php, expected Provider.php',
+            $result->details[0],
+        );
+    }
+
+    /**
+     * The case the check exists for, in the state it actually occurs in: the
+     * mismatched file is simply sitting in the module directory. It cannot
+     * autoload under PSR-4, so the pillar resolves to null and never reaches
+     * the check through the module's pillar list.
+     */
+    public function test_a_mismatched_file_is_found_even_though_its_class_cannot_autoload(): void
+    {
+        $module = new AppModule(
+            'GacelaTest\\Unit\\Console\\Application\\Doctor\\Check\\Fixtures\\BrokenModule',
+            'BrokenModule',
+            BrokenModuleFacade::class,
         );
 
         $result = (new FilenameMismatchCheck([$module]))->run();

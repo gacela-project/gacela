@@ -182,6 +182,16 @@ silently.
 
 ### Fixed
 
+- **`doctor`'s filename check could not see the mismatch it exists to catch.**
+  `FilenameMismatchCheck` drove off resolved pillar classes, and a class whose
+  file basename does not match its short name does not autoload under PSR-4. So
+  the pillar came back `null`, `pillarsOf()` filtered it out, and `doctor`
+  reported "every pillar class matches its filename" and exited 0 on exactly the
+  module whose provider silently never runs. It only had teeth under classmap
+  autoloading. It now also reads the module directory — located from the facade,
+  which is what made the module discoverable — and compares each file's declared
+  class against its basename with a token scan, so the mismatch is found
+  precisely when the class does not resolve. Both rename directions are covered.
 - **`Gacela::resetCache()` flushed a `#[Cacheable]` backend the application
   registered.** It reached `CacheableTrait::clearMethodCache()` transitively
   through `AbstractFacade::resetCache()`, and that calls `clear()` on whatever

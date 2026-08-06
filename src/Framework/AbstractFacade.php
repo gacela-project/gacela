@@ -25,7 +25,7 @@ abstract class AbstractFacade
         // Deliberately not clearMethodCache(): that clears whatever backend is
         // registered, and this path is reached by every Gacela::resetCache(),
         // including the one GacelaTestCase runs per test.
-        CacheableConfig::clearDefaultStorage();
+        CacheableConfig::clearFrameworkOwnedStorage();
     }
 
     /**

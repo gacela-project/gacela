@@ -36,11 +36,11 @@ final class CacheableConfig
     }
 
     /**
-     * Clear the method cache only when it is the framework's own in-memory
-     * default. Call `CacheableTrait::clearMethodCache()` to clear regardless of
-     * who registered the backend.
+     * Clear the method cache only when the framework owns the backend, i.e. it
+     * is the in-memory one `getStorage()` creates lazily. Call
+     * `CacheableTrait::clearMethodCache()` to clear whoever owns it.
      */
-    public static function clearDefaultStorage(): void
+    public static function clearFrameworkOwnedStorage(): void
     {
         if (self::$storageIsUserSupplied) {
             return;

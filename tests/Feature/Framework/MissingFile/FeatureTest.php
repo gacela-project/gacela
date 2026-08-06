@@ -43,6 +43,24 @@ final class FeatureTest extends TestCase
     }
 
     /**
+     * The other half of the Provider story. `getProvidedDependency()` raises
+     * `ProviderNotFoundException` only when the module has no Provider at all;
+     * with a Provider that registers nothing, it falls through to the container
+     * and a key nobody provided comes back as `null`.
+     *
+     * Pinned rather than endorsed. `get()` returning null for an unknown id is
+     * the container's call -- `getOrFail()` is the one that throws -- but the
+     * silent null reaches the application through Gacela's own API, which is
+     * why this belongs here and not only upstream.
+     */
+    public function test_a_provided_dependency_nobody_registered_comes_back_null(): void
+    {
+        $facade = new MissingContainerServiceKey\Facade();
+
+        self::assertNull($facade->domainService());
+    }
+
+    /**
      * A Facade+Factory-only module -- what `make:module --minimal` scaffolds --
      * has no Provider, but make() autowires by type and needs no bindings.
      */

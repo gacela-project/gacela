@@ -11,8 +11,8 @@ use Gacela\Framework\AbstractFacade;
  */
 final class Facade extends AbstractFacade
 {
-    public function error(): void
+    public function domainService(): mixed
     {
-        $this->getFactory()->createDomainService();
+        return $this->getFactory()->createDomainService();
     }
 }

@@ -8,8 +8,8 @@ use Gacela\Framework\AbstractFactory;
 
 final class Factory extends AbstractFactory
 {
-    public function createDomainService(): void
+    public function createDomainService(): mixed
     {
-        $this->getProvidedDependency('non-existing-service');
+        return $this->getProvidedDependency('non-existing-service');
     }
 }

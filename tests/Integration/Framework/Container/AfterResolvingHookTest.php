@@ -87,8 +87,8 @@ final class AfterResolvingHookTest extends TestCase
 
         // This is the case the issue opens with, and the reason the hook checks
         // each instance rather than doing a map lookup on the requested id.
-        self::assertSame('file', $container->get(ReportService::class)?->logger());
-        self::assertSame('file', $container->get(InvoiceService::class)?->logger());
+        self::assertSame('file', $this->resolvedReportService()->logger());
+        self::assertSame('file', $this->resolvedInvoiceService()->logger());
     }
 
     public function test_a_service_that_does_not_match_is_left_alone(): void
@@ -118,7 +118,7 @@ final class AfterResolvingHookTest extends TestCase
             );
         });
 
-        self::assertSame(Container::class, Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame(Container::class, $this->resolvedReportService()->logger());
     }
 
     public function test_several_hooks_for_one_id_run_in_registration_order(): void
@@ -130,7 +130,7 @@ final class AfterResolvingHookTest extends TestCase
             ));
         });
 
-        self::assertSame('first+second', Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame('first+second', $this->resolvedReportService()->logger());
     }
 
     public function test_a_hook_runs_for_a_service_built_through_make(): void
@@ -205,7 +205,7 @@ final class AfterResolvingHookTest extends TestCase
             );
         });
 
-        self::assertSame('file', Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame('file', $this->resolvedReportService()->logger());
     }
 
     public function test_a_hook_does_not_fire_for_a_service_that_is_not_an_object(): void
@@ -246,19 +246,39 @@ final class AfterResolvingHookTest extends TestCase
             );
         });
 
-        self::assertSame('file', Gacela::container()->get(ReportService::class)?->logger());
+        self::assertSame('file', $this->resolvedReportService()->logger());
 
         // Re-bootstrapping without the hook must not keep firing the old one.
         $this->bootstrapWith(static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
 
-        self::assertNull(Gacela::container()->get(ReportService::class)?->logger());
+        self::assertNull($this->resolvedReportService()->logger());
     }
 
     /**
      * @param callable(GacelaConfig):void $configFn
      */
+    /**
+     * Resolving through `?->` made a service that failed to resolve read as a
+     * null logger, so the assertion failed on the value instead of on the cause.
+     */
+    private function resolvedReportService(): ReportService
+    {
+        $service = Gacela::container()->get(ReportService::class);
+        self::assertInstanceOf(ReportService::class, $service);
+
+        return $service;
+    }
+
+    private function resolvedInvoiceService(): InvoiceService
+    {
+        $service = Gacela::container()->get(InvoiceService::class);
+        self::assertInstanceOf(InvoiceService::class, $service);
+
+        return $service;
+    }
+
     private function bootstrapWith(callable $configFn): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($configFn): void {

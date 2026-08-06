@@ -61,6 +61,12 @@ trait CacheableTrait
 
     private static ?stdClass $cacheMissSentinel = null;
 
+    /**
+     * Clears the whole storage, not just this facade's entries, and does so
+     * whether the backend is the in-memory default or one the application
+     * registered. `Gacela::resetCache()` deliberately does not come through
+     * here: it clears only the framework-owned default.
+     */
     public static function clearMethodCache(): void
     {
         CacheableConfig::getStorage()->clear();

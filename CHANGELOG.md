@@ -182,6 +182,17 @@ silently.
 
 ### Fixed
 
+- **`Gacela::resetCache()` flushed a `#[Cacheable]` backend the application
+  registered.** It reached `CacheableTrait::clearMethodCache()` transitively
+  through `AbstractFacade::resetCache()`, and that calls `clear()` on whatever
+  storage is configured. `CacheableConfig::setStorage()` is the documented way
+  to wire APCu or Redis, and `docs/caching.md` recommends it — so on any
+  application that followed the advice, resetting Gacela's caches emptied the
+  whole store. It bit hardest in test suites: `GacelaTestCase::bootstrapGacela()`
+  resets unconditionally, so a suite pointed at a real Redis DB cleared it once
+  per test. `resetCache()` now clears only the framework's own in-memory default
+  and leaves a registered backend alone. Calling `clearMethodCache()` yourself
+  is unchanged and still clears everything, as its docs say.
 - **A second `Gacela::bootstrap()` served the first one's config.**
   `ConfigFactory` memoized the merged config in a `private static` and returned
   it before looking at the setup it was constructed with, so re-bootstrapping in

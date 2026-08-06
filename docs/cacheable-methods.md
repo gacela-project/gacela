@@ -88,6 +88,11 @@ CatalogFacade::clearMethodCache();
 the rest of your application, if you wired APCu or Redis — it removes everything.
 Reach for `clearMethodCacheFor()` unless you genuinely mean "drop the entire cache".
 
+`Gacela::resetCache()` does **not** reach a backend you registered with
+`CacheableConfig::setStorage()`. It is an in-memory reset, and clears only the
+default per-process storage. Calling `clearMethodCache()` yourself still clears
+whatever backend is registered — that is the difference between the two.
+
 `clearMethodCacheFor()` matches on the exact `Class::method::` prefix. Passing `'get'` does **not** clear every method whose name starts with `get`.
 
 It also cannot see entries written under a custom `key:` template — those keys are the

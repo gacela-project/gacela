@@ -101,7 +101,7 @@
             "@csfix"
         ],
         "infection": [
-            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max --min-msi=100 --min-covered-msi=100",
+            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max",
             "@static-clear-cache"
         ],
         "metrics-report": [

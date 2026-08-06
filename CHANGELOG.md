@@ -3,7 +3,7 @@
 ## Unreleased
 
 A foundation major. The runtime change is two lines — PHP `>=8.3` and
-`gacela-project/container` `^2.0.1`, up from a `0.x`. Most of what follows comes
+`gacela-project/container` `^2.0.2`, up from a `0.x`. Most of what follows comes
 from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`,
 and container exceptions where 0.x emitted raw PHP errors.
 
@@ -144,7 +144,7 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   against 300 entries 18.0ms → 0.07ms — the scope column is flat. An application
   with little configuration sees none of that and pays ~2.5% on warm class
   resolution for the fall-through.
-- **`gacela-project/container` `^2.0.1`** (was `^0.10.0`). `Container` is
+- **`gacela-project/container` `^2.0.2`** (was `^0.10.0`). `Container` is
   `final`, so Gacela decorates it by composition. Two of its fixes land in
   Gacela's own path: a class-string sharing a name with a function was *invoked*
   instead of instantiated, and `has()` remembered a negative, so a class
@@ -281,11 +281,16 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
     `PHPUnit\Runner\Version::id() >= 12` — so it activates only under PHPUnit
     12. This package requires `nikic/php-parser` directly for its PHPStan
     rules, so whichever loads first, the other redeclares:
-    `Cannot redeclare interface PhpParser\NodeVisitor`. Reproduced on
-    `phpunit/phpunit:^12.0`; the whole unit suite fatals before the first test.
+    `Cannot redeclare interface PhpParser\NodeVisitor`. Re-reproduced on
+    `phpunit/phpunit:12.5.33` against `rector/rector:2.6.1`, which still ships
+    the gate; the whole unit suite fatals before the first test.
   - **`psalm/plugin-phpunit` stays on `^0.19`.** `0.20` requires
     `psalm/psalm-plugin-api ^0.1`, which conflicts with `vimeo/psalm <7.0.0`,
     and Psalm 7 is still at `7.0.0-beta19`.
+- The container's constructor-plan type aliases moved to `PlanRegistry`, which
+  holds them, from `DependencyResolver`, which builds them, so the decorator's
+  `@psalm-import-type CompiledPlans` follows them. That symbol only exists from
+  container 2.0.2, which is why the floor is `^2.0.2` rather than `^2.0.1`.
 - `DocBlockResolverCache` is `ServiceResolverCache`. It caches resolved custom
   services and decides whether a PHP file or an in-memory map backs them —
   nothing about it is docblock-specific, and every symbol it touches says so

@@ -16,6 +16,8 @@ use PHPUnit\Framework\TestCase;
 
 final class ClassNameFinderTest extends TestCase
 {
+    private const CANDIDATE = '\\valid\\class\\name';
+
     protected function setUp(): void
     {
         InMemoryCache::resetCache();
@@ -42,13 +44,14 @@ final class ClassNameFinderTest extends TestCase
 
     public function test_rule_but_no_resolvable_types(): void
     {
+        // With no resolvable types there is no candidate to build, so the
+        // validator must not be consulted at all. The willReturn(true) this
+        // used to carry was dead: the call it described never happened.
         $classValidator = $this->createMock(ClassValidatorInterface::class);
-        $classValidator->method('isClassNameValid')
-            ->with('\valid\class\name')
-            ->willReturn(true);
+        $classValidator->expects(self::never())->method('isClassNameValid');
 
         $finderRule = $this->createStub(FinderRuleInterface::class);
-        $finderRule->method('buildClassCandidate')->willReturn('\valid\class\name');
+        $finderRule->method('buildClassCandidate')->willReturn(self::CANDIDATE);
 
         $classNameFinder = new ClassNameFinder(
             $classValidator,
@@ -66,61 +69,33 @@ final class ClassNameFinderTest extends TestCase
 
     public function test_rule_returns_invalid_class_name(): void
     {
-        $classValidator = $this->createMock(ClassValidatorInterface::class);
-        $classValidator->method('isClassNameValid')
-            ->with('\valid\class\name')
-            ->willReturn(false);
-
-        $finderRule = $this->createStub(FinderRuleInterface::class);
-        $finderRule->method('buildClassCandidate')->willReturn('\valid\class\name');
-
-        $classNameFinder = new ClassNameFinder(
-            $classValidator,
-            [$finderRule],
-            $this->createStub(CacheInterface::class),
-            [],
-        );
+        $classNameFinder = $this->finderWhoseCandidateIs(valid: false);
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
-        $resolvableTypes = ['A', 'B'];
-        $actual = $classNameFinder->findClassName($classInfo, $resolvableTypes);
+        $actual = $classNameFinder->findClassName($classInfo, ['A', 'B']);
 
         self::assertNull($actual);
     }
 
     public function test_rule_returns_valid_class_name(): void
     {
-        $classValidator = $this->createMock(ClassValidatorInterface::class);
-        $classValidator->method('isClassNameValid')
-            ->with('\valid\class\name')
-            ->willReturn(true);
-
-        $finderRule = $this->createStub(FinderRuleInterface::class);
-        $finderRule->method('buildClassCandidate')->willReturn('\valid\class\name');
-
-        $classNameFinder = new ClassNameFinder(
-            $classValidator,
-            [$finderRule],
-            $this->createStub(CacheInterface::class),
-            [],
-        );
+        $classNameFinder = $this->finderWhoseCandidateIs(valid: true);
 
         $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
-        $resolvableTypes = ['A', 'B'];
-        $actual = $classNameFinder->findClassName($classInfo, $resolvableTypes);
+        $actual = $classNameFinder->findClassName($classInfo, ['A', 'B']);
 
-        self::assertSame('\valid\class\name', $actual);
+        self::assertSame(self::CANDIDATE, $actual);
     }
 
     public function test_caching_valid_class_name(): void
     {
-        $classValidator = $this->createMock(ClassValidatorInterface::class);
+        $classValidator = $this->createStub(ClassValidatorInterface::class);
         $classValidator->method('isClassNameValid')->willReturn(true);
 
         $finderRule = $this->createMock(FinderRuleInterface::class);
         $finderRule->expects(self::once())
             ->method('buildClassCandidate')
-            ->willReturn('\valid\class\name');
+            ->willReturn(self::CANDIDATE);
 
         $classNameFinder = new ClassNameFinder(
             $classValidator,
@@ -167,5 +142,28 @@ final class ClassNameFinderTest extends TestCase
             static fn (\Gacela\Framework\Event\GacelaEventInterface $event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameCachedFoundEvent,
         );
         self::assertCount(1, $cachedFoundEvents);
+    }
+
+    /**
+     * The two rule tests differ only in the validator's verdict; everything
+     * else -- one rule, one candidate, no cache -- is the same wiring.
+     */
+    private function finderWhoseCandidateIs(bool $valid): ClassNameFinder
+    {
+        $classValidator = $this->createMock(ClassValidatorInterface::class);
+        $classValidator->expects(self::atLeastOnce())
+            ->method('isClassNameValid')
+            ->with(self::CANDIDATE)
+            ->willReturn($valid);
+
+        $finderRule = $this->createStub(FinderRuleInterface::class);
+        $finderRule->method('buildClassCandidate')->willReturn(self::CANDIDATE);
+
+        return new ClassNameFinder(
+            $classValidator,
+            [$finderRule],
+            $this->createStub(CacheInterface::class),
+            [],
+        );
     }
 }

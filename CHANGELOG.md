@@ -280,6 +280,29 @@ silently.
 
 ### Internal
 
+- **`phpunit/phpunit` is `^12.5`, and `rector/rector` moved out of the main
+  autoloader.** The two are one change: rector ships a composer `files` autoload
+  that requires its own bundled `nikic/php-parser` once PHPUnit 12 is present,
+  and this package requires `nikic/php-parser` directly for its PHPStan rules,
+  so whichever loaded first the other redeclared `PhpParser\NodeVisitor` — a
+  fatal thrown from the autoloader, before the first test ran. Rector now
+  installs into `vendor-bin/rector/` via `bamarni/composer-bin-plugin`, with its
+  own autoloader, so the two copies never meet. `composer install` still fetches
+  it (`forward-command`), and the `rector`/`rectorrun` scripts and the Code style
+  workflow point at the new path. The bump also unpins ~22 transitive packages
+  that `phpunit 10.5` was holding back (`sebastian/*`, `phpunit/php-*`,
+  `theseer/tokenizer`). `psalm/plugin-phpunit` stays on `^0.19`, which is
+  waiting on upstream and unrelated.
+- The PHPUnit 12 migration surfaced three things worth fixing rather than
+  silencing. Two `SetupGacelaTest` cases compared closures with `assertEquals`,
+  which only ever passed because PHPUnit 10's comparator looked no further than
+  the type; they now run the extensions and assert the result, which also pins
+  the merge *order* the old comparison could not see. Twenty-four
+  `createMock()` calls with no configured expectations became `createStub()`.
+  And `ClassNameFinderTest::test_rule_but_no_resolvable_types` carried a
+  `with()`/`willReturn()` pair describing a call that never happens — with no
+  resolvable types there is no candidate to validate — so it now asserts the
+  validator is never consulted.
 - Two coverage tests guard cache resets from both ends. `ResetCacheCoverageTest`
   checks that a declared reset is reached by `Gacela::resetCache()`.
   `StaticStateCoverageTest` checks that every `static` property under `src/` is

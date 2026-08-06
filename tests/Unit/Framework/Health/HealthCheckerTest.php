@@ -51,7 +51,7 @@ final class HealthCheckerTest extends TestCase
 
     public function test_check_all_catches_exceptions(): void
     {
-        $check = $this->createMock(ModuleHealthCheckInterface::class);
+        $check = $this->createStub(ModuleHealthCheckInterface::class);
         $check->method('getModuleName')->willReturn('FailingModule');
         $check->method('checkHealth')->willThrowException(new Exception('Unexpected error'));
 
@@ -99,7 +99,7 @@ final class HealthCheckerTest extends TestCase
 
     private function createHealthCheck(string $moduleName, HealthStatus $status): ModuleHealthCheckInterface
     {
-        $check = $this->createMock(ModuleHealthCheckInterface::class);
+        $check = $this->createStub(ModuleHealthCheckInterface::class);
         $check->method('getModuleName')->willReturn($moduleName);
         $check->method('checkHealth')->willReturn($status);
 

@@ -164,17 +164,19 @@ final class SetupGacelaTest extends TestCase
                 ->addExternalService('service3', new stdClass()),
         );
 
-        self::assertEquals([
-            'service1' => static fn (): int => 1,
-        ], $setup->externalServices());
+        self::assertSame(['service1'], array_keys($setup->externalServices()));
 
         $setup->merge($setup2);
 
-        self::assertEquals([
-            'service1' => static fn (): int => 1,
-            'service2' => static fn (): int => 2,
-            'service3' => new stdClass(),
-        ], $setup->externalServices());
+        // Asserted by what the services are and do, rather than by comparing
+        // them to freshly built closures: two closures with identical bodies are
+        // distinct objects, and the old assertEquals only passed because
+        // PHPUnit 10's comparator looked no further than the type.
+        $externalServices = $setup->externalServices();
+        self::assertSame(['service1', 'service2', 'service3'], array_keys($externalServices));
+        self::assertSame(1, $externalServices['service1']());
+        self::assertSame(2, $externalServices['service2']());
+        self::assertInstanceOf(stdClass::class, $externalServices['service3']);
     }
 
     public function test_combine_extend_service(): void
@@ -192,15 +194,25 @@ final class SetupGacelaTest extends TestCase
 
         $setup->merge($setup2);
 
-        self::assertEquals([
-            'service' => [
-                static fn (ArrayObject $ao): null => $ao->append(1),
-                static fn (ArrayObject $ao): null => $ao->append(2),
-            ],
-            'service-2' => [
-                static fn (ArrayObject $ao): null => $ao->append(3),
-            ],
-        ], $setup->getServicesToExtend());
+        $servicesToExtend = $setup->getServicesToExtend();
+        self::assertSame(['service', 'service-2'], array_keys($servicesToExtend));
+
+        // Running the extensions says more than comparing them to equivalent
+        // closures ever did: it pins that both extensions for 'service'
+        // survived the merge *and* that they run in registration order, which a
+        // comparison of two indistinguishable Closure objects could not tell.
+        $service = new ArrayObject();
+        foreach ($servicesToExtend['service'] as $extension) {
+            $extension($service);
+        }
+
+        $service2 = new ArrayObject();
+        foreach ($servicesToExtend['service-2'] as $extension) {
+            $extension($service2);
+        }
+
+        self::assertSame([1, 2], $service->getArrayCopy());
+        self::assertSame([3], $service2->getArrayCopy());
     }
 
     public function test_plugins(): void

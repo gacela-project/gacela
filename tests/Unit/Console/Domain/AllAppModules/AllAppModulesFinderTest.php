@@ -32,7 +32,7 @@ final class AllAppModulesFinderTest extends TestCase
 
     public function test_skips_entries_marked_as_directory(): void
     {
-        $fileInfo = $this->createMock(SplFileInfo::class);
+        $fileInfo = $this->createStub(SplFileInfo::class);
         $fileInfo->method('isFile')->willReturn(false);
         $fileInfo->method('getExtension')->willReturn('php');
         $fileInfo->method('getRealPath')->willReturn($this->module1FacadePath());
@@ -55,7 +55,7 @@ final class AllAppModulesFinderTest extends TestCase
         $this->writeTempFacadeFile($filePath, $className);
         require_once $filePath;
 
-        $fileInfo = $this->createMock(SplFileInfo::class);
+        $fileInfo = $this->createStub(SplFileInfo::class);
         $fileInfo->method('isFile')->willReturn(true);
         $fileInfo->method('getExtension')->willReturn('php');
         $fileInfo->method('getRealPath')->willReturn($filePath);
@@ -110,7 +110,7 @@ final class AllAppModulesFinderTest extends TestCase
         $filePath = $tempDir . '/NamespacelessFacade.php';
         file_put_contents($filePath, "<?php\n\nreturn [];\n");
 
-        $fileInfo = $this->createMock(SplFileInfo::class);
+        $fileInfo = $this->createStub(SplFileInfo::class);
         $fileInfo->method('isFile')->willReturn(true);
         $fileInfo->method('getExtension')->willReturn('php');
         $fileInfo->method('getRealPath')->willReturn($filePath);
@@ -263,7 +263,7 @@ final class AllAppModulesFinderTest extends TestCase
 
     private function fileInfoFor(string $path, string $filename, string $extension = 'php'): SplFileInfo
     {
-        $fileInfo = $this->createMock(SplFileInfo::class);
+        $fileInfo = $this->createStub(SplFileInfo::class);
         $fileInfo->method('isFile')->willReturn(true);
         $fileInfo->method('getExtension')->willReturn($extension);
         $fileInfo->method('getRealPath')->willReturn($path);

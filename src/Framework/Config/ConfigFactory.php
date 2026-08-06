@@ -65,11 +65,9 @@ final class ConfigFactory
 
     public function createGacelaFileConfig(): GacelaConfigFileInterface
     {
-        if (self::$gacelaFileConfig instanceof GacelaConfigFileInterface
-            && self::$memoizedSetup === $this->setup
-            && self::$memoizedAppRootDir === $this->appRootDir
-        ) {
-            return self::$gacelaFileConfig;
+        $memoized = $this->memoized();
+        if ($memoized instanceof GacelaConfigFileInterface) {
+            return $memoized;
         }
 
         $gacelaConfigFiles = [];
@@ -91,16 +89,32 @@ final class ConfigFactory
             $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
-        self::$memoizedSetup = $this->setup;
-        self::$memoizedAppRootDir = $this->appRootDir;
-
-        self::$gacelaFileConfig = array_reduce(
+        return $this->memoize(array_reduce(
             $gacelaConfigFiles,
             static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->merge($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
-        );
+        ));
+    }
+
+    /**
+     * The memo, but only when it belongs to this factory's app root and setup.
+     */
+    private function memoized(): ?GacelaConfigFileInterface
+    {
+        if (self::$memoizedAppRootDir !== $this->appRootDir || self::$memoizedSetup !== $this->setup) {
+            return null;
+        }
 
         return self::$gacelaFileConfig;
+    }
+
+    private function memoize(GacelaConfigFileInterface $gacelaFileConfig): GacelaConfigFileInterface
+    {
+        self::$gacelaFileConfig = $gacelaFileConfig;
+        self::$memoizedSetup = $this->setup;
+        self::$memoizedAppRootDir = $this->appRootDir;
+
+        return $gacelaFileConfig;
     }
 
     private function createFileIo(): FileIoInterface

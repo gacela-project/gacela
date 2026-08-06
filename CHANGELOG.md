@@ -243,6 +243,17 @@ silently.
   concrete class, where an unforwarded method compiles fine and stays
   unreachable. The exemption list is empty now. `createScope()` was its last
   entry.
+- `AttributeReadCoverageTest` requires every read of a non-`final` attribute to
+  pass `ReflectionAttribute::IS_INSTANCEOF`. An attribute is left non-`final`
+  precisely so it can be subclassed, and a reader naming the parent without the
+  flag matches the parent and nothing else. `debug:dependencies`, `debug:module`
+  and `debug:container` read that way, and so did the Symfony bridge, so
+  `Gacela\Framework\Attribute\Inject` was honoured by the container and by
+  nothing else: the parameter showed as plain autowiring, and Symfony autowired
+  it. Both attribute docblocks name this failure and call it silent. What hid it
+  is that the container's own three reads were already correct, and every test
+  went through `Container::make()`. Both readers pass the flag now, with a test
+  each that reads through the surface rather than the container.
 - `Gacela::resetCache()` clears the shared plan cache, so plans are shared
   *within* a bootstrap rather than across one. It deliberately does **not** call
   `Container::resetStaticCaches()`. That was tried, and cost `FileCacheBench`

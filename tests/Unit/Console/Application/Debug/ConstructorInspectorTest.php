@@ -11,6 +11,7 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\AutowirableCollaborator;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundContract;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundImplementation;
+use GacelaTest\Feature\Console\DebugDependencies\Fixtures\FrameworkInjectService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\InjectService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\MixedDependenciesService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NoConstructorService;
@@ -128,6 +129,23 @@ final class ConstructorInspectorTest extends TestCase
         $override = $inspection->parameters[1];
         self::assertSame(ParameterStatus::Inject, $override->status);
         self::assertSame('inject -> ' . BoundImplementation::class, $override->detail);
+    }
+
+    /**
+     * `Gacela\Framework\Attribute\Inject` subclasses the container's attribute,
+     * and both imports are supported. Reading for an exact FQN would report the
+     * parameter as plain autowiring, which is the silent failure the attribute's
+     * own docblock warns about.
+     */
+    public function test_the_framework_spelling_of_inject_is_flagged_too(): void
+    {
+        $inspection = $this->inspector->inspect(FrameworkInjectService::class);
+
+        self::assertCount(2, $inspection->parameters);
+        self::assertSame(ParameterStatus::Inject, $inspection->parameters[0]->status);
+        self::assertSame('inject', $inspection->parameters[0]->detail);
+        self::assertSame(ParameterStatus::Inject, $inspection->parameters[1]->status);
+        self::assertSame('inject -> ' . BoundImplementation::class, $inspection->parameters[1]->detail);
     }
 
     public function test_a_binding_to_an_already_built_object_names_its_class(): void

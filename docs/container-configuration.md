@@ -32,9 +32,9 @@ $db = $factory(); // Invoke when needed
 
 Protected services cannot be extended via `extendService()`.
 
-## Post-construction Hooks
+## Resolution Hooks
 
-Run a callback against an instance the moment it is built, without rebuilding it.
+Run a callback against an instance as it is resolved, without rebuilding it.
 
 ```php
 return static function (GacelaConfig $config): void {
@@ -54,6 +54,13 @@ registration order. A class the container autowires as a *nested* constructor
 dependency is not resolved at this level, so hooks do not fire for it. A callback
 that throws removes the instance rather than leaving a half-wired one for the next
 caller, and a container with no hooks pays nothing per resolution.
+
+**A hook fires once per resolution, not once per instance.** A shared instance
+fetched three times runs the callback three times, on the same object — the
+constructor ran once, the hook ran three times. Write callbacks so that repeating
+them is harmless: the `setLogger()` example above is idempotent, whereas appending
+to a collection, incrementing a counter or registering a listener is not, and would
+need its own guard.
 
 Reach for `extendService()` instead when you need to *replace* what comes out, and
 for a [`ServiceResolvedEvent`](events.md) listener when you only want to observe.
@@ -532,7 +539,7 @@ Almost everything `gacela-project/container` offers now has a gacela entry point
 Four things that used to be listed here no longer belong to it: **service
 tagging** is `GacelaConfig::tag()` (see
 [getting a dependency](getting-a-dependency.md#collect-several-implementations)),
-**post-construction hooks** are `GacelaConfig::afterResolving()` (above),
+**resolution hooks** are `GacelaConfig::afterResolving()` (above),
 **`make()` with runtime parameters** is documented above as the supported way to
 override a constructor argument, and **`createScope()`** is what `AbstractFactory`
 builds every module container from.

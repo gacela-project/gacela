@@ -37,6 +37,43 @@ final class AfterResolvingHookTest extends TestCase
         self::assertSame('file', $service->logger());
     }
 
+    /**
+     * Pins the semantics rather than asserting they are ideal. The hook fires
+     * per *resolution*, not per construction: a shared instance fetched three
+     * times runs the callback three times, on the one object the constructor
+     * built once.
+     *
+     * The container documents this upstream ("this runs on every resolution");
+     * what was wrong was Gacela's own construction-flavoured wording around it.
+     * A callback that is not idempotent — appending to a collection, bumping a
+     * counter, registering a listener — has to account for it.
+     */
+    public function test_a_hook_fires_once_per_resolution_not_once_per_instance(): void
+    {
+        $calls = 0;
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$calls): void {
+            // Bound as an already-built instance, so the container hands the
+            // same object back every time and construction cannot be what
+            // drives the callback count.
+            $config->addBinding(ReportService::class, new ReportService());
+            $config->afterResolving(
+                ReportService::class,
+                static function () use (&$calls): void {
+                    ++$calls;
+                },
+            );
+        });
+
+        $container = Gacela::container();
+        $first = $container->get(ReportService::class);
+        $container->get(ReportService::class);
+        $third = $container->get(ReportService::class);
+
+        self::assertSame($first, $third, 'the container hands back one shared instance');
+        self::assertSame(3, $calls, 'but the hook ran once per get()');
+    }
+
     public function test_a_hook_registered_for_an_interface_runs_for_every_implementation(): void
     {
         $this->bootstrapWith(static function (GacelaConfig $config): void {

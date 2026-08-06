@@ -40,8 +40,7 @@ silently.
   **after** the imperative registrations, so a file overrides `addBinding()`.
   Tags accumulate instead. Paths are used as given, so write them with
   `__DIR__`. No YAML: pass `Yaml::parseFile(...)`.
-- **`GacelaConfig::afterResolving()`** runs a callback on an instance after the
-  container builds it:
+- **`GacelaConfig::afterResolving()`** runs a callback on a resolved instance:
   ```php
   $config->afterResolving(
       LoggerAwareInterface::class,
@@ -50,8 +49,12 @@ silently.
   ```
   The id may name an **interface**, so one registration covers every
   implementation. It fires on `get()`, `getOrFail()` and `make()`, in
-  registration order. It costs nothing when unused. It does not fire for a
-  nested constructor dependency. A callback that throws evicts the instance.
+  registration order — **once per resolution, not once per instance**, so a
+  shared instance fetched three times runs the callback three times on the same
+  object. Write callbacks that are safe to repeat; the `setLogger()` above is,
+  and appending to a collection or bumping a counter is not. It costs nothing
+  when unused. It does not fire for a nested constructor dependency. A callback
+  that throws evicts the instance.
 - **`GacelaConfig::tag()`** groups services under a label, reaching every
   module's container:
   ```php

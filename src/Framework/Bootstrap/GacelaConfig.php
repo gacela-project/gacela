@@ -366,8 +366,14 @@ final class GacelaConfig
     }
 
     /**
-     * Run a callback on an instance after the container builds it, receiving the
-     * instance and the container. Callbacks run in registration order.
+     * Run a callback on a resolved instance, receiving the instance and the
+     * container. Callbacks run in registration order.
+     *
+     * Fires **once per resolution, not once per instance**. A shared instance
+     * fetched three times runs the callback three times, on the same object. So
+     * the callback has to be idempotent: setting a property is safe, while
+     * appending to a collection, incrementing a counter or registering a
+     * listener will repeat. The example below is idempotent for that reason.
      *
      * Example:
      * ```php

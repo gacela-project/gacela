@@ -6,7 +6,7 @@ The whole runtime change is two lines, and almost everything below follows from 
 
 ```diff
 -"php": ">=8.1",  "gacela-project/container": "^0.10.0"
-+"php": ">=8.3",  "gacela-project/container": "^2.0.0"
++"php": ">=8.3",  "gacela-project/container": "^2.0.1"
 ```
 
 **Your container stops being a 0.x.** This is the reason, and it is not available to you on 1.x at any version — `Gacela\Container\Container` became `final` at 1.0, so crossing that line is breaking by construction. What it buys:
@@ -21,10 +21,11 @@ The whole runtime change is two lines, and almost everything below follows from 
 
 **Three fixed state leaks that will never reach 1.x.** 1.21.0 is the final 1.x release, so these are upgrade-only. The sharpest: `ClassValidator` memoized the *negative* `class_exists()` answer and never cleared it, so a class that became loadable stayed "missing" for the life of the process. That bites long-running workers, code generation, and `cache:warm`.
 
+**One container, with module scopes.** This was the original 2.0 headline, sequenced out to 2.1 to keep it reviewable, and landed here once it could ship on its own. `AbstractFactory` used to build one container per Factory class, each walking the whole of `gacela.php`; each module now gets a scope of one shared app container, carrying only its own Provider. Module isolation is unchanged — registration is not copied and a miss falls through, so a module still cannot see a sibling's provider keys.
+
 ### What this release is not
 
-- **Barely a performance release.** The three perf spikes on the roadmap were measured and came out sub-millisecond, so they were closed rather than shipped, and writing compiled constructor plans to disk measured a net loss. One exception is real but narrow: module containers now share a constructor-plan cache, worth ~36-41% of resolution time to a request that touches many modules — measured on CI at -35.8%, with peak memory down ~37% locally but not yet confirmed there. A handful of modules collects little
-- **Not the "one container" release.** That was the original headline and it moved to 2.1 — not blocked any more, since the container shipped `createScope()` and this release forwards it, but deliberately sequenced after the cache-regression suite this release builds. This is the foundation that makes it possible, not the thing itself
+- **A performance release on container construction, not on resolution.** The three perf spikes on the roadmap were measured and came out sub-millisecond, so they were closed rather than shipped, and writing compiled constructor plans to disk measured a net loss. What did land is structural, and it is worth least to the applications that need it least: an application with little app-wide configuration sees almost none of the construction saving, and pays ~2.5% on warm class resolution for the scope fall-through
 - **Not a Symfony unblock.** Symfony is a dev dependency of Gacela, never a runtime one. A Symfony 7 or 8 application already works on 1.21
 
 **So who should wait?** If you are on PHP 8.3 already, not running long-lived workers, and not using Psalm, your reason to move *today* is thin.
@@ -158,7 +159,7 @@ This is worth doing regardless of the error. A suppressed call was never a *type
 
 ### 6. Only if you type-hinted the concrete container
 
-`gacela-project/container` moved to `^2.0.0` (was `^0.10.0`), and `Gacela\Container\Container` is `final` from 1.0. `Gacela\Framework\Container\Container` therefore decorates it by composition instead of extending it — which is what its docblock always claimed it did.
+`gacela-project/container` moved to `^2.0.1` (was `^0.10.0`), and `Gacela\Container\Container` is `final` from 1.0. `Gacela\Framework\Container\Container` therefore decorates it by composition instead of extending it — which is what its docblock always claimed it did.
 
 It still implements `ContainerInterface`. **This only affects code that passed a Gacela container somewhere the concrete `Gacela\Container\Container` was type-hinted:**
 

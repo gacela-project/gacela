@@ -7,15 +7,17 @@ A foundation major. The runtime change is two lines — PHP `>=8.3` and
 from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`,
 and container exceptions where 0.x emitted raw PHP errors.
 
-It is **not** the "one container" release; that moved to 2.1 (#539). No longer
-for want of the primitive — container 1.3 shipped `createScope()` and closed
-[container#106](https://github.com/gacela-project/container/issues/106) — but
-because the consolidation only stays reviewable if it ships alone.
+It **is** the "one container" release after all. #539 was sequenced into 2.1 to
+keep it reviewable, then landed here once it could ship on its own: module
+containers are scopes of one app container, so `gacela.php` is walked once per
+bootstrap rather than once per Factory class.
 
-It was not meant to be a performance release either, and mostly is not: the
-three perf spikes measured sub-millisecond and were closed rather than shipped,
-and writing compiled plans to disk measured a **net loss**. One win survived a
-benchmark — every container now shares one constructor-plan cache.
+That makes it more of a performance release than intended. The three perf spikes
+still measured sub-millisecond and were closed rather than shipped, and writing
+compiled plans to disk measured a **net loss** — 1.008 ms to load a 300-class
+plans file against 0.233 ms saved. What survived a benchmark is structural: the
+scope consolidation takes 79 containers against 300 app-wide entries from 18.0ms
+to 0.07ms, and every container now shares one constructor-plan cache.
 
 Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
 `vendor/bin/gacela doctor` on 1.21 first — one of the three fails silently.
@@ -180,9 +182,10 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   `load()`/`loadFile()` return the ids they registered and take an optional
   per-id callback, which closes a gap `loadDefinitions()` shipped with:
   definitions now emit `BindingRegisteredEvent` like every other registration,
-  where naming them previously meant reconstructing the ids and missing aliases. `ContainerStats::memoryUsageFormatted()` is
-  `processMemoryFormatted()` — `debug:container` labels it **Process Memory**,
-  which is what it always measured.
+  where naming them previously meant reconstructing the ids and missing aliases.
+- **`ContainerStats::memoryUsageFormatted()` is `processMemoryFormatted()`** —
+  `debug:container` labels it **Process Memory**, which is what it always
+  measured.
 - **PHP floor raised to `>=8.3`** (was `>=8.1`). 8.1 is end of life and 8.2's
   security window closes in December 2026.
 - **`symfony/*` widened to `^7.0 || ^8.0`** (was `^6.4`). Gacela no longer
@@ -202,6 +205,13 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   their closures and everything each captured. Overwriting one id 5000 times
   held 6.1 MB for a single live binding; it is 1.8 KB now. Bounded in a normal
   bootstrap, but it bit anything re-registering on a long-lived container.
+- **Two applications sharing the default cache directory served each other's
+  resolved class names.** The cache dir defaults to the system temp dir, so
+  `gacela-class-names.php` and `gacela-custom-services.php` were written under
+  that one name whatever project they belonged to — the merged-config cache
+  already hashed the app root for exactly this reason; the other two did not.
+  Both filenames now carry that hash, and `cache:clear` removes the unscoped
+  spelling too, so a file written before the upgrade cannot keep answering.
 - **`CacheWarmedEvent` reported skipped modules as failed**, so a listener
   alerting on `failedCount() > 0` fired on a successful deploy. A missing pillar
   class and one whose autoloading threw now count separately, and
@@ -248,8 +258,9 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
   decorator's docblock claimed implementing `ContainerInterface` made this
   unnecessary; that was never true, since 1.x promises never to extend the
   interface, so every capability since 1.0 landed on the concrete class where an
-  unforwarded method compiles fine and is simply unreachable. `createScope()` is
-  the one recorded non-forward.
+  unforwarded method compiles fine and is simply unreachable. The exemption list
+  is empty: `createScope()` was its last entry, forwardable once container 2.0
+  let a scope be decorated.
 - `Gacela::resetCache()` clears the shared plan cache, so plans are shared
   *within* a bootstrap rather than across one. It deliberately does **not** call
   `Container::resetStaticCaches()`: that was tried and cost `FileCacheBench`
@@ -276,7 +287,7 @@ Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md), and run
     `psalm/psalm-plugin-api ^0.1`, which conflicts with `vimeo/psalm <7.0.0`,
     and Psalm 7 is still at `7.0.0-beta19`.
 - `DocBlockResolverCache` is `ServiceResolverCache`. It caches resolved custom
-  services and decides whether a PHP file or an in-memory map backs them --
+  services and decides whether a PHP file or an in-memory map backs them —
   nothing about it is docblock-specific, and every symbol it touches says so
   (`CustomServicesPhpCache`, and the three `CustomServices*` events). The name
   now matches both what it does and its counterpart, `ClassResolverCache`.

@@ -529,27 +529,26 @@ return static function (GacelaConfig $config): void {
 ## Underlying container features gacela does not expose
 
 Almost everything `gacela-project/container` offers now has a gacela entry point.
-Three things that used to be listed here no longer belong to it: **service
+Four things that used to be listed here no longer belong to it: **service
 tagging** is `GacelaConfig::tag()` (see
 [getting a dependency](getting-a-dependency.md#collect-several-implementations)),
-**post-construction hooks** are `GacelaConfig::afterResolving()` (above), and
+**post-construction hooks** are `GacelaConfig::afterResolving()` (above),
 **`make()` with runtime parameters** is documented above as the supported way to
-override a constructor argument.
+override a constructor argument, and **`createScope()`** is what `AbstractFactory`
+builds every module container from.
 
-What is left out, and why:
+One thing is left out, and why:
 
-- **`createScope()`**, the container's per-request child container. The primitive
-  exists (container 1.3), so what is missing is Gacela's side: who creates the
-  scope and who drops it. Tracked in the 2.1 consolidation.
 - **Compiled constructor plans on disk** (`writeCompiledCache()` and the generated
-  factories that go with it): re-measured for 2.0 and still not worth it, now with
-  a sharper reason than "the saving is small". The saving is real but *smaller than
-  the file*: materialising a 300-class plans file costs ~1.4ms per process, while
-  resolving all 300 of those classes saves ~0.2ms. Compiling a class costs about six
-  times the reflection it avoids, so no subset of classes makes it pay, and a build
-  stamp does not rescue it — the cost is hydrating the array, not the per-class
-  `stat` it replaces. What removes the repeated reflection is the shared plan cache,
+  factories that go with it): re-measured on container 2.0.1 and still not worth it,
+  now with a sharper reason than "the saving is small". The saving is real but
+  *smaller than the file*: materialising a 300-class plans file costs 1.008ms per
+  process, while resolving all 300 of those classes saves 0.233ms — a net loss of
+  0.775ms. Compiling a class costs about six times the reflection it avoids, so no
+  subset of classes makes it pay, and a build stamp does not rescue it — the cost is
+  hydrating the array, not the per-class `stat` it replaces. What removes the
+  repeated reflection is the shared plan cache,
   which is on by default and costs nothing. Nothing is hidden, though: the decorator
   forwards `writeCompiledCache()`, `writeCompiledFactories()`, `useCompiledFactories()`
-  and `compileReport()`, each taking an optional build stamp, so an application that
-  has measured its own case can wire the files up itself.
+  and `compileReport()` — the two writers taking an optional build stamp — so an
+  application that has measured its own case can wire the files up itself.

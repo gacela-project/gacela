@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Attribute\CacheableConfig;
 use Gacela\Framework\Attribute\CacheableTrait;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 
@@ -20,7 +21,11 @@ abstract class AbstractFacade
     public static function resetCache(): void
     {
         self::$factories = [];
-        self::clearMethodCache();
+
+        // Deliberately not clearMethodCache(): that clears whatever backend is
+        // registered, and this path is reached by every Gacela::resetCache(),
+        // including the one GacelaTestCase runs per test.
+        CacheableConfig::clearDefaultStorage();
     }
 
     /**

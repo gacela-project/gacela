@@ -69,7 +69,12 @@ final class HealthStatus
         $worst = $statuses[0];
 
         foreach ($statuses as $status) {
-            if (self::severity($status->level) > self::severity($worst->level)) {
+            if ($status->isUnhealthy()) {
+                $worst = $status;
+                break;
+            }
+
+            if ($status->isDegraded()) {
                 $worst = $status;
             }
         }
@@ -113,14 +118,5 @@ final class HealthStatus
             'message' => $this->message,
             'metadata' => $this->metadata,
         ];
-    }
-
-    private static function severity(HealthLevel $level): int
-    {
-        return match ($level) {
-            HealthLevel::HEALTHY => 0,
-            HealthLevel::DEGRADED => 1,
-            HealthLevel::UNHEALTHY => 2,
-        };
     }
 }

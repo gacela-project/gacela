@@ -124,6 +124,18 @@ final class HealthCheckerTest extends TestCase
         self::assertTrue($status->isUnhealthy());
     }
 
+    public function test_duplicate_checks_preserve_degraded_as_worse_than_healthy(): void
+    {
+        $healthy = $this->createHealthCheck('Orders', HealthStatus::healthy('queue up'));
+        $degraded = $this->createHealthCheck('Orders', HealthStatus::degraded('queue slow'));
+
+        $first = (new HealthChecker([$healthy, $degraded]))->checkAll()->getResults()['Orders'];
+        $last = (new HealthChecker([$degraded, $healthy]))->checkAll()->getResults()['Orders'];
+
+        self::assertTrue($first->isDegraded());
+        self::assertTrue($last->isDegraded());
+    }
+
     public function test_a_later_healthy_check_cannot_overwrite_an_exception(): void
     {
         $failing = $this->createStub(ModuleHealthCheckInterface::class);

@@ -114,14 +114,17 @@ final class HealthCheckerTest extends TestCase
         self::assertCount(2, $status->metadata['health_checks']);
     }
 
-    public function test_a_later_healthy_check_cannot_overwrite_an_unhealthy_one(): void
+    public function test_a_later_less_severe_check_cannot_overwrite_an_unhealthy_one(): void
     {
         $unhealthy = $this->createHealthCheck('Orders', HealthStatus::unhealthy('database down'));
         $healthy = $this->createHealthCheck('Orders', HealthStatus::healthy('queue up'));
+        $degraded = $this->createHealthCheck('Orders', HealthStatus::degraded('queue slow'));
 
-        $status = (new HealthChecker([$unhealthy, $healthy]))->checkAll()->getResults()['Orders'];
+        $followedByHealthy = (new HealthChecker([$unhealthy, $healthy]))->checkAll()->getResults()['Orders'];
+        $followedByDegraded = (new HealthChecker([$unhealthy, $degraded]))->checkAll()->getResults()['Orders'];
 
-        self::assertTrue($status->isUnhealthy());
+        self::assertTrue($followedByHealthy->isUnhealthy());
+        self::assertTrue($followedByDegraded->isUnhealthy());
     }
 
     public function test_duplicate_checks_preserve_degraded_as_worse_than_healthy(): void

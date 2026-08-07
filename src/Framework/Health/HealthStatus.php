@@ -66,16 +66,16 @@ final class HealthStatus
      */
     public static function aggregate(array $statuses): self
     {
-        $worst = $statuses[0];
+        $worstLevel = HealthLevel::HEALTHY;
 
         foreach ($statuses as $status) {
             if ($status->isUnhealthy()) {
-                $worst = $status;
+                $worstLevel = HealthLevel::UNHEALTHY;
                 break;
             }
 
             if ($status->isDegraded()) {
-                $worst = $status;
+                $worstLevel = HealthLevel::DEGRADED;
             }
         }
 
@@ -85,7 +85,7 @@ final class HealthStatus
         );
 
         return new self(
-            $worst->level,
+            $worstLevel,
             sprintf('%d health checks: %s', count($statuses), implode('; ', $summaries)),
             ['health_checks' => array_map(static fn (self $status): array => $status->toArray(), $statuses)],
         );

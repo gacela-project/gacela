@@ -13,6 +13,7 @@ use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
@@ -66,7 +67,7 @@ final class CacheWarmCommand extends Command
             $formatter->writeCacheCleared();
         }
 
-        $modules = $this->discoverModules($formatter);
+        [$modules, $moduleDiscoveryFailed] = $this->discoverModules($formatter);
         $modules = $cacheWarmService->filterProductionModules($modules);
 
         $formatter->writeModulesFound($modules);
@@ -97,9 +98,13 @@ final class CacheWarmCommand extends Command
         );
 
         $this->displayCacheInfo($cacheManager, $formatter);
-        $this->warmAndDisplayMergedConfigCache($formatter);
+        if ((new GacelaFileCache(Config::getInstance()))->isEnabled()) {
+            $this->warmAndDisplayMergedConfigCache($formatter);
+        }
 
-        return Command::SUCCESS;
+        return $moduleDiscoveryFailed || $failedCount > 0
+            ? Command::FAILURE
+            : Command::SUCCESS;
     }
 
     /**
@@ -134,16 +139,16 @@ final class CacheWarmCommand extends Command
     }
 
     /**
-     * @return list<AppModule>
+     * @return array{list<AppModule>, bool} modules and whether discovery failed
      */
     private function discoverModules(
         CacheWarmOutputFormatter $formatter,
     ): array {
         try {
-            return $this->getFacade()->findAllAppModules();
+            return [$this->getFacade()->findAllAppModules(), false];
         } catch (Throwable $throwable) {
             $formatter->writeModuleDiscoveryWarning($throwable->getMessage());
-            return [];
+            return [[], true];
         }
     }
 

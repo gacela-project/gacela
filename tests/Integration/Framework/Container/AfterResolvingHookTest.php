@@ -162,6 +162,85 @@ final class AfterResolvingHookTest extends TestCase
         self::assertSame('file', $service->logger());
     }
 
+    public function test_configured_hooks_run_for_every_scope_resolution_entry_point(): void
+    {
+        $this->bootstrapWith(static function (GacelaConfig $config): void {
+            $config->afterResolving(
+                LoggerAwareInterface::class,
+                static fn (LoggerAwareInterface $service) => $service->setLogger('scoped'),
+            );
+        });
+
+        $scope = Gacela::container()->createScope();
+        $scope->set('report', new ReportService());
+        $scope->set('invoice', new InvoiceService());
+
+        $report = $scope->get('report');
+        $invoice = $scope->getOrFail('invoice');
+
+        self::assertInstanceOf(ReportService::class, $report);
+        self::assertInstanceOf(InvoiceService::class, $invoice);
+        self::assertSame('scoped', $report->logger());
+        self::assertSame('scoped', $invoice->logger());
+        self::assertSame('scoped', $scope->make(ReportService::class)->logger());
+    }
+
+    public function test_a_scope_runs_inherited_hooks_in_registration_order(): void
+    {
+        $this->bootstrapWith(static function (GacelaConfig $config): void {
+            $config->afterResolving(ReportService::class, static fn (ReportService $s) => $s->setLogger('first'));
+            $config->afterResolving(
+                ReportService::class,
+                static fn (ReportService $s) => $s->setLogger($s->logger() . '+second'),
+            );
+        });
+
+        $service = Gacela::container()->createScope()->make(ReportService::class);
+
+        self::assertSame('first+second', $service->logger());
+    }
+
+    public function test_a_parent_owned_service_runs_a_hook_only_once_through_a_scope(): void
+    {
+        $calls = 0;
+        $service = new ReportService();
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$calls, $service): void {
+            $config->addBinding(ReportService::class, $service);
+            $config->afterResolving(ReportService::class, static function () use (&$calls): void {
+                ++$calls;
+            });
+        });
+
+        self::assertSame($service, Gacela::container()->createScope()->get(ReportService::class));
+        self::assertSame(1, $calls);
+    }
+
+    public function test_a_throwing_inherited_hook_removes_the_scoped_service(): void
+    {
+        $seen = [];
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$seen): void {
+            $config->afterResolving('report', static function (ReportService $service) use (&$seen): never {
+                $seen[] = $service;
+                throw new RuntimeException('scope hook failed');
+            });
+        });
+
+        $scope = Gacela::container()->createScope();
+        $scope->set('report', static fn (): ReportService => new ReportService());
+
+        try {
+            $scope->get('report');
+            self::fail('the inherited hook was expected to throw');
+        } catch (RuntimeException $runtimeException) {
+            self::assertSame('scope hook failed', $runtimeException->getMessage());
+        }
+
+        self::assertCount(1, $seen);
+        self::assertNotSame($seen[0], $scope->get('report'));
+    }
+
     public function test_a_throwing_hook_does_not_leave_a_half_built_service_in_the_cache(): void
     {
         $seen = [];

@@ -580,6 +580,7 @@ final class Container implements ContainerInterface
     {
         $decorator = new self();
         $decorator->inner = $inner->withSelfReference($decorator);
+        $decorator->afterResolvingHooks = $this->afterResolvingHooks;
 
         return $decorator;
     }

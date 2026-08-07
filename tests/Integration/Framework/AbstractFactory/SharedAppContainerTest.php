@@ -7,6 +7,7 @@ namespace GacelaTest\Integration\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Event\Container\BindingRegisteredEvent;
 use Gacela\Framework\Gacela;
+use GacelaTest\Integration\Framework\AbstractFactory\SharedApp\AlphaClockHolder;
 use GacelaTest\Integration\Framework\AbstractFactory\SharedApp\AlphaFactory;
 use GacelaTest\Integration\Framework\AbstractFactory\SharedApp\BetaFactory;
 use PHPUnit\Framework\TestCase;
@@ -69,5 +70,22 @@ final class SharedAppContainerTest extends TestCase
         // Sharing the parent must not cost a module its access to the binding.
         self::assertInstanceOf(SharedApp\SystemClock::class, (new AlphaFactory())->clock());
         self::assertInstanceOf(SharedApp\SystemClock::class, (new BetaFactory())->clock());
+    }
+
+    public function test_a_module_factory_inherits_app_wide_resolution_hooks(): void
+    {
+        $resolved = 0;
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$resolved): void {
+            $config->resetInMemoryCache();
+            $config->addBinding(SharedApp\ClockInterface::class, SharedApp\SystemClock::class);
+            $config->afterResolving(AlphaClockHolder::class, static function () use (&$resolved): void {
+                ++$resolved;
+            });
+        });
+
+        (new AlphaFactory())->clock();
+
+        self::assertSame(1, $resolved);
     }
 }

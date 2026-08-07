@@ -55,6 +55,9 @@ dependency is not resolved at this level, so hooks do not fire for it. A callbac
 that throws removes the instance rather than leaving a half-wired one for the next
 caller, and a container with no hooks pays nothing per resolution.
 
+Hooks configured here are app-wide and are inherited by the scoped containers
+that module Factories use.
+
 **A hook fires once per resolution, not once per instance.** A shared instance
 fetched three times runs the callback three times, on the same object — the
 constructor ran once, the hook ran three times. Write callbacks so that repeating

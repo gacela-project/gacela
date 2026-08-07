@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.0.0](https://github.com/gacela-project/gacela/compare/1.21.0...2.0.0) - 2026-08-07
+
 A foundation major. It is also the "one container" release, after all.
 
 The runtime change is two lines. PHP `>=8.3`, and `gacela-project/container`

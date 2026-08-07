@@ -27,6 +27,10 @@
 #     that a *dependency* change resurrected in untouched code.
 
 on:
+  # Manual re-run lever. The 2026-08-06 Actions incident throttled webhooks to
+  # ~15%, so pushes and pull requests silently created no run at all, and there
+  # was no way to ask for one after the fact.
+  workflow_dispatch:
   pull_request:
   push:
     branches:

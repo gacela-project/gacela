@@ -29,6 +29,14 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     $rectorConfig->skip([
+        // Gacela's own cache output, written into the fixture directories by
+        // running the suite. It is gitignored, but rector does not read
+        // .gitignore, so without this any developer who runs the tests and then
+        // commits gets a rector failure on generated files -- and the
+        // pre-commit hook runs `composer quality`, which now includes rector.
+        __DIR__ . '/tests/**/gacela-class-names*.php',
+        __DIR__ . '/tests/**/gacela-custom-services*.php',
+        __DIR__ . '/tests/**/gacela-merged-config*.php',
         __DIR__ . '/tests/Unit/PHPStan/Rules/Fixture',
         // assert() inside an anonymous class extending a non-TestCase parent
         // must not be rewritten to $this->assertSame().

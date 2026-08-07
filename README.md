@@ -9,6 +9,9 @@
   <a href="https://github.com/gacela-project/gacela/actions/workflows/tests.yml">
     <img src="https://github.com/gacela-project/gacela/actions/workflows/tests.yml/badge.svg" alt="GitHub Build Status">
   </a>
+  <a href="https://packagist.org/packages/gacela-project/gacela">
+    <img src="https://img.shields.io/packagist/dt/gacela-project/gacela" alt="Packagist Downloads">
+  </a>
   <a href="https://shepherd.dev/github/gacela-project/gacela">
     <img src="https://shepherd.dev/github/gacela-project/gacela/coverage.svg" alt="Psalm Type-coverage Status">
   </a>

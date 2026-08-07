@@ -87,6 +87,11 @@ Gacela Doctor
 
 A `degraded` check reports as a warning; an `unhealthy` check reports as an error and makes `doctor` exit non-zero. Check metadata is printed under the status line.
 
+Several checks may report under the same module name. Gacela combines them
+into one module result whose level is the worst result, and keeps every
+individual status under the result's `health_checks` metadata. A later healthy
+check therefore cannot hide an earlier degraded or unhealthy one.
+
 ## Status levels
 
 | Level       | When to use                                  |

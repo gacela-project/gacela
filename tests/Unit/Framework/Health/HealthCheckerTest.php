@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Framework\Health;
 
 use Exception;
 use Gacela\Framework\Health\HealthChecker;
+use Gacela\Framework\Health\HealthLevel;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use PHPUnit\Framework\TestCase;
@@ -95,6 +96,46 @@ final class HealthCheckerTest extends TestCase
 
         self::assertArrayHasKey('UserModule', $results);
         self::assertArrayHasKey('OrderModule', $results);
+    }
+
+    public function test_duplicate_module_checks_are_aggregated_to_the_worst_status(): void
+    {
+        $healthy = $this->createHealthCheck('Orders', HealthStatus::healthy('queue up'));
+        $unhealthy = $this->createHealthCheck('Orders', HealthStatus::unhealthy('database down'));
+
+        $report = (new HealthChecker([$healthy, $unhealthy]))->checkAll();
+        $status = $report->getResults()['Orders'];
+
+        self::assertCount(1, $report->getResults());
+        self::assertTrue($status->isUnhealthy());
+        self::assertSame(HealthLevel::UNHEALTHY, $report->getOverallLevel());
+        self::assertStringContainsString('[healthy] queue up', $status->message);
+        self::assertStringContainsString('[unhealthy] database down', $status->message);
+        self::assertCount(2, $status->metadata['health_checks']);
+    }
+
+    public function test_a_later_healthy_check_cannot_overwrite_an_unhealthy_one(): void
+    {
+        $unhealthy = $this->createHealthCheck('Orders', HealthStatus::unhealthy('database down'));
+        $healthy = $this->createHealthCheck('Orders', HealthStatus::healthy('queue up'));
+
+        $status = (new HealthChecker([$unhealthy, $healthy]))->checkAll()->getResults()['Orders'];
+
+        self::assertTrue($status->isUnhealthy());
+    }
+
+    public function test_a_later_healthy_check_cannot_overwrite_an_exception(): void
+    {
+        $failing = $this->createStub(ModuleHealthCheckInterface::class);
+        $failing->method('getModuleName')->willReturn('Orders');
+        $failing->method('checkHealth')->willThrowException(new Exception('connection refused'));
+        $healthy = $this->createHealthCheck('Orders', HealthStatus::healthy('queue up'));
+
+        $status = (new HealthChecker([$failing, $healthy]))->checkAll()->getResults()['Orders'];
+
+        self::assertTrue($status->isUnhealthy());
+        self::assertStringContainsString('connection refused', $status->message);
+        self::assertSame(Exception::class, $status->metadata['health_checks'][0]['metadata']['exception']);
     }
 
     private function createHealthCheck(string $moduleName, HealthStatus $status): ModuleHealthCheckInterface

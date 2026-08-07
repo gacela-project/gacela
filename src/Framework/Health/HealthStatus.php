@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Health;
 
+use function array_map;
+use function count;
+use function implode;
+use function sprintf;
+
 /**
  * Value object representing the health status of a module.
  *
@@ -53,6 +58,34 @@ final class HealthStatus
         return new self(HealthLevel::UNHEALTHY, $message, $metadata);
     }
 
+    /**
+     * Collapse several checks for one module into its worst status without
+     * discarding the individual results that led to it.
+     *
+     * @param non-empty-list<self> $statuses
+     */
+    public static function aggregate(array $statuses): self
+    {
+        $worst = $statuses[0];
+
+        foreach ($statuses as $status) {
+            if (self::severity($status->level) > self::severity($worst->level)) {
+                $worst = $status;
+            }
+        }
+
+        $summaries = array_map(
+            static fn (self $status): string => sprintf('[%s] %s', $status->level->value, $status->message),
+            $statuses,
+        );
+
+        return new self(
+            $worst->level,
+            sprintf('%d health checks: %s', count($statuses), implode('; ', $summaries)),
+            ['health_checks' => array_map(static fn (self $status): array => $status->toArray(), $statuses)],
+        );
+    }
+
     public function isHealthy(): bool
     {
         return $this->level === HealthLevel::HEALTHY;
@@ -80,5 +113,14 @@ final class HealthStatus
             'message' => $this->message,
             'metadata' => $this->metadata,
         ];
+    }
+
+    private static function severity(HealthLevel $level): int
+    {
+        return match ($level) {
+            HealthLevel::HEALTHY => 0,
+            HealthLevel::DEGRADED => 1,
+            HealthLevel::UNHEALTHY => 2,
+        };
     }
 }

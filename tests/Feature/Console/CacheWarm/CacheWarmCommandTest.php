@@ -14,6 +14,7 @@ use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function bin2hex;
@@ -252,7 +253,33 @@ final class CacheWarmCommandTest extends TestCase
             );
             self::assertStringContainsString('Enable file caching in your gacela.php configuration:', $display);
             self::assertStringNotContainsString('Cache size:', $display);
+            self::assertFileDoesNotExist(Config::getInstance()->mergedConfigCacheFilename());
         });
+    }
+
+    public function test_cache_warm_fails_when_a_discovered_module_cannot_be_warmed(): void
+    {
+        $cacheDir = sys_get_temp_dir() . '/gacela-cache-warm-' . bin2hex(random_bytes(4));
+        $brokenModules = dirname(__DIR__, 3) . '/Integration/Console/CacheWarm/FacadeWarm/Domain';
+        putenv('GACELA_CACHE_DIR=' . $cacheDir);
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($brokenModules): void {
+            $config->resetInMemoryCache();
+            $config->enableFileCache();
+            $config->setAppModulePaths([$brokenModules]);
+            $config->setProjectNamespaces(['GacelaTest\\Integration\\Console\\CacheWarm\\FacadeWarm\\Domain']);
+        });
+
+        try {
+            $command = new CommandTester(new CacheWarmCommand());
+            $command->execute([]);
+
+            self::assertSame(Command::FAILURE, $command->getStatusCode());
+            self::assertMatchesRegularExpression('/Classes failed:\s+[1-9]\d*/', $command->getDisplay());
+        } finally {
+            putenv('GACELA_CACHE_DIR');
+            DirectoryUtil::removeDir($cacheDir);
+        }
     }
 
     public function test_cache_warm_with_clear_option_removes_the_previous_cache_file(): void
@@ -291,7 +318,7 @@ final class CacheWarmCommandTest extends TestCase
         );
         self::assertStringContainsString('  Error: ', $display);
         self::assertStringContainsString('Found 0 modules', $display);
-        self::assertSame(0, $command->getStatusCode());
+        self::assertSame(Command::FAILURE, $command->getStatusCode());
     }
 
     /**

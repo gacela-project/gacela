@@ -9,6 +9,8 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Health\HealthStatus;
+use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithMetadataHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithoutMetadataHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\FakeHealthCheck;
@@ -165,6 +167,24 @@ final class DoctorCommandTest extends TestCase
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertContains('✗ Doctor found errors', $this->linesOf($tester));
+    }
+
+    public function test_checks_for_the_same_module_are_combined_without_hiding_an_error(): void
+    {
+        $unhealthy = $this->createStub(ModuleHealthCheckInterface::class);
+        $unhealthy->method('getModuleName')->willReturn('Orders');
+        $unhealthy->method('checkHealth')->willReturn(HealthStatus::unhealthy('Database down'));
+
+        $healthy = $this->createStub(ModuleHealthCheckInterface::class);
+        $healthy->method('getModuleName')->willReturn('Orders');
+        $healthy->method('checkHealth')->willReturn(HealthStatus::healthy('Queue up'));
+
+        $tester = $this->doctor([$unhealthy, $healthy]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame(1, substr_count($tester->getDisplay(), 'module health: Orders'));
+        self::assertStringContainsString('[unhealthy] Database down', $tester->getDisplay());
+        self::assertStringContainsString('[healthy] Queue up', $tester->getDisplay());
     }
 
     public function test_a_passing_check_after_a_warning_stays_a_warning(): void

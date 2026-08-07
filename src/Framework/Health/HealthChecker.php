@@ -29,18 +29,27 @@ final class HealthChecker
      */
     public function checkAll(): HealthCheckReport
     {
-        $results = [];
+        /** @var array<string, non-empty-list<HealthStatus>> $statusesByModule */
+        $statusesByModule = [];
 
         foreach ($this->healthChecks as $healthCheck) {
             try {
                 $status = $healthCheck->checkHealth();
-                $results[$healthCheck->getModuleName()] = $status;
             } catch (Throwable $e) {
-                $results[$healthCheck->getModuleName()] = HealthStatus::unhealthy(
+                $status = HealthStatus::unhealthy(
                     sprintf('Health check failed: %s', $e->getMessage()),
                     ['exception' => $e::class, 'file' => $e->getFile(), 'line' => $e->getLine()],
                 );
             }
+
+            $statusesByModule[$healthCheck->getModuleName()][] = $status;
+        }
+
+        $results = [];
+        foreach ($statusesByModule as $moduleName => $statuses) {
+            $results[$moduleName] = count($statuses) === 1
+                ? $statuses[0]
+                : HealthStatus::aggregate($statuses);
         }
 
         return new HealthCheckReport($results);

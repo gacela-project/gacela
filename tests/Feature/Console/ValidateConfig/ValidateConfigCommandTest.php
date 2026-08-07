@@ -16,10 +16,9 @@ use GacelaTest\Feature\Console\ValidateConfig\Fixtures\InvokableBinding;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\MismatchedImplementation;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\NeedsMandatoryScalar;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\OtherContract;
+use GacelaTest\Feature\Console\ValidateConfig\Fixtures\SideEffectingImplementation;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\SomeContract;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\SomeImplementation;
-use GacelaTest\Feature\Console\ValidateConfig\Fixtures\ThrowsColonPackedCycle;
-use GacelaTest\Feature\Console\ValidateConfig\Fixtures\ThrowsUnparseableCycle;
 use GacelaTest\Feature\Console\ValidateConfig\Fixtures\UnrelatedImplementation;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -178,21 +177,17 @@ final class ValidateConfigCommandTest extends TestCase
         ], $this->verdictLinesOf($tester));
     }
 
-    public function test_reports_a_binding_key_that_does_not_exist_and_keeps_going(): void
+    public function test_accepts_an_arbitrary_string_service_id(): void
     {
         $tester = $this->validate(static function (GacelaConfig $config): void {
-            $config->addBinding(self::MISSING_CLASS, SomeImplementation::class);
-            $config->addBinding(SomeContract::class, SomeImplementation::class);
+            $config->addBinding('original-service', SomeImplementation::class);
         });
 
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-
-        // The bad key is reported, and the next binding is still validated.
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
-            '✗ Binding key does not exist: ' . self::MISSING_CLASS,
-            '✓ ' . SomeContract::class,
+            '✓ original-service',
             '✓ No circular dependencies detected',
-            '✗ Validation failed with errors',
+            '✓ Configuration is valid!',
         ], $this->verdictLinesOf($tester));
     }
 
@@ -229,7 +224,7 @@ final class ValidateConfigCommandTest extends TestCase
         ], $this->verdictLinesOf($tester));
 
         self::assertStringContainsString(
-            sprintf('chain: %s -> %s -> %s', CyclicB::class, CyclicA::class, CyclicB::class),
+            sprintf('chain: %s -> %s -> %s', CyclicA::class, CyclicB::class, CyclicA::class),
             $tester->getDisplay(),
         );
     }
@@ -337,9 +332,8 @@ final class ValidateConfigCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
-        // Both bindings pass the compatibility check; the resolution failure is
-        // reported afterwards as a warning naming the binding it belongs to,
-        // followed by the reason the container gave.
+        // Both bindings pass the compatibility check; static graph validation
+        // reports the unsatisfied scalar without constructing either service.
         $verdicts = $this->verdictLinesOf($tester);
 
         self::assertSame('✓ ' . SomeImplementation::class, $verdicts[0]);
@@ -367,33 +361,30 @@ final class ValidateConfigCommandTest extends TestCase
 
         // The chain that produced the cycle is printed under the error.
         self::assertStringContainsString(
-            sprintf('chain: %s -> %s -> %s', CyclicB::class, CyclicA::class, CyclicB::class),
+            sprintf('chain: %s -> %s -> %s', CyclicA::class, CyclicB::class, CyclicA::class),
             $tester->getDisplay(),
         );
     }
 
-    public function test_prints_a_cycle_headline_without_a_separator_verbatim(): void
+    public function test_validation_does_not_construct_services_or_invoke_factories(): void
     {
-        $tester = $this->validate(static function (GacelaConfig $config): void {
-            $config->addBinding(SomeContract::class, ThrowsUnparseableCycle::class);
+        SideEffectingImplementation::$constructionCount = 0;
+        $factoryCalls = 0;
+
+        $tester = $this->validate(static function (GacelaConfig $config) use (&$factoryCalls): void {
+            $config->addBinding(SomeContract::class, SideEffectingImplementation::class);
+            $config->addBinding('runtime-service', static function () use (&$factoryCalls): SomeImplementation {
+                ++$factoryCalls;
+
+                return new SomeImplementation();
+            });
         });
 
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertSame(0, SideEffectingImplementation::$constructionCount);
+        self::assertSame(0, $factoryCalls);
         self::assertStringContainsString(
-            '      chain: ' . ThrowsUnparseableCycle::HEADLINE,
-            $tester->getDisplay(),
-        );
-    }
-
-    public function test_keeps_the_whole_chain_when_it_starts_right_after_the_colon(): void
-    {
-        $tester = $this->validate(static function (GacelaConfig $config): void {
-            $config->addBinding(SomeContract::class, ThrowsColonPackedCycle::class);
-        });
-
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString(
-            '      chain: ' . ThrowsColonPackedCycle::CHAIN,
+            'Runtime factory not executed; static graph skipped: runtime-service',
             $tester->getDisplay(),
         );
     }
@@ -416,7 +407,7 @@ final class ValidateConfigCommandTest extends TestCase
         self::assertStringNotContainsString('  ✓ ' . SomeContract::class, $display);
         self::assertStringContainsString(
             sprintf(
-                '  ⚠ Warning: Could not resolve binding: %s (%s)',
+                '  ⚠ Warning: Could not inspect binding: %s (%s)',
                 SomeContract::class,
                 self::AUTOLOAD_FAILURE,
             ),

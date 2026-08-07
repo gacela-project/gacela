@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
-use Gacela\Container\Exception\CircularDependencyException;
+use Gacela\Container\ValidationProblem;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Command\Command;
@@ -15,6 +15,7 @@ use Throwable;
 use function class_exists;
 use function count;
 use function file_exists;
+use function implode;
 use function interface_exists;
 use function is_callable;
 use function is_object;
@@ -49,7 +50,7 @@ final class ValidateConfigCommand extends Command
         $hasErrors = $bindingsValidation['errors'];
         $hasWarnings = $bindingsValidation['warnings'];
 
-        $circularDepsValidation = $this->checkCircularDependencies($container, $output);
+        $circularDepsValidation = $this->validateDependencyGraphs($container, $output);
         $hasErrors = $hasErrors || $circularDepsValidation['errors'];
         $hasWarnings = $hasWarnings || $circularDepsValidation['warnings'];
 
@@ -97,11 +98,7 @@ final class ValidateConfigCommand extends Command
             $output->writeln('');
 
             foreach ($bindings as $key => $value) {
-                if (!class_exists($key) && !interface_exists($key)) {
-                    $output->writeln(sprintf('  <error>✗ Binding key does not exist:</> %s', $key));
-                    $hasErrors = true;
-                    continue;
-                }
+                $keyIsType = class_exists($key) || interface_exists($key);
 
                 if (is_string($value)) {
                     if (!class_exists($value)) {
@@ -110,7 +107,7 @@ final class ValidateConfigCommand extends Command
                         continue;
                     }
 
-                    if (!is_subclass_of($value, $key) && $value !== $key) {
+                    if ($keyIsType && !is_subclass_of($value, $key) && $value !== $key) {
                         $expectedKind = interface_exists($key) ? 'interface' : 'class';
                         $valueParents = $this->describeTypeChain($value);
 
@@ -126,7 +123,7 @@ final class ValidateConfigCommand extends Command
                     }
                 } elseif (is_object($value)) {
                     // Callable objects (factories) are always valid; other objects must be instances of the key.
-                    if (!is_callable($value) && class_exists($key) && !($value instanceof $key)) {
+                    if (!is_callable($value) && $keyIsType && !($value instanceof $key)) {
                         $output->writeln(sprintf('  <error>✗ Binding object is not instance of key:</> %s', $key));
                         $hasErrors = true;
                         continue;
@@ -148,7 +145,7 @@ final class ValidateConfigCommand extends Command
     /**
      * @return ValidationResult
      */
-    private function checkCircularDependencies(Container $container, OutputInterface $output): array
+    private function validateDependencyGraphs(Container $container, OutputInterface $output): array
     {
         $output->writeln('<comment>Checking for circular dependencies...</comment>');
 
@@ -157,6 +154,13 @@ final class ValidateConfigCommand extends Command
 
         foreach ($container->getBindings() as $key => $value) {
             if (!is_string($value)) {
+                if (is_callable($value)) {
+                    $output->writeln(sprintf(
+                        '  <fg=cyan>• Runtime factory not executed; static graph skipped:</> %s',
+                        $key,
+                    ));
+                }
+
                 continue;
             }
 
@@ -165,18 +169,29 @@ final class ValidateConfigCommand extends Command
                     continue;
                 }
 
-                // Resolving the binding surfaces circular dependency errors.
-                $container->get($key);
-            } catch (CircularDependencyException $exception) {
-                $output->writeln(sprintf('  <error>✗ Circular dependency detected:</> %s', $key));
-                $output->writeln(sprintf('      chain: %s', $this->cycleChain($exception)));
-                $hasErrors = true;
+                $report = $container->validate([$value]);
+                foreach ($report->issues() as $issue) {
+                    if ($issue->problem === ValidationProblem::DependencyCycle) {
+                        $output->writeln(sprintf('  <error>✗ Circular dependency detected:</> %s', $key));
+                        $output->writeln(sprintf(
+                            '      chain: %s',
+                            implode(' -> ', [...$issue->chain, $issue->class]),
+                        ));
+                        $hasErrors = true;
+
+                        continue;
+                    }
+
+                    $output->writeln(sprintf(
+                        '  <fg=yellow>⚠ Warning: Could not resolve binding:</> %s (%s)',
+                        $key,
+                        $issue->describe(),
+                    ));
+                    $hasWarnings = true;
+                }
             } catch (Throwable $throwable) {
-                // Any other resolution failure -- including a class that cannot even
-                // be loaded -- is a real problem the developer needs to see;
-                // reporting it is the whole point of this command.
                 $output->writeln(sprintf(
-                    '  <fg=yellow>⚠ Warning: Could not resolve binding:</> %s (%s)',
+                    '  <fg=yellow>⚠ Warning: Could not inspect binding:</> %s (%s)',
                     $key,
                     $throwable->getMessage(),
                 ));
@@ -191,20 +206,6 @@ final class ValidateConfigCommand extends Command
         $output->writeln('');
 
         return ['errors' => $hasErrors, 'warnings' => $hasWarnings];
-    }
-
-    /**
-     * Pull the `A -> B -> A` chain out of the exception headline, so the
-     * developer sees exactly which classes close the loop.
-     */
-    private function cycleChain(CircularDependencyException $exception): string
-    {
-        /** @var non-empty-list<string> $lines */
-        $lines = explode("\n", $exception->getMessage());
-        $headline = $lines[0];
-        $colonPos = strpos($headline, ':');
-
-        return $colonPos === false ? $headline : trim(substr($headline, $colonPos + 1));
     }
 
     /**
@@ -235,10 +236,12 @@ This command validates your Gacela configuration for common errors and potential
 <info>What it checks:</info>
   - Presence of the optional gacela.php file (its absence is not an error; it is only reported when found)
   - Bindings configuration:
-    - Validates that binding keys (interfaces/classes) exist
+    - Accepts class/interface keys and arbitrary service IDs
     - Validates that binding values (classes) exist
-    - Checks type compatibility between keys and values
-  - Circular dependency detection (basic check)
+    - Checks type compatibility when the key names a class or interface
+  - Constructor dependency graphs, without constructing services
+  - Runtime factories are reported as outside static graph validation
+  - Standalone aliases, lazy registrations, and already-loaded services are outside the binding root set
 
 <info>Validation levels:</info>
   <error>Errors</error> - Critical issues that will cause runtime failures

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Psalm;
 
+use Gacela\Framework\AbstractFactory;
 use Gacela\Psalm\Plugin;
 use PHPUnit\Framework\TestCase;
+use Psalm\Codebase;
 use Psalm\Config;
+use Psalm\Internal\Codebase\Methods;
 use Psalm\Internal\EventDispatcher;
+use Psalm\Internal\Provider\MethodReturnTypeProvider;
 use Psalm\PluginRegistrationSocket;
 use ReflectionClass;
 use SimpleXMLElement;
@@ -20,6 +24,8 @@ use SimpleXMLElement;
  */
 final class PluginTest extends TestCase
 {
+    private ?MethodReturnTypeProvider $returnTypes = null;
+
     public function test_it_registers_the_pseudo_method_handler(): void
     {
         $dispatcher = new EventDispatcher();
@@ -32,6 +38,20 @@ final class PluginTest extends TestCase
         (new Plugin())($this->socket($dispatcher));
 
         self::assertTrue($dispatcher->hasAfterClassLikeVisitHandlers());
+    }
+
+    public function test_it_registers_the_provided_dependency_return_type_handler(): void
+    {
+        $returnTypes = $this->returnTypeProvider();
+
+        self::assertFalse(
+            $returnTypes->has(AbstractFactory::class),
+            'precondition: nothing is registered for the factory before the plugin runs',
+        );
+
+        (new Plugin())($this->socket(new EventDispatcher()));
+
+        self::assertTrue($returnTypes->has(AbstractFactory::class));
     }
 
     public function test_it_ignores_the_optional_plugin_config(): void
@@ -60,7 +80,33 @@ final class PluginTest extends TestCase
         $socketReflection = new ReflectionClass(PluginRegistrationSocket::class);
         $socket = $socketReflection->newInstanceWithoutConstructor();
         $socketReflection->getProperty('config')->setValue($socket, $config);
+        $socketReflection->getProperty('codebase')->setValue($socket, $this->codebase());
 
         return $socket;
+    }
+
+    /**
+     * A return-type provider registers against the codebase rather than the
+     * event dispatcher, so the socket needs one -- but only the two fields the
+     * registration walks through.
+     */
+    private function codebase(): Codebase
+    {
+        $methods = (new ReflectionClass(Methods::class))->newInstanceWithoutConstructor();
+        $methods->return_type_provider = $this->returnTypeProvider();
+
+        $codebase = (new ReflectionClass(Codebase::class))->newInstanceWithoutConstructor();
+        $codebase->methods = $methods;
+
+        return $codebase;
+    }
+
+    /**
+     * Its handlers live in a static, so constructing one is also how the
+     * registry is emptied between tests.
+     */
+    private function returnTypeProvider(): MethodReturnTypeProvider
+    {
+        return $this->returnTypes ??= new MethodReturnTypeProvider();
     }
 }

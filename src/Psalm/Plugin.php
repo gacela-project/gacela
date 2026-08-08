@@ -24,7 +24,9 @@ final class Plugin implements PluginEntryPointInterface
         // Psalm checks class_exists($handler, false) -- autoloading disabled --
         // so the handler has to be loaded before it can be registered.
         require_once __DIR__ . '/ServiceMapPseudoMethods.php';
+        require_once __DIR__ . '/ProvidedDependencyReturnType.php';
 
         $registration->registerHooksFromClass(ServiceMapPseudoMethods::class);
+        $registration->registerHooksFromClass(ProvidedDependencyReturnType::class);
     }
 }

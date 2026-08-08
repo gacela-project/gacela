@@ -64,6 +64,8 @@ A string key (`$this->getProvidedDependency('some.service')`) still returns
 `mixed`. Nothing in the type system says what it resolves to, and inventing a
 type there would be worse than `mixed` — a guess the analyser then trusts.
 
+The Psalm plugin does the same; see [Psalm](#psalm) below.
+
 A Factory may also declare its dependencies in its **constructor**; pillars are
 resolved through the container, so autowiring applies to the Factory itself:
 
@@ -238,6 +240,21 @@ PHPStan extension in `phpstan-gacela.neon`.
 
 The plugin cannot be delivered through the XInclude above: XInclude replaces a
 single element, and `<plugins>` lives elsewhere in your config.
+
+### Typed provided dependencies
+
+The same `<plugins>` block also types `getProvidedDependency()` when the key is a
+class-string, so the `@var` above every call site can go:
+
+```php
+// Psalm knows this is a Clock, and checks the call on it.
+$clock = $this->getProvidedDependency(Clock::class);
+```
+
+A string key (`'some.service'`) still returns `mixed`, exactly as under PHPStan.
+Nothing in the type system says what it resolves to, and a guess would be worse
+than `mixed`: `mixed` is honestly unknown, a guess is confidently wrong and then
+trusted.
 
 
 ## Troubleshooting

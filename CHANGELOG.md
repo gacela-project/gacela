@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Type `getProvidedDependency(Foo::class)` under Psalm too, matching the PHPStan extension
+
 ### Changed
 
 - Resolve graph imports through a name index instead of comparing every import to every module

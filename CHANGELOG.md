@@ -6,6 +6,15 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- `make:module` and `make:file` corrupted the target directory when the module
+  name repeated the namespace text. `CommandArgumentsParser` replaced the
+  namespace with `str_replace()` across the whole string, so `App/Application`
+  against `App\ => src/` generated into `src/srclication`. Only the matched
+  prefix is removed now. Two neighbouring shapes are fixed with it: a psr-4
+  target without a trailing slash was truncated by a character (`src` became
+  `sr`), and a target given as a list of directories — which Composer allows —
+  raised a `TypeError`. A list now resolves to its first directory, which is
+  where Composer itself looks first.
 
 ## [2.0.0](https://github.com/gacela-project/gacela/compare/1.21.0...2.0.0) - 2026-08-07
 

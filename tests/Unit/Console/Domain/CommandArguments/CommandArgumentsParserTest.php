@@ -120,6 +120,71 @@ final class CommandArgumentsParserTest extends TestCase
         self::assertSame('código/TestModule', $args->directory());
     }
 
+    /**
+     * The module name repeats the namespace text: "Application" starts with
+     * "App". Replacing the namespace globally rewrote that occurrence too, so
+     * the directory came back as `src/srclication`.
+     */
+    public function test_parse_module_name_that_repeats_the_namespace(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+        $args = $parser->parse('App/Application');
+
+        self::assertSame('App\Application', $args->namespace());
+        self::assertSame('src/Application', $args->directory());
+    }
+
+    /**
+     * Composer does not require the trailing slash on a psr-4 target. Cutting
+     * the last character unconditionally turned `src` into `sr`.
+     */
+    public function test_parse_psr4_target_without_a_trailing_slash(): void
+    {
+        $composerJson = json_decode(
+            '{"autoload":{"psr-4":{"App\\\\":"src"}}}',
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        $args = (new CommandArgumentsParser($composerJson))->parse('App/TestModule');
+
+        self::assertSame('App\TestModule', $args->namespace());
+        self::assertSame('src/TestModule', $args->directory());
+    }
+
+    /**
+     * Composer allows a list of directories per namespace. Only the first is
+     * used: it is where Composer itself would look first, and generating into
+     * any of the others would be a guess.
+     */
+    public function test_parse_psr4_target_given_as_a_list_uses_the_first_directory(): void
+    {
+        $composerJson = json_decode(
+            '{"autoload":{"psr-4":{"App\\\\":["src/","generated/"]}}}',
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        $args = (new CommandArgumentsParser($composerJson))->parse('App/TestModule');
+
+        self::assertSame('App\TestModule', $args->namespace());
+        self::assertSame('src/TestModule', $args->directory());
+    }
+
+    /**
+     * The namespace root on its own, with nothing after it.
+     */
+    public function test_parse_the_root_namespace_itself(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+        $args = $parser->parse('App');
+
+        self::assertSame('App', $args->namespace());
+        self::assertSame('src', $args->directory());
+    }
+
     private function exampleOneLevelComposerJson(): array
     {
         $composerJson = <<<'JSON'

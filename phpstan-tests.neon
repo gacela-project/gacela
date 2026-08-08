@@ -31,6 +31,18 @@ parameters:
         -
             identifier: parameter.internalClass
             path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php
+        # Same reason for the return-type handler, which registers against the
+        # codebase rather than the dispatcher: Methods and MethodReturnTypeProvider
+        # are both internal, and has() is the only way to observe the registration.
+        -
+            identifier: property.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php
+        -
+            identifier: return.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php
+        -
+            identifier: classConstant.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php
         # ProvidesScanner's memo is a private static with no public accessor, and
         # reading it is the only way to observe that a repeated scan is skipped.
         -

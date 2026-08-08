@@ -8,6 +8,8 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use RuntimeException;
 
@@ -24,13 +26,28 @@ final class ParseSource
 {
     public static function classIn(string $php): ClassLike
     {
-        $node = (new NodeFinder())->findFirstInstanceOf(self::parse($php), ClassLike::class);
+        return self::classInStatements(self::parse($php));
+    }
 
-        if (!$node instanceof ClassLike) {
-            throw new RuntimeException('The snippet declares no class');
-        }
+    /**
+     * Names rewritten in place, so `Name::toString()` is already qualified --
+     * the tree PHPStan hands a rule.
+     */
+    public static function classInAsPhpStanResolves(string $php): ClassLike
+    {
+        return self::classInStatements(self::resolveNames(self::parse($php), replaceNodes: true));
+    }
 
-        return $node;
+    /**
+     * Names left as the source wrote them, with the qualified form on a
+     * `resolvedName` attribute -- the shape Psalm hands a plugin.
+     *
+     * The difference is not cosmetic: reading `toString()` on this tree gives
+     * `InvoiceRepository` for an imported class, which belongs to no module.
+     */
+    public static function classInWithNameAttributes(string $php): ClassLike
+    {
+        return self::classInStatements(self::resolveNames(self::parse($php), replaceNodes: false));
     }
 
     public static function methodIn(string $php, string $methodName): ClassMethod
@@ -42,6 +59,35 @@ final class ParseSource
         }
 
         throw new RuntimeException(sprintf('The snippet declares no method %s()', $methodName));
+    }
+
+    /**
+     * @param list<Stmt> $statements
+     *
+     * @return list<Stmt>
+     */
+    private static function resolveNames(array $statements, bool $replaceNodes): array
+    {
+        $traverser = new NodeTraverser(new NameResolver(null, ['replaceNodes' => $replaceNodes]));
+
+        /** @var list<Stmt> $resolved */
+        $resolved = $traverser->traverse($statements);
+
+        return $resolved;
+    }
+
+    /**
+     * @param list<Stmt> $statements
+     */
+    private static function classInStatements(array $statements): ClassLike
+    {
+        $node = (new NodeFinder())->findFirstInstanceOf($statements, ClassLike::class);
+
+        if (!$node instanceof ClassLike) {
+            throw new RuntimeException('The snippet declares no class');
+        }
+
+        return $node;
     }
 
     /**

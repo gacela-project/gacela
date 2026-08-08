@@ -35,6 +35,20 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
         );
     }
 
+    /**
+     * `?->` crosses the boundary exactly as much as `->`. The rule is a
+     * `Rule<MethodCall>` and `NullsafeMethodCall` is a sibling node, not a
+     * subclass, so this is pinned rather than assumed: PHPStan reaches it, and
+     * the Psalm half handles the node explicitly.
+     */
+    public function test_a_nullsafe_call_on_an_injected_dependency_is_reported(): void
+    {
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/UserCalls/NullsafeCallFactory.php'],
+            [[$this->expectedError('NullsafeCallFactory', 'Shop\Domain\ShopService', 'Shop'), 21]],
+        );
+    }
+
     public function test_a_call_on_a_facade_is_allowed(): void
     {
         $this->analyse([__DIR__ . '/Fixture/CrossModule/UserCalls/ViaFacadeFactory.php'], []);

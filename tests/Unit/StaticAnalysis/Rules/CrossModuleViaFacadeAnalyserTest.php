@@ -55,6 +55,37 @@ final class CrossModuleViaFacadeAnalyserTest extends TestCase
     }
 
     /**
+     * The two hosts resolve names differently: PHPStan rewrites them in place,
+     * Psalm leaves the source text and puts the qualified form on an attribute.
+     * Reading only `toString()` matched nothing under Psalm, because an imported
+     * class reads as a bare `InvoiceRepository`, which belongs to no module.
+     */
+    public function test_an_imported_class_is_matched_whichever_way_the_host_resolved_it(): void
+    {
+        $source = <<<'PHP'
+            <?php
+
+            namespace App\Modules\Checkout;
+
+            use App\Modules\Billing\Domain\InvoiceRepository;
+
+            final class CheckoutFactory
+            {
+                public function create()
+                {
+                    return new InvoiceRepository();
+                }
+            }
+            PHP;
+
+        $analyser = new CrossModuleViaFacadeAnalyser(self::ROOT);
+        $class = new FakeAnalysedClass('App\Modules\Checkout\CheckoutFactory');
+
+        self::assertCount(1, $analyser->analyse(ParseSource::classInAsPhpStanResolves($source), $class));
+        self::assertCount(1, $analyser->analyse(ParseSource::classInWithNameAttributes($source), $class));
+    }
+
+    /**
      * `new $class` names nothing to resolve a module from.
      */
     public function test_a_dynamic_reference_is_not_reported(): void

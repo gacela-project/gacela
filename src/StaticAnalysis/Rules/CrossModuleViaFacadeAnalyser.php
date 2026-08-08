@@ -7,6 +7,7 @@ namespace Gacela\StaticAnalysis\Rules;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\ModuleBoundary;
+use Gacela\StaticAnalysis\ResolvedName;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node;
@@ -117,7 +118,7 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
             /** @var ClassConstFetch|New_|StaticCall|StaticPropertyFetch $ref */
             // `new $class` / `$class::CONST` name nothing to match on.
             if ($ref->class instanceof Name) {
-                $names[] = $ref->class->toString();
+                $names[] = ResolvedName::of($ref->class);
             }
         }
 

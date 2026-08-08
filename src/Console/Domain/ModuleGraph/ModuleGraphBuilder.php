@@ -65,11 +65,9 @@ final class ModuleGraphBuilder
             }
         }
 
-        // sort() discards keys and reindexes; array_values() first would be a no-op.
-        $list = $dependencies;
-        sort($list);
+        sort($dependencies);
 
-        return $list;
+        return $dependencies;
     }
 
     /**

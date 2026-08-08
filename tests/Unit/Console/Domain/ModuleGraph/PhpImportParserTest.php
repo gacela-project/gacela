@@ -166,9 +166,60 @@ final class PhpImportParserTest extends TestCase
         self::assertSame(['App\Billing\Invoice', 'App\Orders\Order'], $this->parse($source));
     }
 
-    public function test_a_leading_separator_is_kept_verbatim(): void
+    /**
+     * A leading separator is legal and means the same import. Keeping it would
+     * make the name miss every module, because module names carry no separator.
+     */
+    public function test_a_leading_separator_is_dropped(): void
     {
-        self::assertSame(['App\Billing\Invoice'], $this->parse('<?php use App\Billing\Invoice;'));
+        self::assertSame(['App\Billing\Invoice'], $this->parse('<?php use \App\Billing\Invoice;'));
+    }
+
+    public function test_a_leading_separator_is_dropped_on_a_group_prefix(): void
+    {
+        self::assertSame(
+            ['App\Billing\Invoice', 'App\Orders\Order'],
+            $this->parse('<?php use \App\{Billing\Invoice, Orders\Order};'),
+        );
+    }
+
+    /**
+     * PHP keywords are case-insensitive, so the uppercase form is the same
+     * statement. Reading it as a class name leaks an edge from the group prefix.
+     */
+    public function test_an_uppercase_function_import_is_not_a_class_import(): void
+    {
+        self::assertSame([], $this->parse('<?php use FUNCTION App\Billing\calculate;'));
+    }
+
+    public function test_a_mixed_case_const_import_is_not_a_class_import(): void
+    {
+        self::assertSame([], $this->parse('<?php use Const App\Billing\RATE;'));
+    }
+
+    public function test_an_uppercase_function_entry_in_a_group_is_skipped(): void
+    {
+        self::assertSame(
+            ['App\Orders\Order'],
+            $this->parse('<?php use App\{FUNCTION Billing\total, Orders\Order};'),
+        );
+    }
+
+    /**
+     * The keyword may be followed by any whitespace, not only a single space.
+     */
+    public function test_a_function_import_split_after_the_keyword_is_skipped(): void
+    {
+        self::assertSame([], $this->parse("<?php use function\n    App\Billing\calculate;"));
+    }
+
+    /**
+     * The name starts with the keyword text, so only the required whitespace
+     * keeps this a class import rather than a skipped function import.
+     */
+    public function test_a_namespace_whose_name_starts_with_a_keyword_is_an_import(): void
+    {
+        self::assertSame(['Functional\Billing\Invoice'], $this->parse('<?php use Functional\Billing\Invoice;'));
     }
 
     public function test_a_file_with_no_imports(): void

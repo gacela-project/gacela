@@ -5,6 +5,8 @@
 - Preserve duplicate module health checks and aggregate them to the worst reported level
 - Parse module graph imports with the tokenizer, so grouped, multiline and aliased forms resolve
 - Resolve graph imports through a name index instead of comparing every import to every module
+- Strip a leading separator from graph imports, so `use \App\Foo;` still matches its module
+- Match `use function` and `use const` case-insensitively, and only as whole keywords
 - Treat `ttl: 0` as no expiry in `InMemoryCacheStorage`, matching `FileCache`
 - Let `bin/gacela` run from any subdirectory, bootstrapping with the project root
 - Record nested and recursive profiler spans instead of overwriting the outer start time

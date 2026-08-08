@@ -8,6 +8,7 @@ use Gacela\Console\ConsoleConfig;
 use InvalidArgumentException;
 
 use function count;
+use function is_string;
 
 /**
  * @psalm-import-type ComposerJsonContent from ConsoleConfig
@@ -40,17 +41,16 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
         $psr4 = $this->composerJson['autoload']['psr-4'];
         $psr4Dev = $this->composerJson['autoload-dev']['psr-4'] ?? [];
 
-        $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);
+        // `+` keeps the left operand on a duplicate key, which is the same
+        // precedence the two separate isset() chains encoded: autoload wins
+        // over autoload-dev for a namespace declared in both.
+        $psr4All = $psr4 + $psr4Dev;
 
-        foreach ($allPsr4Combinations as $psr4Combination) {
+        foreach ($this->allPossiblePsr4Combinations($desiredNamespace) as $psr4Combination) {
             $psr4Key = $psr4Combination . '\\';
 
-            if (isset($psr4[$psr4Key])) {
-                return $this->foundPsr4($psr4Key, $psr4[$psr4Key], $desiredNamespace);
-            }
-
-            if (isset($psr4Dev[$psr4Key])) {
-                return $this->foundPsr4($psr4Key, $psr4Dev[$psr4Key], $desiredNamespace);
+            if (isset($psr4All[$psr4Key])) {
+                return $this->foundPsr4($psr4Key, $psr4All[$psr4Key], $desiredNamespace);
             }
         }
 
@@ -58,12 +58,15 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
     }
 
     /**
-     * Merge all possible psr-4 combinations and return them ordered by longer to shorter.
-     * This way we'll be able to find the longer match first.
-     * For example: App/TestModule/TestSubModule will produce an array such as:
+     * Every psr-4 prefix the requested namespace could match, longest first, so
+     * the most specific mapping wins.
+     *
+     * The input is slash-separated and the output is backslash-separated,
+     * because these are compared against psr-4 keys: `App/TestModule/TestSubModule`
+     * produces
      * [
-     *   'App/TestModule/TestSubModule',
-     *   'App/TestModule',
+     *   'App\TestModule\TestSubModule',
+     *   'App\TestModule',
      *   'App',
      * ]
      *
@@ -85,13 +88,48 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
         return array_reverse($result);
     }
 
-    private function foundPsr4(string $psr4Key, string $psr4Value, string $desiredNamespace): CommandArguments
+    /**
+     * @param string|list<string> $psr4Value
+     */
+    private function foundPsr4(string $psr4Key, string|array $psr4Value, string $desiredNamespace): CommandArguments
     {
-        $rootDir = mb_substr($psr4Value, 0, -1);
-        $rootNamespace = mb_substr($psr4Key, 0, -1);
-        $targetDirectory = str_replace(['/', $rootNamespace, '\\'], ['\\', $rootDir, '/'], $desiredNamespace);
-        $namespace = str_replace([$rootDir, '/'], [$rootNamespace, '\\'], $targetDirectory);
+        $rootNamespace = rtrim($psr4Key, '\\');
+        $rootDir = rtrim($this->firstDirectoryOf($psr4Value), '/');
 
-        return new CommandArguments($namespace, $targetDirectory);
+        // Only the matched prefix is removed. Replacing the namespace text
+        // globally also rewrote it where it recurs inside the module name, so
+        // `App/Application` against `App\ => src/` produced `src/srclication`.
+        $prefixAsPath = str_replace('\\', '/', $rootNamespace);
+        $remainder = trim(mb_substr($desiredNamespace, mb_strlen($prefixAsPath)), '/');
+
+        return new CommandArguments(
+            $this->join('\\', $rootNamespace, str_replace('/', '\\', $remainder)),
+            $this->join('/', $rootDir, $remainder),
+        );
+    }
+
+    /**
+     * Composer allows a psr-4 target to be a single directory or a list of
+     * them. Only the first is used: it is where Composer itself looks first,
+     * and generating into any of the others would be a guess.
+     *
+     * @param string|list<string> $psr4Value
+     */
+    private function firstDirectoryOf(string|array $psr4Value): string
+    {
+        if (is_string($psr4Value)) {
+            return $psr4Value;
+        }
+
+        return $psr4Value[0] ?? '';
+    }
+
+    /**
+     * Joins the parts that are present, so a namespace root with nothing after
+     * it does not pick up a dangling separator.
+     */
+    private function join(string $separator, string ...$parts): string
+    {
+        return implode($separator, array_filter($parts, static fn (string $part): bool => $part !== ''));
     }
 }

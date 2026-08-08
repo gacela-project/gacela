@@ -9,9 +9,12 @@ use Gacela\Framework\AbstractConfig;
 use JsonException;
 
 /**
+ * A psr-4 target is a directory or a list of them; Composer accepts both, and
+ * assuming the string shape made an array-valued mapping a TypeError.
+ *
  * @psalm-type ComposerJsonContent = array{
- *     autoload?: array{"psr-4"?: array<string,string>},
- *     autoload-dev?: array{"psr-4"?: array<string,string>},
+ *     autoload?: array{"psr-4"?: array<string,string|list<string>>},
+ *     autoload-dev?: array{"psr-4"?: array<string,string|list<string>>},
  * }
  */
 final class ConsoleConfig extends AbstractConfig

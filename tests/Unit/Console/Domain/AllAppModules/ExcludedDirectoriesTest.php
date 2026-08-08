@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Console\Domain\AllAppModules;
 
 use Gacela\Console\Domain\AllAppModules\ExcludedDirectories;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
@@ -12,7 +13,6 @@ use RecursiveIteratorIterator;
 
 use function dirname;
 use function file_put_contents;
-use function is_string;
 use function mkdir;
 use function sort;
 use function sys_get_temp_dir;
@@ -30,7 +30,7 @@ final class ExcludedDirectoriesTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->removeRecursively($this->tempDir);
+        DirectoryUtil::removeDir($this->tempDir);
     }
 
     public function test_vendor_and_node_modules_are_excluded(): void
@@ -128,27 +128,4 @@ final class ExcludedDirectoriesTest extends TestCase
         file_put_contents($path, '<?php');
     }
 
-    private function removeRecursively(string $dir): void
-    {
-        foreach ((array) glob($dir . '/*') as $entry) {
-            if (!is_string($entry)) {
-                continue;
-            }
-
-            if (is_dir($entry)) {
-                $this->removeRecursively($entry);
-            } else {
-                @unlink($entry);
-            }
-        }
-
-        // glob() skips dot entries, and the fixture writes a `.git` tree.
-        foreach ((array) glob($dir . '/.*') as $entry) {
-            if (is_string($entry) && is_dir($entry) && !str_ends_with($entry, '.') && !str_ends_with($entry, '..')) {
-                $this->removeRecursively($entry);
-            }
-        }
-
-        @rmdir($dir);
-    }
 }

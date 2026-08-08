@@ -21,7 +21,15 @@ final class Profiler
     /** @var list<TProfileEntry> */
     private array $entries = [];
 
-    /** @var array<non-empty-string, float> */
+    /**
+     * A stack of start times per `operation:subject`, not a single one. The
+     * same operation can be in flight more than once -- nested or recursive
+     * calls carry identical labels -- and storing one timestamp let the inner
+     * start overwrite the outer, so the pair produced a single entry and the
+     * outer span was lost.
+     *
+     * @var array<non-empty-string, non-empty-list<float>>
+     */
     private array $activeOperations = [];
 
     private function __construct()
@@ -45,6 +53,12 @@ final class Profiler
     public function disable(): void
     {
         $this->enabled = false;
+
+        // A span still open when profiling is turned off can never be closed,
+        // because stop() does nothing while disabled. Keeping it would let a
+        // later enable() pair a fresh stop() with a stale start and record the
+        // time the profiler spent switched off.
+        $this->activeOperations = [];
     }
 
     public function isEnabled(): bool
@@ -62,8 +76,7 @@ final class Profiler
             return;
         }
 
-        $key = $operation . ':' . $subject;
-        $this->activeOperations[$key] = $this->getCurrentTime();
+        $this->activeOperations[$this->keyFor($operation, $subject)][] = $this->getCurrentTime();
     }
 
     /**
@@ -77,25 +90,24 @@ final class Profiler
         }
 
         $endTime = $this->getCurrentTime();
-        $key = $operation . ':' . $subject;
+        $key = $this->keyFor($operation, $subject);
 
         if (!isset($this->activeOperations[$key])) {
+            // A stop() with no matching start() is ignored rather than
+            // recorded: there is no start time to measure from.
             return;
         }
 
-        $startTime = $this->activeOperations[$key];
-        $duration = $endTime - $startTime;
+        $startTime = $this->popStartTime($key);
 
         $this->entries[] = new TProfileEntry(
             operation: $operation,
             subject: $subject,
             startTime: $startTime,
             endTime: $endTime,
-            duration: $duration,
+            duration: $endTime - $startTime,
             memoryUsage: memory_get_usage(true),
         );
-
-        unset($this->activeOperations[$key]);
     }
 
     /**
@@ -159,6 +171,41 @@ final class Profiler
     {
         $this->entries = [];
         $this->activeOperations = [];
+    }
+
+    /**
+     * Takes the innermost start time off the stack, so a stop closes the span
+     * its matching start opened.
+     *
+     * The key is dropped once its stack empties, which keeps `isset()` the
+     * whole "is anything in flight for this key" question rather than one of
+     * two conditions every caller would have to repeat.
+     *
+     * @param non-empty-string $key
+     */
+    private function popStartTime(string $key): float
+    {
+        $stack = $this->activeOperations[$key];
+        $startTime = array_pop($stack);
+
+        if ($stack === []) {
+            unset($this->activeOperations[$key]);
+        } else {
+            $this->activeOperations[$key] = $stack;
+        }
+
+        return $startTime;
+    }
+
+    /**
+     * @param non-empty-string $operation
+     * @param non-empty-string $subject
+     *
+     * @return non-empty-string
+     */
+    private function keyFor(string $operation, string $subject): string
+    {
+        return $operation . ':' . $subject;
     }
 
     /**

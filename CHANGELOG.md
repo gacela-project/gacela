@@ -2,21 +2,26 @@
 
 ## Unreleased
 
-- Preserve duplicate module health checks and aggregate them to the worst reported level
-- Inherit app-wide resolution hooks in module scopes, for `get()`, `getOrFail()` and `make()`
+### Changed
+
+- Resolve graph imports through a name index instead of comparing every import to every module
+- Prune `vendor`, `node_modules` and hidden directories before descending in module discovery
 - Exit non-zero from `cache:warm` when a warmup fails, so a broken deploy is not reported green
-- Validate config without constructing services, so `validate:config` has no side effects
+
+### Fixed
+
+- Strip only the matched psr-4 prefix in `make:module`/`make:file`, and accept list targets
+- Let `bin/gacela` run from any subdirectory, bootstrapping with the project root
+- Discover facades that extend `AbstractFacade` indirectly, not only direct children
 - Parse graph imports with the tokenizer: grouped, multiline, aliased and `\`-prefixed all resolve
 - Ignore `use function` and `use const` in the graph, whatever their case
-- Resolve graph imports through a name index instead of comparing every import to every module
-- Treat `ttl: 0` as no expiry in `InMemoryCacheStorage`, matching `FileCache`
-- Let `bin/gacela` run from any subdirectory, bootstrapping with the project root
-- Record nested and recursive profiler spans, and drop in-flight ones on `disable()`
-- Restore config values, app root and cache dir in `ContainerFixture::restoreContainerState()`
-- Discover facades that extend `AbstractFacade` indirectly, not only direct children
-- Prune `vendor`, `node_modules` and hidden directories before descending in module discovery
 - Check the merged configuration cache against its sources in `doctor`
-- Strip only the matched psr-4 prefix in `make:module`/`make:file`, and accept list targets
+- Validate config without constructing services, so `validate:config` has no side effects
+- Treat `ttl: 0` as no expiry in `InMemoryCacheStorage`, matching `FileCache`
+- Inherit app-wide resolution hooks in module scopes, for `get()`, `getOrFail()` and `make()`
+- Record nested and recursive profiler spans, and drop in-flight ones on `disable()`
+- Preserve duplicate module health checks and aggregate them to the worst reported level
+- Restore config values, app root and cache dir in `ContainerFixture::restoreContainerState()`
 
 ## [2.0.0](https://github.com/gacela-project/gacela/compare/1.21.0...2.0.0) - 2026-08-07
 

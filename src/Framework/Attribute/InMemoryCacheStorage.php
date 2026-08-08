@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Attribute;
 
+use Gacela\Framework\Cache\CacheExpiry;
+
 use function array_keys;
 use function str_starts_with;
 use function time;
@@ -43,10 +45,7 @@ final class InMemoryCacheStorage implements CacheStorageInterface
     {
         $this->cache[$key] = [
             'result' => $value,
-            // 0 is "no expiry", the contract FileCache has always followed --
-            // its own default TTL is 0. Writing time() + 0 here made an entry
-            // expire before set() returned.
-            'expires' => $ttl === 0 ? null : time() + $ttl,
+            'expires' => CacheExpiry::fromTtl($ttl),
         ];
     }
 

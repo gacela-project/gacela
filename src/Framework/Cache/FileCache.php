@@ -111,8 +111,7 @@ final class FileCache
      */
     public function put(string $key, mixed $value, ?int $ttl = null): void
     {
-        $effectiveTtl = $ttl ?? $this->defaultTtl;
-        $expiresAt = $effectiveTtl !== 0 ? time() + $effectiveTtl : null;
+        $expiresAt = CacheExpiry::fromTtl($ttl ?? $this->defaultTtl);
 
         /** @var array{value: T, expiresAt: int|null} $entry */
         $entry = ['value' => $value, 'expiresAt' => $expiresAt];

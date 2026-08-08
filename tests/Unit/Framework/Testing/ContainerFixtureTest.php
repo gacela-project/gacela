@@ -321,6 +321,24 @@ final class ContainerFixtureTest extends TestCase
         self::assertNull(self::readStaticProperty(Config::class, 'instance'));
     }
 
+    /**
+     * The reflection helpers reach into framework internals, so a private field
+     * that gets renamed has to degrade to a no-op rather than take a whole test
+     * suite down with an Error.
+     */
+    public function test_the_reflection_helpers_tolerate_a_property_that_does_not_exist(): void
+    {
+        $object = new stdClass();
+
+        self::assertNull(self::readPrivateProperty($object, 'nothingHere'));
+        self::assertNull(self::readStaticProperty(Config::class, 'nothingHere'));
+
+        self::writePrivateProperty($object, 'nothingHere', 'value');
+        self::writeStaticProperty(Config::class, 'nothingHere', 'value');
+
+        self::assertFalse(property_exists($object, 'nothingHere'));
+    }
+
     public function test_restore_container_state_reinstates_in_memory_cache(): void
     {
         (new InMemoryCache('to-restore'))->put('Foo', 'Bar');

@@ -9,13 +9,34 @@ use Symfony\Component\Console\Application;
 
 (static function (): void {
 
-    $cwd = (string)getcwd();
-    if (!file_exists($autoloadPath = $cwd . '/vendor/autoload.php')) {
-        fwrite(STDERR, "Cannot load composer's autoload file: " . $autoloadPath . PHP_EOL);
+    $cwd = getcwd() ?: '.';
+
+    // Walk up for the nearest vendor/autoload.php, so the command works from
+    // anywhere in the project the way composer tooling is expected to. This
+    // cannot use anything from src/: it runs before the autoloader exists.
+    $projectRoot = null;
+    for ($dir = $cwd;; $dir = $parent) {
+        if (file_exists($dir . '/vendor/autoload.php')) {
+            $projectRoot = $dir;
+            break;
+        }
+
+        $parent = dirname($dir);
+        if ($parent === $dir) {
+            break;
+        }
+    }
+
+    if ($projectRoot === null) {
+        fwrite(
+            STDERR,
+            "Cannot load composer's autoload file: no vendor/autoload.php in "
+            . $cwd . ' or any parent directory' . PHP_EOL,
+        );
         exit(1);
     }
 
-    require $autoloadPath;
+    require $projectRoot . '/vendor/autoload.php';
 
     try {
         if (!class_exists(Application::class)) {
@@ -23,7 +44,10 @@ use Symfony\Component\Console\Application;
             throw new RuntimeException(sprintf($error, Application::class, 'symfony/console'));
         }
 
-        Gacela::bootstrap($cwd);
+        // The project root, not the invoking directory: bootstrapping with a
+        // subdirectory would resolve gacela.php, modules and caches against
+        // the wrong root.
+        Gacela::bootstrap($projectRoot);
 
         $bootstrap = new ConsoleBootstrap(name: 'Gacela', version: Gacela::version());
         $bootstrap->run();

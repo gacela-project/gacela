@@ -59,20 +59,97 @@ final class BinGacelaTest extends TestCase
     }
 
     /**
+     * The autoloader lives in the project root while the command is invoked two
+     * directories below it. Composer tooling is expected to work anywhere in
+     * the project, and this used to fail immediately looking for
+     * `<subdirectory>/vendor/autoload.php`.
+     */
+    public function test_it_finds_the_project_root_when_invoked_from_a_subdirectory(): void
+    {
+        // The stub reports where it was loaded from, so the assertion can name
+        // the directory rather than just observing that something worked.
+        $stub = '<?php fwrite(STDOUT, "autoload-dir:" . __DIR__ . PHP_EOL);';
+
+        [, $stdout, , $projectRoot] = $this->runBinGacela($stub, subdirectory: 'deep/nested');
+
+        self::assertStringContainsString('autoload-dir:' . $projectRoot . '/vendor', $stdout);
+    }
+
+    public function test_it_still_loads_the_autoloader_when_invoked_from_the_project_root(): void
+    {
+        $stub = '<?php fwrite(STDOUT, "autoload-dir:" . __DIR__ . PHP_EOL);';
+
+        [, $stdout, , $projectRoot] = $this->runBinGacela($stub);
+
+        self::assertStringContainsString('autoload-dir:' . $projectRoot . '/vendor', $stdout);
+    }
+
+    /**
+     * How the command is actually installed: composer symlinks
+     * `vendor/bin/gacela` at the real script. The walk-up must start from the
+     * working directory, not from wherever the script itself resolves to --
+     * that path lives under `vendor/`, whose own parent is the project.
+     */
+    public function test_it_works_through_a_symlinked_vendor_bin_entry(): void
+    {
+        $projectRoot = sys_get_temp_dir() . '/gacela-bin-' . uniqid('', true);
+        mkdir($projectRoot . '/vendor/bin', 0o777, true);
+        file_put_contents(
+            $projectRoot . '/vendor/autoload.php',
+            '<?php fwrite(STDOUT, "autoload-dir:" . __DIR__ . PHP_EOL);',
+        );
+
+        $symlink = $projectRoot . '/vendor/bin/gacela';
+        symlink(dirname(__DIR__, 4) . '/bin/gacela', $symlink);
+
+        try {
+            $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+            $process = proc_open([PHP_BINARY, $symlink], $descriptors, $pipes, $projectRoot);
+            self::assertIsResource($process);
+
+            fclose($pipes[0]);
+            $stdout = (string) stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($process);
+
+            self::assertStringContainsString(
+                'autoload-dir:' . realpath($projectRoot) . '/vendor',
+                $stdout,
+            );
+        } finally {
+            unlink($symlink);
+            unlink($projectRoot . '/vendor/autoload.php');
+            rmdir($projectRoot . '/vendor/bin');
+            rmdir($projectRoot . '/vendor');
+            rmdir($projectRoot);
+        }
+    }
+
+    /**
      * Runs bin/gacela in a throwaway working directory. When $autoloadStub is null the directory
      * has no vendor/autoload.php; otherwise the stub is written there as the autoloader.
      *
-     * @return array{int, string, string} exit code, stdout, stderr
+     * $subdirectory, when given, is created under the project root and used as the working
+     * directory, leaving the autoloader above it.
+     *
+     * @return array{int, string, string, string} exit code, stdout, stderr, project root
      */
-    private function runBinGacela(?string $autoloadStub): array
+    private function runBinGacela(?string $autoloadStub, string $subdirectory = ''): array
     {
         $binGacela = dirname(__DIR__, 4) . '/bin/gacela';
-        $cwd = sys_get_temp_dir() . '/gacela-bin-' . uniqid('', true);
-        mkdir($cwd);
+        $projectRoot = sys_get_temp_dir() . '/gacela-bin-' . uniqid('', true);
+        mkdir($projectRoot);
+
+        $cwd = $projectRoot;
+        if ($subdirectory !== '') {
+            $cwd = $projectRoot . '/' . $subdirectory;
+            mkdir($cwd, 0o777, true);
+        }
 
         if ($autoloadStub !== null) {
-            mkdir($cwd . '/vendor');
-            file_put_contents($cwd . '/vendor/autoload.php', $autoloadStub);
+            mkdir($projectRoot . '/vendor');
+            file_put_contents($projectRoot . '/vendor/autoload.php', $autoloadStub);
         }
 
         try {
@@ -92,14 +169,22 @@ final class BinGacelaTest extends TestCase
             fclose($pipes[2]);
             $exitCode = proc_close($process);
 
-            return [$exitCode, $stdout, $stderr];
+            // Resolved, because __DIR__ inside the stub reports the real path
+            // and the system temp dir is a symlink on macOS.
+            return [$exitCode, $stdout, $stderr, (string) realpath($projectRoot)];
         } finally {
             if ($autoloadStub !== null) {
-                unlink($cwd . '/vendor/autoload.php');
-                rmdir($cwd . '/vendor');
+                unlink($projectRoot . '/vendor/autoload.php');
+                rmdir($projectRoot . '/vendor');
             }
 
-            rmdir($cwd);
+            // Deepest first, so each directory is empty when it is removed.
+            while ($cwd !== $projectRoot) {
+                rmdir($cwd);
+                $cwd = dirname($cwd);
+            }
+
+            rmdir($projectRoot);
         }
     }
 }

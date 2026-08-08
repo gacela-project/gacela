@@ -333,6 +333,31 @@ the plugin it ships, and suppresses `GacelaSuffixExtends` under `src/Framework`
 for the same reason `phpstan.neon` does — the framework internals reuse the
 pillar words for things that are not pillars.
 
+### Module boundaries
+
+The cross-module check is opt-in for the same reason it is under PHPStan: nothing
+in a class name says where a module boundary falls. Turn it on by giving the
+plugin your root namespace:
+
+```xml
+<plugins>
+    <pluginClass class="Gacela\Psalm\Plugin">
+        <crossModule rootNamespace="App\Modules" modulePathSegments="1">
+            <sharedNamespace>App\Modules\Shared</sharedNamespace>
+        </crossModule>
+    </pluginClass>
+</plugins>
+```
+
+Both halves go on together — `GacelaCrossModuleAccess` for the references a
+source names, `GacelaCrossModuleMethodCall` for the receivers it does not — and
+they behave exactly as `CrossModuleViaFacadeRule` and
+`CrossModuleMethodCallRule` do under PHPStan.
+
+A `<crossModule>` without a `rootNamespace` is a configuration error and stops
+the run. A rule that quietly does nothing is worse than no rule: it reads as a
+green check, and nothing would ever tell you the boundary went unchecked.
+
 
 ## Troubleshooting
 

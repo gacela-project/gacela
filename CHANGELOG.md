@@ -7,11 +7,7 @@
 - Type `getProvidedDependency(Foo::class)` under Psalm too, matching the PHPStan extension
 - Enforce the pillar rules under Psalm, each as its own suppressible issue type
 - Report cross-module method calls on injected dependencies, which name no class at the call site
-
-### Removed
-
-- Drop the `gacela-project/phpstan-extension` suggestion: its one rule is now built in, and it
-  cannot load against the PHPStan version Gacela requires
+- Enforce module boundaries under Psalm, opt-in through a `<crossModule>` plugin element
 
 ### Changed
 
@@ -19,8 +15,15 @@
 - Prune `vendor`, `node_modules` and hidden directories before descending in module discovery
 - Exit non-zero from `cache:warm` when a warmup fails, so a broken deploy is not reported green
 
+### Removed
+
+- Drop the `gacela-project/phpstan-extension` suggestion: its one rule is now built in, and it
+  cannot load against the PHPStan version Gacela requires
+
 ### Fixed
 
+- Match imported class names in the architecture rules however the host resolved them: under
+  Psalm a `use`d class read as its short name and belonged to no module
 - Strip only the matched psr-4 prefix in `make:module`/`make:file`, and accept list targets
 - Let `bin/gacela` run from any subdirectory, bootstrapping with the project root
 - Discover facades that extend `AbstractFacade` indirectly, not only direct children
@@ -297,6 +300,11 @@ silently.
   `use` statements, raises `E_USER_DEPRECATED`. Both are removed in 3.0. Declare
   it with `#[ServiceMap]`.
 
+### Fixed
+
+- Resolve imported class names in the graph rules whichever way the host resolved them: under
+  Psalm a `use`d class read as its short name and matched no module at all
+
 ### Removed (BREAKING)
 
 - `AbstractDependencyProvider`. Extend `AbstractProvider` instead.
@@ -471,6 +479,11 @@ before you migrate to 2.0.
 - `make:module` and `make:file` now throw when a generated file cannot be written. A read-only target or full disk previously printed success, exited `0`, and wrote nothing
 - An unresolvable health check now throws `HealthCheckNotResolvableException` instead of being skipped. A typo in `addHealthCheck(SomeCheck::class)` previously produced a report that looked healthy while the check never ran
 
+### Fixed
+
+- Resolve imported class names in the graph rules whichever way the host resolved them: under
+  Psalm a `use`d class read as its short name and matched no module at all
+
 ### Removed
 
 - `Gacela\Framework\Container\Locator::addSingleton()` — no production caller, and `Locator` is `@internal`. Seed through a `Container` plus `Locator::getInstance($container)`
@@ -576,6 +589,11 @@ before you migrate to 2.0.
 - `AbstractProvider::register()` is now `final`; overriding it silently disabled `#[Provides]` scanning — use `provideModuleDependencies()` instead
 - Class resolvers now share one `Container` built once from the global bindings, instead of rebuilding one per resolver type; reset with `Gacela::resetCache()`
 - `Gacela::bootstrap()` now batches file-cache writes into a single atomic write per cache file, instead of one full-file rewrite per newly discovered key
+
+### Fixed
+
+- Resolve imported class names in the graph rules whichever way the host resolved them: under
+  Psalm a `use`d class read as its short name and matched no module at all
 
 ### Removed
 

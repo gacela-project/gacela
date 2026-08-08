@@ -6,10 +6,13 @@ namespace GacelaTest\Unit\Psalm;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Psalm\ClassRules;
+use Gacela\Psalm\CrossModuleCallRules;
+use Gacela\Psalm\CrossModuleRules;
 use Gacela\Psalm\Plugin;
 use PHPUnit\Framework\TestCase;
 use Psalm\Codebase;
 use Psalm\Config;
+use Psalm\Exception\ConfigException;
 use Psalm\Internal\Codebase\Methods;
 use Psalm\Internal\EventDispatcher;
 use Psalm\Internal\Provider\MethodReturnTypeProvider;
@@ -62,6 +65,51 @@ final class PluginTest extends TestCase
         (new Plugin())($this->socket($dispatcher));
 
         self::assertContains(ClassRules::class, $dispatcher->after_classlike_checks);
+    }
+
+    /**
+     * Nothing in a class name says where a module boundary falls, so this one
+     * cannot be on by default -- and staying off has to be the behaviour, not an
+     * accident of nobody calling it.
+     */
+    public function test_it_leaves_the_cross_module_check_off_without_config(): void
+    {
+        $dispatcher = new EventDispatcher();
+
+        (new Plugin())($this->socket($dispatcher));
+
+        self::assertNotContains(CrossModuleRules::class, $dispatcher->after_classlike_checks);
+        self::assertNotContains(CrossModuleCallRules::class, $dispatcher->after_expression_checks);
+        self::assertFalse(CrossModuleRules::isConfigured());
+        self::assertFalse(CrossModuleCallRules::isConfigured());
+    }
+
+    /**
+     * Both halves go on together: one matches the module names a source writes,
+     * the other resolves the receivers it does not.
+     */
+    public function test_a_cross_module_element_turns_both_halves_on(): void
+    {
+        $dispatcher = new EventDispatcher();
+
+        (new Plugin())($this->socket($dispatcher), new SimpleXMLElement(
+            '<pluginClass><crossModule rootNamespace="App\Modules"/></pluginClass>',
+        ));
+
+        self::assertContains(CrossModuleRules::class, $dispatcher->after_classlike_checks);
+        self::assertContains(CrossModuleCallRules::class, $dispatcher->after_expression_checks);
+        self::assertTrue(CrossModuleRules::isConfigured());
+        self::assertTrue(CrossModuleCallRules::isConfigured());
+    }
+
+    public function test_a_cross_module_element_without_a_root_namespace_fails_loudly(): void
+    {
+        $this->expectException(ConfigException::class);
+
+        (new Plugin())(
+            $this->socket(new EventDispatcher()),
+            new SimpleXMLElement('<pluginClass><crossModule/></pluginClass>'),
+        );
     }
 
     public function test_it_ignores_the_optional_plugin_config(): void

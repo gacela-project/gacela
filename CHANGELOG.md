@@ -6,6 +6,18 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- **The module graph missed grouped imports entirely.** `ModuleGraphBuilder`
+  extracted imports with `/^use\s+([A-Za-z0-9_\\]+)/m`, which stops at the first
+  character outside a name — so `use App\{Billing\Invoice, Orders\Order};` came
+  back as the bare prefix and produced **no edge at all**, and a group split
+  across lines was invisible. Imports are parsed with the tokenizer now, so
+  grouped, multiline and aliased forms all resolve, while `use function` and
+  `use const` correctly produce no class edge and a `use` inside a class body
+  still does not (that imports a trait, a different relationship).
+- Module graph construction no longer compares every import against every
+  module. Each import is resolved by walking its own namespace segments against
+  an index of module names — measured at 500 modules × 2000 imports, **20.3ms →
+  0.5ms**, with identical results. Ordering and deduplication are unchanged.
 - **`#[Cacheable(ttl: 0)]` cached nothing.** The two built-in caches disagreed
   about zero: `FileCache` documents and implements it as "no expiry" — its own
   default TTL is `0` — while `InMemoryCacheStorage`, the default backend for

@@ -79,6 +79,29 @@ final class ModuleGraphBuilderTest extends TestCase
         self::assertSame([], (new ModuleGraphBuilder())->build([]));
     }
 
+    /**
+     * The headline case: a grouped import spanning two modules, split across
+     * lines and aliased. The previous regex stopped at the brace and returned
+     * the bare prefix, so neither edge existed.
+     *
+     * The same file imports a *function* from AlphaExtra, which must not
+     * become an edge -- that is what keeps the fix from over-reporting.
+     */
+    public function test_a_grouped_import_produces_an_edge_per_module(): void
+    {
+        $graph = (new ModuleGraphBuilder())->build([
+            $this->module('Grouped'),
+            $this->module('Alpha'),
+            $this->module('AlphaExtra'),
+            $this->module('Zebra'),
+        ]);
+
+        self::assertSame(
+            [self::NS . '\Alpha', self::NS . '\Zebra'],
+            $graph[self::NS . '\Grouped'],
+        );
+    }
+
     private function module(string $name): AppModule
     {
         /** @var class-string $facade */

@@ -9,9 +9,11 @@ use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\Config\MergedConfigCache;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
+use function dirname;
 use function file_put_contents;
 use function is_string;
 use function mkdir;
@@ -33,9 +35,18 @@ final class CacheStalenessCheckTest extends TestCase
 
     protected function tearDown(): void
     {
+        // Depth-first: the merged-config tests write into a `config/` subdir,
+        // and a non-empty directory cannot be removed.
+        foreach ((array) glob($this->tempDir . '/*/*') as $file) {
+            if (is_string($file)) {
+                @unlink($file);
+            }
+        }
+
         foreach ((array) glob($this->tempDir . '/*') as $file) {
             if (is_string($file)) {
                 @unlink($file);
+                @rmdir($file);
             }
         }
 
@@ -231,6 +242,164 @@ final class CacheStalenessCheckTest extends TestCase
 
         self::assertSame(CheckStatus::Ok, $result->status);
         self::assertSame(['all cache entries are fresh'], $result->details);
+    }
+
+    /**
+     * The merged configuration cache keeps serving values after a source config
+     * file changes, so doctor reported "all cache entries are fresh" while the
+     * active configuration was stale.
+     */
+    public function test_a_config_source_newer_than_the_merged_cache_is_reported(): void
+    {
+        $source = $this->writeConfigSource('config/default.php', time());
+        $this->writeMergedConfigCache(time() - 120);
+
+        $result = $this->checkWithMergedConfig([$source])->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(['stale: merged config ← ' . $source], $result->details);
+        self::assertSame('run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild', $result->remediation);
+    }
+
+    /**
+     * The environment file is a separate pattern from the base one, and was
+     * equally invisible.
+     */
+    public function test_a_stale_environment_config_source_is_reported(): void
+    {
+        $source = $this->writeConfigSource('config/default.dev.php', time());
+        $this->writeMergedConfigCache(time() - 120);
+
+        $result = $this->checkWithMergedConfig([$source])->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(['stale: merged config ← ' . $source], $result->details);
+    }
+
+    /**
+     * The local override is merged last and wins over everything, so a stale one
+     * is the most misleading of the three.
+     */
+    public function test_a_stale_local_override_source_is_reported(): void
+    {
+        $source = $this->writeConfigSource('config/local.php', time());
+        $this->writeMergedConfigCache(time() - 120);
+
+        $result = $this->checkWithMergedConfig([$source])->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(['stale: merged config ← ' . $source], $result->details);
+    }
+
+    public function test_a_merged_cache_newer_than_every_source_stays_ok(): void
+    {
+        $base = $this->writeConfigSource('config/default.php', time() - 120);
+        $local = $this->writeConfigSource('config/local.php', time() - 120);
+        $this->writeMergedConfigCache(time());
+
+        $result = $this->checkWithMergedConfig([$base, $local])->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['all cache entries are fresh'], $result->details);
+    }
+
+    /**
+     * A source the cache was built from and that has since been deleted changes
+     * the merged result just as much as an edited one.
+     */
+    public function test_a_config_source_that_no_longer_exists_is_reported(): void
+    {
+        $this->writeMergedConfigCache(time());
+
+        $result = $this->checkWithMergedConfig([$this->tempDir . '/config/gone.php'])->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(
+            ['missing source: merged config ← ' . $this->tempDir . '/config/gone.php'],
+            $result->details,
+        );
+    }
+
+    /**
+     * A config file written in the same second the cache was warmed is the
+     * normal outcome of `cache:warm`, so it must not be reported as stale --
+     * the same rule the class-name cache already follows.
+     */
+    public function test_a_config_source_with_the_same_mtime_as_the_merged_cache_is_not_stale(): void
+    {
+        $when = time() - 60;
+        $source = $this->writeConfigSource('config/default.php', $when);
+        $this->writeMergedConfigCache($when);
+
+        self::assertSame(CheckStatus::Ok, $this->checkWithMergedConfig([$source])->run()->status);
+    }
+
+    /**
+     * A deleted source must not stop the scan: the sources after it are equally
+     * capable of being stale, and reporting only the first hides the rest.
+     */
+    public function test_a_missing_config_source_does_not_hide_the_sources_after_it(): void
+    {
+        $gone = $this->tempDir . '/config/gone.php';
+        $stale = $this->writeConfigSource('config/default.php', time());
+        $this->writeMergedConfigCache(time() - 120);
+
+        $result = $this->checkWithMergedConfig([$gone, $stale])->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(
+            [
+                'stale: merged config ← ' . $stale,
+                'missing source: merged config ← ' . $gone,
+            ],
+            $result->details,
+        );
+    }
+
+    /**
+     * Without a merged cache on disk there is nothing to be stale against: the
+     * next bootstrap rebuilds it from the sources.
+     */
+    public function test_sources_are_not_checked_when_no_merged_cache_exists(): void
+    {
+        $this->writeConfigSource('config/default.php', time());
+
+        $result = $this->checkWithMergedConfig([$this->tempDir . '/config/default.php'])->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+    }
+
+    /**
+     * @param list<string> $sources
+     */
+    private function checkWithMergedConfig(array $sources): HealthCheck
+    {
+        return new CacheStalenessCheck(
+            $this->tempDir,
+            static fn (string $className): ?string => null,
+            '',
+            new MergedConfigCache($this->tempDir),
+            $sources,
+        );
+    }
+
+    private function writeConfigSource(string $relativePath, int $mtime): string
+    {
+        $path = $this->tempDir . '/' . $relativePath;
+        @mkdir(dirname($path), 0o777, true);
+        file_put_contents($path, '<?php return [];');
+        touch($path, $mtime);
+
+        return $path;
+    }
+
+    private function writeMergedConfigCache(int $mtime): string
+    {
+        $file = (new MergedConfigCache($this->tempDir))->filename();
+        file_put_contents($file, '<?php return [];');
+        touch($file, $mtime);
+
+        return $file;
     }
 
     private function writeSource(int $mtime): string

@@ -10,6 +10,7 @@ use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\Config\MergedConfigCache;
 use ReflectionClass;
 
 use function sprintf;
@@ -21,11 +22,15 @@ final class CacheStalenessCheck implements HealthCheck
 
     /**
      * @param null|Closure(string):?string $sourceFileResolver resolves a class-name to its source file path
+     * @param null|MergedConfigCache $mergedConfigCache the merged-config cache to check, when there is one
+     * @param list<string> $mergedConfigSources every file that contributes to the merged config
      */
     public function __construct(
         private readonly string $cacheDir,
         ?Closure $sourceFileResolver = null,
         private readonly string $appRootDir = '',
+        private readonly ?MergedConfigCache $mergedConfigCache = null,
+        private readonly array $mergedConfigSources = [],
     ) {
         $this->sourceFileResolver = $sourceFileResolver ?? static function (string $className): ?string {
             if (!class_exists($className) && !interface_exists($className)) {
@@ -49,6 +54,36 @@ final class CacheStalenessCheck implements HealthCheck
             return CheckResult::ok($this->name(), 'no cache directory — nothing to check');
         }
 
+        [$classStale, $classMissing] = $this->resolvedClassStaleness();
+        [$mergedStale, $mergedMissing] = $this->mergedConfigStaleness();
+
+        $stale = [...$classStale, ...$mergedStale];
+        $missing = [...$classMissing, ...$mergedMissing];
+
+        if ($stale === [] && $missing === []) {
+            return CheckResult::ok($this->name(), 'all cache entries are fresh');
+        }
+
+        $details = [
+            ...array_map(static fn (string $entry): string => 'stale: ' . $entry, $stale),
+            ...array_map(static fn (string $entry): string => 'missing source: ' . $entry, $missing),
+        ];
+
+        return CheckResult::warn(
+            $this->name(),
+            $details,
+            'run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild',
+        );
+    }
+
+    /**
+     * The caches that map a key to a class name, checked against the file each
+     * class is declared in.
+     *
+     * @return array{0: list<string>, 1: list<string>}
+     */
+    private function resolvedClassStaleness(): array
+    {
         $stale = [];
         $missing = [];
 
@@ -80,23 +115,43 @@ final class CacheStalenessCheck implements HealthCheck
             }
         }
 
-        if ($stale === [] && $missing === []) {
-            return CheckResult::ok($this->name(), 'all cache entries are fresh');
+        return [$stale, $missing];
+    }
+
+    /**
+     * The merged configuration cache keeps serving values after a source config
+     * file changes, so it can be stale while every class-name entry above is
+     * fresh — which is how doctor came to report "all cache entries are fresh"
+     * on a stale configuration.
+     *
+     * The sources are the ones `ConfigLoader` itself would read, so the base
+     * patterns, the environment patterns and the local overrides are all
+     * covered without this check re-deriving any paths of its own.
+     *
+     * @return array{0: list<string>, 1: list<string>}
+     */
+    private function mergedConfigStaleness(): array
+    {
+        if (!$this->mergedConfigCache instanceof MergedConfigCache || !$this->mergedConfigCache->exists()) {
+            return [[], []];
         }
 
-        $details = [];
-        foreach ($stale as $entry) {
-            $details[] = 'stale: ' . $entry;
+        $cacheMtime = (int) filemtime($this->mergedConfigCache->filename());
+
+        $stale = [];
+        $missing = [];
+
+        foreach ($this->mergedConfigSources as $source) {
+            if (!is_file($source)) {
+                $missing[] = 'merged config ← ' . $source;
+                continue;
+            }
+
+            if ((int) filemtime($source) > $cacheMtime) {
+                $stale[] = 'merged config ← ' . $source;
+            }
         }
 
-        foreach ($missing as $entry) {
-            $details[] = 'missing source: ' . $entry;
-        }
-
-        return CheckResult::warn(
-            $this->name(),
-            $details,
-            'run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild',
-        );
+        return [$stale, $missing];
     }
 }

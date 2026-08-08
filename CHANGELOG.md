@@ -6,6 +6,14 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- `doctor` reported "all cache entries are fresh" while the merged configuration
+  was stale. `CacheStalenessCheck` inspected only the class-name and
+  custom-service caches and never looked at `gacela-merged-config-*.php`, which
+  keeps serving values after a source config file changes. It now compares the
+  merged cache against every file that contributes to it — base patterns,
+  environment patterns and local overrides alike. The source list comes from
+  `ConfigLoader::sourceFiles()` rather than from paths the check derives itself,
+  so it cannot drift from what the loader actually reads.
 - `make:module` and `make:file` corrupted the target directory when the module
   name repeated the namespace text. `CommandArgumentsParser` replaced the
   namespace with `str_replace()` across the whole string, so `App/Application`

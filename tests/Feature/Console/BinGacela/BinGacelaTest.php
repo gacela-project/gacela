@@ -66,7 +66,7 @@ final class BinGacelaTest extends TestCase
 
         [, $stdout, , $projectRoot] = $this->runBinGacela($stub, subdirectory: 'deep/nested');
 
-        self::assertStringContainsString('autoload-dir:' . $projectRoot . '/vendor', $stdout);
+        self::assertStringContainsString($this->expectedAutoloadDir($projectRoot), $stdout);
     }
 
     public function test_it_still_loads_the_autoloader_when_invoked_from_the_project_root(): void
@@ -75,7 +75,7 @@ final class BinGacelaTest extends TestCase
 
         [, $stdout, , $projectRoot] = $this->runBinGacela($stub);
 
-        self::assertStringContainsString('autoload-dir:' . $projectRoot . '/vendor', $stdout);
+        self::assertStringContainsString($this->expectedAutoloadDir($projectRoot), $stdout);
     }
 
     /**
@@ -100,7 +100,7 @@ final class BinGacelaTest extends TestCase
             [, $stdout] = $this->runPhpScript($symlink, $projectRoot);
 
             self::assertStringContainsString(
-                'autoload-dir:' . realpath($projectRoot) . '/vendor',
+                $this->expectedAutoloadDir((string) realpath($projectRoot)),
                 $stdout,
             );
         } finally {
@@ -158,6 +158,16 @@ final class BinGacelaTest extends TestCase
 
             rmdir($projectRoot);
         }
+    }
+
+    /**
+     * The stub reports __DIR__, which uses the platform separator -- a
+     * backslash on Windows. Building the expectation with '/' passed
+     * everywhere the suite ran locally and failed all nine Windows jobs.
+     */
+    private function expectedAutoloadDir(string $projectRoot): string
+    {
+        return 'autoload-dir:' . $projectRoot . DIRECTORY_SEPARATOR . 'vendor';
     }
 
     /**

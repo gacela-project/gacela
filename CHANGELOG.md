@@ -5,6 +5,7 @@
 ### Added
 
 - Type `getProvidedDependency(Foo::class)` under Psalm too, matching the PHPStan extension
+- Enforce the pillar rules under Psalm, each as its own suppressible issue type
 
 ### Changed
 

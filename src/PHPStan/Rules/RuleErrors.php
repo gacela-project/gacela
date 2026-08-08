@@ -30,8 +30,8 @@ final class RuleErrors
 
             // Left unset, PHPStan reports the line of the analysed node, which
             // is what every rule but the interface-drift one wants.
-            if ($violation->line !== null) {
-                $builder->line($violation->line);
+            if ($violation->node !== null) {
+                $builder->line($violation->node->getStartLine());
             }
 
             $errors[] = $builder->build();

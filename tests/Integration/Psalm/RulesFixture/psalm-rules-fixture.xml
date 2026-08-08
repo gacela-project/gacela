@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+    Deliberately broken modules, analysed to prove the Gacela rules fire under
+    Psalm. errorLevel 1 so nothing here is downgraded to a warning.
+-->
+<psalm errorLevel="1" resolveFromConfigFile="true" findUnusedBaselineEntry="false" findUnusedCode="false">
+    <projectFiles>
+        <directory name="."/>
+    </projectFiles>
+    <plugins>
+        <pluginClass class="Gacela\Psalm\Plugin"/>
+    </plugins>
+
+    <issueHandlers>
+        <!-- Not what these fixtures are about, and the project's own psalm.xml
+             suppresses it too. -->
+        <MissingOverrideAttribute errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

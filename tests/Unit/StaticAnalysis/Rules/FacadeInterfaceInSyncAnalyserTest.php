@@ -68,7 +68,7 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
      */
     public function test_the_violation_points_at_the_method_not_the_class(): void
     {
-        self::assertSame(12, $this->analyse(['declared'])[0]->line);
+        self::assertSame(12, $this->analyse(['declared'])[0]->node?->getStartLine());
     }
 
     /**

@@ -69,7 +69,7 @@ final class FacadeInterfaceInSyncAnalyser implements ClassAnalyserInterface
                     $facadeInterface,
                 ),
                 'gacela.facadeInterfaceDrift',
-                $method->getStartLine(),
+                $method,
             );
         }
 

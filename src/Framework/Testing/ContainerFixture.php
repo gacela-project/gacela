@@ -12,6 +12,7 @@ use Gacela\Framework\Gacela;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use ReflectionProperty;
 use RuntimeException;
 use SplFileInfo;
 
@@ -260,14 +261,7 @@ trait ContainerFixture
 
     private static function readPrivateProperty(object $object, string $property): mixed
     {
-        $reflection = new ReflectionClass($object);
-        if (!$reflection->hasProperty($property)) {
-            return null;
-        }
-
-        $prop = $reflection->getProperty($property);
-
-        return $prop->getValue($object);
+        return self::propertyOf($object, $property)?->getValue($object);
     }
 
     /**
@@ -275,24 +269,12 @@ trait ContainerFixture
      */
     private static function readStaticProperty(string $className, string $property): mixed
     {
-        $reflection = new ReflectionClass($className);
-        if (!$reflection->hasProperty($property)) {
-            return null;
-        }
-
-        $prop = $reflection->getProperty($property);
-
-        return $prop->getValue();
+        return self::propertyOf($className, $property)?->getValue();
     }
 
     private static function writePrivateProperty(object $object, string $property, mixed $value): void
     {
-        $reflection = new ReflectionClass($object);
-        if (!$reflection->hasProperty($property)) {
-            return;
-        }
-
-        $reflection->getProperty($property)->setValue($object, $value);
+        self::propertyOf($object, $property)?->setValue($object, $value);
     }
 
     /**
@@ -300,11 +282,22 @@ trait ContainerFixture
      */
     private static function writeStaticProperty(string $className, string $property, mixed $value): void
     {
-        $reflection = new ReflectionClass($className);
-        if (!$reflection->hasProperty($property)) {
-            return;
-        }
+        self::propertyOf($className, $property)?->setValue(null, $value);
+    }
 
-        $reflection->getProperty($property)->setValue(null, $value);
+    /**
+     * Null rather than throwing when the property is absent: these helpers
+     * reach into framework internals, and a fixture must not break a test suite
+     * because a private field was renamed.
+     *
+     * @param  class-string|object  $target
+     */
+    private static function propertyOf(string|object $target, string $property): ?ReflectionProperty
+    {
+        $reflection = new ReflectionClass($target);
+
+        return $reflection->hasProperty($property)
+            ? $reflection->getProperty($property)
+            : null;
     }
 }

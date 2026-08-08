@@ -21,7 +21,15 @@ final class Profiler
     /** @var list<TProfileEntry> */
     private array $entries = [];
 
-    /** @var array<non-empty-string, float> */
+    /**
+     * A stack of start times per `operation:subject`, not a single one. The
+     * same operation can be in flight more than once -- nested or recursive
+     * calls carry identical labels -- and storing one timestamp let the inner
+     * start overwrite the outer, so the pair produced a single entry and the
+     * outer span was lost.
+     *
+     * @var array<non-empty-string, non-empty-list<float>>
+     */
     private array $activeOperations = [];
 
     private function __construct()
@@ -45,6 +53,12 @@ final class Profiler
     public function disable(): void
     {
         $this->enabled = false;
+
+        // A span still open when profiling is turned off can never be closed,
+        // because stop() does nothing while disabled. Keeping it would let a
+        // later enable() pair a fresh stop() with a stale start and record the
+        // time the profiler spent switched off.
+        $this->activeOperations = [];
     }
 
     public function isEnabled(): bool
@@ -63,7 +77,7 @@ final class Profiler
         }
 
         $key = $operation . ':' . $subject;
-        $this->activeOperations[$key] = $this->getCurrentTime();
+        $this->activeOperations[$key][] = $this->getCurrentTime();
     }
 
     /**
@@ -80,10 +94,23 @@ final class Profiler
         $key = $operation . ':' . $subject;
 
         if (!isset($this->activeOperations[$key])) {
+            // A stop() with no matching start() is ignored rather than
+            // recorded: there is no start time to measure from.
             return;
         }
 
-        $startTime = $this->activeOperations[$key];
+        // Innermost first, so a stop closes the span the matching start opened.
+        $stack = $this->activeOperations[$key];
+        $startTime = array_pop($stack);
+
+        // The key is dropped rather than left holding an empty stack, so
+        // `isset()` above stays the whole "is anything in flight" question.
+        if ($stack === []) {
+            unset($this->activeOperations[$key]);
+        } else {
+            $this->activeOperations[$key] = $stack;
+        }
+
         $duration = $endTime - $startTime;
 
         $this->entries[] = new TProfileEntry(
@@ -94,8 +121,6 @@ final class Profiler
             duration: $duration,
             memoryUsage: memory_get_usage(true),
         );
-
-        unset($this->activeOperations[$key]);
     }
 
     /**

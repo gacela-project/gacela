@@ -6,6 +6,15 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- The profiler lost every nested span. `Profiler` kept one start time per
+  `operation:subject`, so starting the same operation while it was already
+  active overwrote the outer timestamp: two nested start/stop pairs produced a
+  single entry, and recursive code was measured against the wrong start. Start
+  times are a stack per key now, and stops pair innermost-first, so nesting and
+  recursion record every span. `disable()` also drops whatever is still in
+  flight — a span open when profiling is switched off can never be closed, and
+  keeping it let a later `enable()` pair a fresh `stop()` with a stale start and
+  report the time the profiler spent switched off.
 - `ContainerFixture::restoreContainerState()` restored a quarter of what
   `captureContainerState()` records. The snapshot captures the resolver caches,
   the active config values, the application root and the cache directory, and

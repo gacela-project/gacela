@@ -136,6 +136,86 @@ final class ProfilerTest extends TestCase
         self::assertSame([], $this->profiler->getEntries());
     }
 
+    /**
+     * One start time per `operation:subject` meant the inner start overwrote
+     * the outer one, so a nested pair produced a single entry and the outer
+     * span was lost entirely.
+     */
+    public function test_nested_identical_spans_produce_two_paired_entries(): void
+    {
+        $this->profiler->start('operation1', 'subject1');
+        $this->profiler->start('operation1', 'subject1');
+        $this->profiler->stop('operation1', 'subject1');
+        $this->profiler->stop('operation1', 'subject1');
+
+        $entries = $this->profiler->getEntries();
+
+        self::assertCount(2, $entries);
+
+        // Stops pair innermost-first, so the inner span is recorded first and
+        // the outer one encloses it.
+        [$inner, $outer] = $entries;
+        self::assertGreaterThanOrEqual($outer->startTime, $inner->startTime);
+        self::assertLessThanOrEqual($outer->endTime, $inner->endTime);
+        self::assertGreaterThanOrEqual($inner->duration, $outer->duration);
+    }
+
+    public function test_recursive_spans_are_all_recorded(): void
+    {
+        for ($depth = 0; $depth < 3; ++$depth) {
+            $this->profiler->start('recurse', 'subject1');
+        }
+
+        for ($depth = 0; $depth < 3; ++$depth) {
+            $this->profiler->stop('recurse', 'subject1');
+        }
+
+        self::assertCount(3, $this->profiler->getEntries());
+    }
+
+    /**
+     * A span open when profiling is turned off can never be closed, because
+     * stop() does nothing while disabled. Keeping it would let a later
+     * enable() + stop() pair a fresh stop with a stale start and record the
+     * time the profiler spent switched off.
+     */
+    public function test_disabling_drops_spans_that_can_no_longer_be_closed(): void
+    {
+        $this->profiler->start('operation1', 'subject1');
+        $this->profiler->disable();
+
+        $this->profiler->enable();
+        $this->profiler->stop('operation1', 'subject1');
+
+        self::assertSame([], $this->profiler->getEntries());
+    }
+
+    public function test_reset_drops_active_spans(): void
+    {
+        $this->profiler->start('operation1', 'subject1');
+        $this->profiler->reset();
+
+        $this->profiler->stop('operation1', 'subject1');
+
+        self::assertSame([], $this->profiler->getEntries());
+    }
+
+    /**
+     * Only the innermost span is closed by one stop; the outer one stays open.
+     */
+    public function test_one_stop_closes_only_the_innermost_of_two_nested_spans(): void
+    {
+        $this->profiler->start('operation1', 'subject1');
+        $this->profiler->start('operation1', 'subject1');
+        $this->profiler->stop('operation1', 'subject1');
+
+        self::assertCount(1, $this->profiler->getEntries());
+
+        $this->profiler->stop('operation1', 'subject1');
+
+        self::assertCount(2, $this->profiler->getEntries());
+    }
+
     public function test_profiler_handles_missing_stop(): void
     {
         $this->profiler->start('operation1', 'subject1');

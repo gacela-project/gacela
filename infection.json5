@@ -416,6 +416,13 @@
         // return as behaviour. These two are allocation guards, not behaviour.
         ReturnRemoval: {
             ignore: [
+                // stop() opens with `if (!$this->enabled) { return; }`. Since
+                // disable() drops the in-flight spans and start() records
+                // nothing while disabled, a disabled profiler can never have an
+                // active operation -- so the isset() below returns for exactly
+                // the same inputs. The guard stays as a cheap early-out that
+                // keeps stop() free while profiling is off, not as a branch.
+                "Gacela\\Framework\\Profiler\\Profiler::stop",
                 // commitBatch() opens with `if (!$this->batching) { return; }`.
                 // $batchPending is only ever filled inside `if ($this->batching)`,
                 // so a non-empty batch implies batching === true, and the two

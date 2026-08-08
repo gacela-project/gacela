@@ -10,7 +10,11 @@ use function time;
 
 final class InMemoryCacheStorage implements CacheStorageInterface
 {
-    /** @var array<string,array{result:mixed,expires:int}> */
+    /**
+     * `expires` is null for an entry stored without expiry.
+     *
+     * @var array<string,array{result:mixed,expires:int|null}>
+     */
     private array $cache = [];
 
     public function has(string $key): bool
@@ -19,8 +23,10 @@ final class InMemoryCacheStorage implements CacheStorageInterface
             return false;
         }
 
+        $expires = $this->cache[$key]['expires'];
+
         // @infection-ignore-all — the > vs >= boundary is a single-second tie; not worth testing
-        if ($this->cache[$key]['expires'] > time()) {
+        if ($expires === null || $expires > time()) {
             return true;
         }
 
@@ -37,7 +43,10 @@ final class InMemoryCacheStorage implements CacheStorageInterface
     {
         $this->cache[$key] = [
             'result' => $value,
-            'expires' => time() + $ttl,
+            // 0 is "no expiry", the contract FileCache has always followed --
+            // its own default TTL is 0. Writing time() + 0 here made an entry
+            // expire before set() returned.
+            'expires' => $ttl === 0 ? null : time() + $ttl,
         ];
     }
 

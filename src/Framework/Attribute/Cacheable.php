@@ -42,7 +42,10 @@ use Attribute;
 final class Cacheable
 {
     /**
-     * @param int $ttl default TTL in seconds; may be overridden per-method via CacheableConfig::setTtlOverrides()
+     * @param int $ttl lifetime in seconds; 0 stores the result without expiry and a negative
+     *                 value is already expired when written. May be overridden per-method via
+     *                 CacheableConfig::setTtlOverrides(). See CacheStorageInterface::set()
+     *                 for the contract every backend follows.
      * @param string|null $key custom key template (supports `{N}` placeholders); null = auto-generated from class::method::args
      */
     public function __construct(

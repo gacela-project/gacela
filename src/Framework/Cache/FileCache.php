@@ -101,6 +101,12 @@ final class FileCache
     }
 
     /**
+     * Same TTL contract as {@see CacheStorageInterface::set()}: a positive
+     * lifetime expires that many seconds from now, 0 stores without expiry
+     * (which is also this cache's default), and a negative one is already
+     * expired when written -- the tests use that to exercise eviction without
+     * sleeping.
+     *
      * @param T $value
      */
     public function put(string $key, mixed $value, ?int $ttl = null): void

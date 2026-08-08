@@ -127,6 +127,19 @@ interface CacheStorageInterface
 
 Call `CacheableConfig::setStorage()` once at bootstrap. All facades using `CacheableTrait` share the same backend.
 
+### The TTL contract a backend must implement
+
+| `$ttl` | meaning |
+|---|---|
+| `> 0` | the entry expires that many seconds from now |
+| `0` | the entry is stored **without expiry** — not "expire immediately" |
+| `< 0` | the entry is already expired when written, so no read returns it |
+
+Zero is the case worth reading twice. `FileCache` has always treated it as "no
+expiry" and its own default TTL is `0`, so a backend that computes
+`time() + $ttl` unconditionally will store an entry that is expired before
+`set()` returns. Both built-in backends follow the table above.
+
 ## TTL overrides per method
 
 Override the TTL declared on the attribute without changing code — useful for tuning hot paths per environment.

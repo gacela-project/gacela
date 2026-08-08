@@ -76,8 +76,7 @@ final class Profiler
             return;
         }
 
-        $key = $operation . ':' . $subject;
-        $this->activeOperations[$key][] = $this->getCurrentTime();
+        $this->activeOperations[$this->keyFor($operation, $subject)][] = $this->getCurrentTime();
     }
 
     /**
@@ -91,7 +90,7 @@ final class Profiler
         }
 
         $endTime = $this->getCurrentTime();
-        $key = $operation . ':' . $subject;
+        $key = $this->keyFor($operation, $subject);
 
         if (!isset($this->activeOperations[$key])) {
             // A stop() with no matching start() is ignored rather than
@@ -99,26 +98,14 @@ final class Profiler
             return;
         }
 
-        // Innermost first, so a stop closes the span the matching start opened.
-        $stack = $this->activeOperations[$key];
-        $startTime = array_pop($stack);
-
-        // The key is dropped rather than left holding an empty stack, so
-        // `isset()` above stays the whole "is anything in flight" question.
-        if ($stack === []) {
-            unset($this->activeOperations[$key]);
-        } else {
-            $this->activeOperations[$key] = $stack;
-        }
-
-        $duration = $endTime - $startTime;
+        $startTime = $this->popStartTime($key);
 
         $this->entries[] = new TProfileEntry(
             operation: $operation,
             subject: $subject,
             startTime: $startTime,
             endTime: $endTime,
-            duration: $duration,
+            duration: $endTime - $startTime,
             memoryUsage: memory_get_usage(true),
         );
     }
@@ -184,6 +171,41 @@ final class Profiler
     {
         $this->entries = [];
         $this->activeOperations = [];
+    }
+
+    /**
+     * Takes the innermost start time off the stack, so a stop closes the span
+     * its matching start opened.
+     *
+     * The key is dropped once its stack empties, which keeps `isset()` the
+     * whole "is anything in flight for this key" question rather than one of
+     * two conditions every caller would have to repeat.
+     *
+     * @param non-empty-string $key
+     */
+    private function popStartTime(string $key): float
+    {
+        $stack = $this->activeOperations[$key];
+        $startTime = array_pop($stack);
+
+        if ($stack === []) {
+            unset($this->activeOperations[$key]);
+        } else {
+            $this->activeOperations[$key] = $stack;
+        }
+
+        return $startTime;
+    }
+
+    /**
+     * @param non-empty-string $operation
+     * @param non-empty-string $subject
+     *
+     * @return non-empty-string
+     */
+    private function keyFor(string $operation, string $subject): string
+    {
+        return $operation . ':' . $subject;
     }
 
     /**

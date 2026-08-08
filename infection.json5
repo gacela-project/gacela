@@ -178,6 +178,13 @@
         // internal formats with no observable behavior of their own.
         Concat: {
             ignore: [
+                // keyFor() is the internal `operation:subject` key and nothing
+                // reads it back. It used to be written out in both start() and
+                // stop(), where mutating one copy desynchronised the two and
+                // broke pairing, so the tests killed it. With a single
+                // definition the mutation applies to both sides at once, the
+                // keys still match, and nothing observable changes.
+                "Gacela\\Framework\\Profiler\\Profiler::keyFor",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Attribute\\CacheableTrait::resolveCacheableAttribute",
@@ -186,6 +193,10 @@
         },
         ConcatOperandRemoval: {
             ignore: [
+                // Same as Concat above: one definition cannot disagree with
+                // itself, so dropping an operand still keys start and stop
+                // identically.
+                "Gacela\\Framework\\Profiler\\Profiler::keyFor",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Attribute\\CacheableTrait::resolveCacheableAttribute",

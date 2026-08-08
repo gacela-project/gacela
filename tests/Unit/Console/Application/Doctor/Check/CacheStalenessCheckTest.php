@@ -10,12 +10,12 @@ use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\MergedConfigCache;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 use function dirname;
 use function file_put_contents;
-use function is_string;
 use function mkdir;
 use function sys_get_temp_dir;
 use function time;
@@ -35,22 +35,7 @@ final class CacheStalenessCheckTest extends TestCase
 
     protected function tearDown(): void
     {
-        // Depth-first: the merged-config tests write into a `config/` subdir,
-        // and a non-empty directory cannot be removed.
-        foreach ((array) glob($this->tempDir . '/*/*') as $file) {
-            if (is_string($file)) {
-                @unlink($file);
-            }
-        }
-
-        foreach ((array) glob($this->tempDir . '/*') as $file) {
-            if (is_string($file)) {
-                @unlink($file);
-                @rmdir($file);
-            }
-        }
-
-        @rmdir($this->tempDir);
+        DirectoryUtil::removeDir($this->tempDir);
     }
 
     public function test_missing_cache_dir_returns_ok(): void

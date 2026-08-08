@@ -7,6 +7,8 @@ namespace GacelaTest\Unit\PHPStan\Rules;
 use Gacela\PHPStan\Rules\FacadeInterfaceInSyncRule;
 use GacelaTest\Unit\PHPStan\Rules\Fixture\FacadeInterface\DriftedFacade;
 use GacelaTest\Unit\PHPStan\Rules\Fixture\FacadeInterface\DriftedFacadeInterface;
+use GacelaTest\Unit\PHPStan\Rules\Fixture\FacadeInterface\SecondPositionFacade;
+use GacelaTest\Unit\PHPStan\Rules\Fixture\FacadeInterface\SecondPositionFacadeInterface;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 
@@ -41,6 +43,28 @@ final class FacadeInterfaceInSyncRuleTest extends RuleTestCase
     public function test_skips_a_class_that_is_not_a_facade(): void
     {
         $this->analyse([__DIR__ . '/Fixture/FacadeInterface/NotAFacade.php'], []);
+    }
+
+    /**
+     * The pairing has to be looked for across every interface implemented, not
+     * only the first one.
+     */
+    public function test_finds_the_interface_when_another_one_is_declared_first(): void
+    {
+        $this->analyse(
+            [__DIR__ . '/Fixture/FacadeInterface/SecondPositionFacade.php'],
+            [
+                [
+                    sprintf(
+                        'Facade method %s::%s() is missing from %s. Consumers type-hinting the interface cannot reach it: declare it in the interface, or make the method non-public.',
+                        SecondPositionFacade::class,
+                        'forgotten',
+                        SecondPositionFacadeInterface::class,
+                    ),
+                    27,
+                ],
+            ],
+        );
     }
 
     protected function getRule(): Rule

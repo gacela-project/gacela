@@ -188,7 +188,6 @@
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Attribute\\CacheableTrait::resolveCacheableAttribute",
-                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
             ],
         },
         ConcatOperandRemoval: {
@@ -200,7 +199,6 @@
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Attribute\\CacheableTrait::resolveCacheableAttribute",
-                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
             ],
         },
         // Tarjan's index counter is only ever compared with other indices or fed
@@ -212,7 +210,7 @@
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
-                "Gacela\\PHPStan\\Rules\\ClassReflectionHelperTrait::shortClassName",
+                "Gacela\\StaticAnalysis\\ShortName::of",
             ],
         },
         // absoluteFilename() slices 12 hex characters out of a sha1 to scope a
@@ -234,12 +232,12 @@
         UnwrapSubstr: {
             ignore: [
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
-                "Gacela\\PHPStan\\Rules\\ClassReflectionHelperTrait::shortClassName",
+                "Gacela\\StaticAnalysis\\ShortName::of",
                 "Gacela\\Framework\\ClassResolver\\ClassInfo::normalizeFilename",
             ],
         },
         Plus: {
-            ignore: ["Gacela\\PHPStan\\Rules\\ClassReflectionHelperTrait::shortClassName"],
+            ignore: ["Gacela\\StaticAnalysis\\ShortName::of"],
         },
         // The keys used by the lazy handler registry stringify identically via sprintf.
         CastString: {
@@ -361,8 +359,8 @@
         Coalesce: {
             ignore: ["Gacela\\Framework\\ClassResolver\\AbstractClassResolver::resolveCached"],
         },
-        // AST node-type guards in the PHPStan rules: the analyser hands over
-        // well-typed nodes, so the always-true/negated guard variants are
+        // AST node-type guards in the architecture analysers: the host hands
+        // over well-typed nodes, so the always-true/negated guard variants are
         // unreachable defensive narrowing.
         InstanceOf_: {
             ignore: [
@@ -370,14 +368,14 @@
                 // catch(Throwable)+fallback path (null->get() Error, or the
                 // strict return type throwing TypeError): identical outcome.
                 "Gacela\\Framework\\Health\\HealthCheckRegistry::instantiate",
-                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
-                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::processNode",
-                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement",
-                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateChain",
-                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation",
-                "Gacela\\PHPStan\\Rules\\FactoryDoesNotCallFacadeRule::processNode",
-                "Gacela\\PHPStan\\Rules\\SuffixExtendsRule::processNode",
-                "Gacela\\PHPStan\\Rules\\FacadeInterfaceInSyncRule::processNode",
+                "Gacela\\StaticAnalysis\\Rules\\CrossModuleViaFacadeAnalyser::referencedClasses",
+                "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::analyse",
+                "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateStatement",
+                "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateChain",
+                "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isCachedDelegation",
+                "Gacela\\StaticAnalysis\\Rules\\FactoryDoesNotCallFacadeAnalyser::analyse",
+                "Gacela\\StaticAnalysis\\Rules\\SuffixExtendsAnalyser::analyse",
+                "Gacela\\StaticAnalysis\\Rules\\FacadeInterfaceInSyncAnalyser::analyse",
             ],
         },
         // isDelegateChain() walks an expression tree in a `while (true)`, advancing
@@ -386,12 +384,12 @@
         // detected, but at 10s each. They are the same unreachable defensive
         // narrowing as the InstanceOf_ entries above, so ignore them by name.
         LogicalOrNegation: {
-            ignore: ["Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateChain"],
+            ignore: ["Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateChain"],
         },
         LogicalOrAllSubExprNegation: {
             ignore: [
-                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateChain",
-                "Gacela\\PHPStan\\Rules\\CrossModuleViaFacadeRule::processNode",
+                "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateChain",
+                "Gacela\\StaticAnalysis\\Rules\\CrossModuleViaFacadeAnalyser::referencedClasses",
                 // Negating both existence checks routes every string through the
                 // same branch for all realistic inputs (the container injects raw
                 // scalars and pass-through strings identically).
@@ -399,14 +397,14 @@
             ],
         },
         TrueValue: {
-            ignore: ["Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isDelegateStatement"],
+            ignore: ["Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateStatement"],
         },
         // Closures are objects and the container evaluates wrapped closures to
         // the same injected value, so the or-variant mutants on the registrar's
         // object/callable pass-through are observationally equivalent.
         LogicalOr: {
             ignore: [
-                "Gacela\\PHPStan\\Rules\\FacadeOnlyDelegatesRule::isCachedDelegation",
+                "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isCachedDelegation",
                 "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
             ],
         },

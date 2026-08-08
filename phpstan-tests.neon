@@ -17,6 +17,10 @@ parameters:
         # GetProvidedDependencyTypeInferenceTest, which does load the extension.
         - %currentWorkingDirectory%/tests/Unit/PHPStan/Reflection/TypeFixture/*
         - %currentWorkingDirectory%/tests/Integration/PHPStan/Fixture/*
+        # Modules that break the architecture rules on purpose, so that a real
+        # psalm run can be asserted to report them. A Factory calling
+        # $this->getFacade() is one of the things being reported.
+        - %currentWorkingDirectory%/tests/Integration/Psalm/RulesFixture/*
     ignoreErrors:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
         - '#has invalid type Totally\\Missing\\Type#'
@@ -43,6 +47,16 @@ parameters:
         -
             identifier: classConstant.internalClass
             path: %currentWorkingDirectory%/tests/Unit/Psalm/PluginTest.php
+        # StorageAnalysedClass is @internal because it is the Psalm half of a seam
+        # consumers never touch. Its test still has to build one: the alternative
+        # is reaching it only through a psalm subprocess, which coverage cannot
+        # see, and every mutant in it would count as untested.
+        -
+            identifier: new.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Psalm/StorageAnalysedClassTest.php
+        -
+            identifier: return.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Psalm/StorageAnalysedClassTest.php
         # ProvidesScanner's memo is a private static with no public accessor, and
         # reading it is the only way to observe that a repeated scan is skipped.
         -

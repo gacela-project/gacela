@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\StaticAnalysis;
 
+use PhpParser\Node;
+
 /**
  * One finding, in terms every host analyser can express.
  *
@@ -14,15 +16,18 @@ namespace Gacela\StaticAnalysis;
 final class Violation
 {
     /**
-     * @param string   $identifier stable, dot-separated, e.g. `gacela.suffixExtends`
-     * @param int|null $line       only when the finding belongs to a line other
-     *                             than the analysed node's own, as with a method
-     *                             reported inside its class
+     * @param string    $identifier stable, dot-separated, e.g. `gacela.suffixExtends`
+     * @param Node|null $node       the node the finding belongs to, when that is
+     *                              not the one being analysed -- as with a method
+     *                              reported from inside its class. A node rather
+     *                              than a line number because Psalm locates an
+     *                              issue by its exact source span, and a line
+     *                              cannot be widened back into one
      */
     public function __construct(
         public readonly string $message,
         public readonly string $identifier,
-        public readonly ?int $line = null,
+        public readonly ?Node $node = null,
     ) {
     }
 }

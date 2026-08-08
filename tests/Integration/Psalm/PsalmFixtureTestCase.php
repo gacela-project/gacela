@@ -15,24 +15,29 @@ use function str_contains;
 use function substr;
 
 /**
- * Runs the plugin end-to-end through a real `vendor/bin/psalm`, over
- * `Fixture/psalm-fixture.xml`.
+ * Runs the plugin end-to-end through a real `vendor/bin/psalm`.
  *
  * That is the strongest proof available -- an in-process test drives a hook,
- * this drives Psalm -- but it is also the slowest, so the run is shared: the
- * fixture set and the config are the same for every test here, so the output is
- * too, and analysing once per process is enough.
+ * this drives Psalm -- but it is also the slowest, so each config is analysed
+ * once per process and its output shared by every test that asks for it.
  */
 abstract class PsalmFixtureTestCase extends TestCase
 {
     private const ROOT = __DIR__ . '/../../..';
 
-    private static ?string $output = null;
+    /** @var array<string, string> */
+    private static array $outputs = [];
 
     final protected function analyseFixture(): string
     {
-        return self::$output ??= $this->runPsalm();
+        return self::$outputs[static::configPath()] ??= $this->runPsalm();
     }
+
+    /**
+     * The psalm config to analyse. One per fixture set, so a set of deliberately
+     * broken modules cannot leak its findings into a test about something else.
+     */
+    abstract protected static function configPath(): string;
 
     /**
      * Only the findings for one fixture file.
@@ -94,7 +99,7 @@ abstract class PsalmFixtureTestCase extends TestCase
         $command = sprintf(
             '%s --config=%s --no-progress --no-cache --output-format=text 2>&1',
             escapeshellarg(self::ROOT . '/vendor/bin/psalm'),
-            escapeshellarg(__DIR__ . '/Fixture/psalm-fixture.xml'),
+            escapeshellarg(static::configPath()),
         );
 
         return (string)shell_exec($command);

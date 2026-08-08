@@ -25,8 +25,10 @@ final class Plugin implements PluginEntryPointInterface
         // so the handler has to be loaded before it can be registered.
         require_once __DIR__ . '/ServiceMapPseudoMethods.php';
         require_once __DIR__ . '/ProvidedDependencyReturnType.php';
+        require_once __DIR__ . '/ClassRules.php';
 
         $registration->registerHooksFromClass(ServiceMapPseudoMethods::class);
         $registration->registerHooksFromClass(ProvidedDependencyReturnType::class);
+        $registration->registerHooksFromClass(ClassRules::class);
     }
 }

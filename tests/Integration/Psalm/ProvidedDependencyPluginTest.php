@@ -56,4 +56,9 @@ final class ProvidedDependencyPluginTest extends PsalmFixtureTestCase
 
         self::assertStringContainsString('MixedMethodCall', $this->errorsIn('StringKeyFactory.php'));
     }
+
+    protected static function configPath(): string
+    {
+        return __DIR__ . '/Fixture/psalm-fixture.xml';
+    }
 }

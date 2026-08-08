@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Psalm;
 
 use Gacela\Framework\AbstractFactory;
+use Gacela\Psalm\ClassRules;
 use Gacela\Psalm\Plugin;
 use PHPUnit\Framework\TestCase;
 use Psalm\Codebase;
@@ -52,6 +53,15 @@ final class PluginTest extends TestCase
         (new Plugin())($this->socket(new EventDispatcher()));
 
         self::assertTrue($returnTypes->has(AbstractFactory::class));
+    }
+
+    public function test_it_registers_the_class_level_architecture_rules(): void
+    {
+        $dispatcher = new EventDispatcher();
+
+        (new Plugin())($this->socket($dispatcher));
+
+        self::assertContains(ClassRules::class, $dispatcher->after_classlike_checks);
     }
 
     public function test_it_ignores_the_optional_plugin_config(): void

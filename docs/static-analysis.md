@@ -256,6 +256,38 @@ Nothing in the type system says what it resolves to, and a guess would be worse
 than `mixed`: `mixed` is honestly unknown, a guess is confidently wrong and then
 trusted.
 
+### Architecture rules
+
+The same `<plugins>` block enforces the pillar rules, the ones PHPStan gets from
+`phpstan-gacela.neon`. They are on by default and share their implementation with
+the PHPStan side, so the two analysers cannot drift apart on what counts as a
+violation.
+
+| Issue | Reports |
+|---|---|
+| `GacelaSuffixExtends` | a `*Facade`/`*Factory`/`*Provider`/`*Config` not extending its pillar base |
+| `GacelaFacadeOnlyDelegates` | inline logic in a facade method |
+| `GacelaFacadeInstantiation` | a factory building a Facade with `new` |
+| `GacelaFactoryFacadeAccess` | a factory calling `$this->getFacade()` |
+| `GacelaFacadeInterfaceDrift` | a public facade method missing from its `*FacadeInterface` |
+
+Each is its own issue type, so one can be turned off without losing the rest:
+
+```xml
+<issueHandlers>
+    <PluginIssue name="GacelaSuffixExtends">
+        <errorLevel type="suppress">
+            <directory name="src/Legacy"/>
+        </errorLevel>
+    </PluginIssue>
+</issueHandlers>
+```
+
+`psalm.xml` in this repository is a working example: Gacela analyses itself with
+the plugin it ships, and suppresses `GacelaSuffixExtends` under `src/Framework`
+for the same reason `phpstan.neon` does — the framework internals reuse the
+pillar words for things that are not pillars.
+
 
 ## Troubleshooting
 

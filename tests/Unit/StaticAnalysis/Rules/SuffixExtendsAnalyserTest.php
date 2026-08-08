@@ -32,11 +32,11 @@ final class SuffixExtendsAnalyserTest extends TestCase
 
     /**
      * The finding belongs to the class, which is the node the host is already
-     * reporting on -- overriding the line would move it off the declaration.
+     * reporting on -- carrying one of its own would move it off the declaration.
      */
-    public function test_a_violation_carries_no_line_of_its_own(): void
+    public function test_a_violation_carries_no_node_of_its_own(): void
     {
-        self::assertNull($this->analyse('App\Checkout\CheckoutFacade')[0]->line);
+        self::assertNull($this->analyse('App\Checkout\CheckoutFacade')[0]->node);
     }
 
     public function test_a_class_without_the_suffix_is_not_checked(): void

@@ -43,4 +43,9 @@ final class ServiceMapPluginTest extends PsalmFixtureTestCase
 
         self::assertStringNotContainsString('UndefinedMagicMethod', $errors);
     }
+
+    protected static function configPath(): string
+    {
+        return __DIR__ . '/Fixture/psalm-fixture.xml';
+    }
 }

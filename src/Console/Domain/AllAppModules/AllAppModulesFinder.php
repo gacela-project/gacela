@@ -109,12 +109,19 @@ final class AllAppModulesFinder
         return $dotPos !== false ? substr($filename, 0, $dotPos) : $filename;
     }
 
+    /**
+     * Any descendant counts, not only a direct child. A project that puts its
+     * own base facade in between -- `RealFacade extends ProjectBaseFacade
+     * extends AbstractFacade` -- is a normal shape, and comparing the immediate
+     * parent by name dropped every one of those modules from list, doctor,
+     * graph and cache-warm without saying so.
+     *
+     * isSubclassOf() is false for AbstractFacade itself, which is what we want:
+     * the base class is not a module.
+     */
     private function isFacade(AppModule $appModule): bool
     {
-        $rc = new ReflectionClass($appModule->facadeClass());
-        $parentClass = $rc->getParentClass();
-
-        return $parentClass !== false
-            && $parentClass->name === AbstractFacade::class;
+        return (new ReflectionClass($appModule->facadeClass()))
+            ->isSubclassOf(AbstractFacade::class);
     }
 }

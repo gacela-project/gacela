@@ -75,6 +75,95 @@ final class AllAppModulesFinderTest extends TestCase
         }
     }
 
+    /**
+     * `RealFacade extends ProjectBaseFacade extends AbstractFacade` is a normal
+     * shape, and comparing the immediate parent by name dropped every module
+     * built that way from list, doctor, graph and cache-warm.
+     */
+    public function test_finds_a_facade_that_extends_abstract_facade_indirectly(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('indirectmodule');
+        $filePath = $tempDir . '/IndirectFacade.php';
+        $className = 'TempAllAppModulesIndirect\\IndirectFacade';
+
+        file_put_contents($filePath, <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace TempAllAppModulesIndirect;
+
+            use Gacela\Framework\AbstractFacade;
+
+            abstract class ProjectBaseFacade extends AbstractFacade
+            {
+            }
+
+            final class IndirectFacade extends ProjectBaseFacade
+            {
+            }
+            PHP);
+        require_once $filePath;
+
+        $fileInfo = $this->createStub(SplFileInfo::class);
+        $fileInfo->method('isFile')->willReturn(true);
+        $fileInfo->method('getExtension')->willReturn('php');
+        $fileInfo->method('getRealPath')->willReturn($filePath);
+        $fileInfo->method('getFilename')->willReturn('IndirectFacade.php');
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($fileInfo),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            $modules = $finder->findAllAppModules('');
+            self::assertCount(1, $modules);
+            self::assertSame($className, $modules[0]->facadeClass());
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    /**
+     * Widening to "any descendant" must not widen to "any class at all".
+     */
+    public function test_a_class_that_does_not_extend_abstract_facade_is_not_a_module(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('notafacade');
+        $filePath = $tempDir . '/PlainFacade.php';
+
+        file_put_contents($filePath, <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace TempAllAppModulesPlain;
+
+            final class PlainFacade
+            {
+            }
+            PHP);
+        require_once $filePath;
+
+        $fileInfo = $this->createStub(SplFileInfo::class);
+        $fileInfo->method('isFile')->willReturn(true);
+        $fileInfo->method('getExtension')->willReturn('php');
+        $fileInfo->method('getRealPath')->willReturn($filePath);
+        $fileInfo->method('getFilename')->willReturn('PlainFacade.php');
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($fileInfo),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
     public function test_skips_dotfile_php_configs(): void
     {
         $tempDir = $this->createTempModuleDirectory('dotfile');

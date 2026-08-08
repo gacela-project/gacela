@@ -8,6 +8,7 @@ use AppendIterator;
 use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
+use Gacela\Console\Domain\AllAppModules\ExcludedDirectories;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
@@ -34,6 +35,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use OuterIterator;
+use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -225,12 +227,35 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
-     * @return RecursiveIteratorIterator<RecursiveDirectoryIterator>
+     * The two analysers infer different template arguments for the callback
+     * iterator -- psalm reads them off the callable's signature, phpstan's stub
+     * does not -- so no single annotation satisfies both. phpstan's view is
+     * written here and psalm is suppressed, matching how the caller above
+     * already handles the same disagreement.
+     *
+     * @psalm-suppress InvalidReturnType, InvalidReturnStatement
+     *
+     * @return RecursiveIteratorIterator<RecursiveCallbackFilterIterator<mixed, mixed, RecursiveDirectoryIterator>>
      */
     private function createRecursiveIteratorFor(string $dir): RecursiveIteratorIterator
     {
+        $excluded = new ExcludedDirectories();
+
         return new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+            // Filtering recursively prunes: returning false for a directory
+            // stops the descent, instead of walking it and discarding the
+            // leaves afterwards. `$dir` itself is never offered to the filter,
+            // so an explicit appModulePaths entry pointing inside one of these
+            // still works.
+            //
+            // hasChildren() is asked of the inner iterator rather than of the
+            // current value, because a RecursiveDirectoryIterator yields plain
+            // strings under some flag combinations and only this reads the same
+            // either way.
+            new RecursiveCallbackFilterIterator(
+                new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+                static fn (SplFileInfo|string $current, string $key, RecursiveDirectoryIterator $iterator): bool => !$iterator->hasChildren() || !$excluded->isExcluded($iterator->getFilename()),
+            ),
             RecursiveIteratorIterator::LEAVES_ONLY,
         );
     }

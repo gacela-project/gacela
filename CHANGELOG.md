@@ -6,6 +6,21 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- Module discovery ignored any facade that did not extend `AbstractFacade`
+  *directly*. `AllAppModulesFinder` compared the immediate parent by name, so a
+  project with its own base facade in between — `RealFacade extends
+  ProjectBaseFacade extends AbstractFacade`, a normal shape — lost every one of
+  those modules from `list:modules`, `doctor`, `debug:graph` and `cache:warm`,
+  silently. Any descendant counts now.
+- Module discovery walked directories it could never find a module in. With no
+  `appModulePaths` configured the scan starts at the project root, and `vendor`
+  was rejected only after each file had already been yielded, while `.git` was
+  not skipped at all. Excluded directories are pruned before the descent now:
+  on this repository that is 19,585 fewer files visited and 0.69s down to 0.09s.
+  The list stays deliberately narrow — hidden directories plus `vendor` and
+  `node_modules` — because guessing that a project's `build/` or `data/` holds
+  no modules is how discovery starts missing them. `data/` is a PSR-4 root in
+  this very repository.
 - `doctor` reported "all cache entries are fresh" while the merged configuration
   was stale. `CacheStalenessCheck` inspected only the class-name and
   custom-service caches and never looked at `gacela-merged-config-*.php`, which

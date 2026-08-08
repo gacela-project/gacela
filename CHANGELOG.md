@@ -6,6 +6,16 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- `bin/gacela` only worked from the project root. It looked for
+  `vendor/autoload.php` in the current working directory alone, so running it
+  from anywhere else failed with `Cannot load composer's autoload file`, even
+  though composer tooling is expected to work throughout a project tree. It now
+  walks up to the nearest project root and bootstraps Gacela with **that**
+  directory — bootstrapping with the invoking subdirectory would resolve
+  `gacela.php`, modules and caches against the wrong root. Invocation from the
+  root and through composer's symlinked `vendor/bin/gacela` are unchanged, and
+  a run with no project above it still reports a clear error naming the
+  directory it searched from.
 - The profiler lost every nested span. `Profiler` kept one start time per
   `operation:subject`, so starting the same operation while it was already
   active overwrote the outer timestamp: two nested start/stop pairs produced a

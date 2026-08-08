@@ -6,6 +6,15 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- `ContainerFixture::restoreContainerState()` restored a quarter of what
+  `captureContainerState()` records. The snapshot captures the resolver caches,
+  the active config values, the application root and the cache directory, and
+  restore reset Gacela and then put back only the resolver caches — leaving
+  `Config::getInstance()` throwing on a state the API had just said it restored.
+  All four are restored now. The `initialized` flag is restored with them,
+  because `get()` re-runs `init()` while it is false and would have overwritten
+  the values from disk. A snapshot taken before bootstrap still creates no
+  `Config` instance, since inventing one hands back state the caller never had.
 - Module discovery ignored any facade that did not extend `AbstractFacade`
   *directly*. `AllAppModulesFinder` compared the immediate parent by name, so a
   project with its own base facade in between — `RealFacade extends

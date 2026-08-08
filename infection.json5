@@ -122,10 +122,11 @@
                 "Gacela\\Framework\\Cache\\FileCache::stats",
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getCacheFileSize",
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getExistingCacheFilesWithSize",
-                "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::run",
-                // Same reason as ::run above, for the merged-config sources:
-                // filemtime() only returns false for a file that vanished
-                // between the is_file() check right above and the call itself.
+                // Both halves of CacheStalenessCheck, which used to be one
+                // ::run(). filemtime() only returns false for a file that
+                // vanished between the is_file() check right above and the call
+                // itself, so the cast cannot change the outcome.
+                "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::resolvedClassStaleness",
                 "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::mergedConfigStaleness",
             ],
         },

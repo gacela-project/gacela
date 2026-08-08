@@ -54,6 +54,36 @@ final class CacheStalenessCheck implements HealthCheck
             return CheckResult::ok($this->name(), 'no cache directory — nothing to check');
         }
 
+        [$classStale, $classMissing] = $this->resolvedClassStaleness();
+        [$mergedStale, $mergedMissing] = $this->mergedConfigStaleness();
+
+        $stale = [...$classStale, ...$mergedStale];
+        $missing = [...$classMissing, ...$mergedMissing];
+
+        if ($stale === [] && $missing === []) {
+            return CheckResult::ok($this->name(), 'all cache entries are fresh');
+        }
+
+        $details = [
+            ...array_map(static fn (string $entry): string => 'stale: ' . $entry, $stale),
+            ...array_map(static fn (string $entry): string => 'missing source: ' . $entry, $missing),
+        ];
+
+        return CheckResult::warn(
+            $this->name(),
+            $details,
+            'run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild',
+        );
+    }
+
+    /**
+     * The caches that map a key to a class name, checked against the file each
+     * class is declared in.
+     *
+     * @return array{0: list<string>, 1: list<string>}
+     */
+    private function resolvedClassStaleness(): array
+    {
         $stale = [];
         $missing = [];
 
@@ -85,28 +115,7 @@ final class CacheStalenessCheck implements HealthCheck
             }
         }
 
-        [$mergedStale, $mergedMissing] = $this->mergedConfigStaleness();
-        $stale = [...$stale, ...$mergedStale];
-        $missing = [...$missing, ...$mergedMissing];
-
-        if ($stale === [] && $missing === []) {
-            return CheckResult::ok($this->name(), 'all cache entries are fresh');
-        }
-
-        $details = [];
-        foreach ($stale as $entry) {
-            $details[] = 'stale: ' . $entry;
-        }
-
-        foreach ($missing as $entry) {
-            $details[] = 'missing source: ' . $entry;
-        }
-
-        return CheckResult::warn(
-            $this->name(),
-            $details,
-            'run `bin/gacela cache:clear && bin/gacela cache:warm` to rebuild',
-        );
+        return [$stale, $missing];
     }
 
     /**

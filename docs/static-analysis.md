@@ -155,10 +155,16 @@ services:
 
 - A call on a `*Facade` **or a `*FacadeInterface`** is allowed — consumers
   type-hint the interface, which is the same sanctioned crossing.
+  `CrossModuleViaFacadeRule` accepts only `*Facade`, because a written
+  `SomeFacadeInterface::class` reference is not a call through one.
 - A receiver PHPStan cannot resolve is not reported. An unknown type is not
   evidence of a violation, and guessing there would make the rule noise.
 - The finding has its own identifier, `gacela.crossModuleMethodCall`, so it can
   be suppressed separately while a codebase catches up.
+
+With both rules on, one line can produce two findings —
+`(new ShopService())->run()` both names the other module and calls into it. They
+are two crossings and each has its own correction, so both are reported.
 
 To see the actual module dependency graph of your app, run
 `vendor/bin/gacela debug:graph` (formats: `text`, `mermaid`, `graphviz`, `json`).

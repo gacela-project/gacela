@@ -2,101 +2,20 @@
 
 ## Unreleased
 
-### Fixed
-
-- Preserve every health check registered for a module and aggregate duplicate
-  results to the worst reported level.
-- **The module graph missed grouped imports entirely.** `ModuleGraphBuilder`
-  extracted imports with `/^use\s+([A-Za-z0-9_\\]+)/m`, which stops at the first
-  character outside a name — so `use App\{Billing\Invoice, Orders\Order};` came
-  back as the bare prefix and produced **no edge at all**, and a group split
-  across lines was invisible. Imports are parsed with the tokenizer now, so
-  grouped, multiline and aliased forms all resolve, while `use function` and
-  `use const` correctly produce no class edge and a `use` inside a class body
-  still does not (that imports a trait, a different relationship).
-- Module graph construction no longer compares every import against every
-  module. Each import is resolved by walking its own namespace segments against
-  an index of module names — measured at 500 modules × 2000 imports, **20.3ms →
-  0.5ms**, with identical results. Ordering and deduplication are unchanged.
-- The module graph dropped imports written with a leading separator.
-  `use \App\Billing\Invoice;` is legal PHP and names the same class, but the
-  separator was kept and no module namespace carries one, so the lookup missed
-  and the edge silently disappeared. The separator is stripped now.
-- `use FUNCTION` and `use Const` were read as class imports. PHP keywords are
-  case-insensitive and accept any whitespace after them, while the check
-  required lowercase and exactly one space. Outside a group this only produced
-  a name that matched nothing; inside a group it leaked a false edge onto the
-  group prefix. A class named `Functional` is still a class.
-- **`#[Cacheable(ttl: 0)]` cached nothing.** The two built-in caches disagreed
-  about zero: `FileCache` documents and implements it as "no expiry" — its own
-  default TTL is `0` — while `InMemoryCacheStorage`, the default backend for
-  `#[Cacheable]`, computed `time() + 0` and so stored an entry that was already
-  expired before `set()` returned. Every read missed and the method ran every
-  time. Zero now means no expiry in both. Negative TTLs were already consistent
-  (already expired when written) and stay supported, which is how the cache
-  tests exercise eviction without sleeping. The contract is written down on
-  `CacheStorageInterface::set()` and in `docs/cacheable-methods.md`, so a custom
-  backend has something to implement against.
-- `bin/gacela` only worked from the project root. It looked for
-  `vendor/autoload.php` in the current working directory alone, so running it
-  from anywhere else failed with `Cannot load composer's autoload file`, even
-  though composer tooling is expected to work throughout a project tree. It now
-  walks up to the nearest project root and bootstraps Gacela with **that**
-  directory — bootstrapping with the invoking subdirectory would resolve
-  `gacela.php`, modules and caches against the wrong root. Invocation from the
-  root and through composer's symlinked `vendor/bin/gacela` are unchanged, and
-  a run with no project above it still reports a clear error naming the
-  directory it searched from.
-- The profiler lost every nested span. `Profiler` kept one start time per
-  `operation:subject`, so starting the same operation while it was already
-  active overwrote the outer timestamp: two nested start/stop pairs produced a
-  single entry, and recursive code was measured against the wrong start. Start
-  times are a stack per key now, and stops pair innermost-first, so nesting and
-  recursion record every span. `disable()` also drops whatever is still in
-  flight — a span open when profiling is switched off can never be closed, and
-  keeping it let a later `enable()` pair a fresh `stop()` with a stale start and
-  report the time the profiler spent switched off.
-- `ContainerFixture::restoreContainerState()` restored a quarter of what
-  `captureContainerState()` records. The snapshot captures the resolver caches,
-  the active config values, the application root and the cache directory, and
-  restore reset Gacela and then put back only the resolver caches — leaving
-  `Config::getInstance()` throwing on a state the API had just said it restored.
-  All four are restored now. The `initialized` flag is restored with them,
-  because `get()` re-runs `init()` while it is false and would have overwritten
-  the values from disk. A snapshot taken before bootstrap still creates no
-  `Config` instance, since inventing one hands back state the caller never had.
-- Module discovery ignored any facade that did not extend `AbstractFacade`
-  *directly*. `AllAppModulesFinder` compared the immediate parent by name, so a
-  project with its own base facade in between — `RealFacade extends
-  ProjectBaseFacade extends AbstractFacade`, a normal shape — lost every one of
-  those modules from `list:modules`, `doctor`, `debug:graph` and `cache:warm`,
-  silently. Any descendant counts now.
-- Module discovery walked directories it could never find a module in. With no
-  `appModulePaths` configured the scan starts at the project root, and `vendor`
-  was rejected only after each file had already been yielded, while `.git` was
-  not skipped at all. Excluded directories are pruned before the descent now:
-  on this repository that is 19,585 fewer files visited and 0.69s down to 0.09s.
-  The list stays deliberately narrow — hidden directories plus `vendor` and
-  `node_modules` — because guessing that a project's `build/` or `data/` holds
-  no modules is how discovery starts missing them. `data/` is a PSR-4 root in
-  this very repository.
-- `doctor` reported "all cache entries are fresh" while the merged configuration
-  was stale. `CacheStalenessCheck` inspected only the class-name and
-  custom-service caches and never looked at `gacela-merged-config-*.php`, which
-  keeps serving values after a source config file changes. It now compares the
-  merged cache against every file that contributes to it — base patterns,
-  environment patterns and local overrides alike. The source list comes from
-  `ConfigLoader::sourceFiles()` rather than from paths the check derives itself,
-  so it cannot drift from what the loader actually reads.
-- `make:module` and `make:file` corrupted the target directory when the module
-  name repeated the namespace text. `CommandArgumentsParser` replaced the
-  namespace with `str_replace()` across the whole string, so `App/Application`
-  against `App\ => src/` generated into `src/srclication`. Only the matched
-  prefix is removed now. Two neighbouring shapes are fixed with it: a psr-4
-  target without a trailing slash was truncated by a character (`src` became
-  `sr`), and a target given as a list of directories — which Composer allows —
-  raised a `TypeError`. A list now resolves to its first directory, which is
-  where Composer itself looks first.
+- Preserve duplicate module health checks and aggregate them to the worst reported level
+- Parse module graph imports with the tokenizer, so grouped, multiline and aliased forms resolve
+- Resolve graph imports through a name index instead of comparing every import to every module
+- Strip a leading separator from graph imports, so `use \App\Foo;` still matches its module
+- Match `use function` and `use const` case-insensitively, and only as whole keywords
+- Treat `ttl: 0` as no expiry in `InMemoryCacheStorage`, matching `FileCache`
+- Let `bin/gacela` run from any subdirectory, bootstrapping with the project root
+- Record nested and recursive profiler spans instead of overwriting the outer start time
+- Drop in-flight profiler spans on `disable()`, so a later `enable()` cannot report a stale one
+- Restore config values, app root and cache dir in `ContainerFixture::restoreContainerState()`
+- Discover facades that extend `AbstractFacade` indirectly, not only direct children
+- Prune `vendor`, `node_modules` and hidden directories before descending in module discovery
+- Check the merged configuration cache against its sources in `doctor`
+- Strip only the matched psr-4 prefix in `make:module`/`make:file`, and accept list targets
 
 ## [2.0.0](https://github.com/gacela-project/gacela/compare/1.21.0...2.0.0) - 2026-08-07
 

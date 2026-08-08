@@ -38,23 +38,21 @@ final class FactoryDoesNotCallFacadeAnalyser implements ClassAnalyserInterface
             return [];
         }
 
-        $nodeFinder = new NodeFinder();
-
         return [
-            ...$this->instantiatedFacades($nodeFinder, $node, $class),
-            ...$this->getFacadeCalls($nodeFinder, $node, $class),
+            ...$this->instantiatedFacades($node, $class),
+            ...$this->getFacadeCalls($node, $class),
         ];
     }
 
     /**
      * @return list<Violation>
      */
-    private function instantiatedFacades(NodeFinder $nodeFinder, ClassLike $node, AnalysedClassInterface $class): array
+    private function instantiatedFacades(ClassLike $node, AnalysedClassInterface $class): array
     {
         $violations = [];
 
         /** @var list<New_> $newExpressions */
-        $newExpressions = $nodeFinder->findInstanceOf($node, New_::class);
+        $newExpressions = (new NodeFinder())->findInstanceOf($node, New_::class);
         foreach ($newExpressions as $new) {
             // `new $class` and `new class {}` name nothing to match on.
             if (!$new->class instanceof Name) {
@@ -82,12 +80,12 @@ final class FactoryDoesNotCallFacadeAnalyser implements ClassAnalyserInterface
     /**
      * @return list<Violation>
      */
-    private function getFacadeCalls(NodeFinder $nodeFinder, ClassLike $node, AnalysedClassInterface $class): array
+    private function getFacadeCalls(ClassLike $node, AnalysedClassInterface $class): array
     {
         $violations = [];
 
         /** @var list<MethodCall> $methodCalls */
-        $methodCalls = $nodeFinder->findInstanceOf($node, MethodCall::class);
+        $methodCalls = (new NodeFinder())->findInstanceOf($node, MethodCall::class);
         foreach ($methodCalls as $call) {
             if (!$this->isThisGetFacade($call)) {
                 continue;

@@ -18,8 +18,8 @@ namespace Gacela\StaticAnalysis;
 interface AnalysedClassInterface
 {
     /**
-     * The fully qualified name. Anonymous classes are excluded before a rule is
-     * reached, so this is always a real name.
+     * The fully qualified name, as the host resolved it -- not the short name
+     * the AST node carries, which says nothing about the module a class is in.
      */
     public function name(): string;
 

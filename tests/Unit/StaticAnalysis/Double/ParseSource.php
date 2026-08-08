@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\StaticAnalysis\Double;
 
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeFinder;
@@ -44,7 +45,7 @@ final class ParseSource
     }
 
     /**
-     * @return list<\PhpParser\Node\Stmt>
+     * @return list<Stmt>
      */
     private static function parse(string $php): array
     {

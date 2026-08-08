@@ -6,6 +6,12 @@
 
 - Type `getProvidedDependency(Foo::class)` under Psalm too, matching the PHPStan extension
 - Enforce the pillar rules under Psalm, each as its own suppressible issue type
+- Report cross-module method calls on injected dependencies, which name no class at the call site
+
+### Removed
+
+- Drop the `gacela-project/phpstan-extension` suggestion: its one rule is now built in, and it
+  cannot load against the PHPStan version Gacela requires
 
 ### Changed
 

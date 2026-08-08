@@ -121,6 +121,51 @@ services:
   namespace-boundary aware (`App\Modules\Shared` does not exempt
   `App\Modules\SharedFoo`).
 
+That rule matches names **written at the call site**, which is not how a boundary
+is usually crossed once dependencies go through Providers and constructors:
+
+```php
+public function __construct(
+    private readonly InvoiceRepository $invoices,  // App\Billing — another module
+) {
+}
+
+public function createProcessor(): Processor
+{
+    return new Processor($this->invoices->findAll());  // names nothing here
+}
+```
+
+`CrossModuleMethodCallRule` is the other half. It resolves the receiver of a
+method call by **type**, so the call above is reported even though the class is
+named only once, in a type-hint. Register it alongside the first, with the same
+arguments:
+
+```neon
+services:
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: App\Modules
+            modulePathSegments: 1
+            sharedNamespaces:
+                - App\Modules\Shared
+```
+
+- A call on a `*Facade` **or a `*FacadeInterface`** is allowed — consumers
+  type-hint the interface, which is the same sanctioned crossing.
+  `CrossModuleViaFacadeRule` accepts only `*Facade`, because a written
+  `SomeFacadeInterface::class` reference is not a call through one.
+- A receiver PHPStan cannot resolve is not reported. An unknown type is not
+  evidence of a violation, and guessing there would make the rule noise.
+- The finding has its own identifier, `gacela.crossModuleMethodCall`, so it can
+  be suppressed separately while a codebase catches up.
+
+With both rules on, one line can produce two findings —
+`(new ShopService())->run()` both names the other module and calls into it. They
+are two crossings and each has its own correction, so both are reported.
+
 To see the actual module dependency graph of your app, run
 `vendor/bin/gacela debug:graph` (formats: `text`, `mermaid`, `graphviz`, `json`).
 

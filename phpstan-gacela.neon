@@ -49,8 +49,23 @@ services:
     # how many segments beneath that root identify a module). Namespaces in
     # sharedNamespaces are exempt shared kernels: references into them are
     # always allowed, and classes inside them are not checked.
+    #
+    # The two rules are halves of one check and are meant to be enabled together.
+    # CrossModuleViaFacadeRule matches names written at the call site -- `new`, a
+    # static call, a class constant. CrossModuleMethodCallRule resolves the
+    # receiver of a method call by type, which is how a boundary is crossed once
+    # dependencies go through Providers and constructors: the class is named once,
+    # in a type-hint, and never at the call site.
     # -
     #     class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
+    #     tags: [phpstan.rules.rule]
+    #     arguments:
+    #         rootNamespace: App\Modules
+    #         modulePathSegments: 1
+    #         sharedNamespaces:
+    #             - App\Modules\Shared
+    # -
+    #     class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
     #     tags: [phpstan.rules.rule]
     #     arguments:
     #         rootNamespace: App\Modules

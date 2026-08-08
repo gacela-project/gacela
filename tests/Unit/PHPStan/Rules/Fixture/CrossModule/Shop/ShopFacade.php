@@ -6,6 +6,10 @@ namespace GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop;
 
 use Gacela\Framework\AbstractFacade;
 
-final class ShopFacade extends AbstractFacade
+final class ShopFacade extends AbstractFacade implements ShopFacadeInterface
 {
+    public function browse(): string
+    {
+        return 'browsing';
+    }
 }

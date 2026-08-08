@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\Domain;
+namespace GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\UserCalls\Domain;
 
-final class UserService
+final class UserCallsService
 {
     public function run(): string
     {

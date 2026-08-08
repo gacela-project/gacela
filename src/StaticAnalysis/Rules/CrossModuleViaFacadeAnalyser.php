@@ -6,6 +6,7 @@ namespace Gacela\StaticAnalysis\Rules;
 
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
+use Gacela\StaticAnalysis\ModuleBoundary;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node;
@@ -17,26 +18,22 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeFinder;
 
-use function array_slice;
-use function count;
-use function explode;
-use function implode;
 use function sprintf;
 use function str_ends_with;
-use function str_starts_with;
-use function strlen;
-use function substr;
 
 /**
  * Module A may only reach module B through B's Facade -- gacela's central
- * architectural claim, checked.
+ * architectural claim, checked wherever the source writes the other module's
+ * name: `new`, a static call, a class constant, a static property.
  *
- * Nothing in a class name says where a module boundary falls, so the root
- * namespace has to be supplied; that is what keeps this rule opt-in while the
- * pillar rules are on by default.
+ * A boundary crossed through an injected dependency writes no name at the call
+ * site, so it is invisible here; {@see CrossModuleMethodCallAnalyser} resolves
+ * those by type instead.
  */
 final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
 {
+    private readonly ModuleBoundary $boundary;
+
     /**
      * @param list<string> $sharedNamespaces namespaces exempt from the boundary
      *                                       check (shared kernels): references
@@ -44,10 +41,11 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
      *                                       classes inside them are not checked
      */
     public function __construct(
-        private readonly string $rootNamespace,
-        private readonly int $modulePathSegments = 1,
-        private readonly array $sharedNamespaces = [],
+        string $rootNamespace,
+        int $modulePathSegments = 1,
+        array $sharedNamespaces = [],
     ) {
+        $this->boundary = new ModuleBoundary($rootNamespace, $modulePathSegments, $sharedNamespaces);
     }
 
     /**
@@ -56,11 +54,11 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
     public function analyse(ClassLike $node, AnalysedClassInterface $class): array
     {
         $currentClass = $class->name();
-        if ($this->isShared($currentClass)) {
+        if ($this->boundary->isShared($currentClass)) {
             return [];
         }
 
-        $currentModule = $this->moduleOf($currentClass);
+        $currentModule = $this->boundary->moduleOf($currentClass);
         if ($currentModule === null) {
             return [];
         }
@@ -69,20 +67,12 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
         $seen = [];
 
         foreach ($this->referencedClasses($node) as $referenced) {
-            $refModule = $this->moduleOf($referenced);
+            $refModule = $this->boundary->crossedBy($currentModule, $referenced);
             if ($refModule === null) {
                 continue;
             }
 
-            if ($refModule === $currentModule) {
-                continue;
-            }
-
             if (str_ends_with(ShortName::of($referenced), 'Facade')) {
-                continue;
-            }
-
-            if ($this->isShared($referenced)) {
                 continue;
             }
 
@@ -124,7 +114,7 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
         $names = [];
 
         foreach ($refs as $ref) {
-            /** @var New_|StaticCall|ClassConstFetch|StaticPropertyFetch $ref */
+            /** @var ClassConstFetch|New_|StaticCall|StaticPropertyFetch $ref */
             // `new $class` / `$class::CONST` name nothing to match on.
             if ($ref->class instanceof Name) {
                 $names[] = $ref->class->toString();
@@ -132,32 +122,5 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
         }
 
         return $names;
-    }
-
-    private function isShared(string $class): bool
-    {
-        foreach ($this->sharedNamespaces as $sharedNamespace) {
-            if ($class === $sharedNamespace || str_starts_with($class, $sharedNamespace . '\\')) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function moduleOf(string $class): ?string
-    {
-        $prefix = $this->rootNamespace . '\\';
-        if (!str_starts_with($class, $prefix)) {
-            return null;
-        }
-
-        $remainder = substr($class, strlen($prefix));
-        $segments = explode('\\', $remainder);
-        if (count($segments) <= $this->modulePathSegments) {
-            return null;
-        }
-
-        return $this->rootNamespace . '\\' . implode('\\', array_slice($segments, 0, $this->modulePathSegments));
     }
 }

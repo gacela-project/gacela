@@ -50,19 +50,11 @@ final class ProvidedDependencyReturnType implements MethodReturnTypeProviderInte
             return null;
         }
 
-        $className = self::constantStringArgument($event, $args[0]);
+        $className = self::resolvableClassName($event, $args[0]);
 
         // Returning null rather than mixed leaves the declared return type in
         // place, and lets another plugin have a go at the same call.
         if ($className === null) {
-            return null;
-        }
-
-        // Resolved through the autoloader rather than Psalm's own codebase so
-        // that this and the PHPStan extension answer identically for the same
-        // key -- two analysers disagreeing about what a Provider supplies would
-        // be worse than either of them being conservative.
-        if (!class_exists($className) && !interface_exists($className)) {
             return null;
         }
 
@@ -72,18 +64,26 @@ final class ProvidedDependencyReturnType implements MethodReturnTypeProviderInte
     /**
      * Read through the inferred type, not the AST, so a class-string held in a
      * variable resolves the same as one written at the call site.
+     *
+     * A union is scanned rather than sampled: the PHPStan extension walks every
+     * constant string it is given and stops at the first that names something,
+     * so a `Foo::class|'some.service'` has to answer `Foo` here too.
      */
-    private static function constantStringArgument(
-        MethodReturnTypeProviderEvent $event,
-        Arg $arg,
-    ): ?string {
+    private static function resolvableClassName(MethodReturnTypeProviderEvent $event, Arg $arg): ?string
+    {
         $type = $event->getSource()->getNodeTypeProvider()->getType($arg->value);
         if (!$type instanceof Union) {
             return null;
         }
 
         foreach ($type->getLiteralStrings() as $literal) {
-            return $literal->value;
+            // Resolved through the autoloader rather than Psalm's own codebase
+            // so that this and the PHPStan extension answer identically for the
+            // same key -- two analysers disagreeing about what a Provider
+            // supplies would be worse than either being conservative.
+            if (class_exists($literal->value) || interface_exists($literal->value)) {
+                return $literal->value;
+            }
         }
 
         return null;

@@ -92,6 +92,22 @@ final class ProvidedDependencyReturnTypeTest extends TestCase
     }
 
     /**
+     * The PHPStan extension walks every constant string it is given and stops at
+     * the first that names something, so a union has to answer the same here --
+     * sampling only the first would depend on which branch Psalm happened to
+     * order first.
+     */
+    public function test_a_union_is_scanned_past_a_key_that_names_nothing(): void
+    {
+        $type = $this->returnTypeFor(new Union([
+            new TLiteralString('some.service'),
+            new TLiteralString(ProvidedClock::class),
+        ]));
+
+        self::assertSame(ProvidedClock::class, (string)$type);
+    }
+
+    /**
      * The key is read through the inferred type rather than the AST, so one held
      * in a variable resolves the same as one written at the call site.
      */

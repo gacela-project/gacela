@@ -41,17 +41,16 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
         $psr4 = $this->composerJson['autoload']['psr-4'];
         $psr4Dev = $this->composerJson['autoload-dev']['psr-4'] ?? [];
 
-        $allPsr4Combinations = $this->allPossiblePsr4Combinations($desiredNamespace);
+        // `+` keeps the left operand on a duplicate key, which is the same
+        // precedence the two separate isset() chains encoded: autoload wins
+        // over autoload-dev for a namespace declared in both.
+        $psr4All = $psr4 + $psr4Dev;
 
-        foreach ($allPsr4Combinations as $psr4Combination) {
+        foreach ($this->allPossiblePsr4Combinations($desiredNamespace) as $psr4Combination) {
             $psr4Key = $psr4Combination . '\\';
 
-            if (isset($psr4[$psr4Key])) {
-                return $this->foundPsr4($psr4Key, $psr4[$psr4Key], $desiredNamespace);
-            }
-
-            if (isset($psr4Dev[$psr4Key])) {
-                return $this->foundPsr4($psr4Key, $psr4Dev[$psr4Key], $desiredNamespace);
+            if (isset($psr4All[$psr4Key])) {
+                return $this->foundPsr4($psr4Key, $psr4All[$psr4Key], $desiredNamespace);
             }
         }
 
@@ -59,12 +58,15 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
     }
 
     /**
-     * Merge all possible psr-4 combinations and return them ordered by longer to shorter.
-     * This way we'll be able to find the longer match first.
-     * For example: App/TestModule/TestSubModule will produce an array such as:
+     * Every psr-4 prefix the requested namespace could match, longest first, so
+     * the most specific mapping wins.
+     *
+     * The input is slash-separated and the output is backslash-separated,
+     * because these are compared against psr-4 keys: `App/TestModule/TestSubModule`
+     * produces
      * [
-     *   'App/TestModule/TestSubModule',
-     *   'App/TestModule',
+     *   'App\TestModule\TestSubModule',
+     *   'App\TestModule',
      *   'App',
      * ]
      *

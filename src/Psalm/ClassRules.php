@@ -35,6 +35,11 @@ use Psalm\Plugin\EventHandler\Event\AfterClassLikeAnalysisEvent;
  */
 final class ClassRules implements AfterClassLikeAnalysisInterface
 {
+    /** @var list<ClassAnalyserInterface>|null */
+    private static ?array $classAnalysers = null;
+
+    private static ?FacadeOnlyDelegatesAnalyser $facadeMethods = null;
+
     public static function afterStatementAnalysis(AfterClassLikeAnalysisEvent $event): ?bool
     {
         $node = $event->getStmt();
@@ -45,7 +50,7 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
             ReportedIssues::report($analyser->analyse($node, $class), $node, $source);
         }
 
-        $facadeMethods = new FacadeOnlyDelegatesAnalyser();
+        $facadeMethods = self::$facadeMethods ??= new FacadeOnlyDelegatesAnalyser();
         foreach ($node->getMethods() as $method) {
             ReportedIssues::report($facadeMethods->analyse($method, $class), $method, $source);
         }
@@ -54,11 +59,14 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
     }
 
     /**
+     * Built once. The rules hold only their configuration, and this runs for
+     * every class-like in a project.
+     *
      * @return list<ClassAnalyserInterface>
      */
     private static function classAnalysers(): array
     {
-        return [
+        return self::$classAnalysers ??= [
             new SuffixExtendsAnalyser('Facade', AbstractFacade::class),
             new SuffixExtendsAnalyser('Factory', AbstractFactory::class),
             new SuffixExtendsAnalyser('Provider', AbstractProvider::class),

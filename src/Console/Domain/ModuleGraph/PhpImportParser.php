@@ -9,7 +9,6 @@ use function explode;
 use function is_array;
 use function preg_match;
 use function preg_split;
-use function str_starts_with;
 use function token_get_all;
 use function trim;
 
@@ -22,11 +21,6 @@ use function trim;
  * correct it. Everything after that is text handling, because the body of a use
  * statement is a comma-separated list with an optional `prefix{...}` group and
  * optional `as` aliases -- and nothing else.
- *
- * The previous `/^use\s+([A-Za-z0-9_\\\\]+)/m` stopped at the first character
- * outside a name, so `use App\{Billing\Invoice, Orders\Order};` came back as
- * the bare prefix and produced no edge at all, and a group split across lines
- * was invisible.
  */
 final class PhpImportParser
 {
@@ -39,7 +33,9 @@ final class PhpImportParser
 
         foreach ($this->topLevelUseStatements($phpSource) as $statement) {
             foreach ($this->namesIn($statement) as $name) {
-                $imports[] = $name;
+                // `use \App\Billing\Invoice;` is legal and means the same import;
+                // the leading separator is not part of the name modules match on.
+                $imports[] = ltrim($name, '\\');
             }
         }
 
@@ -135,9 +131,14 @@ final class PhpImportParser
         return $names;
     }
 
+    /**
+     * The keywords are case-insensitive and any whitespace may follow them, so
+     * `use FUNCTION App\helper;` is the same statement as the lowercase form.
+     * Requiring the whitespace keeps a class named `Functional` a class.
+     */
     private function isNonClassImport(string $entry): bool
     {
-        return str_starts_with($entry, 'function ') || str_starts_with($entry, 'const ');
+        return preg_match('/^(?:function|const)\s/i', $entry) === 1;
     }
 
     /**

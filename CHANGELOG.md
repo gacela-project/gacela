@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Preserve duplicate module health checks and aggregate them to the worst reported level
+- Inherit app-wide resolution hooks in module scopes, for `get()`, `getOrFail()` and `make()`
+- Exit non-zero from `cache:warm` when a warmup fails, so a broken deploy is not reported green
+- Validate config without constructing services, so `validate:config` has no side effects
 - Parse graph imports with the tokenizer: grouped, multiline, aliased and `\`-prefixed all resolve
 - Ignore `use function` and `use const` in the graph, whatever their case
 - Resolve graph imports through a name index instead of comparing every import to every module

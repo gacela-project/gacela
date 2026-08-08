@@ -13,12 +13,15 @@ use SplFileInfo;
 use function dirname;
 use function file_get_contents;
 use function is_string;
-use function preg_match_all;
 use function sort;
-use function str_starts_with;
 
 final class ModuleGraphBuilder
 {
+    public function __construct(
+        private readonly PhpImportParser $importParser = new PhpImportParser(),
+    ) {
+    }
+
     /**
      * Build the module dependency graph: which module's code declares
      * `use` imports pointing into which other module.
@@ -29,32 +32,35 @@ final class ModuleGraphBuilder
      */
     public function build(array $modules): array
     {
-        $graph = [];
-
+        // Indexed by name, so an import is resolved by looking up its own
+        // namespace segments instead of being compared against every module.
+        $moduleNames = [];
         foreach ($modules as $module) {
-            $graph[$module->fullModuleName()] = $this->dependenciesOf($module, $modules);
+            $moduleNames[$module->fullModuleName()] = true;
+        }
+
+        $graph = [];
+        foreach ($modules as $module) {
+            $graph[$module->fullModuleName()] = $this->dependenciesOf($module, $moduleNames);
         }
 
         return $graph;
     }
 
     /**
-     * @param list<AppModule> $allModules
+     * @param array<string, true> $moduleNames
      *
      * @return list<string>
      */
-    private function dependenciesOf(AppModule $module, array $allModules): array
+    private function dependenciesOf(AppModule $module, array $moduleNames): array
     {
+        $ownName = $module->fullModuleName();
         $dependencies = [];
 
         foreach ($this->moduleImports($module) as $import) {
-            foreach ($allModules as $candidate) {
-                if ($candidate->fullModuleName() === $module->fullModuleName()) {
-                    continue;
-                }
-
-                if (str_starts_with($import, $candidate->fullModuleName() . '\\')) {
-                    $dependencies[$candidate->fullModuleName()] = $candidate->fullModuleName();
+            foreach ($this->owningModulesOf($import, $moduleNames) as $owner) {
+                if ($owner !== $ownName) {
+                    $dependencies[$owner] = $owner;
                 }
             }
         }
@@ -64,6 +70,37 @@ final class ModuleGraphBuilder
         sort($list);
 
         return $list;
+    }
+
+    /**
+     * Every module namespace that is a prefix of the import.
+     *
+     * Walking the import's own segments costs its depth; comparing each import
+     * against every module made graph construction grow as imports × modules.
+     * All matching ancestors are returned, not just the closest, because a
+     * module nested inside another is a dependency on both.
+     *
+     * @param array<string, true> $moduleNames
+     *
+     * @return list<string>
+     */
+    private function owningModulesOf(string $import, array $moduleNames): array
+    {
+        $segments = explode('\\', $import);
+        // The class name itself is never a module namespace.
+        array_pop($segments);
+
+        $owners = [];
+        while ($segments !== []) {
+            $candidate = implode('\\', $segments);
+            if (isset($moduleNames[$candidate])) {
+                $owners[] = $candidate;
+            }
+
+            array_pop($segments);
+        }
+
+        return $owners;
     }
 
     /**
@@ -96,8 +133,7 @@ final class ModuleGraphBuilder
                 continue;
             }
 
-            preg_match_all('/^use\s+([A-Za-z0-9_\\\\]+)/m', $contents, $matches);
-            foreach ($matches[1] as $import) {
+            foreach ($this->importParser->importsIn($contents) as $import) {
                 $imports[] = $import;
             }
         }

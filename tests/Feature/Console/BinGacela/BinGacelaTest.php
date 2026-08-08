@@ -7,18 +7,12 @@ namespace GacelaTest\Feature\Console\BinGacela;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
-use function fclose;
 use function file_put_contents;
 use function mkdir;
-use function proc_close;
-use function proc_open;
 use function rmdir;
-use function stream_get_contents;
 use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
-
-use const PHP_BINARY;
 
 final class BinGacelaTest extends TestCase
 {
@@ -103,15 +97,7 @@ final class BinGacelaTest extends TestCase
         symlink(dirname(__DIR__, 4) . '/bin/gacela', $symlink);
 
         try {
-            $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-            $process = proc_open([PHP_BINARY, $symlink], $descriptors, $pipes, $projectRoot);
-            self::assertIsResource($process);
-
-            fclose($pipes[0]);
-            $stdout = (string) stream_get_contents($pipes[1]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            proc_close($process);
+            [, $stdout] = $this->runPhpScript($symlink, $projectRoot);
 
             self::assertStringContainsString(
                 'autoload-dir:' . realpath($projectRoot) . '/vendor',
@@ -153,21 +139,7 @@ final class BinGacelaTest extends TestCase
         }
 
         try {
-            $descriptors = [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
-            ];
-
-            $process = proc_open([PHP_BINARY, $binGacela], $descriptors, $pipes, $cwd);
-            self::assertIsResource($process);
-
-            fclose($pipes[0]);
-            $stdout = (string) stream_get_contents($pipes[1]);
-            $stderr = (string) stream_get_contents($pipes[2]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            $exitCode = proc_close($process);
+            [$exitCode, $stdout, $stderr] = $this->runPhpScript($binGacela, $cwd);
 
             // Resolved, because __DIR__ inside the stub reports the real path
             // and the system temp dir is a symlink on macOS.
@@ -186,5 +158,28 @@ final class BinGacelaTest extends TestCase
 
             rmdir($projectRoot);
         }
+    }
+
+    /**
+     * @return array{int, string, string} exit code, stdout, stderr
+     */
+    private function runPhpScript(string $script, string $cwd): array
+    {
+        $descriptors = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = proc_open([PHP_BINARY, $script], $descriptors, $pipes, $cwd);
+        self::assertIsResource($process);
+
+        fclose($pipes[0]);
+        $stdout = (string) stream_get_contents($pipes[1]);
+        $stderr = (string) stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        return [proc_close($process), $stdout, $stderr];
     }
 }

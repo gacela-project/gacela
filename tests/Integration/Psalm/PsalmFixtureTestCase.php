@@ -40,14 +40,17 @@ abstract class PsalmFixtureTestCase extends TestCase
      * Every line of Psalm's text output starts with the absolute path it
      * concerns, so filtering on the basename separates two fixtures without
      * anchoring a test to a line or column that moves whenever the fixture is
-     * edited.
+     * edited. The separator has to come from `DIRECTORY_SEPARATOR`: Psalm prints
+     * `D:\a\gacela\...` on windows, and a hard-coded `/` quietly matched
+     * nothing there, which made every *negative* assertion pass against an empty
+     * string.
      */
     final protected function errorsIn(string $fixtureBasename): string
     {
         $lines = [];
 
         foreach (explode("\n", $this->analyseFixture()) as $line) {
-            if (str_contains($line, '/' . $fixtureBasename . ':')) {
+            if (str_contains($line, DIRECTORY_SEPARATOR . $fixtureBasename . ':')) {
                 $lines[] = $line;
             }
         }

@@ -36,7 +36,13 @@ final class ProvidedDependencyPluginTest extends PsalmFixtureTestCase
     {
         $this->skipIfPsalmCannotRun($this->analyseFixture());
 
-        self::assertStringNotContainsString('MixedMethodCall', $this->errorsIn('ProvidedFactory.php'));
+        $errors = $this->errorsIn('ProvidedFactory.php');
+
+        // Without this, a filter that matches nothing makes the real assertion
+        // below pass against an empty string -- which is how the windows path
+        // separator went unnoticed the first time.
+        self::assertNotSame('', $errors, 'precondition: psalm reported on this fixture at all');
+        self::assertStringNotContainsString('MixedMethodCall', $errors);
     }
 
     /**

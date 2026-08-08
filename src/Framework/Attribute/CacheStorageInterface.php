@@ -21,6 +21,17 @@ interface CacheStorageInterface
      */
     public function get(string $key, mixed $default = null): mixed;
 
+    /**
+     * The TTL contract every backend must implement:
+     *
+     * - `$ttl > 0`  — the entry expires that many seconds from now.
+     * - `$ttl === 0` — the entry is stored **without expiry**. This is not
+     *   "expire immediately": `FileCache` has always read zero this way and its
+     *   own default TTL is 0.
+     * - `$ttl < 0`  — the entry is already expired when written, so no read
+     *   returns it. Supported rather than rejected: it is how the cache tests
+     *   exercise eviction without sleeping.
+     */
     public function set(string $key, mixed $value, int $ttl): void;
 
     public function delete(string $key): void;

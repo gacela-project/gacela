@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Attribute;
 
+use Gacela\Framework\Cache\CacheExpiry;
+
 use function array_keys;
 use function str_starts_with;
 use function time;
 
 final class InMemoryCacheStorage implements CacheStorageInterface
 {
-    /** @var array<string,array{result:mixed,expires:int}> */
+    /**
+     * `expires` is null for an entry stored without expiry.
+     *
+     * @var array<string,array{result:mixed,expires:int|null}>
+     */
     private array $cache = [];
 
     public function has(string $key): bool
@@ -19,8 +25,10 @@ final class InMemoryCacheStorage implements CacheStorageInterface
             return false;
         }
 
+        $expires = $this->cache[$key]['expires'];
+
         // @infection-ignore-all — the > vs >= boundary is a single-second tie; not worth testing
-        if ($this->cache[$key]['expires'] > time()) {
+        if ($expires === null || $expires > time()) {
             return true;
         }
 
@@ -37,7 +45,7 @@ final class InMemoryCacheStorage implements CacheStorageInterface
     {
         $this->cache[$key] = [
             'result' => $value,
-            'expires' => time() + $ttl,
+            'expires' => CacheExpiry::fromTtl($ttl),
         ];
     }
 

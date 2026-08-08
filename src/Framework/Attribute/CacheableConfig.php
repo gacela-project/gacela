@@ -55,7 +55,9 @@ final class CacheableConfig
     }
 
     /**
-     * @param array<string,int> $overrides map of "Class::method" => ttl in seconds
+     * @param array<string,int> $overrides map of "Class::method" => ttl in seconds, following
+     *                                     the contract in {@see CacheStorageInterface::set()}:
+     *                                     0 stores without expiry, negative is already expired
      */
     public static function setTtlOverrides(array $overrides): void
     {

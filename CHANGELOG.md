@@ -6,6 +6,16 @@
 
 - Preserve every health check registered for a module and aggregate duplicate
   results to the worst reported level.
+- **`#[Cacheable(ttl: 0)]` cached nothing.** The two built-in caches disagreed
+  about zero: `FileCache` documents and implements it as "no expiry" — its own
+  default TTL is `0` — while `InMemoryCacheStorage`, the default backend for
+  `#[Cacheable]`, computed `time() + 0` and so stored an entry that was already
+  expired before `set()` returned. Every read missed and the method ran every
+  time. Zero now means no expiry in both. Negative TTLs were already consistent
+  (already expired when written) and stay supported, which is how the cache
+  tests exercise eviction without sleeping. The contract is written down on
+  `CacheStorageInterface::set()` and in `docs/cacheable-methods.md`, so a custom
+  backend has something to implement against.
 - `bin/gacela` only worked from the project root. It looked for
   `vendor/autoload.php` in the current working directory alone, so running it
   from anywhere else failed with `Cannot load composer's autoload file`, even

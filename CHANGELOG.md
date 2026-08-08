@@ -18,6 +18,15 @@
   module. Each import is resolved by walking its own namespace segments against
   an index of module names — measured at 500 modules × 2000 imports, **20.3ms →
   0.5ms**, with identical results. Ordering and deduplication are unchanged.
+- The module graph dropped imports written with a leading separator.
+  `use \App\Billing\Invoice;` is legal PHP and names the same class, but the
+  separator was kept and no module namespace carries one, so the lookup missed
+  and the edge silently disappeared. The separator is stripped now.
+- `use FUNCTION` and `use Const` were read as class imports. PHP keywords are
+  case-insensitive and accept any whitespace after them, while the check
+  required lowercase and exactly one space. Outside a group this only produced
+  a name that matched nothing; inside a group it leaked a false edge onto the
+  group prefix. A class named `Functional` is still a class.
 - **`#[Cacheable(ttl: 0)]` cached nothing.** The two built-in caches disagreed
   about zero: `FileCache` documents and implements it as "no expiry" — its own
   default TTL is `0` — while `InMemoryCacheStorage`, the default backend for

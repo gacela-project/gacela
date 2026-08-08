@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Testing;
 
 use FilesystemIterator;
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
@@ -139,6 +140,8 @@ trait ContainerFixture
                 $cache->put($cacheKey, $className);
             }
         }
+
+        $this->restoreConfigState($snapshot);
     }
 
     /**
@@ -175,6 +178,46 @@ trait ContainerFixture
         }
 
         $this->containerTempDirs = [];
+    }
+
+    /**
+     * Puts back the config values, application root and cache directory the
+     * snapshot captured. Without this, `restoreContainerState()` left
+     * `Config::getInstance()` throwing, and a snapshot advertised as
+     * restorable restored a quarter of what it recorded.
+     *
+     * A fresh `SetupGacela` is used rather than the one that was active:
+     * a setup holds closures, and this snapshot is deliberately limited to
+     * data that survives serialization. Only the captured values are put back,
+     * so no service object is constructed by restoring.
+     */
+    private function restoreConfigState(ContainerSnapshot $snapshot): void
+    {
+        $appRootDir = $snapshot->appRootDir();
+        $cacheDir = $snapshot->cacheDir();
+
+        if ($appRootDir === null && $cacheDir === null && $snapshot->config() === []) {
+            // Captured before Gacela was bootstrapped: there is no config state
+            // to restore, and creating one would invent an instance the caller
+            // never had.
+            return;
+        }
+
+        $config = Config::createWithSetup(new SetupGacela());
+
+        self::writePrivateProperty($config, 'config', $snapshot->config());
+        // init() re-reads the config files and would overwrite what was just
+        // restored, and get() runs it whenever this flag is false.
+        self::writePrivateProperty($config, 'initialized', true);
+
+        if ($appRootDir !== null) {
+            $config->setAppRootDir($appRootDir);
+            self::writeStaticProperty(Gacela::class, 'appRootDir', $appRootDir);
+        }
+
+        if ($cacheDir !== null) {
+            self::writePrivateProperty($config, 'cacheDir', $cacheDir);
+        }
     }
 
     private function registerContainerTempDirsCleanup(): void
@@ -240,5 +283,28 @@ trait ContainerFixture
         $prop = $reflection->getProperty($property);
 
         return $prop->getValue();
+    }
+
+    private static function writePrivateProperty(object $object, string $property, mixed $value): void
+    {
+        $reflection = new ReflectionClass($object);
+        if (!$reflection->hasProperty($property)) {
+            return;
+        }
+
+        $reflection->getProperty($property)->setValue($object, $value);
+    }
+
+    /**
+     * @param  class-string  $className
+     */
+    private static function writeStaticProperty(string $className, string $property, mixed $value): void
+    {
+        $reflection = new ReflectionClass($className);
+        if (!$reflection->hasProperty($property)) {
+            return;
+        }
+
+        $reflection->getProperty($property)->setValue(null, $value);
     }
 }

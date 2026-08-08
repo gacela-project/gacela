@@ -21,6 +21,7 @@ use ReflectionClass;
 
 use stdClass;
 
+use function dirname;
 use function sprintf;
 
 final class ContainerFixtureTest extends TestCase
@@ -190,6 +191,134 @@ final class ContainerFixtureTest extends TestCase
 
         self::assertSame(__DIR__, $snapshot->appRootDir());
         self::assertSame($cacheDir, $snapshot->cacheDir());
+    }
+
+    /**
+     * The snapshot records config values, app root and cache dir, and restore
+     * used to drop all three -- leaving Config::getInstance() throwing on a
+     * state the API says it just restored.
+     */
+    public function test_restore_container_state_reinstates_config_values(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addAppConfigKeyValue('restored-key', 'restored-value');
+        });
+        $snapshot = $this->captureContainerState();
+
+        $this->resetContainer();
+
+        $this->restoreContainerState($snapshot);
+
+        self::assertSame('restored-value', Config::getInstance()->get('restored-key'));
+    }
+
+    public function test_restore_container_state_reinstates_the_app_root_and_cache_dir(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+        $cacheDir = Config::getInstance()->getCacheDir();
+        $snapshot = $this->captureContainerState();
+
+        $this->resetContainer();
+
+        $this->restoreContainerState($snapshot);
+
+        self::assertSame(__DIR__, Gacela::rootDir());
+        self::assertSame(__DIR__, Config::getInstance()->getAppRootDir());
+        self::assertSame($cacheDir, Config::getInstance()->getCacheDir());
+    }
+
+    /**
+     * The case the fixture exists for: swap state out, bootstrap something
+     * else, then put the original back. Restoring has to win over whatever the
+     * second bootstrap left behind.
+     */
+    public function test_restore_container_state_wins_over_a_different_bootstrap(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addAppConfigKeyValue('which', 'first');
+        });
+        $snapshot = $this->captureContainerState();
+
+        Gacela::bootstrap(dirname(__DIR__), static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addAppConfigKeyValue('which', 'second');
+        });
+        self::assertSame('second', Config::getInstance()->get('which'));
+
+        $this->restoreContainerState($snapshot);
+
+        self::assertSame('first', Config::getInstance()->get('which'));
+        self::assertSame(__DIR__, Gacela::rootDir());
+    }
+
+    /**
+     * The cache dir has to be restored explicitly, not merely recomputed.
+     * `getCacheDir()` derives a default from the *setup*, and restore builds a
+     * fresh `SetupGacela` -- so a non-default directory is only preserved if
+     * the captured value is actually written back.
+     */
+    public function test_restore_container_state_reinstates_a_non_default_cache_dir(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(true, 'custom-cache-dir');
+        });
+
+        // Materialise it, so the snapshot captures a value rather than null.
+        $cacheDir = Config::getInstance()->getCacheDir();
+        // A fresh SetupGacela, which is what restore builds, would compute this
+        // instead -- so the assertion below can only pass if the captured value
+        // was written back rather than recomputed.
+        self::assertNotSame(sys_get_temp_dir(), $cacheDir);
+
+        $snapshot = $this->captureContainerState();
+        $this->resetContainer();
+
+        $this->restoreContainerState($snapshot);
+
+        self::assertSame($cacheDir, Config::getInstance()->getCacheDir());
+    }
+
+    /**
+     * Only the app root was ever established: no config values were read and
+     * the cache dir was never materialised. There is still state worth
+     * restoring, so the "nothing captured" shortcut must not trigger.
+     */
+    public function test_restore_container_state_reinstates_an_app_root_captured_on_its_own(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $snapshot = $this->captureContainerState();
+        self::assertSame(__DIR__, $snapshot->appRootDir());
+        self::assertNull($snapshot->cacheDir());
+        self::assertSame([], $snapshot->config());
+
+        $this->resetContainer();
+        $this->restoreContainerState($snapshot);
+
+        // Asserted through Config rather than Gacela::rootDir(): resetCache()
+        // drops the Config instance but leaves Gacela's own static app root
+        // standing, so rootDir() answers the same with or without a restore.
+        self::assertSame(__DIR__, Config::getInstance()->getAppRootDir());
+    }
+
+    /**
+     * A snapshot taken before bootstrap has nothing to restore, and inventing a
+     * Config instance would hand the caller state they never had.
+     */
+    public function test_restore_container_state_without_captured_config_creates_no_instance(): void
+    {
+        $snapshot = $this->captureContainerState();
+
+        $this->restoreContainerState($snapshot);
+
+        self::assertNull(self::readStaticProperty(Config::class, 'instance'));
     }
 
     public function test_restore_container_state_reinstates_in_memory_cache(): void

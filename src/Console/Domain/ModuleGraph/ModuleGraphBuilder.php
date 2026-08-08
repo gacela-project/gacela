@@ -116,7 +116,29 @@ final class ModuleGraphBuilder
         }
 
         $imports = [];
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($moduleDir, RecursiveDirectoryIterator::SKIP_DOTS));
+        foreach ($this->phpSourcesIn($moduleDir) as $source) {
+            foreach ($this->importParser->importsIn($source) as $import) {
+                $imports[] = $import;
+            }
+        }
+
+        return $imports;
+    }
+
+    /**
+     * The contents of every php file under a directory.
+     *
+     * Separated so the method above is about imports rather than about
+     * traversal: which files are read is one question, what is read out of them
+     * is another.
+     *
+     * @return iterable<string>
+     */
+    private function phpSourcesIn(string $directory): iterable
+    {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+        );
 
         /** @var SplFileInfo $fileInfo */
         foreach ($iterator as $fileInfo) {
@@ -129,16 +151,10 @@ final class ModuleGraphBuilder
             }
 
             $contents = file_get_contents($fileInfo->getPathname());
-            if (!is_string($contents)) {
-                continue;
-            }
-
-            foreach ($this->importParser->importsIn($contents) as $import) {
-                $imports[] = $import;
+            if (is_string($contents)) {
+                yield $contents;
             }
         }
-
-        return $imports;
     }
 
     private function moduleDirectory(AppModule $module): ?string

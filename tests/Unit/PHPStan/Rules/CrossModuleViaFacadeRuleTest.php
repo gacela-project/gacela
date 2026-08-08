@@ -7,7 +7,6 @@ namespace GacelaTest\Unit\PHPStan\Rules;
 use Gacela\PHPStan\Rules\CrossModuleViaFacadeRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
-use ReflectionMethod;
 
 /**
  * @extends RuleTestCase<CrossModuleViaFacadeRule>
@@ -22,6 +21,8 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
 
     /** @var list<string> */
     private array $sharedNamespaces = [];
+
+    private ?Rule $rule = null;
 
     public function test_reports_cross_module_new_of_non_facade(): void
     {
@@ -141,15 +142,6 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
         );
     }
 
-    public function test_default_module_path_segments_is_one(): void
-    {
-        $rule = new CrossModuleViaFacadeRule(self::ROOT);
-        $moduleOf = new ReflectionMethod($rule, 'moduleOf');
-
-        self::assertSame(self::ROOT . '\Shop', $moduleOf->invoke($rule, self::ROOT . '\Shop\Domain\ShopService'));
-        self::assertNull($moduleOf->invoke($rule, self::ROOT . '\OnlyOneSegment'));
-    }
-
     public function test_reports_shared_namespace_reference_when_not_allowlisted(): void
     {
         $this->analyse(
@@ -209,8 +201,31 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/Fixture/CrossModule/Shared/UsesOtherModule.php'], []);
     }
 
+    /**
+     * Registered with nothing but the root namespace -- the shape the docs show
+     * for a project that keeps its modules one segment down.
+     */
+    public function test_the_optional_arguments_may_be_left_out(): void
+    {
+        $this->rule = new CrossModuleViaFacadeRule(self::ROOT);
+
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/User/BadNewFactory.php'],
+            [
+                [
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\BadNewFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
+                    9,
+                ],
+            ],
+        );
+    }
+
     protected function getRule(): Rule
     {
-        return new CrossModuleViaFacadeRule($this->rootNamespace, $this->modulePathSegments, $this->sharedNamespaces);
+        return $this->rule ??= new CrossModuleViaFacadeRule(
+            $this->rootNamespace,
+            $this->modulePathSegments,
+            $this->sharedNamespaces,
+        );
     }
 }

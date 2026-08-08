@@ -12,7 +12,9 @@ use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
+use Gacela\Framework\Config\AppEnv;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Config\MergedConfigCache;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\ServiceResolver\ServiceMap;
@@ -78,10 +80,17 @@ final class DoctorCommand extends Command
     {
         $config = Config::getInstance();
         $modules = $this->getFacade()->findAllAppModules($filter);
-        $suffixTypes = $config->getFactory()->createGacelaFileConfig()->getSuffixTypes();
+        $configFactory = $config->getFactory();
+        $suffixTypes = $configFactory->createGacelaFileConfig()->getSuffixTypes();
 
         $checks = [
-            new CacheStalenessCheck($config->getCacheDir(), null, $config->getAppRootDir()),
+            new CacheStalenessCheck(
+                $config->getCacheDir(),
+                null,
+                $config->getAppRootDir(),
+                new MergedConfigCache($config->getCacheDir(), AppEnv::current(), $config->getAppRootDir()),
+                $configFactory->createConfigLoader()->sourceFiles(),
+            ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules),
         ];

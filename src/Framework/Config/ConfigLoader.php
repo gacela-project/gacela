@@ -41,18 +41,56 @@ final class ConfigLoader
     }
 
     /**
+     * Every file `loadAll()` would read, in the order it reads them.
+     *
+     * Exposed so `doctor` can compare the merged-config cache against its
+     * sources without re-deriving the patterns — a second copy of this logic
+     * would drift, and the check would then be answering about different files
+     * than the ones actually loaded.
+     *
+     * @return list<string>
+     */
+    public function sourceFiles(): array
+    {
+        $files = [];
+
+        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
+            foreach ($this->patternsOf($configItem) as $pattern) {
+                foreach ($this->pathFinder->matchingPattern($pattern) as $absolutePath) {
+                    $files[] = $absolutePath;
+                }
+            }
+
+            // Unlike the patterns, the local path is not globbed, so it is only
+            // a source when it is actually there.
+            $local = $this->pathNormalizer->normalizePathLocal($configItem);
+            if (is_file($local)) {
+                $files[] = $local;
+            }
+        }
+
+        return array_values(array_unique($files));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function patternsOf(GacelaConfigItem $configItem): array
+    {
+        return [
+            $this->pathNormalizer->normalizePathPattern($configItem),
+            $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem),
+        ];
+    }
+
+    /**
      * @return array<string,mixed>
      */
     private function loadConfigsFromPatterns(GacelaConfigItem $configItem): array
     {
-        $patterns = [
-            $this->pathNormalizer->normalizePathPattern($configItem),
-            $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem),
-        ];
-
         $mergedConfigs = [];
 
-        foreach ($patterns as $pattern) {
+        foreach ($this->patternsOf($configItem) as $pattern) {
             foreach ($this->pathFinder->matchingPattern($pattern) as $absolutePath) {
                 $mergedConfigs[] = $this->readConfigWithCache($absolutePath, $configItem);
             }

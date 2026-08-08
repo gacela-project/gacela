@@ -123,6 +123,10 @@
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getCacheFileSize",
                 "Gacela\\Console\\Application\\CacheWarm\\CacheManager::getExistingCacheFilesWithSize",
                 "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::run",
+                // Same reason as ::run above, for the merged-config sources:
+                // filemtime() only returns false for a file that vanished
+                // between the is_file() check right above and the call itself.
+                "Gacela\\Console\\Application\\Doctor\\Check\\CacheStalenessCheck::mergedConfigStaleness",
             ],
         },
         LessThan: {
@@ -309,7 +313,13 @@
             ignore: ["Gacela\\Console\\Domain\\CommandArguments\\CommandArgumentsParser::foundPsr4"],
         },
         UnwrapArrayValues: {
-            ignore: ["Gacela\\Console\\Domain\\ModuleGraph\\GraphDiffMarkdownFormatter::affectedModules"],
+            ignore: [
+                "Gacela\\Console\\Domain\\ModuleGraph\\GraphDiffMarkdownFormatter::affectedModules",
+                // sourceFiles() keys nothing: array_values() only restores the
+                // list shape the return type declares after array_unique()
+                // punched holes in the keys, and every consumer foreaches it.
+                "Gacela\\Framework\\Config\\ConfigLoader::sourceFiles",
+            ],
         },
         // hrtime(true) is an int; dividing by a float yields a float either way.
         // Same for the bootstrap-duration event, and getFloat()'s widening

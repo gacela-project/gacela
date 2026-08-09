@@ -304,6 +304,23 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->properties->shouldValidateConfigSchemaOnBoot ?? self::DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT;
     }
 
+    #[Override]
+    public function getStubsDir(): string
+    {
+        return $this->properties->stubsDir ?? self::DEFAULT_STUBS_DIR;
+    }
+
+    public function setStubsDir(?string $dir): self
+    {
+        $this->properties->stubsDir = $this->setPropertyWithTracking(
+            self::stubsDir,
+            $dir,
+            self::DEFAULT_STUBS_DIR,
+        );
+
+        return $this;
+    }
+
     /**
      * @param ?array<string, ConfigType> $configSchema
      */

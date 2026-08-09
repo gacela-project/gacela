@@ -5,18 +5,14 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\FileContent;
 
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
-use RuntimeException;
 
 use function sprintf;
 
 final class FileContentGenerator implements FileContentGeneratorInterface
 {
-    /**
-     * @param array<string,string> $templateByFilenameMap
-     */
     public function __construct(
         private readonly FileContentIoInterface $fileContentIo,
-        private array $templateByFilenameMap,
+        private readonly StubLocator $stubs,
     ) {
     }
 
@@ -41,12 +37,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
         $search = ['$NAMESPACE$', '$MODULE_NAME$', '$CLASS_NAME$'];
         $replace = [$commandArguments->namespace(), $moduleName, $className];
 
-        $template = $this->templateByFilenameMap[$filename] ?? '';
-        if ($template === '') {
-            throw new RuntimeException(sprintf("Unknown template for '%s'?", $filename));
-        }
-
-        $fileContent = str_replace($search, $replace, $template);
+        $fileContent = str_replace($search, $replace, $this->stubs->templateFor($filename));
 
         $this->fileContentIo->filePutContents($path, $fileContent);
 

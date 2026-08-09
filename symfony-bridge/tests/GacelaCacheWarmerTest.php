@@ -13,7 +13,6 @@ use Gacela\SymfonyBridge\GacelaCacheWarmer;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-use function dirname;
 use function glob;
 use function unlink;
 
@@ -23,20 +22,24 @@ final class GacelaCacheWarmerTest extends TestCase
 
     private const CACHE_DIR = self::APP_ROOT . '/warmer-cache';
 
+    /**
+     * Only ever this fixture's own directory.
+     *
+     * Deriving the directory to empty from `Config::getCacheDir()` looked
+     * tidier and was not: with the file cache off that answers the *system*
+     * temp directory, and this loop then walked it deleting other processes'
+     * files. A cleanup must name what it created.
+     */
     protected function tearDown(): void
     {
-        // Every file, not just the one asserted on: warming also writes the
-        // merged-config cache, and a directory left behind is a directory the
-        // repo's own tooling then tries to format.
-        $file = $this->classNameCacheFile();
-        if ($file !== '') {
-            $directory = dirname($file);
-            foreach (glob($directory . '/*') ?: [] as $leftover) {
-                unlink($leftover);
-            }
-
-            @rmdir($directory);
+        // Warming writes more than the file asserted on -- the merged-config
+        // cache too -- and a directory left behind is one the repo's own
+        // tooling then tries to format.
+        foreach (glob(self::CACHE_DIR . '/*') ?: [] as $leftover) {
+            unlink($leftover);
         }
+
+        @rmdir(self::CACHE_DIR);
 
         Gacela::resetCache();
         Config::resetInstance();

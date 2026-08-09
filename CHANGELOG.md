@@ -4,20 +4,17 @@
 
 ### Added
 
-- Register `GacelaBundle` in a Symfony application: it bootstraps Gacela from the kernel, maps listed Symfony services into it, adds the console commands under a `gacela:` prefix, and warms Gacela's caches from `cache:warmup`
-
-- Replace another module in a test with `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()`, dropped again in `tearDown()`
-
+- Declare which modules may depend on which, in one JSON file read by `debug:graph --check --rules` and by both analysers
+- Report a module rule that governs no module, so a rule cannot outlive what it was written about
+- Write the `--check` findings as JSON with `--format=json`, for a CI job that wants more than an exit code
 - Declare what the configuration must contain with `declareConfigSchema()`, read by `validate:config`, `doctor` and `debug:config`
 - Fill a declared default when no config source provides the key, without ever overriding one that does
 - Mark every key `declared`, `undeclared` or `missing` in `debug:config`
 - Check the declared schema on every bootstrap with `validateConfigSchemaOnBoot()`, for local development
-
-### Added
-
-- Declare which modules may depend on which, in one JSON file read by `debug:graph --check --rules` and by both analysers
-- Report a module rule that governs no module, so a rule cannot outlive what it was written about
-- Write the `--check` findings as JSON with `--format=json`, for a CI job that wants more than an exit code
+- Replace another module in a test with `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()`, dropped again in `tearDown()`
+- Register `GacelaBundle` in a Symfony application: it bootstraps Gacela from the kernel, maps listed Symfony services into it, adds the console commands under a `gacela:` prefix, and warms Gacela's caches from `cache:warmup`
+- Publish the scaffolder's templates into the project with `stubs:publish`, and generate from them per file, falling back to the built-in ones
+- Report a published stub that lost a placeholder, or one the scaffolder never reads, in `doctor`
 
 ## [2.1.0](https://github.com/gacela-project/gacela/compare/2.0.0...2.1.0) - 2026-08-09
 

@@ -71,6 +71,8 @@ final class Properties
 
     public ?bool $shouldValidateConfigSchemaOnBoot = null;
 
+    public ?string $stubsDir = null;
+
     public ?bool $areEventListenersEnabled = null;
 
     /** @var ?list<callable> */

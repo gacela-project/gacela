@@ -19,6 +19,7 @@ use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
+use Gacela\Console\Infrastructure\Command\StubsPublishCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Attribute\Provides;
@@ -58,6 +59,7 @@ final class ConsoleProvider extends AbstractProvider
             new ProfileReportCommand(),
             new DoctorCommand(),
             new InitCommand(Config::getInstance()->getAppRootDir()),
+            new StubsPublishCommand(),
         ];
     }
 

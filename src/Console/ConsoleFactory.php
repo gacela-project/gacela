@@ -14,6 +14,9 @@ use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
+use Gacela\Console\Domain\FileContent\StubFiles;
+use Gacela\Console\Domain\FileContent\StubLocator;
+use Gacela\Console\Domain\FileContent\StubPublisher;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffMarkdownFormatter;
@@ -44,6 +47,7 @@ use Symfony\Component\Console\Command\Command;
 
 use function is_dir;
 use function is_string;
+use function preg_match;
 use function sprintf;
 use function str_starts_with;
 use function strlen;
@@ -87,7 +91,7 @@ final class ConsoleFactory extends AbstractFactory
     {
         return new FileContentGenerator(
             $this->createFileContentIo(),
-            $this->getTemplateByFilenameMap(),
+            new StubLocator($this->stubsDir(), $this->getTemplateByFilenameMap(), StubFiles::basic()),
         );
     }
 
@@ -95,8 +99,46 @@ final class ConsoleFactory extends AbstractFactory
     {
         return new FileContentGenerator(
             $this->createFileContentIo(),
-            $this->getServiceTemplateByFilenameMap(),
+            new StubLocator($this->stubsDir(), $this->getServiceTemplateByFilenameMap(), StubFiles::service()),
         );
+    }
+
+    /**
+     * Where a project's published stubs live, absolute.
+     */
+    public function stubsDir(): string
+    {
+        $config = Config::getInstance();
+        $configured = $config->getSetupGacela()->getStubsDir();
+
+        return $this->isAbsolutePath($configured)
+            ? $configured
+            : $config->getAppRootDir() . '/' . $configured;
+    }
+
+    /**
+     * The built-in stub contents, by the file each is published as.
+     *
+     * @return array<string, string>
+     */
+    public function builtInStubs(): array
+    {
+        $contents = [];
+
+        foreach (StubFiles::basic() as $filename => $stubFile) {
+            $contents[$stubFile] = $this->getTemplateByFilenameMap()[$filename] ?? '';
+        }
+
+        foreach (StubFiles::service() as $filename => $stubFile) {
+            $contents[$stubFile] = $this->getServiceTemplateByFilenameMap()[$filename] ?? '';
+        }
+
+        return $contents;
+    }
+
+    public function createStubPublisher(): StubPublisher
+    {
+        return new StubPublisher($this->createFileContentIo(), $this->builtInStubs());
     }
 
     public function createAllAppModulesFinder(): AllAppModulesFinder
@@ -193,6 +235,16 @@ final class ConsoleFactory extends AbstractFactory
         }
 
         return $result;
+    }
+
+    /**
+     * A leading separator is not what makes a path absolute on windows: there
+     * it is `C:\...`, which starts with neither separator, and a configured
+     * absolute directory was being appended to the application root instead.
+     */
+    private function isAbsolutePath(string $path): bool
+    {
+        return preg_match('~^(?:[a-zA-Z]:[\\\\/]|[\\\\/])~', $path) === 1;
     }
 
     private function stringifyBoundConcrete(mixed $concrete): string

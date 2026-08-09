@@ -6,6 +6,7 @@ namespace Gacela\Console;
 
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
+use Gacela\Console\Domain\FileContent\StubPublishResult;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffResult;
 use Gacela\Console\Domain\ModuleGraph\ModuleRuleCheckResult;
 use Gacela\Container\ContainerStats;
@@ -140,6 +141,26 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createGraphDiffMarkdownFormatter()
             ->format($diff, $head);
+    }
+
+    /**
+     * Where a project's published scaffolder stubs live, absolute.
+     */
+    public function stubsDir(): string
+    {
+        return $this->getFactory()->stubsDir();
+    }
+
+    /**
+     * Copy the built-in stubs into the project.
+     *
+     * @param list<string> $only the stub files to publish; every one when empty
+     */
+    public function publishStubs(string $stubsDir, array $only = [], bool $force = false): StubPublishResult
+    {
+        return $this->getFactory()
+            ->createStubPublisher()
+            ->publish($stubsDir, $only, $force);
     }
 
     public function getContainerStats(): ContainerStats

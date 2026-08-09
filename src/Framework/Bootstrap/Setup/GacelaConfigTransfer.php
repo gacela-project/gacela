@@ -79,6 +79,7 @@ final class GacelaConfigTransfer
         public readonly array $definitions = [],
         public readonly ?array $configSchema = null,
         public readonly ?bool $shouldValidateConfigSchemaOnBoot = null,
+        public readonly ?string $stubsDir = null,
     ) {
     }
 }

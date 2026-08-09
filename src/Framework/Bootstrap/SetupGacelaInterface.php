@@ -45,6 +45,8 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
 
     public function shouldValidateConfigSchemaOnBoot(): bool;
 
+    public function getStubsDir(): string;
+
     public function getEventDispatcher(): EventDispatcherInterface;
 
     public function merge(SetupGacela $other): self;

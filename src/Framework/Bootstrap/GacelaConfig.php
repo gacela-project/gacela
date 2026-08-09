@@ -64,6 +64,8 @@ final class GacelaConfig
 
     private ?bool $shouldValidateConfigSchemaOnBoot = null;
 
+    private ?string $stubsDir = null;
+
     private ?bool $areEventListenersEnabled = null;
 
     /** @var list<callable> */
@@ -362,6 +364,21 @@ final class GacelaConfig
     public function validateConfigSchemaOnBoot(bool $enabled = true): self
     {
         $this->shouldValidateConfigSchemaOnBoot = $enabled;
+
+        return $this;
+    }
+
+    /**
+     * Where `stubs:publish` writes the scaffolder's templates, and where
+     * `make:module`/`make:file` look for them before falling back to the
+     * built-in ones.
+     *
+     * Relative to the application root unless an absolute path is given.
+     * Defaults to `stubs/gacela`.
+     */
+    public function setStubsDir(string $dir): self
+    {
+        $this->stubsDir = $dir;
 
         return $this;
     }
@@ -735,6 +752,7 @@ final class GacelaConfig
             $this->definitions,
             $this->configSchema,
             $this->shouldValidateConfigSchemaOnBoot,
+            $this->stubsDir,
         );
     }
 

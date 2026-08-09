@@ -53,20 +53,20 @@ final class GacelaBundleTest extends TestCase
     }
 
     /**
-     * Identity is the assertion that means anything here. Gacela autowires an
-     * unlisted class perfectly happily, so "an instance came back" would pass
-     * with the whole mapping deleted -- it is *Symfony's* instance that proves
-     * the service travelled across the bridge.
+     * Gacela autowires an unlisted class perfectly happily, so "an instance
+     * came back" would pass with the whole mapping deleted. What cannot is a
+     * constructor argument only Symfony supplies: an autowired one would carry
+     * the default instead.
      */
     public function test_a_service_listed_under_its_type_is_the_one_gacela_hands_back(): void
     {
         $kernel = $this->kernelWithCountingService();
         $kernel->boot();
 
-        self::assertSame(
-            $kernel->getContainer()->get('app.counting'),
-            Gacela::get(CountingService::class),
-        );
+        $service = Gacela::get(CountingService::class);
+
+        self::assertInstanceOf(CountingService::class, $service);
+        self::assertSame(CountingService::FROM_SYMFONY, $service->name());
     }
 
     /**

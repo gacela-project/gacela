@@ -71,6 +71,7 @@ final class DoctorCommandTest extends TestCase
             '✓ suffix configuration',
             '✓ pillar filenames',
             '✓ config schema',
+            '✓ published stubs',
             '✓ All checks passed',
         ], $this->statusLinesOf($tester));
     }
@@ -82,7 +83,7 @@ final class DoctorCommandTest extends TestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
         // The registered check runs after the built-in ones, and its detail is shown.
-        self::assertSame('✓ module health: FakeModule', $this->statusLinesOf($tester)[4]);
+        self::assertSame('✓ module health: FakeModule', $this->statusLinesOf($tester)[5]);
         self::assertStringContainsString('FakeHealthCheck ran', $tester->getDisplay());
     }
 

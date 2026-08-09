@@ -7,6 +7,8 @@ namespace GacelaTest\Integration\PHPStan;
 use PHPUnit\Framework\TestCase;
 
 use function escapeshellarg;
+use function getenv;
+use function putenv;
 use function shell_exec;
 use function sprintf;
 
@@ -31,17 +33,27 @@ abstract class PhpStanFixtureTestCase extends TestCase
 
     private function runPhpStan(): string
     {
-        // XDEBUG_MODE=off and an explicit memory limit, because this is a child
-        // process: under `composer test-coverage` it would otherwise inherit
-        // XDEBUG_MODE=coverage, and PHPStan under coverage exhausts the default
-        // 128M and dies -- which made the whole coverage run unpassable rather
-        // than reporting anything about these tests.
         $command = sprintf(
-            'XDEBUG_MODE=off %s analyse -c %s --memory-limit=1G --no-progress --error-format=raw 2>&1',
+            '%s analyse -c %s --memory-limit=1G --no-progress --error-format=raw 2>&1',
             escapeshellarg(self::ROOT . '/vendor/bin/phpstan'),
             escapeshellarg(__DIR__ . '/Fixture/phpstan-fixture.neon'),
         );
 
-        return (string)shell_exec($command);
+        // Through putenv rather than a `VAR=value cmd` prefix, which is posix
+        // shell syntax that windows does not understand -- there `XDEBUG_MODE`
+        // is read as the command itself.
+        //
+        // It has to be off at all: this is a child process, so under
+        // `composer test-coverage` or infection it inherits
+        // XDEBUG_MODE=coverage, and PHPStan under coverage exhausts the default
+        // memory limit and dies, failing tests that never ran their assertions.
+        $previous = getenv('XDEBUG_MODE');
+        putenv('XDEBUG_MODE=off');
+
+        try {
+            return (string)shell_exec($command);
+        } finally {
+            putenv($previous === false ? 'XDEBUG_MODE' : 'XDEBUG_MODE=' . $previous);
+        }
     }
 }

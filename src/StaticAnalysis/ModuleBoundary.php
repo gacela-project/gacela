@@ -66,7 +66,7 @@ final class ModuleBoundary
     public function isShared(string $class): bool
     {
         foreach ($this->sharedNamespaces as $sharedNamespace) {
-            if ($class === $sharedNamespace || str_starts_with($class, $sharedNamespace . '\\')) {
+            if (NamespaceMatch::covers($sharedNamespace, $class)) {
                 return true;
             }
         }

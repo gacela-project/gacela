@@ -72,3 +72,17 @@ services:
     #         modulePathSegments: 1
     #         sharedNamespaces:
     #             - App\Modules\Shared
+
+    # Opt-in: the module dependencies your project decided against, read from
+    # the same JSON file `debug:graph --check --rules` reads. Nothing is checked
+    # until that file names a rule, and a missing or malformed file fails the
+    # run rather than quietly turning the check off.
+    # -
+    #     class: Gacela\PHPStan\Rules\DeclaredModuleDependencyRule
+    #     tags: [phpstan.rules.rule]
+    #     arguments:
+    #         rootNamespace: App\Modules
+    #         rulesFile: %currentWorkingDirectory%/module-rules.json
+    #         modulePathSegments: 1
+    #         sharedNamespaces:
+    #             - App\Modules\Shared

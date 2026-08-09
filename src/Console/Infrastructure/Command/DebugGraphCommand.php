@@ -6,9 +6,13 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\ModuleGraph\CycleAllowList;
+use Gacela\Console\Domain\ModuleGraph\CycleCheckResult;
 use Gacela\Console\Domain\ModuleGraph\MalformedCycleAllowListException;
+use Gacela\Console\Domain\ModuleGraph\ModuleRuleCheckResult;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
+use Gacela\StaticAnalysis\ModuleRules\MalformedModuleRulesException;
+use Gacela\StaticAnalysis\ModuleRules\ModuleRuleSet;
 use JsonException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -45,7 +49,8 @@ final class DebugGraphCommand extends Command
             ->addOption('format', 'f', InputOption::VALUE_REQUIRED, 'Output format: text, mermaid, graphviz, or json', 'text')
             ->addOption('compare-to', 'c', InputOption::VALUE_REQUIRED, 'Path to a JSON graph (from --format=json) to diff the current graph against')
             ->addOption('check', null, InputOption::VALUE_NONE, 'Exit non-zero when the graph contains a dependency cycle')
-            ->addOption('allowed-cycles', null, InputOption::VALUE_REQUIRED, 'Path to a JSON file of reviewed cycles, each with a "modules" list and a "reason"');
+            ->addOption('allowed-cycles', null, InputOption::VALUE_REQUIRED, 'Path to a JSON file of reviewed cycles, each with a "modules" list and a "reason"')
+            ->addOption('rules', null, InputOption::VALUE_REQUIRED, 'Path to a JSON file of declared module rules, each with a "from", either "allow" or "deny", and a "reason"');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -66,7 +71,7 @@ final class DebugGraphCommand extends Command
         }
 
         if ($input->getOption('check') === true) {
-            return $this->checkCycles($graph, ConsoleInput::option($input, 'allowed-cycles'), $output);
+            return $this->check($graph, $filter, $format, $input, $output);
         }
 
         if ($graph === []) {
@@ -108,39 +113,101 @@ final class DebugGraphCommand extends Command
     }
 
     /**
-     * Fails on an undeclared cycle, and equally on an allowance that no longer
-     * matches one.
+     * The gate: cycles nobody declared, allowances that outlived their cycle,
+     * and dependencies a declared rule forbids.
      *
-     * The second half is the point. A reviewed cycle recorded only in prose is a
-     * decision the tooling cannot see, which makes it indistinguishable from a
-     * cycle nobody noticed; but an allow-list that outlives what it allows is
-     * worse, because it looks like the check is still watching.
+     * Both halves are self-invalidating, which is the point. A reviewed cycle
+     * recorded only in prose is a decision the tooling cannot see, and an
+     * allow-list that outlives what it allows is worse, because it looks like
+     * the check is still watching. A module rule about a module nobody has any
+     * more reads exactly the same way.
      *
      * @param array<string, list<string>> $graph
      */
-    private function checkCycles(array $graph, string $allowListPath, OutputInterface $output): int
+    private function check(array $graph, string $filter, string $format, InputInterface $input, OutputInterface $output): int
     {
-        $allowList = CycleAllowList::empty();
+        $rulesPath = ConsoleInput::option($input, 'rules');
+        if ($rulesPath !== '' && $filter !== '') {
+            $output->writeln(
+                '<error>--rules cannot be combined with a filter: in a narrowed graph, a rule about a filtered-out module is indistinguishable from a rule about a module that no longer exists.</error>',
+            );
 
-        if ($allowListPath !== '') {
-            /** @var list<mixed>|null $decoded */
-            $decoded = $this->readJsonFile($allowListPath, 'allowed cycles', $output);
-            if ($decoded === null) {
-                return self::FAILURE;
-            }
+            return self::FAILURE;
+        }
 
-            try {
-                $allowList = CycleAllowList::fromDecodedJson($decoded);
-            } catch (MalformedCycleAllowListException $exception) {
-                $output->writeln(sprintf('<error>%s</error>', $exception->getMessage()));
+        $allowList = $this->readAllowList(ConsoleInput::option($input, 'allowed-cycles'), $output);
+        if (!$allowList instanceof CycleAllowList) {
+            return self::FAILURE;
+        }
 
-                return self::FAILURE;
-            }
+        $rules = $this->readRuleSet($rulesPath, $output);
+        if (!$rules instanceof ModuleRuleSet) {
+            return self::FAILURE;
         }
 
         $cycles = $this->getFacade()->detectModuleCycles($graph);
-        $result = $allowList->check($cycles);
+        $cycleResult = $allowList->check($cycles);
+        $ruleResult = $this->getFacade()->checkModuleRules($graph, $rules);
 
+        if ($format === 'json') {
+            $output->writeln($this->checkReportAsJson($cycleResult, $ruleResult));
+        } else {
+            $this->writeCycleReport($cycles, $allowList, $cycleResult, $output);
+            $this->writeRuleReport($ruleResult, $rules->isEmpty(), $output);
+        }
+
+        return $cycleResult->isClean() && $ruleResult->isClean() ? self::SUCCESS : self::FAILURE;
+    }
+
+    /**
+     * Null after reporting why the allow list is unusable; an empty list when
+     * none was asked for.
+     */
+    private function readAllowList(string $path, OutputInterface $output): ?CycleAllowList
+    {
+        if ($path === '') {
+            return CycleAllowList::empty();
+        }
+
+        /** @var list<mixed>|null $decoded */
+        $decoded = $this->readJsonFile($path, 'allowed cycles', $output);
+        if ($decoded === null) {
+            return null;
+        }
+
+        try {
+            return CycleAllowList::fromDecodedJson($decoded);
+        } catch (MalformedCycleAllowListException $malformedCycleAllowListException) {
+            $output->writeln(sprintf('<error>%s</error>', $malformedCycleAllowListException->getMessage()));
+
+            return null;
+        }
+    }
+
+    /**
+     * Null after reporting why the rules file is unusable; an empty set when
+     * none was asked for.
+     */
+    private function readRuleSet(string $path, OutputInterface $output): ?ModuleRuleSet
+    {
+        if ($path === '') {
+            return ModuleRuleSet::empty();
+        }
+
+        try {
+            return ModuleRuleSet::fromFile($path);
+        } catch (MalformedModuleRulesException $malformedModuleRulesException) {
+            $output->writeln(sprintf('<error>%s</error>', $malformedModuleRulesException->getMessage()));
+
+            return null;
+        }
+    }
+
+    /**
+     * @param list<list<string>> $cycles
+     */
+    private function writeCycleReport(array $cycles, CycleAllowList $allowList, CycleCheckResult $result, OutputInterface $output): void
+    {
         foreach ($cycles as $cycle) {
             $reason = $allowList->reasonFor($cycle);
             if ($reason !== null) {
@@ -159,13 +226,63 @@ final class DebugGraphCommand extends Command
             ));
         }
 
-        if (!$result->isClean()) {
-            return self::FAILURE;
+        if ($result->isClean()) {
+            $output->writeln('<fg=green>✓ No undeclared module dependency cycles</>');
+        }
+    }
+
+    /**
+     * Silent when no rules were declared: a green line about a check that never
+     * ran is the thing this whole file is written against.
+     */
+    private function writeRuleReport(ModuleRuleCheckResult $result, bool $noRulesDeclared, OutputInterface $output): void
+    {
+        foreach ($result->violations as $violation) {
+            $output->writeln(sprintf(
+                '<error>✗ Forbidden dependency:</error> %s -> %s <fg=gray>(%s)</>',
+                $violation->from,
+                $violation->to,
+                $violation->reason,
+            ));
         }
 
-        $output->writeln('<fg=green>✓ No undeclared module dependency cycles</>');
+        foreach ($result->unknownNamespaces as $namespace) {
+            $output->writeln(sprintf(
+                '<error>✗ Module rule governs nothing:</error> %s matches no module. Remove the rule, or fix the namespace.',
+                $namespace,
+            ));
+        }
 
-        return self::SUCCESS;
+        if ($noRulesDeclared) {
+            return;
+        }
+
+        if ($result->isClean()) {
+            $output->writeln('<fg=green>✓ No forbidden module dependencies</>');
+        }
+    }
+
+    /**
+     * The same findings as a machine-readable report, for a CI job that wants to
+     * do more than test an exit code.
+     */
+    private function checkReportAsJson(CycleCheckResult $cycleResult, ModuleRuleCheckResult $ruleResult): string
+    {
+        $forbidden = [];
+        foreach ($ruleResult->violations as $violation) {
+            $forbidden[] = [
+                'from' => $violation->from,
+                'to' => $violation->to,
+                'reason' => $violation->reason,
+            ];
+        }
+
+        return json_encode([
+            'undeclaredCycles' => $cycleResult->undeclaredCycles,
+            'staleAllowedCycles' => $cycleResult->staleAllowances,
+            'forbiddenDependencies' => $forbidden,
+            'unknownRuleNamespaces' => $ruleResult->unknownNamespaces,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     }
 
     /**

@@ -77,6 +77,7 @@ are what you suppress on, so a rule can be turned off on its own.
 | A Facade's public methods are in its `*FacadeInterface` | `gacela.facadeInterfaceDrift` | `GacelaFacadeInterfaceDrift` | on |
 | A cross-module reference the source **names** | `gacela.crossModuleWithoutFacade` | `GacelaCrossModuleAccess` | opt-in |
 | A cross-module call the source does **not** name | `gacela.crossModuleMethodCall` | `GacelaCrossModuleMethodCall` | opt-in |
+| A dependency the project's rules file forbids | `gacela.declaredModuleDependency` | `GacelaDeclaredModuleDependency` | opt-in |
 
 On top of the rules, both analysers gain two **types** they otherwise lack: the
 pillar accessors, and `getProvidedDependency()` by class-string.
@@ -342,6 +343,90 @@ indistinguishable from a cycle nobody noticed.
 
 `debug:graph` with no `--check` stays exit-code-neutral, so adding the gate does
 not change what the command already did.
+
+## Declaring which modules may depend on which
+
+A cycle is the only thing the graph can refuse on its own. Everything else a team
+agrees on — billing must not reach back-office, reporting reads and nothing more
+— lives in prose, where no tool can see it and a violation arrives as one more
+import in a diff. Write it in a JSON file instead:
+
+```json
+{
+    "rules": [
+        {
+            "from": "App\\Payment",
+            "deny": ["App\\Admin"],
+            "reason": "reviewed 2026-08: billing must not reach back-office"
+        },
+        {
+            "from": "App\\Reporting",
+            "allow": ["App\\Shared"],
+            "reason": "read-only module: the shared kernel and nothing else"
+        }
+    ]
+}
+```
+
+- `deny` forbids the listed modules and leaves every other dependency alone.
+- `allow` is the opposite reading: those are the **only** modules reachable, and
+  anything else is a violation. An empty `allow` is meaningful — a leaf module
+  that may depend on nothing.
+- One entry cannot carry both, and a rule with no `reason` is refused.
+- A rule about `App\Payment` also governs `App\Payment\Refunds`, and matching is
+  namespace-boundary aware: `App\Pay` never governs `App\Payment`.
+
+The same file is read in two places. In CI, over the whole graph:
+
+```bash
+vendor/bin/gacela debug:graph --check --rules=module-rules.json
+```
+
+and in the editor, per class, by whichever analyser you run:
+
+```neon
+# phpstan.neon
+services:
+    -
+        class: Gacela\PHPStan\Rules\DeclaredModuleDependencyRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: App
+            rulesFile: %currentWorkingDirectory%/module-rules.json
+```
+
+```xml
+<!-- psalm.xml -->
+<pluginClass class="Gacela\Psalm\Plugin">
+    <moduleRules rootNamespace="App" file="module-rules.json"/>
+</pluginClass>
+```
+
+One file, two readers, on purpose: a boundary that holds in CI and not in the
+editor is a boundary nobody trusts.
+
+The rules are **self-invalidating**, like the cycle allow list. A `from`, `allow`
+or `deny` naming a namespace that matches no module fails the check — a rule
+about a module nobody has any more still reads as a boundary being watched. A
+`deny` that never fires is not an error; that is the rule doing its job.
+
+`--rules` cannot be combined with a filter argument: in a narrowed graph, a rule
+about a filtered-out module is indistinguishable from a rule about a module that
+no longer exists, and those two must not look alike.
+
+`--check --format=json` writes the findings as a report instead of lines, for a
+CI job that wants more than an exit code:
+
+```json
+{
+    "undeclaredCycles": [],
+    "staleAllowedCycles": [],
+    "forbiddenDependencies": [
+        {"from": "App\\Payment", "to": "App\\Admin", "reason": "reviewed 2026-08: billing must not reach back-office"}
+    ],
+    "unknownRuleNamespaces": []
+}
+```
 
 ## Reviewing graph changes in CI
 

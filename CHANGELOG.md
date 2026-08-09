@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- Declare which modules may depend on which, in one JSON file read by `debug:graph --check --rules` and by both analysers
+- Report a module rule that governs no module, so a rule cannot outlive what it was written about
+- Write the `--check` findings as JSON with `--format=json`, for a CI job that wants more than an exit code
+
 ## [2.1.0](https://github.com/gacela-project/gacela/compare/2.0.0...2.1.0) - 2026-08-09
 
 ### Added

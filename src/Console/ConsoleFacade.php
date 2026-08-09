@@ -7,8 +7,10 @@ namespace Gacela\Console;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffResult;
+use Gacela\Console\Domain\ModuleGraph\ModuleRuleCheckResult;
 use Gacela\Container\ContainerStats;
 use Gacela\Framework\AbstractFacade;
+use Gacela\StaticAnalysis\ModuleRules\ModuleRuleSet;
 
 /**
  * @extends AbstractFacade<ConsoleFactory>
@@ -100,6 +102,19 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createModuleCycleDetector()
             ->detect($graph);
+    }
+
+    /**
+     * Read the declared module rules against the graph the project has: the
+     * dependencies they forbid, and the rules that govern nothing any more.
+     *
+     * @param array<string, list<string>> $graph
+     */
+    public function checkModuleRules(array $graph, ModuleRuleSet $rules): ModuleRuleCheckResult
+    {
+        return $this->getFactory()
+            ->createModuleRuleChecker()
+            ->check($graph, $rules);
     }
 
     /**

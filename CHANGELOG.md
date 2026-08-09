@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.1.0](https://github.com/gacela-project/gacela/compare/2.0.0...2.1.0) - 2026-08-09
+
 ### Added
 
 - Run the Gacela architecture rules under Psalm too, each as its own suppressible issue type

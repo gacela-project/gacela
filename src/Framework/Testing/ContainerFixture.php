@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Gacela\Framework\Testing;
 
 use FilesystemIterator;
+use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
+use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use RecursiveDirectoryIterator;
@@ -16,9 +21,11 @@ use ReflectionProperty;
 use RuntimeException;
 use SplFileInfo;
 
+use function class_exists;
 use function is_array;
 use function is_dir;
 use function is_string;
+use function is_subclass_of;
 use function register_shutdown_function;
 use function sprintf;
 
@@ -81,6 +88,53 @@ trait ContainerFixture
     protected function resetGacelaSingletons(): void
     {
         $this->resetContainer();
+    }
+
+    /**
+     * Resolve another module's Factory to a double, for as long as this test
+     * runs.
+     *
+     * Testing module A in isolation means replacing module B, and until now
+     * that was either a container binding -- which only works when B arrives
+     * through a Provider -- or a reach into `AnonymousGlobal` with a key format
+     * the caller had to know. The Factory is the seam: a consumer constructs
+     * B's Facade itself, and every Facade asks the resolver for its Factory.
+     *
+     * ```php
+     * $this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {
+     *     public function createPostReader(): PostReader { ... }
+     * });
+     * ```
+     *
+     * The swap is dropped by {@see resetContainer()}, which `GacelaTestCase`
+     * already runs in `tearDown()`.
+     *
+     * @param class-string<AbstractFacade> $facadeClass the module to replace, named
+     *                                                  by the class its consumers use
+     */
+    protected function swapModuleFactory(string $facadeClass, AbstractFactory $double): void
+    {
+        $this->swapModulePillar($facadeClass, 'Factory', $double);
+    }
+
+    /**
+     * @see swapModuleFactory() for how the swap works and when it is dropped
+     *
+     * @param class-string<AbstractFacade> $facadeClass
+     */
+    protected function swapModuleConfig(string $facadeClass, AbstractConfig $double): void
+    {
+        $this->swapModulePillar($facadeClass, 'Config', $double);
+    }
+
+    /**
+     * @see swapModuleFactory() for how the swap works and when it is dropped
+     *
+     * @param class-string<AbstractFacade> $facadeClass
+     */
+    protected function swapModuleProvider(string $facadeClass, AbstractProvider $double): void
+    {
+        $this->swapModulePillar($facadeClass, 'Provider', $double);
     }
 
     /**
@@ -219,6 +273,30 @@ trait ContainerFixture
         if ($cacheDir !== null) {
             self::writePrivateProperty($config, 'cacheDir', $cacheDir);
         }
+    }
+
+    /**
+     * The resolver keys a pillar by its module's namespace and the pillar type,
+     * so a double is registered under the same key the module's own class would
+     * have taken -- whatever that class is named, and whether or not the module
+     * has one at all.
+     *
+     * @param class-string<AbstractFacade> $facadeClass
+     */
+    private function swapModulePillar(string $facadeClass, string $resolvableType, object $double): void
+    {
+        if (!class_exists($facadeClass) || !is_subclass_of($facadeClass, AbstractFacade::class)) {
+            throw ModuleDoubleException::notAFacade($facadeClass);
+        }
+
+        $namespace = (new ReflectionClass($facadeClass))->getNamespaceName();
+        AnonymousGlobal::overrideExistingResolvedClass($namespace . '\\' . $resolvableType, $double);
+
+        // A Facade resolved before the swap holds its Factory in a static, and
+        // a Factory holds the container built from its Provider and Config. A
+        // swap nothing re-reads is a swap that silently did not happen.
+        AbstractFacade::resetCache();
+        AbstractFactory::resetCache();
     }
 
     private function registerContainerTempDirsCleanup(): void

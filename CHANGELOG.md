@@ -4,6 +4,8 @@
 
 ### Added
 
+- Replace another module in a test with `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()`, dropped again in `tearDown()`
+
 - Declare what the configuration must contain with `declareConfigSchema()`, read by `validate:config`, `doctor` and `debug:config`
 - Fill a declared default when no config source provides the key, without ever overriding one that does
 - Mark every key `declared`, `undeclared` or `missing` in `debug:config`

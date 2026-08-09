@@ -1,0 +1,12 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Psr4Stubs\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Psr4StubsData\\": "data/"
+        }
+    }
+}

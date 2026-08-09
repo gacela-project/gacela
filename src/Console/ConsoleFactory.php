@@ -14,6 +14,9 @@ use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
+use Gacela\Console\Domain\FileContent\StubFiles;
+use Gacela\Console\Domain\FileContent\StubLocator;
+use Gacela\Console\Domain\FileContent\StubPublisher;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffMarkdownFormatter;
@@ -87,7 +90,7 @@ final class ConsoleFactory extends AbstractFactory
     {
         return new FileContentGenerator(
             $this->createFileContentIo(),
-            $this->getTemplateByFilenameMap(),
+            new StubLocator($this->stubsDir(), $this->getTemplateByFilenameMap(), StubFiles::basic()),
         );
     }
 
@@ -95,8 +98,46 @@ final class ConsoleFactory extends AbstractFactory
     {
         return new FileContentGenerator(
             $this->createFileContentIo(),
-            $this->getServiceTemplateByFilenameMap(),
+            new StubLocator($this->stubsDir(), $this->getServiceTemplateByFilenameMap(), StubFiles::service()),
         );
+    }
+
+    /**
+     * Where a project's published stubs live, absolute.
+     */
+    public function stubsDir(): string
+    {
+        $config = Config::getInstance();
+        $configured = $config->getSetupGacela()->getStubsDir();
+
+        return str_starts_with($configured, DIRECTORY_SEPARATOR) || str_starts_with($configured, '/')
+            ? $configured
+            : $config->getAppRootDir() . '/' . $configured;
+    }
+
+    /**
+     * The built-in stub contents, by the file each is published as.
+     *
+     * @return array<string, string>
+     */
+    public function builtInStubs(): array
+    {
+        $contents = [];
+
+        foreach (StubFiles::basic() as $filename => $stubFile) {
+            $contents[$stubFile] = $this->getTemplateByFilenameMap()[$filename] ?? '';
+        }
+
+        foreach (StubFiles::service() as $filename => $stubFile) {
+            $contents[$stubFile] = $this->getServiceTemplateByFilenameMap()[$filename] ?? '';
+        }
+
+        return $contents;
+    }
+
+    public function createStubPublisher(): StubPublisher
+    {
+        return new StubPublisher($this->createFileContentIo(), $this->builtInStubs());
     }
 
     public function createAllAppModulesFinder(): AllAppModulesFinder

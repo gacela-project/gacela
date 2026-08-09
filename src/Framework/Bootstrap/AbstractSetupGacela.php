@@ -31,6 +31,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string configSchema = 'configSchema';
 
+    public const string stubsDir = 'stubsDir';
+
     public const string servicesToExtend = 'servicesToExtend';
 
     public const string factories = 'factories';
@@ -70,6 +72,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_CONFIG_KEY_VALUES = [];
 
     protected const array DEFAULT_CONFIG_SCHEMA = [];
+
+    protected const string DEFAULT_STUBS_DIR = 'stubs/gacela';
 
     protected const bool DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT = false;
 
@@ -154,5 +158,14 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     public function shouldValidateConfigSchemaOnBoot(): bool
     {
         return self::DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT;
+    }
+
+    /**
+     * Where a project's published scaffolder stubs live, relative to the
+     * application root unless an absolute path is given.
+     */
+    public function getStubsDir(): string
+    {
+        return self::DEFAULT_STUBS_DIR;
     }
 }

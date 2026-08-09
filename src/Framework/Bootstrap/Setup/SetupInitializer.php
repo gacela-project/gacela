@@ -31,6 +31,7 @@ final class SetupInitializer
             ->setConfigKeyValues($dto->configKeyValues)
             ->setConfigSchema($dto->configSchema)
             ->setShouldValidateConfigSchemaOnBoot($dto->shouldValidateConfigSchemaOnBoot)
+            ->setStubsDir($dto->stubsDir)
             ->setAreEventListenersEnabled($dto->areEventListenersEnabled)
             ->setGenericListeners($dto->genericListeners)
             ->setSpecificListeners($dto->specificListeners)

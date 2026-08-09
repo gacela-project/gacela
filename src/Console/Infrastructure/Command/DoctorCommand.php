@@ -8,6 +8,7 @@ use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
+use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
@@ -83,6 +84,7 @@ final class DoctorCommand extends Command
         $modules = $this->getFacade()->findAllAppModules($filter);
         $configFactory = $config->getFactory();
         $suffixTypes = $configFactory->createGacelaFileConfig()->getSuffixTypes();
+        $stubsDir = $this->getFacade()->stubsDir();
 
         $checks = [
             new CacheStalenessCheck(
@@ -95,6 +97,7 @@ final class DoctorCommand extends Command
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules),
             new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
+            new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir)),
         ];
 
         foreach (HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults() as $moduleName => $status) {

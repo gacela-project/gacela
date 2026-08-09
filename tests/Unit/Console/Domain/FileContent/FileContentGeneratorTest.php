@@ -7,6 +7,8 @@ namespace GacelaTest\Unit\Console\Domain\FileContent;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
+use Gacela\Console\Domain\FileContent\StubFiles;
+use Gacela\Console\Domain\FileContent\StubLocator;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use PHPUnit\Framework\TestCase;
 
@@ -15,7 +17,7 @@ final class FileContentGeneratorTest extends TestCase
     public function test_error_when_unknown_template(): void
     {
         $fileContentIo = $this->createStub(FileContentIoInterface::class);
-        $generator = new FileContentGenerator($fileContentIo, []);
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [], StubFiles::basic()));
 
         $this->expectExceptionMessage("Unknown template for 'unknown_template'?");
         $generator->generate(
@@ -35,9 +37,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/DirFacade.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Facade' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -58,9 +60,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/Facade.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Facade' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -82,9 +84,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/DirFactory.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Factory' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -105,9 +107,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/Factory.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Factory' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -129,9 +131,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/DirConfig.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Config' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -152,9 +154,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/Config.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Config' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -176,9 +178,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/DirProvider.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Provider' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -199,9 +201,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('Dir/Provider.php', 'template-result');
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             'Provider' => 'template-result',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace', 'Dir'),
@@ -225,9 +227,9 @@ final class FileContentGeneratorTest extends TestCase
             ->method('filePutContents')
             ->with('src/Module/ModuleFacade.php', $expectedContent);
 
-        $generator = new FileContentGenerator($fileContentIo, [
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [
             FilenameSanitizer::FACADE => 'namespace $NAMESPACE$; class $CLASS_NAME$ extends $MODULE_NAME$Base {}',
-        ]);
+        ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
             new CommandArguments('Namespace\Module', 'src/Module'),

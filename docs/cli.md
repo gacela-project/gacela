@@ -18,6 +18,30 @@ root. `init` is the one that creates it.
 | `init` | Creates the `gacela.php` a project needs before anything else works |
 | `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests`, `--short-name` |
 | `make:file App/Blog Facade Factory` | Generates named pillar files into an existing module — Facade, Factory, Config, Provider |
+| `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force` |
+
+### Your own stubs
+
+`make:module` and `make:file` generate from templates that ship with gacela.
+`stubs:publish` copies them into the project — `stubs/gacela/` by default,
+`GacelaConfig::setStubsDir()` to put them elsewhere:
+
+```bash
+vendor/bin/gacela stubs:publish                    # every stub
+vendor/bin/gacela stubs:publish --template=basic   # one template set
+vendor/bin/gacela stubs:publish --force            # replace ones already published
+```
+
+From then on a generated file uses the project's stub when there is one and the
+built-in template when there is not — **per file**, so publishing your Facade
+stub does not freeze the Factory at the version it was copied from. Without
+`--force` nothing already published is overwritten: it is a file somebody
+changed on purpose.
+
+Every stub substitutes `$NAMESPACE$`, `$MODULE_NAME$` and `$CLASS_NAME$`.
+`doctor` reports a published stub that lost `$NAMESPACE$` or `$CLASS_NAME$`, and
+one filed under a name the scaffolder does not read — an edit that never takes
+effect looks exactly like one that did.
 
 ## Inspecting a project
 

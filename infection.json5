@@ -419,7 +419,16 @@
         // the same way every time, so rebuilding them per call is
         // observationally identical, only slower.
         AssignCoalesce: {
-            ignore: ["Gacela\\Console\\Application\\CacheWarm\\CacheWarmService::classResolvers"],
+            ignore: [
+                "Gacela\\Console\\Application\\CacheWarm\\CacheWarmService::classResolvers",
+                // The rule set is memoized in a static because psalm calls the
+                // handler statically and it runs for every class-like in a
+                // project. Rebuilding it each time is what the mutant does, and
+                // the rules hold only their configuration, so nothing
+                // observable changes.
+                "Gacela\\Psalm\\ClassRules::violationsIn",
+                "Gacela\\Psalm\\ClassRules::classAnalysers",
+            ],
         },
         // ReturnRemoval arrived with infection 0.34 and reads every early
         // return as behaviour. These two are allocation guards, not behaviour.

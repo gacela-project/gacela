@@ -37,6 +37,18 @@ final class Violation
     }
 
     /**
+     * The same finding, pinned to the node it belongs to.
+     *
+     * A rule that judges one member at a time does not carry the node itself --
+     * it is handed one and reports on it -- so whoever ran the rule attaches it
+     * before the finding leaves for a host.
+     */
+    public function at(Node $node): self
+    {
+        return new self($this->message, $this->identifier, $this->tip, $node);
+    }
+
+    /**
      * The message with the tip folded in, for hosts that have nowhere else to
      * put it.
      */

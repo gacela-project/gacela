@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\PHPStan;
 
-use PHPUnit\Framework\TestCase;
-
-use function escapeshellarg;
-use function shell_exec;
-use function sprintf;
-
 /**
  * Runs PHPStan for real against a Factory that asks for a dependency by
  * class-string, using the same `phpstan-gacela.neon` shipped to consumers.
@@ -19,10 +13,8 @@ use function sprintf;
  * class-string the type was never unknown, and the point of typing it is not
  * the accessor itself but the calls made on what comes back.
  */
-final class ProvidedDependencyAnalysisTest extends TestCase
+final class ProvidedDependencyAnalysisTest extends PhpStanFixtureTestCase
 {
-    private const ROOT = __DIR__ . '/../../..';
-
     public function test_a_call_on_a_class_string_dependency_is_checked(): void
     {
         self::assertStringContainsString(
@@ -47,14 +39,4 @@ final class ProvidedDependencyAnalysisTest extends TestCase
         self::assertStringNotContainsString('stringKeyStaysMixed', $this->analyseFixture());
     }
 
-    private function analyseFixture(): string
-    {
-        $command = sprintf(
-            '%s analyse -c %s --no-progress --error-format=raw 2>&1',
-            escapeshellarg(self::ROOT . '/vendor/bin/phpstan'),
-            escapeshellarg(__DIR__ . '/Fixture/phpstan-fixture.neon'),
-        );
-
-        return (string)shell_exec($command);
-    }
 }

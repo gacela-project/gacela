@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Gacela\Psalm;
 
 use Gacela\StaticAnalysis\Rules\CrossModuleMethodCallAnalyser;
+use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\NullsafeMethodCall;
+use Psalm\NodeTypeProvider;
 use Psalm\Plugin\EventHandler\AfterExpressionAnalysisInterface;
 use Psalm\Plugin\EventHandler\Event\AfterExpressionAnalysisEvent;
 use Psalm\Type\Atomic\TNamedObject;
@@ -64,7 +66,7 @@ final class CrossModuleCallRules implements AfterExpressionAnalysisInterface
         }
 
         ReportedIssues::report(
-            $analyser->analyse($callingClass, self::receiverClasses($event)),
+            self::violationsFor($expr, $callingClass, $source->getNodeTypeProvider()),
             $expr,
             $source,
         );
@@ -73,17 +75,30 @@ final class CrossModuleCallRules implements AfterExpressionAnalysisInterface
     }
 
     /**
+     * What the rule finds, apart from the reporting -- see
+     * {@see ClassRules::violationsIn()} for why the two are split.
+     *
+     * @return list<Violation>
+     */
+    public static function violationsFor(
+        MethodCall|NullsafeMethodCall $expr,
+        string $callingClass,
+        NodeTypeProvider $types,
+    ): array {
+        return self::$analyser instanceof \Gacela\StaticAnalysis\Rules\CrossModuleMethodCallAnalyser
+            ? self::$analyser->analyse($callingClass, self::receiverClasses($expr, $types))
+            : [];
+    }
+
+    /**
      * Empty when Psalm could not tell, which the analyser reads as "no evidence"
      * rather than "no violation to find".
      *
      * @return list<string>
      */
-    private static function receiverClasses(AfterExpressionAnalysisEvent $event): array
+    private static function receiverClasses(MethodCall|NullsafeMethodCall $expr, NodeTypeProvider $types): array
     {
-        /** @var MethodCall|NullsafeMethodCall $expr */
-        $expr = $event->getExpr();
-
-        $type = $event->getStatementsSource()->getNodeTypeProvider()->getType($expr->var);
+        $type = $types->getType($expr->var);
         if (!$type instanceof Union) {
             return [];
         }

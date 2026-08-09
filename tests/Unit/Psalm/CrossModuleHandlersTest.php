@@ -38,6 +38,13 @@ final class CrossModuleHandlersTest extends TestCase
 
     protected function setUp(): void
     {
+        // Cleared going in as well as coming out: the handlers keep their
+        // analyser in a static, and any other test that registers the plugin
+        // leaves it set. Asserting "not configured yet" is only meaningful if
+        // this test put it in that state itself.
+        CrossModuleRules::configure(null);
+        CrossModuleCallRules::configure(null);
+
         // Building any psalm type reads the global config for its string-length
         // limit, and a unit test has no analysis to have initialised one.
         $instance = new ReflectionProperty(Config::class, 'instance');

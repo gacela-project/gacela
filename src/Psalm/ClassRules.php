@@ -8,11 +8,14 @@ use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
+use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\Rules\FacadeInterfaceInSyncAnalyser;
 use Gacela\StaticAnalysis\Rules\FacadeOnlyDelegatesAnalyser;
 use Gacela\StaticAnalysis\Rules\FactoryDoesNotCallFacadeAnalyser;
 use Gacela\StaticAnalysis\Rules\SuffixExtendsAnalyser;
+use Gacela\StaticAnalysis\Violation;
+use PhpParser\Node\Stmt\ClassLike;
 use Psalm\Plugin\EventHandler\AfterClassLikeAnalysisInterface;
 use Psalm\Plugin\EventHandler\Event\AfterClassLikeAnalysisEvent;
 
@@ -43,19 +46,45 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
     public static function afterStatementAnalysis(AfterClassLikeAnalysisEvent $event): ?bool
     {
         $node = $event->getStmt();
-        $source = $event->getStatementsSource();
-        $class = new StorageAnalysedClass($event->getClasslikeStorage(), $event->getCodebase());
+
+        ReportedIssues::report(
+            self::violationsIn($node, new StorageAnalysedClass($event->getClasslikeStorage(), $event->getCodebase())),
+            $node,
+            $event->getStatementsSource(),
+        );
+
+        return null;
+    }
+
+    /**
+     * Everything the class-level rules find, each pinned to the node it belongs
+     * to -- a facade method's finding belongs on the method, not on the class.
+     *
+     * Kept apart from the reporting so it can be driven directly: reporting goes
+     * through Psalm's IssueBuffer, which needs a live ProjectAnalyzer that a unit
+     * test has no way to supply. Without the split, the only proof these rules
+     * are wired up at all was a subprocess that coverage cannot see.
+     *
+     * @return list<Violation>
+     */
+    public static function violationsIn(ClassLike $node, AnalysedClassInterface $class): array
+    {
+        $violations = [];
 
         foreach (self::classAnalysers() as $analyser) {
-            ReportedIssues::report($analyser->analyse($node, $class), $node, $source);
+            foreach ($analyser->analyse($node, $class) as $violation) {
+                $violations[] = $violation;
+            }
         }
 
         $facadeMethods = self::$facadeMethods ??= new FacadeOnlyDelegatesAnalyser();
         foreach ($node->getMethods() as $method) {
-            ReportedIssues::report($facadeMethods->analyse($method, $class), $method, $source);
+            foreach ($facadeMethods->analyse($method, $class) as $violation) {
+                $violations[] = $violation->at($method);
+            }
         }
 
-        return null;
+        return $violations;
     }
 
     /**

@@ -55,22 +55,40 @@ final class ReportedIssues
     public static function report(array $violations, Node $analysedNode, StatementsSource $source): void
     {
         foreach ($violations as $violation) {
-            $issue = self::issueFor($violation->identifier);
-            if ($issue === null) {
-                continue;
-            }
+            $issue = self::toIssue($violation, $analysedNode, $source);
 
-            IssueBuffer::maybeAdd(
-                new $issue(
-                    // Psalm has no separate channel for a tip, so the
-                    // correction rides along in the message rather than being
-                    // dropped -- the two hosts should tell you the same thing.
-                    $violation->messageWithTip(),
-                    new CodeLocation($source, $violation->node ?? $analysedNode),
-                ),
-                $source->getSuppressedIssues(),
-            );
+            if ($issue instanceof PluginIssue) {
+                IssueBuffer::maybeAdd($issue, $source->getSuppressedIssues());
+            }
         }
+    }
+
+    /**
+     * One finding as the issue Psalm will report, or null when no rule owns the
+     * identifier.
+     *
+     * Kept apart from {@see report()} so it can be driven directly: handing an
+     * issue to `IssueBuffer` needs a live `ProjectAnalyzer`, which a unit test
+     * has no way to supply -- but which class, which message and which line are
+     * decided here, and those are worth pinning.
+     *
+     * @param Node $analysedNode the node to locate a finding at when it carries
+     *                           none of its own
+     */
+    public static function toIssue(Violation $violation, Node $analysedNode, StatementsSource $source): ?PluginIssue
+    {
+        $issue = self::issueFor($violation->identifier);
+        if ($issue === null) {
+            return null;
+        }
+
+        return new $issue(
+            // Psalm has no separate channel for a tip, so the correction rides
+            // along in the message rather than being dropped -- the two hosts
+            // should tell you the same thing.
+            $violation->messageWithTip(),
+            new CodeLocation($source, $violation->node ?? $analysedNode),
+        );
     }
 
     /**

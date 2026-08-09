@@ -30,6 +30,17 @@ final class PluginTest extends TestCase
 {
     private ?MethodReturnTypeProvider $returnTypes = null;
 
+    /**
+     * Registering the plugin with a <crossModule> element sets a static on each
+     * handler. Left set, it decides the outcome of any later test that asks
+     * whether the check is on.
+     */
+    protected function tearDown(): void
+    {
+        CrossModuleRules::configure(null);
+        CrossModuleCallRules::configure(null);
+    }
+
     public function test_it_registers_the_pseudo_method_handler(): void
     {
         $dispatcher = new EventDispatcher();

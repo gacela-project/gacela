@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Psalm;
 
+use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\Rules\CrossModuleViaFacadeAnalyser;
+use Gacela\StaticAnalysis\Violation;
+use PhpParser\Node\Stmt\ClassLike;
 use Psalm\Plugin\EventHandler\AfterClassLikeAnalysisInterface;
 use Psalm\Plugin\EventHandler\Event\AfterClassLikeAnalysisEvent;
 
@@ -51,11 +54,22 @@ final class CrossModuleRules implements AfterClassLikeAnalysisInterface
         $node = $event->getStmt();
 
         ReportedIssues::report(
-            $analyser->analyse($node, new StorageAnalysedClass($event->getClasslikeStorage(), $event->getCodebase())),
+            self::violationsIn($node, new StorageAnalysedClass($event->getClasslikeStorage(), $event->getCodebase())),
             $node,
             $event->getStatementsSource(),
         );
 
         return null;
+    }
+
+    /**
+     * What the rule finds, apart from the reporting -- see
+     * {@see ClassRules::violationsIn()} for why the two are split.
+     *
+     * @return list<Violation>
+     */
+    public static function violationsIn(ClassLike $node, AnalysedClassInterface $class): array
+    {
+        return self::$analyser instanceof \Gacela\StaticAnalysis\Rules\CrossModuleViaFacadeAnalyser ? self::$analyser->analyse($node, $class) : [];
     }
 }

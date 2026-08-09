@@ -49,6 +49,42 @@ If you only need the reset helpers inside an existing test hierarchy, use the
 [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait
 directly — `GacelaTestCase` builds on it.
 
+## Replacing another module
+
+Testing module A in isolation means replacing module B. A container binding only
+works when B's Facade arrives through a Provider, and a consumer that writes
+`new BlogFacade()` leaves nothing to bind — so the seam is the **Factory** every
+Facade resolves:
+
+```php
+$this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {
+    public function createPostReader(): PostReader
+    {
+        return new InMemoryPostReader(['a post']);
+    }
+});
+
+(new CheckoutFacade())->summary();  // reaches the double, not the real Blog
+```
+
+- `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()` all take
+  the **Facade** class: that is the name a consumer already knows, and the one
+  the resolver derives a module's pillars from.
+- Any object of the right pillar type works — an anonymous subclass, or a PHPUnit
+  stub (`$this->createStub(BlogFactory::class)`).
+- The swap survives repeated resolutions, and applies to a module that was
+  already resolved earlier in the same test.
+- Swapping the same module twice keeps the last double.
+- Every swap is dropped in `tearDown()`, so the next test sees the real module
+  again whatever order the suite runs in.
+
+Naming a class that is not a Facade — the Factory itself, or a typo — throws a
+`ModuleDoubleException` rather than registering a double nothing would ever read.
+
+This replaces reaching into `AnonymousGlobal::overrideExistingResolvedClass()`,
+which needed the resolver's key format and left the Facade's memoised Factory in
+place.
+
 ## Scaffolding a testable module
 
 `make:module` can scaffold a module already wired for testing:

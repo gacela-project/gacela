@@ -17,8 +17,8 @@
 
 ### Removed
 
-- Drop the `gacela-project/phpstan-extension` suggestion: its one rule is now built in, and it
-  cannot load against the PHPStan version Gacela requires
+- Drop the `gacela-project/phpstan-extension` suggestion. The package is abandoned: its one rule
+  is built in, and it cannot load against the PHPStan version Gacela requires
 
 ### Fixed
 

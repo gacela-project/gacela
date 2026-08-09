@@ -101,6 +101,10 @@ final class StaticStateCoverageTest extends TestCase
         'ClassValidator::$existsCache' => 'partial by design: resetCache() drops the negative answers, because a class that did not exist may now be loadable, and keeps the positive ones, because a loaded class cannot unload',
         'EventDispatcherProvider::$preBootstrapDispatcher' => 'not state: a shared NullEventDispatcher that keeps dispatch sites silent before a resolver exists. It has no fields, so there is nothing in it to go stale. The dispatcher and resolver beside it are cleared',
         'Profiler::$instance' => 'observation lifetime, not cache lifetime: the profiler is opt-in and accumulates measurements across a run on purpose. Clearing it on a cache reset would discard the profile the app asked for, half-way through collecting it',
+        'ClassRules::$classAnalysers' => 'pure memoization, and not in a gacela process at all: the architecture rules psalm runs, built once because the handler is called for every class-like it analyses. They hold only their own configuration, and resetCache() belongs to an application runtime this never shares',
+        'ClassRules::$facadeMethods' => 'pure memoization, as above: the one rule that judges a method rather than a class',
+        'CrossModuleRules::$analyser' => "configuration: the boundary check psalm was asked to run, read from the consumer's <crossModule> element at plugin registration. Nothing re-establishes it, so clearing it would silently turn the rule off",
+        'CrossModuleCallRules::$analyser' => 'configuration: the other half of the same check, registered from the same element',
     ];
 
     protected function tearDown(): void

@@ -161,6 +161,29 @@ final class StubsPublishCommandTest extends TestCase
         self::assertStringContainsString('matches no template', $tester->getDisplay());
     }
 
+    /**
+     * The scan has to descend one level: the service set lives in a
+     * subdirectory, so a typo there is exactly as invisible as one at the top.
+     */
+    public function test_doctor_reports_a_stub_nothing_reads_in_a_subdirectory(): void
+    {
+        $this->publishStub('service/facade-makr.txt', '<?php // typo, one level down');
+
+        $tester = $this->execute(new DoctorCommand());
+
+        self::assertStringContainsString('service/facade-makr.txt', $tester->getDisplay());
+        self::assertStringContainsString('matches no template', $tester->getDisplay());
+    }
+
+    public function test_doctor_accepts_a_published_service_stub(): void
+    {
+        $this->publishStub('service/facade-maker.txt', '<?php namespace $NAMESPACE$; class $CLASS_NAME$ {}');
+
+        $tester = $this->execute(new DoctorCommand());
+
+        self::assertStringContainsString('1 published stub(s), all usable', $tester->getDisplay());
+    }
+
     public function test_doctor_is_quiet_when_nothing_is_published(): void
     {
         $tester = $this->execute(new DoctorCommand());

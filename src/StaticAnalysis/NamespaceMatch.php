@@ -20,4 +20,18 @@ final class NamespaceMatch
     {
         return $candidate === $namespace || str_starts_with($candidate, $namespace . '\\');
     }
+
+    /**
+     * @param list<string> $namespaces
+     */
+    public static function anyCovers(array $namespaces, string $candidate): bool
+    {
+        foreach ($namespaces as $namespace) {
+            if (self::covers($namespace, $candidate)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

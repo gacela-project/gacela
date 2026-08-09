@@ -153,7 +153,7 @@ final class DebugGraphCommand extends Command
             $output->writeln($this->checkReportAsJson($cycleResult, $ruleResult));
         } else {
             $this->writeCycleReport($cycles, $allowList, $cycleResult, $output);
-            $this->writeRuleReport($ruleResult, $rules->isEmpty(), $output);
+            $this->writeRuleReport($ruleResult, $rules, $output);
         }
 
         return $cycleResult->isClean() && $ruleResult->isClean() ? self::SUCCESS : self::FAILURE;
@@ -235,7 +235,7 @@ final class DebugGraphCommand extends Command
      * Silent when no rules were declared: a green line about a check that never
      * ran is the thing this whole file is written against.
      */
-    private function writeRuleReport(ModuleRuleCheckResult $result, bool $noRulesDeclared, OutputInterface $output): void
+    private function writeRuleReport(ModuleRuleCheckResult $result, ModuleRuleSet $rules, OutputInterface $output): void
     {
         foreach ($result->violations as $violation) {
             $output->writeln(sprintf(
@@ -253,7 +253,7 @@ final class DebugGraphCommand extends Command
             ));
         }
 
-        if ($noRulesDeclared) {
+        if ($rules->isEmpty()) {
             return;
         }
 

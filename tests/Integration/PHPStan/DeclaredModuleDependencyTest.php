@@ -6,8 +6,6 @@ namespace GacelaTest\Integration\PHPStan;
 
 use Override;
 
-use function str_contains;
-
 /**
  * Runs PHPStan for real over the same fixture and the same rules file that
  * {@see \GacelaTest\Integration\Psalm\DeclaredModuleDependencyTest} hands Psalm.
@@ -22,11 +20,8 @@ final class DeclaredModuleDependencyTest extends PhpStanFixtureTestCase
     {
         $errors = $this->analyseFixture();
 
-        self::assertTrue(
-            str_contains($errors, 'must not depend on')
-            && str_contains($errors, 'fixture: payment must not reach back-office'),
-            'PHPStan did not report the denied dependency. Output: ' . $errors,
-        );
+        self::assertStringContainsString('must not depend on', $errors);
+        self::assertStringContainsString('fixture: payment must not reach back-office', $errors);
     }
 
     public function test_the_finding_is_reported_on_the_class_that_creates_the_edge(): void

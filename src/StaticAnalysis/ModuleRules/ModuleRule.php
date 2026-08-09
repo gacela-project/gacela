@@ -17,13 +17,13 @@ use Gacela\StaticAnalysis\NamespaceMatch;
 final class ModuleRule
 {
     /**
-     * @param list<string>|null $allow the only modules reachable, or null when this is a deny rule
-     * @param list<string>|null $deny  the modules that may not be reached, or null when this is an allow rule
+     * @param list<string> $namespaces  what the rule names -- forbidden, or exclusively permitted
+     * @param bool         $isAllowList which of the two the list means
      */
     private function __construct(
         public readonly string $from,
-        private readonly ?array $allow,
-        private readonly ?array $deny,
+        private readonly array $namespaces,
+        private readonly bool $isAllowList,
         public readonly string $reason,
     ) {
     }
@@ -33,7 +33,7 @@ final class ModuleRule
      */
     public static function deny(string $from, array $namespaces, string $reason): self
     {
-        return new self($from, null, $namespaces, $reason);
+        return new self($from, $namespaces, false, $reason);
     }
 
     /**
@@ -42,7 +42,7 @@ final class ModuleRule
      */
     public static function allow(string $from, array $namespaces, string $reason): self
     {
-        return new self($from, $namespaces, null, $reason);
+        return new self($from, $namespaces, true, $reason);
     }
 
     /**
@@ -56,8 +56,8 @@ final class ModuleRule
 
     public function forbids(string $module): bool
     {
-        if ($this->deny !== null) {
-            return $this->covers($this->deny, $module);
+        if (!$this->isAllowList) {
+            return NamespaceMatch::anyCovers($this->namespaces, $module);
         }
 
         // Reaching deeper into the declaring module's own tree is not a
@@ -66,7 +66,7 @@ final class ModuleRule
             return false;
         }
 
-        return !$this->covers($this->allow ?? [], $module);
+        return !NamespaceMatch::anyCovers($this->namespaces, $module);
     }
 
     /**
@@ -74,20 +74,6 @@ final class ModuleRule
      */
     public function namespaces(): array
     {
-        return [$this->from, ...($this->deny ?? $this->allow ?? [])];
-    }
-
-    /**
-     * @param list<string> $namespaces
-     */
-    private function covers(array $namespaces, string $module): bool
-    {
-        foreach ($namespaces as $namespace) {
-            if (NamespaceMatch::covers($namespace, $module)) {
-                return true;
-            }
-        }
-
-        return false;
+        return [$this->from, ...$this->namespaces];
     }
 }

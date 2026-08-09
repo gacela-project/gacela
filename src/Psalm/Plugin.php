@@ -32,12 +32,29 @@ final class Plugin implements PluginEntryPointInterface
         require_once __DIR__ . '/ClassRules.php';
         require_once __DIR__ . '/CrossModuleRules.php';
         require_once __DIR__ . '/CrossModuleCallRules.php';
+        require_once __DIR__ . '/DeclaredModuleDependencyRules.php';
 
         $registration->registerHooksFromClass(ServiceMapPseudoMethods::class);
         $registration->registerHooksFromClass(ProvidedDependencyReturnType::class);
         $registration->registerHooksFromClass(ClassRules::class);
 
         $this->registerCrossModule($registration, CrossModuleSettings::fromPluginConfig($config));
+        $this->registerModuleRules($registration, ModuleRulesSettings::fromPluginConfig($config));
+    }
+
+    /**
+     * Configured even when there is nothing to configure, so the state is what
+     * the current config says rather than what an earlier one left.
+     */
+    private function registerModuleRules(PluginRegistrationSocket $registration, ?ModuleRulesSettings $settings): void
+    {
+        DeclaredModuleDependencyRules::configure($settings);
+
+        if (!$settings instanceof ModuleRulesSettings) {
+            return;
+        }
+
+        $registration->registerHooksFromClass(DeclaredModuleDependencyRules::class);
     }
 
     private function registerCrossModule(PluginRegistrationSocket $registration, ?CrossModuleSettings $settings): void

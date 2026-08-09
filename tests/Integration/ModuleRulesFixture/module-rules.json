@@ -1,0 +1,9 @@
+{
+    "rules": [
+        {
+            "from": "GacelaTest\\Integration\\ModuleRulesFixture\\Payment",
+            "deny": ["GacelaTest\\Integration\\ModuleRulesFixture\\Admin"],
+            "reason": "fixture: payment must not reach back-office"
+        }
+    ]
+}

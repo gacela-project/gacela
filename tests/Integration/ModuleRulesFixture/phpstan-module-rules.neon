@@ -1,0 +1,15 @@
+services:
+    -
+        class: Gacela\PHPStan\Rules\DeclaredModuleDependencyRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Integration\ModuleRulesFixture
+            rulesFile: %currentWorkingDirectory%/tests/Integration/ModuleRulesFixture/module-rules.json
+            modulePathSegments: 1
+
+parameters:
+    level: max
+    paths:
+        - .
+    excludePaths:
+        - phpstan-module-rules.neon

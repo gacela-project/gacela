@@ -24,11 +24,21 @@ abstract class PhpStanFixtureTestCase extends TestCase
 {
     private const ROOT = __DIR__ . '/../../..';
 
-    private static ?string $output = null;
+    /** @var array<string, string> */
+    private static array $outputs = [];
 
     final protected function analyseFixture(): string
     {
-        return self::$output ??= $this->runPhpStan();
+        return self::$outputs[static::configPath()] ??= $this->runPhpStan();
+    }
+
+    /**
+     * The config to analyse. One per fixture set, so a set of deliberately
+     * broken classes cannot leak its findings into a test about something else.
+     */
+    protected static function configPath(): string
+    {
+        return __DIR__ . '/Fixture/phpstan-fixture.neon';
     }
 
     private function runPhpStan(): string
@@ -36,7 +46,7 @@ abstract class PhpStanFixtureTestCase extends TestCase
         $command = sprintf(
             '%s analyse -c %s --memory-limit=1G --no-progress --error-format=raw 2>&1',
             escapeshellarg(self::ROOT . '/vendor/bin/phpstan'),
-            escapeshellarg(__DIR__ . '/Fixture/phpstan-fixture.neon'),
+            escapeshellarg(static::configPath()),
         );
 
         // Through putenv rather than a `VAR=value cmd` prefix, which is posix

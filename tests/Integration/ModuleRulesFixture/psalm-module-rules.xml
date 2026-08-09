@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+    The declared-module-rules check turned on, which is the point: without a
+    moduleRules element the rule is not registered at all.
+-->
+<psalm errorLevel="1" resolveFromConfigFile="true" findUnusedBaselineEntry="false" findUnusedCode="false">
+    <projectFiles>
+        <directory name="."/>
+    </projectFiles>
+    <plugins>
+        <pluginClass class="Gacela\Psalm\Plugin">
+            <moduleRules
+                rootNamespace="GacelaTest\Integration\ModuleRulesFixture"
+                file="module-rules.json"
+                modulePathSegments="1"
+            />
+        </pluginClass>
+    </plugins>
+
+    <issueHandlers>
+        <MissingOverrideAttribute errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

@@ -29,7 +29,7 @@ root. `init` is the one that creates it.
 | `debug:config` | The effective merged configuration, after every source and override |
 | `debug:container` | Container contents — user bindings and plugins only |
 | `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable` |
-| `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--allowed-cycles`, `--compare-to` |
+| `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--allowed-cycles`, `--rules` to fail on dependencies your rules file forbids, `--compare-to` |
 
 `debug:graph --check` is the one built for CI; see
 [static analysis](static-analysis.md) for wiring it into a workflow.

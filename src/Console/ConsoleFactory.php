@@ -24,6 +24,7 @@ use Gacela\Console\Domain\ModuleGraph\MermaidGraphFormatter;
 use Gacela\Console\Domain\ModuleGraph\ModuleCycleDetector;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
+use Gacela\Console\Domain\ModuleGraph\ModuleRuleChecker;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Container\ContainerStats;
@@ -119,6 +120,11 @@ final class ConsoleFactory extends AbstractFactory
     public function createModuleCycleDetector(): ModuleCycleDetector
     {
         return new ModuleCycleDetector();
+    }
+
+    public function createModuleRuleChecker(): ModuleRuleChecker
+    {
+        return new ModuleRuleChecker();
     }
 
     public function createGraphDiffMarkdownFormatter(): GraphDiffMarkdownFormatter

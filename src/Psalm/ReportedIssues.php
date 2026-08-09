@@ -6,6 +6,7 @@ namespace Gacela\Psalm;
 
 use Gacela\Psalm\Issue\GacelaCrossModuleAccess;
 use Gacela\Psalm\Issue\GacelaCrossModuleMethodCall;
+use Gacela\Psalm\Issue\GacelaDeclaredModuleDependency;
 use Gacela\Psalm\Issue\GacelaFacadeInstantiation;
 use Gacela\Psalm\Issue\GacelaFacadeInterfaceDrift;
 use Gacela\Psalm\Issue\GacelaFacadeOnlyDelegates;
@@ -45,6 +46,7 @@ final class ReportedIssues
         'gacela.facadeInterfaceDrift' => GacelaFacadeInterfaceDrift::class,
         'gacela.crossModuleWithoutFacade' => GacelaCrossModuleAccess::class,
         'gacela.crossModuleMethodCall' => GacelaCrossModuleMethodCall::class,
+        'gacela.declaredModuleDependency' => GacelaDeclaredModuleDependency::class,
     ];
 
     /**

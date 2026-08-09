@@ -1,234 +1,26 @@
 # Static Analysis
 
-Gacela ships configs for PHPStan and Psalm covering the pillar accessors that
-`ServiceResolverAwareTrait` resolves at runtime — `getFacade()`, `getFactory()`,
-`getConfig()`.
+Gacela's architecture is a set of claims — a Facade only delegates, a Factory
+wires its own module, module A reaches module B only through B's Facade. Those
+claims are worth no more than what checks them, so the checks ship **with the
+framework**, for PHPStan and Psalm alike.
 
-## PHPStan
+Both analysers run the same rules. There is one implementation of each check in
+`Gacela\StaticAnalysis`; `Gacela\PHPStan` and `Gacela\Psalm` are thin adapters
+over it. So the two cannot drift apart on what counts as a violation, and neither
+can fall behind the framework it checks — see
+[why they ship here](#why-the-rules-ship-with-the-framework).
 
-Include in your `phpstan.neon`:
+## Setup
+
+### PHPStan
 
 ```neon
 includes:
     - vendor/gacela-project/gacela/phpstan-gacela.neon
 ```
 
-### Typed pillar accessors
-
-Declare the pillar with `#[ServiceMap]` and the accessor gets a real return type:
-
-```php
-#[ServiceMap(method: 'getFacade', className: CheckoutFacade::class)]
-final class CheckoutController
-{
-    use ServiceResolverAwareTrait;
-
-    public function __invoke(): Response
-    {
-        // PHPStan knows this is a CheckoutFacade, and checks the call on it.
-        return $this->getFacade()->placeOrder();
-    }
-}
-```
-
-This matters more than it looks. The accessor was previously *suppressed* rather
-than typed, and a suppressed call is not a checked one — it evaluates to `mixed`,
-which silently switches off analysis of everything reached through it, not just
-the accessor itself. A typo in `placeOrder()` produced no error at all.
-
-A `@method CheckoutFacade getFacade()` docblock works too — PHPStan reads those
-natively — but then the same fact is written twice, and the copies drift.
-
-**The PHPStan suppression is gone as of 2.0.** `phpstan-gacela.neon` no longer
-carries an `ignoreErrors` entry for undeclared pillar accessors, so a class that
-declares neither `#[ServiceMap]` nor a `@method` docblock has its
-`$this->getFacade()` reported as an undefined method. Psalm still ships its
-suppression in `psalm-gacela.xml` as a fallback, scheduled for removal in 3.0.
-
-### Typed provided dependencies
-
-Ask for a provided dependency by class-string and it comes back typed:
-
-```php
-// PHPStan knows this is a Clock, and checks the call on it.
-$clock = $this->getProvidedDependency(Clock::class);
-```
-
-`getProvidedDependency()` is declared as returning `mixed`, which is why call
-sites end up with a hand-written `@var` above them — an assertion the analyser
-takes on faith, and which keeps claiming the old type after the Provider
-changes. When the key *is* a class-string, the type was never unknown; it was
-discarded at the boundary.
-
-A string key (`$this->getProvidedDependency('some.service')`) still returns
-`mixed`. Nothing in the type system says what it resolves to, and inventing a
-type there would be worse than `mixed` — a guess the analyser then trusts.
-
-The Psalm plugin does the same; see [Psalm](#psalm) below.
-
-A Factory may also declare its dependencies in its **constructor**; pillars are
-resolved through the container, so autowiring applies to the Factory itself:
-
-```php
-final class CheckoutFactory extends AbstractFactory
-{
-    public function __construct(
-        private readonly Clock $clock,
-    ) {
-    }
-}
-```
-
-### Facade interfaces
-
-If you type-hint against a `*FacadeInterface` rather than the concrete facade,
-`FacadeInterfaceInSyncRule` keeps the pair honest: a public facade method missing
-from the interface is reported.
-
-Only that direction can drift. PHP already rejects a class that fails to
-implement an interface method, so the interface cannot gain a method the facade
-lacks — but the facade grows public methods the interface never hears about, and
-consumers holding the interface silently cannot reach them. That stays invisible
-until someone compares the two files, and by then the fix is a breaking change.
-
-The rule is on by default and self-limiting: it only fires for a facade that
-explicitly implements the interface named after it (`FooFacade` implements
-`FooFacadeInterface`). A facade that implements unrelated interfaces, or none,
-is not checked.
-
-### Module boundaries
-
-The bundled `CrossModuleViaFacadeRule` enforces gacela's core architecture rule
-statically: module A may only reach module B through B's Facade. It is opt-in —
-register it with your project's root namespace:
-
-```neon
-services:
-    -
-        class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            rootNamespace: App\Modules
-            modulePathSegments: 1     # how many segments under the root identify a module
-            sharedNamespaces:         # optional shared kernels, exempt from the check
-                - App\Modules\Shared
-```
-
-- Any `new`, static call, class-constant or static-property reference from one
-  module into another is reported unless the referenced class is a `*Facade`.
-- `sharedNamespaces` entries are exempt in both directions: references into
-  them are always allowed, and classes inside them are not checked. Matching is
-  namespace-boundary aware (`App\Modules\Shared` does not exempt
-  `App\Modules\SharedFoo`).
-
-That rule matches names **written at the call site**, which is not how a boundary
-is usually crossed once dependencies go through Providers and constructors:
-
-```php
-public function __construct(
-    private readonly InvoiceRepository $invoices,  // App\Billing — another module
-) {
-}
-
-public function createProcessor(): Processor
-{
-    return new Processor($this->invoices->findAll());  // names nothing here
-}
-```
-
-`CrossModuleMethodCallRule` is the other half. It resolves the receiver of a
-method call by **type**, so the call above is reported even though the class is
-named only once, in a type-hint. Register it alongside the first, with the same
-arguments:
-
-```neon
-services:
-    -
-        class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
-        tags: [phpstan.rules.rule]
-        arguments:
-            rootNamespace: App\Modules
-            modulePathSegments: 1
-            sharedNamespaces:
-                - App\Modules\Shared
-```
-
-- A call on a `*Facade` **or a `*FacadeInterface`** is allowed — consumers
-  type-hint the interface, which is the same sanctioned crossing.
-  `CrossModuleViaFacadeRule` accepts only `*Facade`, because a written
-  `SomeFacadeInterface::class` reference is not a call through one.
-- A receiver PHPStan cannot resolve is not reported. An unknown type is not
-  evidence of a violation, and guessing there would make the rule noise.
-- The finding has its own identifier, `gacela.crossModuleMethodCall`, so it can
-  be suppressed separately while a codebase catches up.
-
-With both rules on, one line can produce two findings —
-`(new ShopService())->run()` both names the other module and calls into it. They
-are two crossings and each has its own correction, so both are reported.
-
-To see the actual module dependency graph of your app, run
-`vendor/bin/gacela debug:graph` (formats: `text`, `mermaid`, `graphviz`, `json`).
-
-### Failing on dependency cycles
-
-`debug:graph --check` exits non-zero when two modules depend on each other:
-
-```bash
-vendor/bin/gacela debug:graph --check
-```
-
-A cycle is either a decision somebody made or a mistake nobody noticed, and
-until the decision is written down those are the same thing. Write it down in a
-JSON file and pass it in:
-
-```json
-[
-    {
-        "modules": ["App\\Billing", "App\\Invoicing"],
-        "reason": "reviewed 2026-07: bidirectional by design until the shared kernel lands"
-    }
-]
-```
-
-```bash
-vendor/bin/gacela debug:graph --check --allowed-cycles=allowed-module-cycles.json
-```
-
-The allow list is **self-invalidating**: an entry that no longer matches a real
-cycle fails the check just as loudly as an undeclared cycle. That is deliberate.
-An allow-list that outlives what it allows stops being a record of a decision
-and becomes a mute button, and nothing would tell you it had happened. A `reason`
-is required for the same reason — an allowance nobody justified is
-indistinguishable from a cycle nobody noticed.
-
-`debug:graph` with no `--check` stays exit-code-neutral, so adding the gate does
-not change what the command already did.
-
-### Reviewing graph changes in CI
-
-A new cross-module edge enters a pull request as one more `use` statement, which
-is exactly as visible as every other import. `--compare-to` turns it into
-something a reviewer can see:
-
-```bash
-# on the base branch
-vendor/bin/gacela debug:graph --format=json > base-graph.json
-
-# on the branch under review
-vendor/bin/gacela debug:graph --compare-to=base-graph.json > graph-diff.md
-```
-
-The report is GitHub-flavoured markdown with a mermaid block GitHub renders
-natively in a comment, listing new and removed dependencies and drawing only the
-modules the change touches. When the graph is unchanged it writes **nothing** and
-exits `0` — so a CI job can test the file for emptiness and stay quiet on the
-pull requests that did not move the graph. An unreadable or invalid baseline
-exits `1`: that is a broken setup, not an unchanged graph, and the two must not
-look alike.
-
-`.github/workflows/module-graph.yml` in this repository is a working example.
-
-## Psalm
+### Psalm
 
 ```xml
 <?xml version="1.0"?>
@@ -265,60 +57,43 @@ scope:
 return new YourService($this->getConfig());
 ```
 
-### Type the pillar accessors instead of suppressing them
+The `<plugins>` block cannot be delivered through the XInclude: XInclude replaces
+a single element, and `<plugins>` lives elsewhere in your config. It is also the
+part that matters — `psalm-gacela.xml` only *suppresses* `UndefinedMagicMethod`,
+and a suppressed call is not a checked one. The plugin replaces the suppression
+with real types.
 
-`psalm-gacela.xml` only *suppresses* `UndefinedMagicMethod`. A suppressed call
-is not a typed one — it evaluates to `mixed`, which switches off checking of
-everything reached through the accessor. The `<plugins>` block above is what
-replaces that with a real return type from `#[ServiceMap]`:
+## What is checked
 
-```xml
-<plugins>
-    <pluginClass class="Gacela\Psalm\Plugin"/>
-</plugins>
+Each rule reports under a PHPStan error identifier and a Psalm issue class; both
+are what you suppress on, so a rule can be turned off on its own.
+
+| Check | PHPStan identifier | Psalm issue | |
+|---|---|---|---|
+| `*Facade`/`*Factory`/`*Provider`/`*Config` extends its pillar base | `gacela.suffixExtends` | `GacelaSuffixExtends` | on |
+| A Facade method only delegates | `gacela.facadeOnlyDelegates` | `GacelaFacadeOnlyDelegates` | on |
+| A Factory does not `new` a Facade | `gacela.factoryInstantiatesFacade` | `GacelaFacadeInstantiation` | on |
+| A Factory does not call `$this->getFacade()` | `gacela.factoryCallsGetFacade` | `GacelaFactoryFacadeAccess` | on |
+| A Facade's public methods are in its `*FacadeInterface` | `gacela.facadeInterfaceDrift` | `GacelaFacadeInterfaceDrift` | on |
+| A cross-module reference the source **names** | `gacela.crossModuleWithoutFacade` | `GacelaCrossModuleAccess` | opt-in |
+| A cross-module call the source does **not** name | `gacela.crossModuleMethodCall` | `GacelaCrossModuleMethodCall` | opt-in |
+
+On top of the rules, both analysers gain two **types** they otherwise lack: the
+pillar accessors, and `getProvidedDependency()` by class-string.
+
+Suppressing one rule:
+
+```neon
+# phpstan.neon
+parameters:
+    ignoreErrors:
+        -
+            identifier: gacela.suffixExtends
+            path: src/Legacy/*
 ```
 
-It reads `#[ServiceMap(method: 'getFacade', className: MyFacade::class)]` off
-the calling class and declares `getFacade()` as returning `MyFacade`, so calls
-made *on* the resolved facade are checked. This is the Psalm counterpart of the
-PHPStan extension in `phpstan-gacela.neon`.
-
-The plugin cannot be delivered through the XInclude above: XInclude replaces a
-single element, and `<plugins>` lives elsewhere in your config.
-
-### Typed provided dependencies
-
-The same `<plugins>` block also types `getProvidedDependency()` when the key is a
-class-string, so the `@var` above every call site can go:
-
-```php
-// Psalm knows this is a Clock, and checks the call on it.
-$clock = $this->getProvidedDependency(Clock::class);
-```
-
-A string key (`'some.service'`) still returns `mixed`, exactly as under PHPStan.
-Nothing in the type system says what it resolves to, and a guess would be worse
-than `mixed`: `mixed` is honestly unknown, a guess is confidently wrong and then
-trusted.
-
-### Architecture rules
-
-The same `<plugins>` block enforces the pillar rules, the ones PHPStan gets from
-`phpstan-gacela.neon`. They are on by default and share their implementation with
-the PHPStan side, so the two analysers cannot drift apart on what counts as a
-violation.
-
-| Issue | Reports |
-|---|---|
-| `GacelaSuffixExtends` | a `*Facade`/`*Factory`/`*Provider`/`*Config` not extending its pillar base |
-| `GacelaFacadeOnlyDelegates` | inline logic in a facade method |
-| `GacelaFacadeInstantiation` | a factory building a Facade with `new` |
-| `GacelaFactoryFacadeAccess` | a factory calling `$this->getFacade()` |
-| `GacelaFacadeInterfaceDrift` | a public facade method missing from its `*FacadeInterface` |
-
-Each is its own issue type, so one can be turned off without losing the rest:
-
 ```xml
+<!-- psalm.xml -->
 <issueHandlers>
     <PluginIssue name="GacelaSuffixExtends">
         <errorLevel type="suppress">
@@ -328,16 +103,141 @@ Each is its own issue type, so one can be turned off without losing the rest:
 </issueHandlers>
 ```
 
-`psalm.xml` in this repository is a working example: Gacela analyses itself with
-the plugin it ships, and suppresses `GacelaSuffixExtends` under `src/Framework`
-for the same reason `phpstan.neon` does — the framework internals reuse the
-pillar words for things that are not pillars.
+## Typed pillar accessors
 
-### Module boundaries
+Declare the pillar with `#[ServiceMap]` and the accessor gets a real return type
+under both analysers:
 
-The cross-module check is opt-in for the same reason it is under PHPStan: nothing
-in a class name says where a module boundary falls. Turn it on by giving the
-plugin your root namespace:
+```php
+#[ServiceMap(method: 'getFacade', className: CheckoutFacade::class)]
+final class CheckoutController
+{
+    use ServiceResolverAwareTrait;
+
+    public function __invoke(): Response
+    {
+        // Both analysers know this is a CheckoutFacade, and check the call on it.
+        return $this->getFacade()->placeOrder();
+    }
+}
+```
+
+This matters more than it looks. The accessor was previously *suppressed* rather
+than typed, and a suppressed call is not a checked one — it evaluates to `mixed`,
+which silently switches off analysis of everything reached through it, not just
+the accessor itself. A typo in `placeOrder()` produced no error at all.
+
+A `@method CheckoutFacade getFacade()` docblock works too — both analysers read
+those natively — but then the same fact is written twice, and the copies drift.
+
+**The PHPStan suppression is gone as of 2.0.** `phpstan-gacela.neon` no longer
+carries an `ignoreErrors` entry for undeclared pillar accessors, so a class that
+declares neither `#[ServiceMap]` nor a `@method` docblock has its
+`$this->getFacade()` reported as an undefined method. Psalm still ships its
+suppression in `psalm-gacela.xml` as a fallback, scheduled for removal in 3.0.
+
+## Typed provided dependencies
+
+Ask for a provided dependency by class-string and it comes back typed:
+
+```php
+// Both analysers know this is a Clock, and check the call on it.
+$clock = $this->getProvidedDependency(Clock::class);
+```
+
+`getProvidedDependency()` is declared as returning `mixed`, which is why call
+sites end up with a hand-written `@var` above them — an assertion the analyser
+takes on faith, and which keeps claiming the old type after the Provider changes.
+When the key *is* a class-string, the type was never unknown; it was discarded at
+the boundary.
+
+A string key (`$this->getProvidedDependency('some.service')`) still returns
+`mixed`. Nothing in the type system says what it resolves to, and a guess would
+be worse than `mixed`: `mixed` is honestly unknown, a guess is confidently wrong
+and then trusted.
+
+A Factory may also declare its dependencies in its **constructor**; pillars are
+resolved through the container, so autowiring applies to the Factory itself:
+
+```php
+final class CheckoutFactory extends AbstractFactory
+{
+    public function __construct(
+        private readonly Clock $clock,
+    ) {
+    }
+}
+```
+
+## Facade interfaces
+
+If you type-hint against a `*FacadeInterface` rather than the concrete facade,
+the interface-drift rule keeps the pair honest: a public facade method missing
+from the interface is reported.
+
+Only that direction can drift. PHP already rejects a class that fails to
+implement an interface method, so the interface cannot gain a method the facade
+lacks — but the facade grows public methods the interface never hears about, and
+consumers holding the interface silently cannot reach them. That stays invisible
+until someone compares the two files, and by then the fix is a breaking change.
+
+The rule is on by default and self-limiting: it only fires for a facade that
+explicitly implements the interface named after it (`FooFacade` implements
+`FooFacadeInterface`). A facade that implements unrelated interfaces, or none,
+is not checked.
+
+## Module boundaries
+
+Module A may only reach module B through B's Facade. This is the one check that
+cannot be on by default: nothing in a class name says where a module boundary
+falls, so it needs your root namespace.
+
+It comes in **two halves, meant to be enabled together**.
+
+The first matches the module names a source *writes* — a `new`, a static call, a
+class constant, a static property. The second resolves the receiver of a method
+call by **type**, because that is how a boundary actually gets crossed once
+dependencies go through Providers and constructors:
+
+```php
+public function __construct(
+    private readonly InvoiceRepository $invoices,  // App\Billing — another module
+) {
+}
+
+public function createProcessor(): Processor
+{
+    return new Processor($this->invoices->findAll());  // names nothing here
+}
+```
+
+The class appears once, in a type-hint. A check that only matched written names
+would report green on exactly the codebases most likely to be crossing
+boundaries.
+
+### PHPStan
+
+```neon
+services:
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: App\Modules
+            modulePathSegments: 1     # how many segments under the root identify a module
+            sharedNamespaces:         # optional shared kernels, exempt from the check
+                - App\Modules\Shared
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: App\Modules
+            modulePathSegments: 1
+            sharedNamespaces:
+                - App\Modules\Shared
+```
+
+### Psalm
 
 ```xml
 <plugins>
@@ -349,20 +249,137 @@ plugin your root namespace:
 </plugins>
 ```
 
-Both halves go on together — `GacelaCrossModuleAccess` for the references a
-source names, `GacelaCrossModuleMethodCall` for the receivers it does not — and
-they behave exactly as `CrossModuleViaFacadeRule` and
-`CrossModuleMethodCallRule` do under PHPStan.
-
 A `<crossModule>` without a `rootNamespace` is a configuration error and stops
 the run. A rule that quietly does nothing is worse than no rule: it reads as a
 green check, and nothing would ever tell you the boundary went unchecked.
 
+### What it accepts
+
+- `sharedNamespaces` entries are exempt in both directions: references into them
+  are always allowed, and classes inside them are not checked. Matching is
+  namespace-boundary aware — `App\Modules\Shared` does not exempt
+  `App\Modules\SharedFoo`.
+- A **call** on a `*Facade` or a `*FacadeInterface` is allowed; consumers
+  type-hint the interface, which is the same sanctioned crossing. A **written
+  reference** is allowed only for `*Facade`, because naming
+  `SomeFacadeInterface::class` is not a call through one.
+- A receiver the analyser cannot resolve is not reported. An unknown type is not
+  evidence of a violation, and guessing there would make the rule noise.
+- One line can produce two findings — `(new ShopService())->run()` both names the
+  other module and calls into it. Those are two crossings with two corrections,
+  so both are reported.
+
+To see the actual module dependency graph of your app, run
+`vendor/bin/gacela debug:graph` (formats: `text`, `mermaid`, `graphviz`, `json`).
+
+## Failing on dependency cycles
+
+`debug:graph --check` exits non-zero when two modules depend on each other:
+
+```bash
+vendor/bin/gacela debug:graph --check
+```
+
+A cycle is either a decision somebody made or a mistake nobody noticed, and
+until the decision is written down those are the same thing. Write it down in a
+JSON file and pass it in:
+
+```json
+[
+    {
+        "modules": ["App\\Billing", "App\\Invoicing"],
+        "reason": "reviewed 2026-07: bidirectional by design until the shared kernel lands"
+    }
+]
+```
+
+```bash
+vendor/bin/gacela debug:graph --check --allowed-cycles=allowed-module-cycles.json
+```
+
+The allow list is **self-invalidating**: an entry that no longer matches a real
+cycle fails the check just as loudly as an undeclared cycle. That is deliberate.
+An allow-list that outlives what it allows stops being a record of a decision
+and becomes a mute button, and nothing would tell you it had happened. A `reason`
+is required for the same reason — an allowance nobody justified is
+indistinguishable from a cycle nobody noticed.
+
+`debug:graph` with no `--check` stays exit-code-neutral, so adding the gate does
+not change what the command already did.
+
+## Reviewing graph changes in CI
+
+A new cross-module edge enters a pull request as one more `use` statement, which
+is exactly as visible as every other import. `--compare-to` turns it into
+something a reviewer can see:
+
+```bash
+# on the base branch
+vendor/bin/gacela debug:graph --format=json > base-graph.json
+
+# on the branch under review
+vendor/bin/gacela debug:graph --compare-to=base-graph.json > graph-diff.md
+```
+
+The report is GitHub-flavoured markdown with a mermaid block GitHub renders
+natively in a comment, listing new and removed dependencies and drawing only the
+modules the change touches. When the graph is unchanged it writes **nothing** and
+exits `0` — so a CI job can test the file for emptiness and stay quiet on the
+pull requests that did not move the graph. An unreadable or invalid baseline
+exits `1`: that is a broken setup, not an unchanged graph, and the two must not
+look alike.
+
+`.github/workflows/module-graph.yml` in this repository is a working example.
+
+## Why the rules ship with the framework
+
+Rather than as separate `phpstan-extension` / `psalm-plugin` packages, which is
+the more usual arrangement. Three reasons, and one piece of evidence.
+
+**One implementation per rule.** `Gacela\StaticAnalysis` holds the checks;
+`Gacela\PHPStan` and `Gacela\Psalm` adapt them to a host. Split the adapters into
+separate packages and that shared core has to live somewhere — back here anyway,
+in a third package, or duplicated. Two copies of "what counts as the same module"
+would drift, which is the failure the interface-drift rule exists to catch.
+
+**Gacela analyses itself with them.** `phpstan.neon` includes
+`phpstan-gacela.neon` and `psalm.xml` registers the plugin, so every rule runs
+against the framework's own source on every build. Separate packages make that a
+circular dependency, and a rule nobody runs is a rule nobody notices breaking.
+
+**Lockstep is the point.** These rules name `AbstractFacade`, `AbstractFactory`
+and the rest. They are a description of this framework's architecture at this
+version, not a general-purpose tool with its own release cycle.
+
+**The evidence:** `gacela-project/phpstan-extension` was that separate package.
+It stopped at PHPStan 1, builds errors without the identifiers PHPStan 2
+requires, and so cannot load against the PHPStan version Gacela itself needs. Its
+one rule now lives here as `CrossModuleMethodCallRule`.
+
+## Migrating from `gacela-project/phpstan-extension`
+
+That package is abandoned. Everything it did is built in, and more.
+
+```bash
+composer remove --dev gacela-project/phpstan-extension
+```
+
+| `phpstan-extension` | Built in |
+|---|---|
+| `includes: …/phpstan-extension/extension.neon` | `includes: …/gacela/phpstan-gacela.neon` |
+| `parameters.gacela.modulesNamespace` | `rootNamespace`, on the two cross-module rules |
+| `parameters.gacela.excludedNamespaces` | `sharedNamespaces`, on the same two rules |
+
+Its `EnforceModuleBoundariesForMethodCallRule` is `CrossModuleMethodCallRule`
+here, and the boundary check now has a second half — the references a source
+names — that the package never covered. See
+[Module boundaries](#module-boundaries) for the configuration.
 
 ## Troubleshooting
 
 - **PHPStan can't find the file** — verify the include path resolves relative to your `phpstan.neon`.
 - **Psalm ignores the include** — ensure `xmlns:xi="http://www.w3.org/2001/XInclude"` is declared, then `vendor/bin/psalm --clear-cache`.
+- **A rule fires on the framework's own words** — `GacelaConfig` is a bootstrap builder, not a pillar. `psalm.xml` and `phpstan.neon` in this repository show the scoped suppression.
 
 ## See also
 

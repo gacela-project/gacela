@@ -47,6 +47,7 @@ use Symfony\Component\Console\Command\Command;
 
 use function is_dir;
 use function is_string;
+use function preg_match;
 use function sprintf;
 use function str_starts_with;
 use function strlen;
@@ -110,7 +111,7 @@ final class ConsoleFactory extends AbstractFactory
         $config = Config::getInstance();
         $configured = $config->getSetupGacela()->getStubsDir();
 
-        return str_starts_with($configured, DIRECTORY_SEPARATOR) || str_starts_with($configured, '/')
+        return $this->isAbsolutePath($configured)
             ? $configured
             : $config->getAppRootDir() . '/' . $configured;
     }
@@ -234,6 +235,16 @@ final class ConsoleFactory extends AbstractFactory
         }
 
         return $result;
+    }
+
+    /**
+     * A leading separator is not what makes a path absolute on windows: there
+     * it is `C:\...`, which starts with neither separator, and a configured
+     * absolute directory was being appended to the application root instead.
+     */
+    private function isAbsolutePath(string $path): bool
+    {
+        return preg_match('~^(?:[a-zA-Z]:[\\\\/]|[\\\\/])~', $path) === 1;
     }
 
     private function stringifyBoundConcrete(mixed $concrete): string

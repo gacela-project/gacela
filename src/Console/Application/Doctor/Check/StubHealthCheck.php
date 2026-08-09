@@ -17,6 +17,7 @@ use function is_file;
 use function is_string;
 use function sprintf;
 use function str_contains;
+use function str_replace;
 use function strlen;
 use function substr;
 
@@ -128,8 +129,13 @@ final class StubHealthCheck implements HealthCheck
     {
         $stray = [];
 
-        foreach (glob($stubsDir . '/{,*/}*.txt', GLOB_BRACE) ?: [] as $path) {
-            $relative = substr($path, strlen($stubsDir) + 1);
+        foreach ([...(glob($stubsDir . '/*.txt') ?: []), ...(glob($stubsDir . '/*/*.txt') ?: [])] as $path) {
+            // glob() answers in the platform's own separator, and the names
+            // this is compared against are written with '/'. On windows every
+            // `service/...` stub would otherwise be reported as one the
+            // scaffolder does not read.
+            $relative = str_replace('\\', '/', substr($path, strlen($stubsDir) + 1));
+
             if (!in_array($relative, StubFiles::all(), true)) {
                 $stray[] = $relative;
             }

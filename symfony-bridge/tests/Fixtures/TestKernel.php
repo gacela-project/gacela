@@ -55,6 +55,7 @@ final class TestKernel extends Kernel
 
             foreach ($this->extraServices as $id => $class) {
                 $definition = new Definition($class);
+                $definition->setArguments([CountingService::FROM_SYMFONY]);
                 $definition->setPublic(true);
                 $container->setDefinition($id, $definition);
             }

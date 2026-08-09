@@ -8,6 +8,9 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use Psr\Container\ContainerInterface;
 
+use function class_exists;
+use function interface_exists;
+
 /**
  * Bootstraps Gacela from what the Symfony kernel already knows.
  *
@@ -55,14 +58,30 @@ final class GacelaBootstrapper
     }
 
     /**
-     * Through a closure, so a Symfony service reaches Gacela without being
+     * A listed service reaches Gacela two ways, and which ones apply is decided
+     * by the key the project chose.
+     *
+     * Every key becomes an external service: that is what a project's own
+     * `gacela.php` reads through `getExternalService()` when it declares its
+     * bindings. A key that *names a type* additionally becomes a binding, so
+     * `LoggerInterface::class => 'monolog.logger'` is resolvable on its own --
+     * by `Gacela::get()`, by autowiring, by `#[Inject]`. Bindings map types to
+     * implementations, so a key like `logger` has no business being one.
+     *
+     * Both take a closure, so a Symfony service reaches Gacela without being
      * constructed by the act of configuring it: a bridge that instantiated the
      * entity manager on every boot would cost more than it saves.
      */
     private function applyExternalServices(GacelaConfig $config): void
     {
         foreach ($this->externalServices as $key => $serviceId) {
-            $config->addExternalService($key, fn (): object => $this->service($serviceId));
+            $factory = fn (): object => $this->service($serviceId);
+
+            $config->addExternalService($key, $factory);
+
+            if (class_exists($key) || interface_exists($key)) {
+                $config->addBinding($key, $factory);
+            }
         }
     }
 

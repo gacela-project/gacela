@@ -52,21 +52,38 @@ Gacela's own defaults in place.
 
 ### External services
 
-`external_services` maps a Gacela key to a Symfony service id, so a Factory can
-reach it:
+`external_services` maps a key to a Symfony service id. What the key *is*
+decides how far the service travels:
+
+```yaml
+gacela:
+    external_services:
+        Psr\Log\LoggerInterface: 'monolog.logger'   # a type: also bound
+        report_mailer: 'app.mailer'                 # a plain key: external service only
+```
+
+A key that **names a class or interface** additionally becomes a Gacela binding,
+so it resolves on its own — through `Gacela::get()`, through autowiring, through
+`#[Inject]`:
 
 ```php
-final class ReportFactory extends AbstractFactory
-{
-    public function createReporter(): Reporter
-    {
-        return new Reporter($this->getProvidedDependency('logger'));
-    }
+public function __construct(
+    #[Inject] private LoggerInterface $logger,
+) {
 }
 ```
 
-They are fetched through a service locator when Gacela asks for them, so
-listing a service does not construct it — booting the kernel stays as cheap as
+A key that names **no type** stays an external service, which is what your own
+`gacela.php` reads when it declares bindings — because a binding maps a *type*
+to an implementation, and `report_mailer` is not one:
+
+```php
+// gacela.php
+$config->addBinding(MailerInterface::class, $config->getExternalService('report_mailer'));
+```
+
+Either way the service is fetched through a service locator when Gacela asks for
+it, so listing one does not construct it — booting the kernel stays as cheap as
 it was.
 
 ### Commands

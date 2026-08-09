@@ -13,6 +13,7 @@ use Gacela\SymfonyBridge\GacelaCommands;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 use function count;
 
@@ -107,15 +108,38 @@ final class GacelaExtensionTest extends TestCase
         self::assertFalse($container->hasDefinition('gacela.command.make:module'));
     }
 
-    public function test_a_listed_external_service_is_reached_through_a_locator(): void
+    public function test_every_listed_external_service_is_reached_through_the_locator(): void
     {
-        $container = $this->load([['external_services' => ['logger' => 'monolog.logger']]]);
+        $container = $this->load([['external_services' => [
+            'logger' => 'monolog.logger',
+            'em' => 'doctrine.orm.entity_manager',
+        ]]]);
 
         $arguments = $container->getDefinition(GacelaExtension::BOOTSTRAPPER_ID)->getArguments();
 
-        self::assertSame(['logger' => 'monolog.logger'], $arguments[3]);
+        self::assertSame(['logger' => 'monolog.logger', 'em' => 'doctrine.orm.entity_manager'], $arguments[3]);
+
         self::assertInstanceOf(Definition::class, $arguments[2]);
         self::assertArrayHasKey('container.service_locator', $arguments[2]->getTags());
+
+        // Every listed id, not just the first: the locator is what the
+        // bootstrapper can reach, and a service missing from it is a service
+        // the project listed and cannot use.
+        self::assertEquals(
+            [
+                'monolog.logger' => new Reference('monolog.logger'),
+                'doctrine.orm.entity_manager' => new Reference('doctrine.orm.entity_manager'),
+            ],
+            $arguments[2]->getArgument(0),
+        );
+    }
+
+    public function test_a_project_that_lists_nothing_gets_an_empty_locator(): void
+    {
+        $arguments = $this->load()->getDefinition(GacelaExtension::BOOTSTRAPPER_ID)->getArguments();
+
+        self::assertInstanceOf(Definition::class, $arguments[2]);
+        self::assertSame([], $arguments[2]->getArgument(0));
     }
 
     /**

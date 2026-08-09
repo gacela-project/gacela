@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Bootstrap;
 
+use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
@@ -34,6 +35,15 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
      * @return ConfigKeyValues
      */
     public function getConfigKeyValues(): array;
+
+    /**
+     * What the application's configuration is declared to contain.
+     *
+     * @return array<string, ConfigType>
+     */
+    public function getConfigSchema(): array;
+
+    public function shouldValidateConfigSchemaOnBoot(): bool;
 
     public function getEventDispatcher(): EventDispatcherInterface;
 

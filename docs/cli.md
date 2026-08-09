@@ -26,7 +26,7 @@ root. `init` is the one that creates it.
 | `list:modules` | Renders every module found |
 | `debug:modules` | Dependency resolvability of every module pillar |
 | `debug:module App/Blog` | One module: resolved classes, container bindings, dependency tree |
-| `debug:config` | The effective merged configuration, after every source and override |
+| `debug:config` | The effective merged configuration, after every source and override, each key marked `declared`, `undeclared` or `missing` against the [schema](config-schema.md) |
 | `debug:container` | Container contents — user bindings and plugins only |
 | `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable` |
 | `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--allowed-cycles`, `--rules` to fail on dependencies your rules file forbids, `--compare-to` |
@@ -38,8 +38,8 @@ root. `init` is the one that creates it.
 
 | Command | What it does |
 |---|---|
-| `doctor` | Environmental and wiring health checks. Takes an optional namespace to restrict module-scoped checks, and `--strict` to exit non-zero on warnings too |
-| `validate:config` | Checks the configuration for errors and best-practice violations |
+| `doctor` | Environmental and wiring health checks, including the [declared config schema](config-schema.md). Takes an optional namespace to restrict module-scoped checks, and `--strict` to exit non-zero on warnings too |
+| `validate:config` | Checks the configuration for errors and best-practice violations, and against the [declared schema](config-schema.md) |
 
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see
 [module health checks](module-health-checks.md).

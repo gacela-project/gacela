@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Container\ValidationProblem;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Command\Command;
@@ -54,6 +55,8 @@ final class ValidateConfigCommand extends Command
         $hasErrors = $hasErrors || $circularDepsValidation['errors'];
         $hasWarnings = $hasWarnings || $circularDepsValidation['warnings'];
 
+        $hasErrors = $this->validateConfigSchema($output) || $hasErrors;
+
         $output->writeln('');
         ConsoleSection::separator($output);
 
@@ -73,6 +76,43 @@ final class ValidateConfigCommand extends Command
         $output->writeln('');
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * The declared configuration schema against this environment's merged
+     * values.
+     *
+     * Reading values constructs nothing, which is what keeps this command
+     * side-effect free; a missing key is an error because whatever reads it was
+     * going to fail regardless, and the only question is where.
+     */
+    private function validateConfigSchema(OutputInterface $output): bool
+    {
+        $output->writeln('<comment>Checking configuration schema...</comment>');
+
+        $config = Config::getInstance();
+        if ($config->configSchema()->isEmpty()) {
+            $output->writeln('  <fg=cyan>No schema declared</fg=cyan>');
+            $output->writeln('');
+
+            return false;
+        }
+
+        $violations = $config->configSchemaViolations();
+        foreach ($violations as $violation) {
+            $output->writeln(sprintf('  <error>✗ %s</>', $violation->message));
+        }
+
+        if ($violations === []) {
+            $output->writeln(sprintf(
+                '  <fg=green>✓ %d declared key(s), all satisfied</>',
+                count($config->configSchema()->declaredKeys()),
+            ));
+        }
+
+        $output->writeln('');
+
+        return $violations !== [];
     }
 
     /**

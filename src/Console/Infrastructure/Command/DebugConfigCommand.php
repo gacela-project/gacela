@@ -15,9 +15,11 @@ use Symfony\Component\Console\Input\InputInterface;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function array_key_exists;
 use function count;
 use function is_bool;
 use function is_scalar;
+
 use function ksort;
 
 use function sprintf;
@@ -47,7 +49,9 @@ final class DebugConfigCommand extends Command
     {
         $filter = ConsoleInput::argument($input, 'filter');
 
-        $values = Config::getInstance()->getAllValues();
+        $config = Config::getInstance();
+        $values = $config->getAllValues();
+        $schema = $config->configSchema();
         ksort($values);
 
         $rows = [];
@@ -57,7 +61,15 @@ final class DebugConfigCommand extends Command
                 continue;
             }
 
-            $rows[] = [$key, $this->renderValue($value)];
+            $rows[] = [$key, $this->renderValue($value), $schema->declares($key) ? 'declared' : 'undeclared'];
+        }
+
+        // A declared key nothing provides has no value to list, so it would
+        // otherwise be the one kind of drift this table cannot show.
+        foreach ($schema->declaredKeys() as $key) {
+            if (!array_key_exists($key, $values) && ($filter === '' || str_contains($key, $filter))) {
+                $rows[] = [$key, '<comment>—</comment>', '<error>missing</error>'];
+            }
         }
 
         if ($rows === []) {
@@ -69,7 +81,7 @@ final class DebugConfigCommand extends Command
         }
 
         $table = new Table($output);
-        $table->setHeaders(['Key', 'Value']);
+        $table->setHeaders(['Key', 'Value', 'Schema']);
         $table->setRows($rows);
         $table->render();
 

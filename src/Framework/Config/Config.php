@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Config\Schema\ConfigSchema;
+use Gacela\Framework\Config\Schema\ConfigSchemaViolation;
 use Gacela\Framework\Event\Config\ConfigInitializedEvent;
 use Gacela\Framework\Event\Config\ConfigKeyNotFoundEvent;
 use Gacela\Framework\Event\Config\ConfigKeyReadEvent;
@@ -40,6 +42,8 @@ final class Config implements ConfigInterface
     private bool $initialized = false;
 
     private ?string $cacheDir = null;
+
+    private ?ConfigSchema $configSchema = null;
 
     private function __construct(
         private readonly SetupGacelaInterface $setup,
@@ -265,17 +269,45 @@ final class Config implements ConfigInterface
     {
         $this->configFactory = null;
 
+        // Declared defaults come first: a key a source provides is that
+        // source's, and a key nobody provides is the declaration's.
         /** @psalm-suppress DuplicateArrayKey */
         $this->config = [
+            ...$this->configSchema()->defaults(),
             ...$this->loadMergedConfigValues(),
             ...$this->setup->getConfigKeyValues(),
         ];
 
         $this->initialized = true;
 
+        if ($this->setup->shouldValidateConfigSchemaOnBoot()) {
+            $this->assertConfigMatchesSchema();
+        }
+
         if (self::shouldDispatch(ConfigInitializedEvent::class)) {
             self::dispatchEvent(new ConfigInitializedEvent(count($this->config)));
         }
+    }
+
+    /**
+     * What the application declared its configuration should contain.
+     *
+     * Built once and kept: `validate:config`, `doctor` and `debug:config` all
+     * ask the same question of the same declaration.
+     */
+    public function configSchema(): ConfigSchema
+    {
+        return $this->configSchema ??= ConfigSchema::fromArray($this->setup->getConfigSchema());
+    }
+
+    /**
+     * Every declared key the merged configuration does not satisfy.
+     *
+     * @return list<ConfigSchemaViolation>
+     */
+    public function configSchemaViolations(): array
+    {
+        return $this->configSchema()->violations($this->getAllValues());
     }
 
     /**
@@ -358,6 +390,24 @@ final class Config implements ConfigInterface
     public function hasKey(string $key): bool
     {
         return array_key_exists($key, $this->config);
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    private function assertConfigMatchesSchema(): void
+    {
+        $violations = $this->configSchema()->violations($this->config);
+        if ($violations === []) {
+            return;
+        }
+
+        $messages = [];
+        foreach ($violations as $violation) {
+            $messages[] = $violation->message;
+        }
+
+        throw ConfigException::schemaViolations($messages);
     }
 
     private function notifyKeyNotFound(string $key): void

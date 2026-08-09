@@ -8,12 +8,11 @@ use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Node\InClassNode;
-use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\Rule;
 
 /**
- * Adapts a {@see ClassAnalyserInterface} to PHPStan: resolve the class from the
- * scope, hand the analyser the original AST node, map what comes back.
+ * Adapts a {@see ClassAnalyserInterface} to PHPStan: hand the analyser the
+ * original AST node and the class it belongs to, then map what comes back.
  *
  * Each rule stays a class of its own because that is how a consumer registers
  * and suppresses it -- only the adapting is shared.
@@ -36,14 +35,12 @@ abstract class InClassAnalyserRule implements Rule
 
     final public function processNode(Node $node, Scope $scope): array
     {
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof ClassReflection) {
-            return [];
-        }
-
+        // InClassNode carries the reflection itself, and non-nullably: there is
+        // no such thing as being inside a class without one. Reaching through
+        // the scope instead bought a null check that could never be true.
         return RuleErrors::from($this->analyser->analyse(
             $node->getOriginalNode(),
-            new ReflectionAnalysedClass($classReflection),
+            new ReflectionAnalysedClass($node->getClassReflection()),
         ));
     }
 }

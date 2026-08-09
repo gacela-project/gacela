@@ -31,14 +31,12 @@ final class DeclaredModuleDependencyTest extends PhpStanFixtureTestCase
     }
 
     /**
-     * The suppression key is public contract: a consumer writes it into
-     * `ignoreErrors` to turn this rule off.
+     * The suppression key is public contract, but it is not asserted here: the
+     * `raw` error format prints `[identifier=...]` in some PHPStan builds and
+     * not others, so this test would be pinning the formatter rather than the
+     * rule. It is held instead by DeclaredModuleDependencyAnalyserTest, the
+     * ReportedIssues map, and the docs table.
      */
-    public function test_the_finding_carries_its_identifier(): void
-    {
-        self::assertStringContainsString('gacela.declaredModuleDependency', $this->analyseFixture());
-    }
-
     #[Override]
     protected static function configPath(): string
     {

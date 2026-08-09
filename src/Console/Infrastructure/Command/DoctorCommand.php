@@ -94,7 +94,7 @@ final class DoctorCommand extends Command
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules),
-            new ConfigSchemaCheck($config->configSchema(), $config->configSchemaViolations()),
+            new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
         ];
 
         foreach (HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults() as $moduleName => $status) {

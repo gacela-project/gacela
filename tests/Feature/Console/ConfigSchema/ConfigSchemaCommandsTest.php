@@ -80,6 +80,17 @@ final class ConfigSchemaCommandsTest extends TestCase
         self::assertStringContainsString('db.dsn', $tester->getDisplay());
     }
 
+    public function test_doctor_counts_the_keys_it_checked(): void
+    {
+        $tester = $this->execute(new DoctorCommand(), static function (GacelaConfig $config): void {
+            $config->declareConfigSchema(['db.dsn' => ConfigType::string()->required()]);
+            $config->addAppConfigKeyValue('db.dsn', 'sqlite::memory:');
+        });
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('1 declared key(s), all satisfied', $tester->getDisplay());
+    }
+
     public function test_doctor_stays_quiet_when_nothing_is_declared(): void
     {
         $tester = $this->execute(new DoctorCommand(), static function (GacelaConfig $config): void {

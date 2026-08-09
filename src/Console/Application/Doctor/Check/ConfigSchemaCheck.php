@@ -7,7 +7,6 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Framework\Config\Schema\ConfigSchema;
-use Gacela\Framework\Config\Schema\ConfigSchemaViolation;
 
 use function count;
 use function sprintf;
@@ -24,11 +23,15 @@ use function sprintf;
 final class ConfigSchemaCheck implements HealthCheck
 {
     /**
-     * @param list<ConfigSchemaViolation> $violations
+     * The values rather than the findings: a check handed both could be handed
+     * two that disagree, and then it reports whatever it was told.
+     *
+     * @param array<string, mixed> $values the merged configuration, as this
+     *                                     environment sees it
      */
     public function __construct(
         private readonly ConfigSchema $schema,
-        private readonly array $violations,
+        private readonly array $values,
     ) {
     }
 
@@ -43,7 +46,8 @@ final class ConfigSchemaCheck implements HealthCheck
             return CheckResult::ok($this->name(), 'no schema declared — nothing to check');
         }
 
-        if ($this->violations === []) {
+        $violations = $this->schema->violations($this->values);
+        if ($violations === []) {
             return CheckResult::ok($this->name(), sprintf(
                 '%d declared key(s), all satisfied',
                 count($this->schema->declaredKeys()),
@@ -51,7 +55,7 @@ final class ConfigSchemaCheck implements HealthCheck
         }
 
         $details = [];
-        foreach ($this->violations as $violation) {
+        foreach ($violations as $violation) {
             $details[] = $violation->message;
         }
 

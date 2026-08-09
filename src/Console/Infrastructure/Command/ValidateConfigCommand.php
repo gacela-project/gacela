@@ -85,6 +85,10 @@ final class ValidateConfigCommand extends Command
      * Reading values constructs nothing, which is what keeps this command
      * side-effect free; a missing key is an error because whatever reads it was
      * going to fail regardless, and the only question is where.
+     *
+     * @return bool true when the configuration violates its own declaration.
+     *              Only errors, no warnings: a declared key is either satisfied
+     *              or it is not
      */
     private function validateConfigSchema(OutputInterface $output): bool
     {

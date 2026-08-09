@@ -47,6 +47,17 @@
         <LessSpecificReturnStatement errorLevel="suppress" />
         <UnsafeInstantiation errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
+        <!--
+            Real parent-class overrides do carry #[Override] now: rector applies
+            it, and rector.php enables that one rule out of the 8.3 set so it
+            stays applied.
+
+            What stays suppressed is psalm counting an interface implementation
+            as an override too. That is ~246 methods rector will not touch, for
+            something php already enforces: a class that fails to implement an
+            interface method does not compile. The attribute there would be
+            noise on every implementation in the codebase.
+        -->
         <MissingOverrideAttribute errorLevel="suppress" />
     </issueHandlers>
 </psalm>

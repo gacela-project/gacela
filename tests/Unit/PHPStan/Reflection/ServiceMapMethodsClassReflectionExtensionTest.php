@@ -14,6 +14,7 @@ use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithoutServiceMap;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithPositionalServiceMap;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithRepeatedServiceMap;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithServiceMap;
+use Override;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Testing\PHPStanTestCase;
 
@@ -21,6 +22,7 @@ final class ServiceMapMethodsClassReflectionExtensionTest extends PHPStanTestCas
 {
     private ServiceMapMethodsClassReflectionExtension $extension;
 
+    #[Override]
     protected function setUp(): void
     {
         $this->extension = new ServiceMapMethodsClassReflectionExtension();

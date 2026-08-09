@@ -17,6 +17,8 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Override;
+
 use RuntimeException;
 
 use function is_callable;
@@ -134,6 +136,7 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    #[Override]
     public function buildAppConfig(AppConfigBuilder $builder): AppConfigBuilder
     {
         $builder = parent::buildAppConfig($builder);
@@ -156,6 +159,7 @@ final class SetupGacela extends AbstractSetupGacela
      *
      * @param ExternalServicesMap $externalServices
      */
+    #[Override]
     public function buildBindings(
         BindingsBuilder $builder,
         array $externalServices,
@@ -178,6 +182,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * Allow overriding gacela resolvable types.
      */
+    #[Override]
     public function buildSuffixTypes(SuffixTypesBuilder $builder): SuffixTypesBuilder
     {
         $builder = parent::buildSuffixTypes($builder);
@@ -188,6 +193,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @return ExternalServicesMap
      */
+    #[Override]
     public function externalServices(): array
     {
         return $this->properties->externalServices ?? parent::externalServices();

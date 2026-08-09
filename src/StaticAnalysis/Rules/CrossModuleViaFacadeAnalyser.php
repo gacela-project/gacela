@@ -91,6 +91,7 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
                     $refModule,
                 ),
                 'gacela.crossModuleWithoutFacade',
+                sprintf('Reach %s through its Facade.', $refModule),
             );
         }
 

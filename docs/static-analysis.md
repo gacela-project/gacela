@@ -81,6 +81,19 @@ are what you suppress on, so a rule can be turned off on its own.
 On top of the rules, both analysers gain two **types** they otherwise lack: the
 pillar accessors, and `getProvidedDependency()` by class-string.
 
+Every finding carries the correction as well as the complaint — PHPStan renders
+it on its own 💡 line, Psalm appends it to the message, because it has nowhere
+else to put it:
+
+```
+Class App\Checkout\CheckoutFacade should extend Gacela\Framework\AbstractFacade
+    💡 Extend Gacela\Framework\AbstractFacade, or rename it so it does not end in Facade.
+```
+
+The pillar rules apply to **classes**. An interface, trait or enum named after a
+pillar is left alone: none of them can extend a class, so there would be no way
+to act on the report.
+
 Suppressing one rule:
 
 ```neon

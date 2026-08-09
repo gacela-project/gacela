@@ -94,6 +94,35 @@ final class ArchitectureRulesTest extends PsalmFixtureTestCase
         self::assertSame('', $this->errorsIn('CleanFactory.php'));
     }
 
+    /**
+     * An interface, a trait and an enum cannot extend a class, so the suffix
+     * rule has nothing fixable to say about them. Reporting one leaves a
+     * consumer with a baseline entry as the only way out.
+     */
+    public function test_something_that_cannot_extend_a_pillar_is_not_told_to(): void
+    {
+        $errors = $this->analyseFixture();
+        $this->skipIfPsalmCannotRun($errors);
+
+        self::assertStringContainsString('GacelaSuffixExtends', $errors, 'precondition: the rule ran at all');
+        self::assertSame('', $this->errorsIn('StatusConfig.php'));
+        self::assertSame('', $this->errorsIn('PaymentFacade.php'));
+    }
+
+    /**
+     * Psalm has no separate channel for a tip, so the correction rides along in
+     * the message rather than being dropped.
+     */
+    public function test_a_finding_carries_the_correction(): void
+    {
+        $this->skipIfPsalmCannotRun($this->analyseFixture());
+
+        self::assertStringContainsString(
+            'Extend Gacela\Framework\AbstractFacade, or rename it so it does not end in Facade.',
+            $this->errorsIn('BadFacade.php'),
+        );
+    }
+
     protected static function configPath(): string
     {
         return __DIR__ . '/RulesFixture/psalm-rules-fixture.xml';

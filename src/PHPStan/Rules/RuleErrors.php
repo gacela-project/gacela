@@ -28,6 +28,12 @@ final class RuleErrors
             $builder = RuleErrorBuilder::message($violation->message)
                 ->identifier($violation->identifier);
 
+            // PHPStan renders a tip on its own line under the error, which is
+            // where the correction belongs -- the message says what is wrong.
+            if ($violation->tip !== null) {
+                $builder->tip($violation->tip);
+            }
+
             // Left unset, PHPStan reports the line of the analysed node, which
             // is what every rule but the interface-drift one wants.
             if ($violation->node !== null) {

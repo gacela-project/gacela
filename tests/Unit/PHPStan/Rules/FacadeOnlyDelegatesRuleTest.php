@@ -33,24 +33,26 @@ final class FacadeOnlyDelegatesRuleTest extends RuleTestCase
         $prefix = 'Facade method ' . \GacelaTest\Unit\PHPStan\Rules\Fixture\FacadeDelegate\BadFacade::class . '::';
         $suffix = '() must only delegate to $this->getFactory()/getConfig()/getProvider(); no inline logic allowed.';
 
+        $tip = 'Move the logic into the Factory and have this method call it.';
+
         $this->analyse(
             [__DIR__ . '/Fixture/FacadeDelegate/BadFacade.php'],
             [
-                [$prefix . 'multipleStatements' . $suffix, 12],
-                [$prefix . 'localLogic' . $suffix, 19],
-                [$prefix . 'controlFlow' . $suffix, 24],
-                [$prefix . 'notAllowedRoot' . $suffix, 33],
-                [$prefix . 'cachedNonDelegation' . $suffix, 38],
-                [$prefix . 'cachedMultiStmt' . $suffix, 43],
-                [$prefix . 'somethingElse' . $suffix, 52],
-                [$prefix . 'singleIfStatement' . $suffix, 57],
-                [$prefix . 'delegatesOnLocalVariable' . $suffix, 69],
-                [$prefix . 'dynamicMethodName' . $suffix, 74],
-                [$prefix . 'notCachedWrapper' . $suffix, 79],
-                [$prefix . 'cachedWithoutArgs' . $suffix, 84],
-                [$prefix . 'cachedWithNonClosure' . $suffix, 89],
-                [$prefix . 'cachedOnNullsafeThis' . $suffix, 94],
-                [$prefix . 'cachedClosureWithLeadingDelegation' . $suffix, 99],
+                [$prefix . 'multipleStatements' . $suffix, 12, $tip],
+                [$prefix . 'localLogic' . $suffix, 19, $tip],
+                [$prefix . 'controlFlow' . $suffix, 24, $tip],
+                [$prefix . 'notAllowedRoot' . $suffix, 33, $tip],
+                [$prefix . 'cachedNonDelegation' . $suffix, 38, $tip],
+                [$prefix . 'cachedMultiStmt' . $suffix, 43, $tip],
+                [$prefix . 'somethingElse' . $suffix, 52, $tip],
+                [$prefix . 'singleIfStatement' . $suffix, 57, $tip],
+                [$prefix . 'delegatesOnLocalVariable' . $suffix, 69, $tip],
+                [$prefix . 'dynamicMethodName' . $suffix, 74, $tip],
+                [$prefix . 'notCachedWrapper' . $suffix, 79, $tip],
+                [$prefix . 'cachedWithoutArgs' . $suffix, 84, $tip],
+                [$prefix . 'cachedWithNonClosure' . $suffix, 89, $tip],
+                [$prefix . 'cachedOnNullsafeThis' . $suffix, 94, $tip],
+                [$prefix . 'cachedClosureWithLeadingDelegation' . $suffix, 99, $tip],
             ],
         );
     }

@@ -8,6 +8,7 @@
 - Enforce the pillar rules under Psalm, each as its own suppressible issue type
 - Report cross-module method calls on injected dependencies, which name no class at the call site
 - Enforce module boundaries under Psalm, opt-in through a `<crossModule>` plugin element
+- Report the correction alongside every architecture rule: PHPStan's tip line, Psalm's message
 
 ### Changed
 
@@ -22,6 +23,7 @@
 
 ### Fixed
 
+- Stop telling an interface, trait or enum to extend a pillar base class, which php does not allow
 - Match imported class names in the architecture rules however the host resolved them: under
   Psalm a `use`d class read as its short name and belonged to no module
 - Strip only the matched psr-4 prefix in `make:module`/`make:file`, and accept list targets

@@ -12,6 +12,8 @@ use Gacela\PHPStan\Rules\SuffixExtendsRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 
+use function sprintf;
+
 /**
  * @extends RuleTestCase<SuffixExtendsRule>
  */
@@ -29,6 +31,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixFacade\BadFacade should extend ' . AbstractFacade::class,
                     7,
+                    $this->expectedTip(),
                 ],
             ],
         );
@@ -55,6 +58,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixFactory\InvalidFactory should extend ' . AbstractFactory::class,
                     7,
+                    $this->expectedTip(),
                 ],
             ],
         );
@@ -79,6 +83,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixProvider\InvalidProvider should extend ' . AbstractProvider::class,
                     7,
+                    $this->expectedTip(),
                 ],
             ],
         );
@@ -103,6 +108,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixConfig\InvalidConfig should extend ' . AbstractConfig::class,
                     7,
+                    $this->expectedTip(),
                 ],
             ],
         );
@@ -119,5 +125,14 @@ final class SuffixExtendsRuleTest extends RuleTestCase
     protected function getRule(): Rule
     {
         return new SuffixExtendsRule($this->suffix, $this->expectedParent);
+    }
+
+    private function expectedTip(): string
+    {
+        return sprintf(
+            'Extend %s, or rename it so it does not end in %s.',
+            $this->expectedParent,
+            $this->suffix,
+        );
     }
 }

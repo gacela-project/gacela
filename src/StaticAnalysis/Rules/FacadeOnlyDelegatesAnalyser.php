@@ -83,6 +83,7 @@ final class FacadeOnlyDelegatesAnalyser
                     $method->name->toString(),
                 ),
                 'gacela.facadeOnlyDelegates',
+                'Move the logic into the Factory and have this method call it.',
             ),
         ];
     }

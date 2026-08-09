@@ -72,6 +72,7 @@ final class FactoryDoesNotCallFacadeAnalyser implements ClassAnalyserInterface
                     $className,
                 ),
                 'gacela.factoryInstantiatesFacade',
+                'Declare that Facade in your Provider and read it with getProvidedDependency().',
             );
         }
 
@@ -98,6 +99,7 @@ final class FactoryDoesNotCallFacadeAnalyser implements ClassAnalyserInterface
                     $class->name(),
                 ),
                 'gacela.factoryCallsGetFacade',
+                'Same-module wiring belongs in this Factory; another module belongs in the Provider.',
             );
         }
 

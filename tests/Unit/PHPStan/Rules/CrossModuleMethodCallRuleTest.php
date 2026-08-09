@@ -31,7 +31,7 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
     {
         $this->analyse(
             [__DIR__ . '/Fixture/CrossModule/UserCalls/InjectedFactory.php'],
-            [[$this->expectedError('InjectedFactory', 'Shop\Domain\ShopService', 'Shop'), 22]],
+            [[$this->expectedError('InjectedFactory', 'Shop\Domain\ShopService', 'Shop'), 22, $this->expectedTip('Shop')]],
         );
     }
 
@@ -45,7 +45,7 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
     {
         $this->analyse(
             [__DIR__ . '/Fixture/CrossModule/UserCalls/NullsafeCallFactory.php'],
-            [[$this->expectedError('NullsafeCallFactory', 'Shop\Domain\ShopService', 'Shop'), 21]],
+            [[$this->expectedError('NullsafeCallFactory', 'Shop\Domain\ShopService', 'Shop'), 21, $this->expectedTip('Shop')]],
         );
     }
 
@@ -83,7 +83,7 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
     {
         $this->analyse(
             [__DIR__ . '/Fixture/CrossModule/UserCalls/SharedCallFactory.php'],
-            [[$this->expectedError('SharedCallFactory', 'Shared\Clock', 'Shared'), 18]],
+            [[$this->expectedError('SharedCallFactory', 'Shared\Clock', 'Shared'), 18, $this->expectedTip('Shared')]],
         );
     }
 
@@ -106,13 +106,18 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
 
         $this->analyse(
             [__DIR__ . '/Fixture/CrossModule/UserCalls/InjectedFactory.php'],
-            [[$this->expectedError('InjectedFactory', 'Shop\Domain\ShopService', 'Shop'), 22]],
+            [[$this->expectedError('InjectedFactory', 'Shop\Domain\ShopService', 'Shop'), 22, $this->expectedTip('Shop')]],
         );
     }
 
     protected function getRule(): Rule
     {
         return $this->rule ??= new CrossModuleMethodCallRule(self::ROOT, 1, $this->sharedNamespaces);
+    }
+
+    private function expectedTip(string $module): string
+    {
+        return sprintf("Type-hint %s's Facade, or its interface, instead.", self::ROOT . '\\' . $module);
     }
 
     private function expectedError(string $caller, string $receiver, string $module): string

@@ -29,8 +29,8 @@ final class FacadeInterfaceInSyncRuleTest extends RuleTestCase
         $this->analyse(
             [__DIR__ . '/Fixture/FacadeInterface/DriftedFacade.php'],
             [
-                [$this->expectedError('addedLaterAndForgotten'), 25],
-                [$this->expectedError('alsoForgotten'), 30],
+                [$this->expectedError('addedLaterAndForgotten'), 25, $this->expectedTip(DriftedFacadeInterface::class)],
+                [$this->expectedError('alsoForgotten'), 30, $this->expectedTip(DriftedFacadeInterface::class)],
             ],
         );
     }
@@ -62,6 +62,7 @@ final class FacadeInterfaceInSyncRuleTest extends RuleTestCase
                         SecondPositionFacadeInterface::class,
                     ),
                     27,
+                    $this->expectedTip(SecondPositionFacadeInterface::class),
                 ],
             ],
         );
@@ -70,6 +71,11 @@ final class FacadeInterfaceInSyncRuleTest extends RuleTestCase
     protected function getRule(): Rule
     {
         return new FacadeInterfaceInSyncRule();
+    }
+
+    private function expectedTip(string $interface): string
+    {
+        return sprintf('Declare it in %s, or make the method non-public.', $interface);
     }
 
     private function expectedError(string $method): string

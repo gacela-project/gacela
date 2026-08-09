@@ -285,6 +285,29 @@ green check, and nothing would ever tell you the boundary went unchecked.
 To see the actual module dependency graph of your app, run
 `vendor/bin/gacela debug:graph` (formats: `text`, `mermaid`, `graphviz`, `json`).
 
+### One place the two analysers differ
+
+A facade whose public method comes from a **trait** is judged by PHPStan and not
+by Psalm:
+
+```php
+final class CheckoutFacade extends AbstractFacade
+{
+    use LogicTrait;   // PHPStan reports logic in here, Psalm does not
+}
+```
+
+Both run the same rule; the difference is what each host hands a plugin. PHPStan
+analyses a trait's methods once **per class that uses it**, so the rule sees the
+method with the facade as its class. Psalm analyses them once, in the **trait's
+own** context — a trait extends nothing, and a trait-provided method does not
+appear in the using class's AST.
+
+There is no route to a trait method's body in a using class's context through
+Psalm's public plugin API, so this is a limitation to know about rather than
+something a future release quietly fixes. If your facades take methods from
+traits, PHPStan is the analyser that checks them.
+
 ## Failing on dependency cycles
 
 `debug:graph --check` exits non-zero when two modules depend on each other:

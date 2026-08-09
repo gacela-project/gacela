@@ -8,6 +8,7 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
+use Gacela\Framework\Config\Schema\ConfigType;
 
 /**
  * @psalm-import-type ExternalServicesMap from BuilderConfigurationInterface
@@ -27,6 +28,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     public const string appModulePaths = 'appModulePaths';
 
     public const string configKeyValues = 'configKeyValues';
+
+    public const string configSchema = 'configSchema';
 
     public const string servicesToExtend = 'servicesToExtend';
 
@@ -65,6 +68,10 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_APP_MODULE_PATHS = [];
 
     protected const array DEFAULT_CONFIG_KEY_VALUES = [];
+
+    protected const array DEFAULT_CONFIG_SCHEMA = [];
+
+    protected const bool DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT = false;
 
     protected const array DEFAULT_GENERIC_LISTENERS = [];
 
@@ -126,5 +133,26 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     public function externalServices(): array
     {
         return [];
+    }
+
+    /**
+     * Declaring no schema is the default: nothing is checked until a project
+     * says what its configuration is supposed to contain.
+     *
+     * @return array<string, ConfigType>
+     */
+    public function getConfigSchema(): array
+    {
+        return self::DEFAULT_CONFIG_SCHEMA;
+    }
+
+    /**
+     * Off by default, so bootstrap does no work a project did not ask for. The
+     * schema is meant to be checked by `validate:config` and `doctor`; the boot
+     * check is a local-development convenience.
+     */
+    public function shouldValidateConfigSchemaOnBoot(): bool
+    {
+        return self::DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT;
     }
 }

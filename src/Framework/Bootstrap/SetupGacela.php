@@ -16,6 +16,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Override;
 
@@ -286,6 +287,51 @@ final class SetupGacela extends AbstractSetupGacela
     public function getConfigKeyValues(): array
     {
         return $this->properties->configKeyValues ?? self::DEFAULT_CONFIG_KEY_VALUES;
+    }
+
+    /**
+     * @return array<string, ConfigType>
+     */
+    #[Override]
+    public function getConfigSchema(): array
+    {
+        return $this->properties->configSchema ?? self::DEFAULT_CONFIG_SCHEMA;
+    }
+
+    #[Override]
+    public function shouldValidateConfigSchemaOnBoot(): bool
+    {
+        return $this->properties->shouldValidateConfigSchemaOnBoot ?? self::DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT;
+    }
+
+    /**
+     * @param ?array<string, ConfigType> $configSchema
+     */
+    public function setConfigSchema(?array $configSchema): self
+    {
+        $this->properties->configSchema = $this->setPropertyWithTracking(
+            self::configSchema,
+            $configSchema,
+            self::DEFAULT_CONFIG_SCHEMA,
+        );
+
+        return $this;
+    }
+
+    public function setShouldValidateConfigSchemaOnBoot(?bool $enabled): self
+    {
+        $this->properties->shouldValidateConfigSchemaOnBoot = $enabled
+            ?? self::DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, ConfigType> $schema
+     */
+    public function mergeConfigSchema(array $schema): void
+    {
+        $this->propertyMerger->mergeConfigSchema($schema);
     }
 
     public function getEventDispatcher(): EventDispatcherInterface

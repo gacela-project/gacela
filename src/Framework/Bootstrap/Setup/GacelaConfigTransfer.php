@@ -11,6 +11,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
 /**
@@ -48,6 +49,7 @@ final class GacelaConfigTransfer
      * @param TagsMap $tags
      * @param AfterResolvingMap $afterResolvingCallbacks
      * @param DefinitionSources $definitions
+     * @param ?array<string, ConfigType> $configSchema
      */
     public function __construct(
         public readonly AppConfigBuilder $appConfigBuilder,
@@ -75,6 +77,8 @@ final class GacelaConfigTransfer
         public readonly array $tags = [],
         public readonly array $afterResolvingCallbacks = [],
         public readonly array $definitions = [],
+        public readonly ?array $configSchema = null,
+        public readonly ?bool $shouldValidateConfigSchemaOnBoot = null,
     ) {
     }
 }

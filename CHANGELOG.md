@@ -4,6 +4,13 @@
 
 ### Added
 
+- Declare what the configuration must contain with `declareConfigSchema()`, read by `validate:config`, `doctor` and `debug:config`
+- Fill a declared default when no config source provides the key, without ever overriding one that does
+- Mark every key `declared`, `undeclared` or `missing` in `debug:config`
+- Check the declared schema on every bootstrap with `validateConfigSchemaOnBoot()`, for local development
+
+### Added
+
 - Declare which modules may depend on which, in one JSON file read by `debug:graph --check --rules` and by both analysers
 - Report a module rule that governs no module, so a rule cannot outlive what it was written about
 - Write the `--check` findings as JSON with `--format=json`, for a CI job that wants more than an exit code

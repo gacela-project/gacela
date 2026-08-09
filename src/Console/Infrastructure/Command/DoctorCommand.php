@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
+use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
@@ -93,6 +94,7 @@ final class DoctorCommand extends Command
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules),
+            new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
         ];
 
         foreach (HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults() as $moduleName => $status) {

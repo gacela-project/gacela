@@ -9,6 +9,7 @@ use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Config\Schema\ConfigType;
 
 use function array_merge;
 use function array_unique;
@@ -59,6 +60,18 @@ final class PropertyMerger
     {
         $current = $this->setup->getConfigKeyValues();
         $this->setup->setConfigKeyValues(array_merge($current, $list));
+    }
+
+    /**
+     * Per key, later wins: an extended config refining one key's declaration
+     * says nothing about the keys it did not mention.
+     *
+     * @param array<string, ConfigType> $schema
+     */
+    public function mergeConfigSchema(array $schema): void
+    {
+        $current = $this->setup->getConfigSchema();
+        $this->setup->setConfigSchema(array_merge($current, $schema));
     }
 
     /**

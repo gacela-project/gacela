@@ -6,6 +6,7 @@ namespace Gacela\Framework\Exception;
 
 use RuntimeException;
 
+use function implode;
 use function sprintf;
 
 final class ConfigException extends RuntimeException
@@ -20,6 +21,17 @@ final class ConfigException extends RuntimeException
         $message .= ErrorSuggestionHelper::addHelpfulTip('config_error');
 
         return new self($message);
+    }
+
+    /**
+     * @param list<string> $violations
+     */
+    public static function schemaViolations(array $violations): self
+    {
+        return new self(sprintf(
+            "The configuration does not match the declared schema:\n- %s",
+            implode("\n- ", $violations),
+        ));
     }
 
     public static function invalidType(string $key, string $expectedType, string $actualType): self

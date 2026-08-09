@@ -29,6 +29,8 @@ final class SetupInitializer
             ->setProjectNamespaces($dto->projectNamespaces)
             ->setAppModulePaths($dto->appModulePaths)
             ->setConfigKeyValues($dto->configKeyValues)
+            ->setConfigSchema($dto->configSchema)
+            ->setShouldValidateConfigSchemaOnBoot($dto->shouldValidateConfigSchemaOnBoot)
             ->setAreEventListenersEnabled($dto->areEventListenersEnabled)
             ->setGenericListeners($dto->genericListeners)
             ->setSpecificListeners($dto->specificListeners)

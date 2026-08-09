@@ -4,6 +4,7 @@
 - [CLI commands](cli.md) — every `vendor/bin/gacela` command, what it is for
 - [Getting a dependency](getting-a-dependency.md) — one primary path per intent, and when the other paths are right
 - [Container configuration](container-configuration.md) — factories, aliases, contextual bindings
+- [Config schema](config-schema.md) — declare what the configuration must contain, and fail before a request does
 - [Static analysis](static-analysis.md) — the architecture rules, for PHPStan and Psalm alike
 - [Module health checks](module-health-checks.md) — report module operational status
 - [Events](events.md) — listen to Gacela internals: dispatch model, event catalog, cookbook

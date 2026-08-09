@@ -11,6 +11,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
@@ -64,6 +65,11 @@ final class Properties
 
     /** @var ?ConfigKeyValues */
     public ?array $configKeyValues = null;
+
+    /** @var ?array<string, ConfigType> */
+    public ?array $configSchema = null;
+
+    public ?bool $shouldValidateConfigSchemaOnBoot = null;
 
     public ?bool $areEventListenersEnabled = null;
 

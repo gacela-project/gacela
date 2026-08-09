@@ -12,6 +12,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
+use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
@@ -57,6 +58,11 @@ final class GacelaConfig
 
     /** @var ConfigKeyValues */
     private ?array $configKeyValues = null;
+
+    /** @var ?array<string, ConfigType> */
+    private ?array $configSchema = null;
+
+    private ?bool $shouldValidateConfigSchemaOnBoot = null;
 
     private ?bool $areEventListenersEnabled = null;
 
@@ -315,6 +321,47 @@ final class GacelaConfig
     public function addAppConfigKeyValues(array $config): self
     {
         $this->configKeyValues = array_merge($this->configKeyValues ?? [], $config);
+
+        return $this;
+    }
+
+    /**
+     * Declare what the application's configuration is supposed to contain.
+     *
+     * ```php
+     * $config->declareConfigSchema([
+     *     'db.dsn'  => ConfigType::string()->required(),
+     *     'retries' => ConfigType::int()->default(3),
+     * ]);
+     * ```
+     *
+     * Nothing is checked while booting: the declaration is what
+     * `validate:config` and `doctor` read, so a missing key fails a command
+     * rather than a request in whichever environment lacked it. Declared
+     * defaults *are* applied, because a key with a default is not missing.
+     *
+     * Called twice, or reached again through `extendGacelaConfig()`, the
+     * declarations merge per key and the later one wins.
+     *
+     * @param array<string, ConfigType> $schema
+     */
+    public function declareConfigSchema(array $schema): self
+    {
+        $this->configSchema = array_merge($this->configSchema ?? [], $schema);
+
+        return $this;
+    }
+
+    /**
+     * Check the declared schema on every bootstrap, and fail there.
+     *
+     * For local development: it moves the report from a command you have to
+     * remember to run to the first thing that boots. Leave it off in
+     * production, where the deploy gate has already answered the question.
+     */
+    public function validateConfigSchemaOnBoot(bool $enabled = true): self
+    {
+        $this->shouldValidateConfigSchemaOnBoot = $enabled;
 
         return $this;
     }
@@ -686,6 +733,8 @@ final class GacelaConfig
             $this->tags,
             $this->afterResolvingCallbacks,
             $this->definitions,
+            $this->configSchema,
+            $this->shouldValidateConfigSchemaOnBoot,
         );
     }
 

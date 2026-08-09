@@ -84,6 +84,40 @@ final class DeclaredModuleDependencyAnalyserTest extends TestCase
     }
 
     /**
+     * The scan cannot stop at the first reference it has nothing to say about:
+     * a class reaches many others, and the forbidden one is rarely written
+     * first.
+     */
+    public function test_a_forbidden_dependency_after_an_innocent_one_is_still_reported(): void
+    {
+        self::assertCount(1, $this->analyse(
+            'new App\Modules\Payment\Domain\Basket(); new App\Modules\Shipping\ShippingFacade(); new App\Modules\Admin\AdminFacade();',
+        ));
+    }
+
+    public function test_a_second_forbidden_module_after_a_repeated_one_is_still_reported(): void
+    {
+        $rules = ModuleRuleSet::fromDecodedJson(['rules' => [
+            [
+                'from' => 'App\Modules\Payment',
+                'deny' => ['App\Modules\Admin', 'App\Modules\Legacy'],
+                'reason' => 'reviewed',
+            ],
+        ]]);
+
+        $analyser = new DeclaredModuleDependencyAnalyser(self::ROOT, $rules);
+
+        $violations = $analyser->analyse(
+            ParseSource::classIn($this->sourceWith(
+                'new App\Modules\Admin\AdminFacade(); App\Modules\Admin\Other::go(); new App\Modules\Legacy\LegacyFacade();',
+            )),
+            new FakeAnalysedClass('App\Modules\Payment\PaymentFactory'),
+        );
+
+        self::assertCount(2, $violations);
+    }
+
+    /**
      * A type-hint costs the file the same import the module graph is built
      * from, so the CLI gate and the editor have to agree it is a dependency.
      */

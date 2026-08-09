@@ -53,7 +53,11 @@ final class ReferencedClasses
     {
         $names = self::declarationNames($node);
 
-        foreach ((new NodeFinder())->find($node, static fn (Node $n): bool => self::carriesReferences($n)) as $found) {
+        // The dispatch below is also the filter. Naming the interesting node
+        // kinds twice -- once to select them, once to read them -- is how the
+        // two lists drift apart, and a kind missing from either one is a
+        // dependency nothing reports.
+        foreach ((new NodeFinder())->find($node, static fn (Node $n): bool => self::referencesOf($n) !== []) as $found) {
             foreach (self::referencesOf($found) as $name) {
                 $names[] = $name;
             }
@@ -79,21 +83,6 @@ final class ReferencedClasses
         }
 
         return $node instanceof Enum_ ? $node->implements : [];
-    }
-
-    private static function carriesReferences(Node $node): bool
-    {
-        return $node instanceof Node\Expr\New_
-            || $node instanceof Node\Expr\StaticCall
-            || $node instanceof Node\Expr\StaticPropertyFetch
-            || $node instanceof Node\Expr\ClassConstFetch
-            || $node instanceof Node\Expr\Instanceof_
-            || $node instanceof Node\Stmt\TraitUse
-            || $node instanceof Node\Stmt\Catch_
-            || $node instanceof Node\Attribute
-            || $node instanceof Node\Param
-            || $node instanceof Node\Stmt\Property
-            || $node instanceof Node\FunctionLike;
     }
 
     /**

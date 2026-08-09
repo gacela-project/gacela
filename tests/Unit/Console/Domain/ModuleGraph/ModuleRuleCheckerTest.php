@@ -80,6 +80,16 @@ final class ModuleRuleCheckerTest extends TestCase
         self::assertSame([], $result->violations);
     }
 
+    public function test_every_rule_that_governs_nothing_is_reported_not_only_the_first(): void
+    {
+        $result = $this->check(
+            ['App\Payment' => []],
+            $this->rules([['from' => 'App\Gone', 'deny' => ['App\AlsoGone'], 'reason' => 'reviewed']]),
+        );
+
+        self::assertSame(['App\Gone', 'App\AlsoGone'], $result->unknownNamespaces);
+    }
+
     public function test_a_namespace_covering_only_submodules_is_known(): void
     {
         $result = $this->check(

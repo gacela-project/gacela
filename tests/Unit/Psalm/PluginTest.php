@@ -8,6 +8,7 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Psalm\ClassRules;
 use Gacela\Psalm\CrossModuleCallRules;
 use Gacela\Psalm\CrossModuleRules;
+use Gacela\Psalm\DeclaredModuleDependencyRules;
 use Gacela\Psalm\Plugin;
 use PHPUnit\Framework\TestCase;
 use Psalm\Codebase;
@@ -20,6 +21,8 @@ use Psalm\PluginRegistrationSocket;
 use ReflectionClass;
 use SimpleXMLElement;
 
+use function sprintf;
+
 /**
  * `ServiceMapPluginTest` proves the plugin works by running a real
  * `vendor/bin/psalm`, but that is a subprocess and invisible to coverage. These
@@ -30,6 +33,9 @@ final class PluginTest extends TestCase
 {
     private ?MethodReturnTypeProvider $returnTypes = null;
 
+    /** @var list<string> */
+    private array $files = [];
+
     /**
      * Registering the plugin with a <crossModule> element sets a static on each
      * handler. Left set, it decides the outcome of any later test that asks
@@ -39,6 +45,15 @@ final class PluginTest extends TestCase
     {
         CrossModuleRules::configure(null);
         CrossModuleCallRules::configure(null);
+        DeclaredModuleDependencyRules::configure(null);
+
+        foreach ($this->files as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+
+        $this->files = [];
     }
 
     public function test_it_registers_the_pseudo_method_handler(): void
@@ -113,6 +128,54 @@ final class PluginTest extends TestCase
         self::assertTrue(CrossModuleCallRules::isConfigured());
     }
 
+    /**
+     * The rules live in a file the consumer writes, so with no file named there
+     * is nothing to check -- and staying off has to be the behaviour, not an
+     * accident of nobody calling it.
+     */
+    public function test_it_leaves_the_module_rules_check_off_without_config(): void
+    {
+        $dispatcher = new EventDispatcher();
+
+        (new Plugin())($this->socket($dispatcher));
+
+        self::assertNotContains(DeclaredModuleDependencyRules::class, $dispatcher->after_classlike_checks);
+        self::assertFalse(DeclaredModuleDependencyRules::isConfigured());
+    }
+
+    public function test_a_module_rules_element_turns_the_check_on(): void
+    {
+        $dispatcher = new EventDispatcher();
+
+        (new Plugin())($this->socket($dispatcher), new SimpleXMLElement(sprintf(
+            '<pluginClass><moduleRules rootNamespace="App\Modules" file="%s"/></pluginClass>',
+            $this->writeRulesFile(),
+        )));
+
+        self::assertContains(DeclaredModuleDependencyRules::class, $dispatcher->after_classlike_checks);
+        self::assertTrue(DeclaredModuleDependencyRules::isConfigured());
+    }
+
+    public function test_a_module_rules_element_without_a_file_fails_loudly(): void
+    {
+        $this->expectException(ConfigException::class);
+
+        (new Plugin())(
+            $this->socket(new EventDispatcher()),
+            new SimpleXMLElement('<pluginClass><moduleRules rootNamespace="App\Modules"/></pluginClass>'),
+        );
+    }
+
+    public function test_a_module_rules_element_without_a_root_namespace_fails_loudly(): void
+    {
+        $this->expectException(ConfigException::class);
+
+        (new Plugin())(
+            $this->socket(new EventDispatcher()),
+            new SimpleXMLElement('<pluginClass><moduleRules file="module-rules.json"/></pluginClass>'),
+        );
+    }
+
     public function test_a_cross_module_element_without_a_root_namespace_fails_loudly(): void
     {
         $this->expectException(ConfigException::class);
@@ -131,6 +194,21 @@ final class PluginTest extends TestCase
         (new Plugin())($this->socket($dispatcher), new SimpleXMLElement('<pluginClass/>'));
 
         self::assertTrue($dispatcher->hasAfterClassLikeVisitHandlers());
+    }
+
+    /**
+     * A real file, because the plugin reads the rules while registering: an
+     * unreadable one is a setup error and has to be one here too.
+     */
+    private function writeRulesFile(): string
+    {
+        $path = sys_get_temp_dir() . '/gacela-plugin-rules-' . bin2hex(random_bytes(4)) . '.json';
+        file_put_contents($path, json_encode([
+            'rules' => [['from' => 'App\Modules\Payment', 'deny' => ['App\Modules\Admin'], 'reason' => 'reviewed']],
+        ], JSON_THROW_ON_ERROR));
+        $this->files[] = $path;
+
+        return $path;
     }
 
     /**

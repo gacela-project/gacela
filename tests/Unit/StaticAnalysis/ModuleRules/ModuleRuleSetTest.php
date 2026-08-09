@@ -152,6 +152,10 @@ final class ModuleRuleSetTest extends TestCase
     public function test_an_entry_that_is_not_an_object_is_malformed(): void
     {
         $this->expectException(MalformedModuleRulesException::class);
+        // The message matters: reading `['from']` off a string yields null
+        // through `??`, so the entry would otherwise be reported as one missing
+        // a "from" rather than as the wrong shape entirely.
+        $this->expectExceptionMessage('must be an object');
 
         ModuleRuleSet::fromDecodedJson(['rules' => ['App\Payment']]);
     }
@@ -180,6 +184,21 @@ final class ModuleRuleSetTest extends TestCase
             'deny' => ['App\Admin'],
             'reason' => 'reviewed',
         ]]);
+    }
+
+    public function test_a_deny_that_is_not_a_list_is_malformed(): void
+    {
+        $this->expectException(MalformedModuleRulesException::class);
+
+        $this->rules([['from' => 'App\Payment', 'deny' => 'App\Admin', 'reason' => 'reviewed']]);
+    }
+
+    public function test_a_namespace_that_is_not_a_string_is_malformed(): void
+    {
+        $this->expectException(MalformedModuleRulesException::class);
+        $this->expectExceptionMessage('not a string');
+
+        $this->rules([['from' => 'App\Payment', 'deny' => [42], 'reason' => 'reviewed']]);
     }
 
     public function test_an_empty_deny_list_is_malformed(): void

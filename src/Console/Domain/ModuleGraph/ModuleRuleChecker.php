@@ -26,10 +26,6 @@ final class ModuleRuleChecker
      */
     public function check(array $graph, ModuleRuleSet $rules): ModuleRuleCheckResult
     {
-        if ($rules->isEmpty()) {
-            return new ModuleRuleCheckResult([], []);
-        }
-
         $violations = [];
 
         foreach ($graph as $module => $dependencies) {

@@ -62,7 +62,10 @@ final class ReportedIssues
 
             IssueBuffer::maybeAdd(
                 new $issue(
-                    $violation->message,
+                    // Psalm has no separate channel for a tip, so the
+                    // correction rides along in the message rather than being
+                    // dropped -- the two hosts should tell you the same thing.
+                    $violation->messageWithTip(),
                     new CodeLocation($source, $violation->node ?? $analysedNode),
                 ),
                 $source->getSuppressedIssues(),

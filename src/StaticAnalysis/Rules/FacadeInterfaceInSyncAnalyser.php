@@ -69,6 +69,7 @@ final class FacadeInterfaceInSyncAnalyser implements ClassAnalyserInterface
                     $facadeInterface,
                 ),
                 'gacela.facadeInterfaceDrift',
+                sprintf('Declare it in %s, or make the method non-public.', $facadeInterface),
                 $method,
             );
         }

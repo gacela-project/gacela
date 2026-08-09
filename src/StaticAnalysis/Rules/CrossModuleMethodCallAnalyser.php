@@ -90,6 +90,7 @@ final class CrossModuleMethodCallAnalyser
                     $module,
                 ),
                 'gacela.crossModuleMethodCall',
+                sprintf("Type-hint %s's Facade, or its interface, instead.", $module),
             );
         }
 

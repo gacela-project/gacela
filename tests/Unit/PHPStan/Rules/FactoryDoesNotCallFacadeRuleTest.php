@@ -13,6 +13,10 @@ use PHPStan\Testing\RuleTestCase;
  */
 final class FactoryDoesNotCallFacadeRuleTest extends RuleTestCase
 {
+    private const NEW_TIP = 'Declare that Facade in your Provider and read it with getProvidedDependency().';
+
+    private const CALL_TIP = 'Same-module wiring belongs in this Factory; another module belongs in the Provider.';
+
     public function test_reports_new_facade_instantiation(): void
     {
         $this->analyse(
@@ -21,6 +25,7 @@ final class FactoryDoesNotCallFacadeRuleTest extends RuleTestCase
                 [
                     'Factory GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\BadFactoryNewFacade must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\ShopFacade). Depend on other modules through their Facade via the Provider.',
                     9,
+                    self::NEW_TIP,
                 ],
             ],
         );
@@ -34,6 +39,7 @@ final class FactoryDoesNotCallFacadeRuleTest extends RuleTestCase
                 [
                     'Factory GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\BadFactoryGetFacade must not call $this->getFacade(); same-module access goes through the Factory itself, cross-module access goes through the Provider.',
                     9,
+                    self::CALL_TIP,
                 ],
             ],
         );
@@ -57,10 +63,12 @@ final class FactoryDoesNotCallFacadeRuleTest extends RuleTestCase
                 [
                     'Factory GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\MultiViolationFactory must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\ShopFacade). Depend on other modules through their Facade via the Provider.',
                     9,
+                    self::NEW_TIP,
                 ],
                 [
                     'Factory GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\MultiViolationFactory must not call $this->getFacade(); same-module access goes through the Factory itself, cross-module access goes through the Provider.',
                     9,
+                    self::CALL_TIP,
                 ],
             ],
         );
@@ -74,10 +82,10 @@ final class FactoryDoesNotCallFacadeRuleTest extends RuleTestCase
         $this->analyse(
             [__DIR__ . '/Fixture/FactoryCallsFacade/MixedOrderBadFactory.php'],
             [
-                [$factory . ' must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\ShopFacade)' . $newSuffix, 10],
-                [$factory . ' must not instantiate a Facade (found: new Facade)' . $newSuffix, 10],
-                [$factory . ' must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\Sub\Facade)' . $newSuffix, 10],
-                [$factory . ' must not call $this->getFacade(); same-module access goes through the Factory itself, cross-module access goes through the Provider.', 10],
+                [$factory . ' must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\ShopFacade)' . $newSuffix, 10, self::NEW_TIP],
+                [$factory . ' must not instantiate a Facade (found: new Facade)' . $newSuffix, 10, self::NEW_TIP],
+                [$factory . ' must not instantiate a Facade (found: new GacelaTest\Unit\PHPStan\Rules\Fixture\FactoryCallsFacade\Sub\Facade)' . $newSuffix, 10, self::NEW_TIP],
+                [$factory . ' must not call $this->getFacade(); same-module access goes through the Factory itself, cross-module access goes through the Provider.', 10, self::CALL_TIP],
             ],
         );
     }

@@ -63,6 +63,52 @@ final class SuffixExtendsAnalyserTest extends TestCase
     }
 
     /**
+     * Interfaces, traits and enums cannot extend a class at all, so telling one
+     * of them to would be advice it is impossible to take -- the only way out
+     * would be a baseline entry. `PaymentFacade` as an interface is a perfectly
+     * ordinary thing for a consumer to write.
+     */
+    public function test_only_a_class_can_be_told_to_extend_a_pillar(): void
+    {
+        $analyser = new SuffixExtendsAnalyser('Facade', AbstractFacade::class);
+        $class = new FakeAnalysedClass('App\Checkout\CheckoutFacade');
+
+        foreach (['interface', 'trait', 'enum'] as $kind) {
+            self::assertSame(
+                [],
+                $analyser->analyse(ParseSource::classIn('<?php ' . $kind . ' CheckoutFacade {}'), $class),
+                $kind . ' cannot extend a class, so reporting it would be unfixable',
+            );
+        }
+    }
+
+    /**
+     * An abstract class still can extend, so it is still held to the rule.
+     */
+    public function test_an_abstract_class_is_still_checked(): void
+    {
+        $analyser = new SuffixExtendsAnalyser('Facade', AbstractFacade::class);
+        $class = new FakeAnalysedClass('App\Checkout\CheckoutFacade');
+
+        self::assertCount(
+            1,
+            $analyser->analyse(ParseSource::classIn('<?php abstract class CheckoutFacade {}'), $class),
+        );
+    }
+
+    /**
+     * The message says what is wrong; the tip says what to do about it, and
+     * PHPStan renders it on its own line.
+     */
+    public function test_the_violation_carries_the_correction(): void
+    {
+        self::assertSame(
+            'Extend Gacela\Framework\AbstractFacade, or rename it so it does not end in Facade.',
+            $this->analyse('App\Checkout\CheckoutFacade')[0]->tip,
+        );
+    }
+
+    /**
      * An anonymous class has no name to carry a suffix, and nothing a consumer
      * could rename if it were reported.
      */

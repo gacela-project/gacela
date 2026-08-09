@@ -8,6 +8,8 @@ use Gacela\PHPStan\Rules\CrossModuleViaFacadeRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 
+use function sprintf;
+
 /**
  * @extends RuleTestCase<CrossModuleViaFacadeRule>
  */
@@ -32,6 +34,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\BadNewFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
             ],
         );
@@ -65,6 +68,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\StaticCallFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
             ],
         );
@@ -78,6 +82,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\ClassConstFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
             ],
         );
@@ -91,6 +96,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\DuplicateFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
             ],
         );
@@ -106,6 +112,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Admin\User\AdminUserFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Admin\Shop\AdminShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Admin\Shop). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Admin\Shop'),
                 ],
             ],
         );
@@ -129,14 +136,17 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopRepository from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     15,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     15,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\MixedOrderFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopWriter from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     15,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
             ],
         );
@@ -150,6 +160,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\SharedKernelFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared\Clock from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared'),
                 ],
             ],
         );
@@ -174,6 +185,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\SharedKernelFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared\Clock from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shared'),
                 ],
             ],
         );
@@ -189,6 +201,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\SharedThenBadFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     10,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
             ],
         );
@@ -215,6 +228,7 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
                 [
                     'Class GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\User\BadNewFactory references GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop\Domain\ShopService from another module (GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop). Cross-module access must go through a Facade.',
                     9,
+                    $this->expectedTip('GacelaTest\Unit\PHPStan\Rules\Fixture\CrossModule\Shop'),
                 ],
             ],
         );
@@ -227,5 +241,10 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
             $this->modulePathSegments,
             $this->sharedNamespaces,
         );
+    }
+
+    private function expectedTip(string $module): string
+    {
+        return sprintf('Reach %s through its Facade.', $module);
     }
 }

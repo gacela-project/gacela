@@ -9,6 +9,7 @@ use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 
 use function sprintf;
@@ -34,9 +35,7 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
      */
     public function analyse(ClassLike $node, AnalysedClassInterface $class): array
     {
-        // An anonymous class has no name to carry a suffix, and nothing a
-        // consumer could rename if it were reported.
-        if (!$node->name instanceof Identifier) {
+        if (!$this->couldExtendAPillar($node)) {
             return [];
         }
 
@@ -59,7 +58,23 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
             new Violation(
                 sprintf('Class %s should extend %s', $className, $this->expectedParent),
                 'gacela.suffixExtends',
+                sprintf(
+                    'Extend %s, or rename it so it does not end in %s.',
+                    $this->expectedParent,
+                    $this->suffix,
+                ),
             ),
         ];
+    }
+
+    /**
+     * Interfaces, traits and enums cannot extend a class at all, so telling one
+     * of them to is advice it is impossible to take -- the only way out would be
+     * a baseline entry. An anonymous class has no name to carry a suffix, and
+     * nothing a consumer could rename if it were reported.
+     */
+    private function couldExtendAPillar(ClassLike $node): bool
+    {
+        return $node instanceof Class_ && $node->name instanceof Identifier;
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\PHPStan\Reflection;
 
+use Override;
 use PHPStan\Testing\TypeInferenceTestCase;
 
 final class GetProvidedDependencyTypeInferenceTest extends TypeInferenceTestCase
@@ -28,6 +29,7 @@ final class GetProvidedDependencyTypeInferenceTest extends TypeInferenceTestCase
     /**
      * @return list<string>
      */
+    #[Override]
     public static function getAdditionalConfigFiles(): array
     {
         return [__DIR__ . '/type-inference.neon'];

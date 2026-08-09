@@ -14,6 +14,7 @@ use Rector\DeadCode\Rector\Node\RemoveNonExistingVarAnnotationRector;
 use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php81\Rector\Property\ReadOnlyPropertyRector;
+use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use Rector\PHPUnit\CodeQuality\Rector\Class_\PreferPHPUnitThisCallRector;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
@@ -94,6 +95,11 @@ return static function (RectorConfig $rectorConfig): void {
             __DIR__ . '/tests/Unit/Framework/Testing/ContainerFixtureTest.php',
         ],
     ]);
+
+    // One rule out of the 8.3 set, not the set. #[Override] is a compile-time
+    // check on the class that declares it, so it constrains no downstream code
+    // -- unlike ReadOnlyClassRector below, which is why the level set stays put.
+    $rectorConfig->rule(AddOverrideAttributeToOverriddenMethodsRector::class);
 
     $rectorConfig->sets([
         SetList::CODE_QUALITY,

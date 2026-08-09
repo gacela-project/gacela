@@ -4,11 +4,10 @@
 
 ### Added
 
-- Type `getProvidedDependency(Foo::class)` under Psalm too, matching the PHPStan extension
-- Enforce the pillar rules under Psalm, each as its own suppressible issue type
-- Report cross-module method calls on injected dependencies, which name no class at the call site
-- Enforce module boundaries under Psalm, opt-in through a `<crossModule>` plugin element
-- Report the correction alongside every architecture rule: PHPStan's tip line, Psalm's message
+- Run the Gacela architecture rules under Psalm too, each as its own suppressible issue type
+- Type `getProvidedDependency(Foo::class)` under Psalm, matching the PHPStan extension
+- Report cross-module calls on injected dependencies, which name no class at the call site
+- Show the correction next to every rule finding, not only the complaint
 
 ### Changed
 
@@ -18,19 +17,16 @@
 
 ### Removed
 
-- Drop the `gacela-project/phpstan-extension` suggestion. The package is abandoned: its one rule
-  is built in, and it cannot load against the PHPStan version Gacela requires
+- Drop the abandoned `gacela-project/phpstan-extension` suggestion; its rule is now built in
 
 ### Fixed
 
-- Stop telling an interface, trait or enum to extend a pillar base class, which php does not allow
-- Match imported class names in the architecture rules however the host resolved them: under
-  Psalm a `use`d class read as its short name and belonged to no module
+- Never tell an interface, trait or enum to extend a pillar, which PHP does not allow
+- Resolve imported class names the way each host does; under Psalm a `use`d class matched no module
 - Strip only the matched psr-4 prefix in `make:module`/`make:file`, and accept list targets
 - Let `bin/gacela` run from any subdirectory, bootstrapping with the project root
 - Discover facades that extend `AbstractFacade` indirectly, not only direct children
-- Parse graph imports with the tokenizer: grouped, multiline, aliased and `\`-prefixed all resolve
-- Ignore `use function` and `use const` in the graph, whatever their case
+- Parse graph imports with the tokenizer: grouped, multiline, aliased and `use function`/`use const`
 - Check the merged configuration cache against its sources in `doctor`
 - Validate config without constructing services, so `validate:config` has no side effects
 - Treat `ttl: 0` as no expiry in `InMemoryCacheStorage`, matching `FileCache`

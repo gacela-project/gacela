@@ -1,7 +1,7 @@
 {
     "name": "gacela-project/symfony-bridge",
     "type": "library",
-    "description": "Bridge that lets Symfony DependencyInjection honor Gacela's #[Inject] attribute on Symfony-managed services (Commands, Controllers).",
+    "description": "Symfony bundle for Gacela: bootstraps it from the kernel, maps host services into it, registers its console commands, and honors #[Inject] on Symfony-managed services.",
     "license": "MIT",
     "homepage": "https://gacela-project.com",
     "keywords": [
@@ -21,7 +21,10 @@
     "require": {
         "php": ">=8.3",
         "gacela-project/container": "^2.0.2",
-        "symfony/dependency-injection": "^7.0 || ^8.0"
+        "symfony/config": "^7.0 || ^8.0",
+        "symfony/console": "^7.0 || ^8.0",
+        "symfony/dependency-injection": "^7.0 || ^8.0",
+        "symfony/http-kernel": "^7.0 || ^8.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.5"

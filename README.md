@@ -83,6 +83,7 @@ reach *that* from *here*". [`docs/`](docs/README.md) is the full index; the rest
 - [Testing](docs/testing.md)
 - [Opcache preload](docs/opcache-preload.md) and [production performance](docs/production-performance.md)
 - Full reference: [gacela-project.com](https://gacela-project.com/)
+- [Symfony bundle](symfony-bridge/README.md) — bootstrap Gacela from the kernel, reach Symfony services, `bin/console gacela:*`
 - Examples:
   - [gacela-example](https://github.com/gacela-project/gacela-example)
   - [symfony-gacela-example](https://github.com/gacela-project/symfony-gacela-example) — Gacela with Symfony 7.4

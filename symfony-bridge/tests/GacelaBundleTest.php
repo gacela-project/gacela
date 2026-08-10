@@ -11,7 +11,6 @@ use Gacela\SymfonyBridge\GacelaBundle;
 use Gacela\SymfonyBridge\GacelaInjectCompilerPass;
 use GacelaTest\SymfonyBridge\Fixtures\CountingService;
 use GacelaTest\SymfonyBridge\Fixtures\TestKernel;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 use function array_map;
@@ -20,15 +19,8 @@ use function array_map;
  * The bundle driven through a real kernel, because everything it does happens
  * during compilation or boot -- neither of which a unit test can stand in for.
  */
-final class GacelaBundleTest extends TestCase
+final class GacelaBundleTest extends SymfonyBridgeTestCase
 {
-    protected function tearDown(): void
-    {
-        Gacela::resetCache();
-        Config::resetInstance();
-        CountingService::$constructed = 0;
-    }
-
     public function test_booting_the_kernel_bootstraps_gacela(): void
     {
         $kernel = new TestKernel();

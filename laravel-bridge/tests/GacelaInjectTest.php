@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace GacelaTest\LaravelBridge;
 
-use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\LaravelBridge\GacelaInjectListener;
 use GacelaTest\LaravelBridge\Fixtures\BareConstructorConsumer;
@@ -24,7 +23,6 @@ use GacelaTest\LaravelBridge\Fixtures\UntypedPropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\UntypedSetterConsumer;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use LogicException;
-use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 
 /**
@@ -33,7 +31,7 @@ use ReflectionProperty;
  * and the listener rides `afterResolving`, and neither exists outside a real
  * resolution.
  */
-final class GacelaInjectTest extends TestCase
+final class GacelaInjectTest extends LaravelBridgeTestCase
 {
     private TestApplication $app;
 
@@ -44,13 +42,6 @@ final class GacelaInjectTest extends TestCase
         ]);
         $this->app->singleton('app.counting', static fn (): CountingService => new CountingService(CountingService::FROM_LARAVEL));
         $this->app->boot();
-    }
-
-    protected function tearDown(): void
-    {
-        Gacela::resetCache();
-        Config::resetInstance();
-        CountingService::$constructed = 0;
     }
 
     public function test_a_constructor_parameter_resolves_through_gacela(): void

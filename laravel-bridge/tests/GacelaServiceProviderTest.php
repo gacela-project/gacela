@@ -15,25 +15,14 @@ use Illuminate\Console\Application as Artisan;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 
 /**
  * The provider driven through a real container, because everything it does
  * happens during registration or boot -- neither of which a unit test can
  * stand in for.
  */
-final class GacelaServiceProviderTest extends TestCase
+final class GacelaServiceProviderTest extends LaravelBridgeTestCase
 {
-    protected function tearDown(): void
-    {
-        Gacela::resetCache();
-        Config::resetInstance();
-        CountingService::$constructed = 0;
-        Artisan::forgetBootstrappers();
-        ServiceProvider::$optimizeCommands = [];
-        ServiceProvider::$optimizeClearCommands = [];
-    }
-
     public function test_booting_the_application_bootstraps_gacela(): void
     {
         $app = new TestApplication();

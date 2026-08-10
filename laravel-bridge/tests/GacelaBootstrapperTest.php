@@ -10,23 +10,15 @@ use Gacela\LaravelBridge\GacelaBootstrapper;
 use GacelaTest\LaravelBridge\Fixtures\CountingService;
 use GacelaTest\LaravelBridge\Fixtures\ServiceContract;
 use Illuminate\Container\Container;
-use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
 /**
  * The bootstrapper on its own, where the two options that decide the file
  * cache can be stated one at a time.
  */
-final class GacelaBootstrapperTest extends TestCase
+final class GacelaBootstrapperTest extends LaravelBridgeTestCase
 {
     private const APP_ROOT = __DIR__ . '/Fixtures';
-
-    protected function tearDown(): void
-    {
-        Gacela::resetCache();
-        Config::resetInstance();
-        CountingService::$constructed = 0;
-    }
 
     public function test_it_bootstraps_from_the_given_application_root(): void
     {

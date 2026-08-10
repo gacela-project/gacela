@@ -201,6 +201,19 @@ final class GacelaServiceProviderTest extends TestCase
         self::assertSame('gacela:cache:clear', ServiceProvider::$optimizeClearCommands['gacela'] ?? null);
     }
 
+    /**
+     * names() constructs all fifteen commands to read their names -- a price
+     * no web request should pay for artisan commands it can never run.
+     */
+    public function test_a_web_request_registers_no_commands(): void
+    {
+        $app = new TestApplication([], runningInConsole: false);
+        $app->boot();
+
+        self::assertFalse($this->artisan($app)->has('gacela:make:module'));
+        self::assertArrayNotHasKey('gacela', ServiceProvider::$optimizeCommands);
+    }
+
     public function test_registering_no_commands_registers_no_optimize_hooks_either(): void
     {
         $app = new TestApplication(['register_commands' => false]);

@@ -27,8 +27,6 @@ use Symfony\Component\Console\Command\Command;
  *     Gacela\LaravelBridge\GacelaServiceProvider::class,
  * ];
  * ```
- *
- * @psalm-import-type GacelaBridgeConfig from Configuration
  */
 final class GacelaServiceProvider extends ServiceProvider
 {
@@ -73,7 +71,9 @@ final class GacelaServiceProvider extends ServiceProvider
 
         GacelaInjectListener::register($this->app);
 
-        if ($config['register_commands']) {
+        // Also gated on the console: names() constructs all fifteen commands
+        // to read their names, a price no web request should pay.
+        if ($config['register_commands'] && $this->app->runningInConsole()) {
             $this->registerGacelaCommands($config['command_prefix'], $appRootDir);
         }
     }

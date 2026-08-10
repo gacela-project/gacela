@@ -16,6 +16,7 @@ use ReflectionProperty;
 
 use ReflectionType;
 
+use function array_key_exists;
 use function is_object;
 use function sprintf;
 
@@ -54,7 +55,13 @@ final class GacelaInjectListener
 
     private static function injectInto(object $object): void
     {
-        $plan = self::$plans[$object::class] ??= self::plan($object::class);
+        // array_key_exists, not `??=`: most classes plan to null, and a
+        // null-coalescing memo recomputes exactly those on every resolution.
+        if (!array_key_exists($object::class, self::$plans)) {
+            self::$plans[$object::class] = self::plan($object::class);
+        }
+
+        $plan = self::$plans[$object::class];
         if ($plan === null) {
             return;
         }
@@ -162,12 +169,22 @@ final class GacelaInjectListener
 
         $attribute = $method->getAttributes(Inject::class, ReflectionAttribute::IS_INSTANCEOF)[0]->newInstance();
 
+        // Refused rather than guessed at: with two parameters there is no
+        // saying which one the override was meant for, and every other misuse
+        // in this class fails loudly too.
+        if ($attribute->implementation !== null && $method->getNumberOfParameters() !== 1) {
+            throw new LogicException(sprintf(
+                'Cannot #[Inject(%s)] through %s::%s(): an explicit implementation needs exactly one parameter to receive it.',
+                $attribute->implementation,
+                $method->getDeclaringClass()->getName(),
+                $method->getName(),
+            ));
+        }
+
         $arguments = [];
         foreach ($method->getParameters() as $parameter) {
-            $type = $parameter->getType();
-            $target = $attribute->implementation !== null && $method->getNumberOfParameters() === 1
-                ? $attribute->implementation
-                : self::assertClassType($type, $method);
+            $target = $attribute->implementation
+                ?? self::assertClassType($parameter->getType(), $method);
 
             $arguments[] = Gacela::getRequired($target);
         }

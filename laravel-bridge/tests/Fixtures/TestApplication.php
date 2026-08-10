@@ -25,8 +25,10 @@ final class TestApplication extends Container
     /**
      * @param array<string, mixed> $gacelaConfig what `config/gacela.php` would say
      */
-    public function __construct(array $gacelaConfig = [])
-    {
+    public function __construct(
+        array $gacelaConfig = [],
+        private readonly bool $runningInConsole = true,
+    ) {
         $this->id = bin2hex(random_bytes(6));
 
         $this->instance('config', new Repository(['gacela' => $gacelaConfig]));
@@ -52,6 +54,6 @@ final class TestApplication extends Container
 
     public function runningInConsole(): bool
     {
-        return true;
+        return $this->runningInConsole;
     }
 }

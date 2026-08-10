@@ -42,5 +42,12 @@
         "psr-4": {
             "GacelaTest\\LaravelBridge\\": "tests/"
         }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Gacela\\LaravelBridge\\GacelaServiceProvider"
+            ]
+        }
     }
 }

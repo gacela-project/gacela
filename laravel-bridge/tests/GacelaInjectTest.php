@@ -6,6 +6,7 @@ namespace GacelaTest\LaravelBridge;
 
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
+use Gacela\LaravelBridge\GacelaInjectListener;
 use GacelaTest\LaravelBridge\Fixtures\BareConstructorConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ConstructorConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ContractPropertyConsumer;
@@ -18,11 +19,13 @@ use GacelaTest\LaravelBridge\Fixtures\PropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ReadonlyPropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\SetterConsumer;
 use GacelaTest\LaravelBridge\Fixtures\TestApplication;
+use GacelaTest\LaravelBridge\Fixtures\TwoParameterSetterConsumer;
 use GacelaTest\LaravelBridge\Fixtures\UntypedPropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\UntypedSetterConsumer;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use LogicException;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * `#[Inject]` on classes *Laravel* builds, driven through a real Illuminate
@@ -151,6 +154,19 @@ final class GacelaInjectTest extends TestCase
         self::assertInstanceOf(CountingService::class, $consumer->service());
     }
 
+    /**
+     * With two parameters there is no saying which one the override was meant
+     * for: refused, not guessed at -- silently resolving both by type would be
+     * the one quiet path in a class that otherwise fails loudly.
+     */
+    public function test_an_explicit_implementation_over_two_parameters_is_refused(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('exactly one parameter');
+
+        $this->app->make(TwoParameterSetterConsumer::class);
+    }
+
     public function test_a_property_honors_an_explicit_implementation_over_its_type(): void
     {
         $consumer = $this->app->make(ContractPropertyConsumer::class);
@@ -168,5 +184,31 @@ final class GacelaInjectTest extends TestCase
 
         self::assertSame(CountingService::FROM_LARAVEL, $consumer->baseService()->name());
         self::assertSame(CountingService::FROM_LARAVEL, $consumer->ownService()->name());
+    }
+
+    /**
+     * White-box on purpose: a class with no `#[Inject]` member must be
+     * remembered as `null`, the fast path every later resolution of it takes.
+     * An empty plan would behave the same today and quietly cost the loop
+     * set-up on every resolution forever.
+     */
+    public function test_a_class_with_nothing_to_inject_is_remembered_as_null(): void
+    {
+        // Evict the memo first: under random order another test may have
+        // planned this class already, and a memoized answer would let this
+        // test pass without ever exercising the planning itself.
+        $property = new ReflectionProperty(GacelaInjectListener::class, 'plans');
+        /** @var array<class-string, mixed> $plans */
+        $plans = $property->getValue();
+        unset($plans[CountingService::class]);
+        $property->setValue(null, $plans);
+
+        $this->app->make(CountingService::class);
+
+        /** @var array<class-string, mixed> $plans */
+        $plans = $property->getValue();
+
+        self::assertArrayHasKey(CountingService::class, $plans);
+        self::assertNull($plans[CountingService::class]);
     }
 }

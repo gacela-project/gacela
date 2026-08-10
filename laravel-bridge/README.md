@@ -21,8 +21,10 @@ That alone gives you four things:
 1. **Gacela bootstrapped when the application boots** — with `base_path()` as
    the application root, honouring `gacela.php`. Every boot bootstraps again,
    so an application rebooted inside one process (package tests do it
-   constantly, Octane workers do it for a living) runs on its own configuration
-   rather than the previous boot's.
+   constantly) runs on its own configuration rather than the previous boot's.
+   Note that Octane boots each worker once and reuses it: a request-scoped
+   Laravel service listed in `external_services` stays whatever the worker's
+   first boot captured.
 2. **Laravel services reachable from Gacela** — the ones you list, and only
    those.
 3. **Gacela's console commands in `artisan`**, under a `gacela:` prefix.

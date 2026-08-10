@@ -247,6 +247,10 @@
                 // The cast is already annotated @psalm-suppress RedundantCast:
                 // reset() on a non-empty string list returns a string either way.
                 "Gacela\\Console\\Domain\\FilenameSanitizer\\FilenameSanitizer::sanitize",
+                // getName() is ?string by signature only: every command sets a
+                // name in configure(), so the cast defends a null that cannot
+                // occur. Same line, same reason, in the Symfony twin.
+                "Gacela\\LaravelBridge\\GacelaCommands::names",
             ],
         },
         UnwrapArrayMap: {

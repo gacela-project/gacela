@@ -54,6 +54,20 @@ final class GacelaBootstrapperTest extends TestCase
     }
 
     /**
+     * The explicit-on path is its own branch, and "off is the default anyway"
+     * would let it rot unnoticed: turning it on must both enable the cache and
+     * carry the directory along.
+     */
+    public function test_the_file_cache_can_be_turned_on_explicitly(): void
+    {
+        $cacheDir = self::APP_ROOT . '/bootstrapper-cache';
+        $this->bootstrap(['cache_dir' => $cacheDir, 'file_cache' => true]);
+
+        self::assertTrue(Config::getInstance()->getSetupGacela()->isFileCacheEnabled());
+        self::assertSame($cacheDir, Config::getInstance()->getSetupGacela()->getFileCacheDirectory());
+    }
+
+    /**
      * Saying nothing must change nothing: the provider's defaults are Gacela's
      * defaults, not a second opinion about them.
      */

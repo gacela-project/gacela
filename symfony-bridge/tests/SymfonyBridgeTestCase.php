@@ -20,8 +20,9 @@ abstract class SymfonyBridgeTestCase extends TestCase
 {
     protected function tearDown(): void
     {
+        // Gacela::resetCache() resets Config too -- listing it twice would
+        // imply it does not.
         Gacela::resetCache();
-        Config::resetInstance();
         CountingService::$constructed = 0;
     }
 }

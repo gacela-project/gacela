@@ -71,10 +71,10 @@
         "psr-4": {
             "GacelaData\\": "data/",
             "GacelaTest\\": "tests/",
-            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/",
             "GacelaTest\\LaravelBridge\\": "laravel-bridge/tests/",
-            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/",
-            "Gacela\\LaravelBridge\\": "laravel-bridge/src/"
+            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/",
+            "Gacela\\LaravelBridge\\": "laravel-bridge/src/",
+            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/"
         }
     },
     "bin": [

@@ -1,9 +1,8 @@
 {
     "name": "gacela-project/laravel-bridge",
-    "type": "library",
     "description": "Laravel service provider for Gacela: bootstraps it when the application boots, maps host services into it, registers its artisan commands, and honors #[Inject] on Laravel-managed services.",
     "license": "MIT",
-    "homepage": "https://gacela-project.com",
+    "type": "library",
     "keywords": [
         "php",
         "gacela",
@@ -18,6 +17,7 @@
             "homepage": "https://chemaclass.com"
         }
     ],
+    "homepage": "https://gacela-project.com",
     "require": {
         "php": ">=8.3",
         "gacela-project/container": "^2.0.2",
@@ -31,6 +31,8 @@
     "require-dev": {
         "phpunit/phpunit": "^10.5"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Gacela\\LaravelBridge\\": "src/"
@@ -40,7 +42,5 @@
         "psr-4": {
             "GacelaTest\\LaravelBridge\\": "tests/"
         }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    }
 }

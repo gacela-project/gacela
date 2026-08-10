@@ -246,7 +246,11 @@ final class GacelaConfig
     }
 
     /**
-     * Enable resetting the memory cache on each setup. Useful for functional tests.
+     * Reset the in-memory caches -- including the locator and its instance
+     * cache -- as part of this bootstrap. Anything that re-bootstraps inside
+     * one process wants this: functional tests, and both bridges call it on
+     * every boot, or a re-bootstrap keeps serving the previous boot's
+     * services out of the stale locator (#666).
      */
     public function resetInMemoryCache(): self
     {

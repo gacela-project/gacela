@@ -13,7 +13,7 @@ namespace GacelaTest\SymfonyBridge\Fixtures;
  * and they do not: a constructor argument only Symfony supplies is the fact
  * itself rather than a consequence of it.
  */
-final class CountingService
+final class CountingService implements ServiceContract
 {
     public const AUTOWIRED = 'autowired';
 

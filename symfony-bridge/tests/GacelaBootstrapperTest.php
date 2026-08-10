@@ -8,6 +8,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\GacelaBootstrapper;
 use GacelaTest\SymfonyBridge\Fixtures\CountingService;
+use GacelaTest\SymfonyBridge\Fixtures\ServiceContract;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 
@@ -85,6 +86,16 @@ final class GacelaBootstrapperTest extends SymfonyBridgeTestCase
         $this->bootstrap([], [CountingService::class => 'app.counting']);
 
         self::assertInstanceOf(CountingService::class, Gacela::get(CountingService::class));
+    }
+
+    /**
+     * An interface names a type as much as a class does.
+     */
+    public function test_a_service_listed_under_an_interface_is_bound(): void
+    {
+        $this->bootstrap([], [ServiceContract::class => 'app.counting']);
+
+        self::assertInstanceOf(CountingService::class, Gacela::get(ServiceContract::class));
     }
 
     /**

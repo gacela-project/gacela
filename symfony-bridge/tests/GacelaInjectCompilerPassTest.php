@@ -131,6 +131,21 @@ final class GacelaInjectCompilerPassTest extends TestCase
     }
 
     /**
+     * Same lesson for a constructor-less definition: the scan must step over
+     * it, not stop at it -- skipping and stopping only look alike when the
+     * skipped definition happens to be the last one.
+     */
+    public function test_a_constructorless_definition_is_skipped_without_stopping_the_scan(): void
+    {
+        $this->container->register('app.bare', ConcreteBar::class);
+        $this->container->register('app.service', ServiceWithInject::class);
+
+        $this->pass->process($this->container);
+
+        self::assertInstanceOf(Definition::class, $this->argumentFor('app.service', '$foo'));
+    }
+
+    /**
      * The generated factory definition is an implementation detail of the
      * argument it fills, so it has no business being reachable from the
      * container by id.

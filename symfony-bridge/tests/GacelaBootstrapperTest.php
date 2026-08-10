@@ -8,7 +8,6 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\GacelaBootstrapper;
 use GacelaTest\SymfonyBridge\Fixtures\CountingService;
-use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 
@@ -16,16 +15,9 @@ use Symfony\Component\DependencyInjection\ServiceLocator;
  * The bootstrapper on its own, where the two options that decide the file cache
  * can be stated one at a time.
  */
-final class GacelaBootstrapperTest extends TestCase
+final class GacelaBootstrapperTest extends SymfonyBridgeTestCase
 {
     private const APP_ROOT = __DIR__ . '/Fixtures';
-
-    protected function tearDown(): void
-    {
-        Gacela::resetCache();
-        Config::resetInstance();
-        CountingService::$constructed = 0;
-    }
 
     public function test_it_bootstraps_from_the_given_application_root(): void
     {
@@ -50,6 +42,20 @@ final class GacelaBootstrapperTest extends TestCase
         $this->bootstrap(['cache_dir' => self::APP_ROOT . '/bootstrapper-cache', 'file_cache' => false]);
 
         self::assertFalse(Config::getInstance()->getSetupGacela()->isFileCacheEnabled());
+    }
+
+    /**
+     * The explicit-on path is its own branch, and "off is the default anyway"
+     * would let it rot unnoticed: turning it on must both enable the cache and
+     * carry the directory along.
+     */
+    public function test_the_file_cache_can_be_turned_on_explicitly(): void
+    {
+        $cacheDir = self::APP_ROOT . '/bootstrapper-cache';
+        $this->bootstrap(['cache_dir' => $cacheDir, 'file_cache' => true]);
+
+        self::assertTrue(Config::getInstance()->getSetupGacela()->isFileCacheEnabled());
+        self::assertSame($cacheDir, Config::getInstance()->getSetupGacela()->getFileCacheDirectory());
     }
 
     /**

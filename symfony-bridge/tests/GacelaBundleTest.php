@@ -11,7 +11,6 @@ use Gacela\SymfonyBridge\GacelaBundle;
 use Gacela\SymfonyBridge\GacelaInjectCompilerPass;
 use GacelaTest\SymfonyBridge\Fixtures\CountingService;
 use GacelaTest\SymfonyBridge\Fixtures\TestKernel;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 use function array_map;
@@ -20,15 +19,8 @@ use function array_map;
  * The bundle driven through a real kernel, because everything it does happens
  * during compilation or boot -- neither of which a unit test can stand in for.
  */
-final class GacelaBundleTest extends TestCase
+final class GacelaBundleTest extends SymfonyBridgeTestCase
 {
-    protected function tearDown(): void
-    {
-        Gacela::resetCache();
-        Config::resetInstance();
-        CountingService::$constructed = 0;
-    }
-
     public function test_booting_the_kernel_bootstraps_gacela(): void
     {
         $kernel = new TestKernel();
@@ -50,6 +42,26 @@ final class GacelaBundleTest extends TestCase
         (new TestKernel(['project_namespaces' => ['App']]))->boot();
 
         self::assertSame(['App'], Config::getInstance()->getSetupGacela()->getProjectNamespaces());
+    }
+
+    /**
+     * The sharper variant of the same lesson: the locator memoizes instances,
+     * and a re-bootstrap that kept it would keep serving the first kernel's
+     * services no matter what the second one listed. Configuration alone
+     * cannot see this -- only asking for a *service* can (#666).
+     */
+    public function test_a_second_boot_serves_the_second_kernels_services(): void
+    {
+        $this->kernelWithCountingService()->boot();
+        self::assertSame(CountingService::FROM_SYMFONY, Gacela::get(CountingService::class)?->name());
+
+        (new TestKernel(
+            ['external_services' => [CountingService::class => 'app.counting']],
+            ['app.counting' => CountingService::class],
+            serviceName: 'rebooted',
+        ))->boot();
+
+        self::assertSame('rebooted', Gacela::get(CountingService::class)?->name());
     }
 
     /**

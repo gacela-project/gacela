@@ -105,6 +105,9 @@
                 // would break on an unrelated upstream release.
                 // Not a TODO. The forwarding itself is required by the interface.
                 "Gacela\\Framework\\Container\\Container::warmUp",
+                // Bundle::build() is empty in Symfony's base class; the call is
+                // kept as the documented override convention, not as behavior.
+                "Gacela\\SymfonyBridge\\GacelaBundle::build",
             ],
         },
         IfNegation: {
@@ -249,8 +252,9 @@
                 "Gacela\\Console\\Domain\\FilenameSanitizer\\FilenameSanitizer::sanitize",
                 // getName() is ?string by signature only: every command sets a
                 // name in configure(), so the cast defends a null that cannot
-                // occur. Same line, same reason, in the Symfony twin.
+                // occur. Same line, same reason, in both bridges.
                 "Gacela\\LaravelBridge\\GacelaCommands::names",
+                "Gacela\\SymfonyBridge\\GacelaCommands::names",
             ],
         },
         UnwrapArrayMap: {

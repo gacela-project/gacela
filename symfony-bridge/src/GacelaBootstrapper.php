@@ -39,6 +39,12 @@ final class GacelaBootstrapper
     public function bootstrap(): void
     {
         Gacela::bootstrap($this->appRootDir, function (GacelaConfig $config): void {
+            // Without this, a re-bootstrap keeps the previous boot's locator,
+            // which keeps serving the previous boot's container -- the #597
+            // class of bug, one layer down (#666). A first boot resets nothing
+            // but empty caches, so it only costs where it is needed.
+            $config->resetInMemoryCache();
+
             $this->applyOptions($config);
             $this->applyExternalServices($config);
         });

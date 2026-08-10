@@ -10,13 +10,12 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\GacelaCacheWarmer;
-use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 use function glob;
 use function unlink;
 
-final class GacelaCacheWarmerTest extends TestCase
+final class GacelaCacheWarmerTest extends SymfonyBridgeTestCase
 {
     private const APP_ROOT = __DIR__ . '/Fixtures';
 
@@ -41,8 +40,7 @@ final class GacelaCacheWarmerTest extends TestCase
 
         @rmdir(self::CACHE_DIR);
 
-        Gacela::resetCache();
-        Config::resetInstance();
+        parent::tearDown();
     }
 
     /**

@@ -17,7 +17,8 @@
             // Ships from this repo as its own package. phpunit.xml's <source>
             // covers it too, so it is both measured and gated rather than
             // measured only.
-            'symfony-bridge/src'
+            'symfony-bridge/src',
+            'laravel-bridge/src'
         ]
     },
     // 90, not 100: at 100 one equivalent mutant anywhere turns main red, and

@@ -19,6 +19,7 @@
     <testsuite name="unit">
       <directory suffix="Test.php">tests/Unit</directory>
       <directory suffix="Test.php">symfony-bridge/tests</directory>
+      <directory suffix="Test.php">laravel-bridge/tests</directory>
     </testsuite>
     <testsuite name="integration">
       <directory suffix="Test.php">tests/Integration</directory>
@@ -31,6 +32,7 @@
     <include>
       <directory suffix=".php">src</directory>
       <directory suffix=".php">symfony-bridge/src</directory>
+      <directory suffix=".php">laravel-bridge/src</directory>
     </include>
   </source>
 </phpunit>

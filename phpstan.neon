@@ -13,6 +13,7 @@ parameters:
     paths:
         - %currentWorkingDirectory%/src/
         - %currentWorkingDirectory%/symfony-bridge/src/
+        - %currentWorkingDirectory%/laravel-bridge/src/
     parallel:
         maximumNumberOfProcesses: 4
     excludePaths:
@@ -33,6 +34,10 @@ parameters:
         -
             identifier: gacela.suffixExtends
             path: src/Framework/*
+        # A *Laravel* service provider: the host's word, not a pillar.
+        -
+            identifier: gacela.suffixExtends
+            path: laravel-bridge/src/GacelaServiceProvider.php
         # Building a MethodReflection is unavoidable for a methodsClassReflectionExtension,
         # and PHPStan covers no way of doing it under its BC promise -- neither implementing
         # ExtendedMethodReflection nor constructing its own implementation of it. The class

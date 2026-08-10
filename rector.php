@@ -27,6 +27,8 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/tests',
         __DIR__ . '/symfony-bridge/src',
         __DIR__ . '/symfony-bridge/tests',
+        __DIR__ . '/laravel-bridge/src',
+        __DIR__ . '/laravel-bridge/tests',
     ]);
 
     $rectorConfig->skip([
@@ -84,12 +86,19 @@ return static function (RectorConfig $rectorConfig): void {
         RemoveUnusedVariableAssignRector::class => [__DIR__ . '/tests'],
         // The container writes `#[Inject]` properties through
         // ReflectionProperty::setValue(); readonly would make those fixtures
-        // untestable for the mechanism they exist to cover.
-        ReadOnlyPropertyRector::class => [__DIR__ . '/tests'],
+        // untestable for the mechanism they exist to cover. The laravel-bridge
+        // listener does the same to its fixtures.
+        ReadOnlyPropertyRector::class => [
+            __DIR__ . '/tests',
+            __DIR__ . '/laravel-bridge/tests/Fixtures',
+        ],
         // `#[Before]`-attributed setup methods are invoked reflectively by PHPUnit;
         // rector sees them as unused. Removing them silently drops test isolation.
         RemoveUnusedPrivateMethodRector::class => [
             __DIR__ . '/tests/Unit/Framework/Testing/ContainerFixtureTest.php',
+            // A private #[Inject] setter that exists to be *refused*: no code
+            // path may call it, which is exactly what rector notices.
+            __DIR__ . '/laravel-bridge/tests/Fixtures/PrivateSetterConsumer.php',
         ],
         PrivatizeFinalClassMethodRector::class => [
             __DIR__ . '/tests/Unit/Framework/Testing/ContainerFixtureTest.php',

@@ -33,6 +33,12 @@
         "bamarni/composer-bin-plugin": "^1.8",
         "ergebnis/composer-normalize": "^2.50",
         "friendsofphp/php-cs-fixer": "^3.95",
+        "illuminate/config": "^11.28 || ^12.0",
+        "illuminate/console": "^11.28 || ^12.0",
+        "illuminate/container": "^11.28 || ^12.0",
+        "illuminate/contracts": "^11.28 || ^12.0",
+        "illuminate/events": "^11.28 || ^12.0",
+        "illuminate/support": "^11.28 || ^12.0",
         "infection/infection": "^0.34",
         "nikic/php-parser": "^5.4",
         "phpbench/phpbench": "^1.4",
@@ -65,7 +71,9 @@
         "psr-4": {
             "GacelaData\\": "data/",
             "GacelaTest\\": "tests/",
+            "GacelaTest\\LaravelBridge\\": "laravel-bridge/tests/",
             "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/",
+            "Gacela\\LaravelBridge\\": "laravel-bridge/src/",
             "Gacela\\SymfonyBridge\\": "symfony-bridge/src/"
         }
     },

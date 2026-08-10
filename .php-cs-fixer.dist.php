@@ -13,6 +13,8 @@ $finder = Finder::create()
     // the same style and analysis as src/ and tests/.
     ->in(__DIR__ . '/symfony-bridge/src')
     ->in(__DIR__ . '/symfony-bridge/tests')
+    ->in(__DIR__ . '/laravel-bridge/src')
+    ->in(__DIR__ . '/laravel-bridge/tests')
     ->ignoreVCSIgnored(true);
 
 return (new Config())

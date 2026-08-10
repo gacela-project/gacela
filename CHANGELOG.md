@@ -13,6 +13,8 @@
 - Check the declared schema on every bootstrap with `validateConfigSchemaOnBoot()`, for local development
 - Replace another module in a test with `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()`, dropped again in `tearDown()`
 - Register `GacelaBundle` in a Symfony application: it bootstraps Gacela from the kernel, maps listed Symfony services into it, adds the console commands under a `gacela:` prefix, and warms Gacela's caches from `cache:warmup`
+- Register `GacelaServiceProvider` in a Laravel application: it bootstraps Gacela when the application boots, maps listed Laravel bindings into it, adds the artisan commands under a `gacela:` prefix, and warms Gacela's caches from `artisan optimize`
+- Honor `#[Inject]` on Laravel-resolved services: on constructor parameters through Laravel's contextual attributes, on properties and setters through `afterResolving`
 - Publish the scaffolder's templates into the project with `stubs:publish`, and generate from them per file, falling back to the built-in ones
 - Report a published stub that lost a placeholder, or one the scaffolder never reads, in `doctor`
 

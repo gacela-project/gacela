@@ -13,6 +13,7 @@
     <projectFiles>
         <directory name="src"/>
         <directory name="symfony-bridge/src"/>
+        <directory name="laravel-bridge/src"/>
         <ignoreFiles>
             <directory name="vendor"/>
         </ignoreFiles>
@@ -40,6 +41,8 @@
         <PluginIssue name="GacelaSuffixExtends">
             <errorLevel type="suppress">
                 <directory name="src/Framework"/>
+                <!-- A *Laravel* service provider: the host's word, not a pillar. -->
+                <file name="laravel-bridge/src/GacelaServiceProvider.php"/>
             </errorLevel>
         </PluginIssue>
         <DeprecatedClass errorLevel="suppress" />

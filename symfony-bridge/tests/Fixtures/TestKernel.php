@@ -29,11 +29,13 @@ final class TestKernel extends Kernel
     /**
      * @param array<string, mixed>       $gacelaConfig     what `gacela.yaml` would say
      * @param array<string, class-string> $extraServices   service id => class, registered public
+     * @param string                     $serviceName      the name those services carry, so a second kernel's are distinguishable
      */
     public function __construct(
         private readonly array $gacelaConfig = [],
         private readonly array $extraServices = [],
         string $environment = 'test',
+        private readonly string $serviceName = CountingService::FROM_SYMFONY,
     ) {
         $this->id = bin2hex(random_bytes(6));
 
@@ -55,7 +57,7 @@ final class TestKernel extends Kernel
 
             foreach ($this->extraServices as $id => $class) {
                 $definition = new Definition($class);
-                $definition->setArguments([CountingService::FROM_SYMFONY]);
+                $definition->setArguments([$this->serviceName]);
                 $definition->setPublic(true);
                 $container->setDefinition($id, $definition);
             }

@@ -18,6 +18,10 @@
 - Publish the scaffolder's templates into the project with `stubs:publish`, and generate from them per file, falling back to the built-in ones
 - Report a published stub that lost a placeholder, or one the scaffolder never reads, in `doctor`
 
+### Fixed
+
+- Serve the rebooted kernel's services after a second `GacelaBundle` boot, instead of the previous kernel's out of a stale locator
+
 ## [2.1.0](https://github.com/gacela-project/gacela/compare/2.0.0...2.1.0) - 2026-08-09
 
 ### Added

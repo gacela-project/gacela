@@ -53,6 +53,26 @@ final class GacelaBundleTest extends TestCase
     }
 
     /**
+     * The sharper variant of the same lesson: the locator memoizes instances,
+     * and a re-bootstrap that kept it would keep serving the first kernel's
+     * services no matter what the second one listed. Configuration alone
+     * cannot see this -- only asking for a *service* can (#666).
+     */
+    public function test_a_second_boot_serves_the_second_kernels_services(): void
+    {
+        $this->kernelWithCountingService()->boot();
+        self::assertSame(CountingService::FROM_SYMFONY, Gacela::get(CountingService::class)?->name());
+
+        (new TestKernel(
+            ['external_services' => [CountingService::class => 'app.counting']],
+            ['app.counting' => CountingService::class],
+            serviceName: 'rebooted',
+        ))->boot();
+
+        self::assertSame('rebooted', Gacela::get(CountingService::class)?->name());
+    }
+
+    /**
      * Gacela autowires an unlisted class perfectly happily, so "an instance
      * came back" would pass with the whole mapping deleted. What cannot is a
      * constructor argument only Symfony supplies: an autowired one would carry

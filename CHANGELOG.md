@@ -52,18 +52,11 @@
 
 ## [2.0.0](https://github.com/gacela-project/gacela/compare/1.21.0...2.0.0) - 2026-08-07
 
-The "one container" release. Module containers are scopes of one app container,
-so `gacela.php` is walked once per bootstrap instead of once per Factory class:
-79 containers against 300 app-wide entries go 18.0ms → 0.07ms.
+The "one container" release. Module containers are scopes of one app container, so `gacela.php` is walked once per bootstrap instead of once per Factory class: 79 containers against 300 app-wide entries go 18.0ms → 0.07ms.
 
-Two runtime changes: PHP `>=8.3`, and `gacela-project/container` `^2.0.2` up from
-a `0.x`. Most of what follows comes from the second: `#[Lazy]`, `#[Inject]` on
-properties, PSR-11-correct `has()`, and container exceptions where 0.x emitted
-raw PHP errors.
+Two runtime changes: PHP `>=8.3`, and `gacela-project/container` `^2.0.2` up from a `0.x`. Most of what follows comes from the second: `#[Lazy]`, `#[Inject]` on properties, PSR-11-correct `has()`, and container exceptions where 0.x emitted raw PHP errors.
 
-Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md). Run
-`vendor/bin/gacela doctor` on 1.21 first, because one of the three fails
-silently.
+Migration is three mechanical renames. See [UPGRADE.md](UPGRADE.md). Run `vendor/bin/gacela doctor` on 1.21 first, because one of the three fails silently.
 
 ### Added
 
@@ -144,9 +137,7 @@ silently.
 
 ## [1.21.0](https://github.com/gacela-project/gacela/compare/1.20.0...1.21.0) - 2026-07-26
 
-Static analysis now **types** the pillar accessors instead of suppressing them, and the
-console gained checks for mistakes that were previously silent. Both are worth having
-before you migrate to 2.0.
+Static analysis now **types** the pillar accessors instead of suppressing them, and the console gained checks for mistakes that were previously silent. Both are worth having before you migrate to 2.0.
 
 ### Added
 
@@ -543,7 +534,7 @@ before you migrate to 2.0.
 ## [1.1.0](https://github.com/gacela-project/gacela/compare/1.0.1...1.1.0) - 2023-03-21
 
 - Allow using static facade methods
-  - Enabled calling `::getFactory()` from a static context 
+  - Enabled calling `::getFactory()` from a static context
 - ResetInMemoryCache also from anonymous globals and factory containers
 
 ## [1.0.1](https://github.com/gacela-project/gacela/compare/1.0.0...1.0.1) - 2023-03-12
@@ -634,7 +625,7 @@ before you migrate to 2.0.
 
 ## [0.22.0](https://github.com/gacela-project/gacela/compare/0.21.0...0.22.0) - 2022-06-10
 
-- Added a (file) cache layer 
+- Added a (file) cache layer
   - for class-names to their resolvable-type (in a file: `.gacela-class-names.cache`)
   - for custom-services to their resolvable-class (in a file: `.custom-services.cache`)
 - Delete unnecessary Backtrace for exceptions

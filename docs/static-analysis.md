@@ -132,7 +132,7 @@ final class CheckoutController
 
 This matters more than it looks. The accessor was previously *suppressed* rather than typed, and a suppressed call is not a checked one — it evaluates to `mixed`, which silently switches off analysis of everything reached through it, not just the accessor itself. A typo in `placeOrder()` produced no error at all.
 
-A `@method CheckoutFacade getFacade()` docblock works too — both analysers read those natively — but then the same fact is written twice, and the copies drift.
+A `@method CheckoutFacade getFacade()` docblock works too — both analysers read those natively — but then the same fact is written twice, and the copies drift. The one reason to write both is the IDE, which reads `@method` and not the attribute; that tradeoff is described in [reach another module](getting-a-dependency.md#reach-another-module), and #678 proposes generating the copy so it cannot drift.
 
 **The PHPStan suppression is gone as of 2.0.** `phpstan-gacela.neon` no longer carries an `ignoreErrors` entry for undeclared pillar accessors, so a class that declares neither `#[ServiceMap]` nor a `@method` docblock has its `$this->getFacade()` reported as an undefined method. Psalm still ships its suppression in `psalm-gacela.xml` as a fallback, scheduled for removal in 3.0.
 

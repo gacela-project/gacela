@@ -43,6 +43,19 @@ final class BootstrapFingerprintTest extends TestCase
         );
     }
 
+    /**
+     * A type's own suffix list is first-match-wins in resolution, so its
+     * order is as significant as the namespace order -- a deep sort "for
+     * consistency" here would silently break suffix priority.
+     */
+    public function test_a_types_own_suffix_order_is_significant(): void
+    {
+        self::assertNotSame(
+            BootstrapFingerprint::compute([], ['Factory' => ['V1', 'V2']]),
+            BootstrapFingerprint::compute([], ['Factory' => ['V2', 'V1']]),
+        );
+    }
+
     public function test_different_namespaces_diverge(): void
     {
         self::assertNotSame(

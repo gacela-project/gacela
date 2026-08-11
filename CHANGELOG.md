@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, instead of leaning on transitive luck; demote the Laravel bridge's test-only `illuminate/container` and `illuminate/events` to `require-dev`
+
 ## [2.2.0](https://github.com/gacela-project/gacela/compare/2.1.0...2.2.0) - 2026-08-11
 
 ### Added

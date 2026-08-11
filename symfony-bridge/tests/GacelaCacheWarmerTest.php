@@ -7,6 +7,7 @@ namespace GacelaTest\SymfonyBridge;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
+use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\GacelaCacheWarmer;
@@ -94,6 +95,7 @@ final class GacelaCacheWarmerTest extends SymfonyBridgeTestCase
             $config->getCacheDir(),
             ClassNamePhpCache::FILENAME,
             $config->getAppRootDir(),
+            ClassResolverCache::bootstrapFingerprint(),
         );
     }
 

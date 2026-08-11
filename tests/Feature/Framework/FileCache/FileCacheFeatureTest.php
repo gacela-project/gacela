@@ -8,6 +8,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -44,7 +45,7 @@ final class FileCacheFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileExists(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), ClassNamePhpCache::FILENAME, __DIR__));
+        self::assertFileExists(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), ClassNamePhpCache::FILENAME, __DIR__, ClassResolverCache::bootstrapFingerprint()));
         self::assertFileExists(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), CustomServicesPhpCache::FILENAME, __DIR__));
     }
 
@@ -60,10 +61,10 @@ final class FileCacheFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileExists(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), ClassNamePhpCache::FILENAME, __DIR__));
+        self::assertFileExists(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), ClassNamePhpCache::FILENAME, __DIR__, ClassResolverCache::bootstrapFingerprint()));
         self::assertFileExists(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), CustomServicesPhpCache::FILENAME, __DIR__));
 
-        self::assertFileDoesNotExist(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/this-will-be-overwritten/', '/'), ClassNamePhpCache::FILENAME, __DIR__));
+        self::assertFileDoesNotExist(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/this-will-be-overwritten/', '/'), ClassNamePhpCache::FILENAME, __DIR__, ClassResolverCache::bootstrapFingerprint()));
         self::assertFileDoesNotExist(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/this-will-be-overwritten/', '/'), CustomServicesPhpCache::FILENAME, __DIR__));
     }
 
@@ -77,7 +78,7 @@ final class FileCacheFeatureTest extends TestCase
         $facade = new Module\Facade();
         self::assertSame('name', $facade->getName());
 
-        self::assertFileDoesNotExist(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), ClassNamePhpCache::FILENAME, __DIR__));
+        self::assertFileDoesNotExist(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), ClassNamePhpCache::FILENAME, __DIR__, ClassResolverCache::bootstrapFingerprint()));
         self::assertFileDoesNotExist(AbstractPhpFileCache::absoluteFilename(rtrim(__DIR__ . '/custom/cache-dir/', '/'), CustomServicesPhpCache::FILENAME, __DIR__));
     }
 }

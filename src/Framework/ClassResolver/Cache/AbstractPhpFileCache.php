@@ -30,6 +30,7 @@ abstract class AbstractPhpFileCache implements CacheInterface
     public function __construct(
         private readonly string $cacheDir,
         private readonly string $appRootDir = '',
+        private readonly string $bootstrapFingerprint = '',
     ) {
         self::$cache[static::class] = $this->getExistingCache();
         self::$filenames[static::class] = $this->computeAbsoluteFilename();
@@ -189,8 +190,12 @@ abstract class AbstractPhpFileCache implements CacheInterface
      * Public and static so the console agrees with the cache on the path:
      * `cache:clear` and the staleness check have to look where `put()` wrote.
      */
-    public static function absoluteFilename(string $cacheDir, string $baseFilename, string $appRootDir): string
-    {
+    public static function absoluteFilename(
+        string $cacheDir,
+        string $baseFilename,
+        string $appRootDir,
+        string $bootstrapFingerprint = '',
+    ): string {
         if ($appRootDir === '') {
             return $cacheDir . DIRECTORY_SEPARATOR . $baseFilename;
         }
@@ -199,7 +204,14 @@ abstract class AbstractPhpFileCache implements CacheInterface
             ? substr($baseFilename, 0, -4)
             : $baseFilename;
 
-        return $cacheDir . DIRECTORY_SEPARATOR . $base . '-' . substr(sha1($appRootDir), 0, 12) . '.php';
+        // The fingerprint diverges the *file*, not the key: two bootstraps of
+        // one app root with different resolution inputs each read and write
+        // their own map, instead of whichever resolved first answering for
+        // both (#681). Keys stay stable and human readable for doctor and the
+        // debug tooling.
+        $suffix = $bootstrapFingerprint === '' ? '' : '-' . $bootstrapFingerprint;
+
+        return $cacheDir . DIRECTORY_SEPARATOR . $base . '-' . substr(sha1($appRootDir), 0, 12) . $suffix . '.php';
     }
 
     abstract protected function getCacheFilename(): string;
@@ -223,6 +235,6 @@ abstract class AbstractPhpFileCache implements CacheInterface
 
     private function computeAbsoluteFilename(): string
     {
-        return self::absoluteFilename($this->cacheDir, $this->getCacheFilename(), $this->appRootDir);
+        return self::absoluteFilename($this->cacheDir, $this->getCacheFilename(), $this->appRootDir, $this->bootstrapFingerprint);
     }
 }

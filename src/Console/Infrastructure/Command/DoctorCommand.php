@@ -14,6 +14,7 @@ use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
+use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\AppEnv;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\MergedConfigCache;
@@ -93,6 +94,7 @@ final class DoctorCommand extends Command
                 $config->getAppRootDir(),
                 new MergedConfigCache($config->getCacheDir(), AppEnv::current(), $config->getAppRootDir()),
                 $configFactory->createConfigLoader()->sourceFiles(),
+                ClassResolverCache::bootstrapFingerprint(),
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules),

@@ -9,6 +9,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Gacela;
@@ -48,6 +49,7 @@ final class CacheWarmCommandTest extends TestCase
             Config::getInstance()->getCacheDir(),
             ClassNamePhpCache::FILENAME,
             Config::getInstance()->getAppRootDir(),
+            ClassResolverCache::bootstrapFingerprint(),
         );
         $this->mergedConfigCacheFile = Config::getInstance()->mergedConfigCacheFilename();
         $this->customServicesCacheFile = AbstractPhpFileCache::absoluteFilename(

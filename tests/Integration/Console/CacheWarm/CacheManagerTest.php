@@ -9,6 +9,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -59,13 +60,14 @@ final class CacheManagerTest extends TestCase
      * it defaults to the system temp dir -- and without the hash two
      * applications on one machine read and write the same file.
      */
-    public function test_cache_file_path_points_at_the_app_scoped_class_name_cache(): void
+    public function test_cache_file_path_points_at_the_current_bootstraps_class_name_cache(): void
     {
         self::assertSame(
             AbstractPhpFileCache::absoluteFilename(
                 Config::getInstance()->getCacheDir(),
                 ClassNamePhpCache::FILENAME,
                 Config::getInstance()->getAppRootDir(),
+                ClassResolverCache::bootstrapFingerprint(),
             ),
             $this->cacheManager->getCacheFilePath(),
         );
@@ -102,9 +104,11 @@ final class CacheManagerTest extends TestCase
         $classNameCache = $this->writeCacheFile(ClassNamePhpCache::FILENAME, 1024);
         $customServicesCache = $this->writeCacheFile(CustomServicesPhpCache::FILENAME, 512);
 
+        // The fingerprinted class-name file is discovered by the glob after
+        // the fixed spellings, so it lists last (#681).
         self::assertSame([
-            $classNameCache => '1.00 KB',
             $customServicesCache => '512 B',
+            $classNameCache => '1.00 KB',
         ], $this->cacheManager->getExistingCacheFilesWithSize());
     }
 
@@ -141,6 +145,8 @@ final class CacheManagerTest extends TestCase
             Config::getInstance()->getCacheDir(),
             $filename,
             Config::getInstance()->getAppRootDir(),
+            // Only the class-name cache carries the bootstrap fingerprint (#681).
+            $filename === ClassNamePhpCache::FILENAME ? ClassResolverCache::bootstrapFingerprint() : '',
         );
 
         if (!is_dir(dirname($path))) {

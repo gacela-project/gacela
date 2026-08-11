@@ -32,6 +32,8 @@ vendor/bin/gacela cache:clear     # drop the caches (run before re-warming)
 
 Run `cache:warm` as a deploy step, after `composer install` and before traffic is routed to the new release.
 
+`cache:warm` warms *one bootstrap*: the class-name cache file is keyed by the bootstrap's `projectNamespaces` and suffix types, so a deploy with several entrypoints that bootstrap differently runs it once per entrypoint — each writes its own file, and none answers for another.
+
 ## 3. Preload the framework into opcache
 
 Point `opcache.preload` at `resources/gacela-preload.php` to load Gacela's core files into shared memory at PHP startup, removing their compilation cost from every request.

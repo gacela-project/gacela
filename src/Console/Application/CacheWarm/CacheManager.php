@@ -8,6 +8,7 @@ use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 
 use function array_filter;
@@ -15,6 +16,8 @@ use function array_map;
 use function array_merge;
 use function file_exists;
 use function filesize;
+use function glob;
+use function substr;
 
 final class CacheManager
 {
@@ -31,7 +34,9 @@ final class CacheManager
     }
 
     /**
-     * Absolute path of the primary warm cache (the class-resolution cache written by cache:warm).
+     * Absolute path of the primary warm cache (the class-resolution cache
+     * written by cache:warm) -- the current bootstrap's file, fingerprint
+     * included, or the report would name a path nothing writes (#681).
      */
     public function getCacheFilePath(): string
     {
@@ -39,6 +44,7 @@ final class CacheManager
             $this->cacheDir(),
             ClassNamePhpCache::FILENAME,
             Config::getInstance()->getAppRootDir(),
+            ClassResolverCache::bootstrapFingerprint(),
         );
     }
 
@@ -98,9 +104,11 @@ final class CacheManager
         $cacheDir = $this->cacheDir();
         $appRoot = Config::getInstance()->getAppRootDir();
 
-        // Both spellings: the app-scoped name `put()` writes, and the unscoped
-        // one written before the caches were scoped. `cache:clear` that left a
-        // legacy file behind would leave the stale answers it holds reachable.
+        // Every spelling: the app-scoped name `put()` writes, the unscoped one
+        // written before the caches were scoped, and every bootstrap
+        // fingerprint of the class-name cache (#681) -- `cache:clear` that
+        // left one entrypoint's file behind would leave the stale answers it
+        // holds reachable.
         return array_merge(
             array_map(
                 static fn (string $filename): string => AbstractPhpFileCache::absoluteFilename($cacheDir, $filename, $appRoot),
@@ -110,7 +118,23 @@ final class CacheManager
                 static fn (string $filename): string => $cacheDir . DIRECTORY_SEPARATOR . $filename,
                 self::CACHE_FILENAMES,
             ),
+            $this->fingerprintedClassNameFiles($cacheDir, $appRoot),
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function fingerprintedClassNameFiles(string $cacheDir, string $appRoot): array
+    {
+        if ($appRoot === '') {
+            return [];
+        }
+
+        $appScoped = AbstractPhpFileCache::absoluteFilename($cacheDir, ClassNamePhpCache::FILENAME, $appRoot);
+
+        // The app-scoped name minus `.php`, plus one fingerprint segment.
+        return glob(substr($appScoped, 0, -4) . '-*.php') ?: [];
     }
 
     private function cacheDir(): string

@@ -5,6 +5,7 @@
 ### Fixed
 
 - Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, instead of leaning on transitive luck; demote the Laravel bridge's test-only `illuminate/container` and `illuminate/events` to `require-dev`
+- Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir stop silently serving each other's resolved classes
 
 ## [2.2.0](https://github.com/gacela-project/gacela/compare/2.1.0...2.2.0) - 2026-08-11
 

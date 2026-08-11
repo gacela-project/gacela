@@ -31,6 +31,7 @@ final class CacheStalenessCheck implements HealthCheck
         private readonly string $appRootDir = '',
         private readonly ?MergedConfigCache $mergedConfigCache = null,
         private readonly array $mergedConfigSources = [],
+        private readonly string $classNameFingerprint = '',
     ) {
         $this->sourceFileResolver = $sourceFileResolver ?? static function (string $className): ?string {
             if (!class_exists($className) && !interface_exists($className)) {
@@ -87,8 +88,16 @@ final class CacheStalenessCheck implements HealthCheck
         $stale = [];
         $missing = [];
 
-        foreach ([ClassNamePhpCache::FILENAME, CustomServicesPhpCache::FILENAME] as $filename) {
-            $cacheFile = AbstractPhpFileCache::absoluteFilename($this->cacheDir, $filename, $this->appRootDir);
+        // The class-name file carries the current bootstrap's fingerprint
+        // (#681), injected by the composition root; the custom-services file
+        // is bootstrap-independent and does not.
+        $files = [
+            ClassNamePhpCache::FILENAME => $this->classNameFingerprint,
+            CustomServicesPhpCache::FILENAME => '',
+        ];
+
+        foreach ($files as $filename => $fingerprint) {
+            $cacheFile = AbstractPhpFileCache::absoluteFilename($this->cacheDir, $filename, $this->appRootDir, $fingerprint);
             if (!is_file($cacheFile)) {
                 continue;
             }

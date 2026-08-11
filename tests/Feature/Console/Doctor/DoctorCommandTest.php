@@ -24,7 +24,6 @@ use Symfony\Component\Console\Tester\CommandTester;
 use function bin2hex;
 use function explode;
 use function is_dir;
-use function is_file;
 use function mkdir;
 use function random_bytes;
 use function rmdir;
@@ -52,13 +51,10 @@ final class DoctorCommandTest extends TestCase
     {
         putenv('GACELA_CACHE_DIR');
 
-        $cacheFile = AbstractPhpFileCache::absoluteFilename(
-            $this->cacheDir,
-            ClassNamePhpCache::FILENAME,
-            __DIR__,
-            ClassResolverCache::bootstrapFingerprint(),
-        );
-        if (is_file($cacheFile)) {
+        // The dir is this test's own random-named temp dir, so sweeping it by
+        // glob names exactly what the test created -- and needs no bootstrap,
+        // which tearDown cannot assume survived the test.
+        foreach (glob($this->cacheDir . '/gacela-*.php') ?: [] as $cacheFile) {
             unlink($cacheFile);
         }
 
@@ -264,9 +260,15 @@ final class DoctorCommandTest extends TestCase
 
     public function test_a_stale_cache_entry_is_reported_with_its_remediation(): void
     {
+        // Bootstrap before writing: the entry's filename carries the current
+        // bootstrap's fingerprint (#686), which does not exist before one --
+        // and under an unlucky seed this test runs first (main went red on
+        // exactly that).
+        $this->bootstrapDoctor([]);
         $this->writeCacheEntry('some-cache-key', 'Never\\Declared\\Klass');
 
-        $tester = $this->doctor([]);
+        $tester = new CommandTester(new DoctorCommand());
+        $tester->execute([]);
 
         $display = $tester->getDisplay();
 
@@ -312,6 +314,19 @@ final class DoctorCommandTest extends TestCase
      */
     private function doctor(array $healthChecks, array $input = []): CommandTester
     {
+        $this->bootstrapDoctor($healthChecks);
+
+        $tester = new CommandTester(new DoctorCommand());
+        $tester->execute($input);
+
+        return $tester;
+    }
+
+    /**
+     * @param list<object|string> $healthChecks
+     */
+    private function bootstrapDoctor(array $healthChecks): void
+    {
         $cacheDir = $this->cacheDir;
 
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($healthChecks, $cacheDir): void {
@@ -322,11 +337,6 @@ final class DoctorCommandTest extends TestCase
                 $config->addHealthCheck($healthCheck);
             }
         });
-
-        $tester = new CommandTester(new DoctorCommand());
-        $tester->execute($input);
-
-        return $tester;
     }
 
     /**

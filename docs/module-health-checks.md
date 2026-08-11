@@ -50,8 +50,7 @@ $report = $checker->checkAll();
 
 Register a check with `GacelaConfig::addHealthCheck()` in your `gacela.php` and it runs automatically as part of `vendor/bin/gacela doctor`, alongside the built-in cache-staleness, suffix-mismatch and filename-mismatch checks.
 
-`doctor` takes an optional namespace argument to restrict module-scoped checks, and `--strict` to
-exit non-zero on warnings too, which is the form CI wants.
+`doctor` takes an optional namespace argument to restrict module-scoped checks, and `--strict` to exit non-zero on warnings too, which is the form CI wants.
 
 ```php
 // gacela.php
@@ -87,10 +86,7 @@ Gacela Doctor
 
 A `degraded` check reports as a warning; an `unhealthy` check reports as an error and makes `doctor` exit non-zero. Check metadata is printed under the status line.
 
-Several checks may report under the same module name. Gacela combines them
-into one module result whose level is the worst result, and keeps every
-individual status under the result's `health_checks` metadata. A later healthy
-check therefore cannot hide an earlier degraded or unhealthy one.
+Several checks may report under the same module name. Gacela combines them into one module result whose level is the worst result, and keeps every individual status under the result's `health_checks` metadata. A later healthy check therefore cannot hide an earlier degraded or unhealthy one.
 
 ## Status levels
 
@@ -149,8 +145,7 @@ $report->toArray();
 
 - **Be fast** — checks should complete in under a second. Prefer a quick ping (`SELECT 1`) over full queries.
 - **Include metadata** — latency, error codes, retry counts help diagnose issues.
-- **Let exceptions go** — you do not need a `try`/`catch`. `HealthChecker` turns any `Throwable` out
-  of a check into an `unhealthy` result carrying the exception, file and line as metadata.
+- **Let exceptions go** — you do not need a `try`/`catch`. `HealthChecker` turns any `Throwable` out of a check into an `unhealthy` result carrying the exception, file and line as metadata.
 - **Pick the right level** — reserve `unhealthy` for real outages; use `degraded` for slow-but-working.
 
 ## API reference

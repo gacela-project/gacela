@@ -45,28 +45,15 @@ return static function (GacelaConfig $config): void {
 };
 ```
 
-**The id may name an interface**, which is the point: one registration covers every
-implementation, because the match is made against the resolved instance rather than
-by looking the requested id up in a map.
+**The id may name an interface**, which is the point: one registration covers every implementation, because the match is made against the resolved instance rather than by looking the requested id up in a map.
 
-Hooks fire on container-level resolution — `get()`, `getOrFail()` and `make()` — in
-registration order. A class the container autowires as a *nested* constructor
-dependency is not resolved at this level, so hooks do not fire for it. A callback
-that throws removes the instance rather than leaving a half-wired one for the next
-caller, and a container with no hooks pays nothing per resolution.
+Hooks fire on container-level resolution — `get()`, `getOrFail()` and `make()` — in registration order. A class the container autowires as a *nested* constructor dependency is not resolved at this level, so hooks do not fire for it. A callback that throws removes the instance rather than leaving a half-wired one for the next caller, and a container with no hooks pays nothing per resolution.
 
-Hooks configured here are app-wide and are inherited by the scoped containers
-that module Factories use.
+Hooks configured here are app-wide and are inherited by the scoped containers that module Factories use.
 
-**A hook fires once per resolution, not once per instance.** A shared instance
-fetched three times runs the callback three times, on the same object — the
-constructor ran once, the hook ran three times. Write callbacks so that repeating
-them is harmless: the `setLogger()` example above is idempotent, whereas appending
-to a collection, incrementing a counter or registering a listener is not, and would
-need its own guard.
+**A hook fires once per resolution, not once per instance.** A shared instance fetched three times runs the callback three times, on the same object — the constructor ran once, the hook ran three times. Write callbacks so that repeating them is harmless: the `setLogger()` example above is idempotent, whereas appending to a collection, incrementing a counter or registering a listener is not, and would need its own guard.
 
-Reach for `extendService()` instead when you need to *replace* what comes out, and
-for a [`ServiceResolvedEvent`](events.md) listener when you only want to observe.
+Reach for `extendService()` instead when you need to *replace* what comes out, and for a [`ServiceResolvedEvent`](events.md) listener when you only want to observe.
 
 ## Service Aliases
 
@@ -85,9 +72,7 @@ $container->get('logger');
 
 ## Conditional Bindings
 
-Register a binding only when the key is not already bound — a default that the
-application (or an earlier binding) can override. Useful for plugins that want to
-ship a sensible default without clobbering a host application's choice.
+Register a binding only when the key is not already bound — a default that the application (or an earlier binding) can override. Useful for plugins that want to ship a sensible default without clobbering a host application's choice.
 
 ```php
 return static function (GacelaConfig $config): void {
@@ -102,8 +87,7 @@ return static function (GacelaConfig $config): void {
 $container->get(LoggerInterface::class);
 ```
 
-`addBindingIf()` compares against the bindings already declared in the same config.
-If no binding exists for the key, it behaves exactly like `addBinding()`.
+`addBindingIf()` compares against the bindings already declared in the same config. If no binding exists for the key, it behaves exactly like `addBinding()`.
 
 ## Contextual Bindings
 
@@ -133,8 +117,7 @@ $config->when([ApiController::class, WebController::class])
 
 ### Scalar parameters
 
-`needs()` also accepts a constructor parameter name (prefixed with `$`), so a
-class-specific scalar can be injected without a config lookup:
+`needs()` also accepts a constructor parameter name (prefixed with `$`), so a class-specific scalar can be injected without a config lookup:
 
 ```php
 $config->when(PaymentGateway::class)
@@ -142,22 +125,15 @@ $config->when(PaymentGateway::class)
     ->give(30);
 ```
 
-Any non-class value works: strings, numbers, booleans, arrays — or a closure
-when the value should be built lazily.
+Any non-class value works: strings, numbers, booleans, arrays — or a closure when the value should be built lazily.
 
 ## Constructor Injection with `#[Inject]`
 
-The container autowires constructor parameters by type-hint. For most cases
-that's all you need — declare the type, the container resolves it.
+The container autowires constructor parameters by type-hint. For most cases that's all you need — declare the type, the container resolves it.
 
-`Gacela\Framework\Attribute\Inject` is the import to reach for — the same
-namespace as every other Gacela attribute. It subclasses the container's own,
-and the container reads attributes with `ReflectionAttribute::IS_INSTANCEOF`, so
-either import works and both may appear in one codebase.
+`Gacela\Framework\Attribute\Inject` is the import to reach for — the same namespace as every other Gacela attribute. It subclasses the container's own, and the container reads attributes with `ReflectionAttribute::IS_INSTANCEOF`, so either import works and both may appear in one codebase.
 
-`#[Inject]` is the opt-in for the two cases autowiring alone can't express:
-disambiguating an interface with multiple possible concretes, and marking a
-parameter as explicitly container-owned for tooling like `debug:dependencies`.
+`#[Inject]` is the opt-in for the two cases autowiring alone can't express: disambiguating an interface with multiple possible concretes, and marking a parameter as explicitly container-owned for tooling like `debug:dependencies`.
 
 ```php
 use Gacela\Framework\Attribute\Inject;
@@ -171,16 +147,12 @@ final class CatalogService
 }
 ```
 
-- `#[Inject]` with no argument flags the parameter for the container — the
-  type hint drives resolution.
-- `#[Inject(RedisCache::class)]` routes this specific parameter to
-  `RedisCache`, independent of any global `addBinding` for `CacheInterface`.
+- `#[Inject]` with no argument flags the parameter for the container — the type hint drives resolution.
+- `#[Inject(RedisCache::class)]` routes this specific parameter to `RedisCache`, independent of any global `addBinding` for `CacheInterface`.
 
 ### On properties
 
-`#[Inject]` also targets properties, for classes whose constructor is not yours
-to change — a base class from a vendor package, or one whose signature is fixed
-by a framework contract.
+`#[Inject]` also targets properties, for classes whose constructor is not yours to change — a base class from a vendor package, or one whose signature is fixed by a framework contract.
 
 ```php
 final class CatalogController extends VendorController
@@ -193,34 +165,24 @@ final class CatalogController extends VendorController
 }
 ```
 
-Private, protected and inherited properties all work. Constructor injection
-stays the default for everything else: a dependency in the signature is visible
-to a reader, and to a plain `new` outside the container.
+Private, protected and inherited properties all work. Constructor injection stays the default for everything else: a dependency in the signature is visible to a reader, and to a plain `new` outside the container.
 
-Three cases are rejected by name rather than by a raw PHP error, because none
-of them can work:
+Three cases are rejected by name rather than by a raw PHP error, because none of them can work:
 
-- `readonly` — only writable from inside the declaring class. Promote it to a
-  constructor parameter, which keeps it readonly.
+- `readonly` — only writable from inside the declaring class. Promote it to a constructor parameter, which keeps it readonly.
 - untyped or scalar-typed — there is nothing for the container to resolve.
-- `static` — ignored entirely; state shared by every instance is not a
-  dependency of any one of them.
+- `static` — ignored entirely; state shared by every instance is not a dependency of any one of them.
 
-A property promoted in the constructor is injected by the constructor, not
-twice.
+A property promoted in the constructor is injected by the constructor, not twice.
 
-A cycle reached through an injected property still raises
-`CircularDependencyException`: property injection runs inside the same
-resolution stack, so it is not a way around the diagnostic.
+A cycle reached through an injected property still raises `CircularDependencyException`: property injection runs inside the same resolution stack, so it is not a way around the diagnostic.
 
 ### Resolution order
 
 For `#[Inject($override)] Type $p` on a class `Consumer`, the container tries:
 
-1. A runtime override passed to `make()` under `$p`'s name → use it
-   (top-level parameters only).
-2. `$config->when(Consumer)->needs('$p')->give(X)` (a **named** contextual
-   binding, matched on the parameter name) → resolve `X`.
+1. A runtime override passed to `make()` under `$p`'s name → use it (top-level parameters only).
+2. `$config->when(Consumer)->needs('$p')->give(X)` (a **named** contextual binding, matched on the parameter name) → resolve `X`.
 3. `#[Inject($override)]` set → resolve `$override`.
 4. **`$p` has a default value → use the default.**
 5. `$config->when(Consumer)->needs(Type)->give(X)` → resolve `X`.
@@ -236,35 +198,24 @@ For `#[Inject($override)] Type $p` on a class `Consumer`, the container tries:
 > container to fill, or name it explicitly with `#[Inject]`, which is checked
 > first.
 
-Nullability changes nothing on its own: a `?Foo` with no default and no binding
-is **not** resolved to `null`, it throws `DependencyNotFoundException` like any
-other unresolvable parameter. Only a default produces `null`.
+Nullability changes nothing on its own: a `?Foo` with no default and no binding is **not** resolved to `null`, it throws `DependencyNotFoundException` like any other unresolvable parameter. Only a default produces `null`.
 
 ### Interactions
 
 - Contextual bindings win over global `addBinding` — by name at step 2, by type at step 5, both before `addBinding` at step 6.
-- Protected services (`addProtected`) cannot be injected — they're stored
-  as raw closures and the container won't instantiate them.
-- `#[Inject]` does not replace `#[ServiceMap]` or `ServiceResolverAwareTrait`
-  — those serve a different `__call`-based dispatch use case and remain
-  supported.
+- Protected services (`addProtected`) cannot be injected — they're stored as raw closures and the container won't instantiate them.
+- `#[Inject]` does not replace `#[ServiceMap]` or `ServiceResolverAwareTrait` — those serve a different `__call`-based dispatch use case and remain supported.
 
 ### Visibility in tooling
 
-`vendor/bin/gacela debug:dependencies <Class>` lists every constructor parameter
-with its resolution kind. `#[Inject]` parameters show up tagged `inject`,
-with the override concrete rendered inline when present:
+`vendor/bin/gacela debug:dependencies <Class>` lists every constructor parameter with its resolution kind. `#[Inject]` parameters show up tagged `inject`, with the override concrete rendered inline when present:
 
 ```
 ✓ $logger LoggerInterface (inject)
 ✓ $cache CacheInterface (inject -> App\Cache\RedisCache)
 ```
 
-That view stops at the constructor, and it is derived from type hints. Add
-`--tree` to append the **transitive** dependencies, taken from the container's
-own resolution view rather than re-derived — so bindings and contextual
-bindings are already applied, and a bound interface is listed as the concrete
-that will actually be built:
+That view stops at the constructor, and it is derived from type hints. Add `--tree` to append the **transitive** dependencies, taken from the container's own resolution view rather than re-derived — so bindings and contextual bindings are already applied, and a bound interface is listed as the concrete that will actually be built:
 
 ```
 bin/gacela debug:dependencies "App\Catalog\CatalogService" --tree
@@ -282,14 +233,9 @@ Dependency tree for App\Catalog\CatalogService
 Dependencies: 4
 ```
 
-Nodes are drawn where they sit and labelled with the constructor parameter that
-pulled them in, so a missing dependency several levels down says *whose* it is —
-`IndexerInterface` above is the repository's problem, not the service's. A
-constructor cycle is marked `(cycle)` and cut rather than followed, because a
-broken graph is exactly what this command gets opened for.
+Nodes are drawn where they sit and labelled with the constructor parameter that pulled them in, so a missing dependency several levels down says *whose* it is — `IndexerInterface` above is the repository's problem, not the service's. A constructor cycle is marked `(cycle)` and cut rather than followed, because a broken graph is exactly what this command gets opened for.
 
-`Dependencies` counts distinct classes, so one pulled in by three parents counts
-once and is drawn three times.
+`Dependencies` counts distinct classes, so one pulled in by three parents counts once and is drawn three times.
 
 Each node reports how the container will supply it:
 
@@ -300,11 +246,7 @@ Each node reports how the container will supply it:
 | `autowired` | nothing registered, but the class will be constructed on demand |
 | `unresolvable` | the container owns nothing and the class cannot be built |
 
-The distinction comes from `Container::provides()`, which asks whether the
-container *owns* something for an id. That is narrower than `has()`, which is
-also true of anything merely autowirable — and it is the difference the
-one-level view could not express, because an interface with a binding read the
-same as one without.
+The distinction comes from `Container::provides()`, which asks whether the container *owns* something for an id. That is narrower than `has()`, which is also true of anything merely autowirable — and it is the difference the one-level view could not express, because an interface with a binding read the same as one without.
 
 An unresolvable node is printed, not thrown: the command stays a diagnostic.
 
@@ -351,17 +293,11 @@ Trait gone. `@psalm-suppress` gone. Dependency visible to tooling.
 
 ### Symfony `Command` classes
 
-Symfony `Command` constructors are autowired by Symfony's own container.
-`#[Inject]` on a Symfony-managed class does not take effect on its own — a
-compiler pass is required to route `#[Inject]` parameters to Gacela before
-Symfony's autowire claims them. A dedicated `gacela/symfony-bridge` package
-ships this pass; adopt it in projects where Symfony owns the container.
+Symfony `Command` constructors are autowired by Symfony's own container. `#[Inject]` on a Symfony-managed class does not take effect on its own — a compiler pass is required to route `#[Inject]` parameters to Gacela before Symfony's autowire claims them. A dedicated `gacela/symfony-bridge` package ships this pass; adopt it in projects where Symfony owns the container.
 
 ## Class Attributes: `#[Singleton]`, `#[Factory]` and `#[Lazy]`
 
-Instead of registering a binding or an `addFactory()` closure, module authors can
-annotate the service class itself. Any class resolved through the container —
-including via `getProvidedDependency()` in a Gacela `Factory` — honors these:
+Instead of registering a binding or an `addFactory()` closure, module authors can annotate the service class itself. Any class resolved through the container — including via `getProvidedDependency()` in a Gacela `Factory` — honors these:
 
 ```php
 use Gacela\Container\Attribute\Factory;
@@ -385,8 +321,7 @@ final class MyModuleFactory extends AbstractFactory
 }
 ```
 
-The attribute lives with the class, so the lifetime choice travels with the code
-instead of a `gacela.php` entry. Equivalent imperative registrations:
+The attribute lives with the class, so the lifetime choice travels with the code instead of a `gacela.php` entry. Equivalent imperative registrations:
 
 | Attribute | Imperative equivalent |
 |---|---|
@@ -397,25 +332,14 @@ instead of a `gacela.php` entry. Equivalent imperative registrations:
 
 Notes:
 
-- `#[Singleton]` instances are cached per container. Each Gacela module factory
-  keeps one container, so repeated resolves through the same module share the
-  instance.
-- Without any attribute, an unregistered class is autowired fresh on each
-  `get()` — `#[Singleton]` is the opt-in for caching, `#[Factory]` documents
-  the fresh-instance intent explicitly.
-- Constructor params of attribute-annotated classes still go through the normal
-  resolution order (bindings, contextual bindings, `#[Inject]`).
-- `#[Lazy]` returns a real instance of the class whose constructor has not run
-  yet; touching any property or method initializes it. Useful for an expensive
-  service a given request may never reach. **Requires PHP 8.4** for native lazy
-  objects — on 8.3 the class is constructed eagerly instead, which is
-  unobservable apart from the timing, so it is safe to annotate either way.
+- `#[Singleton]` instances are cached per container. Each Gacela module factory keeps one container, so repeated resolves through the same module share the instance.
+- Without any attribute, an unregistered class is autowired fresh on each `get()` — `#[Singleton]` is the opt-in for caching, `#[Factory]` documents the fresh-instance intent explicitly.
+- Constructor params of attribute-annotated classes still go through the normal resolution order (bindings, contextual bindings, `#[Inject]`).
+- `#[Lazy]` returns a real instance of the class whose constructor has not run yet; touching any property or method initializes it. Useful for an expensive service a given request may never reach. **Requires PHP 8.4** for native lazy objects — on 8.3 the class is constructed eagerly instead, which is unobservable apart from the timing, so it is safe to annotate either way.
 
 ### Resolving domain objects by type with `make()`
 
-`AbstractFactory::make()` gives a `create*()` method a typed, autowiring
-construction path through the same module container — so a factory can resolve a
-domain object by type instead of hand-`new`ing it and wiring each argument:
+`AbstractFactory::make()` gives a `create*()` method a typed, autowiring construction path through the same module container — so a factory can resolve a domain object by type instead of hand-`new`ing it and wiring each argument:
 
 ```php
 final class CheckoutFactory extends AbstractFactory
@@ -428,27 +352,19 @@ final class CheckoutFactory extends AbstractFactory
 }
 ```
 
-- The return type is inferred from the class-string, so no `/** @var */` is
-  needed at the call site (unlike `getProvidedDependency()`, which returns
-  `mixed`).
-- Pass runtime overrides by parameter name to override specific constructor
-  arguments; the instance is then always built fresh:
+- The return type is inferred from the class-string, so no `/** @var */` is needed at the call site (unlike `getProvidedDependency()`, which returns `mixed`).
+- Pass runtime overrides by parameter name to override specific constructor arguments; the instance is then always built fresh:
 
   ```php
   $this->make(CheckoutService::class, ['currency' => 'EUR']);
   ```
 
-  Scalars/config are best expressed as contextual bindings
-  (`when()->needs('$currency')->give(...)`) rather than string locator keys.
-- Additive and opt-in: existing `getProvidedDependency()` and hand-wired
-  `create*()` methods keep working unchanged.
+  Scalars/config are best expressed as contextual bindings (`when()->needs('$currency')->give(...)`) rather than string locator keys.
+- Additive and opt-in: existing `getProvidedDependency()` and hand-wired `create*()` methods keep working unchanged.
 
 ## Definitions as Data
 
-Every binding above is a method call in a closure. When the wiring is generated,
-shared between environments, or reviewed as a diff, you want it as *data* instead
-— `loadDefinitions()` takes a definitions array, or the path of a `.php` file
-returning one or a `.json` file holding one:
+Every binding above is a method call in a closure. When the wiring is generated, shared between environments, or reviewed as a diff, you want it as *data* instead — `loadDefinitions()` takes a definitions array, or the path of a `.php` file returning one or a `.json` file holding one:
 
 ```php
 return static function (GacelaConfig $config): void {
@@ -464,17 +380,11 @@ return static function (GacelaConfig $config): void {
 };
 ```
 
-Each entry ends up calling the registration method it stands for, so a definition
-behaves exactly like the imperative call it replaces.
+Each entry ends up calling the registration method it stands for, so a definition behaves exactly like the imperative call it replaces.
 
-**Ordering.** Sources apply in the order declared, and *after* the imperative
-registrations — so a later source overrides an earlier one, and a definitions file
-overrides `addBinding()`. That is the point: an environment override file that lost
-to the code it is meant to override could not do its job. `tags` accumulate instead
-of overriding, the way `tag()` does.
+**Ordering.** Sources apply in the order declared, and *after* the imperative registrations — so a later source overrides an earlier one, and a definitions file overrides `addBinding()`. That is the point: an environment override file that lost to the code it is meant to override could not do its job. `tags` accumulate instead of overriding, the way `tag()` does.
 
-**Scope.** App-wide, reaching every module container, like `addBinding()`. For
-definitions local to one module, call `Container::load()` in that module's Provider:
+**Scope.** App-wide, reaching every module container, like `addBinding()`. For definitions local to one module, call `Container::load()` in that module's Provider:
 
 ```php
 final class Provider extends AbstractProvider
@@ -486,16 +396,11 @@ final class Provider extends AbstractProvider
 }
 ```
 
-**Paths are used as given.** Unlike `enableFileCache()`, a definitions path is not
-rebased under the application root — write it with `__DIR__`. A missing, unreadable
-or unparsable file throws rather than leaving the wiring half-applied.
+**Paths are used as given.** Unlike `enableFileCache()`, a definitions path is not rebased under the application root — write it with `__DIR__`. A missing, unreadable or unparsable file throws rather than leaving the wiring half-applied.
 
-**Definitions announce themselves.** Each id a source registers emits a
-`BindingRegisteredEvent`, the same as an imperative binding, so a listener
-counting registrations sees the whole container.
+**Definitions announce themselves.** Each id a source registers emits a `BindingRegisteredEvent`, the same as an imperative binding, so a listener counting registrations sees the whole container.
 
-**No YAML.** Neither the container nor gacela takes a parser dependency for it. Pass
-the parsed array instead:
+**No YAML.** Neither the container nor gacela takes a parser dependency for it. Pass the parsed array instead:
 
 ```php
 $config->loadDefinitions(Yaml::parseFile(__DIR__ . '/services.yaml'));
@@ -538,27 +443,8 @@ return static function (GacelaConfig $config): void {
 
 ## Underlying container features gacela does not expose
 
-Almost everything `gacela-project/container` offers now has a gacela entry point.
-Four things that used to be listed here no longer belong to it: **service
-tagging** is `GacelaConfig::tag()` (see
-[getting a dependency](getting-a-dependency.md#collect-several-implementations)),
-**resolution hooks** are `GacelaConfig::afterResolving()` (above),
-**`make()` with runtime parameters** is documented above as the supported way to
-override a constructor argument, and **`createScope()`** is what `AbstractFactory`
-builds every module container from.
+Almost everything `gacela-project/container` offers now has a gacela entry point. Four things that used to be listed here no longer belong to it: **service tagging** is `GacelaConfig::tag()` (see [getting a dependency](getting-a-dependency.md#collect-several-implementations)), **resolution hooks** are `GacelaConfig::afterResolving()` (above), **`make()` with runtime parameters** is documented above as the supported way to override a constructor argument, and **`createScope()`** is what `AbstractFactory` builds every module container from.
 
 One thing is left out, and why:
 
-- **Compiled constructor plans on disk** (`writeCompiledCache()` and the generated
-  factories that go with it): re-measured on container 2.0.1 and still not worth it,
-  now with a sharper reason than "the saving is small". The saving is real but
-  *smaller than the file*: materialising a 300-class plans file costs 1.008ms per
-  process, while resolving all 300 of those classes saves 0.233ms — a net loss of
-  0.775ms. Compiling a class costs about six times the reflection it avoids, so no
-  subset of classes makes it pay, and a build stamp does not rescue it — the cost is
-  hydrating the array, not the per-class `stat` it replaces. What removes the
-  repeated reflection is the shared plan cache,
-  which is on by default and costs nothing. Nothing is hidden, though: the decorator
-  forwards `writeCompiledCache()`, `writeCompiledFactories()`, `useCompiledFactories()`
-  and `compileReport()` — the two writers taking an optional build stamp — so an
-  application that has measured its own case can wire the files up itself.
+- **Compiled constructor plans on disk** (`writeCompiledCache()` and the generated factories that go with it): re-measured on container 2.0.1 and still not worth it, now with a sharper reason than "the saving is small". The saving is real but *smaller than the file*: materialising a 300-class plans file costs 1.008ms per process, while resolving all 300 of those classes saves 0.233ms — a net loss of 0.775ms. Compiling a class costs about six times the reflection it avoids, so no subset of classes makes it pay, and a build stamp does not rescue it — the cost is hydrating the array, not the per-class `stat` it replaces. What removes the repeated reflection is the shared plan cache, which is on by default and costs nothing. Nothing is hidden, though: the decorator forwards `writeCompiledCache()`, `writeCompiledFactories()`, `useCompiledFactories()` and `compileReport()` — the two writers taking an optional build stamp — so an application that has measured its own case can wire the files up itself.

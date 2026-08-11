@@ -10,8 +10,7 @@ Guide to cut a new Gacela release.
 ./release.sh --dry-run    # preview without touching anything
 ```
 
-The script handles pre-flight checks, file updates, quality+tests, commit, tag, push, and GitHub release.
-Run `./release.sh --help` for all options.
+The script handles pre-flight checks, file updates, quality+tests, commit, tag, push, and GitHub release. Run `./release.sh --help` for all options.
 
 ## Pre-flight requirements
 
@@ -38,8 +37,7 @@ The script (and a manual release) assume:
    git push origin main
    git push origin X.Y.Z
    ```
-5. **Create the GitHub release** from the pushed tag, using the CHANGELOG section you just renamed as the body:
-   [new release](https://github.com/gacela-project/gacela/releases/new) — or via CLI:
+5. **Create the GitHub release** from the pushed tag, using the CHANGELOG section you just renamed as the body: [new release](https://github.com/gacela-project/gacela/releases/new) — or via CLI:
    ```bash
    awk '/^## \[X\.Y\.Z\]/{flag=1;next} /^## /{flag=0} flag' CHANGELOG.md > /tmp/release-notes.md
    gh release create X.Y.Z --title X.Y.Z --notes-file /tmp/release-notes.md

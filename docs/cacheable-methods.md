@@ -83,21 +83,13 @@ CatalogFacade::clearMethodCacheFor('getPopularProducts');
 CatalogFacade::clearMethodCache();
 ```
 
-`clearMethodCache()` is called on a facade but is **not scoped to it**: it calls
-`clear()` on the shared storage, so on a backend shared with other facades — or with
-the rest of your application, if you wired APCu or Redis — it removes everything.
-Reach for `clearMethodCacheFor()` unless you genuinely mean "drop the entire cache".
+`clearMethodCache()` is called on a facade but is **not scoped to it**: it calls `clear()` on the shared storage, so on a backend shared with other facades — or with the rest of your application, if you wired APCu or Redis — it removes everything. Reach for `clearMethodCacheFor()` unless you genuinely mean "drop the entire cache".
 
-`Gacela::resetCache()` does **not** reach a backend you registered with
-`CacheableConfig::setStorage()`. It is an in-memory reset, and clears only the
-default per-process storage. Calling `clearMethodCache()` yourself still clears
-whatever backend is registered — that is the difference between the two.
+`Gacela::resetCache()` does **not** reach a backend you registered with `CacheableConfig::setStorage()`. It is an in-memory reset, and clears only the default per-process storage. Calling `clearMethodCache()` yourself still clears whatever backend is registered — that is the difference between the two.
 
 `clearMethodCacheFor()` matches on the exact `Class::method::` prefix. Passing `'get'` does **not** clear every method whose name starts with `get`.
 
-It also cannot see entries written under a custom `key:` template — those keys are the
-interpolated template (`user:42`), which carries no `Class::method::` prefix to match.
-A method with a custom key has to be invalidated through the storage backend directly.
+It also cannot see entries written under a custom `key:` template — those keys are the interpolated template (`user:42`), which carries no `Class::method::` prefix to match. A method with a custom key has to be invalidated through the storage backend directly.
 
 ## Pluggable storage backend
 
@@ -135,10 +127,7 @@ Call `CacheableConfig::setStorage()` once at bootstrap. All facades using `Cache
 | `0` | the entry is stored **without expiry** — not "expire immediately" |
 | `< 0` | the entry is already expired when written, so no read returns it |
 
-Zero is the case worth reading twice. `FileCache` has always treated it as "no
-expiry" and its own default TTL is `0`, so a backend that computes
-`time() + $ttl` unconditionally will store an entry that is expired before
-`set()` returns. Both built-in backends follow the table above.
+Zero is the case worth reading twice. `FileCache` has always treated it as "no expiry" and its own default TTL is `0`, so a backend that computes `time() + $ttl` unconditionally will store an entry that is expired before `set()` returns. Both built-in backends follow the table above.
 
 ## TTL overrides per method
 

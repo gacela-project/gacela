@@ -1,23 +1,13 @@
 # Events
 
-Gacela dispatches domain events while it works: bootstrapping, reading config, resolving classes,
-wiring providers, touching caches. Listening to them is the best window into "how does Gacela
-resolve my modules" — useful for debugging, profiling, tracing, and CI guards, without patching
-the framework.
+Gacela dispatches domain events while it works: bootstrapping, reading config, resolving classes, wiring providers, touching caches. Listening to them is the best window into "how does Gacela resolve my modules" — useful for debugging, profiling, tracing, and CI guards, without patching the framework.
 
 ## Dispatch model
 
 - Every event is a small immutable class implementing `GacelaEventInterface` (one `toString()` method).
-- By default nothing listens: the dispatcher is a `NullEventDispatcher`, and every dispatch site is
-  guarded by `EventDispatcherInterface::hasListeners()`, so **no event object is even allocated**
-  unless a listener is registered for it. Events are zero-cost when unused, including on the
-  class-resolution hot path.
-- Registering any listener switches to a `ConfigurableEventDispatcher`. Listeners are plain
-  callables receiving the event object; they are notify-only (events are immutable, there is no
-  propagation stopping).
-- `GacelaConfig::disableEventListeners()` turns the whole mechanism off regardless of what was
-  registered — the dispatcher is never built, so registered listeners silently do not run. That is
-  the point in production, and the first thing to check when a listener appears dead.
+- By default nothing listens: the dispatcher is a `NullEventDispatcher`, and every dispatch site is guarded by `EventDispatcherInterface::hasListeners()`, so **no event object is even allocated** unless a listener is registered for it. Events are zero-cost when unused, including on the class-resolution hot path.
+- Registering any listener switches to a `ConfigurableEventDispatcher`. Listeners are plain callables receiving the event object; they are notify-only (events are immutable, there is no propagation stopping).
+- `GacelaConfig::disableEventListeners()` turns the whole mechanism off regardless of what was registered — the dispatcher is never built, so registered listeners silently do not run. That is the point in production, and the first thing to check when a listener appears dead.
 
 Two kinds of listeners:
 
@@ -43,8 +33,7 @@ Gacela::bootstrap($appRootDir, static function (GacelaConfig $config): void {
 });
 ```
 
-A generic listener makes *every* dispatch site allocate its event, including hot paths — prefer
-specific listeners in production.
+A generic listener makes *every* dispatch site allocate its event, including hot paths — prefer specific listeners in production.
 
 ## Lifecycle ordering
 
@@ -65,8 +54,7 @@ first Facade/Factory/Config access (per module)
 
 ## Event catalog
 
-All classes live under `Gacela\Framework\Event\`. "Hot path" marks events fired on every warm
-resolve — with only unrelated listeners registered they still cost nothing.
+All classes live under `Gacela\Framework\Event\`. "Hot path" marks events fired on every warm resolve — with only unrelated listeners registered they still cost nothing.
 
 ### Bootstrap (`Event\Bootstrap`)
 
@@ -135,10 +123,7 @@ All four resolver events extend `AbstractGacelaClassResolverEvent` and expose `c
 | `CacheClearedEvent` | a Gacela cache file is deleted | `cacheFile()` | no |
 | `CacheWarmedEvent` | `vendor/bin/gacela cache:warm` finished | `moduleCount()`, `failedCount()`, `skippedCount()` | no |
 
-`failedCount()` and `skippedCount()` are not the same number. A pillar class a
-module declares but does not have is *skipped* — a normal shape, not an error.
-A pillar that is there and blows up on resolution is *failed*. Alert on
-`failedCount()`.
+`failedCount()` and `skippedCount()` are not the same number. A pillar class a module declares but does not have is *skipped* — a normal shape, not an error. A pillar that is there and blows up on resolution is *failed*. Alert on `failedCount()`.
 
 ## Cookbook
 
@@ -214,7 +199,4 @@ $config->registerGenericListener(static function (GacelaEventInterface $event) u
 
 ## Custom dispatchers
 
-`SetupGacela::setEventDispatcher()` accepts any `EventDispatcherInterface`. Implementations must
-provide `dispatch(object $event): void` **and** `hasListeners(string $eventClass): bool` — return
-`false` from `hasListeners()` for event classes you don't care about and the framework will skip
-allocating them entirely.
+`SetupGacela::setEventDispatcher()` accepts any `EventDispatcherInterface`. Implementations must provide `dispatch(object $event): void` **and** `hasListeners(string $eventClass): bool` — return `false` from `hasListeners()` for event classes you don't care about and the framework will skip allocating them entirely.

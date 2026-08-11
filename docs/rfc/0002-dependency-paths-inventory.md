@@ -4,26 +4,19 @@
 
 ## Why this exists
 
-Field data from [phel-lang](https://github.com/phel-lang/phel-lang), a production Gacela
-consumer, reported "15+ documented ways to obtain a dependency" and a `GacelaConfig` with
-33 public methods. Both were checked against this repository rather than taken on trust:
+Field data from [phel-lang](https://github.com/phel-lang/phel-lang), a production Gacela consumer, reported "15+ documented ways to obtain a dependency" and a `GacelaConfig` with 33 public methods. Both were checked against this repository rather than taken on trust:
 
 ```
 GacelaConfig public instance methods: 34  (33 excluding __construct)
 ```
 
-The count is exact. This document is the inventory behind it, because the 2.0 question —
-*which single path do we teach?* — cannot be answered without first writing down what
-exists. Fifteen ways to do one thing is not flexibility; it is fifteen things a reader must
-recognise before they can follow a wiring path, and fifteen surfaces we keep working forever.
+The count is exact. This document is the inventory behind it, because the 2.0 question — *which single path do we teach?* — cannot be answered without first writing down what exists. Fifteen ways to do one thing is not flexibility; it is fifteen things a reader must recognise before they can follow a wiring path, and fifteen surfaces we keep working forever.
 
 Every entry below was read out of the source, not remembered.
 
 ## The inventory
 
-Grouped by what the developer is actually trying to do. **P** = primary (documented,
-taught, type-safe), **S** = supported (works, not the answer to "how do I…"),
-**D** = deprecated, **I** = `@internal`.
+Grouped by what the developer is actually trying to do. **P** = primary (documented, taught, type-safe), **S** = supported (works, not the answer to "how do I…"), **D** = deprecated, **I** = `@internal`.
 
 ### Intent 1 — reach another module
 
@@ -34,8 +27,7 @@ taught, type-safe), **S** = supported (works, not the answer to "how do I…"),
 | 3 | `@method` docblock with an **unqualified** name, resolved against the file's `use` statements | `DocBlockResolver::searchClassOverUseStatements()` | S | Costs a file read + regex per cold resolve. **Analysers do follow it** — see the correction below |
 | 4 | `new SomeFacade()` directly | — | S | What `CrossModuleViaFacadeRule` permits and `FactoryDoesNotCallFacadeRule` forbids in a Factory |
 
-Paths 1–3 are the *same call* resolved three different ways, in a documented order, at
-runtime. That is the "convention re-derived per process" problem in one line.
+Paths 1–3 are the *same call* resolved three different ways, in a documented order, at runtime. That is the "convention re-derived per process" problem in one line.
 
 > **Correction (2026-07-26).** The first version of this RFC described path 3 as "the only
 > resolution strategy no static analyser can see" and claimed "a consumer who writes no
@@ -117,16 +109,9 @@ The phel figure of "15+" was, if anything, conservative.
 
 Two observations that matter more than the total:
 
-**Intent 1 is one call with three resolution strategies.** Paths 1–3 are not choices a
-developer makes; they are fallbacks the runtime tries in order. A consumer who writes no
-docblock and no attribute still gets a working `getFacade()` — resolved by parsing their
-own source file at runtime. That is the single strongest argument in the 2.0 brief, and it
-is not a "too many options" problem, it is a "the option is invisible" problem.
+**Intent 1 is one call with three resolution strategies.** Paths 1–3 are not choices a developer makes; they are fallbacks the runtime tries in order. A consumer who writes no docblock and no attribute still gets a working `getFacade()` — resolved by parsing their own source file at runtime. That is the single strongest argument in the 2.0 brief, and it is not a "too many options" problem, it is a "the option is invisible" problem.
 
-**Intent 4 is the counter-example, and it is instructive.** Six methods, one intent, and
-nobody complains — because they are the *same path* with typed variants, discovered
-together, and impossible to use wrongly. The problem in intents 1–3 is not the number of
-methods; it is that the methods are unrelated mechanisms competing for the same job.
+**Intent 4 is the counter-example, and it is instructive.** Six methods, one intent, and nobody complains — because they are the *same path* with typed variants, discovered together, and impossible to use wrongly. The problem in intents 1–3 is not the number of methods; it is that the methods are unrelated mechanisms competing for the same job.
 
 ## Proposal
 
@@ -137,27 +122,12 @@ Not "delete 15 methods". Most have a real use, and 2.0 is not a rewrite.
    - own collaborator → `create*()`, or `make()` when autowiring pays
    - external service → `#[Provides]`, or `addBinding()` for an interface
    - config value → `AbstractConfig::get*()`
-2. ~~**Retire the `use`-statement scan** (path 3).~~ **Withdrawn** — see the correction
-   above. It is idiomatic PHPDoc that analysers follow, not a blind spot, and the only cost
-   left is a file read and a regex on a cold resolve that `cache:warm` already covers.
-   Deprecating it would have broken a reasonable style for close to nothing.
-   **This RFC now argues for no removals at all.**
-3. **Segregate `GacelaConfig` by audience** rather than shrinking it — bootstrap, container
-   bindings, testing helpers, plugins. A consumer wiring one service should see ~8 methods,
-   not 33. Interface segregation, no deletions, non-breaking if the concrete class keeps
-   implementing all of them.
+2. ~~**Retire the `use`-statement scan** (path 3).~~ **Withdrawn** — see the correction above. It is idiomatic PHPDoc that analysers follow, not a blind spot, and the only cost left is a file read and a regex on a cold resolve that `cache:warm` already covers. Deprecating it would have broken a reasonable style for close to nothing. **This RFC now argues for no removals at all.**
+3. **Segregate `GacelaConfig` by audience** rather than shrinking it — bootstrap, container bindings, testing helpers, plugins. A consumer wiring one service should see ~8 methods, not 33. Interface segregation, no deletions, non-breaking if the concrete class keeps implementing all of them.
 4. Leave the supported paths supported, and stop documenting them as alternatives.
 
 ## Open questions
 
-1. ~~Does retiring path 3 break anyone in practice?~~ **Answered, and it invalidated the
-   question's premise.** Path 3 is not the default for an undeclared class — it requires a
-   `@method` docblock — and analysers follow it. The proposal was withdrawn rather than
-   measured. Worth noting as a method: the question was resolved by writing the deprecation
-   and a fixture for it, then watching the fixture fail to reach the path it was supposed to
-   exercise. The claim had been plausible enough to write down twice.
-2. Is `Locator`/`AnonymousGlobal` being `@internal` but reachable acceptable, or should 2.0
-   make it unreachable? Making it private is breaking for anyone who ignored the marker.
-3. Does segregating `GacelaConfig` help if the concrete class still implements every
-   interface? The discoverability win is real; the "33 methods on one object" fact is not
-   changed by it.
+1. ~~Does retiring path 3 break anyone in practice?~~ **Answered, and it invalidated the question's premise.** Path 3 is not the default for an undeclared class — it requires a `@method` docblock — and analysers follow it. The proposal was withdrawn rather than measured. Worth noting as a method: the question was resolved by writing the deprecation and a fixture for it, then watching the fixture fail to reach the path it was supposed to exercise. The claim had been plausible enough to write down twice.
+2. Is `Locator`/`AnonymousGlobal` being `@internal` but reachable acceptable, or should 2.0 make it unreachable? Making it private is breaking for anyone who ignored the marker.
+3. Does segregating `GacelaConfig` help if the concrete class still implements every interface? The discoverability win is real; the "33 methods on one object" fact is not changed by it.

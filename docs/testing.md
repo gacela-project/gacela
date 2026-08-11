@@ -1,13 +1,10 @@
 # Testing
 
-Gacela ships testing utilities under `Gacela\Framework\Testing` so module tests
-need near-zero boilerplate. They require `phpunit/phpunit`, which gacela only
-*suggests* — it never becomes a runtime dependency of your application.
+Gacela ships testing utilities under `Gacela\Framework\Testing` so module tests need near-zero boilerplate. They require `phpunit/phpunit`, which gacela only *suggests* — it never becomes a runtime dependency of your application.
 
 ## GacelaTestCase
 
-Extend `GacelaTestCase` instead of PHPUnit's `TestCase` when a test bootstraps
-a Gacela application:
+Extend `GacelaTestCase` instead of PHPUnit's `TestCase` when a test bootstraps a Gacela application:
 
 ```php
 use Gacela\Framework\Testing\GacelaTestCase;
@@ -27,15 +24,9 @@ final class CheckoutTest extends GacelaTestCase
 
 What it gives you:
 
-- **Isolation for free.** Every `bootstrapGacela()` starts from a clean
-  in-memory state, and `tearDown()` drops all Gacela singletons — no more
-  `Gacela::resetCache()` / `Config::resetInstance()` boilerplate, and a test
-  can safely bootstrap twice in one process.
-- **Config overrides.** `bootstrapGacelaWithConfig($dir, ['key' => 'value'])`
-  is a shortcut for the most common override; `bootstrapGacela($dir, $configFn)`
-  accepts the usual `GacelaConfig` closure for everything else.
-- **Lifecycle-event recording.** Each bootstrap registers a generic listener,
-  so the [framework lifecycle events](events.md) become assertable:
+- **Isolation for free.** Every `bootstrapGacela()` starts from a clean in-memory state, and `tearDown()` drops all Gacela singletons — no more `Gacela::resetCache()` / `Config::resetInstance()` boilerplate, and a test can safely bootstrap twice in one process.
+- **Config overrides.** `bootstrapGacelaWithConfig($dir, ['key' => 'value'])` is a shortcut for the most common override; `bootstrapGacela($dir, $configFn)` accepts the usual `GacelaConfig` closure for everything else.
+- **Lifecycle-event recording.** Each bootstrap registers a generic listener, so the [framework lifecycle events](events.md) become assertable:
 
 ```php
 $this->assertServiceResolved('checkout-gateway');       // ServiceResolvedEvent seen
@@ -45,16 +36,11 @@ $events = $this->recordedGacelaEvents();                              // all of 
 $resolved = $this->recordedGacelaEventsOf(ServiceResolvedEvent::class); // one type
 ```
 
-If you only need the reset helpers inside an existing test hierarchy, use the
-[`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait
-directly — `GacelaTestCase` builds on it.
+If you only need the reset helpers inside an existing test hierarchy, use the [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait directly — `GacelaTestCase` builds on it.
 
 ## Replacing another module
 
-Testing module A in isolation means replacing module B. A container binding only
-works when B's Facade arrives through a Provider, and a consumer that writes
-`new BlogFacade()` leaves nothing to bind — so the seam is the **Factory** every
-Facade resolves:
+Testing module A in isolation means replacing module B. A container binding only works when B's Facade arrives through a Provider, and a consumer that writes `new BlogFacade()` leaves nothing to bind — so the seam is the **Factory** every Facade resolves:
 
 ```php
 $this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {
@@ -67,23 +53,15 @@ $this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {
 (new CheckoutFacade())->summary();  // reaches the double, not the real Blog
 ```
 
-- `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()` all take
-  the **Facade** class: that is the name a consumer already knows, and the one
-  the resolver derives a module's pillars from.
-- Any object of the right pillar type works — an anonymous subclass, or a PHPUnit
-  stub (`$this->createStub(BlogFactory::class)`).
-- The swap survives repeated resolutions, and applies to a module that was
-  already resolved earlier in the same test.
+- `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()` all take the **Facade** class: that is the name a consumer already knows, and the one the resolver derives a module's pillars from.
+- Any object of the right pillar type works — an anonymous subclass, or a PHPUnit stub (`$this->createStub(BlogFactory::class)`).
+- The swap survives repeated resolutions, and applies to a module that was already resolved earlier in the same test.
 - Swapping the same module twice keeps the last double.
-- Every swap is dropped in `tearDown()`, so the next test sees the real module
-  again whatever order the suite runs in.
+- Every swap is dropped in `tearDown()`, so the next test sees the real module again whatever order the suite runs in.
 
-Naming a class that is not a Facade — the Factory itself, or a typo — throws a
-`ModuleDoubleException` rather than registering a double nothing would ever read.
+Naming a class that is not a Facade — the Factory itself, or a typo — throws a `ModuleDoubleException` rather than registering a double nothing would ever read.
 
-This replaces reaching into `AnonymousGlobal::overrideExistingResolvedClass()`,
-which needed the resolver's key format and left the Facade's memoised Factory in
-place.
+This replaces reaching into `AnonymousGlobal::overrideExistingResolvedClass()`, which needed the resolver's key format and left the Facade's memoised Factory in place.
 
 ## Scaffolding a testable module
 
@@ -93,6 +71,4 @@ place.
 vendor/bin/gacela make:module App/Greeting --template=service --with-tests
 ```
 
-The `service` template generates the four pillars plus a `Domain` service the
-Facade delegates to, and `--with-tests` adds a ready-to-run facade test (a
-`GacelaTestCase`) under the module's `Tests/` directory.
+The `service` template generates the four pillars plus a `Domain` service the Facade delegates to, and `--with-tests` adds a ready-to-run facade test (a `GacelaTestCase`) under the module's `Tests/` directory.

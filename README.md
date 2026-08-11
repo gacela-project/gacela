@@ -8,17 +8,13 @@
 <p align="center">
   <a href="https://github.com/gacela-project/gacela/actions/workflows/tests.yml">
     <img src="https://github.com/gacela-project/gacela/actions/workflows/tests.yml/badge.svg" alt="GitHub Build Status">
-  </a>
-  <a href="https://packagist.org/packages/gacela-project/gacela">
+  </a> <a href="https://packagist.org/packages/gacela-project/gacela">
     <img src="https://img.shields.io/packagist/dt/gacela-project/gacela" alt="Packagist Downloads">
-  </a>
-  <a href="https://shepherd.dev/github/gacela-project/gacela">
+  </a> <a href="https://shepherd.dev/github/gacela-project/gacela">
     <img src="https://shepherd.dev/github/gacela-project/gacela/coverage.svg" alt="Psalm Type-coverage Status">
-  </a>
-  <a href="https://dashboard.stryker-mutator.io/reports/github.com/gacela-project/gacela/main">
+  </a> <a href="https://dashboard.stryker-mutator.io/reports/github.com/gacela-project/gacela/main">
     <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fgacela-project%2Fgacela%2Fmain" alt="Mutation testing badge">
-  </a>
-  <a href="https://github.com/gacela-project/gacela/blob/main/LICENSE">
+  </a> <a href="https://github.com/gacela-project/gacela/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT Software License">
   </a>
 </p>
@@ -64,14 +60,11 @@ vendor/bin/gacela make:module App/Blog  # scaffold a module
 vendor/bin/gacela                       # every command
 ```
 
-Modules can be inspected, validated and prepared for production — see
-[CLI commands](docs/cli.md).
+Modules can be inspected, validated and prepared for production — see [CLI commands](docs/cli.md).
 
 ## Documentation
 
-Start with [getting started](docs/getting-started.md), then
-[getting a dependency](docs/getting-a-dependency.md) — the one that answers "how do I
-reach *that* from *here*". [`docs/`](docs/README.md) is the full index; the rest:
+Start with [getting started](docs/getting-started.md), then [getting a dependency](docs/getting-a-dependency.md) — the one that answers "how do I reach *that* from *here*". [`docs/`](docs/README.md) is the full index; the rest:
 
 - [Upgrading from 1.x](UPGRADE.md)
 - [CLI commands](docs/cli.md)

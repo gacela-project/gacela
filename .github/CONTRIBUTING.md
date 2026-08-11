@@ -24,15 +24,13 @@ In your bug report, please provide the following:
 * What actually happens
 * Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
 
-Please post code and output as text ([using proper markup](https://guides.github.com/features/mastering-markdown/)). 
-Do not post screenshots of code or output.
+Please post code and output as text ([using proper markup](https://guides.github.com/features/mastering-markdown/)). Do not post screenshots of code or output.
 
 ## Workflow for Pull Requests
 
 1. Fork/clone the repository.
 2. Install the vendor dependencies with `composer update`.
-3. Create your branch from `master` if you plan to implement new functionality or change existing code significantly;
-   create your branch from the oldest branch that is affected by the bug if you plan to fix a bug.
+3. Create your branch from `master` if you plan to implement new functionality or change existing code significantly; create your branch from the oldest branch that is affected by the bug if you plan to fix a bug.
 4. Implement your change and add tests for it.
 5. Ensure the test suite passes.
 6. Ensure the code complies with our coding guidelines (see below).
@@ -69,9 +67,7 @@ You can see more composer scripts inside the `/composer.json` file.
 
 ## Git Hooks
 
-You can verify all your commits will pass the CI (coding guidelines, static analyzers, and tests) by enabling the git
-pre-commit hook that will trigger all of them before creating a new commit. Don't worry, it usually takes a couple of
-seconds.
+You can verify all your commits will pass the CI (coding guidelines, static analyzers, and tests) by enabling the git pre-commit hook that will trigger all of them before creating a new commit. Don't worry, it usually takes a couple of seconds.
 
 You can add the git hook running the following bash script:
 

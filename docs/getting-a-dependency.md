@@ -1,11 +1,8 @@
 # Getting a dependency
 
-Gacela supports many ways to obtain a dependency. This page names **one primary
-path per intent** — the one the docs teach, the one that is type-safe, and the
-one to reach for when you have no specific reason to do otherwise.
+Gacela supports many ways to obtain a dependency. This page names **one primary path per intent** — the one the docs teach, the one that is type-safe, and the one to reach for when you have no specific reason to do otherwise.
 
-The rest still work. They are listed at the bottom with the situations where
-they are genuinely the right answer, because "supported" is not "deprecated".
+The rest still work. They are listed at the bottom with the situations where they are genuinely the right answer, because "supported" is not "deprecated".
 
 | I want to… | Use |
 |---|---|
@@ -17,9 +14,7 @@ they are genuinely the right answer, because "supported" is not "deprecated".
 
 ## Reach another module
 
-From an **entry-point class** — a Command, a Controller, anything outside the
-four pillars — `use ServiceResolverAwareTrait` and declare the pillar with
-`#[ServiceMap]`:
+From an **entry-point class** — a Command, a Controller, anything outside the four pillars — `use ServiceResolverAwareTrait` and declare the pillar with `#[ServiceMap]`:
 
 ```php
 use Gacela\Framework\ServiceResolver\ServiceMap;
@@ -37,11 +32,9 @@ final class SendInvoiceController
 }
 ```
 
-The trait is what supplies the `__call()` that reads the attribute. Without it
-`$this->getFacade()` is a plain undefined method, attribute or no attribute.
+The trait is what supplies the `__call()` that reads the attribute. Without it `$this->getFacade()` is a plain undefined method, attribute or no attribute.
 
-**From inside a Factory, do not do this.** A Factory reaches another module
-through its own **Provider**, not by calling `getFacade()` on itself:
+**From inside a Factory, do not do this.** A Factory reaches another module through its own **Provider**, not by calling `getFacade()` on itself:
 
 ```php
 // Provider
@@ -60,21 +53,11 @@ public function createInvoiceSender(): InvoiceSender
 }
 ```
 
-`FactoryDoesNotCallFacadeRule` enforces that, and it is registered by default in
-`phpstan-gacela.neon`: *"Factory must not call `$this->getFacade()`; same-module
-access goes through the Factory itself, cross-module access goes through the
-Provider."*
+`FactoryDoesNotCallFacadeRule` enforces that, and it is registered by default in `phpstan-gacela.neon`: *"Factory must not call `$this->getFacade()`; same-module access goes through the Factory itself, cross-module access goes through the Provider."*
 
-**Why declare the pillar.** The accessor works without the attribute — the
-runtime falls back to reading a `@method` docblock, and then to scanning your
-file's `use` statements, both of which now raise a deprecation. But an
-undeclared accessor is also untyped: 2.0 reports it, and before that it
-evaluated to `mixed`, which switched off checking of everything reached
-*through* it. A `@method` docblock is equally fine for typing; PHPStan reads it
-natively, and it is still worth keeping alongside the attribute for IDEs.
+**Why declare the pillar.** The accessor works without the attribute — the runtime falls back to reading a `@method` docblock, and then to scanning your file's `use` statements, both of which now raise a deprecation. But an undeclared accessor is also untyped: 2.0 reports it, and before that it evaluated to `mixed`, which switched off checking of everything reached *through* it. A `@method` docblock is equally fine for typing; PHPStan reads it natively, and it is still worth keeping alongside the attribute for IDEs.
 
-Cross-module access goes through the other module's **Facade**, never its
-Factory or internals. `CrossModuleViaFacadeRule` enforces this if you enable it.
+Cross-module access goes through the other module's **Facade**, never its Factory or internals. `CrossModuleViaFacadeRule` enforces this if you enable it.
 
 ## Get a collaborator inside my own module
 
@@ -90,9 +73,7 @@ final class Factory extends AbstractFactory
 }
 ```
 
-When the wiring is pure type-based plumbing, `make()` autowires it through the
-module container instead — honouring `#[Inject]`, `#[Singleton]` and
-`#[Factory]`, and needing no Provider at all:
+When the wiring is pure type-based plumbing, `make()` autowires it through the module container instead — honouring `#[Inject]`, `#[Singleton]` and `#[Factory]`, and needing no Provider at all:
 
 ```php
 public function createInvoiceSender(): InvoiceSender
@@ -101,9 +82,7 @@ public function createInvoiceSender(): InvoiceSender
 }
 ```
 
-Use `create*()` when construction has decisions in it, `make()` when it does
-not. A Facade reaches its own Factory with `$this->getFactory()`, which is a
-real typed method — no attribute required.
+Use `create*()` when construction has decisions in it, `make()` when it does not. A Facade reaches its own Factory with `$this->getFactory()`, which is a real typed method — no attribute required.
 
 ## Get an external / infrastructure service
 
@@ -129,9 +108,7 @@ Read it back in the Factory with the class-string form, which is typed:
 $gateway = $this->getProvidedDependency(PaymentGateway::class);
 ```
 
-For "this interface means that implementation" across the whole app, use
-`addBinding()` in `gacela.php` instead — the container then autowires it
-everywhere, including through `make()`:
+For "this interface means that implementation" across the whole app, use `addBinding()` in `gacela.php` instead — the container then autowires it everywhere, including through `make()`:
 
 ```php
 $config->addBinding(PaymentGateway::class, StripeGateway::class);
@@ -139,20 +116,17 @@ $config->addBinding(PaymentGateway::class, StripeGateway::class);
 
 ## Collect several implementations
 
-Two shapes, and which one you want is decided by a single question: **do you
-look a member up, or do you use all of them?**
+Two shapes, and which one you want is decided by a single question: **do you look a member up, or do you use all of them?**
 
 ### Unkeyed — every implementation of something
 
-A set of validators, listeners or rules, where the consumer iterates the whole
-collection. Group them with `tag()` in `gacela.php`:
+A set of validators, listeners or rules, where the consumer iterates the whole collection. Group them with `tag()` in `gacela.php`:
 
 ```php
 $config->tag([NotEmptyValidator::class, EmailValidator::class], 'validators');
 ```
 
-Resolve the group with `tagged()`, which instantiates each id lazily, in the
-order it was tagged. A Provider is where you turn it into a provided dependency:
+Resolve the group with `tagged()`, which instantiates each id lazily, in the order it was tagged. A Provider is where you turn it into a provided dependency:
 
 ```php
 final class Provider extends AbstractProvider
@@ -169,12 +143,9 @@ final class Provider extends AbstractProvider
 }
 ```
 
-A tag declared in `gacela.php` reaches **every** module's container, so a module
-can consume a tag it did not declare — which is what makes a tag an extension
-point rather than just a list.
+A tag declared in `gacela.php` reaches **every** module's container, so a module can consume a tag it did not declare — which is what makes a tag an extension point rather than just a list.
 
-A module that wants to *add* to a tag calls `Container::tag()` in its own
-Provider:
+A module that wants to *add* to a tag calls `Container::tag()` in its own Provider:
 
 ```php
 public function provideModuleDependencies(Container $container): void
@@ -184,15 +155,11 @@ public function provideModuleDependencies(Container $container): void
 }
 ```
 
-That contribution stays in **that module's** container. Two modules tagging
-under the same label do not collide and do not see each other's additions; each
-sees the app-wide set plus its own. That is deliberate — module containers are
-separate, and a tag is not a back channel between modules.
+That contribution stays in **that module's** container. Two modules tagging under the same label do not collide and do not see each other's additions; each sees the app-wide set plus its own. That is deliberate — module containers are separate, and a tag is not a back channel between modules.
 
 ### Keyed — the one implementation for this key
 
-A command bus, a message dispatcher, anything that picks a handler by a business
-key. Use `addHandlerRegistry()`:
+A command bus, a message dispatcher, anything that picks a handler by a business key. Use `addHandlerRegistry()`:
 
 ```php
 $config->addHandlerRegistry(HandlerRegistry::class, [
@@ -206,15 +173,11 @@ $registry = $this->getProvidedDependency(HandlerRegistry::class);
 $handler = $registry->get('email');
 ```
 
-Both resolve their members through the container and both instantiate lazily.
-They are not two ways to do one thing: a registry answers *"the handler for this
-key"* and throws on an unknown one, while a tag answers *"all of these"* and has
-no notion of a key to miss.
+Both resolve their members through the container and both instantiate lazily. They are not two ways to do one thing: a registry answers *"the handler for this key"* and throws on an unknown one, while a tag answers *"all of these"* and has no notion of a key to miss.
 
 ## Read a config value
 
-The typed getters are `protected`, so they are used *inside* your `Config`
-class, which exposes intention-revealing methods to the rest of the module:
+The typed getters are `protected`, so they are used *inside* your `Config` class, which exposes intention-revealing methods to the rest of the module:
 
 ```php
 final class Config extends AbstractConfig
@@ -226,15 +189,11 @@ final class Config extends AbstractConfig
 }
 ```
 
-`getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()` and the
-untyped `get()` are all available. This is the shape the other three intents are
-aiming for: one path, typed variants, impossible to use wrongly.
+`getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()` and the untyped `get()` are all available. This is the shape the other three intents are aiming for: one path, typed variants, impossible to use wrongly.
 
 ## The other paths, and when they are right
 
-These are supported and are **not** deprecated. They are simply not the answer
-to "how do I get a dependency?" — reach for them when the situation below is
-actually yours.
+These are supported and are **not** deprecated. They are simply not the answer to "how do I get a dependency?" — reach for them when the situation below is actually yours.
 
 | Path | Reach for it when |
 |---|---|
@@ -253,15 +212,8 @@ actually yours.
 
 ### Why none of them were removed
 
-The 2.0 inventory ([RFC-0002](rfc/0002-dependency-paths-inventory.md)) counted 25
-paths and the obvious conclusion was "delete most of them". That would have been
-the wrong lesson.
+The 2.0 inventory ([RFC-0002](rfc/0002-dependency-paths-inventory.md)) counted 25 paths and the obvious conclusion was "delete most of them". That would have been the wrong lesson.
 
-Reading a config value has **six** methods for one intent and nobody has ever
-complained, because they are the same path with typed variants — discovered
-together, impossible to confuse. The problem in the other intents was never the
-count. It was that unrelated mechanisms competed for the same job with no
-indication which one you were supposed to use.
+Reading a config value has **six** methods for one intent and nobody has ever complained, because they are the same path with typed variants — discovered together, impossible to confuse. The problem in the other intents was never the count. It was that unrelated mechanisms competed for the same job with no indication which one you were supposed to use.
 
-Naming a primary path fixes that. Deleting working escape hatches would only
-have broken applications that had a good reason to use one.
+Naming a primary path fixes that. Deleting working escape hatches would only have broken applications that had a good reason to use one.

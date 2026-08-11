@@ -13,9 +13,11 @@ use GacelaTest\Unit\PHPStan\Reflection\Fixture\ServiceMapWithoutMagicCall;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithoutServiceMap;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithPositionalServiceMap;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithRepeatedServiceMap;
+use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithSameMethodDifferentClass;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithServiceMap;
 use Override;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Testing\PHPStanTestCase;
 
 final class ServiceMapMethodsClassReflectionExtensionTest extends PHPStanTestCase
@@ -25,7 +27,7 @@ final class ServiceMapMethodsClassReflectionExtensionTest extends PHPStanTestCas
     #[Override]
     protected function setUp(): void
     {
-        $this->extension = new ServiceMapMethodsClassReflectionExtension();
+        $this->extension = new ServiceMapMethodsClassReflectionExtension(self::createReflectionProvider());
     }
 
     public function test_declares_the_method_named_by_the_attribute(): void
@@ -116,6 +118,63 @@ final class ServiceMapMethodsClassReflectionExtensionTest extends PHPStanTestCas
         self::assertTrue($this->extension->hasMethod($classReflection, 'getFacade'));
         self::assertFalse($this->extension->hasMethod($classReflection, 'nope'));
         self::assertFalse($this->extension->hasMethod($classReflection, 'nope'));
+    }
+
+    /**
+     * PHPStan asks hasMethod() before getMethod(), and both land here, so the
+     * attribute is read twice for every accessor unless the answer is kept.
+     */
+    public function test_a_resolved_accessor_is_read_once_per_class_and_method(): void
+    {
+        $reflectionProvider = $this->createMock(ReflectionProvider::class);
+        $reflectionProvider->expects(self::once())
+            ->method('hasClass')
+            ->with(MappedFacade::class)
+            ->willReturn(true);
+
+        $extension = new ServiceMapMethodsClassReflectionExtension($reflectionProvider);
+        $classReflection = $this->reflect(WithServiceMap::class);
+
+        self::assertTrue($extension->hasMethod($classReflection, 'getFacade'));
+        self::assertSame(
+            MappedFacade::class,
+            $extension->getMethod($classReflection, 'getFacade')
+                ->getOnlyVariant()->getReturnType()->getObjectClassNames()[0],
+        );
+    }
+
+    /**
+     * Two modules naming their accessor the same way is the normal case, not an
+     * edge one: a kept answer that forgets which class asked would serve one
+     * module's Facade to every other.
+     */
+    public function test_the_same_accessor_on_another_class_keeps_its_own_mapping(): void
+    {
+        self::assertSame(
+            MappedFacade::class,
+            $this->extension->getMethod($this->reflect(WithServiceMap::class), 'getFacade')
+                ->getOnlyVariant()->getReturnType()->getObjectClassNames()[0],
+        );
+        self::assertSame(
+            MappedFactory::class,
+            $this->extension->getMethod($this->reflect(WithSameMethodDifferentClass::class), 'getFacade')
+                ->getOnlyVariant()->getReturnType()->getObjectClassNames()[0],
+        );
+    }
+
+    /**
+     * PHPStan analyses classes it never loads. Asking the autoloader instead
+     * would drop the mapping for any of them, silently untyping the accessor.
+     */
+    public function test_the_mapped_class_is_looked_up_in_phpstan_not_the_autoloader(): void
+    {
+        $reflectionProvider = $this->createStub(ReflectionProvider::class);
+        $reflectionProvider->method('hasClass')->willReturn(true);
+
+        $extension = new ServiceMapMethodsClassReflectionExtension($reflectionProvider);
+
+        self::assertFalse(class_exists('GacelaTest\Unit\PHPStan\Reflection\Fixture\ThisClassDoesNotExist'));
+        self::assertTrue($extension->hasMethod($this->reflect(ServiceMapToMissingClass::class), 'getFacade'));
     }
 
     /**

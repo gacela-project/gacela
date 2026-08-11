@@ -96,6 +96,11 @@
         "bamarni-bin": {
             "bin-links": false,
             "forward-command": true
+        },
+        "phpstan": {
+            "includes": [
+                "phpstan-gacela.neon"
+            ]
         }
     },
     "scripts": {

@@ -55,6 +55,8 @@ $ ./vendor/bin/php-cs-fixer fix
 
 Please understand that we will not accept a pull request when its changes violate this project's coding guidelines.
 
+Adding a public method to `GacelaConfig`? Read [RFC-0003: the bootstrap configuration surface](../docs/rfc/0003-bootstrap-configuration-surface.md) first — it holds the competition test a new method must pass, the naming grammar, and the audited table a test will ask you to extend.
+
 ## Running Gacela's test suite
 
 Once you've installed all composer dependencies, you can simply test all suites running the following composer script:

@@ -15,6 +15,11 @@
 - [Production performance](production-performance.md) — full checklist to run Gacela fast in production
 - [Upgrading](../UPGRADE.md) — why to move to 2.0, and every breaking change with its replacement
 
+## Host frameworks
+
+- [Symfony bundle](../symfony-bridge/README.md) — bootstrap Gacela from the kernel, reach Symfony services, `bin/console gacela:*`
+- [Laravel provider](../laravel-bridge/README.md) — bootstrap Gacela when the app boots, reach Laravel services, `artisan gacela:*`
+
 ## RFCs
 
 - [RFC-0001: `#[Inject]` + `#[ServiceMapTyped]` — Symfony DI interop](rfc/0001-inject-symfony-di-interop.md)

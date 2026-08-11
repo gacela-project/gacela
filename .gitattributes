@@ -10,8 +10,10 @@
 /.claude                 export-ignore
 /tests                   export-ignore
 /tools                   export-ignore
-/symfony-bridge          export-ignore
-/laravel-bridge          export-ignore
+/symfony-bridge/tests    export-ignore
+/laravel-bridge/tests    export-ignore
+/symfony-bridge/composer.json export-ignore
+/laravel-bridge/composer.json export-ignore
 /.editorconfig           export-ignore
 /.gitattributes          export-ignore
 /.gitignore              export-ignore

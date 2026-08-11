@@ -293,7 +293,7 @@ Trait gone. `@psalm-suppress` gone. Dependency visible to tooling.
 
 ### Symfony `Command` classes
 
-Symfony `Command` constructors are autowired by Symfony's own container. `#[Inject]` on a Symfony-managed class does not take effect on its own — a compiler pass is required to route `#[Inject]` parameters to Gacela before Symfony's autowire claims them. A dedicated `gacela/symfony-bridge` package ships this pass; adopt it in projects where Symfony owns the container.
+Symfony `Command` constructors are autowired by Symfony's own container. `#[Inject]` on a Symfony-managed class does not take effect on its own — a compiler pass is required to route `#[Inject]` parameters to Gacela before Symfony's autowire claims them. The [Symfony bundle](../symfony-bridge/README.md) that ships with Gacela registers this pass; adopt it in projects where Symfony owns the container.
 
 ## Class Attributes: `#[Singleton]`, `#[Factory]` and `#[Lazy]`
 

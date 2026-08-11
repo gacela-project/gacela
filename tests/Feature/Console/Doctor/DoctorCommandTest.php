@@ -78,8 +78,49 @@ final class DoctorCommandTest extends TestCase
             '✓ pillar filenames',
             '✓ config schema',
             '✓ published stubs',
+            '✓ service extensions',
             '✓ All checks passed',
         ], $this->statusLinesOf($tester));
+    }
+
+    /**
+     * An extension on an id no Provider ever set()s is accepted and applied
+     * nowhere (#683); doctor is the surface that says so.
+     */
+    public function test_an_extension_on_an_id_nobody_registers_warns_naming_the_id(): void
+    {
+        $cacheDir = $this->cacheDir;
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheDir): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false, $cacheDir);
+            $config->extendService('ARRAY_AS_OBJETC', static function (): void {
+            });
+        });
+
+        $tester = new CommandTester(new DoctorCommand());
+        $tester->execute([]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), 'a warning must not fail a non-strict run');
+        self::assertContains('⚠ service extensions', $this->statusLinesOf($tester));
+        self::assertStringContainsString('ARRAY_AS_OBJETC', $tester->getDisplay());
+    }
+
+    public function test_an_unmatched_extension_fails_a_strict_run(): void
+    {
+        $cacheDir = $this->cacheDir;
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($cacheDir): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false, $cacheDir);
+            $config->extendService('ARRAY_AS_OBJETC', static function (): void {
+            });
+        });
+
+        $tester = new CommandTester(new DoctorCommand());
+        $tester->execute(['--strict' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
     }
 
     public function test_a_registered_health_check_is_appended_to_the_built_in_ones(): void
@@ -89,7 +130,7 @@ final class DoctorCommandTest extends TestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
         // The registered check runs after the built-in ones, and its detail is shown.
-        self::assertSame('✓ module health: FakeModule', $this->statusLinesOf($tester)[5]);
+        self::assertSame('✓ module health: FakeModule', $this->statusLinesOf($tester)[6]);
         self::assertStringContainsString('FakeHealthCheck ran', $tester->getDisplay());
     }
 

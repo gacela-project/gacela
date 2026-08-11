@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Report an `extendService()` id no Provider ever `set()`s in `doctor` — the extension is otherwise accepted and applied nowhere, silently
+
 ### Fixed
 
 - Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, instead of leaning on transitive luck; demote the Laravel bridge's test-only `illuminate/container` and `illuminate/events` to `require-dev`

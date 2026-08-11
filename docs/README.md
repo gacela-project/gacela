@@ -24,5 +24,6 @@
 
 - [RFC-0001: `#[Inject]` + `#[ServiceMapTyped]` — Symfony DI interop](rfc/0001-inject-symfony-di-interop.md)
 - [RFC-0002: How many ways are there to obtain a dependency?](rfc/0002-dependency-paths-inventory.md) — the 25-path inventory behind the 2.0 "one primary path" question
+- [RFC-0003: The bootstrap configuration surface](rfc/0003-bootstrap-configuration-surface.md) — the competition test, the naming grammar, and the audited `GacelaConfig` table that gates new methods
 
 Full reference: [gacela-project.com](https://gacela-project.com/)

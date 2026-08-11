@@ -214,6 +214,6 @@ These are supported and are **not** deprecated. They are simply not the answer t
 
 The 2.0 inventory ([RFC-0002](rfc/0002-dependency-paths-inventory.md)) counted 25 paths and the obvious conclusion was "delete most of them". That would have been the wrong lesson.
 
-Reading a config value has **six** methods for one intent and nobody has ever complained, because they are the same path with typed variants — discovered together, impossible to confuse. The problem in the other intents was never the count. It was that unrelated mechanisms competed for the same job with no indication which one you were supposed to use.
+The problem in the other intents was never the count — it was unrelated mechanisms competing for the same job with no indication which one to use. That reasoning is now the framework's whole policy on public surface, written down with its gate in [RFC-0003: the bootstrap configuration surface](rfc/0003-bootstrap-configuration-surface.md).
 
 Naming a primary path fixes that. Deleting working escape hatches would only have broken applications that had a good reason to use one.

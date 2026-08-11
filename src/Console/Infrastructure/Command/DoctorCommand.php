@@ -8,6 +8,7 @@ use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
+use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
 use Gacela\Console\Application\Doctor\CheckResult;
@@ -100,6 +101,11 @@ final class DoctorCommand extends Command
             new FilenameMismatchCheck($modules),
             new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
             new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir)),
+            new ServiceExtensionTargetCheck(
+                $modules,
+                array_keys($config->getSetupGacela()->getServicesToExtend()),
+                Gacela::container()->getRegisteredServices(),
+            ),
         ];
 
         foreach (HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults() as $moduleName => $status) {

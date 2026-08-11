@@ -55,6 +55,8 @@ Every stub substitutes `$NAMESPACE$`, `$MODULE_NAME$` and `$CLASS_NAME$`. `docto
 
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).
 
+Among the built-in checks, *service extensions* verifies every `extendService()` id against what the Providers actually `set()`: an extension on an id nothing ever stores — a typo, or an id registered only through `bind()`/`singleton()` — is accepted and applied nowhere at runtime, silently, so `doctor` is the surface that says so. Under `--strict` an unmatched id fails the run.
+
 ## Production
 
 | Command | What it does |

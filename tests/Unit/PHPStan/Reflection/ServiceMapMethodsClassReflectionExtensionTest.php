@@ -13,6 +13,7 @@ use GacelaTest\Unit\PHPStan\Reflection\Fixture\ServiceMapWithoutMagicCall;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithoutServiceMap;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithPositionalServiceMap;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithRepeatedServiceMap;
+use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithSameMethodDifferentClass;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\WithServiceMap;
 use Override;
 use PHPStan\Reflection\ClassReflection;
@@ -138,6 +139,25 @@ final class ServiceMapMethodsClassReflectionExtensionTest extends PHPStanTestCas
         self::assertSame(
             MappedFacade::class,
             $extension->getMethod($classReflection, 'getFacade')
+                ->getOnlyVariant()->getReturnType()->getObjectClassNames()[0],
+        );
+    }
+
+    /**
+     * Two modules naming their accessor the same way is the normal case, not an
+     * edge one: a kept answer that forgets which class asked would serve one
+     * module's Facade to every other.
+     */
+    public function test_the_same_accessor_on_another_class_keeps_its_own_mapping(): void
+    {
+        self::assertSame(
+            MappedFacade::class,
+            $this->extension->getMethod($this->reflect(WithServiceMap::class), 'getFacade')
+                ->getOnlyVariant()->getReturnType()->getObjectClassNames()[0],
+        );
+        self::assertSame(
+            MappedFactory::class,
+            $this->extension->getMethod($this->reflect(WithSameMethodDifferentClass::class), 'getFacade')
                 ->getOnlyVariant()->getReturnType()->getObjectClassNames()[0],
         );
     }

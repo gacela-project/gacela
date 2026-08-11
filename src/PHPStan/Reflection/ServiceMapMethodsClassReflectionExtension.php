@@ -41,7 +41,7 @@ use function array_key_exists;
  */
 final class ServiceMapMethodsClassReflectionExtension implements MethodsClassReflectionExtension
 {
-    /** @var array<string, class-string|null> */
+    /** @var array<class-string, array<string, class-string|null>> */
     private array $mappedClasses = [];
 
     public function __construct(
@@ -80,15 +80,18 @@ final class ServiceMapMethodsClassReflectionExtension implements MethodsClassRef
      */
     private function mappedClass(ClassReflection $classReflection, string $methodName): ?string
     {
-        $key = $classReflection->getName() . '::' . $methodName;
+        $className = $classReflection->getName();
 
         // PHPStan asks hasMethod() before getMethod(), so every typed accessor
         // is resolved at least twice.
-        if (array_key_exists($key, $this->mappedClasses)) {
-            return $this->mappedClasses[$key];
+        if (isset($this->mappedClasses[$className])
+            && array_key_exists($methodName, $this->mappedClasses[$className])
+        ) {
+            return $this->mappedClasses[$className][$methodName];
         }
 
-        return $this->mappedClasses[$key] = $this->resolveMappedClass($classReflection, $methodName);
+        return $this->mappedClasses[$className][$methodName]
+            = $this->resolveMappedClass($classReflection, $methodName);
     }
 
     /**

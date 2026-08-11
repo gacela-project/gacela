@@ -20,6 +20,7 @@
 
 - Serve the rebooted kernel's services after a second `GacelaBundle` boot, instead of the previous kernel's out of a stale locator
 - Type a `#[ServiceMap]` accessor whose mapped class PHPStan knows but the analysing process cannot autoload. The extension asked `class_exists()`, so the mapping was dropped and the accessor silently went back to being untyped
+- Require `gacela-project/gacela` from both bridges. They call `Gacela::bootstrap()` and read `GacelaConfig`, but declared only `gacela-project/container`, so installing either one on its own left the framework it wires up to chance. Inside this repository the root autoloader supplied it, which is what hid it
 
 ## [2.1.0](https://github.com/gacela-project/gacela/compare/2.0.0...2.1.0) - 2026-08-09
 

@@ -4,8 +4,10 @@ Gacela inside a Laravel application: the service provider does the wiring every 
 
 ## Install
 
+The provider ships inside the framework package, so there is nothing extra to require:
+
 ```
-composer require gacela-project/laravel-bridge
+composer require gacela-project/gacela
 ```
 
 ```php
@@ -118,4 +120,4 @@ A `readonly` property is refused by name — it cannot be written after construc
 
 ## Status
 
-Experimental. API may change until it graduates out of `gacela/gacela`'s `laravel-bridge/` subfolder.
+Experimental. The API may still change. It ships from `gacela-project/gacela`'s `laravel-bridge/` subfolder rather than as a package of its own, so it is versioned with the framework.

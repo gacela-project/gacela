@@ -4,8 +4,10 @@ Gacela inside a Symfony application: the bundle does the wiring every Symfony/Ga
 
 ## Install
 
+The bundle ships inside the framework package, so there is nothing extra to require:
+
 ```
-composer require gacela-project/symfony-bridge
+composer require gacela-project/gacela
 ```
 
 ```php
@@ -102,4 +104,4 @@ The Gacela container must be registered as a Symfony service named `gacela.conta
 
 ## Status
 
-Experimental. API may change until it graduates out of `gacela/gacela`'s `symfony-bridge/` subfolder.
+Experimental. The API may still change. It ships from `gacela-project/gacela`'s `symfony-bridge/` subfolder rather than as a package of its own, so it is versioned with the framework.

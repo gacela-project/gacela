@@ -57,14 +57,18 @@
     "suggest": {
         "gacela-project/gacela-env-config-reader": "Allows to read .env config files",
         "gacela-project/gacela-yaml-config-reader": "Allows to read yml/yaml config files",
+        "illuminate/support": "Allows to register Gacela\\LaravelBridge\\GacelaServiceProvider in a Laravel application",
         "phpunit/phpunit": "Allows to extend Gacela\\Framework\\Testing\\GacelaTestCase in your tests",
-        "symfony/console": "Allows to use vendor/bin/gacela script"
+        "symfony/console": "Allows to use vendor/bin/gacela script",
+        "symfony/http-kernel": "Allows to register Gacela\\SymfonyBridge\\GacelaBundle in a Symfony application"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "Gacela\\": "src/"
+            "Gacela\\": "src/",
+            "Gacela\\LaravelBridge\\": "laravel-bridge/src/",
+            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/"
         }
     },
     "autoload-dev": {
@@ -72,9 +76,7 @@
             "GacelaData\\": "data/",
             "GacelaTest\\": "tests/",
             "GacelaTest\\LaravelBridge\\": "laravel-bridge/tests/",
-            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/",
-            "Gacela\\LaravelBridge\\": "laravel-bridge/src/",
-            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/"
+            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/"
         }
     },
     "bin": [

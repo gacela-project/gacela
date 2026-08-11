@@ -9,12 +9,12 @@ use PHPStan\Reflection\Annotations\AnnotationMethodReflection;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ExtendedMethodReflection;
 use PHPStan\Reflection\MethodsClassReflectionExtension;
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\Generic\TemplateTypeMap;
 use PHPStan\Type\ObjectType;
 use ReflectionAttribute;
 
-use function class_exists;
-use function interface_exists;
+use function array_key_exists;
 
 /**
  * Types `getFacade()`/`getFactory()`/`getConfig()` from the `#[ServiceMap]`
@@ -41,6 +41,14 @@ use function interface_exists;
  */
 final class ServiceMapMethodsClassReflectionExtension implements MethodsClassReflectionExtension
 {
+    /** @var array<string, class-string|null> */
+    private array $mappedClasses = [];
+
+    public function __construct(
+        private readonly ReflectionProvider $reflectionProvider,
+    ) {
+    }
+
     public function hasMethod(ClassReflection $classReflection, string $methodName): bool
     {
         return $this->mappedClass($classReflection, $methodName) !== null;
@@ -72,15 +80,34 @@ final class ServiceMapMethodsClassReflectionExtension implements MethodsClassRef
      */
     private function mappedClass(ClassReflection $classReflection, string $methodName): ?string
     {
-        $nativeReflection = $classReflection->getNativeReflection();
+        $key = $classReflection->getName() . '::' . $methodName;
 
-        // Asking the ClassReflection would re-enter this extension and recurse;
+        // PHPStan asks hasMethod() before getMethod(), so every typed accessor
+        // is resolved at least twice.
+        if (array_key_exists($key, $this->mappedClasses)) {
+            return $this->mappedClasses[$key];
+        }
+
+        return $this->mappedClasses[$key] = $this->resolveMappedClass($classReflection, $methodName);
+    }
+
+    /**
+     * @return class-string|null
+     */
+    private function resolveMappedClass(ClassReflection $classReflection, string $methodName): ?string
+    {
+        // Asking for the method would re-enter this extension and recurse;
         // the magic dispatch only exists if the class really has __call.
-        if (!$nativeReflection->hasMethod('__call')) {
+        if (!$classReflection->hasNativeMethod('__call')) {
             return null;
         }
 
-        foreach ($nativeReflection->getAttributes(ServiceMap::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+        // Read natively, the way the runtime resolver does: ClassReflection's own
+        // attribute accessor postdates the `^2.0` PHPStan a consumer may be on.
+        $attributes = $classReflection->getNativeReflection()
+            ->getAttributes(ServiceMap::class, ReflectionAttribute::IS_INSTANCEOF);
+
+        foreach ($attributes as $attribute) {
             /** @var ServiceMap $serviceMap */
             $serviceMap = $attribute->newInstance();
 
@@ -88,9 +115,12 @@ final class ServiceMapMethodsClassReflectionExtension implements MethodsClassRef
                 continue;
             }
 
-            // A mapping to a class that does not exist resolves to nothing at
-            // runtime either; typing it would only move the failure.
-            if (!class_exists($serviceMap->className) && !interface_exists($serviceMap->className)) {
+            // Asked of PHPStan rather than the autoloader: a class it knows from
+            // the files it scanned is one it can type, whether or not this
+            // process can load it. A mapping to a class it does not know resolves
+            // to nothing at runtime either, so typing it would only move the
+            // failure.
+            if (!$this->reflectionProvider->hasClass($serviceMap->className)) {
                 return null;
             }
 

@@ -8,6 +8,22 @@ Both analysers run the same rules. There is one implementation of each check in 
 
 ### PHPStan
 
+With [phpstan/extension-installer](https://github.com/phpstan/extension-installer)
+there is nothing to do: requiring Gacela registers the rules and the accessor
+typing. Turn that off for this package alone with:
+
+```json
+{
+    "extra": {
+        "phpstan/extension-installer": {
+            "ignore": ["gacela-project/gacela"]
+        }
+    }
+}
+```
+
+Without the installer, include it yourself:
+
 ```neon
 includes:
     - vendor/gacela-project/gacela/phpstan-gacela.neon

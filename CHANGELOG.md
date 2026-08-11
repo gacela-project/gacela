@@ -10,10 +10,16 @@
 - Register `GacelaBundle` in a Symfony application: it bootstraps Gacela from the kernel, maps listed Symfony services into it, adds the console commands under a `gacela:` prefix, and warms Gacela's caches from `cache:warmup`
 - Register `GacelaServiceProvider` in a Laravel application: the same four things against the application's boot, listed Laravel bindings, the artisan commands and `artisan optimize`. It also honors `#[Inject]` on Laravel-resolved services: on constructor parameters through Laravel's contextual attributes, on properties and setters through `afterResolving`
 - Publish the scaffolder's templates into the project with `stubs:publish`; generation reads them per file and falls back to the built-in ones. `doctor` reports a published stub that lost a placeholder, or one the scaffolder never reads
+- Register `phpstan-gacela.neon` through `phpstan/extension-installer`, so requiring Gacela is the whole PHPStan setup. Opt out per package with `extra."phpstan/extension-installer".ignore`
+
+### Changed
+
+- Resolve a `#[ServiceMap]` accessor once per class and method under PHPStan. It asks `hasMethod()` before `getMethod()`, so the attribute was read at least twice for every typed accessor
 
 ### Fixed
 
 - Serve the rebooted kernel's services after a second `GacelaBundle` boot, instead of the previous kernel's out of a stale locator
+- Type a `#[ServiceMap]` accessor whose mapped class PHPStan knows but the analysing process cannot autoload. The extension asked `class_exists()`, so the mapping was dropped and the accessor silently went back to being untyped
 
 ## [2.1.0](https://github.com/gacela-project/gacela/compare/2.0.0...2.1.0) - 2026-08-09
 

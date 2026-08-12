@@ -45,88 +45,19 @@ See also: [Opcache preload](opcache-preload.md) for getting PHP itself to cache 
 
 ## Layer 2 — Cacheable facade methods
 
-Cache the *result* of a facade method with the `#[Cacheable]` attribute and `CacheableTrait`:
+Cache the *result* of a facade method with the `#[Cacheable]` attribute and `$this->cached()`. Storage is `InMemoryCacheStorage` by default, which means entries die with the request on PHP-FPM; for cross-request caching swap in a shared backend (APCu, Redis, PSR-16) via `CacheableConfig::setStorage()`.
 
-```php
-use Gacela\Framework\AbstractFacade;
-use Gacela\Framework\Attribute\Cacheable;
-use Gacela\Framework\Attribute\CacheableTrait;
-
-final class CatalogFacade extends AbstractFacade
-{
-    use CacheableTrait;
-
-    #[Cacheable(ttl: 3600)]
-    public function getPopularProducts(): array
-    {
-        return $this->cached(fn (): array =>
-            $this->getFactory()->createRepository()->fetchPopular(),
-        );
-    }
-}
-```
-
-Storage is `InMemoryCacheStorage` by default, which means entries die with the request on PHP-FPM. For cross-request caching swap in a shared backend (APCu, Redis, PSR-16) via `CacheableConfig::setStorage()`.
-
-Clear selectively:
-
-```php
-CatalogFacade::clearMethodCacheFor('getPopularProducts'); // one method, any args
-CatalogFacade::clearMethodCache();                        // the whole shared store, every facade
-```
-
-Full reference: [Cacheable methods](cacheable-methods.md).
+Full reference, including keys, invalidation, TTL overrides, and the storage contract: [Cacheable methods](cacheable-methods.md).
 
 ## Layer 3 — Value primitives
 
-When *your code* needs a cache — compiled artefacts, parsed data, a build pipeline — use `Gacela\Framework\Cache\FileCache`:
+When *your code* needs a cache — compiled artefacts, parsed data, a build pipeline — use `Gacela\Framework\Cache\FileCache`: one atomically written file per key, per-entry TTLs, batched writes, and stats. When invalidating one entry should cascade to every entry derived from it, wrap it in `ScopedCache`, its dependency-aware decorator.
 
-```php
-use Gacela\Framework\Cache\FileCache;
-
-$cache = new FileCache('/var/cache/myapp');
-
-$cache->put('user:42', $user, ttl: 600);
-$cache->get('user:42');     // $user, or null after TTL expiry
-$cache->forget('user:42');
-$cache->clear();
-```
-
-- One `.php` file per key (SHA1-hashed), written atomically via staged `.tmp` + `rename`.
-- TTL per entry; `ttl: 0` means forever.
-- `beginBatch()` / `commitBatch()` defer writes behind a single index-locked flush — useful for warming many entries at once.
-- `stats()` returns entry count, total bytes, and oldest/newest timestamps.
-- Safe against torn reads: concurrent readers see either the previous file or the new one, never a half-written one.
-
-### ScopedCache — dependency-aware decorator
-
-When invalidating one entry should cascade to every downstream entry that derived from it, wrap `FileCache` in `ScopedCache`:
-
-```php
-use Gacela\Framework\Cache\FileCache;
-use Gacela\Framework\Cache\ScopedCache;
-
-$cache = new ScopedCache(new FileCache('/var/cache/myapp'));
-
-$cache->put('ns:core', $envCore);
-$cache->put('file:a.php', $compiledA);
-$cache->put('fragment:a#1', $fragment);
-
-$cache->dependsOn('file:a.php', 'ns:core');
-$cache->dependsOn('fragment:a#1', 'file:a.php');
-
-$cache->invalidate('ns:core');          // cascades: file:a.php and fragment:a#1 also go
-$cache->invalidateLeaf('file:a.php');   // only this key; dependents stay valid
-```
-
-- `get` / `put` / `has` delegate straight to the underlying `FileCache` — zero overhead on the hot path.
-- The dependency graph is persisted alongside the values (`.gacela-scoped-cache-graph.php`) and survives process restarts.
-- Cycles are rejected eagerly at `dependsOn()` — self, two-node, and transitive.
-- Single-writer concurrency: multiple processes racing on `dependsOn()` may lose edges added between load and persist. The value store underneath remains read-safe under concurrency regardless.
+Full reference: [FileCache and ScopedCache](file-cache.md).
 
 ## Picking a layer
 
 - Make Gacela's own resolution faster → Layer 1, `enableFileCache()`.
-- Memoise a specific facade method → Layer 2, `#[Cacheable]`.
-- Cache arbitrary application data → Layer 3, `FileCache`.
-- Same, but invalidation must cascade → Layer 3, `ScopedCache`.
+- Memoise a specific facade method → Layer 2, [`#[Cacheable]`](cacheable-methods.md).
+- Cache arbitrary application data → Layer 3, [`FileCache`](file-cache.md).
+- Same, but invalidation must cascade → Layer 3, [`ScopedCache`](file-cache.md#scopedcache--dependency-aware-decorator).

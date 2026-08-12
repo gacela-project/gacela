@@ -44,7 +44,7 @@ Every stub substitutes `$NAMESPACE$`, `$MODULE_NAME$` and `$CLASS_NAME$`. `docto
 | `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable` |
 | `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--allowed-cycles`, `--rules` to fail on dependencies your rules file forbids, `--compare-to` |
 
-`debug:graph --check` is the one built for CI; see [static analysis](static-analysis.md) for wiring it into a workflow.
+`debug:graph --check` is the one built for CI; see [module boundaries](module-boundaries.md) for wiring it into a workflow.
 
 ## Validating
 
@@ -63,6 +63,6 @@ Among the built-in checks, *service extensions* verifies every `extendService()`
 |---|---|
 | `cache:warm` | Pre-resolves every module class and populates the on-disk caches. `--clear` first, `--attributes` to pre-scan `#[ServiceMap]` |
 | `cache:clear` | Removes every Gacela cache file |
-| `profile:report` | Performance profiling report |
+| `profile:report` | Performance profiling report — the recording side is the [Profiler](profiling.md) |
 
 `cache:warm` only writes anything when the file cache is enabled; the deploy sequence is in [production performance](production-performance.md).

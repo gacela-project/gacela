@@ -8,6 +8,10 @@
 - Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`. The kind is listed in the command's help, `doctor` counts its stub among the ones the scaffolder reads, and until that stub exists the generator names the path it looked for
 - Report in `doctor` every `extendService()` id no Provider ever `set()`s — such an extension is accepted, scheduled on every scope, and applied nowhere
 
+### Changed
+
+- Resolve a class name to its kind through the configured suffixes rather than the four literal pillar names. A project on `addSuffixTypeFacade('PublicApi')` now normalizes `App\Foo\FooPublicApi` to the `Facade` key the resolver looks up, which is what makes an override of it land — an `overrideExistingResolvedClass()` call on such a name was inert before and takes effect now
+
 ### Fixed
 
 - Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote its test-only requirements to `require-dev` — each manifest now states what its `src/` imports, and only that

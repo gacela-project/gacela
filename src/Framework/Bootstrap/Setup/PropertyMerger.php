@@ -13,6 +13,7 @@ use Gacela\Framework\Config\Schema\ConfigType;
 
 use function array_merge;
 use function array_unique;
+use function in_array;
 
 /**
  * Merges individual properties into a SetupGacela instance.
@@ -154,7 +155,18 @@ final class PropertyMerger
         $merged = $this->setup->getPluginStacks();
 
         foreach ($list as $contract => $plugins) {
-            $merged[$contract] = array_values(array_unique(array_merge($merged[$contract] ?? [], $plugins)));
+            // Appended one at a time rather than merged-then-deduplicated: the
+            // result stays a list without a reindex step, and a class both
+            // sources declared keeps the position the first one gave it.
+            $current = $merged[$contract] ?? [];
+
+            foreach ($plugins as $plugin) {
+                if (!in_array($plugin, $current, true)) {
+                    $current[] = $plugin;
+                }
+            }
+
+            $merged[$contract] = $current;
         }
 
         $this->setup->setPluginStacks($merged);

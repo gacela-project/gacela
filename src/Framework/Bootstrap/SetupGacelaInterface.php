@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap;
 
 use Gacela\Framework\Config\Schema\ConfigType;
+use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
@@ -50,6 +51,13 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
      * @return array<string, ConfigType>
      */
     public function getConfigSchema(): array;
+
+    /**
+     * The data shapes the application declares, by the class each generates.
+     *
+     * @return array<string, array<string, DtoType>>
+     */
+    public function getDtoSchema(): array;
 
     public function shouldValidateConfigSchemaOnBoot(): bool;
 

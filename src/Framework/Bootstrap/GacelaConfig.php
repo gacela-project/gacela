@@ -14,6 +14,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
+use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
@@ -67,6 +68,9 @@ final class GacelaConfig
 
     /** @var ?array<string, ConfigType> */
     private ?array $configSchema = null;
+
+    /** @var ?array<string, array<string, DtoType>> */
+    private ?array $dtoSchema = null;
 
     private ?bool $shouldValidateConfigSchemaOnBoot = null;
 
@@ -420,6 +424,48 @@ final class GacelaConfig
      * remember to run to the first thing that boots. Leave it off in
      * production, where the deploy gate has already answered the question.
      */
+    /**
+     * Declare a data shape, by the class it generates.
+     *
+     * ```php
+     * $config->declareDtoSchema(App\Checkout\Order::class, [
+     *     'reference'  => DtoType::string()->required(),
+     *     'total'      => DtoType::int()->required()->describe('order total in cents'),
+     *     'couponCode' => DtoType::string(),
+     * ]);
+     * ```
+     *
+     * `vendor/bin/gacela dto:generate` writes the class: final, typed getters,
+     * `with*()` copies, `toArray()` and `fromArray()`. Nothing is generated
+     * while booting -- the declaration is only read by that command.
+     *
+     * The id is the fully qualified class name on purpose. The file is written
+     * where your own composer `autoload` already looks for that namespace, so
+     * the generated class needs no autoloader from the framework and no step
+     * before static analysis can see it.
+     *
+     * Reached again through `extendGacelaConfig()`, declarations of one class
+     * **union**: another declarer may add properties, which is how a project
+     * extends a packaged shape without forking its file. Redeclaring a property
+     * differently throws, because the first declarer's code reads the same
+     * generated class.
+     *
+     * @param class-string|string $className
+     * @param array<string, DtoType> $properties
+     */
+    public function declareDtoSchema(string $className, array $properties): self
+    {
+        $declared = $this->dtoSchema ?? [];
+
+        foreach ($properties as $property => $type) {
+            $declared[$className][$property] = $type;
+        }
+
+        $this->dtoSchema = $declared;
+
+        return $this;
+    }
+
     public function validateConfigSchemaOnBoot(bool $enabled = true): self
     {
         $this->shouldValidateConfigSchemaOnBoot = $enabled;
@@ -893,6 +939,7 @@ final class GacelaConfig
             $this->configSchema,
             $this->shouldValidateConfigSchemaOnBoot,
             $this->stubsDir,
+            $this->dtoSchema,
         );
     }
 

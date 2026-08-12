@@ -31,6 +31,7 @@ final class SetupInitializer
             ->setAppModulePaths($dto->appModulePaths)
             ->setConfigKeyValues($dto->configKeyValues)
             ->setConfigSchema($dto->configSchema)
+            ->setDtoSchema($dto->dtoSchema)
             ->setShouldValidateConfigSchemaOnBoot($dto->shouldValidateConfigSchemaOnBoot)
             ->setStubsDir($dto->stubsDir)
             ->setAreEventListenersEnabled($dto->areEventListenersEnabled)

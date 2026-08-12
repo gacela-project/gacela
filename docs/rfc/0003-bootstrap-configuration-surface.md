@@ -76,6 +76,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `addSuffixTypeProvider()` | `add*` | conforms; see above |
 | `afterResolving()` | — | exception: the verb names the container lifecycle moment it hooks; `addAfterResolvingCallback()` would name the mechanics and lose the moment |
 | `declareConfigSchema()` | `declare*` | conforms |
+| `declareDtoSchema()` | `declare*` | conforms |
 | `disableEventListeners()` | — | exception: `enable*`'s negative twin; the grammar deliberately has no `disable*` row because most toggles default off, and this one defaults on |
 | `enableFileCache()` | `enable*` | conforms — sugar over `setFileCache(true)` |
 | `extendGacelaConfig()` | `extend*` | exception in meaning: composes another configuration surface into this one rather than wrapping a registered service; predates the grammar |

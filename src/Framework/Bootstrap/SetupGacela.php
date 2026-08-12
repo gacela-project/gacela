@@ -17,6 +17,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
+use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Override;
 
@@ -345,6 +346,36 @@ final class SetupGacela extends AbstractSetupGacela
         );
 
         return $this;
+    }
+
+    /**
+     * @return array<string, array<string, DtoType>>
+     */
+    public function getDtoSchema(): array
+    {
+        return $this->properties->dtoSchema ?? self::DEFAULT_DTO_SCHEMA;
+    }
+
+    /**
+     * @param ?array<string, array<string, DtoType>> $dtoSchema
+     */
+    public function setDtoSchema(?array $dtoSchema): self
+    {
+        $this->properties->dtoSchema = $this->setPropertyWithTracking(
+            self::dtoSchema,
+            $dtoSchema,
+            self::DEFAULT_DTO_SCHEMA,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, array<string, DtoType>> $schema
+     */
+    public function mergeDtoSchema(array $schema): void
+    {
+        $this->propertyMerger->mergeDtoSchema($schema);
     }
 
     /**

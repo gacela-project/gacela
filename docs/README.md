@@ -5,6 +5,7 @@
 - [Getting a dependency](getting-a-dependency.md) — one primary path per intent, and when the other paths are right
 - [Container configuration](container-configuration.md) — factories, aliases, contextual bindings
 - [Config schema](config-schema.md) — declare what the configuration must contain, and fail before a request does
+- [DTO schema](dto-schema.md) — declare a data shape once, generate the immutable class from it, and let another package extend it without a fork
 - [Static analysis](static-analysis.md) — the architecture rules, for PHPStan and Psalm alike
 - [Module boundaries](module-boundaries.md) — the cross-module rules, dependency-cycle gate, declared rules file, and CI graph review
 - [Module health checks](module-health-checks.md) — report module operational status

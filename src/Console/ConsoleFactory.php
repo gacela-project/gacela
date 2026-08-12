@@ -6,6 +6,7 @@ namespace Gacela\Console;
 
 use AppendIterator;
 use FilesystemIterator;
+use Gacela\Console\Application\DtoGenerate\DtoGenerator;
 use Gacela\Console\Application\IdeMeta\IdeMetadataGenerator;
 use Gacela\Console\Application\IdeMeta\IdeMetadataScanner;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
@@ -13,6 +14,8 @@ use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\AllAppModules\ExcludedDirectories;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
+use Gacela\Console\Domain\DtoGenerate\DtoClassBuilder;
+use Gacela\Console\Domain\DtoGenerate\GeneratedClassPath;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
@@ -32,6 +35,7 @@ use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
 use Gacela\Console\Domain\ModuleGraph\ModuleRuleChecker;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
+use Gacela\Console\Domain\PackageManifest\ComposerPackage;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Container\ContainerStats;
 use Gacela\Framework\AbstractFactory;
@@ -41,6 +45,7 @@ use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Dto\Schema\DtoSchema;
 use Gacela\Framework\Gacela;
 use OuterIterator;
 use RecursiveCallbackFilterIterator;
@@ -49,6 +54,7 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
 
+use function is_array;
 use function is_dir;
 use function is_string;
 use function preg_match;
@@ -162,6 +168,23 @@ final class ConsoleFactory extends AbstractFactory
             $this->createModuleScanIterator(),
             $this->createAppModuleCreator(),
         );
+    }
+
+    public function createDtoGenerator(): DtoGenerator
+    {
+        return new DtoGenerator(
+            new DtoClassBuilder(),
+            new GeneratedClassPath(
+                $this->rootPsr4Prefixes(),
+                Config::getInstance()->getAppRootDir(),
+            ),
+            $this->createFileContentIo(),
+        );
+    }
+
+    public function createDtoSchema(): DtoSchema
+    {
+        return DtoSchema::fromArray(Config::getInstance()->getSetupGacela()->getDtoSchema());
     }
 
     public function createIdeMetadataGenerator(): IdeMetadataGenerator
@@ -355,6 +378,39 @@ final class ConsoleFactory extends AbstractFactory
         }
 
         return rtrim($rootDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($path, '/\\');
+    }
+
+    /**
+     * The application's own psr-4 map, read from its composer.json.
+     *
+     * The generated classes land where the project already told composer to
+     * look, which is what lets the framework register no autoloader for them.
+     *
+     * @return array<string, string>
+     */
+    private function rootPsr4Prefixes(): array
+    {
+        $rootDir = Config::getInstance()->getAppRootDir();
+        $manifest = $rootDir . DIRECTORY_SEPARATOR . 'composer.json';
+
+        if (!is_file($manifest)) {
+            return [];
+        }
+
+        $contents = file_get_contents($manifest);
+
+        if ($contents === false) {
+            return [];
+        }
+
+        /** @var mixed $decoded */
+        $decoded = json_decode($contents, true);
+
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        return ComposerPackage::autoloadPrefixesOf($decoded);
     }
 
     private function createFileContentIo(): FileContentIoInterface

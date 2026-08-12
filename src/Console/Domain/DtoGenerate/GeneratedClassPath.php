@@ -65,7 +65,18 @@ final class GeneratedClassPath
         $relative = str_replace('\\', DIRECTORY_SEPARATOR, substr($className, strlen($bestPrefix)));
 
         return $this->rootDir
-            . DIRECTORY_SEPARATOR . trim($bestDirectory, '/\\')
+            . DIRECTORY_SEPARATOR . $this->normalized($bestDirectory)
             . DIRECTORY_SEPARATOR . $relative . '.php';
+    }
+
+    /**
+     * A composer autoload directory is written with forward slashes on every
+     * platform, so a multi-segment one like `build/dto` has to be translated
+     * rather than only trimmed -- otherwise the path comes out with both
+     * separators in it, which works on windows and reads like a bug everywhere.
+     */
+    private function normalized(string $directory): string
+    {
+        return str_replace('/', DIRECTORY_SEPARATOR, trim($directory, '/\\'));
     }
 }

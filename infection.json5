@@ -60,6 +60,13 @@
         ],
         // Equivalent or environment-untestable mutants, grouped by reason.
         "global-ignoreSourceCodeByRegex": [
+            // Composer writes autoload directories with forward slashes on every
+            // platform, so a multi-segment one is translated to the local
+            // separator. On POSIX, where DIRECTORY_SEPARATOR is already "/",
+            // that call is the identity and no assertion here can see it
+            // removed -- the windows matrix is what enforces it, and did:
+            // `/repo\\build/dto\\Order.php` failed all nine windows jobs on #700.
+            '.*str_replace\\(\'/\', DIRECTORY_SEPARATOR.*',
             // Windows-only PHP_OS/EOL handling: a no-op on POSIX where PHP_EOL is "\n".
             '.*strcasecmp\\(substr\\(PHP_OS.*',
             '.*str_replace\\("\\\\n", PHP_EOL.*',

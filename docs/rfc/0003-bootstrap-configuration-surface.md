@@ -1,7 +1,7 @@
 # RFC-0003: The bootstrap configuration surface
 
-- Status: **draft**
-- Relates to: #684, #525, #549, #478. Sequencing: #676 first among the open additions — it is the only one that shrinks the surface.
+- Status: **accepted** (2026-08-12). The audit table below is enforced by a test, so this stopped being a proposal the moment it merged.
+- Relates to: #684, #525, #549, #478. Sequencing: #676 first among the open additions — it was the only one that shrinks the surface, and it shipped.
 
 ## Why this exists
 
@@ -25,6 +25,13 @@ A new `GacelaConfig` method is **fine** when:
 A new method is a **defect** when a reader with a job in hand cannot tell which of two methods does it. That question is answerable at review time, unlike a count.
 
 Applied to the six open issues at the time of writing: #675 and #673 pass (new intents, no competitor). #676 improves the surface (four `addSuffixType*()` verbs become sugar over one `addResolvableType()`). #672 fails twice as proposed (two verbs for one intent, and a third way to group services after `tag()` and `addHandlerRegistry()` — the #478 rule). #674 fails as proposed (a second extend path with no rule for choosing). #679 fails as proposed (a second answer to *which class wins*, next to `setProjectNamespaces()`). "Fails as proposed" means the issue must name the rule for choosing before it adds the method, not that the feature is unwanted.
+
+**What "fails as proposed" turned into.** Three of those have since been answered rather than refused, which is the outcome this test is for:
+
+- **#676** shipped as scored, and the four suffix verbs are now sugar over `addResolvableType()`.
+- **#672** shipped with *one* verb instead of two — `addPluginStack()` appends on repeat, the way `tag()` does — and with a rule separating the three collections: a registry answers *the one implementation for this key*, a tag answers *all of these* untyped, a stack answers *all implementations of this interface*, typed. The contract is the separator.
+- **#674**'s rule turned out to be the one `tag()` and `Container::tag()` already use: `extendService()` wraps an id *wherever it is registered*, `extendProviderService()` wraps it *only as the named Provider registers it*. Everywhere versus there.
+- **#679**'s objection weakened on its own: #686 fixed the cache poisoning that was half its motivation, leaving `setProjectNamespaces()` answering *which tree wins across modules* and a resolution context answering *which variant inside one module wins*. Different questions, so not competitors.
 
 ## Two: the naming grammar
 

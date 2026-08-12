@@ -17,9 +17,7 @@ use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
-use Gacela\Framework\Config\AppEnv;
 use Gacela\Framework\Config\Config;
-use Gacela\Framework\Config\MergedConfigCache;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\ServiceResolver\ServiceMap;
@@ -95,7 +93,7 @@ final class DoctorCommand extends Command
                 $config->getCacheDir(),
                 null,
                 $config->getAppRootDir(),
-                new MergedConfigCache($config->getCacheDir(), AppEnv::current(), $config->getAppRootDir()),
+                $config->mergedConfigCache(),
                 $configFactory->createConfigLoader()->sourceFiles(),
                 ClassResolverCache::bootstrapFingerprint(),
             ),

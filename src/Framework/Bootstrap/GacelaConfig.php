@@ -57,6 +57,9 @@ final class GacelaConfig
     private ?array $projectNamespaces = null;
 
     /** @var list<string> */
+    private ?array $configDimensions = null;
+
+    /** @var list<string> */
     private ?array $appModulePaths = null;
 
     /** @var ConfigKeyValues */
@@ -209,6 +212,33 @@ final class GacelaConfig
     public function addSuffixTypeProvider(string $suffix): self
     {
         return $this->addResolvableType(ResolvableTypes::PROVIDER, null, [$suffix]);
+    }
+
+    /**
+     * Declare an environment variable that selects configuration, the way
+     * `APP_ENV` already does.
+     *
+     * ```php
+     * $config->addConfigDimension('APP_REGION');
+     * $config->addConfigDimension('APP_TENANT');
+     * ```
+     *
+     * With `APP_ENV=prod APP_REGION=eu`, `config/*.php` is read, then
+     * `config/*-prod.php`, then `config/*-prod-eu.php`; each layer refines the
+     * one before it, so more specific wins. Declaration order is the order of
+     * the chain, and a variable that is unset ends it -- with no region, a
+     * tenant is never consulted, because `app-prod--acme.php` would be a file
+     * with a hole in it and no meaning.
+     *
+     * A value may contain only letters, digits, `_`, `.` and `-`: it reaches a
+     * glob pattern and a cache filename, so anything else is refused at
+     * bootstrap rather than resolving somewhere unintended.
+     */
+    public function addConfigDimension(string $environmentVariable): self
+    {
+        $this->configDimensions[] = $environmentVariable;
+
+        return $this;
     }
 
     /**
@@ -840,6 +870,7 @@ final class GacelaConfig
             $this->fileCacheEnabled,
             $this->fileCacheDirectory,
             $this->projectNamespaces,
+            $this->configDimensions,
             $this->appModulePaths,
             $this->configKeyValues,
             $this->genericListeners,

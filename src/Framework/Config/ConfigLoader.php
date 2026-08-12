@@ -79,7 +79,7 @@ final class ConfigLoader
     {
         return [
             $this->pathNormalizer->normalizePathPattern($configItem),
-            $this->pathNormalizer->normalizePathPatternWithEnvironment($configItem),
+            ...$this->pathNormalizer->normalizePathPatternsWithSuffixes($configItem),
         ];
     }
 

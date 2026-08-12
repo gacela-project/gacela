@@ -57,6 +57,26 @@ final class PropertyMerger
     }
 
     /**
+     * Declaration order is the order of the chain, so a later source appends
+     * dimensions rather than reordering the ones already declared.
+     *
+     * @param list<string> $list
+     */
+    public function mergeConfigDimensions(array $list): void
+    {
+        $current = $this->setup->getConfigDimensions();
+        $merged = $current;
+
+        foreach ($list as $variable) {
+            if (!in_array($variable, $merged, true)) {
+                $merged[] = $variable;
+            }
+        }
+
+        $this->setup->setConfigDimensions($merged);
+    }
+
+    /**
      * @param ConfigKeyValues $list
      */
     public function mergeConfigKeyValues(array $list): void

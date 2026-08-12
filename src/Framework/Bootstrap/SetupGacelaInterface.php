@@ -22,6 +22,14 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
     public function getProjectNamespaces(): array;
 
     /**
+     * Environment variables that select configuration beyond APP_ENV, in
+     * declaration order.
+     *
+     * @return list<string>
+     */
+    public function getConfigDimensions(): array;
+
+    /**
      * Get the list of paths scanned when discovering application modules.
      * Empty array means scan the application root directory.
      *

@@ -28,6 +28,7 @@ final class SetupMerger
 
         $this->whenChanged($other, SetupGacela::externalServices, fn () => $this->original->mergeExternalServices($other->externalServices()));
         $this->whenChanged($other, SetupGacela::projectNamespaces, fn () => $this->original->mergeProjectNamespaces($other->getProjectNamespaces()));
+        $this->whenChanged($other, SetupGacela::configDimensions, fn () => $this->original->mergeConfigDimensions($other->getConfigDimensions()));
         $this->whenChanged($other, SetupGacela::configKeyValues, fn () => $this->original->mergeConfigKeyValues($other->getConfigKeyValues()));
         $this->whenChanged($other, SetupGacela::configSchema, fn () => $this->original->mergeConfigSchema($other->getConfigSchema()));
         $this->whenChanged($other, SetupGacela::stubsDir, fn (): SetupGacela => $this->original->setStubsDir($other->getStubsDir()));

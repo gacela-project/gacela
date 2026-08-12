@@ -116,6 +116,16 @@ final class ConfigFactory
     }
 
     /**
+     * The dimensions this project declared, resolved from the environment.
+     *
+     * @internal
+     */
+    public function dimensions(): ConfigDimensions
+    {
+        return ConfigDimensions::fromEnvironment($this->setup->getConfigDimensions());
+    }
+
+    /**
      * The memo, but only when it belongs to this factory's app root and setup.
      */
     private function memoized(): ?GacelaConfigFileInterface
@@ -174,9 +184,14 @@ final class ConfigFactory
 
     private function createPathNormalizer(): PathNormalizerInterface
     {
+        $chain = [];
+        foreach ($this->dimensions()->suffixChain($this->env()) as $suffix) {
+            $chain[] = new WithSuffixAbsolutePathStrategy($this->appRootDir, $suffix);
+        }
+
         return new AbsolutePathNormalizer([
             AbsolutePathNormalizer::WITHOUT_SUFFIX => new WithoutSuffixAbsolutePathStrategy($this->appRootDir),
             AbsolutePathNormalizer::WITH_SUFFIX => new WithSuffixAbsolutePathStrategy($this->appRootDir, $this->env()),
-        ]);
+        ], $chain);
     }
 }

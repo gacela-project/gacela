@@ -112,6 +112,7 @@ final class ConfigLoaderTest extends TestCase
         $normalizer = $this->createStub(PathNormalizerInterface::class);
         $normalizer->method('normalizePathPattern')->willReturn('pattern');
         $normalizer->method('normalizePathPatternWithEnvironment')->willReturn('pattern-env');
+        $normalizer->method('normalizePathPatternsWithSuffixes')->willReturn(['pattern-env']);
         $normalizer->method('normalizePathLocal')->willReturn('/project/config/local.php');
 
         $pathFinder = $this->createMock(PathFinderInterface::class);
@@ -141,6 +142,7 @@ final class ConfigLoaderTest extends TestCase
         $normalizer = $this->createStub(PathNormalizerInterface::class);
         $normalizer->method('normalizePathPattern')->willReturn('pattern');
         $normalizer->method('normalizePathPatternWithEnvironment')->willReturn('pattern-env');
+        $normalizer->method('normalizePathPatternsWithSuffixes')->willReturn(['pattern-env']);
         $normalizer->method('normalizePathLocal')->willReturn($local);
 
         $pathFinder = $this->createStub(PathFinderInterface::class);

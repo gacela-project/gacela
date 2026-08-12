@@ -68,7 +68,7 @@ final class ResolvableTypesTest extends TestCase
 
         self::assertSame(
             ['YyyyY', 'Xxx', 'Zz'],
-            array_column(ResolvableTypes::matchOrder(), 'suffix'),
+            array_keys(ResolvableTypes::matchOrder()),
         );
     }
 
@@ -80,7 +80,7 @@ final class ResolvableTypesTest extends TestCase
     {
         ResolvableTypes::syncFrom(['A' => ['Shared'], 'B' => ['Shared', 'Own']]);
 
-        self::assertSame(['Own'], array_column(ResolvableTypes::matchOrder(), 'suffix'));
+        self::assertSame(['Own'], array_keys(ResolvableTypes::matchOrder()));
         self::assertSame('FooShared', ResolvableType::fromClassName('App\Foo\FooShared')->resolvableType());
     }
 

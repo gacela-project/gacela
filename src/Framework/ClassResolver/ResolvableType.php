@@ -25,7 +25,7 @@ final class ResolvableType
      */
     public static function fromClassName(string $className): self
     {
-        foreach (ResolvableTypes::matchOrder() as ['kind' => $kind, 'suffix' => $suffix]) {
+        foreach (ResolvableTypes::matchOrder() as $suffix => $kind) {
             if (str_ends_with($className, $suffix)) {
                 $moduleName = substr($className, 0, strlen($className) - strlen($suffix));
                 return new self($kind, $moduleName);

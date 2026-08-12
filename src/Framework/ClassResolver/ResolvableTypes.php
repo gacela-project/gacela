@@ -8,8 +8,8 @@ use Gacela\Framework\Exception\ResolvableTypeException;
 
 use function array_keys;
 use function count;
+use function krsort;
 use function strlen;
-use function usort;
 
 /**
  * Every class kind Gacela resolves by suffix, and the suffixes each answers to.
@@ -48,7 +48,7 @@ final class ResolvableTypes
     /** @var array<string, list<string>> kind => suffixes, built-ins included */
     private static array $suffixes = self::BUILT_IN;
 
-    /** @var list<array{kind: string, suffix: string}>|null memo of matchOrder() */
+    /** @var array<string, string>|null memo of matchOrder(): suffix => kind */
     private static ?array $matchOrder = null;
 
     /**
@@ -167,13 +167,18 @@ final class ResolvableTypes
     }
 
     /**
-     * Every (kind, suffix) pair, longest suffix first.
+     * Suffix to the kind it names, longest suffix first.
      *
      * Order is the whole point: a project's `ServiceProvider` must win over the
      * built-in `Provider` it ends with, or the kind is unreachable through a
      * name the project owns.
      *
-     * @return list<array{kind: string, suffix: string}>
+     * A flat map rather than a list of pairs, because the caller walks it on
+     * the resolution path: a suffix names exactly one kind here -- an
+     * ambiguous one is dropped below -- so the suffix is the key, and the
+     * consumer needs no per-element array to read it out of.
+     *
+     * @return array<string, string>
      */
     public static function matchOrder(): array
     {
@@ -188,28 +193,28 @@ final class ResolvableTypes
             }
         }
 
-        $pairs = [];
+        $byLength = [];
         foreach (self::$suffixes as $kind => $suffixes) {
             foreach ($suffixes as $suffix) {
                 // A suffix two kinds share names neither of them: it cannot say
                 // which kind a class ending in it is, so it does not answer at
                 // all, and the caller falls back to the last namespace segment.
                 if (count($owners[$suffix]) === 1) {
-                    $pairs[] = ['kind' => $kind, 'suffix' => $suffix];
+                    $byLength[strlen($suffix)][$suffix] = $kind;
                 }
             }
         }
 
-        usort(
-            $pairs,
-            /**
-             * @param array{kind: string, suffix: string} $a
-             * @param array{kind: string, suffix: string} $b
-             */
-            static fn (array $a, array $b): int => strlen($b['suffix']) <=> strlen($a['suffix']),
-        );
+        krsort($byLength);
 
-        return self::$matchOrder = $pairs;
+        $ordered = [];
+        foreach ($byLength as $sameLength) {
+            foreach ($sameLength as $suffix => $kind) {
+                $ordered[$suffix] = $kind;
+            }
+        }
+
+        return self::$matchOrder = $ordered;
     }
 
     /**

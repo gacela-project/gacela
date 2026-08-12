@@ -71,7 +71,7 @@ final class DoctorCommandTest extends TestCase
         self::assertSame([
             '✓ cache staleness',
             '✓ suffix configuration',
-            '✓ pillar filenames',
+            '✓ class filenames',
             '✓ config schema',
             '✓ published stubs',
             '✓ service extensions',

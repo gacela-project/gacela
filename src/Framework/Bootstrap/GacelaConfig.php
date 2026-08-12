@@ -7,6 +7,7 @@ namespace Gacela\Framework\Bootstrap;
 use Closure;
 use Gacela\Container\ContextualBindingBuilder;
 use Gacela\Framework\Bootstrap\Setup\GacelaConfigTransfer;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\ConfigReaderInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
@@ -147,13 +148,35 @@ final class GacelaConfig
     }
 
     /**
+     * Declare a class kind this project resolves by suffix, beyond the four
+     * pillars.
+     *
+     * A declared kind behaves like a pillar from then on: the finder tries
+     * `Report\ReportExporter` and `Report\Exporter` through the same rules and
+     * namespaces, the file cache holds it, and `doctor` knows its suffixes.
+     * Suffixes default to the kind's own name; a suffix another kind already
+     * claims is rejected here, at bootstrap.
+     *
+     * ```php
+     * $config->addResolvableType('Exporter', AbstractExporter::class, ['Exporter', 'Feed']);
+     * ```
+     *
+     * @param class-string|null $abstractClass the base a class of this kind extends
+     * @param list<string> $suffixes defaults to the kind's own name
+     */
+    public function addResolvableType(string $kind, ?string $abstractClass = null, array $suffixes = []): self
+    {
+        $this->suffixTypesBuilder->declareType($kind, $abstractClass, $suffixes);
+
+        return $this;
+    }
+
+    /**
      * Allow overriding gacela facade suffixes.
      */
     public function addSuffixTypeFacade(string $suffix): self
     {
-        $this->suffixTypesBuilder->addFacade($suffix);
-
-        return $this;
+        return $this->addResolvableType(ResolvableTypes::FACADE, null, [$suffix]);
     }
 
     /**
@@ -161,9 +184,7 @@ final class GacelaConfig
      */
     public function addSuffixTypeFactory(string $suffix): self
     {
-        $this->suffixTypesBuilder->addFactory($suffix);
-
-        return $this;
+        return $this->addResolvableType(ResolvableTypes::FACTORY, null, [$suffix]);
     }
 
     /**
@@ -171,9 +192,7 @@ final class GacelaConfig
      */
     public function addSuffixTypeConfig(string $suffix): self
     {
-        $this->suffixTypesBuilder->addConfig($suffix);
-
-        return $this;
+        return $this->addResolvableType(ResolvableTypes::CONFIG, null, [$suffix]);
     }
 
     /**
@@ -181,9 +200,7 @@ final class GacelaConfig
      */
     public function addSuffixTypeProvider(string $suffix): self
     {
-        $this->suffixTypesBuilder->addProvider($suffix);
-
-        return $this;
+        return $this->addResolvableType(ResolvableTypes::PROVIDER, null, [$suffix]);
     }
 
     /**

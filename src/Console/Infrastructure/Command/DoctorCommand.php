@@ -16,6 +16,7 @@ use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\AppEnv;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\MergedConfigCache;
@@ -87,6 +88,7 @@ final class DoctorCommand extends Command
         $configFactory = $config->getFactory();
         $suffixTypes = $configFactory->createGacelaFileConfig()->getSuffixTypes();
         $stubsDir = $this->getFacade()->stubsDir();
+        $declaredKinds = ResolvableTypes::declaredKinds();
 
         $checks = [
             new CacheStalenessCheck(
@@ -98,9 +100,9 @@ final class DoctorCommand extends Command
                 ClassResolverCache::bootstrapFingerprint(),
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
-            new FilenameMismatchCheck($modules),
+            new FilenameMismatchCheck($modules, $suffixTypes),
             new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
-            new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir)),
+            new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir, $declaredKinds), $declaredKinds),
             new ServiceExtensionTargetCheck(
                 $modules,
                 array_keys($config->getSetupGacela()->getServicesToExtend()),

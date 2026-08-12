@@ -11,11 +11,20 @@ final class GlobalKey
     /** @var array<string,string> */
     private static array $cache = [];
 
+    private static int $generation = 0;
+
     /**
      * Unify the keys for the class resolver.
      */
     public static function fromClassName(string $fullClassName): string
     {
+        // A normalized key answers which suffix names a kind. When the declared
+        // kinds move, every answer here was about the old set.
+        if (self::$generation !== ResolvableTypes::generation()) {
+            self::$generation = ResolvableTypes::generation();
+            self::$cache = [];
+        }
+
         if (isset(self::$cache[$fullClassName])) {
             return self::$cache[$fullClassName];
         }

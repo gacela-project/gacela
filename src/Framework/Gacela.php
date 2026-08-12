@@ -17,6 +17,7 @@ use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Config\PathFinder;
@@ -196,6 +197,10 @@ final class Gacela
     public static function resetCache(): void
     {
         AnonymousGlobal::resetCache();
+        // Back to the four pillars; the assembled configuration declares the
+        // rest again, and dropping them here also drops the key memos that
+        // were built from them.
+        ResolvableTypes::resetCache();
         AbstractFacade::resetCache();
         AbstractFactory::resetCache();
         AbstractClassResolver::resetCache();

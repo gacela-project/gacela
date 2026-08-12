@@ -7,6 +7,7 @@ namespace Gacela\Framework\ClassResolver\GlobalInstance;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableType;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use RuntimeException;
 
 use function in_array;
@@ -18,7 +19,11 @@ use function sprintf;
  */
 final class AnonymousGlobal
 {
-    private const ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL = [
+    /**
+     * A Facade is deliberately absent: overriding one globally would replace
+     * the module's whole public surface, which is what a module double is for.
+     */
+    private const ALLOWED_BUILT_IN_TYPES = [
         'Config',
         'Factory',
         'Provider',
@@ -108,14 +113,21 @@ final class AnonymousGlobal
         return end($callerClassParts);
     }
 
+    /**
+     * @return list<string>
+     */
+    private static function allowedTypes(): array
+    {
+        return [...self::ALLOWED_BUILT_IN_TYPES, ...ResolvableTypes::declaredKinds()];
+    }
+
     private static function validateTypeForAnonymousGlobalRegistration(string $type): void
     {
-        if (!in_array($type, self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL, true)) {
+        $allowed = self::allowedTypes();
+
+        if (!in_array($type, $allowed, true)) {
             throw new RuntimeException(
-                sprintf("Type '%s' not allowed. Valid types: ", $type) . implode(
-                    ', ',
-                    self::ALLOWED_TYPES_FOR_ANONYMOUS_GLOBAL,
-                ),
+                sprintf("Type '%s' not allowed. Valid types: ", $type) . implode(', ', $allowed),
             );
         }
     }

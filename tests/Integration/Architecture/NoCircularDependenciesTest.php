@@ -121,6 +121,7 @@ final class NoCircularDependenciesTest extends TestCase
             . ' | Gacela\Framework\ClassResolver\ClassNameFinder'
             . ' | Gacela\Framework\ClassResolver\ClassNameFinder\Rule'
             . ' | Gacela\Framework\ClassResolver\Config'
+            . ' | Gacela\Framework\ClassResolver\DeclaredType'
             . ' | Gacela\Framework\ClassResolver\DocBlockService'
             . ' | Gacela\Framework\ClassResolver\Facade'
             . ' | Gacela\Framework\ClassResolver\Factory'

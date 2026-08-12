@@ -101,6 +101,23 @@ parameters:
             path: src/Legacy/*
 ```
 
+### Holding a declared kind to its base
+
+`SuffixExtendsRule` takes a suffix and the parent it expects, and `phpstan-gacela.neon` registers it once per pillar. A [kind you declared](getting-a-dependency.md#resolve-a-kind-of-my-own) is one more block in your own config:
+
+```neon
+# phpstan.neon
+services:
+    -
+        class: Gacela\PHPStan\Rules\SuffixExtendsRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            suffix: Exporter
+            expectedParent: App\Shared\AbstractExporter
+```
+
+Gacela does not register this for you: the kind is yours, so is the base, and a rule the framework invented about your classes would be a rule you never asked for.
+
 ```xml
 <!-- psalm.xml -->
 <issueHandlers>

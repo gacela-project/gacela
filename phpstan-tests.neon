@@ -25,6 +25,13 @@ parameters:
         - '#Class GacelaTest\\Unit\\Framework\\Container\\NonExisting not found.#'
         - '#has invalid type Totally\\Missing\\Type#'
         - '#Access to constant on internal class Gacela\\Framework\\Container\\Locator.#'
+        # BUILT_IN is the one definition of the four pillars, and the test that
+        # holds the declared-kind rules to it has to name the baseline it is
+        # comparing against. Spelling the four out again in the test would
+        # recreate the duplication ResolvableTypes exists to remove.
+        -
+            identifier: classConstant.internalClass
+            path: %currentWorkingDirectory%/tests/Unit/Framework/ClassResolver/ResolvableTypesTest.php
         # Psalm exposes no public way to observe that a plugin registered a hook;
         # the registration lands in its internal event dispatcher. Driving the
         # entry point in-process is what puts it under the mutation gate at all,

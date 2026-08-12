@@ -191,6 +191,44 @@ final class Config extends AbstractConfig
 
 `getString()`, `getInt()`, `getFloat()`, `getBool()`, `getArray()` and the untyped `get()` are all available. This is the shape the other three intents are aiming for: one path, typed variants, impossible to use wrongly.
 
+## Resolve a kind of my own
+
+Gacela resolves four kinds by suffix — Facade, Factory, Config, Provider. A project that wants a fifth declares it:
+
+```php
+// gacela.php
+$config->addResolvableType('Exporter', AbstractExporter::class, ['Exporter', 'Feed']);
+```
+
+From then on the kind behaves like a pillar. The finder tries `Report\ReportExporter`, then `Report\Exporter`, then the same two shapes for `Feed`, through the same namespaces and rules; the resolver cache holds it; `doctor` knows its suffixes. Suffixes default to the kind's own name, so `addResolvableType('Exporter', AbstractExporter::class)` is the common case.
+
+Reach the resolved class from anywhere the pillars are reachable:
+
+```php
+use Gacela\Framework\DeclaredTypeResolverAwareTrait;
+
+final class ReportFactory extends AbstractFactory
+{
+    use DeclaredTypeResolverAwareTrait;
+
+    public function createExportedReport(): string
+    {
+        return $this->getResolvedType('Exporter')->export();
+    }
+}
+```
+
+A project that would rather write `getExporter()` puts one method over that call — which is exactly what the pillars' own accessors are.
+
+Two rules the declaration enforces at bootstrap, so neither surfaces later as a resolution that quietly went the wrong way:
+
+- **A suffix belongs to one kind.** Declaring a suffix another kind already claims is refused. Longest suffix wins, so a declared `ServiceProvider` beats the built-in `Provider` it ends with.
+- **The base must exist.** A kind naming a class or interface that does not exist is refused, rather than accepted and never satisfied.
+
+The abstract is a declared contract, not a scan: Gacela never searches your tree for classes extending it. To have the analysers hold a declared kind to its base, register one more `SuffixExtendsRule` in your own `phpstan.neon` — see [static analysis](static-analysis.md#typed-pillar-accessors).
+
+`addSuffixTypeFacade()` and its three siblings are now sugar over this call, and stay supported: they widen a pillar rather than declare a kind.
+
 ## The other paths, and when they are right
 
 These are supported and are **not** deprecated. They are simply not the answer to "how do I get a dependency?" — reach for them when the situation below is actually yours.

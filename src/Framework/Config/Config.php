@@ -269,6 +269,14 @@ final class Config implements ConfigInterface
     {
         $this->configFactory = null;
 
+        // Assemble the config file now rather than at the first resolution:
+        // assembling is what declares the project's resolvable kinds, and code
+        // that runs before any resolution -- a test installing a double, a
+        // bootstrap inspecting a class name -- must already see them. The
+        // result is memoized, so the resolver that would have triggered this
+        // later pays nothing.
+        $this->getFactory()->createGacelaFileConfig();
+
         // Declared defaults come first: a key a source provides is that
         // source's, and a key nobody provides is the declaration's.
         /** @psalm-suppress DuplicateArrayKey */

@@ -6,6 +6,7 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -27,10 +28,15 @@ final class MakeFileCommand extends Command
 
     protected function configure(): void
     {
+        // The declarations are read here, not through the facade: `configure()`
+        // runs from the constructor, and the provider that constructs this
+        // command is itself being resolved at that moment.
+        $filenames = FilenameSanitizer::expectedFilenamesAsText(ResolvableTypes::declaredKinds());
+
         $this->setName('make:file')
-            ->setDescription('Generate a ' . FilenameSanitizer::expectedFilenamesAsText())
+            ->setDescription('Generate a ' . $filenames)
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
-            ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, FilenameSanitizer::expectedFilenamesAsText())
+            ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, $filenames)
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
     }
 

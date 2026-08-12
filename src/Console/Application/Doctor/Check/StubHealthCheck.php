@@ -38,10 +38,12 @@ final class StubHealthCheck implements HealthCheck
 
     /**
      * @param array<string, string> $published stub file (relative) => contents
+     * @param list<string> $declaredKinds the kinds this project declared, whose stubs the scaffolder also reads
      */
     public function __construct(
         private readonly string $stubsDir,
         private readonly array $published,
+        private readonly array $declaredKinds = [],
     ) {
     }
 
@@ -72,9 +74,11 @@ final class StubHealthCheck implements HealthCheck
      * Every file actually published, whatever it is named -- the unknown ones
      * are the point.
      *
+     * @param list<string> $declaredKinds
+     *
      * @return array<string, string> stub file (relative) => contents
      */
-    public static function readPublished(string $stubsDir): array
+    public static function readPublished(string $stubsDir, array $declaredKinds = []): array
     {
         if (!is_dir($stubsDir)) {
             return [];
@@ -82,7 +86,7 @@ final class StubHealthCheck implements HealthCheck
 
         $published = [];
 
-        foreach ([...StubFiles::all(), ...self::strayFiles($stubsDir)] as $stubFile) {
+        foreach ([...StubFiles::all($declaredKinds), ...self::strayFiles($stubsDir, $declaredKinds)] as $stubFile) {
             $path = $stubsDir . '/' . $stubFile;
             if (!is_file($path)) {
                 continue;
@@ -100,7 +104,7 @@ final class StubHealthCheck implements HealthCheck
      */
     private function problems(): array
     {
-        $known = StubFiles::all();
+        $known = StubFiles::all($this->declaredKinds);
         $problems = [];
 
         foreach ($this->published as $stubFile => $contents) {
@@ -123,9 +127,11 @@ final class StubHealthCheck implements HealthCheck
     }
 
     /**
+     * @param list<string> $declaredKinds
+     *
      * @return list<string>
      */
-    private static function strayFiles(string $stubsDir): array
+    private static function strayFiles(string $stubsDir, array $declaredKinds): array
     {
         $stray = [];
 
@@ -136,7 +142,7 @@ final class StubHealthCheck implements HealthCheck
             // scaffolder does not read.
             $relative = str_replace('\\', '/', substr($path, strlen($stubsDir) + 1));
 
-            if (!in_array($relative, StubFiles::all(), true)) {
+            if (!in_array($relative, StubFiles::all($declaredKinds), true)) {
                 $stray[] = $relative;
             }
         }

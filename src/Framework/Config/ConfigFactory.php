@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
@@ -89,11 +90,19 @@ final class ConfigFactory
             $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
         }
 
-        return $this->memoize(array_reduce(
+        $merged = array_reduce(
             $gacelaConfigFiles,
             static fn (GacelaConfigFileInterface $carry, GacelaConfigFileInterface $item): GacelaConfigFileInterface => $carry->merge($item),
             (new GacelaConfigFromBootstrapFactory($this->setup))->createGacelaFileConfig(),
-        ));
+        );
+
+        // Only the merged file knows every kind the project declared: each
+        // source assembles its own, and a kind declared in `gacela.php` is
+        // invisible to the bootstrap closure's. The static resolution seams
+        // read the declarations from here.
+        ResolvableTypes::syncFrom($merged->getSuffixTypes());
+
+        return $this->memoize($merged);
     }
 
     /**

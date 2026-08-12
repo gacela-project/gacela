@@ -38,6 +38,15 @@ parameters:
         -
             identifier: gacela.suffixExtends
             path: laravel-bridge/src/GacelaServiceProvider.php
+        # The accessor seam for a project-declared kind. The three older
+        # aware-traits are each used by a pillar base class inside src/, so they
+        # look used; this one is reached only from a consumer's own class, which
+        # is what it is for. Using it somewhere in the framework to satisfy the
+        # rule would be inventing a caller.
+        -
+            identifier: trait.unused
+            path: src/Framework/DeclaredTypeResolverAwareTrait.php
+            count: 1
         # Building a MethodReflection is unavoidable for a methodsClassReflectionExtension,
         # and PHPStan covers no way of doing it under its BC promise -- neither implementing
         # ExtendedMethodReflection nor constructing its own implementation of it. The class

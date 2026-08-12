@@ -402,6 +402,22 @@ final class Config implements ConfigInterface
     }
 
     /**
+     * The merged-config cache this configuration reads and writes.
+     *
+     * Public because `doctor` reports on that file and used to build its own
+     * from the same three ingredients. Two places deciding a cache identity is
+     * how a checker ends up reporting on a file nothing writes -- and the
+     * identity is about to grow (#675), which is exactly when a second
+     * spelling starts to drift.
+     *
+     * @internal
+     */
+    public function mergedConfigCache(): MergedConfigCache
+    {
+        return $this->createMergedConfigCache();
+    }
+
+    /**
      * @throws ConfigException
      */
     private function assertConfigMatchesSchema(): void

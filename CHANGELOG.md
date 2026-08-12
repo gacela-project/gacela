@@ -4,6 +4,7 @@
 
 ### Added
 
+- Declare an extension point with `addPluginStack()`: every implementation of one interface, in declaration order, resolved lazily and read back typed through `getPluginStack()`. Calling it again appends, so another config source contributes to a stack it did not declare, and an entry that does not implement the interface fails naming the class
 - Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars, reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs became sugar over it
 - Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`. The kind is listed in the command's help, `doctor` counts its stub among the ones the scaffolder reads, and until that stub exists the generator names the path it looked for
 - Report in `doctor` every `extendService()` id no Provider ever `set()`s — such an extension is accepted, scheduled on every scope, and applied nowhere

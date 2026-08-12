@@ -45,6 +45,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string handlerRegistries = 'handlerRegistries';
 
+    public const string pluginStacks = 'pluginStacks';
+
     public const string tags = 'tags';
 
     public const string afterResolvingCallbacks = 'afterResolvingCallbacks';
@@ -92,6 +94,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_CONTEXTUAL_BINDINGS = [];
 
     protected const array DEFAULT_HANDLER_REGISTRIES = [];
+
+    protected const array DEFAULT_PLUGIN_STACKS = [];
 
     protected const array DEFAULT_TAGS = [];
 

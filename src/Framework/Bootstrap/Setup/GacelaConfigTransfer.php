@@ -21,6 +21,7 @@ use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
  * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -45,6 +46,7 @@ final class GacelaConfigTransfer
      * @param ServiceAliasMap $aliases
      * @param ContextualBindingsMap $contextualBindings
      * @param HandlerRegistriesMap $handlerRegistries
+     * @param PluginStacksMap $pluginStacks
      * @param ServiceFactoryMap $lazyServices
      * @param TagsMap $tags
      * @param AfterResolvingMap $afterResolvingCallbacks
@@ -73,6 +75,7 @@ final class GacelaConfigTransfer
         public readonly array $aliases,
         public readonly array $contextualBindings,
         public readonly array $handlerRegistries = [],
+        public readonly array $pluginStacks = [],
         public readonly array $lazyServices = [],
         public readonly array $tags = [],
         public readonly array $afterResolvingCallbacks = [],

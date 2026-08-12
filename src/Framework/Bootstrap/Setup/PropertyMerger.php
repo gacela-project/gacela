@@ -22,6 +22,7 @@ use function array_unique;
  * @psalm-import-type ServiceFactoryMap from ContainerConfigurationInterface
  * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -139,6 +140,24 @@ final class PropertyMerger
         $this->setup->setHandlerRegistries(
             $this->mergeNested($this->setup->getHandlerRegistries(), $list),
         );
+    }
+
+    /**
+     * A stack is a collection too, and an ordered one: the later setup appends
+     * to what the earlier declared, seed first. A class declared twice appears
+     * once, so a config source re-stating the seed does not run it twice.
+     *
+     * @param PluginStacksMap $list
+     */
+    public function mergePluginStacks(array $list): void
+    {
+        $merged = $this->setup->getPluginStacks();
+
+        foreach ($list as $contract => $plugins) {
+            $merged[$contract] = array_values(array_unique(array_merge($merged[$contract] ?? [], $plugins)));
+        }
+
+        $this->setup->setPluginStacks($merged);
     }
 
     /**

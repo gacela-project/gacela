@@ -11,6 +11,8 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Event\Provider\ProviderRegisteredEvent;
+use Gacela\Framework\Exception\PluginStackException;
+use Gacela\Framework\Plugins\PluginStack;
 
 /**
  * @template TConfig of AbstractConfig = AbstractConfig
@@ -91,6 +93,39 @@ abstract class AbstractFactory
         $instance = $this->instances[$key] ??= $creator();
 
         return $instance;
+    }
+
+    /**
+     * The declared implementations of one interface, in order, typed.
+     *
+     * Deliberately not `getProvidedDependency(InvoiceDecorator::class)`: that
+     * call means "the thing registered under this id", and both analysers type
+     * it as the class the id names. A stack registered under its contract
+     * resolves to a `PluginStack` of that contract instead, so routing it
+     * through the same call would make one id mean two things. It gets its own
+     * accessor and `getProvidedDependency()` keeps meaning exactly one.
+     *
+     * @template TPlugin of object
+     *
+     * @param class-string<TPlugin> $contract
+     *
+     * @return PluginStack<TPlugin>
+     */
+    protected function getPluginStack(string $contract): PluginStack
+    {
+        // Read straight off the container rather than through
+        // getProvidedDependency(): a stack is declared app-wide in gacela.php,
+        // so a module that only *consumes* an extension point has no reason to
+        // own a Provider, and being told it needs one would be a coupling the
+        // declaration never asked for.
+        $stack = $this->getContainer()->get($contract);
+
+        if (!$stack instanceof PluginStack) {
+            throw PluginStackException::notDeclared($contract);
+        }
+
+        /** @var PluginStack<TPlugin> $stack */
+        return $stack;
     }
 
     protected function getProvidedDependency(string $key): mixed

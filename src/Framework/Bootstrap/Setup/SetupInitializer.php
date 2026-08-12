@@ -43,6 +43,7 @@ final class SetupInitializer
             ->setAliases($dto->aliases)
             ->setContextualBindings($dto->contextualBindings)
             ->setHandlerRegistries($dto->handlerRegistries)
+            ->setPluginStacks($dto->pluginStacks)
             ->setTags($dto->tags)
             ->setAfterResolvingCallbacks($dto->afterResolvingCallbacks)
             ->setLazyServices($dto->lazyServices)

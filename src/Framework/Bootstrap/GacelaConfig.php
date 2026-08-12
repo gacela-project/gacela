@@ -31,6 +31,7 @@ use function sprintf;
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -98,6 +99,9 @@ final class GacelaConfig
 
     /** @var HandlerRegistriesMap */
     private array $handlerRegistries = [];
+
+    /** @var PluginStacksMap */
+    private array $pluginStacks = [];
 
     /** @var TagsMap */
     private array $tags = [];
@@ -640,6 +644,44 @@ final class GacelaConfig
     }
 
     /**
+     * Declare an extension point: every implementation of one interface, in
+     * declaration order, resolvable as a typed
+     * {@see \Gacela\Framework\Plugins\PluginStack} through
+     * `AbstractFactory::getPluginStack()`.
+     *
+     * ```php
+     * $config->addPluginStack(InvoiceDecorator::class, [
+     *     AddVatBreakdownDecorator::class,
+     *     AddPaymentTermsDecorator::class,
+     * ]);
+     * ```
+     *
+     * Repeated calls append rather than replace, so a later config source --
+     * another package's `extendGacelaConfig`, an environment override --
+     * contributes to a stack it did not declare, seed first. That is the same
+     * rule {@see tag()} follows, and it is why there is no second verb for
+     * contributing.
+     *
+     * Which of the three collections to reach for: a registry answers *the one
+     * implementation for this key*, a tag answers *all of these* untyped, and a
+     * stack answers *all implementations of this interface*, typed and checked.
+     * An entry that does not implement the interface fails when the stack first
+     * resolves it, naming the class.
+     *
+     * @param class-string $contract
+     * @param list<class-string> $plugins
+     */
+    public function addPluginStack(string $contract, array $plugins): self
+    {
+        $this->pluginStacks[$contract] = [
+            ...$this->pluginStacks[$contract] ?? [],
+            ...$plugins,
+        ];
+
+        return $this;
+    }
+
+    /**
      * Group service identifiers under a label so a module can ask for "every
      * service tagged X" without knowing who registered them. Resolve the group
      * with `Container::tagged($tag)`, which instantiates each id lazily, in the
@@ -767,6 +809,7 @@ final class GacelaConfig
             $this->aliases,
             $this->contextualBindings,
             $this->handlerRegistries,
+            $this->pluginStacks,
             $this->lazyServices,
             $this->tags,
             $this->afterResolvingCallbacks,

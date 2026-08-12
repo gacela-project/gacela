@@ -14,6 +14,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
  * @psalm-type ServiceAliasMap = array<string, string>
  * @psalm-type ServicesToExtendMap = array<string, list<Closure>>
  * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
+ * @psalm-type PluginStacksMap = array<class-string, list<class-string>>
  * @psalm-type TagsMap = array<string, list<string>>
  * @psalm-type AfterResolvingMap = array<string, list<Closure>>
  * @psalm-type DefinitionSources = list<string|array<array-key, mixed>>
@@ -57,6 +58,15 @@ interface ContainerConfigurationInterface
      * @return HandlerRegistriesMap
      */
     public function getHandlerRegistries(): array;
+
+    /**
+     * Extension points: each entry maps an interface to the implementations
+     * declared for it, resolvable from the container under that interface as a
+     * {@see \Gacela\Framework\Plugins\PluginStack}.
+     *
+     * @return PluginStacksMap
+     */
+    public function getPluginStacks(): array;
 
     /**
      * Service identifiers grouped under a label, resolvable together through

@@ -35,6 +35,7 @@ use function sprintf;
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -405,6 +406,14 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @return PluginStacksMap
+     */
+    public function getPluginStacks(): array
+    {
+        return $this->properties->pluginStacks ?? self::DEFAULT_PLUGIN_STACKS;
+    }
+
+    /**
      * @return TagsMap
      */
     public function getTags(): array
@@ -760,6 +769,22 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
+     * @param ?PluginStacksMap $list
+     */
+    public function setPluginStacks(?array $list): self
+    {
+        $this->properties->pluginStacks = $this->setPropertyWithTracking(
+            self::pluginStacks,
+            $list,
+            self::DEFAULT_PLUGIN_STACKS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
      * @param ?TagsMap $list
      */
     public function setTags(?array $list): self
@@ -851,6 +876,16 @@ final class SetupGacela extends AbstractSetupGacela
     public function mergeHandlerRegistries(array $list): void
     {
         $this->propertyMerger->mergeHandlerRegistries($list);
+    }
+
+    /**
+     * @internal Used by SetupMerger - do not call directly
+     *
+     * @param PluginStacksMap $list
+     */
+    public function mergePluginStacks(array $list): void
+    {
+        $this->propertyMerger->mergePluginStacks($list);
     }
 
     /**

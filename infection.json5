@@ -210,6 +210,9 @@
         // to min(); shifting its origin by a constant changes no component.
         DecrementInteger: {
             ignore: [
+                // See the IncrementInteger note: an arbitrary but fixed slice
+                // of a digest.
+                "Gacela\\Framework\\Config\\MergedConfigCache::dimensionSuffix",
                 "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
                 "Gacela\\Console\\ConsoleFactory::resolveScanPath",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
@@ -226,6 +229,13 @@
         IncrementInteger: {
             ignore: [
                 "Gacela\\Framework\\ClassResolver\\Cache\\AbstractPhpFileCache::absoluteFilename",
+                // Same arbitrary-slice reasoning as absoluteFilename above: the
+                // dimension suffix takes 12 hex characters out of a sha1 to
+                // scope a cache file to one tuple. Which 12 is arbitrary --
+                // any fixed window is equally stable and equally unique per
+                // tuple -- so killing it would mean asserting the digest,
+                // which pins the implementation rather than the behaviour.
+                "Gacela\\Framework\\Config\\MergedConfigCache::dimensionSuffix",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
@@ -236,6 +246,10 @@
         // prefix of the FQCN can never change the suffix comparison.
         UnwrapSubstr: {
             ignore: [
+                // The dimension suffix is a fixed-width slice of a digest; the
+                // full digest is equally unique and equally arbitrary, so only
+                // the filename's length changes.
+                "Gacela\\Framework\\Config\\MergedConfigCache::dimensionSuffix",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\StaticAnalysis\\ShortName::of",
                 "Gacela\\Framework\\ClassResolver\\ClassInfo::normalizeFilename",
@@ -474,6 +488,10 @@
                 // is_dir() check two lines down returns for exactly the same
                 // inputs. Only a TOCTOU race distinguishes them.
                 "Gacela\\Console\\Infrastructure\\FileContentIo::mkdir",
+                // The guard for a cache with no app root: without it the glob
+                // runs against a stem built from sha1(''), which matches no
+                // file this class ever writes. A fast path, not a branch.
+                "Gacela\\Framework\\Config\\MergedConfigCache::siblingTupleFilenames",
                 // The memo guard in matchOrder(): the pairs are a pure function
                 // of the declared suffixes, so recomputing them returns the same
                 // list. Only the work is observable, and the generation stamp is

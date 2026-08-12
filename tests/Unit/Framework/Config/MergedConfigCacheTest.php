@@ -10,6 +10,7 @@ use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use PHPUnit\Framework\TestCase;
 
 use function rmdir;
+use function strlen;
 use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
@@ -223,6 +224,40 @@ final class MergedConfigCacheTest extends TestCase
 
         self::assertFalse($mine->exists());
         self::assertTrue($theirs->exists());
+    }
+
+    /**
+     * The reap is anchored on the app hash, so a cache with no app root has
+     * no siblings to speak of and must not sweep the directory.
+     */
+    public function test_clearing_an_unscoped_cache_reaps_no_siblings(): void
+    {
+        $scoped = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
+        $scoped->write(['k' => 'v']);
+
+        (new MergedConfigCache($this->cacheDir, 'prod'))->clear();
+
+        self::assertTrue($scoped->exists());
+    }
+
+    /**
+     * And it only reaps merged-config caches: a neighbour in the same
+     * directory whose name happens to start the same way is not this class's
+     * to delete.
+     */
+    public function test_clearing_leaves_a_non_cache_neighbour_alone(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
+        $cache->write(['k' => 'v']);
+
+        $stem = substr($cache->filename(), 0, -strlen(MergedConfigCache::FILENAME_EXTENSION));
+        $neighbour = $stem . '-notes.txt';
+        file_put_contents($neighbour, 'not a cache');
+
+        $cache->clear();
+
+        self::assertFileExists($neighbour);
+        unlink($neighbour);
     }
 
     public function test_different_envs_produce_isolated_cache_files(): void

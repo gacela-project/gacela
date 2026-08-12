@@ -29,10 +29,38 @@ When the same key appears in several places, later sources win:
 
 1. default config files matching the pattern (e.g. `config/app.php`)
 2. environment-suffixed files (`config/app-{APP_ENV}.php`, using the `APP_ENV` env var)
-3. the local file (second argument of `addAppConfig(...)`, conventionally `config/local.php`; not env-suffixed, meant for per-machine overrides)
-4. values set in code via `GacelaConfig::addAppConfigKeyValue(s)`
+3. one file per declared [config dimension](#config-dimensions), each refining the one before it
+4. the local file (second argument of `addAppConfig(...)`, conventionally `config/local.php`; not env-suffixed, meant for per-machine overrides)
+5. values set in code via `GacelaConfig::addAppConfigKeyValue(s)`
 
-Every boot re-reads and re-merges these files. That is what you want while developing, and what you do not want in production: `enableFileCache()` collapses the merged result into a single PHP file per app root and `APP_ENV`, so warm boots skip the scan entirely, and `cache:clear` drops it. It is **off by default** — see [production performance](production-performance.md).
+Every boot re-reads and re-merges these files. That is what you want while developing, and what you do not want in production: `enableFileCache()` collapses the merged result into a single PHP file per app root, `APP_ENV` and dimension tuple, so warm boots skip the scan entirely, and `cache:clear` drops it. It is **off by default** — see [production performance](production-performance.md).
+
+### Config dimensions
+
+`APP_ENV` answers *which environment*. A project that also varies configuration by region, tenant or brand declares further variables that answer the same way:
+
+```php
+// gacela.php
+$config->addConfigDimension('APP_REGION');
+$config->addConfigDimension('APP_TENANT');
+```
+
+With `APP_ENV=prod APP_REGION=eu`, the chain is `config/app.php`, then `config/app-prod.php`, then `config/app-prod-eu.php`. Each link refines the one before it, so the most specific file wins and the others still contribute the keys it does not mention.
+
+Three rules worth knowing:
+
+- **Declaration order is chain order.** `APP_REGION` then `APP_TENANT` means `app-prod-eu-acme.php`, never `app-prod-acme-eu.php`.
+- **An unset variable ends the chain.** With no `APP_REGION`, a tenant is never consulted — `app-prod--acme.php` would be a file with a hole in it and no meaning.
+- **Values are restricted** to letters, digits, `_`, `.` and `-`. A dimension reaches both a glob pattern and a cache filename, so anything else is refused at bootstrap rather than resolving somewhere unintended.
+
+The merged-config cache is named by the whole tuple, so two regions sharing one cache directory never read each other's file. `cache:warm` warms the tuple it runs as, so a deploy that serves several runs it once per tuple:
+
+```bash
+APP_REGION=eu vendor/bin/gacela cache:warm
+APP_REGION=us vendor/bin/gacela cache:warm
+```
+
+`gacela.php` itself does **not** grow dimension variants: it is read in order to *learn* which dimensions exist, so a `gacela-prod-eu.php` could never declare one.
 
 ## 3. Add your first module
 

@@ -254,6 +254,30 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?list<string> $list
+     */
+    public function setConfigDimensions(?array $list): self
+    {
+        $this->properties->configDimensions = $this->setPropertyWithTracking(
+            self::configDimensions,
+            $list,
+            self::DEFAULT_CONFIG_DIMENSIONS,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getConfigDimensions(): array
+    {
+        return $this->properties->configDimensions ?? self::DEFAULT_CONFIG_DIMENSIONS;
+    }
+
+    /**
      * @return list<string>
      */
     public function getProjectNamespaces(): array
@@ -543,6 +567,16 @@ final class SetupGacela extends AbstractSetupGacela
     public function mergeProjectNamespaces(array $list): void
     {
         $this->propertyMerger->mergeProjectNamespaces($list);
+    }
+
+    /**
+     * @internal Used by SetupMerger - do not call directly
+     *
+     * @param list<string> $list
+     */
+    public function mergeConfigDimensions(array $list): void
+    {
+        $this->propertyMerger->mergeConfigDimensions($list);
     }
 
     /**

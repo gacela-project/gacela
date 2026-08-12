@@ -64,6 +64,8 @@ final class GacelaConfigTransfer
         public readonly ?bool $fileCacheEnabled,
         public readonly ?string $fileCacheDirectory,
         public readonly ?array $projectNamespaces,
+        /** @var ?list<string> */
+        public readonly ?array $configDimensions,
         public readonly ?array $appModulePaths,
         public readonly ?array $configKeyValues,
         public readonly ?array $genericListeners,

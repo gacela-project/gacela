@@ -475,6 +475,9 @@ final class Config implements ConfigInterface
             $this->getCacheDir(),
             AppEnv::current(),
             $this->getAppRootDir(),
+            // The tuple names the file. Without it two regions of one
+            // application share a cache and silently serve each other.
+            $this->getFactory()->dimensions()->values(),
         );
     }
 

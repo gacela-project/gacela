@@ -63,6 +63,9 @@ final class Properties
     public ?array $projectNamespaces = null;
 
     /** @var ?list<string> */
+    public ?array $configDimensions = null;
+
+    /** @var ?list<string> */
     public ?array $appModulePaths = null;
 
     /** @var ?ConfigKeyValues */

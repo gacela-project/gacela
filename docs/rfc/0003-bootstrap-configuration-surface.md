@@ -59,6 +59,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `addAppConfigKeyValues()` | `add*` | conforms — plural variant, same path |
 | `addBinding()` | `add*` | conforms |
 | `addBindingIf()` | `add*` | conforms — conditional variant of `addBinding()` |
+| `addConfigDimension()` | `add*` | conforms — a new intent nothing else serves: `APP_ENV` selects configuration and nothing else could, so a second selector had no way to exist. Ordered, and calling twice contributes twice, which is what makes `add*` the right prefix over `set*` |
 | `addExternalService()` | `add*` | conforms |
 | `addFactory()` | `add*` | conforms |
 | `addHandlerRegistry()` | `add*` | conforms |

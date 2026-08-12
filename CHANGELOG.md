@@ -4,6 +4,7 @@
 
 ### Added
 
+- Select configuration by more than `APP_ENV` with `addConfigDimension()`: each declared variable adds a link to the chain, so `config/app-prod-eu.php` refines `config/app-prod.php` refines `config/app.php`. An unset variable ends the chain, values are restricted to what a glob and a filename can safely carry, and the merged-config cache is named by the whole tuple so two regions sharing a cache directory never read each other's file
 - Wrap a service as one Provider registers it with `extendProviderService()`, leaving every other module that reuses the same id alone — and letting one module decorate a sibling's binding without shadowing the sibling's whole Provider class
 - Declare an extension point with `addPluginStack()`: every implementation of one interface, in declaration order, resolved lazily and read back typed through `getPluginStack()`. Calling it again appends, so another config source contributes to a stack it did not declare, and an entry that does not implement the interface fails naming the class
 - Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars, reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs became sugar over it

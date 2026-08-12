@@ -72,6 +72,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `enableFileCache()` | `enable*` | conforms — sugar over `setFileCache(true)` |
 | `extendGacelaConfig()` | `extend*` | exception in meaning: composes another configuration surface into this one rather than wrapping a registered service; predates the grammar |
 | `extendGacelaConfigs()` | `extend*` | same as `extendGacelaConfig()`, plural variant |
+| `extendProviderService()` | `extend*` | conforms — the choosing rule against `extendService()` is the one `tag()` and `Container::tag()` already use: everywhere versus there |
 | `extendService()` | `extend*` | conforms |
 | `getExternalService()` | — | exception: the one read path on a write surface, paired with `addExternalService()` for the bridge handshake |
 | `loadDefinitions()` | — | exception: imports wiring from a file or array; `add*` would hide that the argument is data, not a definition |

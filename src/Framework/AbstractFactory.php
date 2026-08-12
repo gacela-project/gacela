@@ -177,6 +177,15 @@ abstract class AbstractFactory
         $this->scheduleAppWideExtensions($container);
 
         $resolver = (new ProviderResolver())->resolve($this);
+
+        if ($resolver !== null) {
+            // Between resolving the Provider and running it: the extension has
+            // to be queued before the id is stored, because that store is what
+            // drains the queue. Scheduling it earlier is impossible -- which
+            // Provider this module has is not known until it is resolved.
+            $this->scheduleExtensionsFor($resolver::class, $container);
+        }
+
         $resolver?->register($container);
 
         if ($resolver !== null) {
@@ -209,6 +218,28 @@ abstract class AbstractFactory
                 continue;
             }
 
+            foreach ($extensions as $extension) {
+                $scope->extend($id, $extension);
+            }
+        }
+    }
+
+    /**
+     * The extensions aimed at *this* module's Provider.
+     *
+     * `extendService()` wraps an id wherever it is registered, which is right
+     * when the id names one app-wide concept and wrong when two Providers reuse
+     * an un-namespaced key on purpose. Naming the Provider is how a project
+     * says *that* module's binding, and how one module decorates a sibling's
+     * without shadowing the sibling's whole Provider class to change one line.
+     *
+     * @param class-string $providerClass
+     */
+    private function scheduleExtensionsFor(string $providerClass, Container $scope): void
+    {
+        $byId = Config::getInstance()->getSetupGacela()->getProviderServicesToExtend()[$providerClass] ?? [];
+
+        foreach ($byId as $id => $extensions) {
             foreach ($extensions as $extension) {
                 $scope->extend($id, $extension);
             }

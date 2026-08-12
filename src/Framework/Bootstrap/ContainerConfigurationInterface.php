@@ -13,6 +13,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
  * @psalm-type ServiceFactoryMap = array<string, Closure>
  * @psalm-type ServiceAliasMap = array<string, string>
  * @psalm-type ServicesToExtendMap = array<string, list<Closure>>
+ * @psalm-type ProviderServicesToExtendMap = array<class-string, array<string, list<Closure>>>
  * @psalm-type HandlerRegistriesMap = array<string, array<string|int, class-string>>
  * @psalm-type PluginStacksMap = array<class-string, list<class-string>>
  * @psalm-type TagsMap = array<string, list<string>>
@@ -26,6 +27,14 @@ interface ContainerConfigurationInterface
      * @return ServicesToExtendMap
      */
     public function getServicesToExtend(): array;
+
+    /**
+     * Extensions aimed at one Provider's registrations, keyed by that
+     * Provider's class then by service id.
+     *
+     * @return ProviderServicesToExtendMap
+     */
+    public function getProviderServicesToExtend(): array;
 
     /**
      * @return ServiceFactoryMap

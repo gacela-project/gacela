@@ -22,6 +22,7 @@ use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
+ * @psalm-import-type ProviderServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -41,6 +42,7 @@ final class GacelaConfigTransfer
      * @param ?list<class-string> $gacelaConfigsToExtend
      * @param ?list<class-string|callable> $plugins
      * @param ?ServicesToExtendMap $servicesToExtend
+     * @param ProviderServicesToExtendMap $providerServicesToExtend
      * @param ServiceFactoryMap $factories
      * @param ServiceFactoryMap $protectedServices
      * @param ServiceAliasMap $aliases
@@ -70,10 +72,11 @@ final class GacelaConfigTransfer
         public readonly ?array $gacelaConfigsToExtend,
         public readonly ?array $plugins,
         public readonly ?array $servicesToExtend,
-        public readonly array $factories,
-        public readonly array $protectedServices,
-        public readonly array $aliases,
-        public readonly array $contextualBindings,
+        public readonly array $providerServicesToExtend = [],
+        public readonly array $factories = [],
+        public readonly array $protectedServices = [],
+        public readonly array $aliases = [],
+        public readonly array $contextualBindings = [],
         public readonly array $handlerRegistries = [],
         public readonly array $pluginStacks = [],
         public readonly array $lazyServices = [],

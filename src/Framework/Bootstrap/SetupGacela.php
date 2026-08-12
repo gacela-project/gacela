@@ -36,6 +36,7 @@ use function sprintf;
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
+ * @psalm-import-type ProviderServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -406,6 +407,14 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @return ProviderServicesToExtendMap
+     */
+    public function getProviderServicesToExtend(): array
+    {
+        return $this->properties->providerServicesToExtend ?? self::DEFAULT_PROVIDER_SERVICES_TO_EXTEND;
+    }
+
+    /**
      * @return PluginStacksMap
      */
     public function getPluginStacks(): array
@@ -769,6 +778,22 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
+     * @param ?ProviderServicesToExtendMap $list
+     */
+    public function setProviderServicesToExtend(?array $list): self
+    {
+        $this->properties->providerServicesToExtend = $this->setPropertyWithTracking(
+            self::providerServicesToExtend,
+            $list,
+            self::DEFAULT_PROVIDER_SERVICES_TO_EXTEND,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
      * @param ?PluginStacksMap $list
      */
     public function setPluginStacks(?array $list): self
@@ -886,6 +911,16 @@ final class SetupGacela extends AbstractSetupGacela
     public function mergePluginStacks(array $list): void
     {
         $this->propertyMerger->mergePluginStacks($list);
+    }
+
+    /**
+     * @internal Used by SetupMerger - do not call directly
+     *
+     * @param ProviderServicesToExtendMap $list
+     */
+    public function mergeProviderServicesToExtend(array $list): void
+    {
+        $this->propertyMerger->mergeProviderServicesToExtend($list);
     }
 
     /**

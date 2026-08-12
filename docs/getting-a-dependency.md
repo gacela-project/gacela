@@ -271,7 +271,8 @@ These are supported and are **not** deprecated. They are simply not the answer t
 | `addProtected('id', fn)` | the value *is* a closure and must not be invoked |
 | `addAlias('short', Full::class)` | a long id needs a short name |
 | `addLazy()` | construction is expensive and often unused |
-| `extendService('id', fn)` | decorating a service registered elsewhere — *replacing* what comes out |
+| `extendService('id', fn)` | decorating a service registered elsewhere, **wherever** that id is registered — *replacing* what comes out |
+| `extendProviderService(Provider::class, 'id', fn)` | decorating that id **only as one Provider registers it** — when two modules reuse an un-namespaced key, or when one module decorates a sibling's binding without shadowing the sibling's whole Provider |
 | `afterResolving('id', fn)` | touching an instance after it is built without rebuilding it, e.g. a setter on every implementation of an interface |
 | `when(X)->needs(Y)->give(Z)` | one consumer needs a different implementation than everyone else |
 | `loadDefinitions([...])` / `loadDefinitions('file.json')` | the wiring is generated, shared between environments, or reviewed as a diff — see [container-configuration](container-configuration.md#definitions-as-data) |

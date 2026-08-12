@@ -6,6 +6,8 @@ namespace Gacela\Console;
 
 use AppendIterator;
 use FilesystemIterator;
+use Gacela\Console\Application\IdeMeta\IdeMetadataGenerator;
+use Gacela\Console\Application\IdeMeta\IdeMetadataScanner;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\AllAppModules\ExcludedDirectories;
@@ -19,6 +21,7 @@ use Gacela\Console\Domain\FileContent\StubLocator;
 use Gacela\Console\Domain\FileContent\StubPublisher;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizerInterface;
+use Gacela\Console\Domain\IdeMeta\MetaFileRenderer;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffMarkdownFormatter;
 use Gacela\Console\Domain\ModuleGraph\GraphFormatterInterface;
 use Gacela\Console\Domain\ModuleGraph\GraphvizGraphFormatter;
@@ -158,6 +161,17 @@ final class ConsoleFactory extends AbstractFactory
         return new AllAppModulesFinder(
             $this->createModuleScanIterator(),
             $this->createAppModuleCreator(),
+        );
+    }
+
+    public function createIdeMetadataGenerator(): IdeMetadataGenerator
+    {
+        return new IdeMetadataGenerator(
+            $this->createAllAppModulesFinder(),
+            new IdeMetadataScanner(),
+            new MetaFileRenderer(),
+            $this->createFileContentIo(),
+            Config::getInstance()->getAppRootDir(),
         );
     }
 

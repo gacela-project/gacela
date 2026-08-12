@@ -7,6 +7,7 @@ namespace Gacela\Console;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\FileContent\StubPublishResult;
+use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffResult;
 use Gacela\Console\Domain\ModuleGraph\ModuleRuleCheckResult;
 use Gacela\Container\ContainerStats;
@@ -66,6 +67,17 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createAllAppModulesFinder()
             ->findAllAppModules($filter);
+    }
+
+    /**
+     * Write the editor metadata for `getProvidedDependency()`, or, with
+     * $dryRun, work out what it would say and write nothing.
+     */
+    public function generateIdeMetadata(bool $dryRun): IdeMetadataResult
+    {
+        return $this->getFactory()
+            ->createIdeMetadataGenerator()
+            ->generate($dryRun);
     }
 
     /**

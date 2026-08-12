@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\PHPStan\Reflection;
 
-use Gacela\Framework\ServiceResolver\ServiceMap;
+use Gacela\Framework\ServiceResolver\ServiceMapAccessors;
 use PHPStan\Reflection\Annotations\AnnotationMethodReflection;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ExtendedMethodReflection;
@@ -12,7 +12,6 @@ use PHPStan\Reflection\MethodsClassReflectionExtension;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\Generic\TemplateTypeMap;
 use PHPStan\Type\ObjectType;
-use ReflectionAttribute;
 
 use function array_key_exists;
 
@@ -105,31 +104,24 @@ final class ServiceMapMethodsClassReflectionExtension implements MethodsClassRef
             return null;
         }
 
-        // Read natively, the way the runtime resolver does: ClassReflection's own
-        // attribute accessor postdates the `^2.0` PHPStan a consumer may be on.
-        $attributes = $classReflection->getNativeReflection()
-            ->getAttributes(ServiceMap::class, ReflectionAttribute::IS_INSTANCEOF);
+        // Read natively, through the shared query the runtime resolves against:
+        // ClassReflection's own attribute accessor postdates the `^2.0` PHPStan
+        // a consumer may be on, and re-deriving which attribute wins here is how
+        // the analyser and the runtime come to disagree.
+        $className = ServiceMapAccessors::classNameFor($classReflection->getNativeReflection(), $methodName);
 
-        foreach ($attributes as $attribute) {
-            /** @var ServiceMap $serviceMap */
-            $serviceMap = $attribute->newInstance();
-
-            if ($serviceMap->method !== $methodName) {
-                continue;
-            }
-
-            // Asked of PHPStan rather than the autoloader: a class it knows from
-            // the files it scanned is one it can type, whether or not this
-            // process can load it. A mapping to a class it does not know resolves
-            // to nothing at runtime either, so typing it would only move the
-            // failure.
-            if (!$this->reflectionProvider->hasClass($serviceMap->className)) {
-                return null;
-            }
-
-            return $serviceMap->className;
+        if ($className === null) {
+            return null;
         }
 
-        return null;
+        // Asked of PHPStan rather than the autoloader: a class it knows from the
+        // files it scanned is one it can type, whether or not this process can
+        // load it. A mapping to a class it does not know resolves to nothing at
+        // runtime either, so typing it would only move the failure.
+        if (!$this->reflectionProvider->hasClass($className)) {
+            return null;
+        }
+
+        return $className;
     }
 }

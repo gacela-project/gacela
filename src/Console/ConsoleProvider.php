@@ -14,6 +14,7 @@ use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
 use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
+use Gacela\Console\Infrastructure\Command\IdeMetaCommand;
 use Gacela\Console\Infrastructure\Command\InitCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
@@ -58,6 +59,7 @@ final class ConsoleProvider extends AbstractProvider
             new ValidateConfigCommand(),
             new ProfileReportCommand(),
             new DoctorCommand(),
+            new IdeMetaCommand(),
             new InitCommand(Config::getInstance()->getAppRootDir()),
             new StubsPublishCommand(),
         ];

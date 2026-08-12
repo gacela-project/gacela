@@ -8,7 +8,6 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
-use ReflectionAttribute;
 use ReflectionClass;
 
 use function sprintf;
@@ -90,7 +89,7 @@ final class DocBlockResolver
     {
         $reflectionClass = ReflectionClassPool::get($this->callerClass);
 
-        $className = $this->searchClassOverAttributes($reflectionClass, $method);
+        $className = ServiceMapAccessors::classNameFor($reflectionClass, $method);
         if ($className !== null) {
             return $className;
         }
@@ -161,26 +160,6 @@ final class DocBlockResolver
         }
 
         return (new DocBlockParser())->getClassFromMethod($docBlock, $method);
-    }
-
-    /**
-     * @param ReflectionClass<object> $reflectionClass
-     *
-     * @return class-string|null
-     */
-    private function searchClassOverAttributes(ReflectionClass $reflectionClass, string $method): ?string
-    {
-        $attributes = $reflectionClass->getAttributes(ServiceMap::class, ReflectionAttribute::IS_INSTANCEOF);
-
-        foreach ($attributes as $attribute) {
-            /** @var ServiceMap $instance */
-            $instance = $attribute->newInstance();
-            if ($instance->method === $method) {
-                return $instance->className;
-            }
-        }
-
-        return null;
     }
 
     /**

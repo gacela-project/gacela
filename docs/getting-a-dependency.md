@@ -55,7 +55,9 @@ public function createInvoiceSender(): InvoiceSender
 
 `FactoryDoesNotCallFacadeRule` enforces that, and it is registered by default in `phpstan-gacela.neon`: *"Factory must not call `$this->getFacade()`; same-module access goes through the Factory itself, cross-module access goes through the Provider."*
 
-**Why declare the pillar.** The accessor works without the attribute — the runtime falls back to reading a `@method` docblock, and then to scanning your file's `use` statements, both of which now raise a deprecation. But an undeclared accessor is also untyped: 2.0 reports it, and before that it evaluated to `mixed`, which switched off checking of everything reached *through* it. The attribute alone types the accessor under both PHPStan and Psalm; a `@method` docblock adds IDE completion only, because PhpStorm reads `@method` and not `#[ServiceMap]`. Keeping one means writing the same fact twice — see [typed pillar accessors](static-analysis.md#typed-pillar-accessors) for the drift cost — and #678 proposes generating it so the copy cannot drift.
+**Why declare the pillar.** The accessor works without the attribute — the runtime falls back to reading a `@method` docblock, and then to scanning your file's `use` statements, both of which now raise a deprecation. But an undeclared accessor is also untyped: 2.0 reports it, and before that it evaluated to `mixed`, which switched off checking of everything reached *through* it. The attribute alone types the accessor under both PHPStan and Psalm; a `@method` docblock adds IDE completion only, because PhpStorm reads `@method` and not `#[ServiceMap]`. Keeping one means writing the same fact twice — see [typed pillar accessors](static-analysis.md#typed-pillar-accessors) for the drift cost.
+
+The `getProvidedDependency()` side of this needs no docblock at all: `ide:meta` writes editor metadata for it, described under [IDE metadata](static-analysis.md#ide-metadata).
 
 Cross-module access goes through the other module's **Facade**, never its Factory or internals. `CrossModuleViaFacadeRule` enforces this if you enable it.
 

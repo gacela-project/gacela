@@ -7,6 +7,8 @@ namespace GacelaTest\Feature\Framework\UsingDeclaredResolvableTypes;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\ClassResolver\ResolvableType;
+use Gacela\Framework\Config\Config;
+use Gacela\Framework\Exception\ResolvableTypeException;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -85,6 +87,28 @@ final class FeatureTest extends TestCase
         );
 
         self::assertSame('overridden', (new Report\ReportFactory())->createExportedReport());
+    }
+
+    /**
+     * `gacela.php` declares `Feed` for Exporter; the bootstrap closure claims
+     * it for another kind. Each source validates alone and passes, and the
+     * union would name neither -- every `*Feed` silently falling back to the
+     * namespace split. The check has to run where the sources meet.
+     */
+    public function test_two_sources_cannot_claim_one_suffix_between_them(): void
+    {
+        $this->expectException(ResolvableTypeException::class);
+        $this->expectExceptionMessage('Feed');
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false, self::CACHE_DIR);
+            $config->addResolvableType('Importer', null, ['Feed']);
+        });
+
+        // The declarations meet when the sources are merged, which is the
+        // first time anything asks the configuration a question.
+        Config::getInstance()->getFactory()->createGacelaFileConfig();
     }
 
     public function test_a_declared_suffix_names_its_kind(): void

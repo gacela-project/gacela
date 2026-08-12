@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\ClassResolver\ClassInfo;
+use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFromBootstrapFactory;
 use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigUsingGacelaPhpFileFactory;
@@ -98,9 +100,17 @@ final class ConfigFactory
 
         // Only the merged file knows every kind the project declared: each
         // source assembles its own, and a kind declared in `gacela.php` is
-        // invisible to the bootstrap closure's. The static resolution seams
-        // read the declarations from here.
-        ResolvableTypes::syncFrom($merged->getSuffixTypes());
+        // invisible to the bootstrap closure's. So this is also where the
+        // ambiguity rule has to run -- two sources can each declare the same
+        // suffix for a different kind and both pass their own builder's check.
+        $suffixTypes = $merged->getSuffixTypes();
+        ResolvableTypes::assertUnambiguous($suffixTypes);
+
+        if (ResolvableTypes::syncFrom($suffixTypes)) {
+            // Both memos hold answers about which suffix names which kind.
+            GlobalKey::resetCache();
+            ClassInfo::resetCache();
+        }
 
         return $this->memoize($merged);
     }

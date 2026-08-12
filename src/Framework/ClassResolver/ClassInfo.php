@@ -16,14 +16,23 @@ final class ClassInfo implements ClassInfoInterface
     /** @var array<string,array<string,self>> */
     private static array $callerClassCache = [];
 
-    private static int $generation = 0;
-
     public function __construct(
         private readonly string $callerModuleNamespace,
         private readonly string $callerModuleName,
         private readonly string $cacheKey,
         private readonly string $resolvableType = '',
     ) {
+    }
+
+    /**
+     * Every entry holds a cache key built from the declared kinds, so it is
+     * cleared by whoever changes them.
+     *
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$callerClassCache = [];
     }
 
     /**
@@ -78,12 +87,6 @@ final class ClassInfo implements ClassInfoInterface
 
     private static function fromString(string $callerClass, string $resolvableType): self
     {
-        // Every entry holds a cache key built from the declared kinds.
-        if (self::$generation !== ResolvableTypes::generation()) {
-            self::$generation = ResolvableTypes::generation();
-            self::$callerClassCache = [];
-        }
-
         if (isset(self::$callerClassCache[$callerClass][$resolvableType])) {
             return self::$callerClassCache[$callerClass][$resolvableType];
         }

@@ -11,20 +11,24 @@ final class GlobalKey
     /** @var array<string,string> */
     private static array $cache = [];
 
-    private static int $generation = 0;
+    /**
+     * A normalized key answers which suffix names a kind, so every entry is
+     * about the declarations in force when it was computed. Cleared by
+     * whoever changes them -- checking a stamp here instead cost more than the
+     * lookup it guarded, on the hottest path in resolution.
+     *
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$cache = [];
+    }
 
     /**
      * Unify the keys for the class resolver.
      */
     public static function fromClassName(string $fullClassName): string
     {
-        // A normalized key answers which suffix names a kind. When the declared
-        // kinds move, every answer here was about the old set.
-        if (self::$generation !== ResolvableTypes::generation()) {
-            self::$generation = ResolvableTypes::generation();
-            self::$cache = [];
-        }
-
         if (isset(self::$cache[$fullClassName])) {
             return self::$cache[$fullClassName];
         }

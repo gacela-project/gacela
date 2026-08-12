@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
+use Gacela\Framework\Exception\ResolvableTypeException;
+
 use function array_keys;
 use function count;
 use function strlen;
@@ -50,22 +52,13 @@ final class ResolvableTypes
     private static ?array $matchOrder = null;
 
     /**
-     * Bumped whenever the declared set changes.
-     *
-     * Key normalization memoizes answers built from these declarations, so
-     * those memos must drop when the declarations move. They read this stamp
-     * rather than being cleared from here: a registry that reached into its
-     * own readers would be a dependency cycle, and the readers already know
-     * what they cached.
-     */
-    private static int $generation = 0;
-
-    /**
      * @internal
+     *
+     * @return bool whether the declared set actually changed
      */
-    public static function resetCache(): void
+    public static function resetCache(): bool
     {
-        self::apply(self::BUILT_IN);
+        return self::apply(self::BUILT_IN);
     }
 
     /**
@@ -79,20 +72,47 @@ final class ResolvableTypes
      *
      * @param array<string, list<string>> $suffixes
      */
-    public static function syncFrom(array $suffixes): void
+    public static function syncFrom(array $suffixes): bool
     {
-        self::apply($suffixes === [] ? self::BUILT_IN : $suffixes);
+        return self::apply($suffixes === [] ? self::BUILT_IN : $suffixes);
     }
 
     /**
-     * How many times the declared set has changed in this process.
+     * Refuse a suffix that names more than one kind.
      *
-     * A memo built from these declarations records the value it was built
-     * under and drops itself when the two disagree.
+     * The rule lives here, and both places that can see a complete map call
+     * it: the builder while one source is being declared, where the error
+     * points at the line that wrote it, and the merge of every source, where
+     * two sources that were each fine alone first meet. Validating only in the
+     * builder let `gacela.php` and a bootstrap closure declare the same suffix
+     * for different kinds -- each passing, the union silently naming neither.
+     *
+     * Pillars sharing a suffix stays legal: the per-kind list generates
+     * candidates for a resolver that already knows its kind, and only the
+     * reverse mapping degrades. A declared kind has no such history.
+     *
+     * @param array<string, list<string>> $suffixesByKind
      */
-    public static function generation(): int
+    public static function assertUnambiguous(array $suffixesByKind): void
     {
-        return self::$generation;
+        $owners = [];
+        foreach ($suffixesByKind as $kind => $suffixes) {
+            foreach ($suffixes as $suffix) {
+                $owners[$suffix][] = $kind;
+            }
+        }
+
+        foreach ($owners as $suffix => $claimants) {
+            if (count($claimants) < 2) {
+                continue;
+            }
+
+            foreach ($claimants as $claimant) {
+                if (!isset(self::BUILT_IN[$claimant])) {
+                    throw ResolvableTypeException::suffixAlreadyClaimed($suffix, $claimants[0], $claimant);
+                }
+            }
+        }
     }
 
     /**
@@ -186,15 +206,14 @@ final class ResolvableTypes
     /**
      * @param array<string, list<string>> $suffixes
      */
-    private static function apply(array $suffixes): void
+    private static function apply(array $suffixes): bool
     {
         $changed = self::$suffixes !== $suffixes;
 
         self::$suffixes = $suffixes;
         self::$matchOrder = null;
 
-        if ($changed) {
-            ++self::$generation;
-        }
+        return $changed;
+
     }
 }

@@ -14,9 +14,11 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
+use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
+use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
@@ -198,9 +200,13 @@ final class Gacela
     {
         AnonymousGlobal::resetCache();
         // Back to the four pillars; the assembled configuration declares the
-        // rest again, and dropping them here also drops the key memos that
-        // were built from them.
-        ResolvableTypes::resetCache();
+        // rest again. The two key memos hold answers built from whatever was
+        // declared, so they go with them.
+        if (ResolvableTypes::resetCache()) {
+            GlobalKey::resetCache();
+            ClassInfo::resetCache();
+        }
+
         AbstractFacade::resetCache();
         AbstractFactory::resetCache();
         AbstractClassResolver::resetCache();

@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\ResolvableType;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
+use Gacela\Framework\Exception\ResolvableTypeException;
 use PHPUnit\Framework\TestCase;
 
 final class ResolvableTypesTest extends TestCase
@@ -95,26 +96,56 @@ final class ResolvableTypesTest extends TestCase
         self::assertNotSame($first, ResolvableTypes::matchOrder());
     }
 
-    public function test_the_generation_moves_forward_when_the_declarations_change(): void
+    /**
+     * The caller clears the key memos on the strength of this answer, so a
+     * sync that changed the set has to say so.
+     */
+    public function test_a_sync_that_changes_the_set_reports_it(): void
     {
-        $before = ResolvableTypes::generation();
-
-        ResolvableTypes::syncFrom([...ResolvableTypes::BUILT_IN, 'Exporter' => ['Exporter']]);
-
-        self::assertSame($before + 1, ResolvableTypes::generation());
+        self::assertTrue(ResolvableTypes::syncFrom([...ResolvableTypes::BUILT_IN, 'Exporter' => ['Exporter']]));
     }
 
     /**
-     * Syncing the same set twice must not move the stamp: every memo keyed on
-     * it would drop itself for nothing, on every bootstrap.
+     * And one that changed nothing must not: every memo would be dropped for
+     * nothing, on every bootstrap of every project that declares no kind.
      */
-    public function test_the_generation_stands_still_when_nothing_changed(): void
+    public function test_a_sync_that_changes_nothing_reports_that_too(): void
     {
         ResolvableTypes::syncFrom([...ResolvableTypes::BUILT_IN, 'Exporter' => ['Exporter']]);
-        $after = ResolvableTypes::generation();
 
+        self::assertFalse(ResolvableTypes::syncFrom([...ResolvableTypes::BUILT_IN, 'Exporter' => ['Exporter']]));
+    }
+
+    public function test_resetting_to_the_pillars_reports_whether_it_changed(): void
+    {
         ResolvableTypes::syncFrom([...ResolvableTypes::BUILT_IN, 'Exporter' => ['Exporter']]);
 
-        self::assertSame($after, ResolvableTypes::generation());
+        self::assertTrue(ResolvableTypes::resetCache());
+        self::assertFalse(ResolvableTypes::resetCache());
+    }
+
+    public function test_a_suffix_two_declared_kinds_share_is_refused(): void
+    {
+        $this->expectException(ResolvableTypeException::class);
+        $this->expectExceptionMessage('already belongs to the "Exporter" kind');
+
+        ResolvableTypes::assertUnambiguous([
+            ...ResolvableTypes::BUILT_IN,
+            'Exporter' => ['Feed'],
+            'Importer' => ['Feed'],
+        ]);
+    }
+
+    /**
+     * The pillars may share one, and did before any of this existed.
+     */
+    public function test_a_suffix_two_pillars_share_is_allowed(): void
+    {
+        ResolvableTypes::assertUnambiguous([
+            'Facade' => ['Facade', 'Extra'],
+            'Factory' => ['Factory', 'Extra'],
+        ]);
+
+        self::assertTrue(true);
     }
 }

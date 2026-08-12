@@ -13,7 +13,7 @@ final class ResolvableTypesTest extends TestCase
 {
     protected function tearDown(): void
     {
-        ResolvableTypes::resetCache();
+        ResolvableTypes::resetToBuiltIn();
     }
 
     public function test_without_a_declaration_only_the_pillars_exist(): void
@@ -116,12 +116,12 @@ final class ResolvableTypesTest extends TestCase
         self::assertFalse(ResolvableTypes::syncFrom([...ResolvableTypes::BUILT_IN, 'Exporter' => ['Exporter']]));
     }
 
-    public function test_resetting_to_the_pillars_reports_whether_it_changed(): void
+    public function test_returning_to_the_pillars_reports_whether_it_changed(): void
     {
         ResolvableTypes::syncFrom([...ResolvableTypes::BUILT_IN, 'Exporter' => ['Exporter']]);
 
-        self::assertTrue(ResolvableTypes::resetCache());
-        self::assertFalse(ResolvableTypes::resetCache());
+        self::assertTrue(ResolvableTypes::resetToBuiltIn());
+        self::assertFalse(ResolvableTypes::resetToBuiltIn());
     }
 
     public function test_a_suffix_two_declared_kinds_share_is_refused(): void

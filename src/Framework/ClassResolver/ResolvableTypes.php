@@ -52,11 +52,20 @@ final class ResolvableTypes
     private static ?array $matchOrder = null;
 
     /**
-     * @internal
+     * Declarations are not cache: they are configuration, and the next
+     * bootstrap's {@see syncFrom()} replaces them wholesale.
      *
-     * @return bool whether the declared set actually changed
+     * Wiping them back to the pillars on a cache reset looked tidy and was
+     * expensive: a project with custom suffixes then changed the set twice per
+     * bootstrap -- once to the pillars here, once back on sync -- and each
+     * change drops the two key memos, so every class name in the application
+     * was normalized again on every bootstrap. Letting the sync be the only
+     * writer keeps the memos across bootstraps that declare the same thing,
+     * which is all of them after the first.
+     *
+     * @internal
      */
-    public static function resetCache(): bool
+    public static function resetToBuiltIn(): bool
     {
         return self::apply(self::BUILT_IN);
     }
@@ -208,12 +217,20 @@ final class ResolvableTypes
      */
     private static function apply(array $suffixes): bool
     {
-        $changed = self::$suffixes !== $suffixes;
+        // The overwhelmingly common case is a project that declares no kind of
+        // its own, where this is called once per bootstrap with a map equal to
+        // the one already in force. Returning before touching either static
+        // keeps the pillars' array shared with the configuration that produced
+        // it and leaves the match order memoized -- writing them anyway cost
+        // measurably more than the comparison saves.
+        if (self::$suffixes === $suffixes) {
+            return false;
+        }
 
         self::$suffixes = $suffixes;
         self::$matchOrder = null;
 
-        return $changed;
+        return true;
 
     }
 }

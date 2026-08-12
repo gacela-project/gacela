@@ -50,6 +50,7 @@ final class ResetCacheCoverageTest extends TestCase
         'CacheableConfig' => "holds application configuration: the cache backend registered via CacheableConfig::setStorage(). Nothing in the framework sets it, so clearing it here would silently drop the app's configured storage",
         'HealthCheckRegistry' => 'holds checks registered through GacelaConfig::addHealthCheck(). Configuration, re-established by bootstrap, which resets it explicitly at Gacela::bootstrap()',
         'ReflectionClassPool' => 'pure memoization keyed by class name. Reflection of a loaded class cannot change, so nothing goes stale, and the pool is bounded by the set of loaded classes, so it is not a leak. reset() exists for test isolation',
+        'ResolvableTypes' => "holds the class kinds the assembled gacela.php declared: configuration, replaced wholesale by the next bootstrap's sync. Returning it to the pillars here would change the declared set twice per bootstrap, and each change drops the two key memos built from it -- every class name in the application normalized again, on every bootstrap, for a set that is about to be restored. resetToBuiltIn() exists for test isolation",
     ];
 
     public function test_every_resettable_class_is_reached_by_reset_cache(): void

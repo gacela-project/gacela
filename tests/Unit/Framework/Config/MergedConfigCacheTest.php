@@ -138,6 +138,93 @@ final class MergedConfigCacheTest extends TestCase
         );
     }
 
+    /**
+     * The BC lock: a project declaring no dimension must keep the filename it
+     * had, or every upgrade silently invalidates a warm cache.
+     */
+    public function test_declaring_no_dimension_keeps_the_existing_filename(): void
+    {
+        $before = new MergedConfigCache($this->cacheDir, 'prod', '/app/root');
+        $after = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', []);
+
+        self::assertSame($before->filename(), $after->filename());
+    }
+
+    public function test_a_declared_dimension_gives_the_file_its_own_name(): void
+    {
+        $plain = new MergedConfigCache($this->cacheDir, 'prod', '/app/root');
+        $eu = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
+
+        self::assertNotSame($plain->filename(), $eu->filename());
+    }
+
+    public function test_two_dimension_tuples_never_share_a_file(): void
+    {
+        $eu = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
+        $us = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['us']);
+
+        self::assertNotSame($eu->filename(), $us->filename());
+    }
+
+    /**
+     * The collision the readable-segment spelling would have shipped:
+     * `-{env}-{region}` cannot tell `prod-eu` with no region from `prod` in
+     * region `eu`, and hyphenated env names are ordinary. Hashing the
+     * dimensions keeps the two apart.
+     */
+    public function test_a_hyphenated_env_cannot_collide_with_a_dimension(): void
+    {
+        $hyphenatedEnv = new MergedConfigCache($this->cacheDir, 'prod-eu', '/app/root');
+        $envPlusRegion = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
+
+        self::assertNotSame($hyphenatedEnv->filename(), $envPlusRegion->filename());
+    }
+
+    /**
+     * Order is meaning: region eu / tenant acme is not tenant eu / region acme.
+     */
+    public function test_the_order_of_the_dimensions_is_part_of_the_identity(): void
+    {
+        $one = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu', 'acme']);
+        $two = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['acme', 'eu']);
+
+        self::assertNotSame($one->filename(), $two->filename());
+    }
+
+    /**
+     * Clearing has to reap every tuple of this app, not just the one the
+     * current process happens to be. A region left behind is a stale answer
+     * the next deploy of that region reads back.
+     */
+    public function test_clearing_reaps_every_dimension_tuple_of_this_app(): void
+    {
+        $eu = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
+        $us = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['us']);
+        $eu->write(['k' => 'eu']);
+        $us->write(['k' => 'us']);
+
+        $eu->clear();
+
+        self::assertFalse($eu->exists());
+        self::assertFalse($us->exists(), "the other region's tuple was left behind");
+    }
+
+    /**
+     * ...but not another application's, which is what the app hash is for.
+     */
+    public function test_clearing_leaves_another_apps_cache_alone(): void
+    {
+        $mine = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
+        $theirs = new MergedConfigCache($this->cacheDir, 'prod', '/other/root', ['eu']);
+        $mine->write(['k' => 'mine']);
+        $theirs->write(['k' => 'theirs']);
+
+        $mine->clear();
+
+        self::assertFalse($mine->exists());
+        self::assertTrue($theirs->exists());
+    }
+
     public function test_different_envs_produce_isolated_cache_files(): void
     {
         $prod = new MergedConfigCache($this->cacheDir, 'prod');

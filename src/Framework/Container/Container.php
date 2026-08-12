@@ -21,6 +21,7 @@ use Gacela\Framework\Event\Container\BindingRegisteredEvent;
 use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
+use Gacela\Framework\Plugins\LazyPluginStack;
 use Throwable;
 
 use function array_keys;
@@ -629,6 +630,13 @@ final class Container implements ContainerInterface
             $container->set(
                 $registryKey,
                 static fn (): LazyHandlerRegistry => new LazyHandlerRegistry($handlers, $container),
+            );
+        }
+
+        foreach ($containerConfig->getPluginStacks() as $contract => $plugins) {
+            $container->set(
+                $contract,
+                static fn (): LazyPluginStack => new LazyPluginStack($contract, $plugins, $container),
             );
         }
 

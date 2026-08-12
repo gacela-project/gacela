@@ -59,6 +59,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `addLazy()` | `add*` | conforms |
 | `addPlugin()` | `add*` | conforms |
 | `addPlugins()` | `add*` | conforms — plural variant, same path |
+| `addPluginStack()` | `add*` | conforms — declares an extension point and contributes to one with the same verb, appending like `tag()`, so there is no second verb to choose between. Distinct from `tag()` and `addHandlerRegistry()` by carrying an interface contract, which is the rule the docs state |
 | `addProtected()` | `add*` | conforms |
 | `addResolvableType()` | `add*` | conforms — a new intent nothing else serves (declaring a class kind, not a suffix for an existing one), and the four `addSuffixType*()` verbs became sugar over it |
 | `addSuffixTypeConfig()` | `add*` | conforms; #676 folds the four into `addResolvableType()` |

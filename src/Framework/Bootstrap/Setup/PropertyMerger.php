@@ -13,6 +13,7 @@ use Gacela\Framework\Config\Schema\ConfigType;
 
 use function array_merge;
 use function array_unique;
+use function in_array;
 
 /**
  * Merges individual properties into a SetupGacela instance.
@@ -22,6 +23,7 @@ use function array_unique;
  * @psalm-import-type ServiceFactoryMap from ContainerConfigurationInterface
  * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
+ * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -139,6 +141,35 @@ final class PropertyMerger
         $this->setup->setHandlerRegistries(
             $this->mergeNested($this->setup->getHandlerRegistries(), $list),
         );
+    }
+
+    /**
+     * A stack is a collection too, and an ordered one: the later setup appends
+     * to what the earlier declared, seed first. A class declared twice appears
+     * once, so a config source re-stating the seed does not run it twice.
+     *
+     * @param PluginStacksMap $list
+     */
+    public function mergePluginStacks(array $list): void
+    {
+        $merged = $this->setup->getPluginStacks();
+
+        foreach ($list as $contract => $plugins) {
+            // Appended one at a time rather than merged-then-deduplicated: the
+            // result stays a list without a reindex step, and a class both
+            // sources declared keeps the position the first one gave it.
+            $current = $merged[$contract] ?? [];
+
+            foreach ($plugins as $plugin) {
+                if (!in_array($plugin, $current, true)) {
+                    $current[] = $plugin;
+                }
+            }
+
+            $merged[$contract] = $current;
+        }
+
+        $this->setup->setPluginStacks($merged);
     }
 
     /**

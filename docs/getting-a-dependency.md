@@ -9,7 +9,7 @@ The rest still work. They are listed at the bottom with the situations where the
 | reach another module | from an entry point: `ServiceResolverAwareTrait` + `#[ServiceMap]` + `$this->getFacade()`. From a Factory: `#[Provides]` + `getProvidedDependency()` |
 | get a collaborator inside my own module | a `create*()` method on the Factory, or `make()` when autowiring pays |
 | get an external / infrastructure service | `#[Provides]` in the Provider, or `addBinding()` for an interface |
-| collect several implementations | `tag()` when the set is unkeyed, `addHandlerRegistry()` when you look one up by key |
+| collect several implementations | `addPluginStack()` when they share an interface, `tag()` when the set is unkeyed and untyped, `addHandlerRegistry()` when you look one up by key |
 | read a config value | the typed getters on your `Config` |
 
 ## Reach another module
@@ -174,6 +174,37 @@ $handler = $registry->get('email');
 ```
 
 Both resolve their members through the container and both instantiate lazily. They are not two ways to do one thing: a registry answers *"the handler for this key"* and throws on an unknown one, while a tag answers *"all of these"* and has no notion of a key to miss.
+
+### Typed — every implementation of one interface
+
+An extension point: several implementations behind one interface, iterated in order by a module that does not know who contributed them. Declare it with `addPluginStack()`:
+
+```php
+$config->addPluginStack(InvoiceDecorator::class, [
+    AddVatBreakdownDecorator::class,
+    AddPaymentTermsDecorator::class,
+]);
+```
+
+Consume it from the Factory, typed — the `foreach` in the consumer knows what it is iterating:
+
+```php
+final class InvoiceFactory extends AbstractFactory
+{
+    public function createRenderer(): InvoiceRenderer
+    {
+        return new InvoiceRenderer($this->getPluginStack(InvoiceDecorator::class));
+    }
+}
+```
+
+Calling `addPluginStack()` again for the same interface **appends**, seed first, in the order the config sources run — so another package's `extendGacelaConfig` or an environment override contributes to a stack it did not declare, and there is no second verb to choose between. A class registered twice appears once.
+
+Entries resolve through the container on first read and are kept, so iterating twice yields the same plugins however they are bound. A class that does not implement the interface fails on that first read, naming the class and the stack, rather than as a `TypeError` somewhere inside the consumer's loop.
+
+**Which of the three.** A registry answers *the one implementation for this key*. A tag answers *all of these*, untyped, contributed from anywhere. A stack answers *all implementations of this interface*, in order, typed and checked. The contract is what separates a stack from a tag — without one, the answer is a tag.
+
+A stack is reached with `getPluginStack()` rather than `getProvidedDependency()` deliberately: the latter means *the thing registered under this id*, and both analysers type it as the class the id names, so routing a stack through it would make one id mean two things.
 
 ## Read a config value
 

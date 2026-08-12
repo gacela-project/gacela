@@ -24,6 +24,7 @@ use function in_array;
  * @psalm-import-type ServiceAliasMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
+ * @psalm-import-type ProviderServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -141,6 +142,28 @@ final class PropertyMerger
         $this->setup->setHandlerRegistries(
             $this->mergeNested($this->setup->getHandlerRegistries(), $list),
         );
+    }
+
+    /**
+     * Extensions accumulate: two config sources that both decorate the same
+     * Provider binding both run, in source order.
+     *
+     * @param ProviderServicesToExtendMap $list
+     */
+    public function mergeProviderServicesToExtend(array $list): void
+    {
+        $merged = $this->setup->getProviderServicesToExtend();
+
+        foreach ($list as $providerClass => $byId) {
+            foreach ($byId as $id => $extensions) {
+                $merged[$providerClass][$id] = [
+                    ...$merged[$providerClass][$id] ?? [],
+                    ...$extensions,
+                ];
+            }
+        }
+
+        $this->setup->setProviderServicesToExtend($merged);
     }
 
     /**

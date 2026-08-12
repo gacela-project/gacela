@@ -39,6 +39,7 @@ final class SetupMerger
         $this->whenChanged($other, SetupGacela::contextualBindings, fn () => $this->original->mergeContextualBindings($other->getContextualBindings()));
         $this->whenChanged($other, SetupGacela::handlerRegistries, fn () => $this->original->mergeHandlerRegistries($other->getHandlerRegistries()));
         $this->whenChanged($other, SetupGacela::pluginStacks, fn () => $this->original->mergePluginStacks($other->getPluginStacks()));
+        $this->whenChanged($other, SetupGacela::providerServicesToExtend, fn () => $this->original->mergeProviderServicesToExtend($other->getProviderServicesToExtend()));
         $this->whenChanged($other, SetupGacela::tags, fn () => $this->original->mergeTags($other->getTags()));
         $this->whenChanged($other, SetupGacela::afterResolvingCallbacks, fn () => $this->original->mergeAfterResolvingCallbacks($other->getAfterResolvingCallbacks()));
         $this->whenChanged($other, SetupGacela::lazyServices, fn () => $this->original->mergeLazyServices($other->getLazyServices()));

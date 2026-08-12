@@ -35,6 +35,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string servicesToExtend = 'servicesToExtend';
 
+    public const string providerServicesToExtend = 'providerServicesToExtend';
+
     public const string factories = 'factories';
 
     public const string protectedServices = 'protectedServices';
@@ -96,6 +98,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_HANDLER_REGISTRIES = [];
 
     protected const array DEFAULT_PLUGIN_STACKS = [];
+
+    protected const array DEFAULT_PROVIDER_SERVICES_TO_EXTEND = [];
 
     protected const array DEFAULT_TAGS = [];
 

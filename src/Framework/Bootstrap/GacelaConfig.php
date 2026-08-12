@@ -32,6 +32,7 @@ use function sprintf;
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
+ * @psalm-import-type ProviderServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -84,6 +85,9 @@ final class GacelaConfig
 
     /** @var ServicesToExtendMap */
     private array $servicesToExtend = [];
+
+    /** @var ProviderServicesToExtendMap */
+    private array $providerServicesToExtend = [];
 
     /** @var ServiceFactoryMap */
     private array $factories = [];
@@ -455,6 +459,46 @@ final class GacelaConfig
     }
 
     /**
+     * Wrap a service as *one* Provider registers it, leaving every other
+     * module that happens to use the same id alone.
+     *
+     * The pair reads like `tag()` and `Container::tag()` do — one asks
+     * *everywhere*, the other asks *there*:
+     *
+     * - {@see extendService()} wraps an id **wherever it is registered**. Two
+     *   Providers reusing an un-namespaced key both get wrapped, which is
+     *   right when the id names one app-wide concept and wrong when it does
+     *   not.
+     * - this one wraps an id **only in the module whose Provider is named**,
+     *   which is how one module decorates a sibling's binding without
+     *   shadowing the sibling's whole Provider class to change one line.
+     *
+     * ```php
+     * $config->extendProviderService(
+     *     CatalogProvider::class,
+     *     CatalogProvider::PRICE_FORMATTER,
+     *     static fn (PriceFormatter $formatter, Container $container): PriceFormatter
+     *         => new RoundingPriceFormatter($formatter),
+     * );
+     * ```
+     *
+     * The closure receives the service and the module's container, and may
+     * return a replacement or mutate in place — the same contract
+     * `Container::extend()` already has. An id the named Provider never
+     * registers is reported by `doctor`, where an app-wide extension on a
+     * mistyped id is only reported as unmatched anywhere.
+     *
+     * @param class-string $providerClass
+     */
+    public function extendProviderService(string $providerClass, string $id, Closure $service): self
+    {
+        $this->providerServicesToExtend[$providerClass][$id] ??= [];
+        $this->providerServicesToExtend[$providerClass][$id][] = $service;
+
+        return $this;
+    }
+
+    /**
      * Run a callback on a resolved instance, receiving the instance and the
      * container. Callbacks run in registration order.
      *
@@ -804,6 +848,7 @@ final class GacelaConfig
             $this->gacelaConfigsToExtend,
             $this->plugins,
             $this->servicesToExtend,
+            $this->providerServicesToExtend,
             $this->factories,
             $this->protectedServices,
             $this->aliases,

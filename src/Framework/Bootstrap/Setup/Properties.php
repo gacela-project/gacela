@@ -25,6 +25,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
  * @psalm-import-type ServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type HandlerRegistriesMap from ContainerConfigurationInterface
  * @psalm-import-type PluginStacksMap from ContainerConfigurationInterface
+ * @psalm-import-type ProviderServicesToExtendMap from ContainerConfigurationInterface
  * @psalm-import-type TagsMap from ContainerConfigurationInterface
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
@@ -86,6 +87,9 @@ final class Properties
 
     /** @var ?ServicesToExtendMap */
     public ?array $servicesToExtend = null;
+
+    /** @var ?ProviderServicesToExtendMap */
+    public ?array $providerServicesToExtend = null;
 
     /** @var ?ServiceFactoryMap */
     public ?array $factories = null;

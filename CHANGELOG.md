@@ -4,12 +4,12 @@
 
 ### Added
 
-- Report an `extendService()` id no Provider ever `set()`s in `doctor` — the extension is otherwise accepted and applied nowhere, silently
+- Report in `doctor` every `extendService()` id no Provider ever `set()`s — such an extension is accepted, scheduled on every scope, and applied nowhere
 
 ### Fixed
 
-- Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, instead of leaning on transitive luck; demote the Laravel bridge's test-only `illuminate/container` and `illuminate/events` to `require-dev`
-- Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir stop silently serving each other's resolved classes
+- Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote its test-only requirements to `require-dev` — each manifest now states what its `src/` imports, and only that
+- Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir no longer silently serve each other's classes
 
 ## [2.2.0](https://github.com/gacela-project/gacela/compare/2.1.0...2.2.0) - 2026-08-11
 

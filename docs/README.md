@@ -6,11 +6,14 @@
 - [Container configuration](container-configuration.md) — factories, aliases, contextual bindings
 - [Config schema](config-schema.md) — declare what the configuration must contain, and fail before a request does
 - [Static analysis](static-analysis.md) — the architecture rules, for PHPStan and Psalm alike
+- [Module boundaries](module-boundaries.md) — the cross-module rules, dependency-cycle gate, declared rules file, and CI graph review
 - [Module health checks](module-health-checks.md) — report module operational status
+- [Profiling](profiling.md) — instrument code with the in-memory `Profiler` and read it back with `profile:report`
 - [Events](events.md) — listen to Gacela internals: dispatch model, event catalog, cookbook
 - [Testing](testing.md) — `GacelaTestCase`: bootstrap isolation, config overrides, container assertions
 - [Caching](caching.md) — overview of Gacela's three caching layers and when to reach for each
 - [Cacheable methods](cacheable-methods.md) — cache facade method results with `#[Cacheable]`
+- [FileCache and ScopedCache](file-cache.md) — cache arbitrary application data with atomic writes and cascading invalidation
 - [Opcache preload](opcache-preload.md) — production performance tuning
 - [Production performance](production-performance.md) — full checklist to run Gacela fast in production
 - [Upgrading](../UPGRADE.md) — why to move to 2.0, and every breaking change with its replacement

@@ -10,6 +10,7 @@
 - Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars, reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs became sugar over it
 - Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`. The kind is listed in the command's help, `doctor` counts its stub among the ones the scaffolder reads, and until that stub exists the generator names the path it looked for
 - Report in `doctor` every `extendService()` id no Provider ever `set()`s — such an extension is accepted, scheduled on every scope, and applied nowhere
+- Generate editor metadata for `getProvidedDependency()` with `ide:meta`, from the `#[Provides]` attributes: an id naming a class resolves to it, and each string id is typed by the return type of the method that registers it. An id two providers type differently is listed rather than written, because one application-wide answer would be wrong in one of the two modules; `doctor` reports metadata the attributes no longer produce
 
 ### Changed
 
@@ -19,6 +20,7 @@
 
 - Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote its test-only requirements to `require-dev` — each manifest now states what its `src/` imports, and only that
 - Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir no longer silently serve each other's classes
+- Point the "missing return type" exception at the namespace `ServiceMap` actually lives in. Its recommended fix imported `Gacela\Framework\ClassResolver\Attribute\ServiceMap`, which does not exist, so following it left the attribute unmatched and the class no better off; the docblock alternative it offers is now marked as the deprecated path it is
 
 ## [2.2.0](https://github.com/gacela-project/gacela/compare/2.1.0...2.2.0) - 2026-08-11
 

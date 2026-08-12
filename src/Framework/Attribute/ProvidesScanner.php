@@ -24,7 +24,7 @@ final class ProvidesScanner
 
     public static function scan(object $provider, Container $container): void
     {
-        foreach (self::resolveEntries($provider) as $entry) {
+        foreach (self::entriesFor(new ReflectionClass($provider)) as $entry) {
             $method = $entry['method'];
 
             $callback = $entry['needsContainer']
@@ -36,18 +36,27 @@ final class ProvidesScanner
     }
 
     /**
+     * Which services a provider class declares, without instantiating it.
+     *
+     * Public so that a reader which only has the class name -- the IDE metadata
+     * scanner -- asks the same question the container asks, rather than
+     * re-deriving "a public method carrying #[Provides]" beside it. Widening
+     * that here would otherwise register services the generated metadata never
+     * mentions.
+     *
+     * @param ReflectionClass<object> $reflection
+     *
      * @return list<ProvidesEntry>
      */
-    private static function resolveEntries(object $provider): array
+    public static function entriesFor(ReflectionClass $reflection): array
     {
-        $class = $provider::class;
+        $class = $reflection->getName();
 
         if (isset(self::$cache[$class])) {
             return self::$cache[$class];
         }
 
         $entries = [];
-        $reflection = new ReflectionClass($provider);
 
         foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             foreach ($method->getAttributes(Provides::class) as $attribute) {

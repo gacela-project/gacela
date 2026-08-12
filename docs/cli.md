@@ -73,6 +73,7 @@ Among the built-in checks, *service extensions* verifies every `extendService()`
 |---|---|
 | `cache:warm` | Pre-resolves every module class and populates the on-disk caches. `--clear` first, `--attributes` to pre-scan `#[ServiceMap]` |
 | `cache:clear` | Removes every Gacela cache file |
+| `ide:meta` | Writes editor metadata typing `getProvidedDependency()` from the `#[Provides]` attributes. `--dry-run` reports without writing. See [IDE metadata](static-analysis.md#ide-metadata) |
 | `profile:report` | Performance profiling report — the recording side is the [Profiler](profiling.md) |
 
 `cache:warm` only writes anything when the file cache is enabled; the deploy sequence is in [production performance](production-performance.md).

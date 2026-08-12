@@ -149,7 +149,32 @@ final class CheckoutController
 
 This matters more than it looks. The accessor was previously *suppressed* rather than typed, and a suppressed call is not a checked one — it evaluates to `mixed`, which silently switches off analysis of everything reached through it, not just the accessor itself. A typo in `placeOrder()` produced no error at all.
 
-A `@method CheckoutFacade getFacade()` docblock works too — both analysers read those natively — but then the same fact is written twice, and the copies drift. The one reason to write both is the IDE, which reads `@method` and not the attribute; that tradeoff is described in [reach another module](getting-a-dependency.md#reach-another-module), and #678 proposes generating the copy so it cannot drift.
+A `@method CheckoutFacade getFacade()` docblock works too — both analysers read those natively — but then the same fact is written twice, and the copies drift. The one reason to write both is the IDE, which reads `@method` and not the attribute; that tradeoff is described in [reach another module](getting-a-dependency.md#reach-another-module).
+
+## IDE metadata
+
+The analysers type `$this->getProvidedDependency(Clock::class)` as `Clock`, and leave a string id as `mixed` on purpose. An editor has neither, because the method signature says `mixed`. `ide:meta` writes what the editor can read:
+
+```bash
+vendor/bin/gacela ide:meta            # write .phpstorm.meta.php/gacela.meta.php
+vendor/bin/gacela ide:meta --dry-run  # report what would change, write nothing
+```
+
+The generated file states two things:
+
+- **An id that names a class or interface resolves to it.** One rule, no scanning, always true — the same thing both analysers do.
+- **Each string id, typed by the return type of the `#[Provides]` method that registers it.** This is type information neither analyser produces.
+
+The file is generated: add `.phpstorm.meta.php/` to `.gitignore` and regenerate it after changing a Provider. `doctor` compares its content against the attributes and reports when they no longer match. The directory form is deliberate, so a project's own hand-written root meta file is left alone.
+
+Two kinds of id are deliberately left out, and `ide:meta` lists the first kind rather than guessing:
+
+- **Ids two providers register with different types.** The editor map is keyed by argument value across the whole application, while `getProvidedDependency()` reads the calling module's own container. One entry would be right in one module and wrong in the other, and a wrong type is worse than an absent one — it type-checks a call that fails.
+- **Ids whose provider method returns `array`, a nullable or a union.** A map value is a class name; `Foo` for a method returning `?Foo` would hide exactly the null the caller has to handle.
+
+That second exclusion is not rare. Gacela's own `ConsoleProvider` returns `array` from every `#[Provides]` method, so running `ide:meta` on this repository types zero string ids — the wildcard is the whole of what it gains. The string-id half pays off in applications that provide objects.
+
+One caveat this cannot verify for you: whether your editor resolves `Provider::BILLING_FACADE` to its value before consulting the map. If it does not, the string-id entries only apply at call sites that pass the literal.
 
 **The PHPStan suppression is gone as of 2.0.** `phpstan-gacela.neon` no longer carries an `ignoreErrors` entry for undeclared pillar accessors, so a class that declares neither `#[ServiceMap]` nor a `@method` docblock has its `$this->getFacade()` reported as an undefined method. Psalm still ships its suppression in `psalm-gacela.xml` as a fallback, scheduled for removal in 3.0.
 

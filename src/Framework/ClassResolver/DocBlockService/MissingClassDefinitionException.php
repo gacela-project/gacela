@@ -28,36 +28,24 @@ Learn more: https://gacela-project.com/docs/service-resolution
     {
         $suggestions = [];
 
-        $suggestions[] = "1. Use the #[ServiceMap] attribute (recommended - fastest):
+        $suggestions[] = "1. Declare it with the #[ServiceMap] attribute (recommended):
 
-   use Gacela\Framework\ClassResolver\Attribute\ServiceMap;
+   use Gacela\Framework\ServiceResolver\ServiceMap;
 
-   #[ServiceMap('{$method}', YourClass::class)]
-   final class YourFacade extends AbstractFacade
+   #[ServiceMap(method: '{$method}', className: YourClass::class)]
+   final class YourClass
    {
-       public function {$method}(): YourClass
-       {
-           return \$this->resolve(YourClass::class);
-       }
+       use ServiceResolverAwareTrait;
    }";
 
-        $suggestions[] = "2. Add a DocBlock with the return type:
+        $suggestions[] = "2. Add a @method DocBlock (deprecated, removed in 3.0):
 
    /**
     * @method YourClass {$method}()
     */
-   final class YourFacade extends AbstractFacade
+   final class YourClass
    {
-   }";
-
-        $suggestions[] = "3. Add an inline return type hint:
-
-   final class YourFacade extends AbstractFacade
-   {
-       public function {$method}(): YourClass
-       {
-           return \$this->resolve(YourClass::class);
-       }
+       use ServiceResolverAwareTrait;
    }";
 
         return implode("\n\n", $suggestions);

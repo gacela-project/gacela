@@ -9,6 +9,7 @@ use Gacela\Console\Domain\IdeMeta\ProvidedDependencyMap;
 use Gacela\Framework\Attribute\ProvidesScanner;
 use ReflectionClass;
 use ReflectionNamedType;
+use ReflectionType;
 
 use function class_exists;
 use function count;
@@ -110,7 +111,7 @@ final class IdeMetadataScanner
      *
      * @return class-string|null
      */
-    private function returnedClass(mixed $returnType): ?string
+    private function returnedClass(?ReflectionType $returnType): ?string
     {
         if (!$returnType instanceof ReflectionNamedType || $returnType->isBuiltin() || $returnType->allowsNull()) {
             return null;

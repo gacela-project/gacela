@@ -35,20 +35,16 @@ final class IdeMetadataGenerator
 
         $changed = $this->currentContent($path) !== $content;
 
-        // Rewriting identical bytes would move the mtime for no reason, and the
-        // file is one an editor watches.
-        $written = $changed && !$dryRun;
-
-        if ($written) {
+        // Identical bytes are not rewritten: it would move the modification
+        // time of a file an editor watches, for no change.
+        if ($changed && !$dryRun) {
             $this->io->mkdir(IdeMetadataPath::directoryIn($this->appRootDir));
             $this->io->filePutContents($path, $content);
         }
 
         return new IdeMetadataResult(
             path: $path,
-            content: $content,
             changed: $changed,
-            written: $written,
             typedIds: count($map->entries()),
             ambiguous: $map->ambiguous(),
         );

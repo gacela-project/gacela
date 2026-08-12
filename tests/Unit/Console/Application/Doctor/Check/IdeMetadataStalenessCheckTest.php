@@ -96,9 +96,7 @@ final class IdeMetadataStalenessCheckTest extends TestCase
     {
         return new IdeMetadataResult(
             path: IdeMetadataPath::fileIn($this->appRootDir),
-            content: '<?php',
             changed: $changed,
-            written: false,
             typedIds: 0,
         );
     }

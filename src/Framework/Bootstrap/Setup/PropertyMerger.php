@@ -10,6 +10,8 @@ use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
+use Gacela\Framework\Dto\Schema\DtoType;
+use Gacela\Framework\Dto\Schema\MalformedDtoSchemaException;
 
 use function array_merge;
 use function array_unique;
@@ -95,6 +97,37 @@ final class PropertyMerger
     {
         $current = $this->setup->getConfigSchema();
         $this->setup->setConfigSchema(array_merge($current, $schema));
+    }
+
+    /**
+     * Union per property, unlike the config schema above.
+     *
+     * A config key has one owner, so later-wins is right for it. A shape does
+     * not: the module that declared it first reads the same generated class, so
+     * a later declarer redefining a property would break code that already
+     * compiles against it. Adding a property is safe and is the point -- a
+     * project extends a packaged shape without owning its file. Redefining one
+     * is refused where it is declared.
+     *
+     * @param array<string, array<string, DtoType>> $schema
+     */
+    public function mergeDtoSchema(array $schema): void
+    {
+        $merged = $this->setup->getDtoSchema();
+
+        foreach ($schema as $className => $properties) {
+            foreach ($properties as $property => $type) {
+                $existing = $merged[$className][$property] ?? null;
+
+                if ($existing instanceof DtoType && !$existing->isSameShapeAs($type)) {
+                    throw MalformedDtoSchemaException::conflictingRedeclaration($className, $property);
+                }
+
+                $merged[$className][$property] = $type;
+            }
+        }
+
+        $this->setup->setDtoSchema($merged);
     }
 
     /**

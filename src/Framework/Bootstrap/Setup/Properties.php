@@ -12,6 +12,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
+use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
@@ -73,6 +74,9 @@ final class Properties
 
     /** @var ?array<string, ConfigType> */
     public ?array $configSchema = null;
+
+    /** @var ?array<string, array<string, DtoType>> */
+    public ?array $dtoSchema = null;
 
     public ?bool $shouldValidateConfigSchemaOnBoot = null;
 

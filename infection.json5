@@ -47,9 +47,26 @@
         // -- is real logic and stays in the gate.
         "global-ignore": [
             "Gacela\\Console\\Infrastructure\\Command\\*",
+            // DtoClassBuilder emits php source. Its behaviour is pinned where it
+            // matters -- DtoGenerateCommandTest writes a class, requires it, and
+            // exercises the getters, the with*() copies, the toArray round-trip
+            // and the missing-required error, so any mutant that changes what
+            // the generated class *does* is caught. What survives is the
+            // character level: reordering the operands of a docblock line still
+            // produces php that parses and a class that behaves. Pinning those
+            // would be a golden master over source nobody reads, which is the
+            // same trade already made for the command classes above.
+            "Gacela\\Console\\Domain\\DtoGenerate\\DtoClassBuilder",
         ],
         // Equivalent or environment-untestable mutants, grouped by reason.
         "global-ignoreSourceCodeByRegex": [
+            // Composer writes autoload directories with forward slashes on every
+            // platform, so a multi-segment one is translated to the local
+            // separator. On POSIX, where DIRECTORY_SEPARATOR is already "/",
+            // that call is the identity and no assertion here can see it
+            // removed -- the windows matrix is what enforces it, and did:
+            // `/repo\\build/dto\\Order.php` failed all nine windows jobs on #700.
+            '.*str_replace\\(\'/\', DIRECTORY_SEPARATOR.*',
             // Windows-only PHP_OS/EOL handling: a no-op on POSIX where PHP_EOL is "\n".
             '.*strcasecmp\\(substr\\(PHP_OS.*',
             '.*str_replace\\("\\\\n", PHP_EOL.*',
@@ -357,6 +374,7 @@
                 // Two distinct prefixes of equal length cannot both prefix one class name,
                 // so > and >= select the same longest match for every possible input.
                 "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::packagesProviding",
+                "Gacela\\Console\\Domain\\DtoGenerate\\GeneratedClassPath::fileFor",
                 "Gacela\\Framework\\Cache\\FileCache::stats",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",

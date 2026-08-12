@@ -33,6 +33,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string configSchema = 'configSchema';
 
+    public const string dtoSchema = 'dtoSchema';
+
     public const string stubsDir = 'stubsDir';
 
     public const string servicesToExtend = 'servicesToExtend';
@@ -80,6 +82,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_CONFIG_KEY_VALUES = [];
 
     protected const array DEFAULT_CONFIG_SCHEMA = [];
+
+    protected const array DEFAULT_DTO_SCHEMA = [];
 
     protected const string DEFAULT_STUBS_DIR = 'stubs/gacela';
 

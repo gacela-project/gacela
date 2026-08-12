@@ -125,7 +125,11 @@ final class PackageManifestChecker
                 continue;
             }
 
-            $absolute = $package->rootDir . DIRECTORY_SEPARATOR . trim($directory, '/\\');
+            // Composer writes autoload directories with forward slashes on
+            // every platform, so a multi-segment one is translated rather than
+            // only trimmed.
+            $absolute = $package->rootDir . DIRECTORY_SEPARATOR
+                . str_replace('/', DIRECTORY_SEPARATOR, trim($directory, '/\\'));
 
             if (!is_dir($absolute)) {
                 continue;

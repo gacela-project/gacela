@@ -83,6 +83,22 @@ final class ComposerPackage
     }
 
     /**
+     * The autoload prefixes a decoded manifest declares.
+     *
+     * Public and separate from fromDecodedJson() because an application's root
+     * `composer.json` usually has no `name` -- it is never published -- and its
+     * prefixes are still what says where a generated class belongs.
+     *
+     * @param array<array-key, mixed> $decoded
+     *
+     * @return array<string, string>
+     */
+    public static function autoloadPrefixesOf(array $decoded): array
+    {
+        return self::prefixesOf($decoded['autoload'] ?? null);
+    }
+
+    /**
      * `autoload-dev` is deliberately absent: it is not installed for a consumer,
      * so an import reachable only from it cannot break a standalone install.
      *

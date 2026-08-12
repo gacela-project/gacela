@@ -12,6 +12,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\BindingsBuilder;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
+use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 
 /**
@@ -54,6 +55,7 @@ final class GacelaConfigTransfer
      * @param AfterResolvingMap $afterResolvingCallbacks
      * @param DefinitionSources $definitions
      * @param ?array<string, ConfigType> $configSchema
+     * @param ?array<string, array<string, DtoType>> $dtoSchema
      */
     public function __construct(
         public readonly AppConfigBuilder $appConfigBuilder,
@@ -88,6 +90,7 @@ final class GacelaConfigTransfer
         public readonly ?array $configSchema = null,
         public readonly ?bool $shouldValidateConfigSchemaOnBoot = null,
         public readonly ?string $stubsDir = null,
+        public readonly ?array $dtoSchema = null,
     ) {
     }
 }

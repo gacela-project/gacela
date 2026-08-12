@@ -6,6 +6,7 @@ namespace Gacela\Console;
 
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
+use Gacela\Console\Domain\DtoGenerate\DtoGenerateResult;
 use Gacela\Console\Domain\FileContent\StubPublishResult;
 use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffResult;
@@ -67,6 +68,17 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createAllAppModulesFinder()
             ->findAllAppModules($filter);
+    }
+
+    /**
+     * Generate the declared DTO classes, or, with $dryRun, work out what would
+     * be written and write nothing.
+     */
+    public function generateDtoClasses(bool $dryRun): DtoGenerateResult
+    {
+        return $this->getFactory()
+            ->createDtoGenerator()
+            ->generate($this->getFactory()->createDtoSchema(), $dryRun);
     }
 
     /**

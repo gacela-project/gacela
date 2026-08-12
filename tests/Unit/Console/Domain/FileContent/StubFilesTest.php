@@ -67,6 +67,34 @@ final class StubFilesTest extends TestCase
         ], StubFiles::all());
     }
 
+    public function test_a_declared_kind_names_a_stub_file_of_its_own(): void
+    {
+        self::assertSame('exporter-maker.txt', StubFiles::basic(['Exporter'])['Exporter']);
+    }
+
+    public function test_a_multi_word_kind_is_hyphenated_the_way_the_shipped_names_are(): void
+    {
+        self::assertSame('event-subscriber-maker.txt', StubFiles::basic(['EventSubscriber'])['EventSubscriber']);
+    }
+
+    public function test_a_declared_kind_leaves_the_pillars_where_they_were(): void
+    {
+        $basic = StubFiles::basic(['Exporter']);
+
+        self::assertSame('facade-maker.txt', $basic[FilenameSanitizer::FACADE]);
+        self::assertSame('provider-maker.txt', $basic[FilenameSanitizer::PROVIDER]);
+    }
+
+    /**
+     * `all()` is what `doctor` reads to tell a stub the scaffolder uses from one
+     * nothing reads. A declared kind's stub is used, so it belongs in the list.
+     */
+    public function test_a_declared_kind_is_a_stub_the_scaffolder_reads(): void
+    {
+        self::assertContains('exporter-maker.txt', StubFiles::all(['Exporter']));
+        self::assertNotContains('exporter-maker.txt', StubFiles::all());
+    }
+
     public function test_all_covers_both_sets(): void
     {
         $all = StubFiles::all();

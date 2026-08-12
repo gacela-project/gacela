@@ -60,6 +60,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `addPlugin()` | `add*` | conforms |
 | `addPlugins()` | `add*` | conforms — plural variant, same path |
 | `addProtected()` | `add*` | conforms |
+| `addResolvableType()` | `add*` | conforms — a new intent nothing else serves (declaring a class kind, not a suffix for an existing one), and the four `addSuffixType*()` verbs became sugar over it |
 | `addSuffixTypeConfig()` | `add*` | conforms; #676 folds the four into `addResolvableType()` |
 | `addSuffixTypeFacade()` | `add*` | conforms; see above |
 | `addSuffixTypeFactory()` | `add*` | conforms; see above |

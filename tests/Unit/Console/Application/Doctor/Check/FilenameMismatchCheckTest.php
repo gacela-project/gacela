@@ -18,7 +18,7 @@ final class FilenameMismatchCheckTest extends TestCase
 {
     public function test_no_modules_returns_ok(): void
     {
-        $check = new FilenameMismatchCheck([], static fn (string $c): ?string => null);
+        $check = new FilenameMismatchCheck([], fileResolver: static fn (string $c): ?string => null);
 
         self::assertSame(CheckStatus::Ok, $check->run()->status);
     }
@@ -34,7 +34,7 @@ final class FilenameMismatchCheckTest extends TestCase
 
         $check = new FilenameMismatchCheck(
             [$module],
-            static fn (string $class): string => '/app/Foo/' . self::shortName($class) . '.php',
+            fileResolver: static fn (string $class): string => '/app/Foo/' . self::shortName($class) . '.php',
         );
 
         self::assertSame(CheckStatus::Ok, $check->run()->status);
@@ -56,7 +56,7 @@ final class FilenameMismatchCheckTest extends TestCase
             'App\\Foo\\Provider',
         );
 
-        $check = new FilenameMismatchCheck([$module], static fn (string $class): string => $class === 'App\\Foo\\Provider'
+        $check = new FilenameMismatchCheck([$module], fileResolver: static fn (string $class): string => $class === 'App\\Foo\\Provider'
             ? '/app/Foo/DependencyProvider.php'
             : '/app/Foo/' . self::shortName($class) . '.php');
 
@@ -144,7 +144,7 @@ final class FilenameMismatchCheckTest extends TestCase
 
         $check = new FilenameMismatchCheck(
             [$module],
-            static fn (string $class): string => 'C:\\app\\Foo\\FooFacade.php',
+            fileResolver: static fn (string $class): string => 'C:\\app\\Foo\\FooFacade.php',
         );
 
         self::assertSame(CheckStatus::Ok, $check->run()->status);
@@ -154,7 +154,7 @@ final class FilenameMismatchCheckTest extends TestCase
     {
         $module = new AppModule('App\\Foo', 'Foo', 'App\\Foo\\FooFacade');
 
-        $check = new FilenameMismatchCheck([$module], static fn (string $c): ?string => null);
+        $check = new FilenameMismatchCheck([$module], fileResolver: static fn (string $c): ?string => null);
 
         self::assertSame(CheckStatus::Ok, $check->run()->status);
     }
@@ -172,13 +172,104 @@ final class FilenameMismatchCheckTest extends TestCase
 
         $check = new FilenameMismatchCheck(
             [$module],
-            static fn (string $class): string => '/app/Foo/Wrong.php',
+            fileResolver: static fn (string $class): string => '/app/Foo/Wrong.php',
         );
 
         $result = $check->run();
 
         self::assertSame(CheckStatus::Error, $result->status);
         self::assertCount(4, $result->details);
+    }
+
+    /**
+     * A declared kind resolves by filename exactly like a pillar does, so a
+     * class whose file disagrees with it fails the same silent way -- and the
+     * directory pass already walks past the file that proves it.
+     */
+    public function test_a_declared_kind_whose_file_disagrees_with_its_class_is_reported(): void
+    {
+        $result = $this->scanReportModule(['Exporter' => ['Exporter', 'Feed']])->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(
+            ['App\\Report\\ReportExporter is declared in Exporter.php, expected ReportExporter.php'],
+            $result->details,
+        );
+    }
+
+    /**
+     * The same file, in a project that declared no such kind: nothing resolves
+     * by that name, so nothing is Gacela's business to report.
+     */
+    public function test_a_suffix_no_kind_claims_is_not_reported(): void
+    {
+        self::assertSame(CheckStatus::Ok, $this->scanReportModule([])->run()->status);
+    }
+
+    /**
+     * A pillar widened with a further suffix is read through the same map.
+     */
+    public function test_a_suffix_added_to_a_pillar_is_read_too(): void
+    {
+        $module = new AppModule('App\\Report', 'Report', 'App\\Report\\ReportFacade');
+
+        $check = new FilenameMismatchCheck(
+            [$module],
+            ['Facade' => ['Facade', 'PublicApi']],
+            fileResolver: static fn (string $class): string => '/app/Report/ReportFacade.php',
+            directoryScanner: static fn (string $dir): array => ['/app/Report/Api.php'],
+            declaredClassReader: static fn (string $file): string => 'ReportPublicApi',
+        );
+
+        self::assertSame(
+            ['App\\Report\\ReportPublicApi is declared in Api.php, expected ReportPublicApi.php'],
+            $check->run()->details,
+        );
+    }
+
+    /**
+     * The configured map is read on top of the four, never instead of them: a
+     * project that declares a kind must not stop seeing its own providers.
+     */
+    public function test_a_map_naming_only_a_declared_kind_still_reads_the_pillars(): void
+    {
+        $module = new AppModule('App\\Foo', 'Foo', 'App\\Foo\\FooFacade');
+
+        $check = new FilenameMismatchCheck(
+            [$module],
+            ['Exporter' => ['Exporter']],
+            fileResolver: static fn (string $class): string => '/app/Foo/FooFacade.php',
+            directoryScanner: static fn (string $dir): array => ['/app/Foo/DependencyProvider.php'],
+            declaredClassReader: static fn (string $file): string => 'FooProvider',
+        );
+
+        self::assertSame(
+            ['App\\Foo\\FooProvider is declared in DependencyProvider.php, expected FooProvider.php'],
+            $check->run()->details,
+        );
+    }
+
+    /**
+     * A module directory holding `ReportExporter` in `Exporter.php`, seen
+     * through the directory pass -- the only pass that sees a class whose file
+     * keeps it from autoloading.
+     *
+     * @param array<string, list<string>> $suffixTypes
+     */
+    private function scanReportModule(array $suffixTypes): FilenameMismatchCheck
+    {
+        return new FilenameMismatchCheck(
+            [new AppModule('App\\Report', 'Report', 'App\\Report\\ReportFacade')],
+            $suffixTypes,
+            fileResolver: static fn (string $class): string => '/app/Report/ReportFacade.php',
+            directoryScanner: static fn (string $dir): array => [
+                '/app/Report/ReportFacade.php',
+                '/app/Report/Exporter.php',
+            ],
+            declaredClassReader: static fn (string $file): string => $file === '/app/Report/Exporter.php'
+                ? 'ReportExporter'
+                : 'ReportFacade',
+        );
     }
 
     private static function shortName(string $class): string

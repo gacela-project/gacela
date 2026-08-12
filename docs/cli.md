@@ -15,7 +15,7 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 |---|---|
 | `init` | Creates the `gacela.php` a project needs before anything else works |
 | `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests`, `--short-name` |
-| `make:file App/Blog Facade Factory` | Generates named pillar files into an existing module — Facade, Factory, Config, Provider |
+| `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared |
 | `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force` |
 
 ### Your own stubs
@@ -31,6 +31,16 @@ vendor/bin/gacela stubs:publish --force            # replace ones already publis
 From then on a generated file uses the project's stub when there is one and the built-in template when there is not — **per file**, so publishing your Facade stub does not freeze the Factory at the version it was copied from. Without `--force` nothing already published is overwritten: it is a file somebody changed on purpose.
 
 Every stub substitutes `$NAMESPACE$`, `$MODULE_NAME$` and `$CLASS_NAME$`. `doctor` reports a published stub that lost `$NAMESPACE$` or `$CLASS_NAME$`, and one filed under a name the scaffolder does not read — an edit that never takes effect looks exactly like one that did.
+
+### Generating a kind you declared
+
+A kind declared with [`addResolvableType()`](getting-a-dependency.md#resolve-a-kind-of-my-own) is a filename `make:file` accepts, listed in its help next to the pillars:
+
+```bash
+vendor/bin/gacela make:file App/Wallet Exporter   # generates App/Wallet/WalletExporter.php
+```
+
+Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/exporter-maker.txt`, the kind's name lower-cased and hyphenated where it changes case. Until that file exists `make:file` says so and names the path it looked for — `stubs:publish` has nothing to copy there. `make:module` still scaffolds the four pillars only; a declared kind is generated one file at a time.
 
 ## Inspecting a project
 

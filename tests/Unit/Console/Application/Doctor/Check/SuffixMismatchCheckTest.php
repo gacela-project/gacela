@@ -182,6 +182,129 @@ final class SuffixMismatchCheckTest extends TestCase
     }
 
     /**
+     * A kind the project declared is carried like any other, so the map the
+     * check reads is no longer the fixed four.
+     */
+    public function test_a_declared_kind_without_a_discovered_class_reports_nothing(): void
+    {
+        $module = new AppModule(
+            'App\\Foo',
+            'Foo',
+            'App\\Foo\\FooFacade',
+            'App\\Foo\\FooFactory',
+            'App\\Foo\\FooConfig',
+            'App\\Foo\\FooProvider',
+        );
+
+        $suffixes = $this->defaultSuffixes();
+        $suffixes['Exporter'] = ['Exporter', 'Feed'];
+
+        $result = (new SuffixMismatchCheck([$module], $suffixes))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['1 module(s) use configured suffixes'], $result->details);
+    }
+
+    /**
+     * A map that names only a declared kind still knows the pillars: the four
+     * are the floor the configured map is read on top of, never a replacement.
+     */
+    public function test_a_map_naming_only_a_declared_kind_still_knows_the_pillars(): void
+    {
+        $module = new AppModule(
+            'App\\Foo',
+            'Foo',
+            'App\\Foo\\FooFacade',
+            'App\\Foo\\FooFactory',
+            'App\\Foo\\FooConfig',
+            'App\\Foo\\FooProvider',
+        );
+
+        $result = (new SuffixMismatchCheck([$module], ['Exporter' => ['Exporter']]))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+    }
+
+    /**
+     * The difference between "rename this" and a day spent asking why the
+     * facade is not found: the name is not unsuffixed, it is *taken*, and the
+     * kind that took it is one the project itself declared.
+     */
+    public function test_a_class_ending_with_a_declared_kinds_suffix_names_that_kind(): void
+    {
+        $module = new AppModule('App\\Report', 'Report', 'App\\Report\\ReportExporter');
+
+        $suffixes = $this->defaultSuffixes();
+        $suffixes['Exporter'] = ['Exporter', 'Feed'];
+
+        $result = (new SuffixMismatchCheck([$module], $suffixes))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame([
+            'Facade "App\\Report\\ReportExporter" does not end with any configured Facade suffix [Facade]'
+            . '; "Exporter" is configured for the "Exporter" type',
+        ], $result->details);
+    }
+
+    /**
+     * The optional pillars read the declared kinds too, not just the facade.
+     */
+    public function test_an_optional_pillar_ending_with_a_declared_kinds_suffix_names_that_kind(): void
+    {
+        $module = new AppModule('App\\Report', 'Report', 'App\\Report\\ReportFacade', 'App\\Report\\ReportFeed');
+
+        $suffixes = $this->defaultSuffixes();
+        $suffixes['Exporter'] = ['Exporter', 'Feed'];
+
+        $result = (new SuffixMismatchCheck([$module], $suffixes))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame([
+            'Factory "App\\Report\\ReportFeed" does not end with any configured Factory suffix [Factory]'
+            . '; "Feed" is configured for the "Exporter" type',
+        ], $result->details);
+    }
+
+    /**
+     * Longest suffix first, the same order the resolver matches in: a declared
+     * `ServiceProvider` owns the name a built-in `Provider` merely ends in.
+     */
+    public function test_the_longest_suffix_names_the_kind_when_two_could_match(): void
+    {
+        $module = new AppModule('App\\Foo', 'Foo', 'App\\Foo\\FooServiceProvider');
+
+        $suffixes = $this->defaultSuffixes();
+        $suffixes['Service'] = ['ServiceProvider'];
+
+        $result = (new SuffixMismatchCheck([$module], $suffixes))->run();
+
+        self::assertSame([
+            'Facade "App\\Foo\\FooServiceProvider" does not end with any configured Facade suffix [Facade]'
+            . '; "ServiceProvider" is configured for the "Service" type',
+        ], $result->details);
+    }
+
+    /**
+     * A suffix two kinds share cannot say which kind a name is -- the resolver
+     * drops it for exactly that reason -- so the report must not claim one.
+     */
+    public function test_a_suffix_two_kinds_share_names_neither(): void
+    {
+        $module = new AppModule('App\\Foo', 'Foo', 'App\\Foo\\FooExtra');
+
+        $suffixes = $this->defaultSuffixes();
+        $suffixes['Factory'][] = 'Extra';
+        $suffixes['Config'][] = 'Extra';
+
+        $result = (new SuffixMismatchCheck([$module], $suffixes))->run();
+
+        self::assertSame(
+            ['Facade "App\\Foo\\FooExtra" does not end with any configured Facade suffix [Facade]'],
+            $result->details,
+        );
+    }
+
+    /**
      * @return array{Facade: list<string>, Factory: list<string>, Config: list<string>, Provider: list<string>}
      */
     private function defaultSuffixes(): array

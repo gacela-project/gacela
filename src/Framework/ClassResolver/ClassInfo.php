@@ -25,6 +25,17 @@ final class ClassInfo implements ClassInfoInterface
     }
 
     /**
+     * Every entry holds a cache key built from the declared kinds, so it is
+     * cleared by whoever changes them.
+     *
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$callerClassCache = [];
+    }
+
+    /**
      * @param object|class-string $caller
      */
     public static function from(object|string $caller, string $resolvableType = ''): self

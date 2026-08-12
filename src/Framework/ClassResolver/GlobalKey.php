@@ -12,6 +12,19 @@ final class GlobalKey
     private static array $cache = [];
 
     /**
+     * A normalized key answers which suffix names a kind, so every entry is
+     * about the declarations in force when it was computed. Cleared by
+     * whoever changes them -- checking a stamp here instead cost more than the
+     * lookup it guarded, on the hottest path in resolution.
+     *
+     * @internal
+     */
+    public static function resetCache(): void
+    {
+        self::$cache = [];
+    }
+
+    /**
      * Unify the keys for the class resolver.
      */
     public static function fromClassName(string $fullClassName): string

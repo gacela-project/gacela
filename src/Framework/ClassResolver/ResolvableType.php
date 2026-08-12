@@ -8,13 +8,6 @@ use function strlen;
 
 final class ResolvableType
 {
-    private const DEFAULT_ALLOWED_TYPES = [
-        'Facade',
-        'Factory',
-        'Config',
-        'Provider',
-    ];
-
     private function __construct(
         private readonly string $resolvableType,
         private readonly string $moduleName,
@@ -23,13 +16,19 @@ final class ResolvableType
 
     /**
      * Split the moduleName and resolvableType from a className.
+     *
+     * The suffixes come from {@see ResolvableTypes}, so a project-declared kind
+     * splits like a pillar does -- which is what makes an override of
+     * `App\Wallet\WalletReader` land on the key the resolver looks up. Longest
+     * suffix first, so a declared `ServiceProvider` wins over the `Provider` it
+     * ends with.
      */
     public static function fromClassName(string $className): self
     {
-        foreach (self::DEFAULT_ALLOWED_TYPES as $resolvableType) {
-            if (str_ends_with($className, $resolvableType)) {
-                $moduleName = substr($className, 0, strlen($className) - strlen($resolvableType));
-                return new self($resolvableType, $moduleName);
+        foreach (ResolvableTypes::matchOrder() as $suffix => $kind) {
+            if (str_ends_with($className, $suffix)) {
+                $moduleName = substr($className, 0, strlen($className) - strlen($suffix));
+                return new self($kind, $moduleName);
             }
         }
 

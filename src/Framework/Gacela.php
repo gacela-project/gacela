@@ -196,6 +196,7 @@ final class Gacela
     public static function resetCache(): void
     {
         AnonymousGlobal::resetCache();
+
         AbstractFacade::resetCache();
         AbstractFactory::resetCache();
         AbstractClassResolver::resetCache();

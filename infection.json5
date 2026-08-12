@@ -474,6 +474,11 @@
                 // is_dir() check two lines down returns for exactly the same
                 // inputs. Only a TOCTOU race distinguishes them.
                 "Gacela\\Console\\Infrastructure\\FileContentIo::mkdir",
+                // The memo guard in matchOrder(): the pairs are a pure function
+                // of the declared suffixes, so recomputing them returns the same
+                // list. Only the work is observable, and the generation stamp is
+                // what makes the memo safe to keep.
+                "Gacela\\Framework\\ClassResolver\\ResolvableTypes::matchOrder",
             ],
         },
         LogicalOrSingleSubExprNegation: {

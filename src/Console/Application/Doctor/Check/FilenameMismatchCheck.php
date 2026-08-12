@@ -8,8 +8,11 @@ use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use ReflectionClass;
 
+use function array_unique;
+use function array_values;
 use function count;
 use function explode;
 use function in_array;
@@ -17,16 +20,24 @@ use function is_array;
 use function sprintf;
 
 /**
- * Reports pillar classes whose file is named differently from the class.
+ * Reports classes whose file is named differently from the class.
  *
- * Gacela resolves pillars by *filename* suffix, so a class renamed without its
- * file stops resolving with nothing pointing at the cause. That is the step
- * people miss migrating `AbstractDependencyProvider` -> `AbstractProvider`:
+ * Gacela resolves by *filename* suffix, so a class renamed without its file
+ * stops resolving with nothing pointing at the cause. That is the step people
+ * miss migrating `AbstractDependencyProvider` -> `AbstractProvider`:
  * `DependencyProvider.php` has to become `Provider.php` too.
+ *
+ * Which names are worth reporting is a question of what this project resolves,
+ * not of the four pillars: a kind the project declared is found by filename the
+ * same way, and fails the same silent way. So the suffixes come from the
+ * configured map, read on top of the four rather than instead of them.
+ *
+ * @psalm-import-type SuffixTypes from SuffixTypesBuilder
  */
 final class FilenameMismatchCheck implements HealthCheck
 {
-    private const PILLAR_SUFFIXES = ['Facade', 'Factory', 'Config', 'Provider'];
+    /** @var list<string> */
+    private readonly array $resolvableSuffixes;
 
     /** @var Closure(class-string):?string */
     private readonly Closure $fileResolver;
@@ -39,16 +50,20 @@ final class FilenameMismatchCheck implements HealthCheck
 
     /**
      * @param list<AppModule> $modules
+     * @param SuffixTypes $suffixTypes kind => suffixes; a project-declared kind is an ordinary key
      * @param null|Closure(class-string):?string $fileResolver resolves a class-name to its source file path
      * @param null|Closure(string):list<string> $directoryScanner lists the php files in a directory
      * @param null|Closure(string):?string $declaredClassReader reads the short class name a file declares
      */
     public function __construct(
         private readonly array $modules,
+        array $suffixTypes = [],
         ?Closure $fileResolver = null,
         ?Closure $directoryScanner = null,
         ?Closure $declaredClassReader = null,
     ) {
+        $this->resolvableSuffixes = $this->everySuffix($suffixTypes);
+
         $this->fileResolver = $fileResolver ?? static function (string $className): ?string {
             if (!class_exists($className)) {
                 return null;
@@ -70,7 +85,7 @@ final class FilenameMismatchCheck implements HealthCheck
 
     public function name(): string
     {
-        return 'pillar filenames';
+        return 'class filenames';
     }
 
     public function run(): CheckResult
@@ -218,7 +233,7 @@ final class FilenameMismatchCheck implements HealthCheck
                 continue;
             }
 
-            if (!$this->carriesPillarSuffix($filename) && !$this->carriesPillarSuffix($declaredClass)) {
+            if (!$this->carriesResolvableSuffix($filename) && !$this->carriesResolvableSuffix($declaredClass)) {
                 continue;
             }
 
@@ -234,15 +249,41 @@ final class FilenameMismatchCheck implements HealthCheck
         return $mismatches;
     }
 
-    private function carriesPillarSuffix(string $name): bool
+    private function carriesResolvableSuffix(string $name): bool
     {
-        foreach (self::PILLAR_SUFFIXES as $suffix) {
+        foreach ($this->resolvableSuffixes as $suffix) {
             if (str_ends_with($name, $suffix)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Every suffix any configured kind answers to, the four pillars included.
+     *
+     * The pillars are the floor and not the ceiling: `SuffixTypesBuilder` seeds
+     * them and can only widen, so a configured map that names one kind still
+     * has to be read as naming the other four too.
+     *
+     * @param SuffixTypes $suffixTypes
+     *
+     * @return list<string>
+     */
+    private function everySuffix(array $suffixTypes): array
+    {
+        $suffixes = [];
+
+        foreach ([SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES, $suffixTypes] as $map) {
+            foreach ($map as $kindSuffixes) {
+                foreach ($kindSuffixes as $suffix) {
+                    $suffixes[] = $suffix;
+                }
+            }
+        }
+
+        return array_values(array_unique($suffixes));
     }
 
     private function directoryOf(string $file): string

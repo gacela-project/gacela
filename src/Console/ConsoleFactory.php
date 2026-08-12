@@ -35,6 +35,7 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
@@ -84,14 +85,21 @@ final class ConsoleFactory extends AbstractFactory
 
     public function createFilenameSanitizer(): FilenameSanitizerInterface
     {
-        return new FilenameSanitizer();
+        return new FilenameSanitizer(ResolvableTypes::declaredKinds());
     }
 
     public function createFileContentGenerator(): FileContentGeneratorInterface
     {
+        $declaredKinds = ResolvableTypes::declaredKinds();
+
         return new FileContentGenerator(
             $this->createFileContentIo(),
-            new StubLocator($this->stubsDir(), $this->getTemplateByFilenameMap(), StubFiles::basic()),
+            new StubLocator(
+                $this->stubsDir(),
+                $this->getTemplateByFilenameMap(),
+                StubFiles::basic($declaredKinds),
+                $declaredKinds,
+            ),
         );
     }
 
@@ -118,6 +126,10 @@ final class ConsoleFactory extends AbstractFactory
 
     /**
      * The built-in stub contents, by the file each is published as.
+     *
+     * A declared kind is deliberately absent: nothing ships for it, so
+     * publishing would only write an empty file where the project has to write
+     * the template itself.
      *
      * @return array<string, string>
      */

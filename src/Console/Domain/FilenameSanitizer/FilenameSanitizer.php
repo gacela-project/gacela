@@ -9,6 +9,14 @@ use RuntimeException;
 use function count;
 use function sprintf;
 
+/**
+ * Which file `make:file` was asked for, from whatever the user typed.
+ *
+ * The four pillars are always on offer. A project that declared further kinds
+ * puts them on offer too, matched by the same rule: `expo` reaches a declared
+ * `Exporter` the way `faca` reaches `Facade`. Undeclared, the word is only a
+ * string to fuzzy-match, and lands on whichever pillar it always did.
+ */
 final class FilenameSanitizer implements FilenameSanitizerInterface
 {
     public const FACADE = 'Facade';
@@ -19,6 +27,10 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
 
     public const PROVIDER = 'Provider';
 
+    /**
+     * The pillars, which every project has. `make:module` scaffolds exactly
+     * these; a declared kind is generated one file at a time by `make:file`.
+     */
     public const EXPECTED_FILENAMES = [
         self::FACADE,
         self::FACTORY,
@@ -27,26 +39,36 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
     ];
 
     /**
-     * The expected filenames rendered for console help text.
+     * @param list<string> $declaredKinds the kinds this project declared, beyond the pillars
      */
-    public static function expectedFilenamesAsText(): string
-    {
-        return implode(', ', self::EXPECTED_FILENAMES);
+    public function __construct(
+        private readonly array $declaredKinds = [],
+    ) {
     }
 
     /**
-     * @return list<string>
+     * The expected filenames rendered for console help text.
+     *
+     * @param list<string> $declaredKinds
+     */
+    public static function expectedFilenamesAsText(array $declaredKinds = []): string
+    {
+        return implode(', ', [...self::EXPECTED_FILENAMES, ...$declaredKinds]);
+    }
+
+    /**
+     * @return non-empty-list<string>
      */
     public function getExpectedFilenames(): array
     {
-        return self::EXPECTED_FILENAMES;
+        return [...self::EXPECTED_FILENAMES, ...$this->declaredKinds];
     }
 
     public function sanitize(string $filename): string
     {
         $percents = [];
 
-        foreach (self::EXPECTED_FILENAMES as $expected) {
+        foreach ($this->getExpectedFilenames() as $expected) {
             $percents[$expected] = similar_text($expected, $filename);
         }
 

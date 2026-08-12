@@ -119,6 +119,51 @@ final class StubLocatorTest extends TestCase
         $this->locator()->templateFor('Nope');
     }
 
+    /**
+     * A kind the project declared has no built-in template behind it: the stub
+     * it publishes is the only one there is.
+     */
+    public function test_a_declared_kind_generates_from_the_stub_the_project_published(): void
+    {
+        $this->publish('exporter-maker.txt', 'house style exporter');
+
+        self::assertSame('house style exporter', $this->declaredKindLocator()->templateFor('Exporter'));
+    }
+
+    /**
+     * With nothing to fall back on, the only useful answer names the file that
+     * is missing.
+     */
+    public function test_a_declared_kind_without_a_published_stub_names_the_file_to_write(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage($this->stubsDir . '/exporter-maker.txt');
+
+        $this->declaredKindLocator()->templateFor('Exporter');
+    }
+
+    /**
+     * A pillar whose built-in template went missing is not a declared kind, and
+     * must not be told to publish a stub.
+     */
+    public function test_a_pillar_without_a_built_in_template_is_still_unknown(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Unknown template for 'Factory'?");
+
+        $this->declaredKindLocator()->templateFor('Factory');
+    }
+
+    private function declaredKindLocator(): StubLocator
+    {
+        return new StubLocator(
+            $this->stubsDir,
+            ['Facade' => 'built-in facade'],
+            StubFiles::basic(['Exporter']),
+            ['Exporter'],
+        );
+    }
+
     private function locator(): StubLocator
     {
         return new StubLocator(

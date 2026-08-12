@@ -84,24 +84,29 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
         $new->configItems = [...$this->configItems, ...$other->getConfigItems()];
         /** @psalm-suppress DuplicateArrayKey */
         $new->bindings = [...$this->bindings, ...$other->getBindings()];
-        $new->suffixTypes = [
-            'Facade' => $this->filterList($other, 'Facade'),
-            'Factory' => $this->filterList($other, 'Factory'),
-            'Config' => $this->filterList($other, 'Config'),
-            'Provider' => $this->filterList($other, 'Provider'),
-        ];
+        // Every kind either side declared, not the four that used to be the
+        // only ones: a project-declared kind pushed in through setSuffixTypes()
+        // did not survive a merge, which made it unusable in a gacela.php that
+        // is merged with another.
+        $merged = [];
+        foreach ([...array_keys($this->suffixTypes), ...array_keys($other->getSuffixTypes())] as $kind) {
+            $merged[$kind] = $this->filterList($other, $kind);
+        }
+
+        $new->suffixTypes = $merged;
 
         return $new;
     }
 
     /**
-     * @param 'Facade'|'Factory'|'Config'|'Provider' $key
-     *
      * @return list<string>
      */
     private function filterList(GacelaConfigFileInterface $other, string $key): array
     {
-        $merged = array_merge($this->suffixTypes[$key], $other->getSuffixTypes()[$key]);
+        $merged = array_merge(
+            $this->suffixTypes[$key] ?? [],
+            $other->getSuffixTypes()[$key] ?? [],
+        );
         $filtered = array_filter(array_unique($merged), static fn (string $str): bool => $str !== '');
         /** @var list<non-empty-string> $values */
         $values = array_values($filtered);

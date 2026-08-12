@@ -8,10 +8,13 @@ use Gacela\Console\Application\IdeMeta\IdeMetadataScanner;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\IdeMeta\ProvidedDependencyMap;
 use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\AgreeingBillingProvider;
+use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\BaseRelativeProvider;
 use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\BillingProvider;
 use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\BillingService;
+use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\ChildRelativeProvider;
 use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\ClockInterface;
 use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\ConflictingBillingProvider;
+use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\RelativeReturnTypeProvider;
 use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\ReportService;
 use GacelaTest\Unit\Console\Application\IdeMeta\Fixtures\UnwritableTypesProvider;
 use PHPUnit\Framework\TestCase;
@@ -60,6 +63,37 @@ final class IdeMetadataScannerTest extends TestCase
 
         self::assertSame([], $map->entries());
         self::assertSame([], $map->ambiguous());
+    }
+
+    /**
+     * PHP 8.5 resolves a relative return type inside `getName()`; earlier
+     * versions return the literal `self`. Both must produce this same entry, or
+     * the generated file differs by the PHP that wrote it and `doctor` reports
+     * stale whenever a colleague on another version last ran the command.
+     */
+    public function test_a_relative_return_type_resolves_the_same_on_every_php_version(): void
+    {
+        $map = $this->scan(RelativeReturnTypeProvider::class);
+
+        self::assertSame(RelativeReturnTypeProvider::class, $map->entries()['ITSELF']);
+    }
+
+    /**
+     * `static` is the relative type 8.5 leaves alone, so both versions reach
+     * the resolution here rather than only the older ones.
+     */
+    public function test_a_late_bound_return_type_resolves_to_the_declaring_class(): void
+    {
+        $map = $this->scan(RelativeReturnTypeProvider::class);
+
+        self::assertSame(RelativeReturnTypeProvider::class, $map->entries()['LATE_BOUND']);
+    }
+
+    public function test_a_parent_return_type_resolves_to_the_parent(): void
+    {
+        $map = $this->scan(ChildRelativeProvider::class);
+
+        self::assertSame(BaseRelativeProvider::class, $map->entries()['FROM_PARENT']);
     }
 
     public function test_two_providers_registering_one_id_with_one_type_is_not_a_conflict(): void

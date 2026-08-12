@@ -418,10 +418,26 @@
                 // same branch for all realistic inputs (the container injects raw
                 // scalars and pass-through strings identically).
                 "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
+                // Same shape: only a name that is neither a class nor an
+                // interface tells the two branches apart, and a #[Provides]
+                // method whose return type names no existing class fails
+                // phpstan long before this command runs. The pair is what
+                // narrows `string` to `class-string`, which the project's
+                // phpstan rules forbid doing with an inline @var.
+                "Gacela\\Console\\Application\\IdeMeta\\IdeMetadataScanner::returnedClass",
             ],
         },
         TrueValue: {
             ignore: ["Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateStatement"],
+        },
+        // PHP 8.4 reports a return type with the casing the source wrote, so
+        // `: SELF` arrives as 'SELF' there and as the resolved class on 8.5 --
+        // the comparison has to be case-insensitive to make both agree. Only a
+        // fixture written `SELF` could kill the mutant, and php-cs-fixer
+        // lowercases the keyword in every file it formats, so no fixture in
+        // this repository can hold the casing long enough to be tested.
+        UnwrapStrToLower: {
+            ignore: ["Gacela\\Console\\Application\\IdeMeta\\IdeMetadataScanner::resolveRelativeType"],
         },
         // Closures are objects and the container evaluates wrapped closures to
         // the same injected value, so the or-variant mutants on the registrar's

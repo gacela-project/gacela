@@ -8,8 +8,8 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\IdeMeta\ProvidedDependencyMap;
 use Gacela\Framework\Attribute\ProvidesScanner;
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionNamedType;
-use ReflectionType;
 
 use function class_exists;
 use function count;
@@ -90,7 +90,7 @@ final class IdeMetadataScanner
                 continue;
             }
 
-            $className = $this->returnedClass($entry['method']->getReturnType());
+            $className = $this->returnedClass($entry['method']);
 
             if ($className !== null) {
                 $types[$id] = $className;
@@ -111,15 +111,50 @@ final class IdeMetadataScanner
      *
      * @return class-string|null
      */
-    private function returnedClass(?ReflectionType $returnType): ?string
+    private function returnedClass(ReflectionMethod $method): ?string
     {
+        $returnType = $method->getReturnType();
+
         if (!$returnType instanceof ReflectionNamedType || $returnType->isBuiltin() || $returnType->allowsNull()) {
             return null;
         }
 
-        $name = $returnType->getName();
+        $name = $this->resolveRelativeType($returnType->getName(), $method->getDeclaringClass());
 
-        // Also filters `self`/`static`, which name no loadable class.
         return class_exists($name) || interface_exists($name) ? $name : null;
+    }
+
+    /**
+     * `self`, `static` and `parent` named as the class each stands for.
+     *
+     * PHP 8.5 resolves a relative return type in `getName()` and earlier
+     * versions hand back the literal word, so without this the same Provider
+     * yields a different file per PHP version -- and because the doctor check
+     * compares content, a team split across versions would see it flip between
+     * "matches" and "stale" depending on who ran the command. Resolving here
+     * makes every supported version agree, and agrees with 8.5 rather than
+     * against it.
+     *
+     * `static` is the one 8.5 does *not* resolve, so it is handled here on
+     * every version. It resolves to the declaring class, an upper bound rather
+     * than the exact runtime class -- still a true statement about the value.
+     *
+     * Lower-cased because 8.4 hands back the casing the source used: a return
+     * type written `SELF` arrives as `'SELF'` there and as the resolved class
+     * on 8.5, which is the divergence this method exists to remove.
+     *
+     * @param ReflectionClass<object> $declaringClass
+     */
+    private function resolveRelativeType(string $name, ReflectionClass $declaringClass): string
+    {
+        $parent = $declaringClass->getParentClass();
+
+        return match (strtolower($name)) {
+            'self', 'static' => $declaringClass->getName(),
+            // A class declaring `: parent` always has one; falling back to the
+            // literal keeps this total, and it resolves to no class anyway.
+            'parent' => $parent === false ? $name : $parent->getName(),
+            default => $name,
+        };
     }
 }

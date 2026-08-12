@@ -36,9 +36,4 @@ final class UnwritableTypesProvider
         return $this->billing ? new BillingService() : new ReportService();
     }
 
-    #[Provides('ITSELF')]
-    public function itself(): self
-    {
-        return $this;
-    }
 }

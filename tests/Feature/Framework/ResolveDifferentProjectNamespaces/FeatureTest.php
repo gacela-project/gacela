@@ -8,6 +8,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdParty\ModuleA\Facade as ThirdPartyModuleAFacade;
 use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdParty\ModuleB\Facade as ThirdPartyModuleBFacade;
+use GacelaTest\Feature\Framework\ResolveDifferentProjectNamespaces\vendor\ThirdParty\ModuleC\Facade as ThirdPartyModuleCFacade;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -44,6 +45,31 @@ final class FeatureTest extends TestCase
         $facade = new ThirdPartyModuleAFacade();
 
         self::assertSame('Hi, from vendor\ThirdParty\ModuleA::StringA2', $facade->stringValueA2());
+    }
+
+    /**
+     * The module-prefixed spelling, `{projectNamespace}\ModuleC\ModuleCFactory`,
+     * which is what `docs/getting-a-dependency.md` shows for per-entrypoint
+     * wiring. Its siblings above override with the bare `Factory` name, so this
+     * is the one that keeps the documented shape honest.
+     */
+    public function test_override_factory_named_with_the_module_prefix(): void
+    {
+        $facade = new ThirdPartyModuleCFacade();
+
+        self::assertSame('Overridden, from src\Main\ModuleC::StringC1', $facade->stringValueC1());
+    }
+
+    /**
+     * The override extends the vendor Factory and replaces one method, so
+     * everything it does not mention still resolves from the base -- the reason
+     * a variant is a small subclass rather than a copy of the module.
+     */
+    public function test_a_method_the_override_does_not_replace_still_comes_from_the_base(): void
+    {
+        $facade = new ThirdPartyModuleCFacade();
+
+        self::assertSame('Hi, from vendor\ThirdParty\ModuleC::StringC2', $facade->stringValueC2());
     }
 
     public function test_override_factory_from_second_highest_prio_namespace(): void

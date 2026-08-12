@@ -262,6 +262,54 @@ The abstract is a declared contract, not a scan: Gacela never searches your tree
 
 `addSuffixTypeFacade()` and its three siblings are now sugar over this call, and stay supported: they widen a pillar rather than declare a kind.
 
+## Vary the wiring per entrypoint
+
+One module often serves several entrypoints — a web request, a queue worker, a scheduled job — and the wiring differs: the worker wants a batching writer, the request a synchronous one.
+
+The tempting answer is a branch inside the Factory:
+
+```php
+public function createProductWriter(): ProductWriter
+{
+    return $this->getConfig()->isWorker()      // don't
+        ? new BatchingProductWriter()
+        : new SyncProductWriter();
+}
+```
+
+That hides the variant in control flow, where `debug:module` cannot show it and `cache:warm` cannot precompute past it.
+
+Each entrypoint already has its own bootstrap, so give it its own **project namespaces** instead. Configured namespaces are searched before the module's own, which is tried last:
+
+```php
+// bin/worker.php
+Gacela::bootstrap(dirname(__DIR__), static function (GacelaConfig $config): void {
+    $config->setProjectNamespaces(['App\Worker']);
+});
+```
+
+```
+src/
+├── Catalog/
+│   ├── CatalogFacade.php
+│   ├── CatalogFactory.php        synchronous writer
+│   └── Domain/ProductWriter.php
+└── Worker/
+    └── Catalog/
+        └── CatalogFactory.php    batching writer
+```
+
+`App\Worker\Catalog\CatalogFactory` now answers for `App\Catalog\CatalogFacade` under the worker bootstrap, and nothing changes for the web entrypoint, which sets no project namespaces at all.
+
+Four things worth knowing:
+
+- **You override only what differs.** The variant class extends the original and overrides the one method that changes; every other `create*()` still comes from the base Factory. A parallel tree of *whole* modules is not what this asks for.
+- **List order is resolution order.** `setProjectNamespaces(['App\Worker', 'App\Shared'])` tries `App\Worker` first, then `App\Shared`, then the module's own namespace. The first candidate that exists wins.
+- **It covers every pillar Gacela *resolves*** — Facade, Factory, Config and Provider, plus any [kind you declared](#resolve-a-kind-of-my-own). A Facade you reach with `new CatalogFacade()` is not resolved, so that call is untouched; one reached through `getFacade()` is.
+- **Each bootstrap gets its own cache file.** The on-disk class-name cache is keyed by a hash of `projectNamespaces` and suffix types, so a warm web cache can never answer for the worker — see [caching](caching.md). At deploy, run `cache:warm` once per entrypoint; see [production performance](production-performance.md).
+
+The honest limit: the variant lives *outside* the module folder, so the module no longer tells its own whole story. [#679](https://github.com/gacela-project/gacela/issues/679) tracks letting the variant live inside the module instead, and is waiting on a real application that finds the parallel tree painful enough to justify the cost.
+
 ## The other paths, and when they are right
 
 These are supported and are **not** deprecated. They are simply not the answer to "how do I get a dependency?" — reach for them when the situation below is actually yours.

@@ -9,6 +9,7 @@ use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
+use Gacela\Console\Application\Doctor\Check\PackageManifestCheck;
 use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
@@ -112,6 +113,7 @@ final class DoctorCommand extends Command
             // the whole application, so comparing it against the modules a
             // namespace filter left behind would report every scoped run as
             // stale.
+            new PackageManifestCheck($config->getAppRootDir()),
             new IdeMetadataStalenessCheck(
                 $config->getAppRootDir(),
                 fn (): IdeMetadataResult => $this->getFacade()->generateIdeMetadata(dryRun: true),

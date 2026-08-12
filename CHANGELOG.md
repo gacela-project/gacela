@@ -10,6 +10,7 @@
 - Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars, reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs became sugar over it
 - Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`. The kind is listed in the command's help, `doctor` counts its stub among the ones the scaffolder reads, and until that stub exists the generator names the path it looked for
 - Report in `doctor` every `extendService()` id no Provider ever `set()`s — such an extension is accepted, scheduled on every scope, and applied nowhere
+- Report in `doctor` any package importing a namespace its own `composer.json` never mentions. A sub-package of a monorepo resolves fine against the root autoloader and fatals the day it is installed alone — the bug this repository shipped in both bridges once already. Every manifest section counts as a mention, because a phar-distributed package declares no autoload prefix and demanding a particular section would name the wrong package to add
 - Generate editor metadata for `getProvidedDependency()` with `ide:meta`, from the `#[Provides]` attributes: an id naming a class resolves to it, and each string id is typed by the return type of the method that registers it. An id two providers type differently is listed rather than written, because one application-wide answer would be wrong in one of the two modules; `doctor` reports metadata the attributes no longer produce
 
 ### Changed

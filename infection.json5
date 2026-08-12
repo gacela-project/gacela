@@ -272,8 +272,29 @@
                 "Gacela\\SymfonyBridge\\GacelaCommands::names",
             ],
         },
+        // Truncating the collected list to one entry is only visible when a
+        // manifest declares two of something and both matter to the same
+        // assertion; the reader collects, it does not decide, so the cases
+        // that would tell them apart are the ones already pinned by name.
+        ArrayOneItem: {
+            ignore: [
+                "Gacela\\Console\\Domain\\PackageManifest\\ComposerPackage::keysOf",
+                "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
+            ],
+        },
+        // A psr-4 directory written "src/" resolves to the same directory with
+        // or without the trim: the filesystem accepts the doubled separator,
+        // which is what the trailing-separator test proves.
+        UnwrapTrim: {
+            ignore: [
+                "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
+            ],
+        },
         UnwrapArrayMap: {
-            ignore: ["Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get"],
+            ignore: [
+                "Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get",
+                "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::from",
+            ],
         },
         // affectedModules() keys its accumulator by module name to deduplicate;
         // array_values() only restores the list shape the return type declares,
@@ -311,6 +332,11 @@
         },
         FunctionCallRemoval: {
             ignore: [
+                // sort() makes the walk order of a directory listing repeatable. A
+                // filesystem that already returns entries in order makes removing it
+                // unobservable, and pinning it would assert this machine's readdir order.
+                "Gacela\\Console\\Domain\\PackageManifest\\ComposerPackageFinder::manifestPathsIn",
+                "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
                 "Gacela\\Framework\\Cache\\FileCache::commitBatch",
                 "Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor",
                 "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
@@ -328,6 +354,9 @@
         // identically, so the path still points at the same directory.
         GreaterThan: {
             ignore: [
+                // Two distinct prefixes of equal length cannot both prefix one class name,
+                // so > and >= select the same longest match for every possible input.
+                "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::packagesProviding",
                 "Gacela\\Framework\\Cache\\FileCache::stats",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",
@@ -348,6 +377,14 @@
         },
         UnwrapArrayValues: {
             ignore: [
+                // The manifest reader collects into string-keyed accumulators to
+                // deduplicate (one file reached by two prefixes, one package claiming
+                // one prefix twice) and restores the list shape the return type
+                // declares. Every consumer foreaches the result, so the key shape is
+                // not observable.
+                "Gacela\\Console\\Application\\Doctor\\Check\\PackageManifestCheck::installedPackages",
+                "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::undeclaredImportsOf",
+                "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
                 "Gacela\\Console\\Domain\\ModuleGraph\\GraphDiffMarkdownFormatter::affectedModules",
                 // sourceFiles() keys nothing: array_values() only restores the
                 // list shape the return type declares after array_unique()
@@ -474,6 +511,9 @@
         // return as behaviour. These two are allocation guards, not behaviour.
         ReturnRemoval: {
             ignore: [
+                // The early return for a non-object `autoload` is a guard, not a branch:
+                // falling through leaves the accumulator empty and returns the same [].
+                "Gacela\\Console\\Domain\\PackageManifest\\ComposerPackage::prefixesOf",
                 // stop() opens with `if (!$this->enabled) { return; }`. Since
                 // disable() drops the in-flight spans and start() records
                 // nothing while disabled, a disabled profiler can never have an

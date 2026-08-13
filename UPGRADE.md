@@ -224,7 +224,26 @@ Not blocking this upgrade, but the notices start now.
 
 The generic form counts too. `@extends AbstractFacade<MyFactory>` names the factory by its short name, which is resolved through the file's `use` statements — the second deprecated strategy. Typing a pillar generically is still worth doing for the analysers; it is not a substitute for the attribute.
 
-**Static analysis will not find these for you.** PHPStan reads `@method` and `@extends` natively, so a class carrying either is a class it considers correct — with or without the attribute. A green analysis run says nothing about whether you are ready for 3.0.
+**Neither analyser finds these on its own.** PHPStan reads `@method` and `@extends` natively, so a class carrying either is a class it considers correct — with or without the attribute. A green analysis run says nothing about whether you are ready for 3.0.
+
+Gacela ships a rule that does, off by default because what it reports is not wrong on 2.x — turning it on is the decision to start this migration:
+
+```neon
+# phpstan.neon
+services:
+    -
+        class: Gacela\PHPStan\Rules\ServiceMapMissingRule
+        tags: [phpstan.rules.rule]
+```
+
+```xml
+<!-- psalm.xml -->
+<pluginClass class="Gacela\Psalm\Plugin">
+    <serviceMapMissing/>
+</pluginClass>
+```
+
+Each finding names the attribute to paste. It covers `@method` accessors on classes using `ServiceResolverAwareTrait` — not the `@extends` generic form below, which `FactoryResolver` resolves by naming convention rather than from the docblock. See [Static analysis](docs/static-analysis.md#finding-what-30-removes).
 
 The notice fires on a **cold resolve only**, because the answer is memoized per caller-and-method. To surface every occurrence:
 

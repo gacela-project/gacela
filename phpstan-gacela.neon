@@ -79,6 +79,16 @@ services:
     #         sharedNamespaces:
     #             - App\Modules\Shared
 
+    # Opt-in: pillar accessors still resolved from a `@method` docblock, which
+    # 3.0 removes in favour of #[ServiceMap]. Not on by default because what it
+    # reports is a deprecation rather than a mistake -- enabling it is the
+    # decision to start that migration, rather than a build that starts failing
+    # on an upgrade. The runtime notice covers only what a run reaches, and only
+    # on a cold resolve; this covers every class.
+    # -
+    #     class: Gacela\PHPStan\Rules\ServiceMapMissingRule
+    #     tags: [phpstan.rules.rule]
+
     # Opt-in: the module dependencies your project decided against, read from
     # the same JSON file `debug:graph --check --rules` reads. Nothing is checked
     # until that file names a rule, and a missing or malformed file fails the

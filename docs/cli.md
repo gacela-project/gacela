@@ -65,12 +65,13 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).
 
-Four of the built-in checks report the same kind of fault: **configuration a project declared that nothing acts on**. Each is accepted at bootstrap, costs nothing at runtime, and does exactly nothing — which is why a command has to be the one to say so. Under `--strict` any of them fails the run.
+Five of the built-in checks report the same kind of fault: **configuration a project declared that nothing acts on**. Each is accepted at bootstrap, costs nothing at runtime, and does exactly nothing — which is why a command has to be the one to say so. Under `--strict` any of them fails the run.
 
 - **event listeners** — a `registerSpecificListener()` target no dispatched event can be. The dispatcher compares `$event::class`, so a listener registered against an interface never fires, not even for events implementing it; nor does one naming an abstract class or a typo. `Container::afterResolving()` matches by `instanceof`, which is exactly why registering against a contract looks like it should work. A concrete class nothing dispatches is left alone — that listener is waiting, not broken.
 - **config sources** — an `addAppConfig()` path matching no file. `conf/*.php` for a directory named `config` bootstraps perfectly, and then the first read of a key fails with an error about the key rather than the path meant to provide it. Only the base path is reported: `config/app-prod.php` is *meant* to be absent where it does not apply.
 - **cache directory** — caching enabled onto a directory that cannot be written. Writing is best-effort by design, so the application runs correctly and pays the cold cost on every request instead. Reported read-only: `doctor` never creates the directory to find out.
-- **service extensions** — an `extendService()` id no Provider ever `set()`s. A typo, or an id registered only through `bind()`/`singleton()`, which do not drain the extension queue.
+- **service extensions** — an `extendService()` id no Provider ever `set()`s. A typo, or an id registered only through `bind()`/`singleton()`, which do not drain the extension queue. An `extendProviderService()` id is held against the Provider it names, which is the sharper miss: not "nobody set this id" but "the Provider you named does not", so an id some *other* Provider registers is still reported.
+- **tagged services** — a `tag()` id nothing can answer. `Container::tagged()` resolves each id in turn and gives back `null` for one naming nothing, so the group a module iterates carries a hole and the failure lands on the consumer as "Call to a member function … on null", pointing at the loop rather than the registration. An id is answerable when a Provider `set()`s it or it names a class the container can construct, so a tag grouping plain service ids is left alone.
 
 ## Production
 

@@ -59,14 +59,32 @@ final class ConfigDimensions
                 break;
             }
 
-            if (preg_match(self::VALUE_PATTERN, $value) !== 1) {
-                throw ConfigDimensionException::invalidValue($variable, $value);
-            }
+            self::assertValueCanReachAPath($variable, $value);
 
             $values[] = $value;
         }
 
         return new self($values);
+    }
+
+    /**
+     * The alphabet a value must keep to, for every variable that reaches the
+     * config glob and the merged-config cache filename.
+     *
+     * Shared with {@see AppEnv::current()} rather than repeated there: `APP_ENV`
+     * is the first link of the same chain and reaches the same two places, so
+     * two copies of this rule would be two answers to one question. It was
+     * unchecked, and a value like `../escaped` had the cache written into a
+     * directory named after it, while `x/../../pwned` made the write fail
+     * silently and the application boot uncached with nothing to say why.
+     *
+     * @throws ConfigDimensionException
+     */
+    public static function assertValueCanReachAPath(string $variable, string $value): void
+    {
+        if (preg_match(self::VALUE_PATTERN, $value) !== 1) {
+            throw ConfigDimensionException::invalidValue($variable, $value);
+        }
     }
 
     /**

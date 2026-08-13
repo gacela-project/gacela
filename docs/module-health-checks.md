@@ -84,7 +84,7 @@ Gacela Doctor
 ✓ All checks passed
 ```
 
-A `degraded` check reports as a warning; an `unhealthy` check reports as an error and makes `doctor` exit non-zero. Check metadata is printed under the status line.
+A `degraded` check reports as a warning; an `unhealthy` check reports as an error and makes `doctor` exit non-zero. Their metadata is printed under the status line, one `key: value` per line, with a value that is not a scalar named by its type. A **healthy** check stays a single line: it takes metadata like the other two, and `doctor` does not print it, because a passing check is not what you are reading the report for.
 
 Several checks may report under the same module name. Gacela combines them into one module result whose level is the worst result, and keeps every individual status under the result's `health_checks` metadata. A later healthy check therefore cannot hide an earlier degraded or unhealthy one.
 

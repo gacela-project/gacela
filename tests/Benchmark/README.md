@@ -28,7 +28,14 @@ vendor/bin/phpbench run <path> --tag=selfbase --store --progress=none
 vendor/bin/phpbench run <path> --ref=selfbase --report=aggregate --progress=none
 ```
 
-If unchanged code drifts near the threshold, the subject belongs in `informational`, not in `gate` with a widened tolerance. `ScopedCacheBench` is the worked example: gated at ±10%, widened to ±30%, and it still produced +48.96% on a PR that changed no runtime code. Widening again would have left a "gate" that only catches a >1.6x regression. A gate that fails on PRs which never touched the code does not get fixed — it gets bypassed, which costs more than not having it.
+**Store the baseline twice before believing it.** The stored run is one sample too, and an unusually fast one makes every later run look like a regression. Measured here: against one baseline, `bench_resolve_with_inject_attribute` reported `+10.38%` and then `+10.66%` on untouched code -- enough to condemn the subject -- and against a baseline stored minutes later, `-0.04%` and `-5.08%`. The tell was that *every* subject in the file had moved the same direction, which says something about the baseline rather than about any one of them.
+
+```bash
+vendor/bin/phpbench run <path> --tag=selfbase2 --store --progress=none
+vendor/bin/phpbench run <path> --ref=selfbase2 --report=aggregate --progress=none
+```
+
+If unchanged code drifts near the threshold **against both baselines**, the subject belongs in `informational`, not in `gate` with a widened tolerance. `ScopedCacheBench` is the worked example: gated at ±10%, widened to ±30%, and it still produced +48.96% on a PR that changed no runtime code. Widening again would have left a "gate" that only catches a >1.6x regression. A gate that fails on PRs which never touched the code does not get fixed — it gets bypassed, which costs more than not having it.
 
 Prefer moving the subject to `informational` over widening a gate past ~30%.
 

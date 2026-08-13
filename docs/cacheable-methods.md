@@ -73,6 +73,8 @@ public function getUser(int $id): array
 
 A bare string with no placeholders is args-agnostic — every call shares the same entry regardless of arguments. That's rarely what you want when the method takes parameters.
 
+A placeholder the method has no argument for is the same thing in disguise: `{N}` interpolates `$args[N] ?? ''`, so `key: 'user:{5}'` on a one-argument method is the constant `user:` for every call. Both shapes are reported by `gacela.cacheableKeyIgnoresArguments`, which is on by default — see [static analysis](static-analysis.md). Only `{N}` is a placeholder, so `{id}` is copied through literally and is args-agnostic too.
+
 ## Clearing the cache
 
 ```php

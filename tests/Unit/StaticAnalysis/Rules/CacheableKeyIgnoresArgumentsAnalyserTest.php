@@ -57,6 +57,88 @@ final class CacheableKeyIgnoresArgumentsAnalyserTest extends TestCase
     }
 
     /**
+     * `{5}` on a one-argument method interpolates to the empty string --
+     * `$args[$index] ?? ''` -- so the key is the same constant for every call
+     * and the first result is served to all of them. Exactly the fault this
+     * rule exists for, and it passed because the key does carry a `{`.
+     */
+    public function test_a_placeholder_past_the_last_argument_is_reported(): void
+    {
+        $violations = $this->analyse("#[Cacheable(ttl: 60, key: 'user:{5}')]", 'int $id');
+
+        self::assertCount(1, $violations);
+        self::assertSame('gacela.cacheableKeyIgnoresArguments', $violations[0]->identifier);
+        // The following word matters: asserting only "the 1 argument" also
+        // matches "the 1 arguments", so a broken plural would read as correct.
+        self::assertStringContainsString('within the 1 argument the method takes', $violations[0]->message);
+    }
+
+    /**
+     * Indexes are zero-based, so the last argument of a one-argument method is
+     * `{0}` and `{1}` is already past it. The off-by-one is the whole point of
+     * the check, and only a boundary case can tell `<` from `<=`.
+     */
+    public function test_the_index_after_the_last_argument_is_out_of_range(): void
+    {
+        $violations = $this->analyse("#[Cacheable(ttl: 60, key: 'u:{1}')]", 'int $id');
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('within the 1 argument the method takes', $violations[0]->message);
+    }
+
+    public function test_the_last_argument_is_in_range(): void
+    {
+        self::assertSame([], $this->analyse("#[Cacheable(ttl: 60, key: 'u:{1}')]", 'int $id, string $scope'));
+    }
+
+    public function test_the_count_is_pluralised(): void
+    {
+        $violations = $this->analyse("#[Cacheable(ttl: 60, key: 'u:{7}')]", 'int $id, string $scope');
+
+        self::assertStringContainsString('within the 2 arguments the method takes', $violations[0]->message);
+    }
+
+    public function test_the_out_of_range_correction_names_the_placeholders_available(): void
+    {
+        $violations = $this->analyse("#[Cacheable(ttl: 60, key: 'u:{7}')]", 'int $id, string $scope');
+
+        self::assertSame(
+            'Use a placeholder the method has an argument for: {0} to {1}.',
+            $violations[0]->tip,
+        );
+    }
+
+    /**
+     * One placeholder in range is enough: the key still tells two calls apart,
+     * whatever else it carries.
+     */
+    public function test_one_placeholder_in_range_is_enough(): void
+    {
+        self::assertSame([], $this->analyse("#[Cacheable(ttl: 60, key: 'u:{0}-{9}')]", 'int $id'));
+    }
+
+    /**
+     * A variadic takes as many arguments as the call site passes, so no index
+     * can be shown to be out of range from the declaration alone.
+     */
+    public function test_a_variadic_method_is_not_judged_on_the_index(): void
+    {
+        self::assertSame([], $this->analyse("#[Cacheable(ttl: 60, key: 'u:{3}')]", 'int ...$ids'));
+    }
+
+    /**
+     * A brace that is not a placeholder interpolates nothing -- the template is
+     * copied through -- so the key is as constant as one with no brace at all.
+     */
+    public function test_a_brace_that_is_not_a_placeholder_is_reported(): void
+    {
+        $violations = $this->analyse("#[Cacheable(ttl: 60, key: 'user:{id}')]", 'int $id');
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('does not mention the arguments', $violations[0]->message);
+    }
+
+    /**
      * With no arguments there is nothing for the key to mention, and one entry
      * is the only entry there could be.
      */

@@ -10,8 +10,9 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassMethod;
 
+use function count;
+use function preg_match_all;
 use function sprintf;
-use function str_contains;
 use function str_ends_with;
 
 /**
@@ -50,23 +51,94 @@ final class CacheableKeyIgnoresArgumentsAnalyser
 
         $key = $this->declaredKey($method);
 
-        if ($key === null || str_contains($key, '{')) {
+        if ($key === null) {
             return [];
         }
 
-        return [
-            new Violation(
-                sprintf(
-                    'The #[Cacheable] key "%s" on %s::%s() does not mention the arguments, '
-                    . 'so every call shares one entry and the first result is served to all of them',
-                    $key,
-                    $class->name(),
-                    $method->name->toString(),
-                ),
-                'gacela.cacheableKeyIgnoresArguments',
-                sprintf('Put the argument in the key, as "%s:{0}", or drop `key` so the trait derives one from the arguments.', $key),
+        $indexes = $this->placeholderIndexes($key);
+
+        if ($indexes === []) {
+            return [$this->noPlaceholder($key, $class, $method)];
+        }
+
+        // A variadic takes as many arguments as the call site passes, so no
+        // index can be shown to be out of range from the declaration alone.
+        $count = count($method->params);
+        if ($method->params[$count - 1]->variadic) {
+            return [];
+        }
+
+        foreach ($indexes as $index) {
+            if ($index < $count) {
+                return [];
+            }
+        }
+
+        return [$this->everyPlaceholderOutOfRange($key, $count, $class, $method)];
+    }
+
+    /**
+     * `{N}` interpolates `$args[N] ?? ''`, so an index the method has no
+     * argument for contributes an empty string -- the same constant on every
+     * call. The key carries a `{`, which is all this rule used to ask for.
+     */
+    private function everyPlaceholderOutOfRange(
+        string $key,
+        int $count,
+        AnalysedClassInterface $class,
+        ClassMethod $method,
+    ): Violation {
+        return new Violation(
+            sprintf(
+                // One string, not a concatenation split for line length:
+                // splitting generates Concat mutants that no reasonable
+                // assertion kills, as `FALLBACK_DEPRECATION` says of the same
+                // shape.
+                'The #[Cacheable] key "%s" on %s::%s() has no placeholder within the %d argument%s the method takes, so every call shares one entry and the first result is served to all of them',
+                $key,
+                $class->name(),
+                $method->name->toString(),
+                $count,
+                $count === 1 ? '' : 's',
             ),
-        ];
+            'gacela.cacheableKeyIgnoresArguments',
+            sprintf('Use a placeholder the method has an argument for: {0} to {%d}.', $count - 1),
+        );
+    }
+
+    private function noPlaceholder(
+        string $key,
+        AnalysedClassInterface $class,
+        ClassMethod $method,
+    ): Violation {
+        return new Violation(
+            sprintf(
+                'The #[Cacheable] key "%s" on %s::%s() does not mention the arguments, so every call shares one entry and the first result is served to all of them',
+                $key,
+                $class->name(),
+                $method->name->toString(),
+            ),
+            'gacela.cacheableKeyIgnoresArguments',
+            sprintf('Put the argument in the key, as "%s:{0}", or drop `key` so the trait derives one from the arguments.', $key),
+        );
+    }
+
+    /**
+     * The indexes of the `{N}` placeholders, read with the pattern the trait
+     * interpolates with -- `{id}` and a stray `{` are not placeholders there
+     * and must not be counted as one here.
+     *
+     * Left as the digit strings the pattern captured: `\d+` cannot match
+     * anything else, and PHP compares a numeric string to an int numerically,
+     * so casting them first only added a step nothing could observe.
+     *
+     * @return list<numeric-string>
+     */
+    private function placeholderIndexes(string $key): array
+    {
+        preg_match_all('/\{(\d+)\}/', $key, $matches);
+
+        return $matches[1];
     }
 
     /**

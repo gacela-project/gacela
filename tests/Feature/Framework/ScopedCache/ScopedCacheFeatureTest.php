@@ -8,6 +8,7 @@ use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\ScopedCache;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function count;
 use function glob;
@@ -34,6 +35,64 @@ final class ScopedCacheFeatureTest extends TestCase
     protected function tearDown(): void
     {
         DirectoryUtil::removeDir($this->cacheDir);
+    }
+
+    /**
+     * The graph is written on every `dependsOn()`, `invalidate()` and
+     * `clear()`, and its path was the cache directory concatenated with the
+     * filename. {@see FileCache} reduces `''`, `'/'` and whitespace to an
+     * empty directory, so that concatenation named the filesystem root: a
+     * cache with nowhere to write wrote and unlinked at `/` while holding
+     * nothing on disk of its own.
+     *
+     * The values it decorates already degrade to memory; the graph now does
+     * the same, through the helper {@see FileCache} reads.
+     */
+    public function test_a_cache_with_nowhere_to_write_keeps_its_graph_in_memory(): void
+    {
+        $scoped = new ScopedCache(new FileCache(''));
+
+        $scoped->put('parent', 'p');
+        $scoped->put('child', 'c');
+        $scoped->dependsOn('child', 'parent');
+
+        self::assertSame(['child'], $scoped->dependents('parent'));
+        self::assertFileDoesNotExist(DIRECTORY_SEPARATOR . self::GRAPH_FILE);
+        // Asked of the path, not only of the filesystem: a write to `/` fails
+        // silently for an unprivileged process, so the file is absent whether
+        // or not the bug is present. The path is the thing that differs.
+        self::assertNull($this->graphPathOf($scoped));
+    }
+
+    /**
+     * And a real directory still resolves to a path under it, so the guard
+     * above cannot pass by answering null for everything.
+     */
+    public function test_a_real_directory_still_resolves_to_a_graph_path(): void
+    {
+        $scoped = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame(
+            $this->cacheDir . DIRECTORY_SEPARATOR . self::GRAPH_FILE,
+            $this->graphPathOf($scoped),
+        );
+    }
+
+    /**
+     * Every write path, because each persists: an invalidate and a clear would
+     * each have reached the root on their own.
+     */
+    public function test_invalidating_and_clearing_with_nowhere_to_write_touch_no_disk(): void
+    {
+        $scoped = new ScopedCache(new FileCache(''));
+        $scoped->put('parent', 'p');
+        $scoped->dependsOn('child', 'parent');
+
+        $scoped->invalidate('parent');
+        $scoped->clear();
+
+        self::assertNull($scoped->get('parent'));
+        self::assertFileDoesNotExist(DIRECTORY_SEPARATOR . self::GRAPH_FILE);
     }
 
     /**
@@ -149,5 +208,21 @@ final class ScopedCacheFeatureTest extends TestCase
     private function countCacheFiles(): int
     {
         return count(glob($this->cacheDir . '/*.php') ?: []);
+    }
+
+    /**
+     * The graph's path, read off the object.
+     *
+     * Private because nothing outside needs it, and pinned here because the
+     * difference between a correct and an incorrect one is invisible in
+     * behaviour: both keep working, and both leave `/` untouched on a machine
+     * that cannot write there.
+     */
+    private function graphPathOf(ScopedCache $scoped): ?string
+    {
+        $method = new ReflectionMethod($scoped, 'graphPath');
+
+        /** @var ?string */
+        return $method->invoke($scoped);
     }
 }

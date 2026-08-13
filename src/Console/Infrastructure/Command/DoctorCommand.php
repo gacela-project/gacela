@@ -16,6 +16,7 @@ use Gacela\Console\Application\Doctor\Check\PackageManifestCheck;
 use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
+use Gacela\Console\Application\Doctor\Check\TaggedServiceTargetCheck;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
@@ -143,6 +144,11 @@ final class DoctorCommand extends Command
             new ServiceExtensionTargetCheck(
                 $modules,
                 array_keys($config->getSetupGacela()->getServicesToExtend()),
+                Gacela::container()->getRegisteredServices(),
+            ),
+            new TaggedServiceTargetCheck(
+                $modules,
+                $config->getSetupGacela()->getTags(),
                 Gacela::container()->getRegisteredServices(),
             ),
             // Regenerated unfiltered, and lazily: the metadata file describes

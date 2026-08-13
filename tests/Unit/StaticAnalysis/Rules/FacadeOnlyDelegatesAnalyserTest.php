@@ -47,7 +47,7 @@ final class FacadeOnlyDelegatesAnalyserTest extends TestCase
 
         self::assertCount(1, $violations);
         self::assertSame(
-            'Facade method App\Checkout\CheckoutFacade::doThing() must only delegate to $this->getFactory()/getConfig()/getProvider(); no inline logic allowed.',
+            'Facade method App\Checkout\CheckoutFacade::doThing() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.',
             $violations[0]->message,
         );
         self::assertSame('gacela.facadeOnlyDelegates', $violations[0]->identifier);

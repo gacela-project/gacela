@@ -41,6 +41,16 @@ final class GoodFacade extends AbstractFacade
         return $this->getFactory()?->createThing()?->value;
     }
 
+    /**
+     * A kind declared with `addResolvableType()` is reached through
+     * `getResolvedType()`, and delegating to it is the same shape as
+     * delegating to a pillar.
+     */
+    public function declaredKindDelegate(): mixed
+    {
+        return $this->getResolvedType('Exporter')?->run();
+    }
+
     public function cachedArrow(): mixed
     {
         return $this->cached(fn () => $this->getFactory()->createRepository()->fetchData());

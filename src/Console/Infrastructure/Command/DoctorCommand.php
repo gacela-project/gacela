@@ -144,6 +144,7 @@ final class DoctorCommand extends Command
                 $modules,
                 array_keys($config->getSetupGacela()->getServicesToExtend()),
                 Gacela::container()->getRegisteredServices(),
+                $this->providerScopedExtensionIds(),
             ),
             // Regenerated unfiltered, and lazily: the metadata file describes
             // the whole application, so comparing it against the modules a
@@ -183,6 +184,32 @@ final class DoctorCommand extends Command
         $targets = array_keys($setup->getSpecificListeners() ?? []);
 
         return $targets;
+    }
+
+    /**
+     * Ids passed to `extendProviderService()`, grouped by the Provider each
+     * names.
+     *
+     * Read off the concrete setup for the same reason as the listener map
+     * above: it is not part of SetupGacelaInterface.
+     *
+     * @return array<class-string, list<string>>
+     */
+    private function providerScopedExtensionIds(): array
+    {
+        $setup = Config::getInstance()->getSetupGacela();
+
+        if (!$setup instanceof SetupGacela) {
+            return [];
+        }
+
+        $byProvider = [];
+
+        foreach ($setup->getProviderServicesToExtend() as $providerClass => $byId) {
+            $byProvider[$providerClass] = array_keys($byId);
+        }
+
+        return $byProvider;
     }
 
     private function renderResult(CheckResult $result, OutputInterface $output): void

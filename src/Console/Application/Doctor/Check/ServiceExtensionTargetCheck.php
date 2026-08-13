@@ -38,11 +38,13 @@ final class ServiceExtensionTargetCheck implements HealthCheck
      * @param list<AppModule> $modules
      * @param list<string> $extensionIds ids passed to extendService()
      * @param list<string> $appContainerServiceIds ids the app container itself stores
+     * @param array<class-string, list<string>> $providerScopedIds ids passed to extendProviderService(), by provider
      */
     public function __construct(
         private readonly array $modules,
         private readonly array $extensionIds,
         private readonly array $appContainerServiceIds,
+        private readonly array $providerScopedIds = [],
     ) {
     }
 
@@ -53,7 +55,7 @@ final class ServiceExtensionTargetCheck implements HealthCheck
 
     public function run(): CheckResult
     {
-        if ($this->extensionIds === []) {
+        if ($this->extensionIds === [] && $this->providerScopedIds === []) {
             return CheckResult::ok($this->name(), 'no service extensions registered');
         }
 
@@ -75,6 +77,25 @@ final class ServiceExtensionTargetCheck implements HealthCheck
             }
         }
 
+        $scopedCount = 0;
+        foreach ($this->providerScopedIds as $providerClass => $ids) {
+            $registered = array_flip($this->registeredBy($providerClass, $warnings));
+
+            foreach ($ids as $id) {
+                ++$scopedCount;
+
+                if (isset($registered[$id])) {
+                    continue;
+                }
+
+                $warnings[] = sprintf(
+                    "'%s' is extended on %s, which never set()s it -- the extension will never apply",
+                    $id,
+                    $providerClass,
+                );
+            }
+        }
+
         if ($warnings !== []) {
             return CheckResult::warn(
                 $this->name(),
@@ -83,7 +104,10 @@ final class ServiceExtensionTargetCheck implements HealthCheck
             );
         }
 
-        return CheckResult::ok($this->name(), sprintf('%d extension id(s) matched', count($this->extensionIds)));
+        return CheckResult::ok(
+            $this->name(),
+            sprintf('%d extension id(s) matched', count($this->extensionIds) + $scopedCount),
+        );
     }
 
     /**
@@ -98,7 +122,28 @@ final class ServiceExtensionTargetCheck implements HealthCheck
     private function providedIds(AppModule $module, array &$warnings): array
     {
         $providerClass = $module->providerClass();
-        if ($providerClass === null || !is_subclass_of($providerClass, AbstractProvider::class)) {
+        if ($providerClass === null) {
+            return [];
+        }
+
+        return $this->registeredBy($providerClass, $warnings);
+    }
+
+    /**
+     * What one Provider stores, read off a throwaway scope.
+     *
+     * Named directly by `extendProviderService()`, so the miss is sharper than
+     * the app-wide one: not "nobody set this" but "the Provider you named does
+     * not". A slot holding a class that is not a Provider is skipped rather
+     * than instantiated and run.
+     *
+     * @param list<string> $warnings
+     *
+     * @return list<string>
+     */
+    private function registeredBy(string $providerClass, array &$warnings): array
+    {
+        if (!is_subclass_of($providerClass, AbstractProvider::class)) {
             return [];
         }
 

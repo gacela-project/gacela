@@ -22,6 +22,8 @@
 
 ### Fixed
 
+- Report in `doctor` an `extendProviderService()` id the named Provider never `set()`s. Its own docblock promised this, and only app-wide `extendService()` ids were ever passed to the check — so a typo, or the wrong Provider named, applied nowhere and said nothing. The provider-scoped miss is the sharper one: not "nobody set this id" but "the Provider you named does not"
+
 - Answer a mistyped Laravel bridge config key with the one that was meant. `config/gacela.php` listing all eight allowed keys is a list to scan rather than an answer; Symfony's own config tree replies "Did you mean ...?" to the same mistake, and Gacela already reads the same helper for a mistyped key in `gacela.php`
 - Say so when a plugin's class does not exist. A name registered with `addPluginStack()` is a string until something loads it, and the container answers `null` for one that resolves to nothing — so a typo was reported as a class that "does not implement" the contract, sending the reader to inspect an `implements` clause on a file that is not there
 - Never touch the filesystem root from `FileCache` when there is no cache directory. `''`, `'/'` and whitespace all normalize to an empty directory, and every path was concatenated onto it directly — so the entry path became `'/<sha1>.php'` and the glob `'/*.php'`. A cache with no usable directory wrote entries to the root, read them back, and `clear()` would have unlinked every PHP file it found there; on Windows, where the drive root is writable, the entries really did land there. `CacheFilePath` now answers "nowhere" rather than "the root", and reads, writes, deletes and batch commits all honour it

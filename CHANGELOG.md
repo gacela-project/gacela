@@ -20,6 +20,7 @@
 
 ### Fixed
 
+- Name the config key that was meant when one is not found. `ConfigException::keyNotFound()` has always accepted the available keys and always been handed none, leaving `Did you mean?` unreachable for config while the identical helper worked for services; all six typed getters now supply them. Since the config is flat, a nested reach like `database.host` is answered with `database`
 - Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote their test-only requirements to `require-dev`, so each manifest states what its `src/` imports and only that
 - Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir no longer serve each other's classes
 - Point the "missing return type" exception at the namespace `ServiceMap` actually lives in: its recommended fix named one that does not exist, so following it left the attribute unmatched. Its docblock alternative is now marked as the deprecated path it is

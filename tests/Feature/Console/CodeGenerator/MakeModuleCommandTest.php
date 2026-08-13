@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\CodeGenerator;
 
+use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
@@ -11,8 +12,10 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Tester\CommandTester;
 
 use function sprintf;
 
@@ -89,6 +92,38 @@ OUT;
     {
         yield 'module' => ['TestModule', false];
         yield 'module -s' => ['', true];
+    }
+
+    /**
+     * Only the service template scaffolds a facade test. Accepting the flag on
+     * the others wrote four files, reported "created successfully" and produced
+     * no test -- so a reader who asked for one believes they have it.
+     */
+    public function test_with_tests_on_a_template_that_scaffolds_none_is_refused(): void
+    {
+        $tester = new CommandTester(new MakeModuleCommand());
+        $exitCode = $tester->execute(['path' => 'Psr4CodeGeneratorData/NotGenerated', '--with-tests' => true]);
+
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('--with-tests only applies to the service template', $tester->getDisplay());
+        self::assertStringContainsString('--template=service', $tester->getDisplay());
+        self::assertDirectoryDoesNotExist(getcwd() . '/data/NotGenerated');
+    }
+
+    /**
+     * `--minimal` is shorthand for a template, so the refusal names the
+     * template it resolved to rather than the flag that chose it.
+     */
+    public function test_the_refusal_names_the_template_the_shorthand_resolved_to(): void
+    {
+        $tester = new CommandTester(new MakeModuleCommand());
+        $tester->execute([
+            'path' => 'Psr4CodeGeneratorData/NotGeneratedEither',
+            '--with-tests' => true,
+            '--minimal' => true,
+        ]);
+
+        self::assertStringContainsString('the "minimal" template scaffolds no test', $tester->getDisplay());
     }
 
     public function test_make_module_with_service_template_generates_a_working_module(): void

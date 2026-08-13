@@ -26,6 +26,7 @@
 ### Fixed
 
 - Refuse `debug:graph --rules` and `--allowed-cycles` when `--check` is absent, instead of ignoring them. Both files are read only by `--check`, so a CI job that wrote a rules file and ran the command without it printed the graph and exited zero — a gate that looks green while checking nothing
+- Refuse `make:module --with-tests` on a template that scaffolds no test, instead of ignoring it. Only the service template writes a facade test; on the others the flag was accepted, four files were written and "created successfully" reported — so a reader who asked for a test believed they had one
 
 - Report in `doctor` an `extendProviderService()` id the named Provider never `set()`s. Its own docblock promised this, and only app-wide `extendService()` ids were ever passed to the check — so a typo, or the wrong Provider named, applied nowhere and said nothing. The provider-scoped miss is the sharper one: not "nobody set this id" but "the Provider you named does not"
 

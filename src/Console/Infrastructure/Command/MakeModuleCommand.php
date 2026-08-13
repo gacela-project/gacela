@@ -80,7 +80,24 @@ final class MakeModuleCommand extends Command
         $commandArguments = $this->getFacade()->parseArguments($path);
         $shortName = $input->getOption('short-name') === true;
         $isService = $template === 'service';
-        $files = $this->filesFor($template, $input->getOption('with-tests') === true);
+        $withTests = $input->getOption('with-tests') === true;
+
+        // Only the service template scaffolds a facade test, and accepting the
+        // flag on the others wrote four files, reported "created successfully"
+        // and produced no test -- so a reader who asked for one believes they
+        // have it. Refused rather than ignored, the same way an unusable path
+        // is.
+        if ($withTests && !$isService) {
+            $output->writeln(sprintf(
+                '<error>--with-tests only applies to the service template, and the "%s" template scaffolds no test.</error>',
+                $template,
+            ));
+            $output->writeln('Add <comment>--template=service</comment>, or drop <comment>--with-tests</comment>.');
+
+            return self::FAILURE;
+        }
+
+        $files = $this->filesFor($template, $withTests);
 
         // Every target, before the first one is written. Generating over a
         // module replaces hand-written code with a stub and reports it as

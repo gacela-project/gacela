@@ -11,12 +11,15 @@ use Gacela\StaticAnalysis\ResolvedName;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\TraitUse;
 
+use function in_array;
 use function preg_match_all;
+
 use function sprintf;
 
 use const PREG_SET_ORDER;
@@ -76,17 +79,15 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
             return [];
         }
 
+        // No early return for a class without a docblock: there is nothing to
+        // match in an empty string, so the loop below is already the answer.
         $docBlock = $node->getDocComment()?->getText() ?? '';
-
-        if ($docBlock === '') {
-            return [];
-        }
 
         $declared = $this->accessorsDeclaredByAttribute($node);
         $violations = [];
 
         foreach ($this->accessorsDocumented($docBlock) as $method => $type) {
-            if (isset($declared[$method])) {
+            if (in_array($method, $declared, true)) {
                 continue;
             }
 
@@ -153,7 +154,7 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
      * Attributes are read off this class only, never its parents -- which is
      * what the runtime does, because PHP does not inherit attributes.
      *
-     * @return array<string, true>
+     * @return list<string>
      */
     private function accessorsDeclaredByAttribute(ClassLike $node): array
     {
@@ -168,7 +169,7 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
                 $method = $this->methodArgument($attribute->args);
 
                 if ($method !== null) {
-                    $declared[$method] = true;
+                    $declared[] = $method;
                 }
             }
         }
@@ -186,17 +187,13 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
     private function methodArgument(array $args): ?string
     {
         foreach ($args as $position => $arg) {
-            $named = $arg->name?->toString();
+            // Named, it is whichever argument says `method:` -- which need not
+            // be written first. Unnamed, it is the first one, and only that one.
+            $isMethod = $arg->name instanceof Identifier
+                ? $arg->name->toString() === 'method'
+                : $position === 0;
 
-            if ($named !== null && $named !== 'method') {
-                continue;
-            }
-
-            if ($named === null && $position !== 0) {
-                continue;
-            }
-
-            if ($arg->value instanceof String_) {
+            if ($isMethod && $arg->value instanceof String_) {
                 return $arg->value->value;
             }
         }

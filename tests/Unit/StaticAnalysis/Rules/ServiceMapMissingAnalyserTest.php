@@ -118,6 +118,121 @@ final class ServiceMapMissingAnalyserTest extends TestCase
     }
 
     /**
+     * Every undeclared accessor is reported, not the first one -- a class
+     * migrates accessor by accessor, and a report that stopped at one would
+     * send you back for the rest.
+     */
+    public function test_every_undeclared_accessor_is_reported(): void
+    {
+        $violations = $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                /**
+                 * @method WalletFacade getFacade()
+                 * @method WalletRepository getRepository()
+                 */
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+        );
+
+        self::assertCount(2, $violations);
+        self::assertStringContainsString('getFacade()', $violations[0]->message);
+        self::assertStringContainsString('getRepository()', $violations[1]->message);
+    }
+
+    /**
+     * Every attribute is read, not the first: declaring two accessors is the
+     * ordinary shape of a migrated class.
+     */
+    public function test_every_attribute_declares_its_accessor(): void
+    {
+        self::assertSame([], $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                use Gacela\Framework\ServiceResolver\ServiceMap;
+                /**
+                 * @method WalletFacade getFacade()
+                 * @method WalletRepository getRepository()
+                 */
+                #[ServiceMap(method: 'getFacade', className: WalletFacade::class)]
+                #[ServiceMap(method: 'getRepository', className: WalletRepository::class)]
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+        ));
+    }
+
+    /**
+     * Named arguments may be written in any order, so `method:` is found by its
+     * name rather than by where it sits.
+     */
+    public function test_the_named_arguments_may_be_written_in_either_order(): void
+    {
+        self::assertSame([], $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                use Gacela\Framework\ServiceResolver\ServiceMap;
+                /** @method WalletFacade getFacade() */
+                #[ServiceMap(className: WalletFacade::class, method: 'getFacade')]
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+        ));
+    }
+
+    /**
+     * `className` takes a string, so it may be written as a plain one rather
+     * than `::class`. Written first, it is still not the method name -- reading
+     * whichever argument happens to be a string would file the accessor under a
+     * class name and report the class as unmigrated.
+     */
+    public function test_a_string_class_name_written_first_is_not_the_method_name(): void
+    {
+        self::assertSame([], $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                use Gacela\Framework\ServiceResolver\ServiceMap;
+                /** @method WalletFacade getFacade() */
+                #[ServiceMap(className: 'App\Wallet\WalletFacade', method: 'getFacade')]
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+        ));
+    }
+
+    /**
+     * A real method is skipped, and the walk continues: an undeclared accessor
+     * after it is still reported. Skipping by leaving the loop would hide
+     * whatever the class documents next.
+     */
+    public function test_a_real_method_does_not_end_the_walk(): void
+    {
+        $violations = $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                /**
+                 * @method WalletFacade getFacade()
+                 * @method WalletRepository getRepository()
+                 */
+                final class WalletCommand {
+                    use ServiceResolverAwareTrait;
+                    public function getFacade(): WalletFacade { return new WalletFacade(); }
+                }
+                PHP,
+        );
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('getRepository()', $violations[0]->message);
+    }
+
+    /**
      * `__call()` is only reached for a method the class does not have, so a
      * declared one is never resolved from the docblock -- its `@method` tag is
      * documentation, and reporting it would be advice with nothing to fix.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\Testing;
 
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Testing\GacelaTestCase;
 use Gacela\Framework\Testing\ModuleDoubleException;
@@ -12,6 +13,8 @@ use GacelaTest\Integration\Framework\Testing\ModuleDoubleFixture\Greeting\Greeti
 use GacelaTest\Integration\Framework\Testing\ModuleDoubleFixture\Greeting\GreetingFacade;
 use GacelaTest\Integration\Framework\Testing\ModuleDoubleFixture\Greeting\GreetingFactory;
 use GacelaTest\Integration\Framework\Testing\ModuleDoubleFixture\Greeting\GreetingProvider;
+use GacelaTest\Integration\Framework\Testing\ModuleDoubleFixture\Sealed\Domain\SealedGreeter;
+use GacelaTest\Integration\Framework\Testing\ModuleDoubleFixture\Sealed\SealedFacade;
 
 /**
  * Replacing another module is the most common thing a test of a modular
@@ -20,6 +23,33 @@ use GacelaTest\Integration\Framework\Testing\ModuleDoubleFixture\Greeting\Greeti
 final class ModuleDoublesTest extends GacelaTestCase
 {
     private const FIXTURE_DIR = __DIR__ . '/ModuleDoubleFixture';
+
+    /**
+     * A `final` Factory -- which is what `make:module` generates, and what the
+     * rest of this codebase prefers -- cannot be subclassed, so neither the
+     * anonymous subclass this file uses elsewhere nor `createStub()` can double
+     * it: PHP raises a fatal error, PHPUnit a `ClassIsFinalException`.
+     *
+     * `swapModuleFactory()` takes an `AbstractFactory`, not the module's own
+     * one, so the double is a standalone factory carrying the methods the Facade
+     * calls. Every other fixture here is deliberately non-final, which is how a
+     * shape the scaffolder always produces went untested.
+     */
+    public function test_a_final_factory_is_doubled_by_a_standalone_one(): void
+    {
+        $this->bootstrapGacela(self::FIXTURE_DIR);
+
+        self::assertSame('hello', (new SealedFacade())->greet(), 'precondition: the real module answers');
+
+        $this->swapModuleFactory(SealedFacade::class, new class() extends AbstractFactory {
+            public function createGreeter(): SealedGreeter
+            {
+                return new SealedGreeter('swapped');
+            }
+        });
+
+        self::assertSame('swapped', (new SealedFacade())->greet());
+    }
 
     public function test_a_swapped_factory_is_what_the_facade_uses(): void
     {

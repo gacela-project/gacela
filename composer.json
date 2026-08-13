@@ -132,6 +132,7 @@
             "XDEBUG_MODE=off ./vendor/bin/phpmetrics --config=phpmetrics-config.json --junit=data/log-junit.xml"
         ],
         "module-cycles": "php bin/gacela debug:graph --check --allowed-cycles=allowed-module-cycles.json",
+        "normalizerun": "@composer normalize --dry-run",
         "phpbench": "XDEBUG_MODE=off ./vendor/bin/phpbench run --report=aggregate --ansi",
         "phpbench-base": "XDEBUG_MODE=off ./vendor/bin/phpbench run --tag=baseline --report=aggregate --progress=plain --ansi",
         "phpbench-ref": "XDEBUG_MODE=off ./vendor/bin/phpbench run --ref=baseline --report=aggregate --progress=plain --ansi",
@@ -144,6 +145,7 @@
         ],
         "psalm": "XDEBUG_MODE=off ./vendor/bin/psalm",
         "quality": [
+            "@normalizerun",
             "@csrun",
             "@rectorrun",
             "@psalm",

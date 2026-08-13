@@ -244,7 +244,9 @@ final class ValidateConfigCommandTest extends TestCase
                 SomeContract::class,
                 MismatchedImplementation::class,
             ),
-            '✓ ' . SomeContract::class,
+            // No `✓` for this key: the tick says the binding had nothing to
+            // report, so printing it under a warning about the same key read as
+            // the warning being withdrawn. The two error paths already skip it.
             '✓ No circular dependencies detected',
             '⚠ Validation completed with warnings',
         ], $this->verdictLinesOf($tester));

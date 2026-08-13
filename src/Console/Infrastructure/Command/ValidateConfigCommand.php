@@ -164,6 +164,11 @@ final class ValidateConfigCommand extends Command
                         $output->writeln(sprintf('      actual:       %s', $valueParents));
                         $output->writeln(sprintf('      hint:         make %s extend or implement %s', $value, $key));
                         $hasWarnings = true;
+                        // As the two error paths above do. The tick means this
+                        // binding had nothing to report, so printing it under a
+                        // warning about the same key reads as the warning being
+                        // withdrawn.
+                        continue;
                     }
                 } elseif (is_object($value)) {
                     // Callable objects (factories) are always valid; other objects must be instances of the key.

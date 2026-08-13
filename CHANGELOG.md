@@ -4,6 +4,8 @@
 
 ### Added
 
+- Answer "are the generated DTO classes up to date?" with `dto:generate --check`. The classes are committed, so a declaration edited without regenerating leaves the repository behind what `gacela.php` says — and `--dry-run` reported it while exiting `0` either way, so a CI job had to parse the output. `--check` writes nothing, names each stale file, and exits non-zero, like `debug:graph --check`. Nothing declared is a pass: there is nothing to be stale
+
 - Report in `doctor` listeners registered while `disableEventListeners()` is in effect. No dispatcher is built, so every registration is inert — which `docs/events.md` already calls the first thing to check when a listener appears dead, and which the check itself used to give a green tick to. Generic listeners count too: they carry no target, so a project whose only listeners are generic looked like one that had registered nothing. Disabling with nothing registered stays silent, and an unfireable target is still reported alongside, because it has to be right for the day the switch goes back on
 
 - Name what `profile:report` never saw finish. A `stop()` that misspells the operation or subject is ignored — there is no start time to measure from — so the entry vanishes and looks exactly like code nobody instrumented. The report now lists what is still open, counted where several spans of one operation are, and `--format=json` carries the same answer in an `unfinished` field

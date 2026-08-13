@@ -203,6 +203,75 @@ final class DtoGenerateCommandTest extends TestCase
     /**
      * @param list<string> $classNames
      */
+    /**
+     * The CI question this command could not answer: are the generated classes
+     * in the repository up to date with what `gacela.php` declares? `--dry-run`
+     * reports it and exits 0 either way, so a job had to parse the output.
+     */
+    public function test_check_fails_when_a_class_would_be_written(): void
+    {
+        $tester = $this->generate(['--check' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('would write', $tester->getDisplay());
+    }
+
+    public function test_check_writes_nothing_even_though_it_fails(): void
+    {
+        $this->generate(['--check' => true]);
+
+        self::assertFileDoesNotExist($this->orderFile(), 'a check must not write what it is checking');
+    }
+
+    public function test_check_passes_once_the_classes_are_generated(): void
+    {
+        $this->generate();
+
+        $tester = $this->generate(['--check' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+    }
+
+    /**
+     * With nothing declared there is nothing to be stale, which is a pass --
+     * the same answer `--check` gives a project whose classes are current.
+     */
+    public function test_check_passes_when_no_shape_is_declared(): void
+    {
+        Gacela::bootstrap($this->projectDir, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+        });
+
+        $tester = new CommandTester(new DtoGenerateCommand());
+        $tester->execute(['--check' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+    }
+
+    /**
+     * The command's own empty case: nothing declared is not a failure, and the
+     * message has to name the call that would change that. Untested until now,
+     * which is why `DtoGenerateResult::total()` had no coverage at all -- it is
+     * read only here.
+     */
+    public function test_a_project_declaring_no_shape_is_told_how_to_declare_one(): void
+    {
+        Gacela::bootstrap($this->projectDir, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+        });
+
+        $tester = new CommandTester(new DtoGenerateCommand());
+        $tester->execute([]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString(
+            'No shape declared. Use $config->declareDtoSchema(...) in gacela.php.',
+            $tester->getDisplay(),
+        );
+    }
+
     private function generateMany(array $classNames): CommandTester
     {
         Gacela::bootstrap($this->projectDir, static function (GacelaConfig $config) use ($classNames): void {

@@ -19,7 +19,10 @@ $config->declareDtoSchema(App\Checkout\Order::class, [
 ```bash
 vendor/bin/gacela dto:generate            # write the classes
 vendor/bin/gacela dto:generate --dry-run  # report what would change, write nothing
+vendor/bin/gacela dto:generate --check    # the same, and exit non-zero if anything would change
 ```
+
+`--check` is the CI form: the generated classes are committed, so a declaration edited without regenerating leaves the repository behind what `gacela.php` says. It writes nothing — writing is what it exists to catch — and names each file that is stale.
 
 ```php
 $order = Order::fromArray(['reference' => 'ord-1187', 'total' => 4990]);

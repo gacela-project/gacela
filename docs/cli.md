@@ -65,6 +65,8 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).
 
+*event listeners* answers whether a `registerSpecificListener()` target can ever match. The dispatcher compares `$event::class`, so a listener registered against an interface never fires — not even for events that implement it — and neither does one naming an abstract class or a typo. `Container::afterResolving()` matches by `instanceof`, which is exactly why registering against a contract looks like it should work. A concrete class nothing dispatches is left alone: that listener is waiting, not broken.
+
 *config sources* answers whether the paths you passed to `addAppConfig()` match a file. `conf/*.php` for a directory named `config` bootstraps perfectly — globbing a path that is not there yields no files, and an application with no configuration is a legitimate one — and then the first thing to read a key fails, with an error about the key rather than about the path that was meant to provide it. Only the base path is reported: `config/app-prod.php` is *meant* to be absent everywhere it does not apply.
 
 *cache directory* answers whether the cache you enabled can actually be written. Writing is best-effort by design — an application must not fail because an optimisation could not be stored — so a project that enabled caching and got a directory it has no permission on runs correctly and pays the cold cost on every request, with nothing said. Reported read-only: `doctor` never creates the directory to find out.

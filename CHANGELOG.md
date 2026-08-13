@@ -4,6 +4,8 @@
 
 ### Added
 
+- Report in `doctor` a tagged id nothing can answer. `Container::tagged()` resolves each id in turn and gives back `null` for one naming nothing, so the group a module iterates silently carries a hole and the failure lands on the consumer as "Call to a member function … on null" — pointing at the loop rather than the registration. An id is answerable when a Provider `set()`s it or it names a class the container can construct, so a tag grouping plain service ids is untouched
+
 - Select configuration by more than `APP_ENV` with `addConfigDimension()`: each declared variable adds a link to the chain, so `config/app-prod-eu.php` refines `config/app-prod.php` refines `config/app.php`. The merged-config cache is keyed by the whole tuple, so two regions sharing a cache directory never read each other's file
 - Declare a data shape with `declareDtoSchema()` and generate the immutable class from it with `dto:generate`: typed getters, `with*()` copies, `toArray()` and `fromArray()`. Declarations of one shape union, so a project adds a property to a packaged shape without forking it, and redefining one is refused at bootstrap. The file is written where the project's own composer `autoload` already looks
 - Declare an extension point with `addPluginStack()`: every implementation of one interface, in declaration order, resolved lazily and read back typed through `getPluginStack()`. Calling it again appends, so another config source contributes to a stack it did not declare

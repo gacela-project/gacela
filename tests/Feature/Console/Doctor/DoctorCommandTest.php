@@ -78,6 +78,7 @@ final class DoctorCommandTest extends TestCase
             '✓ published stubs',
             '✓ event listeners',
             '✓ service extensions',
+            '✓ tagged services',
             '✓ package manifests',
             '✓ IDE metadata',
             '✓ All checks passed',

@@ -130,6 +130,97 @@ final class ServiceExtensionTargetCheckTest extends TestCase
     /**
      * @param class-string|null $providerClass
      */
+    /**
+     * `extendProviderService()` names the Provider, so the miss is sharper
+     * than the app-wide one: not "nobody set this id" but "the Provider you
+     * named does not". Its own docblock promised `doctor` reported this, and
+     * only app-wide ids were ever passed to this check.
+     */
+    public function test_a_provider_scoped_id_the_named_provider_sets_is_matched(): void
+    {
+        $check = new ServiceExtensionTargetCheck([], [], [], [SetProvider::class => [SetProvider::ID]]);
+
+        self::assertSame(CheckStatus::Ok, $check->run()->status);
+    }
+
+    /**
+     * The matched id comes first on purpose: skipping it must not abandon the
+     * ids after it, and with the unmatched one first the skip's `continue` and
+     * `break` are indistinguishable.
+     */
+    public function test_a_matched_provider_scoped_id_does_not_end_the_walk(): void
+    {
+        $check = new ServiceExtensionTargetCheck(
+            [],
+            [],
+            [],
+            [SetProvider::class => [SetProvider::ID, 'knwon.id']],
+        );
+
+        $result = $check->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertStringContainsString('knwon.id', $result->details[0]);
+    }
+
+    public function test_a_provider_scoped_id_the_named_provider_never_sets_warns(): void
+    {
+        $check = new ServiceExtensionTargetCheck([], [], [], [SetProvider::class => ['knwon.id']]);
+
+        $result = $check->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertStringContainsString('knwon.id', $result->details[0]);
+        self::assertStringContainsString(SetProvider::class, $result->details[0]);
+    }
+
+    /**
+     * The case the app-wide check cannot express: the id is real and some
+     * other Provider registers it, but not the one named -- so the extension
+     * still never applies.
+     */
+    public function test_an_id_registered_only_by_another_provider_warns(): void
+    {
+        $check = new ServiceExtensionTargetCheck(
+            [$this->module(SetProvider::class)],
+            [],
+            [],
+            [BindOnlyProvider::class => [SetProvider::ID]],
+        );
+
+        $result = $check->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertStringContainsString(BindOnlyProvider::class, $result->details[0]);
+    }
+
+    /**
+     * A provider slot holding a class that is not a Provider is skipped rather
+     * than instantiated and run.
+     */
+    public function test_a_provider_scoped_id_on_a_non_provider_class_is_skipped(): void
+    {
+        $check = new ServiceExtensionTargetCheck([], [], [], [StubFacade::class => ['some.id']]);
+
+        $result = $check->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        // Exactly the unmatched id: the class is skipped, not run and crashed.
+        self::assertCount(1, $result->details);
+    }
+
+    public function test_the_passing_message_counts_both_kinds_of_extension(): void
+    {
+        $check = new ServiceExtensionTargetCheck(
+            [],
+            ['app.id'],
+            ['app.id'],
+            [SetProvider::class => [SetProvider::ID]],
+        );
+
+        self::assertContains('2 extension id(s) matched', $check->run()->details);
+    }
+
     private function module(?string $providerClass): AppModule
     {
         return new AppModule(

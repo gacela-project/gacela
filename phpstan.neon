@@ -34,10 +34,6 @@ parameters:
         -
             identifier: gacela.suffixExtends
             path: src/Framework/*
-        # A *Laravel* service provider: the host's word, not a pillar.
-        -
-            identifier: gacela.suffixExtends
-            path: laravel-bridge/src/GacelaServiceProvider.php
         # The accessor seam for a project-declared kind. The three older
         # aware-traits are each used by a pillar base class inside src/, so they
         # look used; this one is reached only from a consumer's own class, which

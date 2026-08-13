@@ -110,6 +110,24 @@ final class ArchitectureRulesTest extends PsalmFixtureTestCase
     }
 
     /**
+     * Nor is a class that already has a parent: PHP has single inheritance, so
+     * it cannot extend the pillar too. Outside Gacela the shape is ordinary --
+     * a Laravel `ServiceProvider`, an OAuth `GoogleAuthProvider` -- and these
+     * rules run inside every consumer's build.
+     *
+     * Its own file, because the assertion is that Psalm reports *nothing* here
+     * and a shared file would let another rule's silence stand in for this one.
+     */
+    public function test_a_class_that_already_extends_something_is_not_told_to_extend_a_pillar(): void
+    {
+        $errors = $this->analyseFixture();
+        $this->skipIfPsalmCannotRun($errors);
+
+        self::assertStringContainsString('GacelaSuffixExtends', $errors, 'precondition: the rule ran at all');
+        self::assertSame('', $this->errorsIn('InheritedNameFacade.php'));
+    }
+
+    /**
      * Psalm has no separate channel for a tip, so the correction rides along in
      * the message rather than being dropped.
      */

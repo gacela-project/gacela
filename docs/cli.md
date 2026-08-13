@@ -13,7 +13,7 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 
 | Command | What it does |
 |---|---|
-| `init` | Creates the `gacela.php` a project needs before anything else works |
+| `init` | Creates the `gacela.php` a project needs before anything else works, plus the `config/app.php` it declares. `--force` regenerates `gacela.php` and never touches your config |
 | `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests`, `--short-name` |
 | `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared |
 | `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force` |

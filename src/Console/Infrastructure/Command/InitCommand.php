@@ -10,7 +10,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function dirname;
+use function is_dir;
 use function is_file;
+use function mkdir;
 use function sprintf;
 
 /**
@@ -25,6 +28,16 @@ final class InitCommand extends Command
     private const FILENAME = 'gacela.php';
 
     private const TEMPLATE = __DIR__ . '/../Template/Command/gacela-php.txt';
+
+    /**
+     * The generated `gacela.php` declares `config/*.php`, so the directory has
+     * to exist with something in it -- otherwise the very first `doctor` run on
+     * a freshly scaffolded project reports a config path that loads nothing,
+     * which is true and entirely the scaffolder's doing.
+     */
+    private const CONFIG_FILENAME = 'config' . DIRECTORY_SEPARATOR . 'app.php';
+
+    private const CONFIG_TEMPLATE = __DIR__ . '/../Template/Command/app-config.txt';
 
     public function __construct(
         private readonly string $appRootDir,
@@ -55,10 +68,49 @@ final class InitCommand extends Command
         }
 
         $output->writeln(sprintf('<fg=green>✓</> Created %s', $target));
+
+        $configTarget = $this->writeAppConfig();
+        if ($configTarget !== null) {
+            $output->writeln(sprintf('<fg=green>✓</> Created %s', $configTarget));
+        }
+
         $output->writeln('');
         $output->writeln('Next: <comment>bin/gacela make:module App/YourModule --minimal</comment>');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The config file the generated `gacela.php` points at.
+     *
+     * Never overwritten, not even with `--force`: that flag is about replacing
+     * a `gacela.php` you asked to regenerate, and the configuration next to it
+     * is yours. Returns null when there was already one, so nothing is claimed
+     * to have been created.
+     */
+    private function writeAppConfig(): ?string
+    {
+        $target = $this->appRootDir . DIRECTORY_SEPARATOR . self::CONFIG_FILENAME;
+
+        if (is_file($target)) {
+            return null;
+        }
+
+        $directory = dirname($target);
+        if (!is_dir($directory) && !mkdir($directory, 0o777, true) && !is_dir($directory)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
+        }
+
+        $template = file_get_contents(self::CONFIG_TEMPLATE);
+        if ($template === false) {
+            throw new RuntimeException(sprintf('Template "%s" could not be read', self::CONFIG_TEMPLATE));
+        }
+
+        if (file_put_contents($target, $template) === false) {
+            throw new RuntimeException(sprintf('File "%s" was not written', $target));
+        }
+
+        return $target;
     }
 
     /**

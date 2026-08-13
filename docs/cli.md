@@ -60,7 +60,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 | Command | What it does |
 |---|---|
-| `doctor` | Environmental and wiring health checks, including the [declared config schema](config-schema.md) and each package's `composer.json` against what it imports. Takes an optional namespace to restrict module-scoped checks, and `--strict` to exit non-zero on warnings too |
+| `doctor` | Environmental and wiring health checks, including the [declared config schema](config-schema.md) and each package's `composer.json` against what it imports. Takes an optional namespace to restrict module-scoped checks, `--strict` to exit non-zero on warnings too, and `--only-problems` to print just the checks that found something |
 | `validate:config` | Checks the configuration for errors and best-practice violations, and against the [declared schema](config-schema.md) |
 
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).

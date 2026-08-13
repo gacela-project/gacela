@@ -124,6 +124,55 @@ final class DoctorCommandTest extends TestCase
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
     }
 
+    /**
+     * Twelve checks is a lot of "✓" to read to find the one "⚠". `-q` is not
+     * the answer: it suppresses everything, so `--strict -q` fails a build with
+     * no indication of what failed.
+     */
+    public function test_only_problems_hides_the_passing_checks(): void
+    {
+        $tester = $this->doctor([UnhealthyHealthCheck::class], ['--only-problems' => true]);
+
+        $lines = $this->statusLinesOf($tester);
+
+        self::assertContains('✗ module health: UnhealthyModule', $lines);
+        self::assertNotContains('✓ cache staleness', $lines);
+        self::assertNotContains('✓ event listeners', $lines);
+    }
+
+    /**
+     * The remediation is the reason to read the line at all, so hiding the
+     * passing checks must not hide it.
+     */
+    public function test_only_problems_keeps_the_detail_of_what_it_reports(): void
+    {
+        $tester = $this->doctor([DegradedWithMetadataHealthCheck::class], ['--only-problems' => true]);
+
+        $display = $tester->getDisplay();
+
+        self::assertStringContainsString('Cache is stale', $display);
+        self::assertStringContainsString('stale-entries: 42', $display);
+    }
+
+    /**
+     * A clean run still says so. Printing nothing would leave "did it even
+     * run?" open -- which is what `-q` already does.
+     */
+    public function test_only_problems_still_reports_a_clean_run(): void
+    {
+        $tester = $this->doctor([], ['--only-problems' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertContains('✓ All checks passed', $this->statusLinesOf($tester));
+    }
+
+    public function test_only_problems_does_not_change_the_exit_code(): void
+    {
+        $strict = $this->doctor([DegradedWithoutMetadataHealthCheck::class], ['--only-problems' => true, '--strict' => true]);
+
+        self::assertSame(Command::FAILURE, $strict->getStatusCode(), 'a warning still fails --strict');
+    }
+
     public function test_a_registered_health_check_is_appended_to_the_built_in_ones(): void
     {
         $tester = $this->doctor([FakeHealthCheck::class]);

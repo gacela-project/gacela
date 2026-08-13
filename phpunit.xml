@@ -10,6 +10,11 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          cacheDirectory=".phpunit.cache"
          backupStaticProperties="false"
+         failOnWarning="true"
+         failOnNotice="true"
+         failOnPhpunitWarning="true"
+         failOnPhpunitNotice="true"
+         failOnPhpunitDeprecation="true"
 >
   <php>
     <ini name="error_reporting" value="-1"/>

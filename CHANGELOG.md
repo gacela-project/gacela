@@ -27,6 +27,8 @@
 
 ### Fixed
 
+- Never write or delete the scoped cache's dependency graph at the filesystem root. `ScopedCache` built its graph path by concatenating onto the underlying `FileCache` directory, which is empty for `''`, `'/'` and whitespace — so a cache with nowhere to write persisted the graph to `/` on every `dependsOn()` and unlinked it on `clear()`. It now reads the same `CacheFilePath` rule the values do, and keeps the graph in memory when there is nowhere to put it
+
 - Refuse `debug:graph --rules` and `--allowed-cycles` when `--check` is absent, instead of ignoring them. Both files are read only by `--check`, so a CI job that wrote a rules file and ran the command without it printed the graph and exited zero — a gate that looks green while checking nothing
 - Refuse `make:module --with-tests` on a template that scaffolds no test, instead of ignoring it. Only the service template writes a facade test; on the others the flag was accepted, four files were written and "created successfully" reported — so a reader who asked for a test believed they had one
 

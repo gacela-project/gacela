@@ -11,8 +11,6 @@ use function is_array;
 use function is_file;
 use function is_string;
 
-use const DIRECTORY_SEPARATOR;
-
 /**
  * Dependency-aware decorator over {@see FileCache}.
  *
@@ -80,7 +78,12 @@ final class ScopedCache
         $this->dependencies = [];
         $this->dependents = [];
 
-        FileCache::delete($this->graphPath());
+        $path = $this->graphPath();
+        if ($path === null) {
+            return;
+        }
+
+        FileCache::delete($path);
     }
 
     /**
@@ -249,9 +252,23 @@ final class ScopedCache
         return false;
     }
 
-    private function graphPath(): string
+    /**
+     * Null when the underlying cache has nowhere to write.
+     *
+     * {@see FileCache::normalizeDirectory()} reduces `''`, `'/'` and whitespace
+     * to an empty string, and concatenating onto that gave
+     * `'/.gacela-scoped-cache-graph.php'` -- the filesystem root. The graph is
+     * written on every `dependsOn()` and deleted by `clear()`, so a cache with
+     * no usable directory wrote and unlinked at the root while holding nothing
+     * on disk of its own.
+     *
+     * The same rule {@see FileCache} reads, through the same helper, rather
+     * than a second path builder that has to be remembered separately -- which
+     * is exactly how this one was missed when the other was fixed.
+     */
+    private function graphPath(): ?string
     {
-        return $this->cache->directory . DIRECTORY_SEPARATOR . self::GRAPH_FILENAME;
+        return CacheFilePath::inDirectory($this->cache->directory, self::GRAPH_FILENAME);
     }
 
     /**
@@ -262,11 +279,18 @@ final class ScopedCache
     private function loadGraph(): void
     {
         $path = $this->graphPath();
-        if (!is_file($path)) {
+        if ($path === null || !is_file($path)) {
             return;
         }
 
-        /** @var mixed $payload */
+        /**
+         * The path is built rather than written inline, so Psalm can no longer
+         * partially resolve it -- the file is a graph this class wrote.
+         *
+         * @psalm-suppress UnresolvableInclude
+         *
+         * @var mixed $payload
+         */
         $payload = require $path;
         if (!is_array($payload)) {
             return;
@@ -295,6 +319,14 @@ final class ScopedCache
 
     private function persistGraph(): void
     {
-        FileCache::writeAtomically($this->graphPath(), $this->dependencies);
+        $path = $this->graphPath();
+
+        // A cache with nowhere to write keeps its graph in memory, as the
+        // values it decorates already do.
+        if ($path === null) {
+            return;
+        }
+
+        FileCache::writeAtomically($path, $this->dependencies);
     }
 }

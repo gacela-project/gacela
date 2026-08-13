@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalKey;
@@ -77,7 +78,18 @@ final class ConfigFactory
         $fileIo = $this->createFileIo();
 
         $gacelaPhpDefaultPath = $this->getGacelaPhpDefaultPath();
-        if ($fileIo->existsFile($gacelaPhpDefaultPath)) {
+
+        // Bootstrapping without a closure builds the setup by reading this very
+        // file, and the base of the merge below is assembled from that setup --
+        // so everything it declares is already in. Reading it again as a
+        // separate source merges a second copy onto the first: two config items
+        // for one addAppConfig(), and a plugin declared once running twice,
+        // since a plugin is a class-string or a closure and has none of the
+        // identity a plugin *stack* deduplicates by.
+        $alreadyInTheBase = $this->setup instanceof SetupGacela
+            && $this->setup->wasBuiltFrom($gacelaPhpDefaultPath);
+
+        if (!$alreadyInTheBase && $fileIo->existsFile($gacelaPhpDefaultPath)) {
             $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory(
                 $gacelaPhpDefaultPath,
                 $this->setup,

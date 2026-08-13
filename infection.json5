@@ -71,6 +71,11 @@
             // namespace separator. Identity on POSIX, so only the windows
             // matrix can see this one removed.
             '.*str_replace\\(\'\\\\\\\\\', \'/\', \\$file->getPathname\\(\\)\\).*',
+            // Same on both sides of wasBuiltFrom(): bootstrap joins the gacela.php
+            // path with DIRECTORY_SEPARATOR and the config factory joins it with
+            // "/", which only differ as strings on windows. Removing either call
+            // is the identity on POSIX and restores the double read on windows.
+            '.*str_replace\\(\'\\\\\\\\\', \'/\', \\$this->sourceFilePath\\).*',
             // Windows-only PHP_OS/EOL handling: a no-op on POSIX where PHP_EOL is "\n".
             '.*strcasecmp\\(substr\\(PHP_OS.*',
             '.*str_replace\\("\\\\n", PHP_EOL.*',

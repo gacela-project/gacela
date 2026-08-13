@@ -222,13 +222,17 @@ Not blocking this upgrade, but the notices start now.
 
 **Resolving a pillar from a `@method` docblock, or by scanning the caller's `use` statements**, raises `E_USER_DEPRECATED`. Declare it with `#[ServiceMap(method: ..., className: ...)]` — the attribute is checked first, so adding it silences the notice.
 
+The generic form counts too. `@extends AbstractFacade<MyFactory>` names the factory by its short name, which is resolved through the file's `use` statements — the second deprecated strategy. Typing a pillar generically is still worth doing for the analysers; it is not a substitute for the attribute.
+
+**Static analysis will not find these for you.** PHPStan reads `@method` and `@extends` natively, so a class carrying either is a class it considers correct — with or without the attribute. A green analysis run says nothing about whether you are ready for 3.0.
+
 The notice fires on a **cold resolve only**, because the answer is memoized per caller-and-method. To surface every occurrence:
 
 ```bash
 vendor/bin/gacela cache:clear
 ```
 
-or develop with the file cache off.
+or develop with the file cache off. Even then you only see the accessors your run actually calls, so the list is as complete as the code paths you exercise — a suite that never touches a module never reports it.
 
 ---
 

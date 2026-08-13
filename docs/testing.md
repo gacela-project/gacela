@@ -66,7 +66,7 @@ Gacela::bootstrap($dir, static function (GacelaConfig $config): void {
 Testing module A in isolation means replacing module B. A container binding only works when B's Facade arrives through a Provider, and a consumer that writes `new BlogFacade()` leaves nothing to bind — so the seam is the **Factory** every Facade resolves:
 
 ```php
-$this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {
+$this->swapModuleFactory(BlogFacade::class, new class() extends AbstractFactory {
     public function createPostReader(): PostReader
     {
         return new InMemoryPostReader(['a post']);
@@ -76,8 +76,23 @@ $this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {
 (new CheckoutFacade())->summary();  // reaches the double, not the real Blog
 ```
 
+The double extends `AbstractFactory`, not `BlogFactory`. It only has to carry the methods the Facade under test actually calls — `swapModuleFactory()` takes an `AbstractFactory`, so what it *is* does not have to be Blog's own.
+
+**If `BlogFactory` is `final`, that is the only form available.** A `final` class cannot be subclassed (PHP raises a fatal error) and cannot be doubled by PHPUnit either (`ClassIsFinalException`), so neither `new class() extends BlogFactory` nor `$this->createStub(BlogFactory::class)` compiles or runs. `make:module` generates `final` pillars, and this codebase prefers them, so assume that is the case unless you know otherwise.
+
+Extending the real Factory is worth it when it is *not* final and you want to keep its other `create*()` methods and override one:
+
+```php
+$this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {   // BlogFactory must not be final
+    public function createPostReader(): PostReader
+    {
+        return new InMemoryPostReader(['a post']);
+    }
+});
+```
+
 - `swapModuleFactory()`, `swapModuleConfig()` and `swapModuleProvider()` all take the **Facade** class: that is the name a consumer already knows, and the one the resolver derives a module's pillars from.
-- Any object of the right pillar type works — an anonymous subclass, or a PHPUnit stub (`$this->createStub(BlogFactory::class)`).
+- Any object of the right pillar type works: a standalone `AbstractFactory`, an anonymous subclass of the real one, or a PHPUnit stub — the last two only where the class is not `final`.
 - The swap survives repeated resolutions, and applies to a module that was already resolved earlier in the same test.
 - Swapping the same module twice keeps the last double.
 - Every swap is dropped in `tearDown()`, so the next test sees the real module again whatever order the suite runs in.

@@ -292,6 +292,37 @@ final class PreloaderTest extends TestCase
         );
     }
 
+    /**
+     * A class whose parent is not installed is the realistic way this happens:
+     * a partial or half-updated install, where the framework is there and one
+     * of the packages it runs on is not.
+     *
+     * What matters is that the one class costs only itself. Preloading is
+     * best-effort by design, so aborting the image over it would take a startup
+     * that merely degrades and make it a boot failure -- and the reason has to
+     * reach the operator, since it is the only account of what is missing.
+     */
+    public function test_a_class_whose_dependency_is_missing_is_reported_and_costs_only_itself(): void
+    {
+        $frameworkDir = $this->fixtureRoot . '/src/Framework';
+        mkdir($frameworkDir, 0o777, true);
+        file_put_contents(
+            $frameworkDir . '/Fine.php',
+            "<?php\nnamespace Gacela\\Framework;\nfinal class Fine {}\n",
+        );
+        file_put_contents(
+            $frameworkDir . '/Broken.php',
+            "<?php\nnamespace Gacela\\Framework;\nfinal class Broken extends \\Absent\\Package\\Missing {}\n",
+        );
+
+        $result = Preloader::run($this->fixtureRoot);
+
+        self::assertSame(1, $result->linkedCount(), 'the healthy class still linked');
+        self::assertCount(1, $result->skipped());
+        self::assertStringContainsString('Gacela\Framework\Broken', $result->skipped()[0]);
+        self::assertStringContainsString('Absent\Package\Missing', $result->skipped()[0]);
+    }
+
     private function gacelaRoot(): string
     {
         return dirname(__DIR__, 4);

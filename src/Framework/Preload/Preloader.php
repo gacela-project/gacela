@@ -48,8 +48,6 @@ use function trait_exists;
  */
 final class Preloader
 {
-    private const NAMESPACE_PREFIX = 'Gacela\\Framework\\';
-
     /**
      * Requires phpunit, which is a dev dependency and absent in production.
      * Loading it would raise a fatal in a context that cannot report one
@@ -92,36 +90,25 @@ final class Preloader
     }
 
     /**
-     * Every framework class, in a stable order.
+     * Every class of the runtime closure, in a stable order.
+     *
+     * All three packages, not only the framework: the container is reached on
+     * the first `Container::withConfig()` and cost more than everything else in
+     * bootstrap put together while it was merely *linkable* rather than
+     * preloaded. Linking pulls in whatever a framework class extends or
+     * implements, which is a handful of container classes -- the rest were
+     * still being read off disk on the first request.
      *
      * @return list<class-string>
      */
     public static function classNames(string $gacelaRoot): array
     {
-        $frameworkDir = $gacelaRoot . '/src/Framework';
-
-        if (!is_dir($frameworkDir)) {
-            return [];
-        }
-
-        $prefixLength = strlen($frameworkDir) + 1;
-
         $classNames = [];
 
-        /** @var SplFileInfo $file */
-        foreach (self::phpFilesIn($frameworkDir) as $file) {
-            // Windows reports backslashes here, which are also the namespace
-            // separator: normalize before either meaning is read into it.
-            $path = str_replace('\\', '/', $file->getPathname());
-
-            /** @var class-string $className */
-            $className = self::NAMESPACE_PREFIX . str_replace('/', '\\', substr($path, $prefixLength, -4));
-
-            if (str_starts_with($className, self::EXCLUDED_NAMESPACE)) {
-                continue;
+        foreach (self::autoloadPrefixes($gacelaRoot) as $prefix => $directory) {
+            foreach (self::classNamesUnder($prefix, $directory) as $className) {
+                $classNames[] = $className;
             }
-
-            $classNames[] = $className;
         }
 
         sort($classNames);
@@ -176,6 +163,42 @@ final class Preloader
         }
 
         return null;
+    }
+
+    /**
+     * @return list<class-string>
+     */
+    private static function classNamesUnder(string $prefix, string $directory): array
+    {
+        $directory = rtrim($directory, '/');
+
+        if (!is_dir($directory)) {
+            return [];
+        }
+
+        $prefixLength = strlen($directory) + 1;
+
+        $classNames = [];
+
+        /** @var SplFileInfo $file */
+        foreach (self::phpFilesIn($directory) as $file) {
+            // Windows reports backslashes here, which are also the namespace
+            // separator: normalize before either meaning is read into it.
+            $path = str_replace('\\', '/', $file->getPathname());
+
+            /** @var class-string $className */
+            $className = $prefix . str_replace('/', '\\', substr($path, $prefixLength, -4));
+
+            if (str_starts_with($className, self::EXCLUDED_NAMESPACE)) {
+                continue;
+            }
+
+            $classNames[] = $className;
+        }
+
+        // Not sorted here: the caller sorts the whole closure, and doing it
+        // twice would only make the second pass unobservable.
+        return $classNames;
     }
 
     /**

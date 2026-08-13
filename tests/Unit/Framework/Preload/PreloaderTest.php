@@ -20,8 +20,7 @@ use function mkdir;
 use function random_bytes;
 use function rmdir;
 use function sort;
-use function str_replace;
-use function strlen;
+use function sprintf;
 use function sys_get_temp_dir;
 use function unlink;
 
@@ -104,12 +103,30 @@ final class PreloaderTest extends TestCase
     public function test_every_discovered_class_has_a_file(): void
     {
         $root = $this->gacelaRoot();
+        $prefixes = Preloader::autoloadPrefixes($root);
 
         foreach (Preloader::classNames($root) as $className) {
-            $relative = str_replace('\\', '/', substr($className, strlen('Gacela\\Framework\\')));
-
-            self::assertFileExists($root . '/src/Framework/' . $relative . '.php');
+            // Resolved through the same rule the autoloader uses. Rebuilding the
+            // path here would assume every class lives under src/Framework,
+            // which stopped being true once the closure included its packages.
+            self::assertNotNull(
+                Preloader::fileFor($className, $prefixes),
+                sprintf('%s resolves to no file', $className),
+            );
         }
+    }
+
+    /**
+     * The container is reached on the first `Container::withConfig()`. While it
+     * was only *linkable* rather than preloaded, loading it cost more than
+     * every other part of bootstrap put together.
+     */
+    public function test_the_packages_the_framework_runs_on_are_included(): void
+    {
+        $classNames = Preloader::classNames($this->gacelaRoot());
+
+        self::assertContains(\Gacela\Container\Container::class, $classNames);
+        self::assertContains(\Psr\Container\ContainerInterface::class, $classNames);
     }
 
     /**
@@ -125,7 +142,9 @@ final class PreloaderTest extends TestCase
 
     /**
      * A preload image built in filesystem order differs between machines for no
-     * reason; sorting is what makes the logged count reproducible.
+     * reason; sorting is what makes the logged count reproducible. Across the
+     * whole closure rather than per package, so it does not depend on which
+     * prefix happened to be walked first either.
      */
     public function test_the_order_is_sorted(): void
     {

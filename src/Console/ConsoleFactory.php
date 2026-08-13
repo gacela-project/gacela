@@ -296,6 +296,14 @@ final class ConsoleFactory extends AbstractFactory
         return preg_match('~^(?:[a-zA-Z]:[\\\\/]|[\\\\/])~', $path) === 1;
     }
 
+    /**
+     * `mixed` on purpose, and narrower than it looks only from one caller.
+     * Bindings are `string|object|callable`, but a *contextual* binding is
+     * whatever `->give()` was handed -- typed `mixed` upstream, and an `int`
+     * is a normal thing to inject. Psalm sees only the first caller and offers
+     * to narrow this to `string|callable|object`, which would fatal on the
+     * second. Do not apply that fix.
+     */
     private function stringifyBoundConcrete(mixed $concrete): string
     {
         return is_string($concrete) ? $concrete : get_debug_type($concrete);

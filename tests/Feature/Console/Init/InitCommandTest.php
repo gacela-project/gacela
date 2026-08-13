@@ -103,7 +103,11 @@ final class InitCommandTest extends TestCase
     {
         $tester = $this->init($this->appRoot, []);
 
-        self::assertStringContainsString('config/app.php', $tester->getDisplay());
+        // The command joins the path with DIRECTORY_SEPARATOR, so asserting a
+        // forward slash passes on POSIX and fails on windows -- and its
+        // negation in the --force test below would have passed there for the
+        // wrong reason, asserting nothing at all.
+        self::assertStringContainsString($this->configPath(), $tester->getDisplay());
     }
 
     /**
@@ -123,7 +127,7 @@ final class InitCommandTest extends TestCase
             "<?php return ['mine' => true];",
             file_get_contents($this->appRoot . '/config/app.php'),
         );
-        self::assertStringNotContainsString('config/app.php', $tester->getDisplay());
+        self::assertStringNotContainsString($this->configPath(), $tester->getDisplay());
     }
 
     public function test_refuses_to_overwrite_an_existing_file(): void
@@ -168,6 +172,15 @@ final class InitCommandTest extends TestCase
         } finally {
             restore_error_handler();
         }
+    }
+
+    /**
+     * As the command spells it, so a mismatch is a real difference rather than
+     * a separator.
+     */
+    private function configPath(): string
+    {
+        return 'config' . DIRECTORY_SEPARATOR . 'app.php';
     }
 
     /**

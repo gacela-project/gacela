@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
+use Gacela\Console\Domain\CommandArguments\ModulePath;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\ServiceResolver\ServiceMap;
@@ -52,6 +53,22 @@ final class MakeFileCommand extends Command
 
         /** @var string $path */
         $path = $input->getArgument('path');
+
+        // Same rule as make:module, and for the same reason: a segment that is
+        // not a PHP label makes the namespace and the class name unparseable,
+        // and the files are written before anyone finds out.
+        $unusable = ModulePath::firstUnusableSegment($path);
+        if ($unusable !== null) {
+            $output->writeln(sprintf(
+                '<error>"%s" cannot be part of a module path: "%s" is not a valid PHP name.</error>',
+                $path,
+                $unusable,
+            ));
+            $output->writeln('Every segment becomes a namespace and a class name -- use <comment>UserProfile</comment>, not <comment>user-profile</comment>.');
+
+            return self::FAILURE;
+        }
+
         $commandArguments = $this->getFacade()->parseArguments($path);
         $shortName = $input->getOption('short-name') === true;
 

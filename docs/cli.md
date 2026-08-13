@@ -65,13 +65,12 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).
 
-*event listeners* answers whether a `registerSpecificListener()` target can ever match. The dispatcher compares `$event::class`, so a listener registered against an interface never fires — not even for events that implement it — and neither does one naming an abstract class or a typo. `Container::afterResolving()` matches by `instanceof`, which is exactly why registering against a contract looks like it should work. A concrete class nothing dispatches is left alone: that listener is waiting, not broken.
+Four of the built-in checks report the same kind of fault: **configuration a project declared that nothing acts on**. Each is accepted at bootstrap, costs nothing at runtime, and does exactly nothing — which is why a command has to be the one to say so. Under `--strict` any of them fails the run.
 
-*config sources* answers whether the paths you passed to `addAppConfig()` match a file. `conf/*.php` for a directory named `config` bootstraps perfectly — globbing a path that is not there yields no files, and an application with no configuration is a legitimate one — and then the first thing to read a key fails, with an error about the key rather than about the path that was meant to provide it. Only the base path is reported: `config/app-prod.php` is *meant* to be absent everywhere it does not apply.
-
-*cache directory* answers whether the cache you enabled can actually be written. Writing is best-effort by design — an application must not fail because an optimisation could not be stored — so a project that enabled caching and got a directory it has no permission on runs correctly and pays the cold cost on every request, with nothing said. Reported read-only: `doctor` never creates the directory to find out.
-
-Among the built-in checks, *service extensions* verifies every `extendService()` id against what the Providers actually `set()`: an extension on an id nothing ever stores — a typo, or an id registered only through `bind()`/`singleton()` — is accepted and applied nowhere at runtime, silently, so `doctor` is the surface that says so. Under `--strict` an unmatched id fails the run.
+- **event listeners** — a `registerSpecificListener()` target no dispatched event can be. The dispatcher compares `$event::class`, so a listener registered against an interface never fires, not even for events implementing it; nor does one naming an abstract class or a typo. `Container::afterResolving()` matches by `instanceof`, which is exactly why registering against a contract looks like it should work. A concrete class nothing dispatches is left alone — that listener is waiting, not broken.
+- **config sources** — an `addAppConfig()` path matching no file. `conf/*.php` for a directory named `config` bootstraps perfectly, and then the first read of a key fails with an error about the key rather than the path meant to provide it. Only the base path is reported: `config/app-prod.php` is *meant* to be absent where it does not apply.
+- **cache directory** — caching enabled onto a directory that cannot be written. Writing is best-effort by design, so the application runs correctly and pays the cold cost on every request instead. Reported read-only: `doctor` never creates the directory to find out.
+- **service extensions** — an `extendService()` id no Provider ever `set()`s. A typo, or an id registered only through `bind()`/`singleton()`, which do not drain the extension queue.
 
 ## Production
 

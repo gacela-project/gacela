@@ -12,6 +12,7 @@ use ReflectionMethod;
 
 use function count;
 use function glob;
+use function rtrim;
 use function sys_get_temp_dir;
 use function uniqid;
 
@@ -29,7 +30,11 @@ final class ScopedCacheFeatureTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cacheDir = sys_get_temp_dir() . '/gacela-scoped-cache-feature-' . uniqid('', true);
+        // DIRECTORY_SEPARATOR, not '/': FileCache normalizes separators, so a
+        // fixture joined with a literal slash is not the string the cache holds
+        // on Windows -- where sys_get_temp_dir() is already back-slashed.
+        $this->cacheDir = rtrim(sys_get_temp_dir(), '/\\')
+            . DIRECTORY_SEPARATOR . 'gacela-scoped-cache-feature-' . uniqid('', true);
     }
 
     protected function tearDown(): void
@@ -163,7 +168,7 @@ final class ScopedCacheFeatureTest extends TestCase
         $cache = $this->openCache();
         $this->seedPipeline($cache);
 
-        $graphPath = $this->cacheDir . '/' . self::GRAPH_FILE;
+        $graphPath = $this->cacheDir . DIRECTORY_SEPARATOR . self::GRAPH_FILE;
         self::assertFileExists($graphPath);
         self::assertGreaterThan(0, $this->countCacheFiles());
 

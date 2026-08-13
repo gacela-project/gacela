@@ -284,6 +284,28 @@ final class ServiceMapMissingAnalyserTest extends TestCase
     }
 
     /**
+     * The parameter list is optional in what the resolver accepts -- it matches
+     * the name at a word boundary -- so a tag written without one resolves at
+     * runtime and has to be reported here too. Requiring it would make the rule
+     * quietly pass a class that is not ready.
+     */
+    public function test_a_method_tag_without_a_parameter_list_is_still_reported(): void
+    {
+        $violations = $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                /** @method WalletFacade getFacade */
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+        );
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('getFacade()', $violations[0]->message);
+    }
+
+    /**
      * A tag with no return type states nothing to declare, so there is no
      * attribute to suggest and it is left alone rather than reported without a
      * correction.

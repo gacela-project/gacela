@@ -65,10 +65,14 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
     private const ATTRIBUTE = 'ServiceMap';
 
     /**
-     * `@method [static] <type> <name>(`. A tag written without a return type
+     * `@method [static] <type> <name>`. A tag written without a return type
      * does not match, and is left alone: nothing can be suggested for it.
+     *
+     * The parameter list is not required, because the resolver does not require
+     * it either -- `DocBlockParser` matches the name at a word boundary, so a
+     * tag written without one still resolves and so must still be reported.
      */
-    private const METHOD_TAG = '#@method\s+(?:static\s+)?(?P<type>[^\s(]+)\s+(?P<name>\w+)\s*\(#';
+    private const METHOD_TAG = '#@method\s+(?:static\s+)?(?P<type>[^\s(]+)\s+(?P<name>\w+)#';
 
     /**
      * @return list<Violation>

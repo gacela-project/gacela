@@ -113,6 +113,118 @@ PHP;
         self::assertSame('\Ns\Target\UserName', $actual);
     }
 
+    /**
+     * A short name is matched against the name an import *defines*, not against
+     * the end of the line. `Facade` is a perfectly ordinary class name -- a
+     * module can call its facade exactly that -- and every neighbouring import
+     * of some `*Facade` ends in it.
+     *
+     * The wrong class came back silently. Nothing failed; another module's
+     * facade was simply injected.
+     */
+    public function test_a_short_name_is_not_matched_against_the_tail_of_another_import(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace Ns\Test;
+
+            use Ns\Billing\BillingFacade;
+
+            final class TestClass
+            {
+            }
+            PHP;
+
+        self::assertSame('\Ns\Test\Facade', $this->parser->getUseStatement('Facade', $phpCode));
+    }
+
+    /**
+     * The same collision through an alias, which is how it is most likely to be
+     * written: a command reaching a sibling module renames its facade to say
+     * which one it is, and the rename ends in `Facade` too.
+     */
+    public function test_a_short_name_is_not_matched_against_the_tail_of_an_alias(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace Ns\Test;
+
+            use Ns\Other\Facade as OtherModuleFacade;
+
+            final class TestClass
+            {
+            }
+            PHP;
+
+        self::assertSame('\Ns\Test\Facade', $this->parser->getUseStatement('Facade', $phpCode));
+    }
+
+    /**
+     * An aliased import brings only the alias into scope, so the original short
+     * name is not a name this file can use -- it resolves against the namespace
+     * like any other unimported one.
+     */
+    public function test_an_aliased_import_does_not_answer_for_its_original_name(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace Ns\Test;
+
+            use Ns\Other\Renamed as SomethingElse;
+
+            final class TestClass
+            {
+            }
+            PHP;
+
+        self::assertSame('\Ns\Test\Renamed', $this->parser->getUseStatement('Renamed', $phpCode));
+    }
+
+    /**
+     * An import from the global namespace has no separator to take a last
+     * segment after, so the whole name is the name it defines.
+     */
+    public function test_an_import_from_the_global_namespace_defines_its_whole_name(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace Ns\Test;
+
+            use ReflectionClass;
+
+            final class TestClass
+            {
+            }
+            PHP;
+
+        self::assertSame('\ReflectionClass', $this->parser->getUseStatement('ReflectionClass', $phpCode));
+    }
+
+    /**
+     * `use function` and `use const` import neither, so they cannot answer for
+     * a class name that happens to match.
+     */
+    public function test_a_function_import_does_not_answer_for_a_class_name(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace Ns\Test;
+
+            use function Ns\Helpers\Formatter;
+
+            final class TestClass
+            {
+            }
+            PHP;
+
+        self::assertSame('\Ns\Test\Formatter', $this->parser->getUseStatement('Formatter', $phpCode));
+    }
+
     public function test_falls_back_to_empty_namespace_when_php_code_has_no_namespace_line(): void
     {
         $phpCode = <<<'PHP'

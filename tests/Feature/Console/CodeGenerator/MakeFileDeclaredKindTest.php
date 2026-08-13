@@ -103,20 +103,36 @@ final class MakeFileDeclaredKindTest extends TestCase
     }
 
     /**
-     * Undeclared, `Exporter` is just another string to fuzzy-match, and it
-     * matches whatever it matched before declared kinds existed. Pinned so that
-     * teaching the sanitizer new kinds cannot quietly re-route the old ones.
+     * Undeclared, `Exporter` reaches nothing and no file is written.
+     *
+     * It used to reach the closest pillar, so this same command wrote a
+     * `Provider` and reported it created. Asked of the files as well as the
+     * status: the whole failure was that something appeared on disk.
      */
-    public function test_an_undeclared_kind_still_resolves_to_the_closest_pillar(): void
+    public function test_an_undeclared_kind_writes_nothing(): void
     {
         $this->bootstrapWithoutDeclarations();
         $this->publishStub('exporter-maker.txt', 'namespace $NAMESPACE$; class $CLASS_NAME$ {}');
 
         $tester = $this->makeFile('Exporter');
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertFileExists(self::GENERATED_DIR . '/DeclaredKindModuleProvider.php');
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('is not one of the filenames', $tester->getDisplay());
+        self::assertFileDoesNotExist(self::GENERATED_DIR . '/DeclaredKindModuleProvider.php');
         self::assertFileDoesNotExist(self::GENERATED_DIR . '/DeclaredKindModuleExporter.php');
+    }
+
+    /**
+     * And the message names the way out, which for a project that wants an
+     * `Exporter` is to declare one.
+     */
+    public function test_the_refusal_names_the_declaration_that_would_allow_it(): void
+    {
+        $this->bootstrapWithoutDeclarations();
+
+        $tester = $this->makeFile('Exporter');
+
+        self::assertStringContainsString("addResolvableType('Exporter')", $tester->getDisplay());
     }
 
     public function test_the_help_text_lists_the_declared_kind_next_to_the_pillars(): void

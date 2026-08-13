@@ -10,6 +10,7 @@ use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -48,10 +49,19 @@ final class MakeFileCommand extends Command
         /** @var list<string> $inputFileNames */
         $inputFileNames = $input->getArgument('filenames');
 
-        $filenames = array_map(
-            fn (string $raw): string => $this->getFacade()->sanitizeFilename($raw),
-            $inputFileNames,
-        );
+        // A word naming no kind is the user's input, not a fault in the
+        // framework -- rendered as an error rather than left to surface as an
+        // uncaught exception attributed to a file inside Gacela.
+        try {
+            $filenames = array_map(
+                fn (string $raw): string => $this->getFacade()->sanitizeFilename($raw),
+                $inputFileNames,
+            );
+        } catch (RuntimeException $runtimeException) {
+            $output->writeln(sprintf('<error>%s</error>', $runtimeException->getMessage()));
+
+            return self::FAILURE;
+        }
 
         /** @var string $path */
         $path = $input->getArgument('path');

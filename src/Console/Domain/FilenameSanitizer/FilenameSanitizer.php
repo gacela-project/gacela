@@ -7,7 +7,11 @@ namespace Gacela\Console\Domain\FilenameSanitizer;
 use RuntimeException;
 
 use function count;
+use function implode;
 use function sprintf;
+use function str_contains;
+use function strlen;
+use function strtolower;
 
 /**
  * Which file `make:file` was asked for, from whatever the user typed.
@@ -27,15 +31,24 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
 
     public const PROVIDER = 'Provider';
 
-    /**
-     * The pillars, which every project has. `make:module` scaffolds exactly
-     * these; a declared kind is generated one file at a time by `make:file`.
-     */
     public const EXPECTED_FILENAMES = [
         self::FACADE,
         self::FACTORY,
         self::CONFIG,
         self::PROVIDER,
+    ];
+
+    /**
+     * The pillars, which every project has. `make:module` scaffolds exactly
+     * these; a declared kind is generated one file at a time by `make:file`.
+     */
+    /**
+     * Names a kind answers to besides its own, lowercased.
+     *
+     * @var array<string, list<string>>
+     */
+    private const ALIASES = [
+        self::PROVIDER => ['dependency-provider'],
     ];
 
     /**
@@ -66,24 +79,90 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
 
     public function sanitize(string $filename): string
     {
-        $percents = [];
+        $matches = $this->matching($filename);
 
-        foreach ($this->getExpectedFilenames() as $expected) {
-            $percents[$expected] = similar_text($expected, $filename);
-        }
-
-        $maxVal = max($percents);
-        $maxValKeys = array_keys($percents, $maxVal, true);
-
-        if (count($maxValKeys) > 1) {
+        if ($matches === []) {
             throw new RuntimeException(sprintf(
-                'When using "%s", which filename do you mean [%s]?',
+                "\"%s\" is not one of the filenames make:file can generate: %s.\n"
+                . "Declare it with addResolvableType('%s') in gacela.php to generate it as a kind of its own.",
                 $filename,
-                implode(' or ', $maxValKeys),
+                implode(', ', $this->getExpectedFilenames()),
+                $filename,
             ));
         }
 
-        /** @psalm-suppress RedundantCast */
-        return (string)reset($maxValKeys);
+        if (count($matches) > 1) {
+            throw new RuntimeException(sprintf(
+                'When using "%s", which filename do you mean [%s]?',
+                $filename,
+                implode(' or ', $matches),
+            ));
+        }
+
+        return $matches[0];
+    }
+
+    /**
+     * The kinds the typed word can mean.
+     *
+     * The letters typed, in order, somewhere in the kind's name -- so `cade`
+     * and `tory` reach `Facade` and `Factory`, and `fig` reaches `Config`.
+     * A word that spells a kind out in full reaches it too, which is how
+     * `dependency-provider` finds `Provider`.
+     *
+     * Not a similarity score, because no threshold separates the words that
+     * should match from the words that should not. `de-pr` scores 36% against
+     * `Provider` and `Service` scores 53%, so any cutoff keeping the first
+     * keeps the second -- and `Service` silently produced a `Provider` file.
+     * Asking whether the letters are there answers every case exactly.
+     *
+     * @return list<string>
+     */
+    private function matching(string $filename): array
+    {
+        $needle = strtolower($filename);
+        $matches = [];
+
+        foreach ($this->getExpectedFilenames() as $expected) {
+            foreach ($this->namesFor($expected) as $name) {
+                if ($this->spellsOut($needle, $name) || str_contains($needle, $name)) {
+                    $matches[] = $expected;
+                    break;
+                }
+            }
+        }
+
+        return $matches;
+    }
+
+    /**
+     * Every name a kind answers to, lowercased.
+     *
+     * `Provider` carries the name it had before it was renamed, so the
+     * abbreviations built on it -- `de-pr` for `dependency-provider` -- keep
+     * working.
+     *
+     * @return list<string>
+     */
+    private function namesFor(string $kind): array
+    {
+        return [strtolower($kind), ...self::ALIASES[$kind] ?? []];
+    }
+
+    /**
+     * Whether every character of the needle appears in the haystack, in order.
+     */
+    private function spellsOut(string $needle, string $haystack): bool
+    {
+        $at = 0;
+        $length = strlen($needle);
+
+        for ($i = 0, $end = strlen($haystack); $i < $end && $at < $length; ++$i) {
+            if ($haystack[$i] === $needle[$at]) {
+                ++$at;
+            }
+        }
+
+        return $at === $length;
     }
 }

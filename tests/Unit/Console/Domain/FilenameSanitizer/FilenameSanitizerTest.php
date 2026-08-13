@@ -8,6 +8,8 @@ use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
+
 final class FilenameSanitizerTest extends TestCase
 {
     private FilenameSanitizer $filenameSanitizer;
@@ -62,12 +64,71 @@ final class FilenameSanitizerTest extends TestCase
     }
 
     /**
-     * Undeclared, the word is just another string to fuzzy-match, and it
-     * matches what it matched before declared kinds existed.
+     * Undeclared, the word reaches nothing.
+     *
+     * It used to fall back to the closest pillar, so `make:file App/Wallet
+     * Exporter` wrote a `Provider` and reported it as created. The words that
+     * land here are the ones people actually type -- `Repository`, `Controller`,
+     * `Service`, `Migration` -- and every one of them produced a file of a kind
+     * nobody asked for.
      */
-    public function test_an_undeclared_kind_falls_back_to_the_closest_pillar(): void
+    public function test_an_undeclared_kind_reaches_nothing(): void
     {
-        self::assertSame(FilenameSanitizer::PROVIDER, $this->filenameSanitizer->sanitize('Exporter'));
+        $this->expectExceptionMessage('"Exporter" is not one of the filenames make:file can generate');
+
+        $this->filenameSanitizer->sanitize('Exporter');
+    }
+
+    /**
+     * Naming the way out: Gacela has a feature for exactly this, and a reader
+     * who typed `Repository` almost certainly wants it.
+     */
+    public function test_the_refusal_points_at_declaring_the_kind(): void
+    {
+        $this->expectExceptionMessage("addResolvableType('Repository')");
+
+        $this->filenameSanitizer->sanitize('Repository');
+    }
+
+    /**
+     * The kinds every other PHP framework has, which Gacela does not. Each one
+     * silently produced a pillar: `Repository` and `Migration` a `Factory`,
+     * `Controller`, `Service` and `Middleware` a `Provider`.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function kindsGacelaDoesNotHave(): iterable
+    {
+        yield 'repository' => ['Repository'];
+        yield 'controller' => ['Controller'];
+        yield 'service' => ['Service'];
+        yield 'middleware' => ['Middleware'];
+        yield 'migration' => ['Migration'];
+        yield 'model' => ['Model'];
+        yield 'entity' => ['Entity'];
+        yield 'listener' => ['Listener'];
+        yield 'command' => ['Command'];
+        yield 'handler' => ['Handler'];
+    }
+
+    #[DataProvider('kindsGacelaDoesNotHave')]
+    public function test_a_kind_gacela_does_not_have_is_refused(string $filename): void
+    {
+        $this->expectExceptionMessage(sprintf('"%s" is not one of the filenames make:file can generate', $filename));
+
+        $this->filenameSanitizer->sanitize($filename);
+    }
+
+    /**
+     * `dependency-provider` is what `Provider` used to be called, and `de-pr`
+     * abbreviates that rather than `Provider` -- so the old name is carried as
+     * an alias instead of being left to a similarity score that cannot tell it
+     * from `Service`.
+     */
+    public function test_the_provider_still_answers_to_its_former_name(): void
+    {
+        self::assertSame(FilenameSanitizer::PROVIDER, $this->filenameSanitizer->sanitize('dependency-provider'));
+        self::assertSame(FilenameSanitizer::PROVIDER, $this->filenameSanitizer->sanitize('de-pr'));
     }
 
     public function test_facade_or_factory_problem(): void

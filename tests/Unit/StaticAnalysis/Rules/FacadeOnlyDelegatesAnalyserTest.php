@@ -180,6 +180,28 @@ final class FacadeOnlyDelegatesAnalyserTest extends TestCase
     /**
      * @return list<Violation>
      */
+    /**
+     * A static method has no `$this` to delegate through, so no body it could
+     * hold would satisfy this rule -- and the tip names a call it cannot make.
+     * Reporting it leaves a rename or a baseline entry as the only way out,
+     * the same reason interfaces, traits and enums go unreported.
+     */
+    public function test_a_static_method_cannot_delegate_so_it_is_not_judged(): void
+    {
+        self::assertSame([], $this->analyse('return new self();', 'public static'));
+        self::assertSame([], $this->analyse("return 'a literal';", 'public static'));
+        self::assertSame([], $this->analyse('$x = 1; return $x + 1;', 'public static'));
+    }
+
+    /**
+     * Instance methods are unaffected: the guard is about `$this` being
+     * unavailable, not about relaxing what a Facade may hold.
+     */
+    public function test_an_instance_method_with_logic_is_still_reported(): void
+    {
+        self::assertNotSame([], $this->analyse('$x = 1; return $x + 1;'));
+    }
+
     private function analyse(string $body, string $visibility = 'public'): array
     {
         return $this->analyseSource(

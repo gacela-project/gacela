@@ -67,6 +67,17 @@ final class FacadeOnlyDelegatesAnalyser
             return [];
         }
 
+        // A static method has no `$this` to delegate through, so no body it
+        // could hold would satisfy this rule -- and the tip, "move the logic
+        // into the Factory and have this method call it", names a call it
+        // cannot make. Reporting it leaves a rename or a baseline entry as the
+        // only way out, which is the same reason interfaces, traits and enums
+        // go unreported. A named constructor, `public static function make():
+        // self`, is an ordinary shape to find on any class.
+        if ($method->isStatic()) {
+            return [];
+        }
+
         if (in_array($method->name->toString(), self::IGNORED_METHODS, true)) {
             return [];
         }

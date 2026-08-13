@@ -38,6 +38,29 @@ $resolved = $this->recordedGacelaEventsOf(ServiceResolvedEvent::class); // one t
 
 If you only need the reset helpers inside an existing test hierarchy, use the [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait directly — `GacelaTestCase` builds on it.
 
+### Bootstrapping twice without either of them
+
+Neither is required. But calling `Gacela::bootstrap()` a second time in one process on your own keeps the **previous** boot's services, and says nothing:
+
+```php
+Gacela::bootstrap($dir, static fn (GacelaConfig $c) => $c->addBinding(Clock::class, $frozenClock));
+Gacela::get(Clock::class);   // the frozen one, as expected
+
+Gacela::bootstrap($dir, static fn (GacelaConfig $c) => $c->addBinding(Clock::class, $realClock));
+Gacela::get(Clock::class);   // still the frozen one
+```
+
+The configuration *is* re-read, so the second boot leaves you with new config and old services. Add [`resetInMemoryCache()`](../src/Framework/Bootstrap/GacelaConfig.php) to the closure and both move together:
+
+```php
+Gacela::bootstrap($dir, static function (GacelaConfig $config): void {
+    $config->resetInMemoryCache();
+    // …
+});
+```
+
+`GacelaTestCase` and both framework bridges call it on every boot for exactly this reason. It is opt-in rather than automatic because a process that re-bootstraps with the *same* wiring pays to resolve everything again.
+
 ## Replacing another module
 
 Testing module A in isolation means replacing module B. A container binding only works when B's Facade arrives through a Provider, and a consumer that writes `new BlogFacade()` leaves nothing to bind — so the seam is the **Factory** every Facade resolves:

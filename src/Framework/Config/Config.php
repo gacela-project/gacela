@@ -371,9 +371,16 @@ final class Config implements ConfigInterface
             return $this->cacheDir;
         }
 
-        $this->cacheDir = getenv('GACELA_CACHE_DIR') ?: $this->getDefaultCacheDir();
+        // Trimmed before it is stored, not on the way out: the memoized field is
+        // what every call after the first returns, so trimming the return value
+        // normalized the path for exactly one caller and left the rest with the
+        // raw one -- which they then concatenated onto, producing `dir//file`.
+        $this->cacheDir = rtrim(
+            getenv('GACELA_CACHE_DIR') ?: $this->getDefaultCacheDir(),
+            '/\\',
+        );
 
-        return rtrim($this->cacheDir, '/\\');
+        return $this->cacheDir;
     }
 
     /**

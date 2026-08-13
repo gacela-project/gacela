@@ -125,6 +125,58 @@ final class DebugGraphRulesTest extends TestCase
         self::assertStringContainsString('--rules cannot be combined with a filter', $this->command->getDisplay());
     }
 
+    /**
+     * Both files are read only by `--check`. Passing one without it printed the
+     * graph and exited zero: a CI job that writes a rules file, wires the
+     * command in, and is guarded by nothing.
+     */
+    public function test_rules_without_check_is_refused_rather_than_ignored(): void
+    {
+        $rules = $this->writeRules([
+            ['from' => self::PAYMENT, 'deny' => [self::ADMIN], 'reason' => 'reviewed'],
+        ]);
+
+        $exitCode = $this->command->execute(['--rules' => $rules]);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('--rules only applies with --check', $this->command->getDisplay());
+        self::assertStringContainsString('--check --rules=', $this->command->getDisplay());
+    }
+
+    public function test_an_allow_list_without_check_is_refused_too(): void
+    {
+        $exitCode = $this->command->execute(['--allowed-cycles' => '/some/file.json']);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('--allowed-cycles only applies with --check', $this->command->getDisplay());
+    }
+
+    /**
+     * One file reads as one file, and the plural form on a single flag is the
+     * seam that says nobody ran it.
+     */
+    public function test_both_together_are_named_in_the_plural(): void
+    {
+        $exitCode = $this->command->execute([
+            '--rules' => '/some/rules.json',
+            '--allowed-cycles' => '/some/cycles.json',
+        ]);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('--rules and --allowed-cycles only apply with --check', $this->command->getDisplay());
+    }
+
+    /**
+     * The plain graph is the command's ordinary use and must stay unaffected.
+     */
+    public function test_a_plain_graph_run_is_unaffected(): void
+    {
+        $exitCode = $this->command->execute([]);
+
+        self::assertSame(0, $exitCode);
+        self::assertStringNotContainsString('only applies with --check', $this->command->getDisplay());
+    }
+
     public function test_check_fails_when_the_rules_file_is_missing(): void
     {
         $exitCode = $this->command->execute(['--check' => true, '--rules' => '/does/not/exist.json']);

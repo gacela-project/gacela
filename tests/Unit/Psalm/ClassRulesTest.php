@@ -41,6 +41,27 @@ final class ClassRulesTest extends TestCase
         self::assertSame([], $this->violationsIn($source, [AbstractFacade::class]));
     }
 
+    /**
+     * The second method-level rule. Psalm's own integration test drives it in a
+     * subprocess, which coverage cannot see, so the wiring is proven here.
+     */
+    public function test_it_runs_the_cacheable_key_rule(): void
+    {
+        $source = <<<'PHP'
+            <?php
+            final class CheckoutFacade
+            {
+                #[Cacheable(key: 'thing')]
+                public function doThing(int $id) {}
+            }
+            PHP;
+
+        self::assertSame(
+            ['gacela.cacheableKeyIgnoresArguments'],
+            $this->identifiersIn($source, [AbstractFacade::class]),
+        );
+    }
+
     public function test_it_runs_the_suffix_rule(): void
     {
         self::assertSame(

@@ -37,6 +37,12 @@ services:
     -
         class: Gacela\PHPStan\Rules\FacadeOnlyDelegatesRule
         tags: [phpstan.rules.rule]
+    # A #[Cacheable] key with no {N} placeholder, on a method that takes
+    # arguments: every call shares one entry, so the first result is served to
+    # all of them.
+    -
+        class: Gacela\PHPStan\Rules\CacheableKeyIgnoresArgumentsRule
+        tags: [phpstan.rules.rule]
     -
         class: Gacela\PHPStan\Rules\FactoryDoesNotCallFacadeRule
         tags: [phpstan.rules.rule]

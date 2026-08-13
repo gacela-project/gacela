@@ -128,6 +128,22 @@ final class ArchitectureRulesTest extends PsalmFixtureTestCase
     }
 
     /**
+     * The key decides what the entry is filed under, so one with no `{N}`
+     * placeholder is the same string for every call and the first caller's
+     * result is served to the rest. Nothing fails; the wrong row is served.
+     */
+    public function test_a_cacheable_key_must_mention_the_arguments(): void
+    {
+        $this->skipIfPsalmCannotRun($this->analyseFixture());
+
+        self::assertStringContainsString(
+            'GacelaCacheableKeyIgnoresArguments: The #[Cacheable] key "thing" on '
+            . RulesFixture\CachedFacade::class . '::bareKey()',
+            $this->errorsIn('CachedFacade.php'),
+        );
+    }
+
+    /**
      * Psalm has no separate channel for a tip, so the correction rides along in
      * the message rather than being dropped.
      */

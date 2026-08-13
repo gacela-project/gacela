@@ -10,6 +10,7 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
+use Gacela\StaticAnalysis\Rules\CacheableKeyIgnoresArgumentsAnalyser;
 use Gacela\StaticAnalysis\Rules\FacadeInterfaceInSyncAnalyser;
 use Gacela\StaticAnalysis\Rules\FacadeOnlyDelegatesAnalyser;
 use Gacela\StaticAnalysis\Rules\FactoryDoesNotCallFacadeAnalyser;
@@ -42,6 +43,8 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
     private static ?array $classAnalysers = null;
 
     private static ?FacadeOnlyDelegatesAnalyser $facadeMethods = null;
+
+    private static ?CacheableKeyIgnoresArgumentsAnalyser $cacheableKeys = null;
 
     public static function afterStatementAnalysis(AfterClassLikeAnalysisEvent $event): ?bool
     {
@@ -78,8 +81,14 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
         }
 
         $facadeMethods = self::$facadeMethods ??= new FacadeOnlyDelegatesAnalyser();
+        $cacheableKeys = self::$cacheableKeys ??= new CacheableKeyIgnoresArgumentsAnalyser();
+
         foreach ($node->getMethods() as $method) {
             foreach ($facadeMethods->analyse($method, $class) as $violation) {
+                $violations[] = $violation->at($method);
+            }
+
+            foreach ($cacheableKeys->analyse($method, $class) as $violation) {
                 $violations[] = $violation->at($method);
             }
         }

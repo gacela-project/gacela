@@ -25,8 +25,6 @@ trait ServiceResolverAwareTrait
     private static array $docBlockServiceResolvers = [];
 
     /**
-     * @psalm-suppress LessSpecificImplementedReturnType
-     *
      * @param list<mixed> $parameters
      *
      * @return mixed

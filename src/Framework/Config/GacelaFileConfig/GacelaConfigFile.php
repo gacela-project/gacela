@@ -82,7 +82,6 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     {
         $new = clone $this;
         $new->configItems = [...$this->configItems, ...$other->getConfigItems()];
-        /** @psalm-suppress DuplicateArrayKey */
         $new->bindings = [...$this->bindings, ...$other->getBindings()];
         // Every kind either side declared, not the four that used to be the
         // only ones: a project-declared kind pushed in through setSuffixTypes()

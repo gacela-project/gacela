@@ -60,8 +60,6 @@ final class ConsoleConfig extends AbstractConfig
     }
 
     /**
-     * @psalm-suppress MixedReturnTypeCoercion
-     *
      * @throws ConsoleException|JsonException
      *
      * @return ComposerJsonContent

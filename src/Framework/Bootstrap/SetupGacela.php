@@ -25,6 +25,7 @@ use RuntimeException;
 
 use function is_callable;
 use function sprintf;
+use function str_replace;
 
 /**
  * @psalm-suppress ArgumentTypeCoercion,MixedArgumentTypeCoercion
@@ -54,6 +55,18 @@ final class SetupGacela extends AbstractSetupGacela
 
     private readonly PropertyMerger $propertyMerger;
 
+    /**
+     * The `gacela.php` this setup was built from, when it was built from one.
+     *
+     * Bootstrap reads that file to make this object, and the config-file
+     * factory used to read it a second time to make its own. Everything the
+     * project declared then arrived twice -- two config items for one
+     * `addAppConfig()`, and a plugin declared once running twice, since a
+     * plugin cannot be deduplicated the way a plugin *stack* is. Naming the
+     * source is what lets the second read be skipped.
+     */
+    private string $sourceFilePath = '';
+
     public function __construct()
     {
         $this->properties = new Properties();
@@ -74,7 +87,26 @@ final class SetupGacela extends AbstractSetupGacela
             return new self();
         }
 
-        return self::fromCallable($setupGacelaFileFn);
+        $setup = self::fromCallable($setupGacelaFileFn);
+        $setup->sourceFilePath = $gacelaFilePath;
+
+        return $setup;
+    }
+
+    /**
+     * Whether this setup already holds everything that `gacela.php` declares,
+     * because it was built by reading it.
+     *
+     * Compared with separators normalized: bootstrap joins the path with
+     * DIRECTORY_SEPARATOR and the config factory joins it with "/", which name
+     * the same file everywhere and only differ as strings on windows -- where
+     * the mismatch would quietly restore the double read this answer exists to
+     * prevent.
+     */
+    public function wasBuiltFrom(string $gacelaFilePath): bool
+    {
+        return $this->sourceFilePath !== ''
+            && str_replace('\\', '/', $this->sourceFilePath) === str_replace('\\', '/', $gacelaFilePath);
     }
 
     /**

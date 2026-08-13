@@ -35,7 +35,48 @@ final class GacelaConfigUsingGacelaPhpFileFactoryTest extends TestCase
             $fileIo,
         );
 
-        $this->expectExceptionMessage('`gacela.php` file should return a `callable(GacelaConfig)`');
+        $this->expectExceptionMessage('"gacelaPhpPath" must return a `callable(GacelaConfig)`');
+        $factory->createGacelaFileConfig();
+    }
+
+    /**
+     * This factory reads `gacela-{APP_ENV}.php` as well as `gacela.php`, and the
+     * message named the latter whatever it had been handed -- so a broken
+     * `gacela-prod.php` sent you to the file that was fine, in the one
+     * environment where it happened.
+     */
+    public function test_the_message_names_the_file_it_was_given(): void
+    {
+        $fileIo = $this->createStub(FileIoInterface::class);
+        $fileIo->method('include')->willReturn(['not' => 'a callable']);
+
+        $factory = new GacelaConfigUsingGacelaPhpFileFactory(
+            '/app/gacela-prod.php',
+            $this->createStub(SetupGacelaInterface::class),
+            $fileIo,
+        );
+
+        $this->expectExceptionMessage('"/app/gacela-prod.php" must return a `callable(GacelaConfig)`');
+        $factory->createGacelaFileConfig();
+    }
+
+    /**
+     * What the file gave back instead, because the two likeliest mistakes are
+     * an array of settings and a file that returns nothing at all -- `include`
+     * yields `1` for the latter, which is unrecognisable without being named.
+     */
+    public function test_the_message_says_what_the_file_returned_instead(): void
+    {
+        $fileIo = $this->createStub(FileIoInterface::class);
+        $fileIo->method('include')->willReturn(1);
+
+        $factory = new GacelaConfigUsingGacelaPhpFileFactory(
+            '/app/gacela.php',
+            $this->createStub(SetupGacelaInterface::class),
+            $fileIo,
+        );
+
+        $this->expectExceptionMessage('it returned int');
         $factory->createGacelaFileConfig();
     }
 

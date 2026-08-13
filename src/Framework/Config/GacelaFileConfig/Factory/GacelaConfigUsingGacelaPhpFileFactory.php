@@ -12,7 +12,9 @@ use Gacela\Framework\Config\GacelaConfigFileFactoryInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use RuntimeException;
 
+use function get_debug_type;
 use function is_callable;
+use function sprintf;
 
 final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFactoryInterface
 {
@@ -44,7 +46,16 @@ final class GacelaConfigUsingGacelaPhpFileFactory implements GacelaConfigFileFac
         $configFn = $this->fileIo->include($this->gacelaPhpPath);
 
         if (!is_callable($configFn)) {
-            throw new RuntimeException('`gacela.php` file should return a `callable(GacelaConfig)`');
+            // Named, because this factory reads `gacela-{APP_ENV}.php` as well:
+            // saying "gacela.php" sent you to the file that was fine, in the one
+            // environment where the other one was read. What came back instead
+            // is named too -- `include` yields 1 for a file that returns
+            // nothing, which is unrecognisable otherwise.
+            throw new RuntimeException(sprintf(
+                'The file "%s" must return a `callable(GacelaConfig)`, it returned %s.',
+                $this->gacelaPhpPath,
+                get_debug_type($configFn),
+            ));
         }
 
         $configFn($gacelaConfig);

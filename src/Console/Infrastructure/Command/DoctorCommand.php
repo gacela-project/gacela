@@ -8,6 +8,7 @@ use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSourceCheck;
+use Gacela\Console\Application\Doctor\Check\EventListenerTargetCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
@@ -20,6 +21,7 @@ use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
@@ -120,6 +122,7 @@ final class DoctorCommand extends Command
             ),
             new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
             new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir, $declaredKinds), $declaredKinds),
+            new EventListenerTargetCheck($this->specificListenerTargets()),
             new ServiceExtensionTargetCheck(
                 $modules,
                 array_keys($config->getSetupGacela()->getServicesToExtend()),
@@ -141,6 +144,28 @@ final class DoctorCommand extends Command
         }
 
         return $checks;
+    }
+
+    /**
+     * Read off the concrete setup: the listener map is not part of
+     * SetupGacelaInterface, and widening a public contract to reach a
+     * diagnostic would be the tail wagging the dog. An implementation that is
+     * not Gacela's own simply reports nothing here.
+     *
+     * @return list<class-string>
+     */
+    private function specificListenerTargets(): array
+    {
+        $setup = Config::getInstance()->getSetupGacela();
+
+        if (!$setup instanceof SetupGacela) {
+            return [];
+        }
+
+        /** @var list<class-string> $targets */
+        $targets = array_keys($setup->getSpecificListeners() ?? []);
+
+        return $targets;
     }
 
     private function renderResult(CheckResult $result, OutputInterface $output): void

@@ -44,7 +44,12 @@ final class OpcachePreloadTest extends TestCase
 
     protected function tearDown(): void
     {
-        self::assertNotSame('', $this->errorLog);
+        // tearDown still runs when setUp skipped, so there is nothing named yet
+        // on the platforms that skip -- and nothing to remove either.
+        if ($this->errorLog === '') {
+            return;
+        }
+
         self::assertStringStartsWith(sys_get_temp_dir() . DIRECTORY_SEPARATOR, $this->errorLog);
 
         if (is_file($this->errorLog)) {

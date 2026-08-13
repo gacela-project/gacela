@@ -51,6 +51,21 @@ final class GoodFacade extends AbstractFacade
         return $this->getResolvedType('Exporter')?->run();
     }
 
+    /**
+     * A static method has no `$this` to delegate through, so no body it could
+     * hold would satisfy this rule. A named constructor is an ordinary shape
+     * to find on any class.
+     */
+    public static function make(): self
+    {
+        return new self();
+    }
+
+    public static function kind(): string
+    {
+        return 'good';
+    }
+
     public function cachedArrow(): mixed
     {
         return $this->cached(fn () => $this->getFactory()->createRepository()->fetchData());

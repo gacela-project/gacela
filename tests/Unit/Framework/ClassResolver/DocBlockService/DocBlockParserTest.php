@@ -116,6 +116,53 @@ TXT;
         );
     }
 
+    /**
+     * The tag is found by being a `@method` tag, not by being on a line that
+     * mentions the name. Matching the first line *containing* it meant a
+     * sentence naming your own accessor answered for it -- and since the answer
+     * was the line's fourth space-separated token, the class it resolved to was
+     * whatever word happened to sit there.
+     *
+     * This is an ordinary docblock. It failed with "Missing the concrete return
+     * type for the method `getFacade()`", pointing at the one line that states
+     * it.
+     */
+    public function test_prose_naming_the_accessor_does_not_answer_for_the_tag(): void
+    {
+        $docBlock = <<<'TXT'
+            /**
+             * Convenience wrapper. Use getFacade() to reach the module.
+             *
+             * @method \App\Module\WalletFacade getFacade()
+             */
+            TXT;
+
+        self::assertSame(
+            '\App\Module\WalletFacade',
+            $this->parser->getClassFromMethod($docBlock, 'getFacade'),
+        );
+    }
+
+    /**
+     * The name is matched at a word boundary, so a longer accessor beginning
+     * with the same characters is a different tag -- `getFacade` must not be
+     * answered by `@method X getFacadeExtended()`.
+     */
+    public function test_a_longer_accessor_does_not_answer_for_a_shorter_one(): void
+    {
+        $docBlock = <<<'TXT'
+            /**
+             * @method \App\Module\Extended getFacadeExtended()
+             * @method \App\Module\Wallet getFacade()
+             */
+            TXT;
+
+        self::assertSame(
+            '\App\Module\Wallet',
+            $this->parser->getClassFromMethod($docBlock, 'getFacade'),
+        );
+    }
+
     public function test_unknown_method_with_no_matching_doc_block_returns_empty_string(): void
     {
         self::assertSame('', $this->parser->getClassFromMethod('/** nothing */', 'somethingElse'));

@@ -17,6 +17,7 @@ use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeConfig;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFacade;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFactory;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeNoDocBlockCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeProseCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeRandomService;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -168,6 +169,16 @@ final class DocBlockResolverTest extends TestCase
     {
         yield 'Facade resolution from Command' => [
             new FakeCommand(),
+            'getFacade',
+            FakeFacade::class,
+            'Facade',
+        ];
+
+        // A docblock whose prose names the accessor above the tag that declares
+        // it. The prose used to answer for the tag, and the class stopped
+        // resolving.
+        yield 'Facade resolution past prose naming the accessor' => [
+            new FakeProseCommand(),
             'getFacade',
             FakeFacade::class,
             'Facade',

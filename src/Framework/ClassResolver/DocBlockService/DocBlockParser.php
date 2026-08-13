@@ -15,23 +15,7 @@ final class DocBlockParser
             return '';
         }
 
-        if (strcasecmp(substr(PHP_OS, 0, 3), 'WIN') === 0) {
-            $docBlock = str_replace("\n", PHP_EOL, $docBlock);
-        }
-
-        $lines = array_filter(
-            explode(PHP_EOL, $docBlock),
-            static fn (string $l): bool => str_contains($l, $method),
-        );
-
-        $firstLine = reset($lines);
-        $classFromMethod = '';
-
-        if ($firstLine !== false) {
-            /** @var array<int, string> $lineSplit */
-            $lineSplit = explode(' ', $firstLine);
-            $classFromMethod = $lineSplit[3] ?? '';
-        }
+        $classFromMethod = $this->returnTypeOfMethodTag($docBlock, $method);
 
         if ($classFromMethod !== '') {
             return $classFromMethod;
@@ -53,6 +37,37 @@ final class DocBlockParser
             }
 
             return AbstractConfig::class;
+        }
+
+        return '';
+    }
+
+    /**
+     * The return type of `@method <type> <name>(`, or an empty string when the
+     * docblock declares no such tag.
+     *
+     * Matched as a tag rather than as "the first line containing the name":
+     * that read the line's fourth space-separated token, so a sentence
+     * mentioning your own accessor answered for it with whatever word sat in
+     * that position -- `Use getFacade() to reach the module.` resolved
+     * `getFacade()` to a class called `wrapper.`, and the failure arrived as
+     * "Missing the concrete return type" pointing at a docblock that states it.
+     *
+     * `\b` rather than a required `(`, because a tag written without the
+     * parameter list resolved before and still does. It also keeps a longer
+     * accessor from answering for a shorter one: `getFacade` does not match
+     * `getFacadeExtended`, where no boundary falls.
+     */
+    private function returnTypeOfMethodTag(string $docBlock, string $method): string
+    {
+        // Callers spell the method both ways -- `__call()` hands over a bare
+        // name, and the resolver's own tests ask with the parentheses.
+        $name = rtrim($method, '()');
+
+        $pattern = '#@method\s+(?:static\s+)?([^\s(]+)\s+' . preg_quote($name, '#') . '\b#';
+
+        if (preg_match($pattern, $docBlock, $matches) === 1) {
+            return $matches[1];
         }
 
         return '';

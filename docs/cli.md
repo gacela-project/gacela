@@ -14,8 +14,8 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 | Command | What it does |
 |---|---|
 | `init` | Creates the `gacela.php` a project needs before anything else works, plus the `config/app.php` it declares. `--force` regenerates `gacela.php` and never touches your config |
-| `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests`, `--short-name` |
-| `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared |
+| `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests` (service template only — refused on the others rather than ignored), `--short-name`, `--force` to replace files that already exist |
+| `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared. `--short-name`, `--force` to replace files that already exist |
 | `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force` |
 
 ### Your own stubs
@@ -52,7 +52,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 | `debug:config` | The effective merged configuration, after every source and override, each key marked `declared`, `undeclared` or `missing` against the [schema](config-schema.md) |
 | `debug:container` | Container contents — user bindings and plugins only |
 | `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable` |
-| `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--allowed-cycles`, `--rules` to fail on dependencies your rules file forbids, `--compare-to` |
+| `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--compare-to`. `--allowed-cycles` and `--rules` are read only by `--check`, and are refused without it |
 
 `debug:graph --check` is the one built for CI; see [module boundaries](module-boundaries.md) for wiring it into a workflow.
 

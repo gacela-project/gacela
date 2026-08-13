@@ -4,25 +4,24 @@
 
 ### Added
 
-- Select configuration by more than `APP_ENV` with `addConfigDimension()`: each declared variable adds a link to the chain, so `config/app-prod-eu.php` refines `config/app-prod.php` refines `config/app.php`. An unset variable ends the chain, values are restricted to what a glob and a filename can safely carry, and the merged-config cache is named by the whole tuple so two regions sharing a cache directory never read each other's file
-- Wrap a service as one Provider registers it with `extendProviderService()`, leaving every other module that reuses the same id alone — and letting one module decorate a sibling's binding without shadowing the sibling's whole Provider class
-- Declare an extension point with `addPluginStack()`: every implementation of one interface, in declaration order, resolved lazily and read back typed through `getPluginStack()`. Calling it again appends, so another config source contributes to a stack it did not declare, and an entry that does not implement the interface fails naming the class
-- Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars, reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs became sugar over it
-- Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`. The kind is listed in the command's help, `doctor` counts its stub among the ones the scaffolder reads, and until that stub exists the generator names the path it looked for
-- Report in `doctor` every `extendService()` id no Provider ever `set()`s — such an extension is accepted, scheduled on every scope, and applied nowhere
-- Declare a data shape with `declareDtoSchema()` and generate it with `dto:generate`: one final, fully typed class per shape, with typed getters, `with*()` copies, `toArray()` and `fromArray()`. Every declarer of one shape contributes to it, so a project adds a property to a packaged shape without forking its file, while redeclaring a property differently is refused at bootstrap. A shape is declared by the class it generates, so the file is written where the project's own composer `autoload` already looks — no framework autoloader, and static analysis reads the classes without a generation step running first
-- Report in `doctor` any package importing a namespace its own `composer.json` never mentions. A sub-package of a monorepo resolves fine against the root autoloader and fatals the day it is installed alone — the bug this repository shipped in both bridges once already. Every manifest section counts as a mention, because a phar-distributed package declares no autoload prefix and demanding a particular section would name the wrong package to add
-- Generate editor metadata for `getProvidedDependency()` with `ide:meta`, from the `#[Provides]` attributes: an id naming a class resolves to it, and each string id is typed by the return type of the method that registers it. An id two providers type differently is listed rather than written, because one application-wide answer would be wrong in one of the two modules; `doctor` reports metadata the attributes no longer produce
+- Select configuration by more than `APP_ENV` with `addConfigDimension()`: each declared variable adds a link to the chain, so `config/app-prod-eu.php` refines `config/app-prod.php` refines `config/app.php`. The merged-config cache is keyed by the whole tuple, so two regions sharing a cache directory never read each other's file
+- Declare a data shape with `declareDtoSchema()` and generate the immutable class from it with `dto:generate`: typed getters, `with*()` copies, `toArray()` and `fromArray()`. Declarations of one shape union, so a project adds a property to a packaged shape without forking it, and redefining one is refused at bootstrap. The file is written where the project's own composer `autoload` already looks
+- Declare an extension point with `addPluginStack()`: every implementation of one interface, in declaration order, resolved lazily and read back typed through `getPluginStack()`. Calling it again appends, so another config source contributes to a stack it did not declare
+- Wrap a service as one Provider registers it with `extendProviderService()`, leaving every other module that reuses the same id alone
+- Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars and reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs are now sugar over it
+- Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`
+- Generate editor metadata for `getProvidedDependency()` with `ide:meta`, from the `#[Provides]` attributes. An id two providers type differently is listed rather than written, since one application-wide answer would be wrong in one of them
+- Report in `doctor` every `extendService()` id no Provider ever `set()`s, any package importing a namespace its own `composer.json` never mentions, and editor metadata the attributes no longer produce
 
 ### Changed
 
-- Resolve a class name to its kind through the configured suffixes rather than the four literal pillar names. A project on `addSuffixTypeFacade('PublicApi')` now normalizes `App\Foo\FooPublicApi` to the `Facade` key the resolver looks up, which is what makes an override of it land — an `overrideExistingResolvedClass()` call on such a name was inert before and takes effect now
+- Resolve a class name to its kind through the configured suffixes rather than the four literal pillar names. A project on `addSuffixTypeFacade('PublicApi')` now normalizes `App\Foo\FooPublicApi` to the `Facade` key the resolver looks up, so an `overrideExistingResolvedClass()` call on such a name takes effect where it was inert before
 
 ### Fixed
 
-- Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote its test-only requirements to `require-dev` — each manifest now states what its `src/` imports, and only that
-- Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir no longer silently serve each other's classes
-- Point the "missing return type" exception at the namespace `ServiceMap` actually lives in. Its recommended fix imported `Gacela\Framework\ClassResolver\Attribute\ServiceMap`, which does not exist, so following it left the attribute unmatched and the class no better off; the docblock alternative it offers is now marked as the deprecated path it is
+- Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote their test-only requirements to `require-dev`, so each manifest states what its `src/` imports and only that
+- Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir no longer serve each other's classes
+- Point the "missing return type" exception at the namespace `ServiceMap` actually lives in: its recommended fix named one that does not exist, so following it left the attribute unmatched. Its docblock alternative is now marked as the deprecated path it is
 
 ## [2.2.0](https://github.com/gacela-project/gacela/compare/2.1.0...2.2.0) - 2026-08-11
 

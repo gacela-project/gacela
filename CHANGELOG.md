@@ -4,6 +4,8 @@
 
 ### Added
 
+- Report in `doctor` listeners registered while `disableEventListeners()` is in effect. No dispatcher is built, so every registration is inert — which `docs/events.md` already calls the first thing to check when a listener appears dead, and which the check itself used to give a green tick to. Generic listeners count too: they carry no target, so a project whose only listeners are generic looked like one that had registered nothing. Disabling with nothing registered stays silent, and an unfireable target is still reported alongside, because it has to be right for the day the switch goes back on
+
 - Name what `profile:report` never saw finish. A `stop()` that misspells the operation or subject is ignored — there is no start time to measure from — so the entry vanishes and looks exactly like code nobody instrumented. The report now lists what is still open, counted where several spans of one operation are, and `--format=json` carries the same answer in an `unfinished` field
 
 - Report in `doctor` a tagged id nothing can answer. `Container::tagged()` resolves each id in turn and gives back `null` for one naming nothing, so the group a module iterates silently carries a hole and the failure lands on the consumer as "Call to a member function … on null" — pointing at the loop rather than the registration. An id is answerable when a Provider `set()`s it or it names a class the container can construct, so a tag grouping plain service ids is untouched

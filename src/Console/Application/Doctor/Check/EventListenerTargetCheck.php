@@ -35,10 +35,16 @@ use function sprintf;
 final class EventListenerTargetCheck implements HealthCheck
 {
     /**
-     * @param list<string> $listenerTargets the event names passed to registerSpecificListener()
+     * @param list<string> $listenerTargets      the event names passed to registerSpecificListener()
+     * @param int          $genericListenerCount how many registerGenericListener() callables there are;
+     *                                           they carry no target, so they are invisible to the checks below
+     * @param bool         $dispatcherEnabled    false when `disableEventListeners()` was called, which
+     *                                           builds no dispatcher at all. Defaults to Gacela's own default
      */
     public function __construct(
         private readonly array $listenerTargets,
+        private readonly int $genericListenerCount = 0,
+        private readonly bool $dispatcherEnabled = true,
     ) {
     }
 
@@ -49,11 +55,26 @@ final class EventListenerTargetCheck implements HealthCheck
 
     public function run(): CheckResult
     {
-        if ($this->listenerTargets === []) {
+        $registered = count($this->listenerTargets) + $this->genericListenerCount;
+
+        if ($registered === 0) {
+            // Disabling with nothing registered is an ordinary production
+            // setting rather than a fault: no declaration is going unheard.
             return CheckResult::ok($this->name(), 'no specific listeners registered');
         }
 
         $warnings = [];
+
+        // The kill switch builds no dispatcher, so everything registered
+        // silently does not run -- which `docs/events.md` calls the first thing
+        // to check when a listener appears dead. Said before the target
+        // problems below, because it applies to all of them at once.
+        if (!$this->dispatcherEnabled) {
+            $warnings[] = sprintf(
+                '%d listener(s) registered, but event listeners are disabled -- none of them runs',
+                $registered,
+            );
+        }
 
         foreach ($this->listenerTargets as $target) {
             $reason = $this->whyItCanNeverFire($target);
@@ -64,17 +85,26 @@ final class EventListenerTargetCheck implements HealthCheck
         }
 
         if ($warnings !== []) {
-            return CheckResult::warn(
-                $this->name(),
-                $warnings,
-                'a specific listener runs only when the dispatched event is exactly that class -- register the concrete event, or use registerGenericListener() and filter inside it',
-            );
+            return CheckResult::warn($this->name(), $warnings, $this->hintFor());
         }
 
         return CheckResult::ok(
             $this->name(),
             sprintf('%d listener target(s) name a concrete event', count($this->listenerTargets)),
         );
+    }
+
+    /**
+     * The switch first: with the dispatcher off, correcting a target changes
+     * nothing until it is back on.
+     */
+    private function hintFor(): string
+    {
+        if (!$this->dispatcherEnabled) {
+            return 'remove disableEventListeners() to let them run, or drop the registrations -- nothing here can tell a deliberate kill switch from a forgotten one';
+        }
+
+        return 'a specific listener runs only when the dispatched event is exactly that class -- register the concrete event, or use registerGenericListener() and filter inside it';
     }
 
     private function whyItCanNeverFire(string $target): ?string

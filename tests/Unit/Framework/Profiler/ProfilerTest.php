@@ -73,6 +73,75 @@ final class ProfilerTest extends TestCase
         self::assertCount(2, $entries);
     }
 
+    /**
+     * A `stop()` whose subject does not match its `start()` is ignored -- there
+     * is no start time to measure from -- so the entry is lost and nothing says
+     * why. The unmatched start is still open, and naming it is what turns "my
+     * operation is missing from the report" into the typo that caused it.
+     */
+    public function test_a_start_whose_stop_never_matched_is_reported_as_unfinished(): void
+    {
+        $this->profiler->enable();
+        $this->profiler->start('db-query', 'orders');
+        $this->profiler->stop('db-query', 'order');
+
+        self::assertSame([], $this->profiler->getEntries());
+        self::assertSame(['db-query:orders' => 1], $this->profiler->getUnfinishedOperations());
+    }
+
+    /**
+     * Every open operation, not the first one found: a report naming one of
+     * three sends its reader to fix that one and rerun into the same silence.
+     */
+    public function test_every_open_operation_is_reported(): void
+    {
+        $this->profiler->enable();
+        $this->profiler->start('db-query', 'orders');
+        $this->profiler->start('render', 'page');
+        $this->profiler->start('http', 'upstream');
+
+        self::assertSame(
+            ['db-query:orders' => 1, 'render:page' => 1, 'http:upstream' => 1],
+            $this->profiler->getUnfinishedOperations(),
+        );
+    }
+
+    public function test_a_matched_pair_leaves_nothing_unfinished(): void
+    {
+        $this->profiler->enable();
+        $this->profiler->start('db-query', 'users');
+        $this->profiler->stop('db-query', 'users');
+
+        self::assertSame([], $this->profiler->getUnfinishedOperations());
+    }
+
+    /**
+     * Nested spans of one operation close innermost-first, so a report of what
+     * is still open has to count them rather than merely name them.
+     */
+    public function test_nested_starts_are_counted_while_they_remain_open(): void
+    {
+        $this->profiler->enable();
+        $this->profiler->start('render', 'page');
+        $this->profiler->start('render', 'page');
+
+        self::assertSame(['render:page' => 2], $this->profiler->getUnfinishedOperations());
+
+        $this->profiler->stop('render', 'page');
+
+        self::assertSame(['render:page' => 1], $this->profiler->getUnfinishedOperations());
+    }
+
+    public function test_reset_clears_what_was_left_open(): void
+    {
+        $this->profiler->enable();
+        $this->profiler->start('render', 'page');
+
+        $this->profiler->reset();
+
+        self::assertSame([], $this->profiler->getUnfinishedOperations());
+    }
+
     public function test_profiler_generates_statistics(): void
     {
         $this->profiler->start('operation1', 'subject1');

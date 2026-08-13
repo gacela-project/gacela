@@ -111,6 +111,34 @@ final class Profiler
     }
 
     /**
+     * Operations started and never stopped, with how many of each are still
+     * open.
+     *
+     * A `stop()` whose operation or subject does not match its `start()` is
+     * ignored -- there is no start time to measure from -- so a typo in either
+     * costs the entry *and* says nothing, in the one tool whose job is telling
+     * a reader what happened. The unmatched start is still here, and naming it
+     * is what turns "my operation is missing from the report" into the typo
+     * that caused it.
+     *
+     * Keyed `operation:subject`, the same shape the report reads.
+     *
+     * @return array<string, int>
+     */
+    public function getUnfinishedOperations(): array
+    {
+        $unfinished = [];
+
+        // No emptiness check: popStartTime() unsets the key when its last span
+        // closes, so a key that is here has spans still open.
+        foreach ($this->activeOperations as $key => $startTimes) {
+            $unfinished[$key] = count($startTimes);
+        }
+
+        return $unfinished;
+    }
+
+    /**
      * @return list<TProfileEntry>
      */
     public function getEntries(): array

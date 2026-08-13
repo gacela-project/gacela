@@ -50,9 +50,11 @@ final class ProfileReportCommand extends Command
         }
 
         $entries = $profiler->getEntries();
+        $unfinished = $profiler->getUnfinishedOperations();
 
         if ($entries === []) {
             $output->writeln('<info>No profiling data available</info>');
+            $this->writeUnfinished($unfinished, $output);
             $output->writeln('');
 
             return self::SUCCESS;
@@ -69,7 +71,42 @@ final class ProfileReportCommand extends Command
             default => $this->outputTable($entries, $profiler, $output),
         };
 
+        // Not for `json`, whose consumer parses a document rather than reading
+        // prose, and which already carries the same list in a field of its own.
+        if ($format !== 'json') {
+            $this->writeUnfinished($unfinished, $output);
+        }
+
         return self::SUCCESS;
+    }
+
+    /**
+     * The operations still open when the report ran.
+     *
+     * An operation missing from the report because its `stop()` misspelled the
+     * subject looks exactly like one that was never instrumented. This is the
+     * difference, and it is the reason a reader would look here at all.
+     *
+     * @param array<string, int> $unfinished
+     */
+    private function writeUnfinished(array $unfinished, OutputInterface $output): void
+    {
+        if ($unfinished === []) {
+            return;
+        }
+
+        $output->writeln('');
+        $output->writeln('<comment>Started and never stopped:</comment>');
+
+        foreach ($unfinished as $key => $openCount) {
+            $output->writeln(sprintf(
+                '  %s%s',
+                $key,
+                $openCount > 1 ? sprintf(' (%d open)', $openCount) : '',
+            ));
+        }
+
+        $output->writeln('<comment>A stop() must match its start() on both operation and subject.</comment>');
     }
 
     /**
@@ -122,6 +159,9 @@ final class ProfileReportCommand extends Command
         $data = [
             'entries' => [],
             'stats' => $profiler->getStats(),
+            // A field of its own rather than prose: the same answer the text
+            // report gives, for a consumer that parses rather than reads.
+            'unfinished' => $profiler->getUnfinishedOperations(),
         ];
 
         foreach ($entries as $entry) {

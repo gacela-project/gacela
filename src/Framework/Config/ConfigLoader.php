@@ -73,6 +73,57 @@ final class ConfigLoader
     }
 
     /**
+     * The distinct base patterns this project declared.
+     *
+     * Distinct rather than one per config item: the same path declared twice is
+     * one claim about where configuration lives, and counting it twice would
+     * report "1 of 2 paths load nothing" for a project that wrote exactly one.
+     *
+     * @return list<string>
+     */
+    public function declaredPatterns(): array
+    {
+        $patterns = [];
+
+        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
+            $pattern = $this->pathNormalizer->normalizePathPattern($configItem);
+
+            if ($pattern !== '') {
+                $patterns[] = $pattern;
+            }
+        }
+
+        return array_values(array_unique($patterns));
+    }
+
+    /**
+     * The declared config paths that matched no file at all.
+     *
+     * Only the base pattern of each item, never the environment-and-dimensions
+     * chain: `config/app-prod.php` is meant to be absent everywhere it does not
+     * apply, so reporting it would fire on every correctly configured project.
+     * The base pattern is the one the project wrote out and expects to load,
+     * and a typo in it costs nothing at bootstrap -- the values are simply not
+     * there, and the first thing to read one fails somewhere else entirely.
+     *
+     * @return list<string>
+     */
+    public function patternsMatchingNothing(): array
+    {
+        $unmatched = [];
+
+        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
+            $pattern = $this->pathNormalizer->normalizePathPattern($configItem);
+
+            if ($pattern !== '' && $this->pathFinder->matchingPattern($pattern) === []) {
+                $unmatched[] = $pattern;
+            }
+        }
+
+        return array_values(array_unique($unmatched));
+    }
+
+    /**
      * @return list<string>
      */
     private function patternsOf(GacelaConfigItem $configItem): array

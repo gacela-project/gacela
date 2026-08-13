@@ -7,6 +7,7 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
+use Gacela\Console\Application\Doctor\Check\ConfigSourceCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
@@ -33,6 +34,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function count;
 use function sprintf;
 
 /**
@@ -88,7 +90,9 @@ final class DoctorCommand extends Command
         $config = Config::getInstance();
         $modules = $this->getFacade()->findAllAppModules($filter);
         $configFactory = $config->getFactory();
-        $suffixTypes = $configFactory->createGacelaFileConfig()->getSuffixTypes();
+        $gacelaFileConfig = $configFactory->createGacelaFileConfig();
+        $configLoader = $configFactory->createConfigLoader();
+        $suffixTypes = $gacelaFileConfig->getSuffixTypes();
         $stubsDir = $this->getFacade()->stubsDir();
         $declaredKinds = ResolvableTypes::declaredKinds();
 
@@ -98,7 +102,7 @@ final class DoctorCommand extends Command
                 null,
                 $config->getAppRootDir(),
                 $config->mergedConfigCache(),
-                $configFactory->createConfigLoader()->sourceFiles(),
+                $configLoader->sourceFiles(),
                 ClassResolverCache::bootstrapFingerprint(),
             ),
             // Ahead of the staleness check on purpose: with nowhere to write,
@@ -110,6 +114,10 @@ final class DoctorCommand extends Command
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules, $suffixTypes),
+            new ConfigSourceCheck(
+                $configLoader->patternsMatchingNothing(),
+                count($configLoader->declaredPatterns()),
+            ),
             new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
             new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir, $declaredKinds), $declaredKinds),
             new ServiceExtensionTargetCheck(

@@ -11,6 +11,7 @@
 - Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars and reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs are now sugar over it
 - Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`
 - Generate editor metadata for `getProvidedDependency()` with `ide:meta`, from the `#[Provides]` attributes. An id two providers type differently is listed rather than written, since one application-wide answer would be wrong in one of them
+- Print only the checks that found something with `doctor --only-problems`. Twelve checks is a lot of "✓" to read to find the one "⚠", and `-q` is not the answer: it suppresses everything, so `--strict -q` fails a build without saying what failed
 - Report in `doctor` what a project declared and nothing acts on: an `extendService()` id no Provider `set()`s, a `registerSpecificListener()` target no dispatched event can be, an `addAppConfig()` path matching no file, a cache directory that cannot be written to, a package importing a namespace its own `composer.json` never mentions, and editor metadata the attributes no longer produce. Each of these is accepted today and simply does nothing
 
 ### Changed

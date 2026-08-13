@@ -52,7 +52,8 @@ final class DoctorCommand extends Command
         $this->setName('doctor')
             ->setDescription('Run environmental & wiring health checks for the current Gacela setup')
             ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict module-scoped checks to this namespace', '')
-            ->addOption('strict', null, InputOption::VALUE_NONE, 'Exit with a failure code on warnings too, for CI');
+            ->addOption('strict', null, InputOption::VALUE_NONE, 'Exit with a failure code on warnings too, for CI')
+            ->addOption('only-problems', null, InputOption::VALUE_NONE, 'Report only the checks that found something');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -61,16 +62,32 @@ final class DoctorCommand extends Command
 
         $filter = ConsoleInput::argument($input, 'filter');
         $strict = $input->getOption('strict') === true;
+        $onlyProblems = $input->getOption('only-problems') === true;
         $checks = $this->buildChecks($filter);
         $worst = CheckStatus::Ok;
+        $rendered = false;
 
         foreach ($checks as $check) {
             $result = $check->run();
-            $this->renderResult($result, $output);
+
+            // A passing check is the bulk of the output and none of the news.
+            // The summary below still reports, so a clean run says so rather
+            // than printing nothing and leaving "did it run?" open.
+            if (!$onlyProblems || $result->status !== CheckStatus::Ok) {
+                $this->renderResult($result, $output);
+                $rendered = true;
+            }
+
             $worst = $this->worseOf($worst, $result->status);
         }
 
-        $output->writeln('');
+        // renderResult() already ends each block with a blank line, so this one
+        // only separates the summary from *something*. With --only-problems and
+        // nothing to report there is nothing to separate it from.
+        if ($rendered) {
+            $output->writeln('');
+        }
+
         ConsoleSection::separator($output);
 
         return match ($worst) {

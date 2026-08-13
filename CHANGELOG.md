@@ -11,7 +11,7 @@
 - Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars and reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs are now sugar over it
 - Generate a declared kind with `make:file App/Wallet Exporter`, from the stub the project publishes for it at `stubs/gacela/exporter-maker.txt`
 - Generate editor metadata for `getProvidedDependency()` with `ide:meta`, from the `#[Provides]` attributes. An id two providers type differently is listed rather than written, since one application-wide answer would be wrong in one of them
-- Report in `doctor` every `extendService()` id no Provider ever `set()`s, any package importing a namespace its own `composer.json` never mentions, and editor metadata the attributes no longer produce
+- Report in `doctor` every `extendService()` id no Provider ever `set()`s, any package importing a namespace its own `composer.json` never mentions, editor metadata the attributes no longer produce, and a cache directory that cannot be written to — enabled caching that stores nothing runs correctly and pays the cold cost on every request, and the staleness check reads it as "nothing to check"
 
 ### Changed
 

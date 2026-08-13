@@ -65,6 +65,8 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).
 
+*cache directory* answers whether the cache you enabled can actually be written. Writing is best-effort by design — an application must not fail because an optimisation could not be stored — so a project that enabled caching and got a directory it has no permission on runs correctly and pays the cold cost on every request, with nothing said. Reported read-only: `doctor` never creates the directory to find out.
+
 Among the built-in checks, *service extensions* verifies every `extendService()` id against what the Providers actually `set()`: an extension on an id nothing ever stores — a typo, or an id registered only through `bind()`/`singleton()` — is accepted and applied nowhere at runtime, silently, so `doctor` is the surface that says so. Under `--strict` an unmatched id fails the run.
 
 ## Production

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
+use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
@@ -99,6 +100,13 @@ final class DoctorCommand extends Command
                 $config->mergedConfigCache(),
                 $configFactory->createConfigLoader()->sourceFiles(),
                 ClassResolverCache::bootstrapFingerprint(),
+            ),
+            // Ahead of the staleness check on purpose: with nowhere to write,
+            // there are no cache files to be stale and that check reports
+            // "nothing to check" -- which is the symptom, not the cause.
+            new CacheWritabilityCheck(
+                $config->getSetupGacela()->isFileCacheEnabled(),
+                $config->getCacheDir(),
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules, $suffixTypes),

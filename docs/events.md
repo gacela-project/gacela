@@ -7,7 +7,7 @@ Gacela dispatches domain events while it works: bootstrapping, reading config, r
 - Every event is a small immutable class implementing `GacelaEventInterface` (one `toString()` method).
 - By default nothing listens: the dispatcher is a `NullEventDispatcher`, and every dispatch site is guarded by `EventDispatcherInterface::hasListeners()`, so **no event object is even allocated** unless a listener is registered for it. Events are zero-cost when unused, including on the class-resolution hot path.
 - Registering any listener switches to a `ConfigurableEventDispatcher`. Listeners are plain callables receiving the event object; they are notify-only (events are immutable, there is no propagation stopping).
-- `GacelaConfig::disableEventListeners()` turns the whole mechanism off regardless of what was registered — the dispatcher is never built, so registered listeners silently do not run. That is the point in production, and the first thing to check when a listener appears dead.
+- `GacelaConfig::disableEventListeners()` turns the whole mechanism off regardless of what was registered — the dispatcher is never built, so registered listeners silently do not run. That is the point in production, and the first thing to check when a listener appears dead. `vendor/bin/gacela doctor` reports the combination, so you do not have to remember to look.
 
 Two kinds of listeners:
 

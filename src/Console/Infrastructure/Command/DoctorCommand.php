@@ -140,7 +140,11 @@ final class DoctorCommand extends Command
             ),
             new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
             new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir, $declaredKinds), $declaredKinds),
-            new EventListenerTargetCheck($this->specificListenerTargets()),
+            new EventListenerTargetCheck(
+                $this->specificListenerTargets(),
+                $this->genericListenerCount(),
+                $this->eventDispatcherCanBeBuilt(),
+            ),
             new ServiceExtensionTargetCheck(
                 $modules,
                 array_keys($config->getSetupGacela()->getServicesToExtend()),
@@ -190,6 +194,43 @@ final class DoctorCommand extends Command
         $targets = array_keys($setup->getSpecificListeners() ?? []);
 
         return $targets;
+    }
+
+    /**
+     * How many `registerGenericListener()` callables there are. They carry no
+     * target, so a project whose only listeners are generic has an empty target
+     * list and would otherwise look like one that registered nothing.
+     */
+    private function genericListenerCount(): int
+    {
+        $setup = Config::getInstance()->getSetupGacela();
+
+        if (!$setup instanceof SetupGacela) {
+            return 0;
+        }
+
+        return count($setup->getGenericListeners() ?? []);
+    }
+
+    /**
+     * False when `disableEventListeners()` was called, so nothing registered can
+     * run.
+     *
+     * Read through `canCreateEventDispatcher()`, which is already public,
+     * rather than widening the setup to expose the flag for a diagnostic. It
+     * also answers false when nothing is registered, which is why the check is
+     * told how much *is* registered and only concludes "disabled" when both are
+     * true.
+     */
+    private function eventDispatcherCanBeBuilt(): bool
+    {
+        $setup = Config::getInstance()->getSetupGacela();
+
+        if (!$setup instanceof SetupGacela) {
+            return true;
+        }
+
+        return $setup->canCreateEventDispatcher();
     }
 
     /**

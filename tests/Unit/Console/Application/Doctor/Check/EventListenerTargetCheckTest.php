@@ -20,6 +20,71 @@ final class EventListenerTargetCheckTest extends TestCase
         self::assertSame(['no specific listeners registered'], $result->details);
     }
 
+    /**
+     * `disableEventListeners()` builds no dispatcher at all, so everything
+     * registered silently does not run -- which `docs/events.md` calls the first
+     * thing to check when a listener appears dead. The check validated the
+     * targets and gave a green tick to listeners that cannot fire.
+     */
+    public function test_listeners_registered_while_the_dispatcher_is_off_are_reported(): void
+    {
+        $result = (new EventListenerTargetCheck(
+            [GacelaBootstrapStartedEvent::class],
+            dispatcherEnabled: false,
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(
+            ['1 listener(s) registered, but event listeners are disabled -- none of them runs'],
+            $result->details,
+        );
+    }
+
+    /**
+     * A generic listener is registered against no target, so the target list is
+     * empty and the check used to return early -- the one shape where every
+     * listener in the project is invisible to it.
+     */
+    public function test_a_generic_listener_alone_is_reported_when_the_dispatcher_is_off(): void
+    {
+        $result = (new EventListenerTargetCheck([], genericListenerCount: 2, dispatcherEnabled: false))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(
+            ['2 listener(s) registered, but event listeners are disabled -- none of them runs'],
+            $result->details,
+        );
+    }
+
+    /**
+     * Disabling with nothing registered is an ordinary production setting, not
+     * a fault: there is no declaration going unheard.
+     */
+    public function test_the_dispatcher_being_off_with_nothing_registered_is_fine(): void
+    {
+        $result = (new EventListenerTargetCheck([], dispatcherEnabled: false))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+    }
+
+    /**
+     * Both faults are worth saying: the targets still have to be right for the
+     * day the switch is turned back on.
+     */
+    public function test_an_unfireable_target_is_still_reported_while_the_dispatcher_is_off(): void
+    {
+        $result = (new EventListenerTargetCheck(
+            [GacelaEventInterface::class],
+            dispatcherEnabled: false,
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertCount(2, $result->details);
+        self::assertStringContainsString('event listeners are disabled', $result->details[0]);
+        self::assertStringContainsString('is an interface', $result->details[1]);
+        self::assertStringContainsString('disableEventListeners()', $result->remediation);
+    }
+
     public function test_a_concrete_event_class_passes(): void
     {
         $result = (new EventListenerTargetCheck([GacelaBootstrapStartedEvent::class]))->run();

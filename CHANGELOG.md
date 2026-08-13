@@ -31,6 +31,7 @@
 
 ### Fixed
 
+- Round the per-operation `total_duration` in `Profiler::getStats()` like every other duration in that payload. It was handed on as summed, one line from its rounded twin, so float addition noise reached `profile:report --format=json` in one field and not its siblings — `0.1 + 0.2` arriving as `0.30000000000000004` next to a `total_duration` of `0.3`
 - Name the file in "must return a `callable(GacelaConfig)`", and say what it returned instead. The same factory reads `gacela-{APP_ENV}.php` as well as `gacela.php`, but the message always said `gacela.php` — so a broken `gacela-prod.php` sent you to the file that was fine, in the one environment where the other was read. `include` yields `1` for a file that returns nothing, which is unrecognisable until it is named
 - Report the shape of an `--allowed-cycles` file before judging its entries. An object's values were walked as if they were entries, so `{"cycles": [...]}` — the shape the sibling `--rules` flag on the same command really does take — was reported as `Allowed-cycle entry #0 must list at least two "modules"`, pointing at an entry when the file's shape was wrong. A correct entry that was never wrapped in the array got the same message. Both now name the keys found, and say either to wrap a stray entry in `[ ]` or that `--rules` is the flag taking an object
 

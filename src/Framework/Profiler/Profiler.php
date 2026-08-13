@@ -179,7 +179,10 @@ final class Profiler
         foreach ($tally as $operation => $stats) {
             $byOperation[$operation] = [
                 'count' => $stats['count'],
-                'total_duration' => $stats['total_duration'],
+                // Rounded like every other duration in this payload. Averaged
+                // from the summed value rather than this one, so the rounding
+                // is applied once at the end instead of compounding.
+                'total_duration' => round($stats['total_duration'], 6),
                 'avg_duration' => $this->average($stats['total_duration'], $stats['count']),
             ];
         }

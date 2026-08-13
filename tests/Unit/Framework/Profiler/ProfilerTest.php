@@ -373,6 +373,38 @@ final class ProfilerTest extends TestCase
         self::assertSame(0.004, $stats['by_operation']['op2']['total_duration']);
     }
 
+    /**
+     * Every other duration in the payload is rounded to microseconds; this one
+     * was handed on as summed, one line from its rounded twin. Float addition
+     * is what makes that visible -- `0.1 + 0.2` is `0.30000000000000004` -- and
+     * `getStats()` goes straight into `profile:report --format=json`, so a
+     * consumer saw one field carrying noise its siblings do not.
+     */
+    public function test_per_operation_total_duration_is_rounded_like_every_other_duration(): void
+    {
+        $this->injectEntries([
+            $this->entry('op', 's1', duration: 0.1),
+            $this->entry('op', 's2', duration: 0.2),
+        ]);
+
+        $stats = $this->profiler->getStats();
+
+        self::assertSame(0.3, $stats['by_operation']['op']['total_duration']);
+        self::assertSame(0.3, $stats['total_duration'], 'the top-level total was already rounded');
+    }
+
+    /**
+     * Six decimals, which is microseconds: the unit `hrtime()` measures in and
+     * the precision every other duration here keeps. A value that differs at
+     * the seventh is what pins it.
+     */
+    public function test_per_operation_total_duration_keeps_microsecond_precision(): void
+    {
+        $this->injectEntries([$this->entry('op', 's1', duration: 0.12345678)]);
+
+        self::assertSame(0.123457, $this->profiler->getStats()['by_operation']['op']['total_duration']);
+    }
+
     public function test_per_operation_avg_duration_is_that_operations_total_over_count(): void
     {
         $this->injectEntries([

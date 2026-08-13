@@ -105,6 +105,7 @@ final class StaticStateCoverageTest extends TestCase
         'Profiler::$instance' => 'observation lifetime, not cache lifetime: the profiler is opt-in and accumulates measurements across a run on purpose. Clearing it on a cache reset would discard the profile the app asked for, half-way through collecting it',
         'ClassRules::$classAnalysers' => 'pure memoization, and not in a gacela process at all: the architecture rules psalm runs, built once because the handler is called for every class-like it analyses. They hold only their own configuration, and resetCache() belongs to an application runtime this never shares',
         'ClassRules::$facadeMethods' => 'pure memoization, as above: the one rule that judges a method rather than a class',
+        'ClassRules::$cacheableKeys' => 'pure memoization, as above: the second rule that judges a method rather than a class, this one reading the #[Cacheable] attribute on it',
         'CrossModuleRules::$analyser' => "configuration: the boundary check psalm was asked to run, read from the consumer's <crossModule> element at plugin registration. Nothing re-establishes it, so clearing it would silently turn the rule off",
         'CrossModuleCallRules::$analyser' => 'configuration: the other half of the same check, registered from the same element',
     ];

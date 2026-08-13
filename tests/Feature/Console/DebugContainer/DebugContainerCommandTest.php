@@ -85,6 +85,54 @@ final class DebugContainerCommandTest extends TestCase
         self::assertStringNotContainsString('Container is empty', $display);
     }
 
+    /**
+     * A binding registers no service, so the "empty" hint keyed on that one
+     * counter contradicted the line above it: `User Bindings: 1` and "Container
+     * is empty" in the same output. Adding a binding and running this command to
+     * check it landed is the likeliest reason to run it at all.
+     */
+    public function test_a_container_holding_only_a_binding_is_not_reported_as_empty(): void
+    {
+        $tester = $this->debugContainer([], static function (GacelaConfig $config): void {
+            $config->addBinding(BoundContract::class, BoundImplementation::class);
+        });
+
+        $display = $tester->getDisplay();
+
+        self::assertMatchesRegularExpression('/Registered Services: 0\b/', $display);
+        self::assertMatchesRegularExpression('/User Bindings: 1\b/', $display);
+        self::assertStringNotContainsString('Container is empty', $display);
+    }
+
+    /**
+     * Counting them answers "how many", which is not the question. What a
+     * binding resolves to is the thing being debugged, and `debug:module`
+     * already prints it -- from the same facade method this now reads.
+     */
+    public function test_the_bindings_are_named_and_not_only_counted(): void
+    {
+        $tester = $this->debugContainer([], static function (GacelaConfig $config): void {
+            $config->addBinding(BoundContract::class, BoundImplementation::class);
+        });
+
+        self::assertStringContainsString(
+            BoundContract::class . ' => ' . BoundImplementation::class,
+            $tester->getDisplay(),
+        );
+    }
+
+    /**
+     * Asserted on the arrow rather than on a heading: `User Bindings: 0` is
+     * already in the output, so any heading containing "Bindings" matches it.
+     */
+    public function test_an_empty_container_lists_no_bindings(): void
+    {
+        $display = $this->debugContainer([])->getDisplay();
+
+        self::assertStringContainsString('Container is empty', $display);
+        self::assertStringNotContainsString(' => ', $display);
+    }
+
     public function test_stats_flag_takes_precedence_over_the_class_argument(): void
     {
         $tester = $this->debugContainer(['class' => ConsoleFacade::class, '--stats' => true]);

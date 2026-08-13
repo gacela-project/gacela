@@ -7,6 +7,7 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\Application\Debug\DependencyTreeInspector;
 use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\ConsoleFacade;
+use Gacela\Container\ContainerStats;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -78,8 +79,26 @@ final class DebugContainerCommand extends Command
         $output->writeln(sprintf('<fg=cyan>Process Memory:</> %s', $stats->processMemoryFormatted()));
         $output->writeln('');
 
-        if ($stats->registeredServices === 0) {
-            $output->writeln('<comment>Container is empty - no services registered yet</comment>');
+        $bindings = $this->getFacade()->getContainerBindings();
+
+        // What a binding resolves to is the thing being debugged, and a count
+        // does not say it. `debug:module` prints the same map, from the same
+        // facade method, for one module's worth of it.
+        if ($bindings !== []) {
+            $output->writeln('<fg=cyan>Bindings:</>');
+            foreach ($bindings as $abstract => $concrete) {
+                $output->writeln(sprintf('  %s => %s', $abstract, $concrete));
+            }
+
+            $output->writeln('');
+        }
+
+        // Every counter, not just the services: a binding registers none, so
+        // keying the hint on that one printed "Container is empty" directly
+        // under "User Bindings: 1" -- and checking that a binding landed is the
+        // likeliest reason to run this at all.
+        if ($this->holdsNothing($stats, $bindings)) {
+            $output->writeln('<comment>Container is empty - nothing registered yet</comment>');
             $output->writeln('');
         }
 
@@ -88,6 +107,21 @@ final class DebugContainerCommand extends Command
         $output->writeln('');
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Cached dependencies are left out on purpose: they are a resolution
+     * artefact rather than something a project registered, so a container that
+     * only ever resolved something is still one holding nothing of its own.
+     *
+     * @param array<string, string> $bindings
+     */
+    private function holdsNothing(ContainerStats $stats, array $bindings): bool
+    {
+        return $stats->registeredServices === 0
+            && $stats->frozenServices === 0
+            && $stats->factoryServices === 0
+            && $bindings === [];
     }
 
     private function displayDependencyTree(OutputInterface $output, string $className): int

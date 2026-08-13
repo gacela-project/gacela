@@ -18,6 +18,59 @@ use function count;
 
 final class GacelaTestCaseTest extends GacelaTestCase
 {
+    /**
+     * The failure a test gets when it bootstrapped Gacela directly.
+     *
+     * These assertions read events, and only bootstrapGacela() registers the
+     * listener that collects them -- so a test migrated to this base class
+     * while keeping its own Gacela::bootstrap() call recorded nothing, and was
+     * told its service "was not resolved" when the service resolved perfectly
+     * and nothing was watching.
+     */
+    public function test_asserting_without_bootstrapping_through_the_base_class_names_the_cause(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $message = $this->messageFromFailedAssertion(
+            fn (): mixed => $this->assertServiceResolved(StringValueInterface::class),
+        );
+
+        self::assertStringContainsString('No Gacela events were recorded', $message);
+        self::assertStringContainsString('bootstrapGacela', $message);
+        self::assertStringNotContainsString('was not resolved', $message);
+    }
+
+    public function test_the_binding_assertion_names_the_same_cause(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $message = $this->messageFromFailedAssertion(
+            fn (): mixed => $this->assertBindingRegistered(StringValueInterface::class),
+        );
+
+        self::assertStringContainsString('No Gacela events were recorded', $message);
+    }
+
+    /**
+     * The guard must not swallow the assertion it guards: once events are
+     * being recorded, a service that really was not resolved still says so.
+     */
+    public function test_a_genuinely_unresolved_service_still_reports_itself(): void
+    {
+        $this->bootstrapGacela(__DIR__);
+
+        $message = $this->messageFromFailedAssertion(
+            fn (): mixed => $this->assertServiceResolved('never-resolved-id'),
+        );
+
+        self::assertStringContainsString('"never-resolved-id" was not resolved', $message);
+        self::assertStringNotContainsString('No Gacela events were recorded', $message);
+    }
+
     public function test_bootstrap_with_config_exposes_key_values(): void
     {
         $this->bootstrapGacelaWithConfig(__DIR__, ['a-key' => 'a-value', 'an-int' => 42]);
@@ -144,5 +197,24 @@ final class GacelaTestCaseTest extends GacelaTestCase
         self::assertTrue($seen);
         self::assertSame('yes', Config::getInstance()->getString('from-closure'));
         self::assertNotSame([], $this->recordedGacelaEvents());
+    }
+
+    /**
+     * The message a failing assertion produced.
+     *
+     * `Throwable` rather than PHPUnit's own failure type, which is `@internal`
+     * and which static analysis refuses to see caught. `fail()` sits outside
+     * the try so that an assertion which unexpectedly passes is reported
+     * rather than caught by this same handler.
+     */
+    private function messageFromFailedAssertion(callable $assertion): string
+    {
+        try {
+            $assertion();
+        } catch (Throwable $throwable) {
+            return $throwable->getMessage();
+        }
+
+        self::fail('Expected the assertion to fail, but it passed');
     }
 }

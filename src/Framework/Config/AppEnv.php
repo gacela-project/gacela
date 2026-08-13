@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\Exception\ConfigDimensionException;
+
 use function getenv;
 
 /**
@@ -13,8 +15,19 @@ use function getenv;
  */
 final class AppEnv
 {
+    /**
+     * @throws ConfigDimensionException when the value could not be part of a path
+     */
     public static function current(): string
     {
-        return getenv('APP_ENV') ?: '';
+        $env = getenv('APP_ENV') ?: '';
+
+        // The same rule a declared dimension is held to, because this is the
+        // first link of that chain and reaches the same two places. Checking it
+        // here rather than at bootstrap keeps the answer and its validity in one
+        // place: nothing can read APP_ENV past this method.
+        ConfigDimensions::assertValueCanReachAPath('APP_ENV', $env);
+
+        return $env;
     }
 }

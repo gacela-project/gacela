@@ -51,7 +51,7 @@ Three rules worth knowing:
 
 - **Declaration order is chain order.** `APP_REGION` then `APP_TENANT` means `app-prod-eu-acme.php`, never `app-prod-acme-eu.php`.
 - **An unset variable ends the chain.** With no `APP_REGION`, a tenant is never consulted — `app-prod--acme.php` would be a file with a hole in it and no meaning.
-- **Values are restricted** to letters, digits, `_`, `.` and `-`. A dimension reaches both a glob pattern and a cache filename, so anything else is refused at bootstrap rather than resolving somewhere unintended.
+- **Values are restricted** to letters, digits, `_`, `.` and `-`. A dimension reaches both a glob pattern and a cache filename, so anything else is refused at bootstrap rather than resolving somewhere unintended. `APP_ENV` is the first link of the same chain and is held to the same alphabet.
 
 The merged-config cache is named by the whole tuple, so two regions sharing one cache directory never read each other's file. `cache:warm` warms the tuple it runs as, so a deploy that serves several runs it once per tuple:
 

@@ -13,9 +13,11 @@ use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Console\AllAppModules\Domain\Module1\Module1Facade;
+use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmRealMethodService;
 use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmRepository;
 use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmService;
 use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmServiceInterface;
+use GacelaTest\Integration\Console\CacheWarm\AttributeWarm\AttributeWarmTypedFacade;
 use PHPUnit\Framework\TestCase;
 
 use function array_values;
@@ -196,6 +198,59 @@ final class CacheWarmServiceTest extends TestCase
             [AttributeWarmService::class . '::getRepository' => AttributeWarmRepository::class],
             CustomServicesPhpCache::all(),
         );
+    }
+
+    /**
+     * `__call()` is invoked only for a method the class does not have, so an
+     * accessor that is also a real method never reaches the resolver -- and an
+     * entry cached under its name is one nothing can look up.
+     */
+    public function test_warm_attribute_cache_skips_an_accessor_the_class_really_declares(): void
+    {
+        CustomServicesPhpCache::clearStaticCache();
+
+        (new CacheWarmService())->warmAttributeCache(AttributeWarmRealMethodService::class);
+
+        // The fixture declares that one first and a genuine accessor after it,
+        // so this also pins that skipping does not end the walk.
+        self::assertSame(
+            [AttributeWarmRealMethodService::class . '::getOtherRepository' => AttributeWarmRepository::class],
+            CustomServicesPhpCache::all(),
+        );
+    }
+
+    /**
+     * The symptom the change above is really about. Warming walked every public
+     * method, so on any facade it resolved the inherited real `getFactory()`
+     * through the docblock fallback -- reading the `@extends` generic and
+     * raising the 3.0 deprecation for it. That accessor resolves through
+     * `FactoryResolver` and the naming convention, so the notice named a call
+     * that does not take that path and suggested an attribute that would not
+     * change it: one per facade, on the command `UPGRADE.md` recommends for
+     * surfacing the genuine ones.
+     */
+    public function test_warming_a_generically_typed_facade_raises_no_deprecation(): void
+    {
+        CustomServicesPhpCache::clearStaticCache();
+
+        $notices = [];
+        set_error_handler(
+            static function (int $severity, string $message) use (&$notices): bool {
+                $notices[] = $message;
+
+                return true;
+            },
+            E_USER_DEPRECATED,
+        );
+
+        try {
+            (new CacheWarmService())->warmAttributeCache(AttributeWarmTypedFacade::class);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame([], $notices);
+        self::assertSame([], CustomServicesPhpCache::all());
     }
 
     public function test_warm_attribute_cache_skips_a_class_that_does_not_exist(): void

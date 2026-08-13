@@ -12,7 +12,7 @@ use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use Gacela\Framework\ServiceResolver\ReflectionClassPool;
-use ReflectionMethod;
+use Gacela\Framework\ServiceResolver\ServiceMapAccessors;
 
 use function array_filter;
 use function array_values;
@@ -102,7 +102,24 @@ final class CacheWarmService
     }
 
     /**
-     * Pre-warm the attribute cache by scanning all methods that might use ServiceMap attributes.
+     * Pre-resolve the pillar accessors this class declares with `#[ServiceMap]`.
+     *
+     * The entries are keyed by caller-and-method and read from exactly one
+     * place: `ServiceResolverAwareTrait::__call()`, which PHP invokes only for
+     * a method the class **does not have**. So the set worth warming is the
+     * accessors the attribute declares, minus any the class really declares --
+     * an entry under a real method's name is one nothing can ever look up.
+     *
+     * It used to walk `getMethods(IS_PUBLIC)` instead, resolving whichever
+     * started with get/create/find/build. Every one of those is a real method by
+     * definition, so the whole pass wrote unreachable entries -- and, on any
+     * class extending `AbstractFacade`, resolved the inherited real
+     * `getFactory()` through the docblock fallback and raised the 3.0
+     * deprecation for it. That accessor resolves through `FactoryResolver` and
+     * the module's naming convention, so the notice named a call that does not
+     * take that path and suggested an attribute that would not change it: one
+     * per facade in the project, on the command `UPGRADE.md` recommends for
+     * surfacing genuine ones.
      *
      * @param class-string $className
      */
@@ -114,26 +131,15 @@ final class CacheWarmService
 
         try {
             $reflectionClass = ReflectionClassPool::get($className);
-            $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
-
             $docBlockResolver = DocBlockResolver::fromClassName($className);
 
-            $commonMethodPrefixes = ['get', 'create', 'find', 'build'];
-
-            foreach ($methods as $method) {
-                $methodName = $method->getName();
-
-                if (str_starts_with($methodName, '__')) {
+            foreach (array_keys(ServiceMapAccessors::declaredOn($reflectionClass)) as $methodName) {
+                if ($reflectionClass->hasMethod($methodName)) {
                     continue;
                 }
 
-                foreach ($commonMethodPrefixes as $prefix) {
-                    if (str_starts_with($methodName, $prefix)) {
-                        // Called for its side effect: resolving populates the attribute cache.
-                        $docBlockResolver->getDocBlockResolvable($methodName);
-                        break;
-                    }
-                }
+                // Called for its side effect: resolving populates the attribute cache.
+                $docBlockResolver->getDocBlockResolvable($methodName);
             }
         } catch (Exception) {
             // Skip classes whose attributes/doc-blocks cannot be resolved during

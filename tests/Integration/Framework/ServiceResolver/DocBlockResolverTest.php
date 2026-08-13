@@ -14,8 +14,10 @@ use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommandWithUnrelatedImport;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeConfig;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeConfigurationLoader;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFacade;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFactory;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeLoaderCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeNoDocBlockCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeProseCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeRandomService;
@@ -172,6 +174,17 @@ final class DocBlockResolverTest extends TestCase
             'getFacade',
             FakeFacade::class,
             'Facade',
+        ];
+
+        // A class is a pillar by being one, not by having the word in its name.
+        // `FakeConfigurationLoader` contains `Config` and extends nothing, so
+        // resolving it as the module's Config pillar handed back an anonymous
+        // AbstractConfig instead of the class the attribute names.
+        yield 'A custom service whose name merely contains a pillar word' => [
+            new FakeLoaderCommand(),
+            'getLoader',
+            FakeConfigurationLoader::class,
+            'FakeConfigurationLoader',
         ];
 
         // A docblock whose prose names the accessor above the tag that declares

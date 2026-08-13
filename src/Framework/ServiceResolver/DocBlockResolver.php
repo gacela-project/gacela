@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ServiceResolver;
 
+use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockParser;
 use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionException;
@@ -18,7 +20,12 @@ use const E_USER_DEPRECATED;
 
 final class DocBlockResolver
 {
-    private const SPECIAL_RESOLVABLE_TYPES = ['Facade', 'Factory', 'Config'];
+    /** The three pillars a name can claim, and the base each one has to extend. */
+    private const SPECIAL_RESOLVABLE_TYPES = [
+        'Facade' => AbstractFacade::class,
+        'Factory' => AbstractFactory::class,
+        'Config' => AbstractConfig::class,
+    ];
 
     /**
      * One string, deliberately not a concatenation: splitting it for line length
@@ -199,14 +206,33 @@ final class DocBlockResolver
         return (new UseBlockParser())->getUseStatement($className, $phpFile);
     }
 
+    /**
+     * Which resolver answers for this class: one of the three pillars, or the
+     * class's own short name for everything else.
+     *
+     * A class is a pillar by **being** one, not by having the word in its name.
+     * Matching the name alone made `FakeConfigurationLoader` a `Config`, and
+     * the pillar resolver -- finding no such config in the module -- handed
+     * back an anonymous `AbstractConfig` stand-in instead of the class that was
+     * asked for. Nothing failed; the wrong object was returned, and by a route
+     * that ignores an explicit `#[ServiceMap]` naming the class.
+     *
+     * The framework's own `GacelaConfig` and `ConfigFactory` are exactly these
+     * names, which `phpstan.neon` already says out loud when it exempts them
+     * from `SuffixExtendsRule`.
+     *
+     * The name is still checked first, and still by containment: a project may
+     * write `FacadeModuleB` as readily as `ModuleBFacade`, and a declared kind
+     * like `FacaModuleA` matches neither and keeps its own name, as before.
+     */
     private function normalizeResolvableType(string $resolvableType): string
     {
         /** @var non-empty-list<string> $resolvableTypeParts */
         $resolvableTypeParts = explode('\\', $resolvableType);
         $result = end($resolvableTypeParts);
 
-        foreach (self::SPECIAL_RESOLVABLE_TYPES as $specialName) {
-            if (str_contains($result, $specialName)) {
+        foreach (self::SPECIAL_RESOLVABLE_TYPES as $specialName => $pillar) {
+            if (str_contains($result, $specialName) && is_a($resolvableType, $pillar, true)) {
                 return $specialName;
             }
         }

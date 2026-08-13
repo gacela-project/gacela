@@ -60,6 +60,34 @@ final class ConfigurationTest extends TestCase
         Configuration::validate(['cache_dri' => '/tmp/gacela']);
     }
 
+    /**
+     * `cache_dri` for `cache_dir` is the shape a typo takes, and eight allowed
+     * keys is a list to scan rather than an answer. Symfony's own config tree
+     * answers the same mistake with "Did you mean ...?", and Gacela reads the
+     * same helper for a mistyped key in `gacela.php`.
+     */
+    public function test_a_mistyped_key_is_answered_with_the_one_meant(): void
+    {
+        $this->expectExceptionMessage("Did you mean?\n  - cache_dir");
+
+        Configuration::validate(['cache_dri' => '/tmp/gacela']);
+    }
+
+    /**
+     * A key resembling nothing gets the list and no guess: a suggestion that
+     * is wrong is worse than none, because it is followed.
+     */
+    public function test_a_key_resembling_nothing_is_not_guessed_at(): void
+    {
+        try {
+            Configuration::validate(['zzzzzzzzzzzz' => true]);
+            self::fail('Expected the validation to fail');
+        } catch (InvalidArgumentException $invalidArgumentException) {
+            self::assertStringContainsString('zzzzzzzzzzzz', $invalidArgumentException->getMessage());
+            self::assertStringNotContainsString('Did you mean?', $invalidArgumentException->getMessage());
+        }
+    }
+
     public function test_an_unknown_key_fails_naming_the_allowed_keys(): void
     {
         $this->expectException(InvalidArgumentException::class);

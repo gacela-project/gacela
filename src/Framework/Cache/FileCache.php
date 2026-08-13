@@ -143,8 +143,7 @@ final class FileCache
         $this->memory = [];
         $this->batchPending = [];
 
-        $files = glob($this->directory . '/*.php') ?: [];
-        foreach ($files as $file) {
+        foreach ($this->cacheFiles() as $file) {
             self::delete($file);
         }
     }
@@ -173,7 +172,15 @@ final class FileCache
         $pending = $this->batchPending;
         $this->batchPending = [];
 
-        $indexPath = $this->directory . DIRECTORY_SEPARATOR . self::INDEX_FILENAME;
+        $indexPath = CacheFilePath::inDirectory($this->directory, self::INDEX_FILENAME);
+
+        // Nowhere to write: the entries are already in memory, which is the
+        // whole of what a cache with no directory holds. There is no index to
+        // lock and nothing for the fallback below to write.
+        if ($indexPath === null) {
+            return;
+        }
+
         $handle = @fopen($indexPath, 'c');
 
         if ($handle === false) {
@@ -198,7 +205,7 @@ final class FileCache
 
     public function stats(): FileCacheStats
     {
-        $files = glob($this->directory . '/*.php') ?: [];
+        $files = $this->cacheFiles();
         $bytes = 0;
         $oldestAt = null;
         $newestAt = null;
@@ -330,9 +337,13 @@ final class FileCache
         return $entry['expiresAt'] !== null && $entry['expiresAt'] <= time();
     }
 
-    private function entryPath(string $key): string
+    /**
+     * Null when there is no directory to hold the entry, which is how every
+     * caller below knows not to touch the disk at all.
+     */
+    private function entryPath(string $key): ?string
     {
-        return $this->directory . DIRECTORY_SEPARATOR . sha1($key) . '.php';
+        return CacheFilePath::forEntry($this->directory, $key);
     }
 
     /**
@@ -342,11 +353,18 @@ final class FileCache
     {
         $file = $this->entryPath($key);
 
-        if (!is_file($file)) {
+        if ($file === null || !is_file($file)) {
             return null;
         }
 
-        /** @var array{value: T, expiresAt: int|null} $entry */
+        /**
+         * The path is built rather than written inline, so Psalm can no longer
+         * partially resolve it -- the file is a cache entry this class wrote.
+         *
+         * @psalm-suppress UnresolvableInclude
+         *
+         * @var array{value: T, expiresAt: int|null} $entry
+         */
         $entry = require $file;
 
         return $entry;
@@ -354,7 +372,13 @@ final class FileCache
 
     private function deleteEntryFile(string $key): void
     {
-        self::delete($this->entryPath($key));
+        $path = $this->entryPath($key);
+
+        if ($path === null) {
+            return;
+        }
+
+        self::delete($path);
     }
 
     /**
@@ -362,7 +386,15 @@ final class FileCache
      */
     private function writeEntryToDisk(string $key, array $entry): void
     {
-        self::writeAtomically($this->entryPath($key), $entry);
+        $path = $this->entryPath($key);
+
+        // A cache with nowhere to write keeps its entries in memory, as the
+        // class documents. Writing anyway put them at the filesystem root.
+        if ($path === null) {
+            return;
+        }
+
+        self::writeAtomically($path, $entry);
     }
 
     private static function invalidateOpcacheFor(string $file): void
@@ -385,6 +417,25 @@ final class FileCache
      *     `\\` UNC prefix on Windows
      *   - collapse runs of the separator and trim trailing separators
      */
+    /**
+     * The cache files on disk, or none when there is nowhere to look.
+     *
+     * {@see CacheFilePath} owns the "nowhere is not the root" rule, which
+     * is the whole reason this is not a bare glob.
+     *
+     * @return list<string>
+     */
+    private function cacheFiles(): array
+    {
+        $pattern = CacheFilePath::pattern($this->directory);
+
+        if ($pattern === null) {
+            return [];
+        }
+
+        return glob($pattern) ?: [];
+    }
+
     private function normalizeDirectory(string $dir): string
     {
         $dir = trim($dir);

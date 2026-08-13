@@ -148,6 +148,27 @@ final class SuffixTypesBuilderTest extends TestCase
         (new SuffixTypesBuilder())->declareType('Exporter', 'Never\Declared\Klass');
     }
 
+    /**
+     * A name resolving to nothing is usually a namespace typo or an autoloader
+     * that has not seen the file, so the refusal carries the tips for that --
+     * which this message did not, while every other "does not exist" in the
+     * framework did.
+     */
+    public function test_a_missing_base_is_refused_with_the_tips_for_a_missing_class(): void
+    {
+        try {
+            /** @psalm-suppress ArgumentTypeCoercion */
+            (new SuffixTypesBuilder())->declareType('Exporter', 'Never\\Declared\\Klass');
+            self::fail('Expected ResolvableTypeException');
+        } catch (ResolvableTypeException $resolvableTypeException) {
+            $message = $resolvableTypeException->getMessage();
+
+            self::assertStringContainsString("Run 'composer dump-autoload' to refresh autoloader", $message);
+            // What went wrong first, what to try about it after.
+            self::assertStringStartsWith('The "Exporter" kind names', $message);
+        }
+    }
+
     public function test_an_interface_is_a_valid_base(): void
     {
         $built = (new SuffixTypesBuilder())

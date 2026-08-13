@@ -10,6 +10,7 @@ use Gacela\Framework\Exception\PluginStackException;
 use Traversable;
 
 use function array_key_exists;
+use function class_exists;
 use function count;
 
 /**
@@ -85,6 +86,13 @@ final class LazyPluginStack implements PluginStack
         }
 
         $className = $this->plugins[$position];
+        // Before the container, which answers `null` for a name that resolves
+        // to nothing: the contract check below would then report a missing
+        // class as one that "does not implement" the contract.
+        if (!class_exists($className)) {
+            throw PluginStackException::classDoesNotExist($className, $this->contract);
+        }
+
         /** @var object $instance */
         $instance = $this->container->get($className);
 

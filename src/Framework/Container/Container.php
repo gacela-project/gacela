@@ -230,6 +230,15 @@ final class Container implements ContainerInterface
         $this->inner->singletonIf($abstract, $concrete);
     }
 
+    /**
+     * Store anything under an id: a Closure is resolved on first read, and
+     * every other value is handed back as it was given.
+     *
+     * `mixed` on purpose. Psalm infers `Closure` from the call sites it can
+     * see and offers to narrow the signature to it -- which would reject
+     * `$container->set(Pool::class, new Pool())`, the form the documentation
+     * uses. Do not apply that fix.
+     */
     public function set(string $id, mixed $instance): void
     {
         $this->inner->set($id, $instance);

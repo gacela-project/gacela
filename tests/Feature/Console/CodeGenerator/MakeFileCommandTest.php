@@ -10,6 +10,7 @@ use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -61,6 +62,32 @@ final class MakeFileCommandTest extends TestCase
 
         self::assertSame(sprintf("> Path 'src/TestModule/%s.php' created successfully", $fileName), trim($output->fetch()));
         self::assertFileExists(sprintf('./src/TestModule/%s.php', $fileName));
+    }
+
+    /**
+     * The same rule `make:module` applies, and for the same reason: every
+     * segment becomes a namespace and a class name, so generating from one that
+     * is not a PHP label writes files that do not parse and reports them as
+     * created.
+     */
+    public function test_it_refuses_a_path_segment_that_cannot_be_a_php_name(): void
+    {
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+
+        $exitCode = $bootstrap->run(new StringInput('make:file Psr4CodeGenerator/user-profile facade'), $output);
+
+        $display = $output->fetch();
+
+        self::assertSame(Command::FAILURE, $exitCode, $display);
+        self::assertStringContainsString('user-profile', $display);
+        self::assertStringContainsString('is not a valid PHP name', $display);
+
+        // Refused before writing: a half-generated module is worse than none.
+        self::assertFileDoesNotExist('./src/user-profile/user-profileFacade.php');
+        self::assertDirectoryDoesNotExist('./src/user-profile');
     }
 
     public static function createFilesProvider(): iterable

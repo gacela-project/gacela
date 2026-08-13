@@ -15,13 +15,19 @@ final class ResolvableTypeException extends RuntimeException
         return new self('A resolvable type needs a non-empty kind, e.g. addResolvableType("Exporter").');
     }
 
+    /**
+     * A name that resolves to nothing is usually a namespace typo or an
+     * autoloader that has not seen the file yet, so this carries the tips for
+     * that -- the same ones every other "does not exist" in the framework
+     * offers, and which nothing reached until now.
+     */
     public static function unknownAbstractClass(string $kind, string $abstractClass): self
     {
         return new self(sprintf(
             'The "%s" kind names "%s" as its base, and no such class or interface exists.',
             $kind,
             $abstractClass,
-        ));
+        ) . ErrorSuggestionHelper::addHelpfulTip('class_not_found'));
     }
 
     public static function suffixAlreadyClaimed(string $suffix, string $owner, string $claimant): self

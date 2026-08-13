@@ -110,6 +110,28 @@ final class HealthCheckRegistryTest extends TestCase
         HealthCheckRegistry::createHealthChecker();
     }
 
+    /**
+     * The message names the call to check; the tips name the two things that
+     * usually make a registered class-string resolve to nothing.
+     */
+    public function test_an_unresolvable_class_string_carries_the_tips_for_a_missing_class(): void
+    {
+        /** @var class-string<ModuleHealthCheckInterface> $bogus */
+        $bogus = 'GacelaTest\\NotExisting\\HealthCheck';
+        HealthCheckRegistry::register($bogus);
+
+        try {
+            HealthCheckRegistry::createHealthChecker();
+            self::fail('Expected HealthCheckNotResolvableException');
+        } catch (HealthCheckNotResolvableException $healthCheckNotResolvableException) {
+            $message = $healthCheckNotResolvableException->getMessage();
+
+            self::assertStringContainsString("Run 'composer dump-autoload' to refresh autoloader", $message);
+            // What went wrong first, what to try about it after.
+            self::assertStringStartsWith('The health check "', $message);
+        }
+    }
+
     public function test_class_that_is_not_a_health_check_reports_the_misconfiguration(): void
     {
         /** @var class-string<ModuleHealthCheckInterface> $notACheck */

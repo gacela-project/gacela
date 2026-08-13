@@ -87,9 +87,16 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
         // only ones: a project-declared kind pushed in through setSuffixTypes()
         // did not survive a merge, which made it unusable in a gacela.php that
         // is merged with another.
+        // Keyed union rather than concatenated key lists: a kind both sides
+        // declare appeared twice, so filterList ran a second time over the same
+        // two inputs and overwrote its own answer with an identical one. `+`
+        // keeps this side's order and appends the kinds only the other declares,
+        // which is the order the concatenation produced.
+        $otherSuffixTypes = $other->getSuffixTypes();
+
         $merged = [];
-        foreach ([...array_keys($this->suffixTypes), ...array_keys($other->getSuffixTypes())] as $kind) {
-            $merged[$kind] = $this->filterList($other, $kind);
+        foreach ($this->suffixTypes + $otherSuffixTypes as $kind => $_) {
+            $merged[$kind] = $this->filterList($otherSuffixTypes, $kind);
         }
 
         $new->suffixTypes = $merged;
@@ -98,13 +105,15 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     }
 
     /**
+     * @param SuffixTypes $otherSuffixTypes
+     *
      * @return list<string>
      */
-    private function filterList(GacelaConfigFileInterface $other, string $key): array
+    private function filterList(array $otherSuffixTypes, string $key): array
     {
         $merged = array_merge(
             $this->suffixTypes[$key] ?? [],
-            $other->getSuffixTypes()[$key] ?? [],
+            $otherSuffixTypes[$key] ?? [],
         );
         $filtered = array_filter(array_unique($merged), static fn (string $str): bool => $str !== '');
         /** @var list<non-empty-string> $values */

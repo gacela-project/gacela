@@ -21,6 +21,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function count;
 use function implode;
 use function in_array;
 use function is_array;
@@ -72,6 +73,23 @@ final class DebugGraphCommand extends Command
 
         if ($input->getOption('check') === true) {
             return $this->check($graph, $filter, $format, $input, $output);
+        }
+
+        // Both files are only read by --check, and a CI job that passes one
+        // without it gets a printed graph and a zero exit: a gate that looks
+        // green while checking nothing. Refused rather than implied, because
+        // --check also decides cycles, and turning it on for someone who asked
+        // for neither is a different command than the one they wrote.
+        $ignored = $this->optionsNeedingCheck($input);
+        if ($ignored !== []) {
+            $output->writeln(sprintf(
+                '<error>%s only %s with --check, and this run would report nothing.</error>',
+                implode(' and ', $ignored),
+                count($ignored) === 1 ? 'applies' : 'apply',
+            ));
+            $output->writeln(sprintf('Add <comment>--check</comment>: <comment>debug:graph --check %s=...</comment>', $ignored[0]));
+
+            return self::FAILURE;
         }
 
         if ($graph === []) {
@@ -157,6 +175,24 @@ final class DebugGraphCommand extends Command
         }
 
         return $cycleResult->isClean() && $ruleResult->isClean() ? self::SUCCESS : self::FAILURE;
+    }
+
+    /**
+     * The options `check()` alone reads, when it is not going to run.
+     *
+     * @return list<string>
+     */
+    private function optionsNeedingCheck(InputInterface $input): array
+    {
+        $ignored = [];
+
+        foreach (['--rules' => 'rules', '--allowed-cycles' => 'allowed-cycles'] as $flag => $option) {
+            if (ConsoleInput::option($input, $option) !== '') {
+                $ignored[] = $flag;
+            }
+        }
+
+        return $ignored;
     }
 
     /**

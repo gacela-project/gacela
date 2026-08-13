@@ -25,6 +25,8 @@
 
 ### Fixed
 
+- Refuse `debug:graph --rules` and `--allowed-cycles` when `--check` is absent, instead of ignoring them. Both files are read only by `--check`, so a CI job that wrote a rules file and ran the command without it printed the graph and exited zero — a gate that looks green while checking nothing
+
 - Report in `doctor` an `extendProviderService()` id the named Provider never `set()`s. Its own docblock promised this, and only app-wide `extendService()` ids were ever passed to the check — so a typo, or the wrong Provider named, applied nowhere and said nothing. The provider-scoped miss is the sharper one: not "nobody set this id" but "the Provider you named does not"
 
 - Answer a mistyped Laravel bridge config key with the one that was meant. `config/gacela.php` listing all eight allowed keys is a list to scan rather than an answer; Symfony's own config tree replies "Did you mean ...?" to the same mistake, and Gacela already reads the same helper for a mistyped key in `gacela.php`

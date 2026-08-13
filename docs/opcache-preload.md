@@ -26,7 +26,7 @@ Anything Gacela could not link is named in that line, and PHP logs its own `Can'
 
 ## Preload your own files
 
-Create `config/app-preload.php`. Load the classes rather than compiling the files: a compiled class is only kept if everything it extends, implements and uses was preloaded too, and loading it is what pulls those in.
+Create `preload/app-preload.php`. Load the classes rather than compiling the files: a compiled class is only kept if everything it extends, implements and uses was preloaded too, and loading it is what pulls those in.
 
 ```php
 <?php
@@ -36,10 +36,12 @@ class_exists(App\User\UserFacade::class);
 class_exists(App\Product\ProductFacade::class);
 ```
 
+> **Keep it outside your config glob.** This file is a script, not configuration: it returns nothing. Put it in `config/` and the default `addAppConfig('config/*.php')` matches it, so the next bootstrap dies with `The PHP config file "…/config/app-preload.php" must return an array or a JsonSerializable object!` — before anything preloads.
+
 Wire it via env var in your FPM pool:
 
 ```ini
-env[GACELA_PRELOAD_USER_FILES] = /path/to/project/config/app-preload.php
+env[GACELA_PRELOAD_USER_FILES] = /path/to/project/preload/app-preload.php
 ```
 
 ## Deployment

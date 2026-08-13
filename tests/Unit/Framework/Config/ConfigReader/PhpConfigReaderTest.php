@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 use function file_put_contents;
+use function sprintf;
 use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
@@ -70,7 +71,26 @@ final class PhpConfigReaderTest extends TestCase
         $file = $this->createTempConfig('<?php return 123;');
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('The PHP config file must return an array or a JsonSerializable object!');
+        $this->expectExceptionMessage(sprintf(
+            'The PHP config file "%s" must return an array or a JsonSerializable object!',
+            $file,
+        ));
+
+        (new PhpConfigReader())->read($file);
+    }
+
+    /**
+     * The shape a non-config file has: `include` returns 1 when a file returns
+     * nothing, so a script dropped where the config glob matches it arrives here
+     * looking exactly like a typo in a real config file. Naming the file is what
+     * tells those two apart.
+     */
+    public function test_a_file_that_returns_nothing_throws_naming_it(): void
+    {
+        $file = $this->createTempConfig("<?php\n\nclass_exists(RuntimeException::class);\n");
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage($file);
 
         (new PhpConfigReader())->read($file);
     }

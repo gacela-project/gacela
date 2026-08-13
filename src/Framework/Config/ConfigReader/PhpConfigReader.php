@@ -11,6 +11,7 @@ use JsonSerializable;
 use RuntimeException;
 
 use function is_array;
+use function sprintf;
 
 final class PhpConfigReader implements ConfigReaderInterface
 {
@@ -47,7 +48,15 @@ final class PhpConfigReader implements ConfigReaderInterface
         }
 
         if (!is_array($content)) {
-            throw new RuntimeException('The PHP config file must return an array or a JsonSerializable object!');
+            // Named, because the glob decides which files land here: a project
+            // with five config files got the same sentence whichever one was
+            // wrong, and a PHP file that is not a config at all -- dropped into
+            // `config/` where `config/*.php` matches it -- returns 1 from
+            // `include` and arrives here looking identical to a typo.
+            throw new RuntimeException(sprintf(
+                'The PHP config file "%s" must return an array or a JsonSerializable object!',
+                $absolutePath,
+            ));
         }
 
         /** @var array<string,mixed> $content */

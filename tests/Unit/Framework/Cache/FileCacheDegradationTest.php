@@ -9,6 +9,7 @@ use Gacela\Framework\Cache\WritableDirectory;
 use GacelaTest\Fixtures\FailingWriteStreamWrapper;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\WarningCollectorTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
@@ -16,6 +17,7 @@ use function file_get_contents;
 use function file_put_contents;
 use function glob;
 use function mkdir;
+use function rmdir;
 use function sha1;
 use function sprintf;
 use function sys_get_temp_dir;
@@ -37,6 +39,123 @@ final class FileCacheDegradationTest extends TestCase
     {
         WritableDirectory::resetCache();
         $this->restoreReadOnlyDirs();
+    }
+
+    /**
+     * Every spelling of "nowhere" normalizes to an empty directory.
+     *
+     * This is what made the unguarded glob reachable: `$this->directory . '/*.php'`
+     * becomes `'/*.php'`, so {@see FileCache::stats()} would report every PHP
+     * file at the filesystem root as a cache entry and {@see FileCache::clear()}
+     * would unlink them -- from a cache that, having no usable directory, never
+     * wrote a file and holds nothing on disk to clear.
+     *
+     * `'//'` is deliberately absent: on Windows it normalizes to the UNC
+     * prefix `\\` rather than to nothing, so it is a different case on a
+     * different platform.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function nowhereDirectories(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'root' => ['/'];
+        yield 'whitespace' => ['   '];
+        yield 'trailing separator only' => ['/ '];
+    }
+
+    #[DataProvider('nowhereDirectories')]
+    public function test_a_directory_that_means_nowhere_normalizes_to_empty(string $directory): void
+    {
+        self::assertSame('', (new FileCache($directory))->directory);
+        self::assertFalse((new FileCache($directory))->isPersistent());
+    }
+
+    /**
+     * Nothing on disk belongs to a cache with nowhere to put it, so there is
+     * nothing to count and nothing to delete.
+     */
+    #[DataProvider('nowhereDirectories')]
+    public function test_a_cache_with_nowhere_to_write_owns_no_files(string $directory): void
+    {
+        $fileCache = new FileCache($directory);
+
+        self::assertSame(0, $fileCache->stats()->entries);
+        self::assertSame(0, $fileCache->stats()->bytes);
+
+        $fileCache->clear();
+
+        self::assertSame(0, $fileCache->stats()->entries);
+    }
+
+    /**
+     * Nothing reaches the disk at all -- which on Windows it did: the entry
+     * path built from an empty directory is a path at the drive root, and the
+     * drive root is writable there, so entries really were persisted to `D:\`
+     * and read back after a clear().
+     */
+    public function test_a_cache_with_nowhere_to_write_persists_nothing(): void
+    {
+        $fileCache = new FileCache('');
+        $fileCache->put('key', 'value');
+
+        // A second cache shares no memory with the first, so anything it can
+        // still see came off the disk.
+        self::assertNull((new FileCache(''))->get('key'));
+    }
+
+    /**
+     * The batch path too: committing takes an index-file lock, and there is no
+     * index file when there is no directory to hold one.
+     */
+    public function test_committing_a_batch_with_nowhere_to_write_persists_nothing(): void
+    {
+        $fileCache = new FileCache('');
+        $fileCache->beginBatch();
+        $fileCache->put('key', 'value');
+        $fileCache->commitBatch();
+
+        self::assertSame('value', $fileCache->get('key'));
+        self::assertNull((new FileCache(''))->get('key'));
+        self::assertSame(0, $fileCache->stats()->entries);
+    }
+
+    /**
+     * In memory, though, it still works -- that is the degradation the class
+     * documents, and clearing has to reach it.
+     */
+    public function test_clearing_a_cache_with_nowhere_to_write_still_empties_memory(): void
+    {
+        $fileCache = new FileCache('');
+        $fileCache->put('key', 'value');
+
+        self::assertSame('value', $fileCache->get('key'));
+
+        $fileCache->clear();
+
+        self::assertNull($fileCache->get('key'));
+    }
+
+    /**
+     * The guard must not cost a real directory anything: its files are still
+     * counted and still deleted.
+     */
+    public function test_a_usable_directory_is_still_counted_and_cleared(): void
+    {
+        $directory = sys_get_temp_dir() . '/gacela-cache-guard-' . uniqid();
+        mkdir($directory, recursive: true);
+
+        $fileCache = new FileCache($directory);
+        $fileCache->put('key', 'value');
+
+        self::assertSame(1, $fileCache->stats()->entries);
+
+        $fileCache->clear();
+
+        self::assertSame(0, $fileCache->stats()->entries);
+        self::assertSame([], glob($directory . '/*.php') ?: []);
+
+        rmdir($directory);
     }
 
     public function test_uncreatable_directory_degrades_to_memory_only(): void

@@ -4,6 +4,8 @@
 
 ### Added
 
+- Name what `profile:report` never saw finish. A `stop()` that misspells the operation or subject is ignored — there is no start time to measure from — so the entry vanishes and looks exactly like code nobody instrumented. The report now lists what is still open, counted where several spans of one operation are, and `--format=json` carries the same answer in an `unfinished` field
+
 - Report in `doctor` a tagged id nothing can answer. `Container::tagged()` resolves each id in turn and gives back `null` for one naming nothing, so the group a module iterates silently carries a hole and the failure lands on the consumer as "Call to a member function … on null" — pointing at the loop rather than the registration. An id is answerable when a Provider `set()`s it or it names a class the container can construct, so a tag grouping plain service ids is untouched
 - Report a `#[Cacheable]` key that never mentions the arguments, on a method that has them, through both PHPStan (`gacela.cacheableKeyIgnoresArguments`) and Psalm (`GacelaCacheableKeyIgnoresArguments`). The key decides what the entry is filed under, so one without a `{N}` placeholder is the same string for every call and `getUser(2)` is answered with user 1's row — nothing fails, the wrong record is simply served. A key built at runtime is not judged, and a method without arguments is left alone
 

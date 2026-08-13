@@ -121,10 +121,10 @@ final class ProfileReportCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
-        /** @var array{entries: list<array<string, mixed>>, stats: array<string, mixed>} $decoded */
+        /** @var array{entries: list<array<string, mixed>>, stats: array<string, mixed>, unfinished: array<string, int>} $decoded */
         $decoded = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
 
-        self::assertSame(['entries', 'stats'], array_keys($decoded));
+        self::assertSame(['entries', 'stats', 'unfinished'], array_keys($decoded));
         self::assertSame($this->profiler->getStats(), $decoded['stats']);
 
         $expected = array_map(
@@ -179,6 +179,78 @@ final class ProfileReportCommandTest extends TestCase
     /**
      * @param array<string, string> $input
      */
+    /**
+     * An operation missing from the report because its `stop()` misspelled the
+     * subject looks exactly like one that was never instrumented. This is the
+     * difference.
+     */
+    public function test_the_report_names_what_was_started_and_never_stopped(): void
+    {
+        $this->profiler->start('db-query', 'users');
+        $this->profiler->stop('db-query', 'users');
+        $this->profiler->start('db-query', 'orders');
+        $this->profiler->stop('db-query', 'order');
+
+        $display = $this->runCommand([])->getDisplay();
+
+        self::assertStringContainsString('Started and never stopped:', $display);
+        self::assertStringContainsString('db-query:orders', $display);
+        self::assertStringContainsString('must match its start()', $display);
+    }
+
+    public function test_a_report_with_nothing_open_says_nothing_about_it(): void
+    {
+        $this->profiler->start('db-query', 'users');
+        $this->profiler->stop('db-query', 'users');
+
+        self::assertStringNotContainsString('Started and never stopped', $this->runCommand([])->getDisplay());
+    }
+
+    /**
+     * Reached even when nothing completed: an unmatched pair is the likeliest
+     * reason there is no data to report, and the run that most needs the answer
+     * is the one that produced nothing.
+     */
+    public function test_it_is_reported_even_when_no_entry_completed(): void
+    {
+        $this->profiler->start('render', 'page');
+
+        $display = $this->runCommand([])->getDisplay();
+
+        self::assertStringContainsString('No profiling data available', $display);
+        self::assertStringContainsString('render:page', $display);
+    }
+
+    /**
+     * Several spans of one operation open at once are counted, because naming
+     * it once would understate what is still outstanding.
+     */
+    public function test_several_open_spans_of_one_operation_are_counted(): void
+    {
+        $this->profiler->start('render', 'page');
+        $this->profiler->start('render', 'page');
+
+        self::assertStringContainsString('render:page (2 open)', $this->runCommand([])->getDisplay());
+    }
+
+    /**
+     * A consumer that parses gets a field rather than prose.
+     */
+    public function test_json_carries_the_unfinished_operations_in_a_field(): void
+    {
+        $this->profiler->start('db-query', 'users');
+        $this->profiler->stop('db-query', 'users');
+        $this->profiler->start('render', 'page');
+
+        $display = $this->runCommand(['--format' => 'json'])->getDisplay();
+
+        /** @var array{unfinished: array<string, int>} $decoded */
+        $decoded = json_decode($display, true);
+
+        self::assertSame(['render:page' => 1], $decoded['unfinished']);
+        self::assertStringNotContainsString('Started and never stopped', $display);
+    }
+
     private function runCommand(array $input): CommandTester
     {
         $tester = new CommandTester(new ProfileReportCommand());

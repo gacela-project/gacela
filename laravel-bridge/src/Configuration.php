@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\LaravelBridge;
 
+use Gacela\Framework\Exception\ErrorSuggestionHelper;
 use InvalidArgumentException;
 
 use function array_diff_key;
@@ -53,10 +54,19 @@ final class Configuration
 
         $unknown = array_diff_key($config, $defaults);
         if ($unknown !== []) {
+            $unknownKeys = array_keys($unknown);
+            $allowedKeys = array_keys($defaults);
+
+            // The suggestion on top of the list, not instead of it. Symfony's
+            // own config tree answers the same mistake with "Did you mean
+            // ...?", and Gacela already reads this helper for a mistyped
+            // config key -- a typo in `config/gacela.php` is the same mistake
+            // in a different file.
             throw new InvalidArgumentException(sprintf(
-                'Unknown gacela config key(s): "%s". Allowed keys: "%s".',
-                implode('", "', array_keys($unknown)),
-                implode('", "', array_keys($defaults)),
+                'Unknown gacela config key(s): "%s". Allowed keys: "%s".%s',
+                implode('", "', $unknownKeys),
+                implode('", "', $allowedKeys),
+                ErrorSuggestionHelper::suggestSimilar((string)$unknownKeys[0], $allowedKeys),
             ));
         }
 

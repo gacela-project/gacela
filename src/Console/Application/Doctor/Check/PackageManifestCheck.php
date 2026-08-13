@@ -6,6 +6,7 @@ namespace Gacela\Console\Application\Doctor\Check;
 
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
+use Gacela\Console\Domain\FileContent\JsonFile;
 use Gacela\Console\Domain\PackageManifest\ComposerPackageFinder;
 use Gacela\Console\Domain\PackageManifest\NamespacePackageMap;
 use Gacela\Console\Domain\PackageManifest\PackageManifestChecker;
@@ -86,20 +87,9 @@ final class PackageManifestCheck implements HealthCheck
         $path = $this->appRootDir . DIRECTORY_SEPARATOR . 'vendor'
             . DIRECTORY_SEPARATOR . 'composer' . DIRECTORY_SEPARATOR . 'installed.json';
 
-        if (!is_file($path)) {
-            return null;
-        }
+        $decoded = JsonFile::decode($path);
 
-        $contents = file_get_contents($path);
-
-        if ($contents === false) {
-            return null;
-        }
-
-        /** @var mixed $decoded */
-        $decoded = json_decode($contents, true);
-
-        if (!is_array($decoded)) {
+        if ($decoded === null) {
             return null;
         }
 

@@ -6,13 +6,13 @@ namespace Gacela\Console\Domain\PackageManifest;
 
 use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\ExcludedDirectories;
+use Gacela\Console\Domain\FileContent\JsonFile;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
 use function dirname;
-use function is_array;
 
 /**
  * Every `composer.json` the repository owns.
@@ -90,15 +90,6 @@ final class ComposerPackageFinder
      */
     private function decode(string $manifestPath): ?array
     {
-        $contents = file_get_contents($manifestPath);
-
-        if ($contents === false) {
-            return null;
-        }
-
-        /** @var mixed $decoded */
-        $decoded = json_decode($contents, true);
-
-        return is_array($decoded) ? $decoded : null;
+        return JsonFile::decode($manifestPath);
     }
 }

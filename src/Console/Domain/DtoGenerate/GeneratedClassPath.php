@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\DtoGenerate;
 
+use Gacela\Console\Domain\PackageManifest\Psr4Prefixes;
+
 use function str_replace;
-use function str_starts_with;
 use function strlen;
 use function substr;
 use function trim;
@@ -41,31 +42,18 @@ final class GeneratedClassPath
      */
     public function fileFor(string $className): ?string
     {
-        $bestPrefix = '';
-        $bestDirectory = null;
+        // Longest prefix wins, the way composer resolves it: a project with both
+        // `App\` and `App\Generated\` means the second for a class under it.
+        $prefix = Psr4Prefixes::longestMatching($this->psr4Prefixes, $className);
 
-        foreach ($this->psr4Prefixes as $prefix => $directory) {
-            if (!str_starts_with($className, $prefix)) {
-                continue;
-            }
-
-            // Longest prefix wins, the way composer resolves it: a project with
-            // both `App\` and `App\Generated\` means the second for a class
-            // under it.
-            if (strlen($prefix) > strlen($bestPrefix)) {
-                $bestPrefix = $prefix;
-                $bestDirectory = $directory;
-            }
-        }
-
-        if ($bestDirectory === null) {
+        if ($prefix === null) {
             return null;
         }
 
-        $relative = str_replace('\\', DIRECTORY_SEPARATOR, substr($className, strlen($bestPrefix)));
+        $relative = str_replace('\\', DIRECTORY_SEPARATOR, substr($className, strlen($prefix)));
 
         return $this->rootDir
-            . DIRECTORY_SEPARATOR . $this->normalized($bestDirectory)
+            . DIRECTORY_SEPARATOR . $this->normalized($this->psr4Prefixes[$prefix])
             . DIRECTORY_SEPARATOR . $relative . '.php';
     }
 

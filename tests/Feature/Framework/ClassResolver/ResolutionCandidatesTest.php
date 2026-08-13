@@ -34,9 +34,24 @@ final class ResolutionCandidatesTest extends TestCase
         $message = $exception->getMessage();
 
         self::assertStringContainsString('Tried resolving the following class names:', $message);
+
+        // Asked of the bulleted list rather than the whole message: the `E.g.`
+        // line names the module-prefixed class too, so a message-wide search
+        // for it passes even with the prefix finder rule removed -- which is
+        // the one thing this test is here to notice.
+        $candidates = $this->candidateLines($message);
+
         // The two finder rules produce a module-prefixed and a bare candidate.
-        self::assertStringContainsString('\\ClassResolver\\ClassResolverProvider', $message);
-        self::assertStringContainsString('\\ClassResolver\\Provider', $message);
+        self::assertContains(
+            'ClassResolverProvider',
+            $this->shortNames($candidates),
+            'the module-prefixed candidate is missing from the list',
+        );
+        self::assertContains(
+            'Provider',
+            $this->shortNames($candidates),
+            'the bare candidate is missing from the list',
+        );
     }
 
     public function test_candidates_are_rendered_as_a_bulleted_block(): void
@@ -66,5 +81,31 @@ final class ResolutionCandidatesTest extends TestCase
         preg_match_all('/^ {2}- (\S+)$/m', $message, $matches);
         self::assertNotSame([], $matches[1]);
         self::assertSame(array_values(array_unique($matches[1])), $matches[1]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function candidateLines(string $message): array
+    {
+        preg_match_all('/^ {2}- (\S+)$/m', $message, $matches);
+
+        /** @var list<string> $candidates */
+        $candidates = $matches[1];
+
+        return $candidates;
+    }
+
+    /**
+     * @param list<string> $candidates
+     *
+     * @return list<string>
+     */
+    private function shortNames(array $candidates): array
+    {
+        return array_values(array_map(
+            static fn (string $c): string => substr((string)strrchr($c, '\\'), 1),
+            $candidates,
+        ));
     }
 }

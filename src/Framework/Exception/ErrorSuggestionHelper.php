@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Exception;
 
+use function array_map;
 use function array_slice;
+use function class_exists;
 use function implode;
 use function similar_text;
 use function sprintf;
@@ -37,6 +39,38 @@ final class ErrorSuggestionHelper
         );
     }
 
+    /**
+     * Tips for a class the resolver could not find, phrased in terms of the
+     * kind it was actually looking for.
+     *
+     * These replace a fixed `facade_not_found` text that named `Facade` in
+     * every message. The two exceptions carrying these tips are raised for a
+     * `Provider` and for a docblock-declared kind, and a Facade is constructed
+     * rather than resolved -- so the advice named the one kind it could never
+     * be, directly under a message naming the right one.
+     *
+     * The base-class line is offered only where that base exists: the four
+     * pillars have an `Abstract*`, a kind declared through
+     * `addResolvableType()` has none, and inventing `AbstractExporter` sends
+     * the reader looking for a class Gacela does not ship.
+     */
+    public static function addResolvableTypeTip(string $resolvableType): string
+    {
+        $tips = [];
+
+        if (class_exists('Gacela\\Framework\\Abstract' . $resolvableType)) {
+            $tips[] = sprintf('Ensure your %s extends Abstract%s', $resolvableType, $resolvableType);
+        }
+
+        $tips[] = 'Check the module namespace matches the directory structure';
+        $tips[] = sprintf('Verify the %s file name matches the class name', $resolvableType);
+
+        return sprintf(
+            "\n\nTips:\n%s",
+            implode("\n", array_map(static fn (string $t): string => '  • ' . $t, $tips)),
+        );
+    }
+
     public static function addHelpfulTip(string $context): string
     {
         return match ($context) {
@@ -50,11 +84,6 @@ final class ErrorSuggestionHelper
                 "  • Check if the service is registered in a Provider\n" .
                 "  • Verify the service binding in gacela.php\n" .
                 '  • Ensure the service class exists and is autoloadable',
-
-            'facade_not_found' => "\n\nTips:\n" .
-                "  • Ensure your Facade extends AbstractFacade\n" .
-                "  • Check the module namespace matches the directory structure\n" .
-                '  • Verify the Facade file name matches the class name',
 
             'config_error' => "\n\nTips:\n" .
                 "  • Check your gacela.php configuration file\n" .

@@ -400,7 +400,6 @@ final class FileCache
     private static function invalidateOpcacheFor(string $file): void
     {
         if (function_exists('opcache_invalidate')) {
-            /** @psalm-suppress UndefinedFunction */
             opcache_invalidate($file, true);
         }
     }

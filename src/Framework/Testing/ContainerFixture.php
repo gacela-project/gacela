@@ -307,7 +307,6 @@ trait ContainerFixture
 
         $this->containerTempDirsCleanupRegistered = true;
 
-        /** @psalm-suppress UnusedFunctionCall */
         register_shutdown_function(function (): void {
             $this->cleanupContainerTempDirs();
         });

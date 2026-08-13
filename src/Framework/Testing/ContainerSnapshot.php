@@ -62,15 +62,10 @@ final class ContainerSnapshot
      */
     public function __unserialize(array $data): void
     {
-        /** @psalm-suppress InaccessibleProperty */
         $this->inMemoryCache = $data['inMemoryCache'] ?? [];
-        /** @psalm-suppress InaccessibleProperty */
         $this->config = $data['config'] ?? [];
-        /** @psalm-suppress InaccessibleProperty */
         $this->appRootDir = $data['appRootDir'] ?? null;
-        /** @psalm-suppress InaccessibleProperty */
         $this->cacheDir = $data['cacheDir'] ?? null;
-        /** @psalm-suppress InaccessibleProperty */
         $this->extras = $data['extras'] ?? [];
     }
 

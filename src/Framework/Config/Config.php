@@ -281,7 +281,6 @@ final class Config implements ConfigInterface
 
         // Declared defaults come first: a key a source provides is that
         // source's, and a key nobody provides is the declaration's.
-        /** @psalm-suppress DuplicateArrayKey */
         $this->config = [
             ...$this->configSchema()->defaults(),
             ...$this->loadMergedConfigValues(),

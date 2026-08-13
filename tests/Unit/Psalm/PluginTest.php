@@ -10,6 +10,7 @@ use Gacela\Psalm\CrossModuleCallRules;
 use Gacela\Psalm\CrossModuleRules;
 use Gacela\Psalm\DeclaredModuleDependencyRules;
 use Gacela\Psalm\Plugin;
+use Gacela\Psalm\ServiceMapMissingRules;
 use PHPUnit\Framework\TestCase;
 use Psalm\Codebase;
 use Psalm\Config;
@@ -154,6 +155,55 @@ final class PluginTest extends TestCase
 
         self::assertContains(DeclaredModuleDependencyRules::class, $dispatcher->after_classlike_checks);
         self::assertTrue(DeclaredModuleDependencyRules::isConfigured());
+    }
+
+    /**
+     * What this one reports is a deprecation rather than a mistake, so off is
+     * the behaviour a project that has not asked for it must get -- an upgrade
+     * that turned it on would fail a build over code that works.
+     */
+    public function test_it_leaves_the_service_map_check_off_without_config(): void
+    {
+        $dispatcher = new EventDispatcher();
+
+        (new Plugin())($this->socket($dispatcher));
+
+        self::assertNotContains(ServiceMapMissingRules::class, $dispatcher->after_classlike_checks);
+        self::assertFalse(ServiceMapMissingRules::isConfigured());
+    }
+
+    /**
+     * The element carries nothing: there is nothing to configure, only the
+     * decision to start the 3.0 migration.
+     */
+    public function test_a_service_map_missing_element_turns_the_check_on(): void
+    {
+        $dispatcher = new EventDispatcher();
+
+        (new Plugin())(
+            $this->socket($dispatcher),
+            new SimpleXMLElement('<pluginClass><serviceMapMissing/></pluginClass>'),
+        );
+
+        self::assertContains(ServiceMapMissingRules::class, $dispatcher->after_classlike_checks);
+        self::assertTrue(ServiceMapMissingRules::isConfigured());
+    }
+
+    /**
+     * Configured on every invocation, so a second run with the element gone
+     * turns it back off rather than leaving what the first one set -- the
+     * handler holds its state in a static, which outlives one invocation.
+     */
+    public function test_a_later_config_without_the_element_turns_it_back_off(): void
+    {
+        (new Plugin())(
+            $this->socket(new EventDispatcher()),
+            new SimpleXMLElement('<pluginClass><serviceMapMissing/></pluginClass>'),
+        );
+
+        (new Plugin())($this->socket(new EventDispatcher()));
+
+        self::assertFalse(ServiceMapMissingRules::isConfigured());
     }
 
     public function test_a_module_rules_element_without_a_file_fails_loudly(): void

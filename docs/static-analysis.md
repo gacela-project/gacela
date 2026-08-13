@@ -79,6 +79,7 @@ Each rule reports under a PHPStan error identifier and a Psalm issue class; both
 | A cross-module reference the source **names** | `gacela.crossModuleWithoutFacade` | `GacelaCrossModuleAccess` | opt-in |
 | A cross-module call the source does **not** name | `gacela.crossModuleMethodCall` | `GacelaCrossModuleMethodCall` | opt-in |
 | A dependency the project's rules file forbids | `gacela.declaredModuleDependency` | `GacelaDeclaredModuleDependency` | opt-in |
+| A pillar accessor declared with `#[ServiceMap]`, not `@method` | `gacela.serviceMapMissing` | `GacelaServiceMapMissing` | opt-in |
 
 On top of the rules, both analysers gain two **types** they otherwise lack: the pillar accessors, and `getProvidedDependency()` by class-string.
 
@@ -211,6 +212,38 @@ If you type-hint against a `*FacadeInterface` rather than the concrete facade, t
 Only that direction can drift. PHP already rejects a class that fails to implement an interface method, so the interface cannot gain a method the facade lacks — but the facade grows public methods the interface never hears about, and consumers holding the interface silently cannot reach them. That stays invisible until someone compares the two files, and by then the fix is a breaking change.
 
 The rule is on by default and self-limiting: it only fires for a facade that explicitly implements the interface named after it (`FooFacade` implements `FooFacadeInterface`). A facade that implements unrelated interfaces, or none, is not checked.
+
+## Finding what 3.0 removes
+
+Resolving a pillar accessor from a `@method` docblock, or from the file's `use` statements, is deprecated in 2.0 and removed in 3.0 — `#[ServiceMap]` is the replacement. The runtime says so, but only for accessors a run actually reaches, and only on a **cold** resolve: the answer is memoized per caller-and-method, so a warm cache is silent. A migration driven by those notices is a migration over whichever code paths your tests happen to execute.
+
+This rule reads the same fact from the source, for every class at once:
+
+```neon
+# phpstan.neon
+services:
+    -
+        class: Gacela\PHPStan\Rules\ServiceMapMissingRule
+        tags: [phpstan.rules.rule]
+```
+
+```xml
+<!-- psalm.xml -->
+<pluginClass class="Gacela\Psalm\Plugin">
+    <serviceMapMissing/>
+</pluginClass>
+```
+
+It is opt-in because what it reports is not wrong on 2.x. Turning it on is the decision to start the migration, taken when the project is ready rather than as a side effect of upgrading.
+
+Each finding carries the attribute to paste, with the type spelled as the docblock spells it — the file it goes back into is the one whose imports made the short name resolve in the first place:
+
+```
+App\Wallet\WalletCommand::getFacade() is resolved from its @method docblock, which is deprecated and removed in 3.0
+    💡 Declare it with #[ServiceMap(method: 'getFacade', className: WalletFacade::class)].
+```
+
+Deliberately narrow, since it runs inside your build: only classes using `ServiceResolverAwareTrait` **directly**, and only a `@method` naming a method the class does not declare — a real method never reaches `__call()`. Keep the `@method` tag if your editor wants it; the attribute is what resolves, and the two together are fine.
 
 ## Module boundaries
 

@@ -12,6 +12,7 @@ use Gacela\Psalm\Issue\GacelaFacadeInstantiation;
 use Gacela\Psalm\Issue\GacelaFacadeInterfaceDrift;
 use Gacela\Psalm\Issue\GacelaFacadeOnlyDelegates;
 use Gacela\Psalm\Issue\GacelaFactoryFacadeAccess;
+use Gacela\Psalm\Issue\GacelaServiceMapMissing;
 use Gacela\Psalm\Issue\GacelaSuffixExtends;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node;
@@ -49,6 +50,7 @@ final class ReportedIssues
         'gacela.crossModuleWithoutFacade' => GacelaCrossModuleAccess::class,
         'gacela.crossModuleMethodCall' => GacelaCrossModuleMethodCall::class,
         'gacela.declaredModuleDependency' => GacelaDeclaredModuleDependency::class,
+        'gacela.serviceMapMissing' => GacelaServiceMapMissing::class,
     ];
 
     /**

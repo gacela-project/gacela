@@ -15,6 +15,7 @@ use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
+use Gacela\Framework\Dto\Schema\MalformedDtoSchemaException;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
@@ -458,6 +459,17 @@ final class GacelaConfig
         $declared = $this->dtoSchema ?? [];
 
         foreach ($properties as $property => $type) {
+            // The same rule `PropertyMerger::mergeDtoSchema()` applies when two
+            // sources meet. Enforced here too, because the reason for it does
+            // not depend on where the second declaration sits: this accumulator
+            // used to overwrite, so one source declaring a class twice changed
+            // the generated class under everyone already reading it.
+            $existing = $declared[$className][$property] ?? null;
+
+            if ($existing instanceof DtoType && !$existing->isSameShapeAs($type)) {
+                throw MalformedDtoSchemaException::conflictingRedeclaration($className, $property);
+            }
+
             $declared[$className][$property] = $type;
         }
 

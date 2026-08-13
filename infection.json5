@@ -67,6 +67,10 @@
             // removed -- the windows matrix is what enforces it, and did:
             // `/repo\\build/dto\\Order.php` failed all nine windows jobs on #700.
             '.*str_replace\\(\'/\', DIRECTORY_SEPARATOR.*',
+            // SplFileInfo reports backslashes on windows, which is also the
+            // namespace separator. Identity on POSIX, so only the windows
+            // matrix can see this one removed.
+            '.*str_replace\\(\'\\\\\\\\\', \'/\', \\$file->getPathname\\(\\)\\).*',
             // Windows-only PHP_OS/EOL handling: a no-op on POSIX where PHP_EOL is "\n".
             '.*strcasecmp\\(substr\\(PHP_OS.*',
             '.*str_replace\\("\\\\n", PHP_EOL.*',
@@ -110,6 +114,12 @@
         },
         MethodCallRemoval: {
             ignore: [
+                // Registering the preload autoloader only changes anything in a
+                // process that has no other one -- which a test suite, running
+                // under composer's, never is. What it guards is asserted by
+                // OpcachePreloadTest, which starts a real preloading process;
+                // that process loads the shipped file, so no mutant reaches it.
+                "Gacela\\Framework\\Preload\\Preloader::run",
                 "Gacela\\Framework\\Cache\\FileCache::writeContentsAtomically",
                 "Gacela\\Framework\\Cache\\FileCache::delete",
                 "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
@@ -295,6 +305,10 @@
         // that would tell them apart are the ones already pinned by name.
         ArrayOneItem: {
             ignore: [
+                // The early return happens only when the map holds exactly the
+                // framework's own prefix, so slicing it to one item returns it
+                // unchanged.
+                "Gacela\\Framework\\Preload\\Preloader::autoloadPrefixes",
                 "Gacela\\Console\\Domain\\PackageManifest\\ComposerPackage::keysOf",
                 "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
             ],
@@ -358,6 +372,16 @@
                 "Gacela\\Framework\\Cache\\FileCache::invalidateOpcacheFor",
                 "Gacela\\Framework\\Testing\\ContainerFixture::registerContainerTempDirsCleanup",
                 "Gacela\\Console\\Domain\\ModuleGraph\\ModuleCycleDetector::stronglyConnectedComponents",
+                // Body of the preload autoloader: it is only ever asked for a
+                // class no other autoloader has already found, and under
+                // composer's there is no such class. Same reason as
+                // Preloader::run in MethodCallRemoval above.
+                "Gacela\\Framework\\Preload\\Preloader::registerAutoloader",
+            ],
+        },
+        NotIdentical: {
+            ignore: [
+                "Gacela\\Framework\\Preload\\Preloader::registerAutoloader",
             ],
         },
         // foundPsr4() strips the trailing separator from a psr-4 key/value. Those

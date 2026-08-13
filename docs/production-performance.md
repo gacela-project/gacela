@@ -36,7 +36,7 @@ Run `cache:warm` as a deploy step, after `composer install` and before traffic i
 
 ## 3. Preload the framework into opcache
 
-Point `opcache.preload` at `resources/gacela-preload.php` to load Gacela's core files into shared memory at PHP startup, removing their compilation cost from every request.
+Point `opcache.preload` at `resources/gacela-preload.php` to load the framework into shared memory at PHP startup, removing its compilation and linking cost from every request. The script discovers what to load, so it covers the whole framework and cannot fall behind a rename.
 
 Preloaded files are snapshotted at startup, so **restart PHP-FPM after every deploy**. The `php.ini` block, Docker recipe, `GACELA_PRELOAD_USER_FILES` and troubleshooting are in [Opcache preload](opcache-preload.md).
 

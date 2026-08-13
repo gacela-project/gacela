@@ -40,6 +40,17 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/tests/**/gacela-class-names*.php',
         __DIR__ . '/tests/**/gacela-custom-services*.php',
         __DIR__ . '/tests/**/gacela-merged-config*.php',
+        // The bridges write the same caches into their own fixtures, and their
+        // tests are scanned too -- so leaving them out only moved the failure.
+        // Spelled out per name rather than `gacela-*.php`: the env-specific
+        // `gacela-dev.php` and `gacela-prod.php` fixtures are real files that
+        // have to keep being checked.
+        __DIR__ . '/symfony-bridge/tests/**/gacela-class-names*.php',
+        __DIR__ . '/symfony-bridge/tests/**/gacela-custom-services*.php',
+        __DIR__ . '/symfony-bridge/tests/**/gacela-merged-config*.php',
+        __DIR__ . '/laravel-bridge/tests/**/gacela-class-names*.php',
+        __DIR__ . '/laravel-bridge/tests/**/gacela-custom-services*.php',
+        __DIR__ . '/laravel-bridge/tests/**/gacela-merged-config*.php',
         __DIR__ . '/tests/Unit/PHPStan/Rules/Fixture',
         // assert() inside an anonymous class extending a non-TestCase parent
         // must not be rewritten to $this->assertSame().

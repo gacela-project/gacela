@@ -124,7 +124,7 @@
             "@csfix"
         ],
         "infection": [
-            "XDEBUG_MODE=coverage ./vendor/bin/infection --show-mutations --threads=max",
+            "XDEBUG_MODE=coverage php -d memory_limit=-1 ./vendor/bin/infection --show-mutations --threads=max",
             "@static-clear-cache"
         ],
         "metrics-report": [

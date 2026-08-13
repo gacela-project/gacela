@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Bootstrap;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Dto\Schema\DtoType;
+use Gacela\Framework\Dto\Schema\MalformedDtoSchemaException;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
@@ -178,6 +180,49 @@ final class GacelaConfigTest extends TestCase
             ->addPlugin($pluginB);
 
         self::assertSame([$pluginA, $pluginB], $config->toTransfer()->plugins);
+    }
+
+    /**
+     * The union rule is enforced when two *sources* are merged, and was not
+     * when one source declared the same class twice -- the accumulator simply
+     * overwrote, so `couponCode` silently went from `?string` to `?int` and the
+     * generated class changed under everyone already reading it. The reason for
+     * the rule does not depend on where the second declaration sits.
+     */
+    public function test_redeclaring_a_property_differently_in_one_source_is_refused(): void
+    {
+        $config = (new GacelaConfig())
+            ->declareDtoSchema('App\Order', ['couponCode' => DtoType::string()]);
+
+        $this->expectException(MalformedDtoSchemaException::class);
+        $this->expectExceptionMessage('never redefined');
+
+        $config->declareDtoSchema('App\Order', ['couponCode' => DtoType::int()]);
+    }
+
+    public function test_declaring_more_properties_for_one_class_unions_them(): void
+    {
+        $config = (new GacelaConfig())
+            ->declareDtoSchema('App\Order', ['reference' => DtoType::string()->required()])
+            ->declareDtoSchema('App\Order', ['giftMessage' => DtoType::string()]);
+
+        self::assertSame(
+            ['reference', 'giftMessage'],
+            array_keys($config->toTransfer()->dtoSchema['App\Order'] ?? []),
+        );
+    }
+
+    /**
+     * A description is prose about the property, not part of its shape, so the
+     * same comparison the source merge uses has to be the one applied here.
+     */
+    public function test_redeclaring_a_property_identically_is_allowed(): void
+    {
+        $config = (new GacelaConfig())
+            ->declareDtoSchema('App\Order', ['total' => DtoType::int()->required()->describe('cents')])
+            ->declareDtoSchema('App\Order', ['total' => DtoType::int()->required()->describe('minor units')]);
+
+        self::assertSame(['total'], array_keys($config->toTransfer()->dtoSchema['App\Order'] ?? []));
     }
 }
 

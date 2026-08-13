@@ -98,7 +98,7 @@ vendor/bin/gacela debug:graph --check --allowed-cycles=allowed-module-cycles.jso
 
 The allow list is **self-invalidating**: an entry that no longer matches a real cycle fails the check just as loudly as an undeclared cycle. That is deliberate. An allow-list that outlives what it allows stops being a record of a decision and becomes a mute button, and nothing would tell you it had happened. A `reason` is required for the same reason — an allowance nobody justified is indistinguishable from a cycle nobody noticed.
 
-`debug:graph` with no `--check` stays exit-code-neutral, so adding the gate does not change what the command already did.
+`debug:graph` with no `--check` stays exit-code-neutral, so adding the gate does not change what the command already did. The one exception is passing an option only `--check` reads: `--allowed-cycles` and `--rules` are refused without it, rather than accepted and ignored — a run that wrote a rules file and forgot the flag used to print the graph and exit zero, which is a gate that looks green while checking nothing.
 
 ## Declaring which modules may depend on which
 

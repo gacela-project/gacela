@@ -31,7 +31,7 @@ $profiler->stop('db-query', 'users');
 
 The profiler lives in process memory, so results are read in the same process that recorded them.
 
-In code, `getEntries()` returns every recorded span, and `getStats()` aggregates them:
+In code, `getEntries()` returns every recorded span, `getUnfinishedOperations()` names what is still open, and `getStats()` aggregates the rest:
 
 ```php
 $stats = Profiler::getInstance()->getStats();
@@ -43,7 +43,16 @@ $stats['peak_memory'];       // int, bytes
 $stats['by_operation'];      // per operation: count, total_duration, avg_duration
 ```
 
-On the command line, `profile:report` renders the same data as a table (`--format=table|json|summary`), sorted by duration, memory, or operation (`--sort`). Because the profiler is per-process, the command shows the spans recorded during its own run: enable the profiler and instrument code inside `gacela.php` or the bootstrap closure, and whatever executes while the command boots is what appears in the report.
+A `stop()` that misspells the operation or subject is ignored — there is no start time to measure from — so its span never becomes an entry and looks exactly like code nobody instrumented. `getUnfinishedOperations()` is the difference: it returns what was started and never closed, keyed `operation:subject` and counted, because nested spans of one operation close innermost-first.
+
+```php
+$profiler->start('db-query', 'orders');
+$profiler->stop('db-query', 'order');   // typo
+
+$profiler->getUnfinishedOperations();   // ['db-query:orders' => 1]
+```
+
+On the command line, `profile:report` renders the same data as a table (`--format=table|json|summary`), sorted by duration, memory, or operation (`--sort`). It lists anything left open under **Started and never stopped**, and `--format=json` carries the same answer in an `unfinished` field. Because the profiler is per-process, the command shows the spans recorded during its own run: enable the profiler and instrument code inside `gacela.php` or the bootstrap closure, and whatever executes while the command boots is what appears in the report.
 
 ## See also
 

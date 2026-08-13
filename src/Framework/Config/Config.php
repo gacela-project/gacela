@@ -17,6 +17,7 @@ use Gacela\Framework\Exception\ConfigException;
 use RuntimeException;
 
 use function array_key_exists;
+use function array_keys;
 use function count;
 use function is_array;
 use function is_bool;
@@ -103,7 +104,7 @@ final class Config implements ConfigInterface
         if (!$this->hasKey($key)) {
             $this->notifyKeyNotFound($key);
 
-            throw ConfigException::keyNotFound($key, self::class);
+            throw $this->keyNotFound($key);
         }
 
         return $this->config[$key];
@@ -123,7 +124,7 @@ final class Config implements ConfigInterface
                 return $default;
             }
 
-            throw ConfigException::keyNotFound($key, self::class);
+            throw $this->keyNotFound($key);
         }
 
         $value = $this->config[$key];
@@ -148,7 +149,7 @@ final class Config implements ConfigInterface
                 return $default;
             }
 
-            throw ConfigException::keyNotFound($key, self::class);
+            throw $this->keyNotFound($key);
         }
 
         $value = $this->config[$key];
@@ -175,7 +176,7 @@ final class Config implements ConfigInterface
                 return $default;
             }
 
-            throw ConfigException::keyNotFound($key, self::class);
+            throw $this->keyNotFound($key);
         }
 
         $value = $this->config[$key];
@@ -204,7 +205,7 @@ final class Config implements ConfigInterface
                 return $default;
             }
 
-            throw ConfigException::keyNotFound($key, self::class);
+            throw $this->keyNotFound($key);
         }
 
         $value = $this->config[$key];
@@ -233,7 +234,7 @@ final class Config implements ConfigInterface
                 return $default;
             }
 
-            throw ConfigException::keyNotFound($key, self::class);
+            throw $this->keyNotFound($key);
         }
 
         $value = $this->config[$key];
@@ -415,6 +416,22 @@ final class Config implements ConfigInterface
     public function mergedConfigCache(): MergedConfigCache
     {
         return $this->createMergedConfigCache();
+    }
+
+    /**
+     * Every "key not found" carries the keys that do exist, so a typo can be
+     * answered with the name that was meant.
+     *
+     * Routed through one method because the six typed getters each raise this
+     * independently, and the suggestion was previously absent from all of them:
+     * `ConfigException::keyNotFound()` has always taken the available keys and
+     * has always been handed none, leaving `Did you mean?` unreachable for
+     * config while the identical machinery worked for services. A seventh
+     * getter cannot now forget them.
+     */
+    private function keyNotFound(string $key): ConfigException
+    {
+        return ConfigException::keyNotFound($key, self::class, array_keys($this->config));
     }
 
     /**

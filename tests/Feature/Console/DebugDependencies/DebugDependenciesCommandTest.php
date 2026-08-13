@@ -129,6 +129,41 @@ final class DebugDependenciesCommandTest extends TestCase
         self::assertMatchesRegularExpression('/Unresolvable:\s+2/', $display);
     }
 
+    /**
+     * A binding's value is a class name, a closure or an already-built object,
+     * and only the first was covered. The other two are what a provider-style
+     * registration looks like, and the report has to say something useful about
+     * each rather than printing whatever `(string)` makes of it.
+     */
+    public function test_a_closure_binding_is_reported_as_a_closure(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addBinding(
+                BoundContract::class,
+                static fn (): BoundImplementation => new BoundImplementation(),
+            );
+        });
+
+        self::assertStringContainsString(
+            sprintf('$bound %s (bound -> Closure instance)', BoundContract::class),
+            $this->inspect(MixedDependenciesService::class)->getDisplay(),
+        );
+    }
+
+    public function test_an_object_binding_is_reported_by_its_class(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addBinding(BoundContract::class, new BoundImplementation());
+        });
+
+        self::assertStringContainsString(
+            sprintf('$bound %s (bound -> %s instance)', BoundContract::class, BoundImplementation::class),
+            $this->inspect(MixedDependenciesService::class)->getDisplay(),
+        );
+    }
+
     public function test_a_fully_resolvable_constructor_omits_the_remediation_hint(): void
     {
         $tester = $this->inspect(Fixtures\InjectService::class);

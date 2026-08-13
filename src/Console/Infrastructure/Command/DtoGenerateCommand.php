@@ -29,12 +29,16 @@ final class DtoGenerateCommand extends Command
         $this->setName('dto:generate')
             ->setDescription('Generate the immutable DTO classes declared with declareDtoSchema()')
             ->setHelp($this->getHelpText())
-            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Report what would change, write nothing');
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Report what would change, write nothing')
+            ->addOption('check', null, InputOption::VALUE_NONE, 'Like --dry-run, and exit non-zero when a class would be written');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $dryRun = $input->getOption('dry-run') === true;
+        // --check is a --dry-run that fails: writing is what it exists to catch,
+        // so it must not do any.
+        $check = $input->getOption('check') === true;
+        $dryRun = $check || $input->getOption('dry-run') === true;
         $result = $this->getFacade()->generateDtoClasses($dryRun);
 
         if ($result->total() === 0) {
@@ -45,6 +49,15 @@ final class DtoGenerateCommand extends Command
 
         $this->writeWritten($result, $dryRun, $output);
         $this->writeUnplaceable($result, $output);
+
+        // Under --check, a class that would be written is the answer the caller
+        // asked for: the generated files in the repository are behind what
+        // gacela.php declares.
+        if ($check && $result->hasChanges()) {
+            $output->writeln('<comment>Run `dto:generate` and commit the result.</comment>');
+
+            return Command::FAILURE;
+        }
 
         // An unplaceable shape is the one failure this command can have: the
         // declaration is fine and there is simply nowhere the class may live.

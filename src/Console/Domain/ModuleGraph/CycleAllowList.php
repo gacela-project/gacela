@@ -36,10 +36,21 @@ final class CycleAllowList
     }
 
     /**
-     * @param list<mixed> $decoded
+     * Whatever `json_decode()` produced, which is the point: the file is the
+     * user's, so it is only a list of entries once this has said so.
+     *
+     * @param array<array-key, mixed> $decoded
      */
     public static function fromDecodedJson(array $decoded): self
     {
+        // The file's shape first: an object's values used to be walked as if
+        // they were entries, so a wrong shape was reported as a wrong entry.
+        if (!array_is_list($decoded)) {
+            // Keys as decoded: a JSON object gives strings, and `{"0": …, "2": …}`
+            // gives ints, which are as worth naming and print the same.
+            throw MalformedCycleAllowListException::notAListOfEntries(array_keys($decoded));
+        }
+
         $entries = [];
         $position = 0;
 

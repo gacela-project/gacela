@@ -80,6 +80,56 @@ final class CycleAllowListTest extends TestCase
         self::assertNull($allowList->reasonFor(['C', 'D']));
     }
 
+    /**
+     * The sibling flag on the same command, `--rules`, takes an object with a
+     * `rules` key, so reaching for `{"cycles": [...]}` here is the natural
+     * mistake -- I made it with the page open. The values of that object were
+     * walked as if they were entries, and the report blamed "entry #0" for a
+     * file whose shape was wrong.
+     */
+    public function test_an_object_instead_of_a_list_of_entries_is_rejected(): void
+    {
+        $this->expectException(MalformedCycleAllowListException::class);
+        // The `--rules` hint, not the "wrap it" one: nothing here looks like a
+        // stray entry, so the likely mistake is the sibling flag's shape.
+        $this->expectExceptionMessage('Note that --rules takes an object, and this one takes the array directly.');
+
+        CycleAllowList::fromDecodedJson(['cycles' => [['A', 'B']]]);
+    }
+
+    public function test_the_shape_error_names_the_keys_it_found(): void
+    {
+        $this->expectException(MalformedCycleAllowListException::class);
+        $this->expectExceptionMessage('found an object with keys: cycles, extra');
+
+        CycleAllowList::fromDecodedJson(['cycles' => [], 'extra' => 1]);
+    }
+
+    /**
+     * The other likely slip: a correct entry that was never wrapped in the
+     * array. Worth its own sentence, because the fix is a pair of brackets.
+     */
+    public function test_a_single_unwrapped_entry_says_to_wrap_it(): void
+    {
+        $this->expectException(MalformedCycleAllowListException::class);
+        $this->expectExceptionMessage('wrap it in [ ]');
+
+        CycleAllowList::fromDecodedJson(['modules' => ['A', 'B'], 'reason' => 'reviewed']);
+    }
+
+    /**
+     * Either key is enough to recognise a stray entry: a file holding only
+     * `{"modules": [...]}` forgot both the reason and the brackets, and the
+     * brackets are the part that is not obvious.
+     */
+    public function test_one_entry_key_is_enough_to_suggest_wrapping(): void
+    {
+        $this->expectException(MalformedCycleAllowListException::class);
+        $this->expectExceptionMessage('wrap it in [ ]');
+
+        CycleAllowList::fromDecodedJson(['modules' => ['A', 'B']]);
+    }
+
     public function test_an_entry_that_is_not_an_object_is_rejected(): void
     {
         $this->expectException(MalformedCycleAllowListException::class);

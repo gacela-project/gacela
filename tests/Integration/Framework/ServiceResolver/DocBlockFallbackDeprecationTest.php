@@ -9,8 +9,10 @@ use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeAttributeCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFacade;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeFqcnDocBlockCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeRepeatedCommand;
+use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeSuggestionCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeUseStatementCommand;
 use PHPUnit\Framework\TestCase;
 
@@ -73,6 +75,14 @@ final class DocBlockFallbackDeprecationTest extends TestCase
 
         self::assertCount(1, $notices);
         self::assertStringContainsString('@method docblock', $notices[0]);
+
+        // Asserted on this branch too: it reaches the suggestion with a name
+        // the other one does not produce -- written `\`-prefixed in the
+        // docblock -- so exactly one branch would otherwise prove the spelling.
+        self::assertStringContainsString(
+            'className: \\' . FakeFacade::class . '::class)',
+            $notices[0],
+        );
     }
 
     /**
@@ -92,6 +102,29 @@ final class DocBlockFallbackDeprecationTest extends TestCase
         });
 
         self::assertCount(1, $notices, 'the same caller and method must report once per process');
+    }
+
+    /**
+     * The suggestion is only actionable if it names the class. The resolver has
+     * just worked the class out -- that is what the notice is reporting -- so
+     * printing a literal `className: ...` handed the reader back the one
+     * question the fallback had already answered. A pillar named unqualified
+     * resolves against the file's imports *and* its namespace, so re-deriving
+     * it by hand is not always a matter of reading the `use` block.
+     *
+     * Leading `\` so the line pastes into any namespace unchanged.
+     */
+    public function test_the_notice_names_the_class_it_resolved_so_the_suggestion_pastes(): void
+    {
+        $notices = $this->capturingDeprecations(static function (): void {
+            (new FakeSuggestionCommand())->getFacade();
+        });
+
+        self::assertCount(1, $notices);
+        self::assertStringContainsString(
+            "#[ServiceMap(method: 'getFacade', className: \\" . FakeFacade::class . '::class)]',
+            $notices[0],
+        );
     }
 
     public function test_declaring_the_pillar_with_the_attribute_raises_nothing(): void

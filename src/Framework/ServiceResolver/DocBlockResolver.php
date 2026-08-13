@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\DocBlockService\MissingClassDefinitionExcepti
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
 use ReflectionClass;
 
+use function ltrim;
 use function sprintf;
 use function trigger_error;
 
@@ -25,7 +26,7 @@ final class DocBlockResolver
      * the exact rendered characters would turn a behavioural test into a
      * golden master over a message nobody reads character by character.
      */
-    private const string FALLBACK_DEPRECATION = "Gacela: %s::%s() was resolved from %s. This fallback is deprecated and will be removed in 3.0. Declare it with #[ServiceMap(method: '%s', className: ...)] instead.";
+    private const string FALLBACK_DEPRECATION = "Gacela: %s::%s() was resolved from %s. This fallback is deprecated and will be removed in 3.0. Declare it with #[ServiceMap(method: '%s', className: \\%s::class)] instead.";
 
     /** @var array<string,string> [fileName => fileContent] */
     private static array $fileContentCache = [];
@@ -96,14 +97,14 @@ final class DocBlockResolver
 
         $className = $this->searchClassOverDocBlock($reflectionClass, $method);
         if (class_exists($className)) {
-            $this->triggerFallbackDeprecation($method, '@method docblock');
+            $this->triggerFallbackDeprecation($method, '@method docblock', $className);
 
             return $className;
         }
 
         $className = $this->searchClassOverUseStatements($reflectionClass, $className);
         if (class_exists($className)) {
-            $this->triggerFallbackDeprecation($method, "the file's use statements");
+            $this->triggerFallbackDeprecation($method, "the file's use statements", $className);
 
             return $className;
         }
@@ -126,7 +127,7 @@ final class DocBlockResolver
      * caller-and-method, so a warm cache stays silent. Run `gacela cache:clear`
      * (or develop with the file cache off) to surface every occurrence.
      */
-    private function triggerFallbackDeprecation(string $method, string $strategy): void
+    private function triggerFallbackDeprecation(string $method, string $strategy, string $className): void
     {
         // Once per caller-and-method for the life of the process. The resolved
         // class is memoized, so without this the notice would fire again on
@@ -144,7 +145,17 @@ final class DocBlockResolver
         self::$warned[$this->callerClass][$method] = $strategy;
 
         trigger_error(
-            sprintf(self::FALLBACK_DEPRECATION, $this->callerClass, $method, $strategy, $method),
+            // ltrim: the use-statement scan hands back a leading `\` and the
+            // docblock branch does not, so the format supplies the one the
+            // pasted line needs and the name arrives without it either way.
+            sprintf(
+                self::FALLBACK_DEPRECATION,
+                $this->callerClass,
+                $method,
+                $strategy,
+                $method,
+                ltrim($className, '\\'),
+            ),
             E_USER_DEPRECATED,
         );
     }

@@ -220,7 +220,7 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 Not blocking this upgrade, but the notices start now.
 
-**Resolving a pillar from a `@method` docblock, or by scanning the caller's `use` statements**, raises `E_USER_DEPRECATED`. Declare it with `#[ServiceMap(method: ..., className: ...)]` — the attribute is checked first, so adding it silences the notice.
+**Resolving a pillar from a `@method` docblock, or by scanning the caller's `use` statements**, raises `E_USER_DEPRECATED`. Declare it with `#[ServiceMap(method: ..., className: ...)]` — the attribute is checked first, so adding it silences the notice. Each notice names the class it resolved, spelled `\Fully\Qualified\Name::class`, so the line it suggests pastes into any namespace unchanged.
 
 The generic form counts too. `@extends AbstractFacade<MyFactory>` names the factory by its short name, which is resolved through the file's `use` statements — the second deprecated strategy. Typing a pillar generically is still worth doing for the analysers; it is not a substitute for the attribute.
 

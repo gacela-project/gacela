@@ -32,7 +32,7 @@ final class FacadeOnlyDelegatesRuleTest extends RuleTestCase
     public function test_reports_all_bad_patterns(): void
     {
         $prefix = 'Facade method ' . \GacelaTest\Unit\PHPStan\Rules\Fixture\FacadeDelegate\BadFacade::class . '::';
-        $suffix = '() must only delegate to $this->getFactory()/getConfig()/getProvider(); no inline logic allowed.';
+        $suffix = '() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.';
 
         $tip = 'Move the logic into the Factory and have this method call it.';
 
@@ -54,6 +54,7 @@ final class FacadeOnlyDelegatesRuleTest extends RuleTestCase
                 [$prefix . 'cachedWithNonClosure' . $suffix, 89, $tip],
                 [$prefix . 'cachedOnNullsafeThis' . $suffix, 94, $tip],
                 [$prefix . 'cachedClosureWithLeadingDelegation' . $suffix, 99, $tip],
+                [$prefix . 'declaredKindWithLogic' . $suffix, 112, $tip],
             ],
         );
     }
@@ -72,7 +73,7 @@ final class FacadeOnlyDelegatesRuleTest extends RuleTestCase
             ],
             [[
                 'Facade method ' . TraitUsingFacade::class
-                . '::fromTheTrait() must only delegate to $this->getFactory()/getConfig()/getProvider();'
+                . '::fromTheTrait() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType();'
                 . ' no inline logic allowed.',
                 9,
                 'Move the logic into the Factory and have this method call it.',

@@ -31,7 +31,15 @@ use function sprintf;
  */
 final class FacadeOnlyDelegatesAnalyser
 {
-    private const ALLOWED_ROOTS = ['getFactory', 'getConfig', 'getProvider'];
+    /**
+     * `getResolvedType` alongside the three pillar accessors: a kind declared
+     * with `addResolvableType()` is reached through it, and that is delegation
+     * of exactly the same shape. Without it this rule contradicted a feature
+     * the framework ships -- `return $this->getResolvedType('Exporter')->run();`
+     * was reported as inline logic, advising the reader to move into the
+     * Factory a method body that holds no logic to move.
+     */
+    private const ALLOWED_ROOTS = ['getFactory', 'getConfig', 'getProvider', 'getResolvedType'];
 
     private const IGNORED_METHODS = [
         '__construct',
@@ -39,6 +47,7 @@ final class FacadeOnlyDelegatesAnalyser
         'getFactory',
         'getConfig',
         'getProvider',
+        'getResolvedType',
         'getFacade',
     ];
 
@@ -78,7 +87,7 @@ final class FacadeOnlyDelegatesAnalyser
         return [
             new Violation(
                 sprintf(
-                    'Facade method %s::%s() must only delegate to $this->getFactory()/getConfig()/getProvider(); no inline logic allowed.',
+                    'Facade method %s::%s() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.',
                     $class->name(),
                     $method->name->toString(),
                 ),

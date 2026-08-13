@@ -105,6 +105,19 @@ final class BadFacade extends AbstractFacade
         });
     }
 
+    /**
+     * Reaching a declared kind does not make the rest of the body delegation:
+     * the branch is logic no other module can reach.
+     */
+    public function declaredKindWithLogic(bool $flag): mixed
+    {
+        if ($flag) {
+            return null;
+        }
+
+        return $this->getResolvedType('Exporter')?->run();
+    }
+
     private function notCached(callable $callback): string
     {
         return (string) $callback();

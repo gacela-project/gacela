@@ -35,13 +35,23 @@ final class InitCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        $file = $this->appRoot . '/gacela.php';
-        if (is_file($file)) {
-            unlink($file);
+        // Named one by one rather than swept: every one of these is a file this
+        // test knew it was creating, and the root is asserted to be the temp
+        // directory it made before anything is removed under it.
+        self::assertStringStartsWith(sys_get_temp_dir() . '/gacela-init-test-', $this->appRoot);
+
+        foreach (['/gacela.php', '/config/app.php'] as $relative) {
+            $file = $this->appRoot . $relative;
+            if (is_file($file)) {
+                unlink($file);
+            }
         }
 
-        if (is_dir($this->appRoot)) {
-            rmdir($this->appRoot);
+        foreach (['/config', ''] as $relative) {
+            $directory = $this->appRoot . $relative;
+            if (is_dir($directory)) {
+                rmdir($directory);
+            }
         }
     }
 
@@ -70,6 +80,54 @@ final class InitCommandTest extends TestCase
 
         self::assertStringContainsString('declare(strict_types=1);', $contents);
         self::assertStringContainsString('GacelaConfig', $contents);
+    }
+
+    /**
+     * The generated `gacela.php` declares `config/*.php`. Without a file behind
+     * it the first `doctor` run on a freshly scaffolded project reports a config
+     * path that loads nothing -- true, and entirely the scaffolder's doing.
+     */
+    public function test_writes_the_config_file_the_generated_gacela_php_declares(): void
+    {
+        $tester = $this->init($this->appRoot, []);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertFileExists($this->appRoot . '/config/app.php');
+
+        /** @var mixed $values */
+        $values = require $this->appRoot . '/config/app.php';
+        self::assertSame([], $values);
+    }
+
+    public function test_names_the_config_file_it_created(): void
+    {
+        $tester = $this->init($this->appRoot, []);
+
+        // The command joins the path with DIRECTORY_SEPARATOR, so asserting a
+        // forward slash passes on POSIX and fails on windows -- and its
+        // negation in the --force test below would have passed there for the
+        // wrong reason, asserting nothing at all.
+        self::assertStringContainsString($this->configPath(), $tester->getDisplay());
+    }
+
+    /**
+     * `--force` is about regenerating `gacela.php`. The configuration beside it
+     * is the project's own, and a scaffolder that overwrote it would destroy
+     * work no one asked it to touch.
+     */
+    public function test_force_leaves_an_existing_config_file_alone(): void
+    {
+        mkdir($this->appRoot . '/config', 0777, true);
+        file_put_contents($this->appRoot . '/config/app.php', "<?php return ['mine' => true];");
+
+        $tester = $this->init($this->appRoot, ['--force' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertSame(
+            "<?php return ['mine' => true];",
+            file_get_contents($this->appRoot . '/config/app.php'),
+        );
+        self::assertStringNotContainsString($this->configPath(), $tester->getDisplay());
     }
 
     public function test_refuses_to_overwrite_an_existing_file(): void
@@ -114,6 +172,15 @@ final class InitCommandTest extends TestCase
         } finally {
             restore_error_handler();
         }
+    }
+
+    /**
+     * As the command spells it, so a mismatch is a real difference rather than
+     * a separator.
+     */
+    private function configPath(): string
+    {
+        return 'config' . DIRECTORY_SEPARATOR . 'app.php';
     }
 
     /**

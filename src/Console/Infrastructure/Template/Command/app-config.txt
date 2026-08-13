@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Read by the `config/*.php` pattern that `gacela.php` declares. Every file
+ * matching it is merged, and `config/local.php` is merged last, so a key set
+ * there wins over this one.
+ *
+ * Read it back with `Config::getInstance()->get('key')`, or declare a shape for
+ * it with `declareConfigSchema()` and have `doctor` check it.
+ */
+return [
+    // 'db' => ['host' => 'localhost'],
+];

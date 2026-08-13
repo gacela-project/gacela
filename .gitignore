@@ -15,7 +15,11 @@ vendor/
 *.cache
 *.tmp
 .gacela-cache-*
-cachegacela-*
+# Written when a mutant drops the separator between the cache directory and the
+# filename, so the name carries the directory's own prefix: `warmer-cache` +
+# `gacela-merged-config-...`. Anchored at the start this matched none of them,
+# and two got committed.
+*cachegacela-*
 tests/**/Users/
 gacela-local.php
 gacela-custom-services*.php

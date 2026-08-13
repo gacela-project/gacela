@@ -70,6 +70,7 @@ final class DoctorCommandTest extends TestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertSame([
             '✓ cache staleness',
+            '✓ cache directory',
             '✓ suffix configuration',
             '✓ class filenames',
             '✓ config schema',
@@ -127,8 +128,14 @@ final class DoctorCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
 
-        // The registered check runs after the built-in ones, and its detail is shown.
-        self::assertSame('✓ module health: FakeModule', $this->statusLinesOf($tester)[8]);
+        // The registered check runs after the built-in ones, and its detail is
+        // shown. Located from the end rather than by index: which position that
+        // is changes whenever a built-in check is added, and the claim here is
+        // about the order, not the count.
+        $lines = $this->statusLinesOf($tester);
+
+        self::assertSame('✓ All checks passed', array_pop($lines));
+        self::assertSame('✓ module health: FakeModule', array_pop($lines));
         self::assertStringContainsString('FakeHealthCheck ran', $tester->getDisplay());
     }
 

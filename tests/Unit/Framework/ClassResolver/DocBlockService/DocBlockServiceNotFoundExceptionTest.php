@@ -29,13 +29,12 @@ final class DocBlockServiceNotFoundExceptionTest extends TestCase
 ClassResolver Exception
 Cannot resolve the `ResolvableType` for your module `FakeModule`
 You can fix this by adding the missing `ResolvableType` to your module.
-E.g. `\GacelaTest\Unit\FakeModule\ResolvableType`
+E.g. `\GacelaTest\Unit\FakeModule\FakeModuleResolvableType`
 
 
 Tips:
-  • Ensure your Facade extends AbstractFacade
   • Check the module namespace matches the directory structure
-  • Verify the Facade file name matches the class name
+  • Verify the ResolvableType file name matches the class name
 EOT;
 
         self::assertSame($expected, $exception->getMessage());

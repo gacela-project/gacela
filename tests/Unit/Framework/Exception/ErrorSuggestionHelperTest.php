@@ -7,6 +7,8 @@ namespace GacelaTest\Unit\Framework\Exception;
 use Gacela\Framework\Exception\ErrorSuggestionHelper;
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
+
 final class ErrorSuggestionHelperTest extends TestCase
 {
     public function test_suggest_similar_returns_empty_string_when_no_options_available(): void
@@ -129,14 +131,45 @@ final class ErrorSuggestionHelperTest extends TestCase
         self::assertSame($expected, ErrorSuggestionHelper::addHelpfulTip('service_not_found'));
     }
 
-    public function test_add_helpful_tip_for_facade_not_found(): void
+    /**
+     * A pillar has an `Abstract*` to extend, so the advice names it.
+     */
+    public function test_tips_for_a_pillar_name_that_pillar(): void
     {
         $expected = "\n\nTips:\n"
-            . "  • Ensure your Facade extends AbstractFacade\n"
+            . "  • Ensure your Provider extends AbstractProvider\n"
             . "  • Check the module namespace matches the directory structure\n"
-            . '  • Verify the Facade file name matches the class name';
+            . '  • Verify the Provider file name matches the class name';
 
-        self::assertSame($expected, ErrorSuggestionHelper::addHelpfulTip('facade_not_found'));
+        self::assertSame($expected, ErrorSuggestionHelper::addResolvableTypeTip('Provider'));
+    }
+
+    /**
+     * A kind declared through `addResolvableType()` has no base class in the
+     * framework, so the line offering one is left out rather than pointing at
+     * an `AbstractExporter` that does not exist.
+     */
+    public function test_tips_for_a_declared_kind_omit_a_base_class_it_has_none_of(): void
+    {
+        $expected = "\n\nTips:\n"
+            . "  • Check the module namespace matches the directory structure\n"
+            . '  • Verify the Exporter file name matches the class name';
+
+        self::assertSame($expected, ErrorSuggestionHelper::addResolvableTypeTip('Exporter'));
+    }
+
+    /**
+     * All four pillars, because the tip is derived from the kind rather than
+     * written out per kind.
+     */
+    public function test_every_pillar_is_offered_its_own_base_class(): void
+    {
+        foreach (['Facade', 'Factory', 'Config', 'Provider'] as $pillar) {
+            self::assertStringContainsString(
+                sprintf('Ensure your %s extends Abstract%s', $pillar, $pillar),
+                ErrorSuggestionHelper::addResolvableTypeTip($pillar),
+            );
+        }
     }
 
     public function test_add_helpful_tip_for_config_error(): void

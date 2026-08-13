@@ -48,7 +48,7 @@ trait ClassResolverExceptionTrait
             }
         }
 
-        return $message . ErrorSuggestionHelper::addHelpfulTip('facade_not_found');
+        return $message . ErrorSuggestionHelper::addResolvableTypeTip($resolvableType);
     }
 
     /**
@@ -83,11 +83,26 @@ trait ClassResolverExceptionTrait
         return array_values(array_unique($candidates));
     }
 
+    /**
+     * The module-prefixed name, which is the convention `make:module` writes
+     * and the first candidate the finder tries.
+     *
+     * The unprefixed `\App\Wallet\Provider` this used to name resolves too, so
+     * nothing was broken -- it simply pointed away from the spelling every
+     * generated module, and the candidate list directly below it, already uses.
+     *
+     * Built from the module's own namespace rather than read off the head of
+     * the candidate list: candidates are ordered by configured project
+     * namespace, so the first is `\App\Wallet\WalletProvider` for a project
+     * whose first namespace is `App` even when the module lives elsewhere
+     * entirely.
+     */
     private function findClassNameExample(ClassInfo $classInfo, string $resolvableType): string
     {
         return sprintf(
-            '\\%s\\%s\\%s',
+            '\\%s\\%s\\%s%s',
             $classInfo->getModuleNamespace(),
+            $classInfo->getModuleName(),
             $classInfo->getModuleName(),
             $resolvableType,
         );

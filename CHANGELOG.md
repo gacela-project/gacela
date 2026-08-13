@@ -20,6 +20,8 @@
 
 ### Fixed
 
+- Advise on the kind that failed to resolve. A missing `Provider` named `Provider` four times and then closed with "Ensure your Facade extends AbstractFacade" — the fixed tip text was the only thing in the message not derived from the kind, and the two exceptions carrying it are raised for a `Provider` and for a kind declared through `addResolvableType()`, never for a Facade. A declared kind is no longer offered an `Abstract*` base the framework does not ship
+- Name the module-prefixed class in the resolver's `E.g.` line, matching what `make:module` writes and the first candidate the finder tries; the unprefixed `\App\Wallet\Provider` it named resolves too, but is not the spelling anything else in the message uses
 - Name the config key that was meant when one is not found. `ConfigException::keyNotFound()` has always accepted the available keys and always been handed none, leaving `Did you mean?` unreachable for config while the identical helper worked for services; all six typed getters now supply them. Since the config is flat, a nested reach like `database.host` is answered with `database`
 - Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote their test-only requirements to `require-dev`, so each manifest states what its `src/` imports and only that
 - Key the on-disk class-name cache by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps of one app sharing a cache dir no longer serve each other's classes

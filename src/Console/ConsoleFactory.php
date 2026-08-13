@@ -19,6 +19,7 @@ use Gacela\Console\Domain\DtoGenerate\GeneratedClassPath;
 use Gacela\Console\Domain\FileContent\FileContentGenerator;
 use Gacela\Console\Domain\FileContent\FileContentGeneratorInterface;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
+use Gacela\Console\Domain\FileContent\JsonFile;
 use Gacela\Console\Domain\FileContent\StubFiles;
 use Gacela\Console\Domain\FileContent\StubLocator;
 use Gacela\Console\Domain\FileContent\StubPublisher;
@@ -54,7 +55,6 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
 
-use function is_array;
 use function is_dir;
 use function is_string;
 use function preg_match;
@@ -391,26 +391,9 @@ final class ConsoleFactory extends AbstractFactory
     private function rootPsr4Prefixes(): array
     {
         $rootDir = Config::getInstance()->getAppRootDir();
-        $manifest = $rootDir . DIRECTORY_SEPARATOR . 'composer.json';
+        $decoded = JsonFile::decode($rootDir . DIRECTORY_SEPARATOR . 'composer.json');
 
-        if (!is_file($manifest)) {
-            return [];
-        }
-
-        $contents = file_get_contents($manifest);
-
-        if ($contents === false) {
-            return [];
-        }
-
-        /** @var mixed $decoded */
-        $decoded = json_decode($contents, true);
-
-        if (!is_array($decoded)) {
-            return [];
-        }
-
-        return ComposerPackage::autoloadPrefixesOf($decoded);
+        return $decoded === null ? [] : ComposerPackage::autoloadPrefixesOf($decoded);
     }
 
     private function createFileContentIo(): FileContentIoInterface

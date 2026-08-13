@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\PackageManifest;
 
 use function is_array;
-use function str_starts_with;
-use function strlen;
 
 /**
  * Which package provides a namespace.
@@ -84,23 +82,16 @@ final class NamespacePackageMap
      */
     public function packagesProviding(string $className): array
     {
-        $bestPrefix = '';
-        $best = [];
+        $prefix = Psr4Prefixes::longestMatching($this->prefixToPackages, $className);
 
-        foreach ($this->prefixToPackages as $prefix => $packages) {
-            if (!str_starts_with($className, $prefix)) {
-                continue;
-            }
-
-            if (strlen($prefix) > strlen($bestPrefix)) {
-                $bestPrefix = $prefix;
-                $best = $packages;
-            }
+        if ($prefix === null) {
+            return [];
         }
 
-        sort($best);
+        $packages = $this->prefixToPackages[$prefix];
+        sort($packages);
 
-        return $best;
+        return $packages;
     }
 
 }

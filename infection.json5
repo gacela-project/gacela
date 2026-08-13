@@ -373,8 +373,7 @@
             ignore: [
                 // Two distinct prefixes of equal length cannot both prefix one class name,
                 // so > and >= select the same longest match for every possible input.
-                "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::packagesProviding",
-                "Gacela\\Console\\Domain\\DtoGenerate\\GeneratedClassPath::fileFor",
+                "Gacela\\Console\\Domain\\PackageManifest\\Psr4Prefixes::longestMatching",
                 "Gacela\\Framework\\Cache\\FileCache::stats",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",
@@ -401,6 +400,7 @@
                 // declares. Every consumer foreaches the result, so the key shape is
                 // not observable.
                 "Gacela\\Console\\Application\\Doctor\\Check\\PackageManifestCheck::installedPackages",
+                "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::from",
                 "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::undeclaredImportsOf",
                 "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
                 "Gacela\\Console\\Domain\\ModuleGraph\\GraphDiffMarkdownFormatter::affectedModules",
@@ -529,6 +529,11 @@
         // return as behaviour. These two are allocation guards, not behaviour.
         ReturnRemoval: {
             ignore: [
+                // Same shape one level up: with no installed.json the guard
+                // returns null, and falling through reads an offset off null,
+                // which is null, which fails the is_array() below and returns
+                // null anyway. The guard is what keeps a php warning out of it.
+                "Gacela\\Console\\Application\\Doctor\\Check\\PackageManifestCheck::installedPackages",
                 // The early return for a non-object `autoload` is a guard, not a branch:
                 // falling through leaves the accumulator empty and returns the same [].
                 "Gacela\\Console\\Domain\\PackageManifest\\ComposerPackage::prefixesOf",

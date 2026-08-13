@@ -27,6 +27,7 @@
 
 ### Fixed
 
+- Normalize the cache directory on every `getCacheDir()` call, not only the first. The trailing separator was stripped from the returned value but the raw one was memoized, so the first caller got `/var/cache` and everyone after it got `/var/cache/` — which they concatenated onto, building `/var/cache//file.php`. Both spellings open the same file, so nothing failed; the paths the console reports and the empty-directory branch the `doctor` cache checks take now agree regardless of who asked first
 - Never write or delete the scoped cache's dependency graph at the filesystem root. `ScopedCache` built its graph path by concatenating onto the underlying `FileCache` directory, which is empty for `''`, `'/'` and whitespace — so a cache with nowhere to write persisted the graph to `/` on every `dependsOn()` and unlinked it on `clear()`. It now reads the same `CacheFilePath` rule the values do, and keeps the graph in memory when there is nowhere to put it
 
 - Refuse `debug:graph --rules` and `--allowed-cycles` when `--check` is absent, instead of ignoring them. Both files are read only by `--check`, so a CI job that wrote a rules file and ran the command without it printed the graph and exited zero — a gate that looks green while checking nothing

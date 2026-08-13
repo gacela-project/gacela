@@ -152,6 +152,32 @@ final class ConfigTest extends TestCase
         }
     }
 
+    /**
+     * The memoization test above passes with a fixture that has no trailing
+     * separator, so `rtrim()` is a no-op there and the two calls agree by
+     * accident. With one, they did not: the trimmed value was returned but the
+     * *un*-trimmed one was stored, so only the first caller saw a normalized
+     * path and everyone after it got the raw one.
+     *
+     * Callers concatenate onto this, so the later ones built `dir//file`. Both
+     * spellings open the same file, which is why nothing failed -- but they are
+     * not the same string, and the doctor checks that branch on an empty cache
+     * dir see a different value depending on who asked first.
+     */
+    public function test_get_cache_dir_is_normalized_on_every_call_not_only_the_first(): void
+    {
+        Config::resetInstance();
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->setFileCache(true, '/trailing-sep-cache/'),
+        );
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir('/apps');
+
+        self::assertSame('/apps/trailing-sep-cache', $config->getCacheDir());
+        self::assertSame('/apps/trailing-sep-cache', $config->getCacheDir());
+        self::assertSame('/apps/trailing-sep-cache', $config->getCacheDir());
+    }
+
     public function test_get_cache_dir_returns_windows_style_absolute_path_unchanged(): void
     {
         Config::resetInstance();

@@ -17,6 +17,7 @@ use function is_dir;
 use function is_file;
 use function sort;
 use function spl_autoload_register;
+use function sprintf;
 use function str_replace;
 use function str_starts_with;
 use function strlen;
@@ -82,7 +83,10 @@ final class Preloader
                 // One class that cannot link must not cost the whole image.
                 // A dev-only dependency appearing under src/ later lands here
                 // and is reported, rather than aborting every other class.
-                $skipped[] = $className . ' (' . $throwable->getMessage() . ')';
+                // Spelled with sprintf like the summary that renders it, and
+                // not asserted character by character: the reason is PHP's own
+                // wording, which has changed between versions before.
+                $skipped[] = sprintf('%s (%s)', $className, $throwable->getMessage());
             }
         }
 

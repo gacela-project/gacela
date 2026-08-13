@@ -108,6 +108,8 @@ final class StaticStateCoverageTest extends TestCase
         'ClassRules::$cacheableKeys' => 'pure memoization, as above: the second rule that judges a method rather than a class, this one reading the #[Cacheable] attribute on it',
         'CrossModuleRules::$analyser' => "configuration: the boundary check psalm was asked to run, read from the consumer's <crossModule> element at plugin registration. Nothing re-establishes it, so clearing it would silently turn the rule off",
         'CrossModuleCallRules::$analyser' => 'configuration: the other half of the same check, registered from the same element',
+        'ServiceMapMissingRules::$analyser' => "configuration: the 3.0-readiness check psalm was asked to run, read from the consumer's <serviceMapMissing> element at plugin registration. Same lifetime as the cross-module handlers above, and nothing re-establishes it",
+        'DeclaredModuleDependencyRules::$analyser' => "configuration: the module-rules check, read from the consumer's <moduleRules> element and holding the rule set parsed from the file it names",
     ];
 
     protected function tearDown(): void

@@ -16,6 +16,7 @@
 
 ### Changed
 
+- Refuse to overwrite in `make:module` and `make:file`, and add `--force` for when replacing is the intent. Generating over an existing module replaced every pillar with a stub and reported "created successfully" for each one, with no prompt and no flag — the only record that hand-written code had been there was the file it had just been written over. Every target is now checked before the first is written, so a run that would replace something writes nothing and names what is in the way. **This changes existing behaviour**: a script that regenerates a module in place now needs `--force`
 - Resolve a class name to its kind through the configured suffixes rather than the four literal pillar names. A project on `addSuffixTypeFacade('PublicApi')` now normalizes `App\Foo\FooPublicApi` to the `Facade` key the resolver looks up, so an `overrideExistingResolvedClass()` call on such a name takes effect where it was inert before
 
 ### Fixed

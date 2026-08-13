@@ -134,6 +134,15 @@ final class StubPublisherTest extends TestCase
             {
                 $this->written[$path] = $fileContent;
             }
+
+            /**
+             * What this double recorded, so a caller asking whether it already
+             * wrote a path gets an answer consistent with the writes above.
+             */
+            public function existsFile(string $path): bool
+            {
+                return isset($this->written[$path]);
+            }
         };
     }
 

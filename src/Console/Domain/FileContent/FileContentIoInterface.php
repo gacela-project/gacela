@@ -9,4 +9,6 @@ interface FileContentIoInterface
     public function mkdir(string $directory): void;
 
     public function filePutContents(string $path, string $fileContent): void;
+
+    public function existsFile(string $path): bool;
 }

@@ -10,6 +10,7 @@ use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use Gacela\Console\Domain\FileContent\StubFiles;
 use Gacela\Console\Domain\FileContent\StubLocator;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class FileContentGeneratorTest extends TestCase
@@ -24,6 +25,63 @@ final class FileContentGeneratorTest extends TestCase
             new CommandArguments('Namespace', 'Dir'),
             'unknown_template',
         );
+    }
+
+    /**
+     * The path the overwrite check reports, spelled out for every shape that
+     * changes it.
+     *
+     * Deliberately literal rather than compared against what `generate()`
+     * writes: `generate()` builds its path by calling this method, so asserting
+     * the two agree asserts nothing. Agreement is a property of the design --
+     * one path builder, used by both -- and what remains worth pinning is that
+     * the builder is right.
+     *
+     * @param list<string> $expected
+     */
+    #[DataProvider('pathShapes')]
+    public function test_the_reported_target_covers_every_path_shape(bool $shortName, string $subDirectory, string $expected): void
+    {
+        $generator = new FileContentGenerator(
+            $this->createStub(FileContentIoInterface::class),
+            new StubLocator('', ['Facade' => 'template-result'], StubFiles::basic()),
+        );
+
+        $actual = $generator->targetPath(
+            new CommandArguments('Namespace', 'Dir'),
+            FilenameSanitizer::FACADE,
+            $shortName,
+            $subDirectory,
+        );
+
+        self::assertSame($expected, $actual);
+    }
+
+    /**
+     * @return iterable<string, array{bool, string, string}>
+     */
+    public static function pathShapes(): iterable
+    {
+        yield 'plain' => [false, '', 'Dir/DirFacade.php'];
+        yield 'short name' => [true, '', 'Dir/Facade.php'];
+        yield 'sub-directory' => [false, 'Domain', 'Dir/Domain/DirFacade.php'];
+        yield 'short name in a sub-directory' => [true, 'Domain', 'Dir/Domain/Facade.php'];
+    }
+
+    /**
+     * Naming a target must not create the directory for it: a command asks this
+     * before deciding whether to refuse, and a refused run that left an empty
+     * module directory behind would be writing after saying it wrote nothing.
+     */
+    public function test_naming_a_target_creates_nothing(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::never())->method('mkdir');
+        $fileContentIo->expects(self::never())->method('filePutContents');
+
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [], StubFiles::basic()));
+
+        $generator->targetPath(new CommandArguments('Namespace', 'Dir'), FilenameSanitizer::FACADE, false, '');
     }
 
     public function test_facade_maker_template(): void

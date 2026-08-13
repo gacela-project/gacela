@@ -57,6 +57,17 @@ final class FacadeInterfaceInSyncAnalyser implements ClassAnalyserInterface
                 continue;
             }
 
+            // Neither is a static method. The drift this rule exists to catch
+            // is a consumer holding the interface being unable to reach a
+            // method -- and a static one is not reached through an instance
+            // anyway, so requiring it in the interface would force every
+            // implementer, test doubles included, to carry a static factory.
+            // The sibling rule already treats a static method as outside the
+            // Facade's delegating surface, having no `$this` to delegate with.
+            if ($method->isStatic()) {
+                continue;
+            }
+
             if ($class->interfaceHasMethod($facadeInterface, $methodName)) {
                 continue;
             }

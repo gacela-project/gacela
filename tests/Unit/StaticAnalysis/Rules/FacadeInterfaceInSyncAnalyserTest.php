@@ -21,6 +21,11 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
      * Kept as a string rather than a fixture file because cs-fixer reorders a
      * real class by visibility, which would undo exactly that ordering.
      */
+    /**
+     * The static method sits *between* two instance methods on purpose: it is
+     * skipped, and skipping must not abandon the methods after it. With it
+     * last, `continue` and `break` are indistinguishable.
+     */
     private const SOURCE = <<<'PHP'
         <?php
         final class CheckoutFacade implements CheckoutFacadeInterface
@@ -32,6 +37,8 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
             protected function alsoInternal() {}
 
             public function declared() {}
+
+            public static function make() {}
 
             public function forgotten() {}
         }
@@ -68,7 +75,7 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
      */
     public function test_the_violation_points_at_the_method_not_the_class(): void
     {
-        self::assertSame(12, $this->analyse(['declared'])[0]->node?->getStartLine());
+        self::assertSame(14, $this->analyse(['declared'])[0]->node?->getStartLine());
     }
 
     /**
@@ -130,6 +137,20 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
      *
      * @return list<Violation>
      */
+    /**
+     * The drift this rule catches is a consumer holding the interface being
+     * unable to reach a method. A static one is not reached through an
+     * instance anyway, so requiring it would force every implementer -- test
+     * doubles included -- to carry a static factory. The sibling rule already
+     * treats a static method as outside the Facade's delegating surface.
+     */
+    public function test_a_static_method_is_not_part_of_the_interface_surface(): void
+    {
+        $violations = $this->analyse(['declared', 'forgotten']);
+
+        self::assertSame([], $violations);
+    }
+
     private function analyse(array $declaredInInterface): array
     {
         $analyser = new FacadeInterfaceInSyncAnalyser();

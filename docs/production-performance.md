@@ -75,6 +75,14 @@ GACELA_CACHE_DIR=/var/cache/gacela-prod
 
 `GACELA_CACHE_DIR` overrides the directory at runtime and takes precedence over the bootstrap value.
 
+## What none of this has to pay for
+
+**Module count.** Bootstrapping does not walk your modules — it reads the configuration and builds the container, and costs the same in a project with five modules as in one with five hundred. Measured flat from 10 to 500.
+
+Resolution is charged per module you actually **touch**, not per module you have: a pillar is resolved on first use and memoized, so a request that reaches two modules pays for two. This is why the levers above are about *bootstrap* and *class loading* — the parts every request pays — rather than about the size of the codebase.
+
+If a request in a large application feels slow, the module count is not the first place to look. `debug:module` shows what one module actually resolves, and the [profiler](profiling.md) attributes time to the operations that ran.
+
 ## Checklist
 
 | Step | Lever | Reference |

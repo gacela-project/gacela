@@ -20,7 +20,7 @@ Restart PHP-FPM:
 sudo systemctl restart php8.3-fpm
 ```
 
-Verify in the logs: `Gacela Opcache Preload: 176 classes linked, 0 skipped`.
+Verify in the logs: `Gacela Opcache Preload: <n> classes linked, 0 skipped`. The count tracks the framework's size; the `0` is the part to check.
 
 Anything Gacela could not link is named in that line, and PHP logs its own `Can't preload unlinked class ...` warning next to it. Both mean the class was dropped from the image and is being loaded per request as usual — a correctness problem for the preload only, not for your application.
 

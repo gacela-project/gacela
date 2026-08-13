@@ -7,6 +7,7 @@ namespace GacelaTest\LaravelBridge;
 use Gacela\Framework\Gacela;
 use Gacela\LaravelBridge\GacelaInjectListener;
 use GacelaTest\LaravelBridge\Fixtures\BareConstructorConsumer;
+use GacelaTest\LaravelBridge\Fixtures\BridgeAttributePropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ConstructorConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ContractPropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ContractSetterConsumer;
@@ -74,6 +75,18 @@ final class GacelaInjectTest extends LaravelBridgeTestCase
     public function test_a_property_is_injected_after_laravel_builds_the_instance(): void
     {
         $consumer = $this->app->make(PropertyConsumer::class);
+
+        self::assertSame(CountingService::FROM_LARAVEL, $consumer->service()->name());
+    }
+
+    /**
+     * "Honouring the attribute under either namespace" is a README promise, and
+     * only the Gacela one was exercised on a property. The bridge's is the
+     * import a reader already has from the constructor example above it.
+     */
+    public function test_a_property_carrying_the_bridge_attribute_is_injected_too(): void
+    {
+        $consumer = $this->app->make(BridgeAttributePropertyConsumer::class);
 
         self::assertSame(CountingService::FROM_LARAVEL, $consumer->service()->name());
     }

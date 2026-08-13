@@ -20,18 +20,20 @@ Restart PHP-FPM:
 sudo systemctl restart php8.3-fpm
 ```
 
-Verify in the logs: `Gacela Opcache Preload: 32 files preloaded successfully, 0 failed`.
+Verify in the logs: `Gacela Opcache Preload: <n> classes linked, 0 skipped`. The count tracks the framework's size; the `0` is the part to check.
+
+Anything Gacela could not link is named in that line, and PHP logs its own `Can't preload unlinked class ...` warning next to it. Both mean the class was dropped from the image and is being loaded per request as usual — a correctness problem for the preload only, not for your application.
 
 ## Preload your own files
 
-Create `config/app-preload.php`:
+Create `config/app-preload.php`. Load the classes rather than compiling the files: a compiled class is only kept if everything it extends, implements and uses was preloaded too, and loading it is what pulls those in.
 
 ```php
 <?php
-$root = dirname(__DIR__);
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-opcache_compile_file($root . '/src/User/UserFacade.php');
-opcache_compile_file($root . '/src/Product/ProductFacade.php');
+class_exists(App\User\UserFacade::class);
+class_exists(App\Product\ProductFacade::class);
 ```
 
 Wire it via env var in your FPM pool:
@@ -60,6 +62,9 @@ sudo systemctl restart php8.3-fpm
 |-------------------------|------------------------------------------------------------------------|
 | Files not preloading    | `php -v` ≥ 8.3, `php -i \| grep opcache.enable`, preload file readable |
 | Permission denied       | `opcache.preload_user` must match the PHP-FPM user (`ps aux \| grep php-fpm`) |
+| `Can't preload unlinked class` | A parent, interface or trait was not preloaded. For your own files, load the class instead of compiling the file (above). |
+| Preload aborts on `fopen(php://stdout)` or similar | Some package runs I/O in a composer `files` autoload entry, which the preload context forbids. Install with `--no-dev`, or preload your classes without requiring the full autoloader. |
+| Nothing happens on Windows | `opcache.preload` is not supported there. |
 
 ## Docker
 

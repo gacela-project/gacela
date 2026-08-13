@@ -21,6 +21,43 @@ final class FileContentGenerator implements FileContentGeneratorInterface
      *
      * @return string path result where the file was generated
      */
+    /**
+     * Where {@see generate()} would write, without writing it or creating any
+     * directory on the way -- so a command can find out what it is about to
+     * replace while it is still able to refuse.
+     */
+    public function targetPath(CommandArguments $commandArguments, string $filename, bool $withShortName = false, string $subDirectory = ''): string
+    {
+        $targetDirectory = $commandArguments->directory();
+        if ($subDirectory !== '') {
+            $targetDirectory .= '/' . $subDirectory;
+        }
+
+        $moduleName = $withShortName ? '' : $commandArguments->basename();
+
+        return sprintf('%s/%s%s.php', $targetDirectory, $moduleName, $filename);
+    }
+
+    /**
+     * @param list<array{string, string}> $files [filename, subDirectory] pairs
+     *
+     * @return list<string>
+     */
+    public function existingTargets(CommandArguments $commandArguments, array $files, bool $withShortName = false): array
+    {
+        $existing = [];
+
+        foreach ($files as [$filename, $subDirectory]) {
+            $path = $this->targetPath($commandArguments, $filename, $withShortName, $subDirectory);
+
+            if ($this->fileContentIo->existsFile($path)) {
+                $existing[] = $path;
+            }
+        }
+
+        return $existing;
+    }
+
     public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName = false, string $subDirectory = ''): string
     {
         $targetDirectory = $commandArguments->directory();
@@ -33,7 +70,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
         $moduleName = $withShortName ? '' : $commandArguments->basename();
         $className = $moduleName . $filename;
 
-        $path = sprintf('%s/%s.php', $targetDirectory, $className);
+        $path = $this->targetPath($commandArguments, $filename, $withShortName, $subDirectory);
         $search = ['$NAMESPACE$', '$MODULE_NAME$', '$CLASS_NAME$'];
         $replace = [$commandArguments->namespace(), $moduleName, $className];
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
-use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\CommandArguments\ModulePath;
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
 use Gacela\Framework\ServiceResolver\ServiceMap;
@@ -17,6 +16,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function implode;
 use function in_array;
 use function sprintf;
 
@@ -38,7 +38,8 @@ final class MakeModuleCommand extends Command
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name')
             ->addOption('template', 't', InputOption::VALUE_REQUIRED, 'Module template: basic, service (Facade wired to a Domain service), or minimal (Facade + Factory only)', 'basic')
             ->addOption('minimal', null, InputOption::VALUE_NONE, 'Scaffold only the Facade and Factory pillars (shorthand for --template=minimal)')
-            ->addOption('with-tests', null, InputOption::VALUE_NONE, 'Also scaffold a facade test (service template only)');
+            ->addOption('with-tests', null, InputOption::VALUE_NONE, 'Also scaffold a facade test (service template only)')
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Replace files that already exist');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -78,20 +79,30 @@ final class MakeModuleCommand extends Command
 
         $commandArguments = $this->getFacade()->parseArguments($path);
         $shortName = $input->getOption('short-name') === true;
+        $isService = $template === 'service';
+        $files = $this->filesFor($template, $input->getOption('with-tests') === true);
 
-        if ($template === 'service') {
-            $this->generateServiceModule($commandArguments, $shortName, $input->getOption('with-tests') === true, $output);
-        } elseif ($template === 'minimal') {
-            $this->generateMinimalModule($commandArguments, $shortName, $output);
-        } else {
-            foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
-                $fullPath = $this->getFacade()->generateFileContent(
-                    $commandArguments,
-                    $filename,
-                    $shortName,
-                );
-                $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
+        // Every target, before the first one is written. Generating over a
+        // module replaces hand-written code with a stub and reports it as
+        // "created", so a partly-replaced module is the one outcome there is
+        // no way back from -- the same reason an unusable path is refused
+        // before generation rather than during it.
+        if ($input->getOption('force') !== true) {
+            $existing = $this->getFacade()->existingGeneratedFiles($commandArguments, $files, $shortName, $isService);
+
+            if ($existing !== []) {
+                ConsoleSection::refusedToOverwrite($output, $existing);
+
+                return self::FAILURE;
             }
+        }
+
+        foreach ($files as [$filename, $subDirectory]) {
+            $fullPath = $isService
+                ? $this->getFacade()->generateServiceFileContent($commandArguments, $filename, $shortName, $subDirectory)
+                : $this->getFacade()->generateFileContent($commandArguments, $filename, $shortName);
+
+            $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
         }
 
         $pieces = explode('/', $commandArguments->directory());
@@ -101,15 +112,30 @@ final class MakeModuleCommand extends Command
         return self::SUCCESS;
     }
 
-    private function generateServiceModule(
-        CommandArguments $commandArguments,
-        bool $shortName,
-        bool $withTests,
-        OutputInterface $output,
-    ): void {
+    /**
+     * Which files a template scaffolds, as [filename, subDirectory] pairs.
+     *
+     * One list per template, read once to check what exists and again to
+     * write: two lists would let the check and the writing disagree, which is
+     * precisely the disagreement that loses a file.
+     *
+     * @return list<array{string, string}>
+     */
+    private function filesFor(string $template, bool $withTests): array
+    {
+        if ($template === 'minimal') {
+            // Config and Provider are optional: add them when the module
+            // actually reads config or wires external dependencies.
+            return [[FilenameSanitizer::FACADE, ''], [FilenameSanitizer::FACTORY, '']];
+        }
+
         $files = [];
         foreach (FilenameSanitizer::EXPECTED_FILENAMES as $filename) {
             $files[] = [$filename, ''];
+        }
+
+        if ($template !== 'service') {
+            return $files;
         }
 
         $files[] = ['Service', 'Domain'];
@@ -117,35 +143,6 @@ final class MakeModuleCommand extends Command
             $files[] = ['FacadeTest', 'Tests'];
         }
 
-        foreach ($files as [$filename, $subDirectory]) {
-            $fullPath = $this->getFacade()->generateServiceFileContent(
-                $commandArguments,
-                $filename,
-                $shortName,
-                $subDirectory,
-            );
-            $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
-        }
+        return $files;
     }
-
-    /**
-     * The `minimal` template scaffolds only the Facade and Factory pillars.
-     * Config and Provider are optional: add them when the module actually
-     * reads config or wires external dependencies.
-     */
-    private function generateMinimalModule(
-        CommandArguments $commandArguments,
-        bool $shortName,
-        OutputInterface $output,
-    ): void {
-        foreach ([FilenameSanitizer::FACADE, FilenameSanitizer::FACTORY] as $filename) {
-            $fullPath = $this->getFacade()->generateFileContent(
-                $commandArguments,
-                $filename,
-                $shortName,
-            );
-            $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
-        }
-    }
-
 }

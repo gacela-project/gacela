@@ -6,6 +6,8 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function count;
+use function implode;
 use function sprintf;
 use function str_repeat;
 
@@ -28,5 +30,24 @@ final class ConsoleSection
     public static function separator(OutputInterface $output): void
     {
         $output->writeln(sprintf('<info>%s</info>', str_repeat('=', self::WIDTH)));
+    }
+
+    /**
+     * Why a `make:*` run wrote nothing, in one place so both makers refuse in
+     * the same words.
+     *
+     * @param list<string> $paths
+     */
+    public static function refusedToOverwrite(OutputInterface $output, array $paths): void
+    {
+        $output->writeln(sprintf(
+            '<error>%s already %s.</error>',
+            implode(', ', $paths),
+            count($paths) === 1 ? 'exists' : 'exist',
+        ));
+        $output->writeln(sprintf(
+            'Nothing was written. Pass <comment>--force</comment> to replace %s.',
+            count($paths) === 1 ? 'it' : 'them',
+        ));
     }
 }

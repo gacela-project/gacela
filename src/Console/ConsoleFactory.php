@@ -112,6 +112,20 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
+    /**
+     * The generator a `make:*` run would use, picked by template.
+     *
+     * Here rather than in the Facade so the two paths that must agree on a
+     * target path -- checking what exists and writing it -- resolve the same
+     * generator.
+     */
+    public function createFileContentGeneratorFor(bool $service): FileContentGeneratorInterface
+    {
+        return $service
+            ? $this->createServiceFileContentGenerator()
+            : $this->createFileContentGenerator();
+    }
+
     public function createServiceFileContentGenerator(): FileContentGeneratorInterface
     {
         return new FileContentGenerator(

@@ -17,6 +17,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function array_map;
 use function sprintf;
 
 /**
@@ -38,7 +39,8 @@ final class MakeFileCommand extends Command
             ->setDescription('Generate a ' . $filenames)
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
             ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, $filenames)
-            ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name');
+            ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name')
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Replace files that already exist');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -71,6 +73,20 @@ final class MakeFileCommand extends Command
 
         $commandArguments = $this->getFacade()->parseArguments($path);
         $shortName = $input->getOption('short-name') === true;
+
+        $files = array_map(static fn (string $filename): array => [$filename, ''], $filenames);
+
+        // Same rule as make:module: check every target before writing any of
+        // them, so a run that would replace hand-written code refuses instead.
+        if ($input->getOption('force') !== true) {
+            $existing = $this->getFacade()->existingGeneratedFiles($commandArguments, $files, $shortName);
+
+            if ($existing !== []) {
+                ConsoleSection::refusedToOverwrite($output, $existing);
+
+                return self::FAILURE;
+            }
+        }
 
         foreach ($filenames as $filename) {
             $absolutePath = $this->getFacade()->generateFileContent(

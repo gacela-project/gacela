@@ -7,6 +7,7 @@ namespace Gacela\Console\Infrastructure;
 use Gacela\Console\Domain\FileContent\FileContentIoInterface;
 use RuntimeException;
 
+use function file_exists;
 use function sprintf;
 
 final class FileContentIo implements FileContentIoInterface
@@ -28,6 +29,11 @@ final class FileContentIo implements FileContentIoInterface
         }
 
         throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
+    }
+
+    public function existsFile(string $path): bool
+    {
+        return file_exists($path);
     }
 
     public function filePutContents(string $path, string $fileContent): void

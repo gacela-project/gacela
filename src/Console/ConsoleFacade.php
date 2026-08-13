@@ -49,6 +49,25 @@ final class ConsoleFacade extends AbstractFacade
      *
      * @param string $subDirectory optional sub-directory (relative to the module dir) to place the file in
      */
+    /**
+     * Which of the files a `make:*` run would write already exist.
+     *
+     * @param list<array{string, string}> $files [filename, subDirectory] pairs
+     * @param bool $service whether the service template's generator is the one that would write them
+     *
+     * @return list<string>
+     */
+    public function existingGeneratedFiles(
+        CommandArguments $commandArguments,
+        array $files,
+        bool $withShortName = false,
+        bool $service = false,
+    ): array {
+        return $this->getFactory()
+            ->createFileContentGeneratorFor($service)
+            ->existingTargets($commandArguments, $files, $withShortName);
+    }
+
     public function generateServiceFileContent(
         CommandArguments $commandArguments,
         string $filename,

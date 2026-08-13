@@ -65,10 +65,32 @@ return static function (GacelaConfig $config): void {
     $config->addAlias('logger', LoggerInterface::class);
 };
 
-// Both resolve to the same instance:
+// Both resolve to the same service -- same class, same wiring:
 $container->get(LoggerInterface::class);
 $container->get('logger');
 ```
+
+Not to the same *object*: a binding is wiring, and the container builds it per resolution. See [what is cached and what is not](#what-is-cached-and-what-is-not) for the shapes that do share an instance.
+
+## What is cached and what is not
+
+A binding says *how* to build something, not *what* was built, so the container builds it again on each resolution — through `get()` and through `getProvidedDependency()` in a module Factory alike:
+
+```php
+$config->addBinding(LoggerInterface::class, FileLogger::class);
+
+$container->get(LoggerInterface::class) === $container->get(LoggerInterface::class);   // false
+```
+
+Three things do hand back one instance:
+
+| | |
+|---|---|
+| `#[Singleton]` on the class | cached per container, and each module Factory keeps one |
+| `$container->set($id, ...)` in a Provider | the resolved value is kept under that id |
+| `addBinding($id, $object)` with an already-built object | there is nothing left to build |
+
+This is the opt-in caching described under [class attributes](#class-attributes-singleton-factory-and-lazy): reach for `#[Singleton]` when a service must be shared, rather than assuming a binding shares it. It matters most for a service that builds something internally on first use — a connection, a warmed lookup table — which is rebuilt with the object every time.
 
 ## Conditional Bindings
 
@@ -410,7 +432,7 @@ $config->loadDefinitions(Yaml::parseFile(__DIR__ . '/services.yaml'));
 
 | Type | Behavior | Use Case |
 |------|----------|----------|
-| Regular (binding) | Singleton | Stateless services, repositories |
+| Regular (binding) | New instance each resolution | Stateless services, repositories |
 | Conditional (`addBindingIf`) | Binds only if unbound | Plugin defaults that apps can override |
 | Factory | New instance each call | Stateful services, request-scoped |
 | Protected | Returns closure as-is | Lazy initialization, callable configs |

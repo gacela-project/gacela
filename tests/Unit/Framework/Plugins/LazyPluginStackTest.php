@@ -79,6 +79,48 @@ final class LazyPluginStackTest extends TestCase
      * contract is checked on first resolve -- and the failure names the class
      * and the stack, instead of a TypeError wherever the consumer used it.
      */
+    /**
+     * A class name in `gacela.php` is a string until something loads it, and
+     * the container answers `null` for one that resolves to nothing -- so the
+     * contract check reported a missing class as one that "does not implement"
+     * the contract, sending the reader to inspect an `implements` clause on a
+     * file that is not there. A typo in a plugin's class name is the ordinary
+     * way to arrive here.
+     */
+    public function test_a_plugin_class_that_does_not_exist_says_so(): void
+    {
+        /** @var class-string $missing */
+        $missing = 'GacelaTest\\Unit\\Framework\\Plugins\\Fixtures\\NoSuchDecorator';
+        $stack = $this->stack([$missing]);
+
+        try {
+            $stack->all();
+            self::fail('Expected a PluginStackException');
+        } catch (PluginStackException $pluginStackException) {
+            $message = $pluginStackException->getMessage();
+
+            self::assertStringContainsString('no such class exists', $message);
+            self::assertStringContainsString('NoSuchDecorator', $message);
+            self::assertStringNotContainsString('does not implement', $message);
+            // What went wrong first, what to try about it after.
+            self::assertStringStartsWith('"GacelaTest', $message);
+        }
+    }
+
+    /**
+     * The tips for a class that does not exist, which is what this is: a
+     * namespace typo or an autoloader that has not seen the file.
+     */
+    public function test_a_missing_plugin_class_carries_the_tips_for_one(): void
+    {
+        /** @var class-string $missing */
+        $missing = 'GacelaTest\\Unit\\Framework\\Plugins\\Fixtures\\NoSuchDecorator';
+
+        $this->expectExceptionMessage("Run 'composer dump-autoload' to refresh autoloader");
+
+        $this->stack([$missing])->all();
+    }
+
     public function test_a_plugin_that_does_not_implement_the_contract_is_refused_by_name(): void
     {
         $stack = $this->stack([NotADecorator::class]);

@@ -19,5 +19,8 @@
         "aggregate"
       ]
     }
+  },
+  "runner.php_config": {
+    "error_reporting": "8191"
   }
 }

@@ -26,7 +26,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
      * directory on the way -- so a command can find out what it is about to
      * replace while it is still able to refuse.
      */
-    public function targetPath(CommandArguments $commandArguments, string $filename, bool $withShortName = false, string $subDirectory = ''): string
+    public function targetPath(CommandArguments $commandArguments, string $filename, bool $withShortName, string $subDirectory): string
     {
         $targetDirectory = $commandArguments->directory();
         if ($subDirectory !== '') {
@@ -43,7 +43,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
      *
      * @return list<string>
      */
-    public function existingTargets(CommandArguments $commandArguments, array $files, bool $withShortName = false): array
+    public function existingTargets(CommandArguments $commandArguments, array $files, bool $withShortName): array
     {
         $existing = [];
 

@@ -88,7 +88,7 @@ final class MakeModuleCommand extends Command
         // no way back from -- the same reason an unusable path is refused
         // before generation rather than during it.
         if ($input->getOption('force') !== true) {
-            $existing = $this->getFacade()->existingGeneratedFiles($commandArguments, $files, $shortName, $isService);
+            $existing = $this->getFacade()->existingGeneratedFiles($commandArguments, $files, $shortName);
 
             if ($existing !== []) {
                 ConsoleSection::refusedToOverwrite($output, $existing);

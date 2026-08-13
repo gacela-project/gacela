@@ -18,7 +18,7 @@ interface FileContentGeneratorInterface
     /**
      * Where `generate()` would write, without writing it.
      */
-    public function targetPath(CommandArguments $commandArguments, string $filename, bool $withShortName = false, string $subDirectory = ''): string;
+    public function targetPath(CommandArguments $commandArguments, string $filename, bool $withShortName, string $subDirectory): string;
 
     /**
      * Which of the given targets already exist on disk.
@@ -31,5 +31,5 @@ interface FileContentGeneratorInterface
      *
      * @return list<string> the paths that exist, in the order given
      */
-    public function existingTargets(CommandArguments $commandArguments, array $files, bool $withShortName = false): array;
+    public function existingTargets(CommandArguments $commandArguments, array $files, bool $withShortName): array;
 }

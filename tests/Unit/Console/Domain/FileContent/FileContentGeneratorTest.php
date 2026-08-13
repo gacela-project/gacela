@@ -81,7 +81,7 @@ final class FileContentGeneratorTest extends TestCase
 
         $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [], StubFiles::basic()));
 
-        $generator->targetPath(new CommandArguments('Namespace', 'Dir'), FilenameSanitizer::FACADE);
+        $generator->targetPath(new CommandArguments('Namespace', 'Dir'), FilenameSanitizer::FACADE, false, '');
     }
 
     public function test_facade_maker_template(): void

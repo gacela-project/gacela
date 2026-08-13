@@ -52,19 +52,22 @@ final class ConsoleFacade extends AbstractFacade
     /**
      * Which of the files a `make:*` run would write already exist.
      *
+     * A target path is built from the module arguments alone -- the stubs a
+     * template would fill in never reach it -- so which template is in play
+     * makes no difference here, and asking would be a distinction nothing
+     * could observe.
+     *
      * @param list<array{string, string}> $files [filename, subDirectory] pairs
-     * @param bool $service whether the service template's generator is the one that would write them
      *
      * @return list<string>
      */
     public function existingGeneratedFiles(
         CommandArguments $commandArguments,
         array $files,
-        bool $withShortName = false,
-        bool $service = false,
+        bool $withShortName,
     ): array {
         return $this->getFactory()
-            ->createFileContentGeneratorFor($service)
+            ->createFileContentGenerator()
             ->existingTargets($commandArguments, $files, $withShortName);
     }
 

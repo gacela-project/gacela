@@ -152,6 +152,23 @@ final class MakeRefusesToOverwriteTest extends TestCase
         self::assertFileExists(self::FACADE);
     }
 
+    /**
+     * The service template puts files in sub-directories (`Domain/`, `Tests/`),
+     * and the check resolves them through the plain generator -- a target path
+     * is built from the module arguments alone, never from the stubs a template
+     * would fill in. This is what says those two agree.
+     */
+    public function test_the_service_template_sub_directories_are_checked_too(): void
+    {
+        $this->runCommand('make:module ' . self::MODULE_ARG . ' --template=service --with-tests');
+
+        $output = $this->runCommand('make:module ' . self::MODULE_ARG . ' --template=service --with-tests');
+
+        self::assertStringContainsString('Domain/OverwriteModuleService.php', $output);
+        self::assertStringContainsString('Tests/OverwriteModuleFacadeTest.php', $output);
+        self::assertStringContainsString('Nothing was written.', $output);
+    }
+
     private function generateModule(): void
     {
         $this->runCommand('make:module ' . self::MODULE_ARG);

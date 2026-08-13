@@ -13,11 +13,14 @@ use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
 use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
+use Gacela\Console\Infrastructure\Command\DtoGenerateCommand;
+use Gacela\Console\Infrastructure\Command\IdeMetaCommand;
 use Gacela\Console\Infrastructure\Command\InitCommand;
 use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
+use Gacela\Console\Infrastructure\Command\StubsPublishCommand;
 use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
 use Symfony\Component\Console\Command\Command;
 
@@ -49,6 +52,9 @@ final class GacelaCommands
         ProfileReportCommand::class,
         DoctorCommand::class,
         InitCommand::class,
+        DtoGenerateCommand::class,
+        IdeMetaCommand::class,
+        StubsPublishCommand::class,
     ];
 
     /**

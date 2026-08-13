@@ -9,6 +9,7 @@ use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 
@@ -35,7 +36,9 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
      */
     public function analyse(ClassLike $node, AnalysedClassInterface $class): array
     {
-        if (!$this->couldExtendAPillar($node)) {
+        $classNode = $this->pillarCandidate($node);
+
+        if (!$classNode instanceof Class_) {
             return [];
         }
 
@@ -51,6 +54,17 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
         }
 
         if ($class->extendsClass($this->expectedParent)) {
+            return [];
+        }
+
+        // A class that already has a parent cannot take this advice either:
+        // PHP has single inheritance, so the only way out would be a rename or
+        // a baseline entry -- the same reason interfaces, traits and enums go
+        // unreported. Its whole ancestry was checked for the pillar just above,
+        // so reaching here means the parent belongs to another hierarchy: a
+        // `GoogleAuthProvider extends AbstractOAuthProvider` has nothing to do
+        // with Gacela, and this rule runs inside every consumer's build.
+        if ($classNode->extends instanceof Name) {
             return [];
         }
 
@@ -73,8 +87,12 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
      * a baseline entry. An anonymous class has no name to carry a suffix, and
      * nothing a consumer could rename if it were reported.
      */
-    private function couldExtendAPillar(ClassLike $node): bool
+    private function pillarCandidate(ClassLike $node): ?Class_
     {
-        return $node instanceof Class_ && $node->name instanceof Identifier;
+        if (!$node instanceof Class_) {
+            return null;
+        }
+
+        return $node->name instanceof Identifier ? $node : null;
     }
 }

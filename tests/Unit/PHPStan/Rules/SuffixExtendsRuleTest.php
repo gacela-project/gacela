@@ -37,6 +37,17 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         );
     }
 
+    /**
+     * A class with a parent of its own cannot extend the pillar too, so
+     * reporting it produces advice whose only resolution is a rename or a
+     * baseline entry. Its whole ancestry is still checked for the pillar
+     * first, so this only skips a genuinely different hierarchy.
+     */
+    public function test_ignores_a_class_that_already_extends_something_else(): void
+    {
+        $this->analyse([__DIR__ . '/Fixture/SuffixFacade/InheritedFacade.php'], []);
+    }
+
     public function test_allows_user_facade_extending_abstract_facade(): void
     {
         $this->analyse([__DIR__ . '/Fixture/SuffixFacade/UserFacade.php'], []);

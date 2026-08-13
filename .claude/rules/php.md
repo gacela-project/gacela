@@ -23,7 +23,7 @@ globs: src/**/*.php,tests/**/*.php
 ## Quality Gates
 
 ```bash
-composer quality     # cs-fixer (dry-run) + psalm + phpstan
+composer quality     # normalize + cs-fixer + rector (dry-run) + psalm + phpstan (src and tests) + module cycles
 composer fix         # normalize + cs-fixer + rector (auto-fix)
 composer infection   # Mutation testing (requires Xdebug)
 ```

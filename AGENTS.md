@@ -8,7 +8,7 @@ Source code lives in `src/` under the `Gacela\` namespace, grouped by module-res
 
 - `composer install` — install PHP 8.3+ dependencies and trigger repo git hooks.
 - `composer test` — run linting, static analysis, and the full PHPUnit matrix (`unit`, `integration`, `feature`).
-- `composer quality` — quick guardrail: php-cs-fixer dry run, Psalm, then PHPStan.
+- `composer quality` — every check CI enforces that is fast enough to run per-commit: composer-normalize, php-cs-fixer and rector dry runs, Psalm, PHPStan over `src/` and again over the tests, then the module-cycle check. `module-graph` stays CI-only because it diffs against the base branch, and `infection` and `phpbench` because they are too slow for a per-commit gate.
 - `composer csfix` / `composer csrun` — auto-fix or check formatting with php-cs-fixer config.
 - `composer phpbench` — execute aggregate performance benchmarks.
 - `composer infection` — mutation testing; requires Xdebug enabled. It runs mutated code, which writes files into fixture directories and, when a mutant mangles a path, into a directory named after the mangled root (`\\ar/...`, from `/var/...`). All of it is gitignored and rector is configured to skip it, so a run leaves the suite green — but it does break `composer archive`, which filters by `.gitattributes` rather than `.gitignore` and refuses the back-slashed name. Use `git archive HEAD` to inspect what ships; that is also what Packagist builds from.

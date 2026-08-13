@@ -123,6 +123,8 @@ abstract class GacelaTestCase extends TestCase
      */
     protected function assertServiceResolved(string $serviceId): void
     {
+        $this->assertGacelaEventsAreBeingRecorded();
+
         self::assertContains(
             $serviceId,
             array_map(
@@ -139,6 +141,8 @@ abstract class GacelaTestCase extends TestCase
      */
     protected function assertBindingRegistered(string $id): void
     {
+        $this->assertGacelaEventsAreBeingRecorded();
+
         self::assertContains(
             $id,
             array_map(
@@ -147,5 +151,31 @@ abstract class GacelaTestCase extends TestCase
             ),
             sprintf('Binding "%s" was not registered in the container.', $id),
         );
+    }
+
+    /**
+     * That there is a recording to read at all.
+     *
+     * These assertions answer from events, and only {@see bootstrapGacela()}
+     * registers the listener that collects them. A test that called
+     * `Gacela::bootstrap()` directly -- which is what migrating an existing
+     * test to this base class leaves behind -- records nothing, and every
+     * assertion below then fails with "was not resolved" about a service that
+     * resolved perfectly well while nothing was watching.
+     *
+     * Checked first so the failure names the cause rather than the symptom.
+     * A bootstrap through `bootstrapGacela()` records its own start and finish
+     * whatever else happens, so an empty recording can only mean the listener
+     * was never registered.
+     */
+    private function assertGacelaEventsAreBeingRecorded(): void
+    {
+        $message = <<<'MESSAGE'
+            No Gacela events were recorded, so this assertion cannot answer anything.
+            Bootstrap with $this->bootstrapGacela(...) instead of Gacela::bootstrap(...):
+            it registers the listener these assertions read.
+            MESSAGE;
+
+        self::assertNotSame([], $this->recordedGacelaEvents, $message);
     }
 }

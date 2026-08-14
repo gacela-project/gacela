@@ -172,12 +172,23 @@ final class DebugModuleCommand extends Command
         return $ids;
     }
 
+    /**
+     * The application's container, which is why this takes no module: bindings
+     * are registered on one container for the whole project, so there is no
+     * module-scoped answer to give here.
+     *
+     * It used to say `Bindings` under a heading naming the module, next to four
+     * sections that really are about that module -- so an id another module's
+     * Provider declares read as this one depending on it, and an id missing
+     * from the list read as this one not binding it. `Provides` above is the
+     * module-scoped section; this one is labelled for what it is.
+     */
     private function renderBindings(OutputInterface $output): void
     {
         $bindings = $this->getFacade()->getContainerBindings();
         $contextualBindings = $this->getFacade()->getContainerContextualBindings();
 
-        $output->writeln('  <fg=cyan>Bindings</>:');
+        $output->writeln('  <fg=cyan>Application bindings</> (project-wide):');
 
         if ($bindings === [] && $contextualBindings === []) {
             $output->writeln('    (none)');

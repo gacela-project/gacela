@@ -75,7 +75,34 @@ final class DebugModuleCommandTest extends TestCase
         $tester = $this->debugModule(['module' => 'CheckoutModule']);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertMatchesRegularExpression('/Bindings:\s*\R\s*\(none\)/', $tester->getDisplay());
+        self::assertMatchesRegularExpression(
+            '/Application bindings \(project-wide\):\s*\R\s*\(none\)/',
+            $tester->getDisplay(),
+        );
+    }
+
+    /**
+     * The section reports the application's container, and the heading above it
+     * names one module. That mismatch is the whole bug: an id another module's
+     * Provider declares read as this module depending on it, and an id missing
+     * from the list read as this module not binding it.
+     *
+     * Both halves are asserted, because the label is only worth having if the
+     * thing it describes is really project-wide -- which is what makes the two
+     * modules' sections identical.
+     */
+    public function test_the_bindings_section_says_it_is_the_applications_not_the_modules(): void
+    {
+        $checkout = $this->debugModule(['module' => 'CheckoutModule'], $this->withStripeBinding())->getDisplay();
+        $gadget = $this->debugModule(['module' => 'GadgetModule'], $this->withStripeBinding())->getDisplay();
+
+        self::assertStringContainsString('Application bindings (project-wide):', $checkout);
+        self::assertStringNotContainsString('  Bindings:', $checkout);
+
+        // GadgetModule binds nothing, and still reports Stripe -- because the
+        // list was never its own.
+        self::assertSame($this->bindingsSectionOf($checkout), $this->bindingsSectionOf($gadget));
+        self::assertStringContainsString(StripeGateway::class, $this->bindingsSectionOf($gadget));
     }
 
     public function test_reports_contextual_bindings_next_to_the_plain_ones(): void
@@ -242,7 +269,18 @@ final class DebugModuleCommandTest extends TestCase
 
         // --tree drops the pillar and binding sections entirely.
         self::assertStringNotContainsString('Facade    →', $display);
-        self::assertStringNotContainsString('Bindings:', $display);
+        self::assertStringNotContainsString('Application bindings', $display);
+    }
+
+    /**
+     * The `Application bindings` block, up to the next section.
+     */
+    private function bindingsSectionOf(string $display): string
+    {
+        $parts = explode('Application bindings (project-wide):', $display);
+        self::assertArrayHasKey(1, $parts, 'no bindings section: comparing two empty strings would pass for nothing');
+
+        return explode('Dependency tree', $parts[1])[0];
     }
 
     /**

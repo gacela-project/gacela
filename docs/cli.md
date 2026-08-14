@@ -64,6 +64,8 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 | `doctor` | Environmental and wiring health checks, including the [declared config schema](config-schema.md) and each package's `composer.json` against what it imports. Takes an optional namespace to restrict module-scoped checks, `--strict` to exit non-zero on warnings too, `--only-problems` to print just the checks that found something, and `--format=json` for a CI job that wants to say *which* check failed rather than only that one did |
 | `validate:config` | Checks the configuration for errors and best-practice violations, and against the [declared schema](config-schema.md) |
 
+Every command that can emit JSON accepts `--json`. Where a command has more than two output formats — `debug:graph`, `profile:report` — `--format=` chooses among them and `--json` is shorthand for the one you were going to pick anyway.
+
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).
 
 Seven of the built-in checks report the same kind of fault: **configuration a project declared that nothing acts on**. Each is accepted at bootstrap, costs nothing at runtime, and does exactly nothing — which is why a command has to be the one to say so. Under `--strict` any of them fails the run.

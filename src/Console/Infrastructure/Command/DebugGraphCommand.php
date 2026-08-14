@@ -48,6 +48,7 @@ final class DebugGraphCommand extends Command
             ->setDescription('Show the module dependency graph (which module imports which)')
             ->addArgument('filter', InputArgument::OPTIONAL, 'Only include modules matching this filter')
             ->addOption('format', 'f', InputOption::VALUE_REQUIRED, 'Output format: text, mermaid, graphviz, or json', 'text')
+            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Shorthand for --format=json')
             ->addOption('compare-to', 'c', InputOption::VALUE_REQUIRED, 'Path to a JSON graph (from --format=json) to diff the current graph against')
             ->addOption('check', null, InputOption::VALUE_NONE, 'Exit non-zero when the graph contains a dependency cycle')
             ->addOption('allowed-cycles', null, InputOption::VALUE_REQUIRED, 'Path to a JSON file of reviewed cycles, each with a "modules" list and a "reason"')
@@ -56,7 +57,7 @@ final class DebugGraphCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $format = ConsoleInput::option($input, 'format');
+        $format = ConsoleInput::format($input);
         if (!in_array($format, self::FORMATS, true)) {
             $output->writeln(sprintf('<error>Unknown format "%s". Use one of: text, mermaid, graphviz, json</error>', $format));
 

@@ -28,6 +28,7 @@ final class ProfileReportCommand extends Command
                 'Output format: table, json, summary',
                 'table',
             )
+            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Shorthand for --format=json')
             ->addOption(
                 'sort',
                 's',
@@ -44,7 +45,7 @@ final class ProfileReportCommand extends Command
         // Read before the early returns below, both of which a `--format=json`
         // consumer reaches: those are the two runs where there is nothing to
         // report, which is exactly when a CI job is parsing the output.
-        $format = ConsoleInput::option($input, 'format');
+        $format = ConsoleInput::format($input, 'table');
 
         if (!$profiler->isEnabled()) {
             if ($format === 'json') {

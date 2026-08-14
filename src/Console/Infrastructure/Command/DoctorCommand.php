@@ -62,7 +62,8 @@ final class DoctorCommand extends Command
             ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict module-scoped checks to this namespace', '')
             ->addOption('strict', null, InputOption::VALUE_NONE, 'Exit with a failure code on warnings too, for CI')
             ->addOption('only-problems', null, InputOption::VALUE_NONE, 'Report only the checks that found something')
-            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: text|json', 'text');
+            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: text|json', 'text')
+            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Shorthand for --format=json');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -71,7 +72,7 @@ final class DoctorCommand extends Command
         $strict = $input->getOption('strict') === true;
         $onlyProblems = $input->getOption('only-problems') === true;
 
-        if (ConsoleInput::option($input, 'format') === 'json') {
+        if (ConsoleInput::format($input) === 'json') {
             return $this->renderJson($output, $this->buildChecks($filter), $strict, $onlyProblems);
         }
 

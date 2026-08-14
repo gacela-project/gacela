@@ -110,9 +110,18 @@ return static function (RectorConfig $rectorConfig): void {
             // A private #[Inject] setter that exists to be *refused*: no code
             // path may call it, which is exactly what rector notices.
             __DIR__ . '/laravel-bridge/tests/Fixtures/PrivateSetterConsumer.php',
+            // A private #[Provides] method that exists to be *reported*: the
+            // scanner reads public methods only, so nothing may call it -- and
+            // deleting it deletes the fault UnreachableProvidesCheck is asserted
+            // against.
+            __DIR__ . '/tests/Unit/Console/Application/Doctor/Check/Fixtures/HiddenProvidesProvider.php',
         ],
         PrivatizeFinalClassMethodRector::class => [
             __DIR__ . '/tests/Unit/Framework/Testing/ContainerFixtureTest.php',
+            // Its protected method has to stay protected: the check reports the
+            // visibility it found, and privatizing it leaves that branch with
+            // nothing to report.
+            __DIR__ . '/tests/Unit/Console/Application/Doctor/Check/Fixtures/HiddenProvidesProvider.php',
         ],
     ]);
 

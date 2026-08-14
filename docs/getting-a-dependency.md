@@ -116,6 +116,24 @@ For "this interface means that implementation" across the whole app, use `addBin
 $config->addBinding(PaymentGateway::class, StripeGateway::class);
 ```
 
+### What a miss looks like
+
+`getProvidedDependency()` **returns `null` for an id nothing provides** — it does not throw. Measured across the shapes you can pass it:
+
+| what you pass | you get |
+|---|---|
+| an id a Provider declares | the value |
+| a **misspelled** string id | `null` |
+| an unregistered **concrete** class | an autowired instance |
+| an unregistered **interface** | `null` |
+| a class name that does not exist | `null` |
+
+The concrete-class row is why it cannot simply throw: the container autowires a class it can construct, which is the behaviour `make()` relies on. But it means a typo in a string id is not reported anywhere — the `null` travels until something calls a method on it, and the stack points at the consumer rather than at the id.
+
+Two habits cost nothing and remove the guesswork: declare ids as constants on the Provider (`Provider::BILLING_FACADE`, not `'billing.facade'`), so a typo is a fatal undefined-constant at the call site; and check `vendor/bin/gacela debug:module App/Blog`, which lists every id that module's Provider declares.
+
+This is the same shape as an [unanswerable tagged id](cli.md), which `doctor` reports — a group iterating one hole, failing on the consumer. Nothing reports this one, because an id may legitimately come from another module's Provider, from `addBinding()`, or from `extendService()`, so "no Provider declares it" is not the same as "it is wrong".
+
 ## Collect several implementations
 
 Two shapes, and which one you want is decided by a single question: **do you look a member up, or do you use all of them?**

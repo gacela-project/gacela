@@ -42,6 +42,8 @@
 
 ### Changed
 
+- Ask whether a class is a Facade before building a module out of it. Module discovery built an `AppModule` for *every* class in the project — three class resolvers run for a Factory, a Config and a Provider — and then discarded it for the ~90% that turned out not to be Facades. On a 121-module project that step was 1292 constructions to keep 121, and asking first costs a `ReflectionClass` on a set it already had. Discovery drops from a 251 ms median to 238 ms (15 runs each, same 121 modules found)
+
 - Accept `--json` on every command that can emit it. Two spellings had grown side by side — `--json` where a command has exactly two output formats (`debug:module`, `debug:provides`) and `--format=json` where it has more (`debug:graph`, `profile:report`, and `doctor` as of this release) — so a reader who learned one met `The "--json" option does not exist.` on the other, in both directions. `--json` now works everywhere; `--format` still chooses among the commands that offer a real choice, and the two produce the same document
 
 - Say what an empty module listing means, in `list:modules`, `debug:graph` and `debug:modules` alike. With no argument the first two reported `No modules match filter ""`, quoting a filter the reader never typed and giving "nothing here is a module" in the words of "your filter matched nothing"; the third had its own third wording. One message now answers for all of them, and the empty case names the cause worth naming: discovery reflects on the class to see whether it descends from `AbstractFacade`, so a Facade whose namespace composer cannot map is skipped in silence — and the files sitting on disk are what make the empty list read as a bug in the command

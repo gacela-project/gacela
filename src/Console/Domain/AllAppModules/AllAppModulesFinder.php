@@ -31,10 +31,12 @@ final class AllAppModulesFinder
 
         /** @var SplFileInfo $fileInfo */
         foreach ($this->fileIterator as $fileInfo) {
-            $appModule = $this->createAppModule($fileInfo, $filter);
-            if ($appModule instanceof AppModule && $this->isFacade($appModule)) {
-                $result[$appModule->facadeClass()] = $appModule;
+            $facadeClass = $this->findFacadeClass($fileInfo, $filter);
+            if ($facadeClass === null) {
+                continue;
             }
+
+            $result[$facadeClass] = $this->appModuleCreator->fromClass($facadeClass);
         }
 
         uksort($result, static fn ($a, $b): int => $a <=> $b);
@@ -42,7 +44,19 @@ final class AllAppModulesFinder
         return array_values($result);
     }
 
-    private function createAppModule(SplFileInfo $fileInfo, string $filter): ?AppModule
+    /**
+     * The class this file declares, when it is a Facade -- and nothing more.
+     *
+     * The module used to be built first and the Facade question asked of it
+     * afterwards, so every class in the project got an `AppModule`: three class
+     * resolvers run for a Factory, a Config and a Provider, each one resolving
+     * to an *instance*, and the whole thing discarded for the ~90% of classes
+     * that are not Facades at all. Asking first costs a `ReflectionClass` and
+     * answers for the same set.
+     *
+     * @return ?class-string
+     */
+    private function findFacadeClass(SplFileInfo $fileInfo, string $filter): ?string
     {
         $realPath = $fileInfo->getRealPath();
 
@@ -79,7 +93,11 @@ final class AllAppModulesFinder
             return null;
         }
 
-        return $this->appModuleCreator->fromClass($fullyQualifiedClassName);
+        if (!$this->isFacade($fullyQualifiedClassName)) {
+            return null;
+        }
+
+        return $fullyQualifiedClassName;
     }
 
     private function getNamespace(SplFileInfo $fileInfo): string
@@ -118,10 +136,12 @@ final class AllAppModulesFinder
      *
      * isSubclassOf() is false for AbstractFacade itself, which is what we want:
      * the base class is not a module.
+     *
+     * @param class-string $className
      */
-    private function isFacade(AppModule $appModule): bool
+    private function isFacade(string $className): bool
     {
-        return (new ReflectionClass($appModule->facadeClass()))
+        return (new ReflectionClass($className))
             ->isSubclassOf(AbstractFacade::class);
     }
 }

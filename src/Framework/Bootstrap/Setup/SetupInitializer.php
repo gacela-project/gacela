@@ -35,6 +35,7 @@ final class SetupInitializer
             ->setShouldValidateConfigSchemaOnBoot($dto->shouldValidateConfigSchemaOnBoot)
             ->setStubsDir($dto->stubsDir)
             ->setAreEventListenersEnabled($dto->areEventListenersEnabled)
+            ->setEventDispatcherIfGiven($dto->eventDispatcher)
             ->setGenericListeners($dto->genericListeners)
             ->setSpecificListeners($dto->specificListeners)
             ->setGacelaConfigsToExtend($dto->gacelaConfigsToExtend)

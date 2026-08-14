@@ -16,6 +16,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Dto\Schema\MalformedDtoSchemaException;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
@@ -54,6 +55,8 @@ final class GacelaConfig
     private ?bool $fileCacheEnabled = null;
 
     private ?string $fileCacheDirectory = null;
+
+    private ?EventDispatcherInterface $eventDispatcher = null;
 
     /** @var list<string> */
     private ?array $projectNamespaces = null;
@@ -521,6 +524,27 @@ final class GacelaConfig
     /**
      * Do not dispatch any event in the application.
      */
+    /**
+     * Replace the dispatcher entirely -- to bridge Gacela's events onto a PSR-14
+     * bus, or to answer `hasListeners()` yourself so the framework skips
+     * allocating the events you do not want.
+     *
+     * `SetupGacela::setEventDispatcher()` has always accepted one; this is the
+     * way to reach it from `Gacela::bootstrap()`, whose closure is handed a
+     * `GacelaConfig` and nothing else.
+     *
+     * Takes precedence over {@see disableEventListeners()}: that switch governs
+     * the dispatcher Gacela would *build*, and this one it does not build. An
+     * application that hands over a dispatcher is the thing deciding what runs,
+     * so decline in `hasListeners()` rather than reaching for the switch.
+     */
+    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
+    {
+        $this->eventDispatcher = $eventDispatcher;
+
+        return $this;
+    }
+
     public function disableEventListeners(): self
     {
         $this->areEventListenersEnabled = false;
@@ -970,6 +994,7 @@ final class GacelaConfig
             $this->shouldValidateConfigSchemaOnBoot,
             $this->stubsDir,
             $this->dtoSchema,
+            $this->eventDispatcher,
         );
     }
 

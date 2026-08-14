@@ -200,3 +200,14 @@ $config->registerGenericListener(static function (GacelaEventInterface $event) u
 ## Custom dispatchers
 
 `SetupGacela::setEventDispatcher()` accepts any `EventDispatcherInterface`. Implementations must provide `dispatch(object $event): void` **and** `hasListeners(string $eventClass): bool` — return `false` from `hasListeners()` for event classes you don't care about and the framework will skip allocating them entirely.
+
+Set it from the bootstrap closure, the same place everything else is configured:
+
+```php
+Gacela::bootstrap($appRootDir, static function (GacelaConfig $config): void {
+    $config->setEventDispatcher(new Psr14Bridge($myBus));
+});
+```
+
+A dispatcher you supply **takes precedence over `disableEventListeners()`**: that switch governs the dispatcher Gacela would *build*, and this is one it does not build. To go quiet, return `false` from `hasListeners()` — which also skips allocating the events, where the switch would only stop them being delivered.
+

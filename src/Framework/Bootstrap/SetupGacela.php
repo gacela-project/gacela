@@ -600,6 +600,20 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    /**
+     * The transfer carries null when the application set none, and a null there
+     * means "not configured" rather than "no dispatcher" -- writing it through
+     * would replace one a `gacela.php` had already installed.
+     */
+    public function setEventDispatcherIfGiven(?EventDispatcherInterface $eventDispatcher): self
+    {
+        if ($eventDispatcher instanceof EventDispatcherInterface) {
+            $this->setEventDispatcher($eventDispatcher);
+        }
+
+        return $this;
+    }
+
     public function merge(self $other): self
     {
         return (new SetupMerger($this))->merge($other);

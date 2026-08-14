@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Setup;
 
 use Gacela\Framework\Bootstrap\BuilderConfigurationInterface;
+
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
 use Gacela\Framework\Config\GacelaConfigBuilder\AppConfigBuilder;
@@ -14,6 +15,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
@@ -91,6 +93,7 @@ final class GacelaConfigTransfer
         public readonly ?bool $shouldValidateConfigSchemaOnBoot = null,
         public readonly ?string $stubsDir = null,
         public readonly ?array $dtoSchema = null,
+        public readonly ?EventDispatcherInterface $eventDispatcher = null,
     ) {
     }
 }

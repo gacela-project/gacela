@@ -48,6 +48,17 @@ trait ClassResolverExceptionTrait
             }
         }
 
+        // Directly under the candidate list, because that is what these lines
+        // are about: a file already in the directory that one of the names
+        // above was meant to reach.
+        $hints = ModuleDirectoryHint::findNear($caller, $resolvableType, $candidates);
+        if ($hints !== []) {
+            $message .= 'Found in the module directory:' . "\n";
+            foreach ($hints as $hint) {
+                $message .= '  - ' . $hint . "\n";
+            }
+        }
+
         return $message . ErrorSuggestionHelper::addResolvableTypeTip($resolvableType);
     }
 

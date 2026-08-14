@@ -65,9 +65,7 @@ final class DebugModulesCommand extends Command
         $this->writeHeader($output, $filter);
 
         if ($modules === []) {
-            $output->writeln($filter === ''
-                ? '  <comment>No modules discovered.</comment>'
-                : sprintf('  <comment>No modules match filter "%s".</comment>', $filter));
+            ConsoleSection::noModulesFound($output, $filter, '  ');
             $output->writeln('');
             return Command::SUCCESS;
         }

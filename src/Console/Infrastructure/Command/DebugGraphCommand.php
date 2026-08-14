@@ -93,7 +93,7 @@ final class DebugGraphCommand extends Command
         }
 
         if ($graph === []) {
-            $output->writeln(sprintf('<comment>No modules match filter "%s".</comment>', $filter));
+            ConsoleSection::noModulesFound($output, $filter);
 
             return self::SUCCESS;
         }

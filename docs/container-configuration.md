@@ -111,6 +111,42 @@ $container->get(LoggerInterface::class);
 
 `addBindingIf()` compares against the bindings already declared in the same config. If no binding exists for the key, it behaves exactly like `addBinding()`.
 
+A package does not write into the application's `gacela.php`, though, so the arrangement it actually ships is an extending config:
+
+```php
+// vendor/acme/clock/src/GacelaConfig.php — what the package ships
+final class AcmeClockGacelaConfig
+{
+    public function __invoke(GacelaConfig $config): void
+    {
+        $config->addBindingIf(ClockInterface::class, SystemClock::class);
+    }
+}
+
+// gacela.php — what the application writes
+return static function (GacelaConfig $config): void {
+    $config->addBinding(ClockInterface::class, FrozenClock::class);
+    $config->extendGacelaConfig(AcmeClockGacelaConfig::class);
+};
+
+// Resolves to FrozenClock. Drop the addBinding() line and it resolves to SystemClock.
+```
+
+This works because extending configs run against the *same* `GacelaConfig`, so the package's `addBindingIf()` can see what the application bound. The order of the two lines does not matter: extending configs run after the whole closure has.
+
+**Between separate config sources there is nothing to see yet**, and the usual merge order decides instead. `gacela.php` merges onto the bootstrap closure, so a conditional binding in `gacela.php` still replaces an unconditional one in the closure — the same as a plain `addBinding()` would:
+
+```php
+Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+    $config->addBinding(ClockInterface::class, FrozenClock::class);
+});
+
+// gacela.php
+$config->addBindingIf(ClockInterface::class, SystemClock::class);
+
+// Resolves to SystemClock: the condition had no sibling binding to compare against.
+```
+
 ## Contextual Bindings
 
 Provide different implementations based on which class is requesting a dependency.

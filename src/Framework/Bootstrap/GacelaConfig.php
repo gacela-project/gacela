@@ -263,6 +263,17 @@ final class GacelaConfig
      * Bind a key only when it is not already bound in this config, so plugins can
      * register a default that the application (or an earlier binding) can override.
      *
+     * "In this config" is the whole of it: the check runs against the bindings on
+     * this instance, not against every config source. `extendGacelaConfig()` is
+     * what makes the promise work, because extending configs run against the same
+     * instance -- so a package registering its default there sees what the
+     * application already bound and declines.
+     *
+     * Between separate sources there is nothing to see yet, and the usual merge
+     * order decides instead: `gacela.php` merges onto the bootstrap closure, so a
+     * conditional binding in `gacela.php` still replaces an unconditional one in
+     * the closure, exactly as a plain {@see addBinding()} there would.
+     *
      * @param class-string $key
      * @param class-string|object|callable $value
      */

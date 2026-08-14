@@ -15,6 +15,7 @@ use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
 use Gacela\Console\Application\Doctor\Check\PackageManifestCheck;
+use Gacela\Console\Application\Doctor\Check\PluginStackCheck;
 use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
@@ -201,6 +202,7 @@ final class DoctorCommand extends Command
             new UndiscoveredFacadeCheck($this->getFacade()->findUndiscoveredFacadeFiles()),
             new UnresolvedPillarFileCheck($modules, $suffixTypes),
             new CacheableStorageCheck($modules, CacheableConfig::hasUserSuppliedStorage()),
+            new PluginStackCheck($config->getSetupGacela()->getPluginStacks()),
             new DuplicateProvidedIdCheck($modules),
             new UnreachableProvidesCheck($modules),
             new ConfigSourceCheck(

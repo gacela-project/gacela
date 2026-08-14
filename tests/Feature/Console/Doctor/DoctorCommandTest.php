@@ -85,6 +85,7 @@ final class DoctorCommandTest extends TestCase
             '✓ undiscovered facades',
             '✓ unresolved pillar files',
             '✓ cacheable storage',
+            '✓ plugin stacks',
             '✓ duplicate provided ids',
             '✓ unreachable #[Provides]',
             '✓ config sources',

@@ -33,6 +33,8 @@
 
 ### Fixed
 
+- List the `autoload-dev` prefixes too when `make:*` cannot match a namespace. The lookup searches `autoload` and `autoload-dev` together — that is what "Read autoload-dev psr-4 namespaces for gacela make commands" shipped — but the `Known PSR-4:` list it prints on a miss was built from `autoload` alone. Mistyping a namespace that lives in `autoload-dev` produced a list with no dev prefix in it at all, about namespaces Gacela had just been willing to resolve, and the list is the only thing the reader has to compare the typo against
+
 - Throw `GacelaNotBootstrappedException` from `Config::getInstance()`, like `Gacela::container()` and `Gacela::rootDir()` already did. It threw a bare `RuntimeException` telling you to `call createWithSetup() first` — an `@internal` method only `Gacela::bootstrap()` calls, so the one instruction the message gave was one you must not follow. It is also the way a project reaches this state first: every pillar goes through `Config::getInstance()`, so a `new SomeFacade()` before the bootstrap landed here rather than on the two that were right. Catching the typed exception to degrade, as `debug:container` and `debug:dependencies` do, therefore missed the commonest case
 
 - Register `dto:generate`, `ide:meta` and `stubs:publish` in the Symfony and Laravel bridges. Both bridges keep a hand-written list of the commands they expose, and those three were never added — so `bin/console` and `artisan` could not run commands `vendor/bin/gacela` could, including the `dto:generate --check` a CI job wants. All three write files into the project exactly like `make:module` and `init`, which were listed. A test in each bridge now reads the command directory and fails when the list falls behind it

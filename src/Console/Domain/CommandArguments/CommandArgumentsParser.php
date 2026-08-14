@@ -54,7 +54,11 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             }
         }
 
-        throw CommandArgumentsException::noAutoloadPsr4MatchFound($desiredNamespace, array_keys($psr4));
+        // Every prefix the lookup above searched, not just `autoload`: this list
+        // is the only thing the reader has to compare their typo against, and
+        // one missing the `autoload-dev` prefixes reads as "Gacela does not see
+        // those" -- about namespaces it had just been willing to resolve.
+        throw CommandArgumentsException::noAutoloadPsr4MatchFound($desiredNamespace, array_keys($psr4All));
     }
 
     /**

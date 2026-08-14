@@ -60,6 +60,7 @@
 
 ### Fixed
 
+- Write an array default as one readable expression, in `dto:generate`'s output and in `debug:dependencies`/`debug:modules`. It went through `var_export()`, which puts `array (` on its own line and indents the body from column zero — so a generated constructor call came out across five mangled lines in a file the developer commits, a one-parameter-per-line listing grew line breaks mid-row, and the same text reached the `detail` field of the JSON those commands emit. Now `['a' => 1, 'b' => ['c' => 2]]`, with a list writing its values alone and `null` spelled the way the rest of the generated file spells it
 - Generate a `gacela.php` that names the project's own namespaces. `init` wrote the literal `setProjectNamespaces(['App'])` into every project it scaffolded, which is right for the ones that use `App\` and quietly wrong for the rest — the resolver tries those prefixes *before* the module's own namespace, so a wrong one costs a failed lookup on every cold resolution and resolves the wrong class for a project that does have an `App\` module of the same name. The prefixes now come from `composer.json`, falling back to `['App']` when there is no manifest
 
 - Reattach nine docblocks in the shipped code that described nothing, orphaned when a method was added between an existing docblock and its signature. Both halves stay valid php, so the analysers only object when the annotation was load-bearing for a type. A test now walks the shipped directories and fails on any docblock whose next meaningful token is another docblock

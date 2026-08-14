@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\DtoGenerate;
 
+use Gacela\Console\Domain\FileContent\PhpValue;
+
 use Gacela\Framework\Dto\MissingDtoPropertyException;
 use Gacela\Framework\Dto\Schema\DtoType;
 
@@ -12,7 +14,6 @@ use function sprintf;
 use function strrpos;
 use function substr;
 use function ucfirst;
-use function var_export;
 
 /**
  * Writes one declared shape as php source.
@@ -106,7 +107,7 @@ final class DtoClassBuilder
             $args[] = sprintf(
                 "            \$data['%s'] ?? %s,",
                 $property,
-                $type->hasDefault ? var_export($type->default, true) : 'null',
+                $type->hasDefault ? PhpValue::export($type->default) : 'null',
             );
         }
 

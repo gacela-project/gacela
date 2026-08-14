@@ -32,6 +32,25 @@ final class ConstructorInspectorTest extends TestCase
         $this->inspector = new ConstructorInspector();
     }
 
+    /**
+     * The detail is one line in a report that puts one parameter per line, and
+     * in a JSON string field. `var_export()` on an array default put line
+     * breaks through both.
+     */
+    public function test_an_array_default_is_described_on_one_line(): void
+    {
+        $inspection = (new ConstructorInspector())->inspect(WithArrayDefaults::class);
+
+        $details = [];
+        foreach ($inspection->parameters as $parameter) {
+            $details[$parameter->name] = $parameter->detail;
+        }
+
+        self::assertSame("= ['a' => 1, 'b' => ['c' => 2]]", $details['$nested']);
+        self::assertSame('= []', $details['$empty']);
+        self::assertSame("= ['eur', 'usd']", $details['$list']);
+    }
+
     public function test_class_without_constructor(): void
     {
         $inspection = $this->inspector->inspect(NoConstructorService::class);
@@ -161,5 +180,20 @@ final class ConstructorInspectorTest extends TestCase
             'bound -> ' . BoundImplementation::class . ' instance',
             $inspection->parameters[0]->detail,
         );
+    }
+}
+
+final class WithArrayDefaults
+{
+    /**
+     * @param array<string, mixed> $nested
+     * @param array<array-key, mixed> $empty
+     * @param list<string> $list
+     */
+    public function __construct(
+        public readonly array $nested = ['a' => 1, 'b' => ['c' => 2]],
+        public readonly array $empty = [],
+        public readonly array $list = ['eur', 'usd'],
+    ) {
     }
 }

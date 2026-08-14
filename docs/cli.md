@@ -108,6 +108,8 @@ The **undiscovered facades** check reports a file named the way the scaffolder n
 
 It is a warning, not an error: `Facade` is an ordinary word, and a project beside a framework with its own facades should not have a build failed by a naming coincidence. `--strict` is how a project opts in. Only names matching the scaffolder's own pattern count, so a `NullFacade` is left alone here — the [`GacelaSuffixExtends`](static-analysis.md) rule is what has an opinion about naming, and this check is about the module that went missing.
 
+The **unresolved pillar files** check asks the same question one level down. A module whose `BlogFactory.php` cannot be loaded is still a module: the Facade resolves, discovery keeps it, and the Factory simply comes back `null` — so `list:modules` prints a blank cell and `debug:module` says `(not found)`, telling you that you have no Factory while you are looking at the file you wrote. It reports a pillar file that is on disk and resolved to nothing, under any configured suffix and for `--short-name` modules too. A module that genuinely has no Factory is the ordinary case and is left alone; the check is about the *file*.
+
 ## Production
 
 | Command | What it does |

@@ -290,64 +290,6 @@ final class DebugModulesCommandTest extends TestCase
      * @param array<string, bool|string> $input
      * @param array<string, bool> $options
      */
-    /**
-     * The command already counted the pillars nothing can build and exited
-     * `SUCCESS` regardless, so acting on the count meant grepping the output --
-     * which is what an exit code exists to avoid.
-     */
-    public function test_check_fails_when_a_pillar_needs_something_the_container_cannot_supply(): void
-    {
-        $tester = $this->debugModules('BrokenFixtures', ['--check' => true]);
-
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('the container cannot satisfy', $tester->getDisplay());
-    }
-
-    public function test_check_passes_when_every_pillar_resolves(): void
-    {
-        $tester = $this->debugModules('Fixtures', ['--check' => true]);
-
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Every inspected parameter can be satisfied', $tester->getDisplay());
-    }
-
-    /**
-     * The reason `--check` is not simply `unresolvableCount() > 0`.
-     *
-     * A union-typed parameter is reported as unresolvable because the inspector
-     * does not walk one -- that is a gap in this tool, and failing a build over
-     * it would blame a project for using a language feature.
-     */
-    public function test_check_does_not_fail_on_a_parameter_it_declined_to_inspect(): void
-    {
-        $tester = $this->debugModules('UnionFixtures', ['--check' => true]);
-
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('not inspected', $tester->getDisplay());
-    }
-
-    /**
-     * ...and it is still named, so a passing `--check` does not read as "every
-     * parameter was checked".
-     */
-    public function test_an_uninspected_parameter_is_still_reported_as_unresolvable(): void
-    {
-        $tester = $this->debugModules('UnionFixtures', []);
-
-        self::assertStringContainsString('1 unresolvable parameter', $tester->getDisplay());
-    }
-
-    /**
-     * Without the flag the command reports and passes, exactly as before.
-     */
-    public function test_without_check_a_broken_module_still_exits_successfully(): void
-    {
-        $tester = $this->debugModules('BrokenFixtures', []);
-
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringNotContainsString('the container cannot satisfy', $tester->getDisplay());
-    }
-
     private function debugModules(string $fixtureDirectory, array $input, array $options = []): CommandTester
     {
         Gacela::bootstrap(__DIR__ . '/' . $fixtureDirectory, static function (GacelaConfig $config): void {

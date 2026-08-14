@@ -4,6 +4,8 @@
 
 ### Added
 
+- List what a module's Provider declares in `debug:module`, under `Provides (#[Provides])` and in the `provides` field of `--json`. The Provider was printed as one of the four pillars with its whole purpose left blank, while the `Bindings` section beside it reports the *application's* container — the same list for every module printed, and not an answer to "what does this module provide?", which is the question `getProvidedDependency('...')` asks. Attribute-declared ids only, and labelled as such: finding the ones a Provider `set()`s imperatively means running it against a container, which resolves the services, and this command describes rather than builds
+
 - Answer "are the generated DTO classes up to date?" with `dto:generate --check`. The classes are committed, so a declaration edited without regenerating leaves the repository behind what `gacela.php` says — and `--dry-run` reported it while exiting `0` either way, so a CI job had to parse the output. `--check` writes nothing, names each stale file, and exits non-zero, like `debug:graph --check`. Nothing declared is a pass: there is nothing to be stale
 
 - Report in `doctor` listeners registered while `disableEventListeners()` is in effect. No dispatcher is built, so every registration is inert — which `docs/events.md` already calls the first thing to check when a listener appears dead, and which the check itself used to give a green tick to. Generic listeners count too: they carry no target, so a project whose only listeners are generic looked like one that had registered nothing. Disabling with nothing registered stays silent, and an unfireable target is still reported alongside, because it has to be right for the day the switch goes back on

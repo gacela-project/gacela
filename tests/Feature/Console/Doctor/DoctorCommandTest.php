@@ -72,6 +72,39 @@ final class DoctorCommandTest extends TestCase
         }
     }
 
+    /**
+     * `doctor` runs more checks than any other command and is the only one
+     * whose exit code depends on a distinction the flags do not explain: an
+     * error always fails, a warning fails only under `--strict`.
+     *
+     * The help is asserted for that model rather than for a list of checks --
+     * a run already names every check it made, and a list here would go stale
+     * the next time one is added.
+     */
+    public function test_the_help_explains_the_verdict_model(): void
+    {
+        $help = (new DoctorCommand())->getHelp();
+
+        self::assertStringContainsString('always fail the run', $help);
+        self::assertStringContainsString('--strict', $help);
+        self::assertStringContainsString('narrows which modules get inspected, not which checks run', $help);
+    }
+
+    /**
+     * The claim above about the filter, checked against the command rather than
+     * trusted: every check reports either way, and only the modules they walk
+     * change.
+     */
+    public function test_a_filter_matching_nothing_still_reports_every_check(): void
+    {
+        $unfiltered = $this->statusLinesOf($this->doctor([]));
+        $filtered = $this->statusLinesOf($this->doctor([], ['filter' => 'NoSuchNamespaceXYZ']));
+
+        // Two empty lists are also "the same", and would prove nothing.
+        self::assertGreaterThan(10, count($unfiltered));
+        self::assertSame($unfiltered, $filtered);
+    }
+
     public function test_reports_every_built_in_check_when_nothing_is_registered(): void
     {
         $tester = $this->doctor([]);
@@ -141,9 +174,15 @@ final class DoctorCommandTest extends TestCase
     }
 
     /**
-     * Twelve checks is a lot of "✓" to read to find the one "⚠". `-q` is not
-     * the answer: it suppresses everything, so `--strict -q` fails a build with
-     * no indication of what failed.
+     * A full run is a lot of "✓" to read to find the one "⚠". `-q` is not the
+     * answer: it suppresses everything, so `--strict -q` fails a build with no
+     * indication of what failed.
+     *
+     * The count is deliberately not written out here. The changelog's copy of
+     * this sentence is guarded by
+     * `test_the_changelog_counts_the_checks_doctor_actually_runs()`; an
+     * unguarded second copy would just be one more number to get wrong -- as
+     * this one was, sitting at "Twelve" through six more checks.
      */
     public function test_only_problems_hides_the_passing_checks(): void
     {
@@ -462,10 +501,11 @@ final class DoctorCommandTest extends TestCase
     }
 
     /**
-     * The `--only-problems` changelog entry opens "Fourteen checks is a lot of
-     * ✓ to read to find the one ⚠", and adding a check makes that wrong. It has
-     * been wrong twice: #796 took it to thirteen and #797 to fourteen, both
-     * caught by hand, both while still in `## Unreleased` and shipping.
+     * The `--only-problems` changelog entry opens by counting the checks in
+     * words -- "<N> checks is a lot of ✓ to read to find the one ⚠" -- and
+     * adding a check makes that wrong. It had been wrong twice before this
+     * guard: #796 took it to thirteen and #797 to fourteen, both caught by
+     * hand, both while still in `## Unreleased` and shipping.
      *
      * #798 guarded the sibling count in `docs/cli.md` and deliberately left
      * this one alone, because it needed the number of checks the command

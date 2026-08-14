@@ -542,8 +542,8 @@
                 // project. Rebuilding it each time is what the mutant does, and
                 // the rules hold only their configuration, so nothing
                 // observable changes.
-                "Gacela\\Psalm\\ClassRules::violationsIn",
                 "Gacela\\Psalm\\ClassRules::classAnalysers",
+                "Gacela\\Psalm\\ClassRules::methodAnalysers",
             ],
         },
         // ReturnRemoval arrived with infection 0.34 and reads every early

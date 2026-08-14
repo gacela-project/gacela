@@ -10,11 +10,13 @@ use Override;
  * Runs PHPStan for real over the same shape
  * {@see \GacelaTest\Integration\Psalm\ArchitectureRulesTest} hands Psalm.
  *
- * Every other rule Gacela ships had both halves of that pair. This one had the
- * analyser's own unit tests and the Psalm front end, and nothing driving the
- * PHPStan rule -- the only rule in the file where the pair was incomplete,
- * while being registered uncommented in `phpstan-gacela.neon`, so every
- * consumer runs it.
+ * This one had the analyser's own unit tests and the Psalm front end, and
+ * nothing driving the PHPStan rule, while being registered uncommented in
+ * `phpstan-gacela.neon` -- so every consumer runs it.
+ *
+ * It was not the only one: `FacadeOnlyDelegatesRule` was in the same state, and
+ * {@see FacadeOnlyDelegatesTest} covers it now. Neither claim about the rest of
+ * the file is made here, because nothing checks it.
  *
  * The half a unit test cannot reach is the adaptation: `getNodeType()` naming
  * a node PHPStan hands over, `getOriginalNode()` still carrying the attribute,

@@ -6,6 +6,7 @@ namespace Gacela\StaticAnalysis\Rules;
 
 use Gacela\Framework\AbstractFacade;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
+use Gacela\StaticAnalysis\MethodAnalyserInterface;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -29,7 +30,7 @@ use function sprintf;
  * A Facade method is a name for something the Factory does. Logic living in it
  * is logic no other module can reach and no test can address directly.
  */
-final class FacadeOnlyDelegatesAnalyser
+final class FacadeOnlyDelegatesAnalyser implements MethodAnalyserInterface
 {
     /**
      * `getResolvedType` alongside the three pillar accessors: a kind declared

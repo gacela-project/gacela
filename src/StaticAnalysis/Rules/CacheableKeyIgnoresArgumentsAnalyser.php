@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\StaticAnalysis\Rules;
 
 use Gacela\StaticAnalysis\AnalysedClassInterface;
+use Gacela\StaticAnalysis\MethodAnalyserInterface;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
@@ -36,7 +37,7 @@ use function str_ends_with;
  * `{0}`, or drop `key` entirely -- with none, the trait derives one from the
  * method *and its arguments*, which is already per-argument.
  */
-final class CacheableKeyIgnoresArgumentsAnalyser
+final class CacheableKeyIgnoresArgumentsAnalyser implements MethodAnalyserInterface
 {
     private const ATTRIBUTE = 'Cacheable';
 

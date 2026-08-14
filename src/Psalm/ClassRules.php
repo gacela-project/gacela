@@ -10,6 +10,7 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
+use Gacela\StaticAnalysis\MethodAnalyserInterface;
 use Gacela\StaticAnalysis\Rules\CacheableKeyIgnoresArgumentsAnalyser;
 use Gacela\StaticAnalysis\Rules\FacadeInterfaceInSyncAnalyser;
 use Gacela\StaticAnalysis\Rules\FacadeOnlyDelegatesAnalyser;
@@ -42,9 +43,8 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
     /** @var list<ClassAnalyserInterface>|null */
     private static ?array $classAnalysers = null;
 
-    private static ?FacadeOnlyDelegatesAnalyser $facadeMethods = null;
-
-    private static ?CacheableKeyIgnoresArgumentsAnalyser $cacheableKeys = null;
+    /** @var list<MethodAnalyserInterface>|null */
+    private static ?array $methodAnalysers = null;
 
     public static function afterStatementAnalysis(AfterClassLikeAnalysisEvent $event): ?bool
     {
@@ -80,20 +80,29 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
             }
         }
 
-        $facadeMethods = self::$facadeMethods ??= new FacadeOnlyDelegatesAnalyser();
-        $cacheableKeys = self::$cacheableKeys ??= new CacheableKeyIgnoresArgumentsAnalyser();
-
         foreach ($node->getMethods() as $method) {
-            foreach ($facadeMethods->analyse($method, $class) as $violation) {
-                $violations[] = $violation->at($method);
-            }
-
-            foreach ($cacheableKeys->analyse($method, $class) as $violation) {
-                $violations[] = $violation->at($method);
+            foreach (self::methodAnalysers() as $analyser) {
+                foreach ($analyser->analyse($method, $class) as $violation) {
+                    $violations[] = $violation->at($method);
+                }
             }
         }
 
         return $violations;
+    }
+
+    /**
+     * The method-level rules, listed the way the class-level ones are. Naming
+     * them one at a time meant a property, a `??=` and a loop per rule.
+     *
+     * @return list<MethodAnalyserInterface>
+     */
+    private static function methodAnalysers(): array
+    {
+        return self::$methodAnalysers ??= [
+            new FacadeOnlyDelegatesAnalyser(),
+            new CacheableKeyIgnoresArgumentsAnalyser(),
+        ];
     }
 
     /**

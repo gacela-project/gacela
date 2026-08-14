@@ -104,6 +104,10 @@
 - Preload the framework and the packages it runs on, discovered rather than named in a list. A preloaded class is only kept if everything it extends, implements and uses came along, so the hand-written list silently linked none of the pillars, the resolvers or either container
 - Read `gacela.php` once when bootstrapping without a closure, instead of loading it as a config source it is already the source of. Everything the project declared arrived twice: one `addAppConfig()` globbed twice, a plugin declared once ran twice. Passing a closure to `Gacela::bootstrap()` was never affected
 
+### Documentation
+
+- Correct the remedy offered for a misspelled provided-dependency id. "Check `debug:module`, which lists every id that module's Provider declares" does not hold: the command lists what `#[Provides]` declares and not what a Provider registers imperatively with `$container->set()`, so the module the advice was written for prints `(none)` however many ids it has. Declaring with the attribute is what makes an id visible to tooling, which is now what the page says
+
 ## [2.2.0](https://github.com/gacela-project/gacela/compare/2.1.0...2.2.0) - 2026-08-11
 
 ### Added

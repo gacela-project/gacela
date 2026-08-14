@@ -15,6 +15,7 @@ use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\CheckoutModul
 use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\PaymentGatewayInterface;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\StripeGateway;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\GadgetModule\GadgetModuleFacade;
+use GacelaTest\Feature\Console\DebugModule\Fixtures\ImperativeModule\ImperativeModuleProvider;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\WiredModule\WiredCollaborator;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\WiredModule\WiredModuleFacade;
 use PHPUnit\Framework\TestCase;
@@ -154,6 +155,7 @@ final class DebugModuleCommandTest extends TestCase
         self::assertSame([
             'Module: CheckoutModule',
             'Module: GadgetModule',
+            'Module: ImperativeModule',
             'Module: WiredModule',
         ], array_values(array_filter(
             $lines,
@@ -231,6 +233,26 @@ final class DebugModuleCommandTest extends TestCase
             strpos($display, CheckoutModuleProvider::RETRIES),
             strpos($display, CheckoutModuleProvider::GATEWAY),
         );
+    }
+
+    /**
+     * A Provider that registers with `$container->set()` and declares no
+     * attribute reports `(none)`, however many ids it registers. The heading
+     * says `#[Provides]` for that reason, and finding the imperative ones means
+     * running the Provider, which this command does not do.
+     *
+     * Pinned because the documented remedy for a misspelled id used to be
+     * "check `debug:module`, which lists every id that module's Provider
+     * declares" -- advice that sends a reader with an imperative Provider to a
+     * command that shows them nothing.
+     */
+    public function test_a_provider_that_registers_imperatively_declares_nothing(): void
+    {
+        $display = $this->debugModule(['module' => 'ImperativeModule'])->getDisplay();
+
+        self::assertStringContainsString(ImperativeModuleProvider::class, $display);
+        self::assertStringNotContainsString(ImperativeModuleProvider::GATEWAY, $display);
+        self::assertMatchesRegularExpression('/Provides \(#\[Provides\]\):\s*\R\s*\(none\)/u', $display);
     }
 
     public function test_a_module_without_a_provider_declares_nothing(): void

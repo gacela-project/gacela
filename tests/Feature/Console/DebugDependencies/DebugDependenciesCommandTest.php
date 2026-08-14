@@ -401,6 +401,34 @@ $reference = ' . stdClass::class . '::class;
     /**
      * @param array<string, mixed> $options
      */
+    /**
+     * `DependencyTreeInspector` catches `GacelaNotBootstrappedException` from
+     * `Gacela::container()` and reports `containerAvailable: false`, which is
+     * the one line the reader sees for it. Nothing asserted that line, and the
+     * catch it belongs to is the one #786 widened -- `Config::getInstance()`
+     * used to throw a bare `RuntimeException`, which this handler never caught.
+     *
+     * So the degrade is deliberate and now says so: `--tree` without a
+     * bootstrap explains itself instead of printing an empty tree, which would
+     * read as "this class has no dependencies".
+     */
+    public function test_the_tree_says_why_it_is_empty_without_a_bootstrap(): void
+    {
+        $gacela = new ReflectionClass(Gacela::class);
+        $gacela->getProperty('mainContainer')->setValue($gacela, value: null);
+
+        try {
+            $display = $this->inspect(BoundImplementation::class, ['--tree' => true])->getDisplay();
+
+            self::assertStringContainsString('No container available', $display);
+            self::assertStringContainsString('bootstrap Gacela to resolve the tree', $display);
+            self::assertStringNotContainsString('No transitive dependencies', $display);
+        } finally {
+            // Put the process back the way setUp() leaves it.
+            $this->setUp();
+        }
+    }
+
     private function inspect(string $argument, array $options = []): CommandTester
     {
         $tester = new CommandTester(new DebugDependenciesCommand());

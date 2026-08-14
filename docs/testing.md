@@ -38,6 +38,24 @@ $resolved = $this->recordedGacelaEventsOf(ServiceResolvedEvent::class); // one t
 
 If you only need the reset helpers inside an existing test hierarchy, use the [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait directly — `GacelaTestCase` builds on it.
 
+### What else the trait gives you
+
+Beyond the resets and the `swapModule*()` calls below:
+
+```php
+$dir = $this->containerTempDir();   // a new temp dir, removed when the process ends
+```
+
+**One directory per call**, not one per test — two calls hand back two paths. Hold the return value rather than calling it again to name the same place twice. Nothing needs cleaning up by hand; `cleanupContainerTempDirs()` exists for when you want it to happen between methods rather than at process end.
+
+```php
+$snapshot = $this->captureContainerState();
+// ... a test that bootstraps differently, rebinds, or rewrites config
+$this->restoreContainerState($snapshot);
+```
+
+The snapshot covers the in-memory class-name cache, the config values, the app root and the cache directory. It deliberately does **not** capture resolved service instances — those can hold file handles and connections — so restoring rebuilds them lazily rather than handing back objects that outlived their resources.
+
 ### Bootstrapping twice without either of them
 
 Neither is required. But calling `Gacela::bootstrap()` a second time in one process on your own keeps the **previous** boot's services, and says nothing:

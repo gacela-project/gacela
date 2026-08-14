@@ -33,6 +33,36 @@ final class ConsoleSection
     }
 
     /**
+     * Why a module-listing run found nothing, in one place so every command
+     * that discovers modules answers in the same words.
+     *
+     * A filter that matched nothing and a project where nothing is a module are
+     * different answers, and `No modules match filter ""` gave the second in
+     * the words of the first -- quoting a filter the reader never typed.
+     *
+     * The empty case names the cause worth naming: discovery reflects on the
+     * class to see whether it descends from `AbstractFacade`, so a Facade whose
+     * namespace composer cannot map is skipped in silence. The files are right
+     * there on disk, which is what makes an empty list read as a bug in the
+     * command rather than in the autoload map.
+     */
+    public static function noModulesFound(OutputInterface $output, string $filter, string $indent = ''): void
+    {
+        if ($filter !== '') {
+            $output->writeln(sprintf('%s<comment>No modules match filter "%s".</comment>', $indent, $filter));
+
+            return;
+        }
+
+        $output->writeln(sprintf('%s<comment>No modules found.</comment>', $indent));
+        $output->writeln(sprintf(
+            '%sA module is found by its Facade: the filename carries the suffix, and the class has to be'
+            . ' autoloadable. If the files are there, check the psr-4 mapping in composer.json.',
+            $indent,
+        ));
+    }
+
+    /**
      * Why a `make:*` run wrote nothing, in one place so both makers refuse in
      * the same words.
      *

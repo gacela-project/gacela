@@ -43,6 +43,35 @@ final class DebugGraphCommandTest extends TestCase
         $this->baselines = [];
     }
 
+    /**
+     * `list:modules`, `debug:modules` and this one all report the same absence,
+     * and did it in three different ways -- this one quoting a filter the
+     * reader never typed. They share one message now, so the case a project
+     * actually hits is worded once.
+     */
+    public function test_finding_nothing_without_a_filter_does_not_quote_an_empty_one(): void
+    {
+        $emptyDir = sys_get_temp_dir() . '/gacela-graph-empty-' . bin2hex(random_bytes(4));
+        mkdir($emptyDir, 0777, true);
+
+        try {
+            Gacela::bootstrap($emptyDir, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->setAppModulePaths(['.']);
+            });
+
+            $tester = new CommandTester(new DebugGraphCommand());
+            $tester->execute([]);
+            $display = $tester->getDisplay();
+
+            self::assertStringContainsString('No modules found.', $display);
+            self::assertStringNotContainsString('filter ""', $display);
+        } finally {
+            // Names exactly what this test created.
+            rmdir($emptyDir);
+        }
+    }
+
     public function test_text_format_lists_modules_and_edges(): void
     {
         $this->command->execute([]);

@@ -22,13 +22,19 @@ use Symfony\Component\Console\Command\Command;
 
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function array_column;
+use function array_keys;
 use function bin2hex;
 use function file_put_contents;
 use function is_file;
+use function json_decode;
 use function random_bytes;
+
 use function sprintf;
 use function sys_get_temp_dir;
 use function unlink;
+
+use const JSON_THROW_ON_ERROR;
 
 final class DebugDependenciesCommandTest extends TestCase
 {
@@ -424,6 +430,121 @@ $reference = ' . stdClass::class . '::class;
             // Put the process back the way setUp() leaves it.
             $this->setUp();
         }
+    }
+
+    /**
+     * The parameter shape is the one `debug:modules --json` uses for a pillar,
+     * so the two commands describe one parameter the same way rather than
+     * inventing a vocabulary each. Including the name without its `$`.
+     */
+    public function test_json_reports_the_parameters_in_the_shape_the_other_commands_use(): void
+    {
+        $document = $this->inspectAsJson(MixedDependenciesService::class);
+
+        self::assertSame(MixedDependenciesService::class, $document['class']);
+        self::assertTrue($document['hasConstructor']);
+
+        $byName = array_column($document['parameters'], null, 'name');
+
+        self::assertSame(
+            ['name' => 'mandatoryScalar', 'type' => 'string', 'status' => 'scalar-without-default',
+                'detail' => 'scalar without default', 'resolvable' => false],
+            $byName['mandatoryScalar'],
+        );
+        self::assertSame('unbound-interface', $byName['unbound']['status']);
+        self::assertTrue($byName['collaborator']['resolvable']);
+    }
+
+    public function test_json_counts_resolvable_and_unresolvable(): void
+    {
+        $document = $this->inspectAsJson(MixedDependenciesService::class);
+
+        self::assertSame(
+            [$document['resolvable'], $document['unresolvable']],
+            [4, 2],
+        );
+    }
+
+    /**
+     * `--tree` means in the document what it means in the text report, where
+     * the section only appears with the flag: building a transitive graph
+     * nobody asked for is not free.
+     */
+    public function test_the_tree_is_absent_without_the_flag_and_present_with_it(): void
+    {
+        self::assertArrayNotHasKey('tree', $this->inspectAsJson(MixedDependenciesService::class));
+
+        $withTree = $this->inspectAsJson(MixedDependenciesService::class, ['--tree' => true]);
+
+        self::assertArrayHasKey('tree', $withTree);
+        self::assertArrayHasKey('total', $withTree);
+        self::assertTrue($withTree['containerAvailable']);
+    }
+
+    /**
+     * The tree shape is `debug:container --json`'s, so a class inspected
+     * through either command reads the same.
+     */
+    public function test_the_tree_nodes_carry_the_parameter_that_pulled_them_in(): void
+    {
+        $tree = $this->inspectAsJson(MixedDependenciesService::class, ['--tree' => true])['tree'];
+
+        self::assertNotSame([], $tree);
+        self::assertSame(
+            ['class', 'parameter', 'status', 'repeated', 'children'],
+            array_keys($tree[0]),
+        );
+    }
+
+    public function test_a_class_that_does_not_exist_is_an_error_document(): void
+    {
+        $tester = $this->inspect('NoSuchClassAnywhere', ['--json' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame(
+            ['error' => 'Class "NoSuchClassAnywhere" does not exist'],
+            json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
+    /**
+     * The other two refusals answer in the same shape: a consumer piping this
+     * into a parser gets a document on every run that refused, not only the
+     * one that could not find the class.
+     */
+    public function test_an_abstract_class_is_an_error_document_too(): void
+    {
+        $tester = $this->inspect(AbstractService::class, ['--json' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+
+        /** @var array{error: string} $decoded */
+        $decoded = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertStringContainsString('is abstract', $decoded['error']);
+    }
+
+    public function test_a_class_without_a_constructor_says_so_rather_than_omitting_the_key(): void
+    {
+        $document = $this->inspectAsJson(NoConstructorService::class);
+
+        self::assertFalse($document['hasConstructor']);
+        self::assertSame([], $document['parameters']);
+    }
+
+    /**
+     * @param array<string, bool|string> $options
+     *
+     * @return array<string, mixed>
+     */
+    private function inspectAsJson(string $argument, array $options = []): array
+    {
+        $display = $this->inspect($argument, $options + ['--json' => true])->getDisplay();
+
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
     }
 
     /**

@@ -134,7 +134,7 @@ final class DoctorCommandTest extends TestCase
             '✓ cacheable storage',
             '✓ plugin stacks',
             '✓ duplicate provided ids',
-            '✓ unreachable #[Provides]',
+            '✓ unusable #[Provides]',
             '✓ config sources',
             '✓ config schema',
             '✓ published stubs',

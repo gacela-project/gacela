@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Console\Application\Doctor\Check;
 
-use Gacela\Console\Application\Doctor\Check\UnreachableProvidesCheck;
+use Gacela\Console\Application\Doctor\Check\UnusableProvidesCheck;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\HiddenProvidesProvider;
 use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\StubFacade;
+use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\UncallableProvidesProvider;
 use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\UniqueIdProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -26,11 +27,11 @@ use function sprintf;
  * that never registered, which is itself silent, so the first sign is a call on
  * null somewhere else.
  */
-final class UnreachableProvidesCheckTest extends TestCase
+final class UnusableProvidesCheckTest extends TestCase
 {
     public function test_a_provider_whose_declarations_are_all_public_passes(): void
     {
-        $result = (new UnreachableProvidesCheck([$this->module(UniqueIdProvider::class)]))->run();
+        $result = (new UnusableProvidesCheck([$this->module(UniqueIdProvider::class)]))->run();
 
         self::assertSame(CheckStatus::Ok, $result->status);
         self::assertSame(['1 provider(s) checked'], $result->details);
@@ -38,7 +39,7 @@ final class UnreachableProvidesCheckTest extends TestCase
 
     public function test_a_private_declaration_is_reported(): void
     {
-        $result = (new UnreachableProvidesCheck([$this->module(HiddenProvidesProvider::class)]))->run();
+        $result = (new UnusableProvidesCheck([$this->module(HiddenProvidesProvider::class)]))->run();
 
         self::assertSame(CheckStatus::Warn, $result->status);
         self::assertStringContainsString(HiddenProvidesProvider::HIDDEN, $this->detailMentioning($result->details, 'hidden()'));
@@ -54,7 +55,7 @@ final class UnreachableProvidesCheckTest extends TestCase
      */
     public function test_a_protected_declaration_is_reported_alongside_it(): void
     {
-        $result = (new UnreachableProvidesCheck([$this->module(HiddenProvidesProvider::class)]))->run();
+        $result = (new UnusableProvidesCheck([$this->module(HiddenProvidesProvider::class)]))->run();
 
         self::assertCount(2, $result->details);
         self::assertStringContainsString('which is protected', $this->detailMentioning($result->details, 'alsoHidden()'));
@@ -62,7 +63,7 @@ final class UnreachableProvidesCheckTest extends TestCase
 
     public function test_the_public_declaration_beside_them_is_not_reported(): void
     {
-        $result = (new UnreachableProvidesCheck([$this->module(HiddenProvidesProvider::class)]))->run();
+        $result = (new UnusableProvidesCheck([$this->module(HiddenProvidesProvider::class)]))->run();
 
         foreach ($result->details as $detail) {
             self::assertStringNotContainsString(HiddenProvidesProvider::VISIBLE, $detail);
@@ -76,12 +77,63 @@ final class UnreachableProvidesCheckTest extends TestCase
      */
     public function test_a_module_without_a_provider_is_skipped_and_the_next_one_still_read(): void
     {
-        $result = (new UnreachableProvidesCheck([
+        $result = (new UnusableProvidesCheck([
             $this->module(null),
             $this->module(HiddenProvidesProvider::class),
         ]))->run();
 
         self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertCount(2, $result->details);
+    }
+
+    /**
+     * The scanner registers it and then calls it with nothing, so the id is
+     * declared and raises `ArgumentCountError` at whatever point something
+     * first asks for it -- on the consumer, far from this declaration.
+     */
+    public function test_a_method_requiring_an_argument_is_reported(): void
+    {
+        $result = (new UnusableProvidesCheck([$this->module(UncallableProvidesProvider::class)]))->run();
+
+        self::assertStringContainsString(
+            'requires 1 argument(s)',
+            $this->detailMentioning($result->details, 'needsArgument()'),
+        );
+    }
+
+    /**
+     * There is no value to register, so the id answers null -- the same silence
+     * a private method produces, by a different route.
+     */
+    public function test_a_method_returning_void_is_reported(): void
+    {
+        $result = (new UnusableProvidesCheck([$this->module(UncallableProvidesProvider::class)]))->run();
+
+        self::assertStringContainsString(
+            'returns void',
+            $this->detailMentioning($result->details, 'returnsVoid()'),
+        );
+    }
+
+    /**
+     * An *optional* parameter is not the same fault: the scanner calls with
+     * none and the default applies. Reporting it would be a rule a project
+     * turns off.
+     */
+    public function test_an_optional_parameter_is_not_a_fault(): void
+    {
+        $result = (new UnusableProvidesCheck([$this->module(UncallableProvidesProvider::class)]))->run();
+
+        foreach ($result->details as $detail) {
+            self::assertStringNotContainsString('optionalArgument()', $detail);
+            self::assertStringNotContainsString('fine()', $detail);
+        }
+    }
+
+    public function test_each_faulty_method_is_reported_once(): void
+    {
+        $result = (new UnusableProvidesCheck([$this->module(UncallableProvidesProvider::class)]))->run();
+
         self::assertCount(2, $result->details);
     }
 

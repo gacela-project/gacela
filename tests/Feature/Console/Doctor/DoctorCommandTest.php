@@ -21,9 +21,14 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function array_column;
+use function array_filter;
+use function array_unique;
+use function array_values;
 use function bin2hex;
 use function explode;
 use function is_dir;
+use function json_decode;
 use function mkdir;
 use function random_bytes;
 use function rmdir;
@@ -31,6 +36,8 @@ use function rtrim;
 use function sprintf;
 use function sys_get_temp_dir;
 use function unlink;
+
+use const JSON_THROW_ON_ERROR;
 
 final class DoctorCommandTest extends TestCase
 {
@@ -358,6 +365,83 @@ final class DoctorCommandTest extends TestCase
         self::assertContains('    no modules discovered', $this->linesOf($tester));
     }
 
+    /**
+     * @param list<object|string> $healthChecks
+     * @param array<string, bool|string> $input
+     */
+    /**
+     * `--strict` already answers "did anything go wrong" with an exit code. A
+     * job that wants to say *which* check, and repeat its remediation into a
+     * review comment, had to parse the prose -- which is why
+     * `debug:graph --check` grew `--format=json` first.
+     */
+    public function test_json_reports_every_check_with_its_status(): void
+    {
+        $display = $this->doctor([], ['--format' => 'json'])->getDisplay();
+
+        /** @var array{status: string, checks: list<array{name: string, status: string}>} $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('ok', $decoded['status']);
+        self::assertContains('cache staleness', array_column($decoded['checks'], 'name'));
+        self::assertSame(['ok'], array_unique(array_column($decoded['checks'], 'status')));
+    }
+
+    /**
+     * The status vocabulary is the enum's own values, so a consumer matching on
+     * `error` is matching what `CheckStatus` already carries rather than a
+     * second spelling invented for the report.
+     */
+    public function test_json_carries_the_failing_check_and_its_remediation(): void
+    {
+        $display = $this->doctor([UnhealthyHealthCheck::class], ['--format' => 'json'])->getDisplay();
+
+        /** @var array{status: string, checks: list<array{name: string, status: string, details: list<string>, remediation: string}>} $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('error', $decoded['status']);
+
+        $failing = array_values(array_filter($decoded['checks'], static fn (array $c): bool => $c['status'] === 'error'));
+        self::assertNotSame([], $failing);
+        self::assertNotSame([], $failing[0]['details']);
+    }
+
+    /**
+     * The flag means the same thing in both formats, or a job that adds
+     * `--format=json` to an existing `--only-problems` invocation quietly starts
+     * reporting everything.
+     */
+    public function test_only_problems_narrows_the_json_too(): void
+    {
+        $display = $this->doctor([], ['--format' => 'json', '--only-problems' => true])->getDisplay();
+
+        /** @var array{status: string, checks: list<mixed>} $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('ok', $decoded['status'], 'a clean run still reports its overall status');
+        self::assertSame([], $decoded['checks']);
+    }
+
+    public function test_json_keeps_the_exit_code_the_text_format_gives(): void
+    {
+        self::assertSame(
+            Command::FAILURE,
+            $this->doctor([UnhealthyHealthCheck::class], ['--format' => 'json'])->getStatusCode(),
+        );
+
+        self::assertSame(
+            Command::FAILURE,
+            $this->doctor([DegradedWithoutMetadataHealthCheck::class], ['--format' => 'json', '--strict' => true])->getStatusCode(),
+            'a warning still fails --strict',
+        );
+
+        self::assertSame(
+            Command::SUCCESS,
+            $this->doctor([DegradedWithoutMetadataHealthCheck::class], ['--format' => 'json'])->getStatusCode(),
+            'and still passes without it',
+        );
+    }
+
     private function writeCacheEntry(string $key, string $className): void
     {
         file_put_contents(
@@ -371,10 +455,6 @@ final class DoctorCommandTest extends TestCase
         );
     }
 
-    /**
-     * @param list<object|string> $healthChecks
-     * @param array<string, bool|string> $input
-     */
     private function doctor(array $healthChecks, array $input = []): CommandTester
     {
         $this->bootstrapDoctor($healthChecks);

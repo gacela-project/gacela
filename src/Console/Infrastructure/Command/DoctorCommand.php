@@ -40,7 +40,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function count;
+use function json_encode;
 use function sprintf;
+
+use const JSON_PRETTY_PRINT;
+use const JSON_THROW_ON_ERROR;
+use const JSON_UNESCAPED_SLASHES;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -56,16 +61,22 @@ final class DoctorCommand extends Command
             ->setDescription('Run environmental & wiring health checks for the current Gacela setup')
             ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict module-scoped checks to this namespace', '')
             ->addOption('strict', null, InputOption::VALUE_NONE, 'Exit with a failure code on warnings too, for CI')
-            ->addOption('only-problems', null, InputOption::VALUE_NONE, 'Report only the checks that found something');
+            ->addOption('only-problems', null, InputOption::VALUE_NONE, 'Report only the checks that found something')
+            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: text|json', 'text');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        ConsoleSection::title($output, 'Gacela Doctor');
-
         $filter = ConsoleInput::argument($input, 'filter');
         $strict = $input->getOption('strict') === true;
         $onlyProblems = $input->getOption('only-problems') === true;
+
+        if (ConsoleInput::option($input, 'format') === 'json') {
+            return $this->renderJson($output, $this->buildChecks($filter), $strict, $onlyProblems);
+        }
+
+        ConsoleSection::title($output, 'Gacela Doctor');
+
         $checks = $this->buildChecks($filter);
         $worst = CheckStatus::Ok;
         $rendered = false;
@@ -101,6 +112,52 @@ final class DoctorCommand extends Command
                 $strict ? Command::FAILURE : Command::SUCCESS,
             ),
             CheckStatus::Ok => $this->finish($output, '<fg=green>✓ All checks passed</>', Command::SUCCESS),
+        };
+    }
+
+    /**
+     * The deploy gate's other half. `--strict` already answers "did anything
+     * go wrong" with an exit code; a job that wants to say *which* check, and
+     * repeat its remediation into a review comment, had to parse the prose.
+     * `debug:graph --check --format=json` is here for the same reason.
+     *
+     * Every check is reported, including the passing ones, unless
+     * `--only-problems` narrows it -- the flag means the same thing in both
+     * formats. `status` is the string the enum already carries, so the values
+     * are `ok`, `warn` and `error` rather than a second vocabulary.
+     *
+     * @param list<HealthCheck> $checks
+     */
+    private function renderJson(OutputInterface $output, array $checks, bool $strict, bool $onlyProblems): int
+    {
+        $worst = CheckStatus::Ok;
+        $reported = [];
+
+        foreach ($checks as $check) {
+            $result = $check->run();
+            $worst = $this->worseOf($worst, $result->status);
+
+            if ($onlyProblems && $result->status === CheckStatus::Ok) {
+                continue;
+            }
+
+            $reported[] = [
+                'name' => $check->name(),
+                'status' => $result->status->value,
+                'details' => $result->details,
+                'remediation' => $result->remediation,
+            ];
+        }
+
+        $output->writeln(json_encode([
+            'status' => $worst->value,
+            'checks' => $reported,
+        ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        return match ($worst) {
+            CheckStatus::Error => Command::FAILURE,
+            CheckStatus::Warn => $strict ? Command::FAILURE : Command::SUCCESS,
+            CheckStatus::Ok => Command::SUCCESS,
         };
     }
 

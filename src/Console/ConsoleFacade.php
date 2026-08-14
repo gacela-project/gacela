@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console;
 
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeFile;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 use Gacela\Console\Domain\DtoGenerate\DtoGenerateResult;
 use Gacela\Console\Domain\FileContent\StubPublishResult;
@@ -90,6 +91,21 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createAllAppModulesFinder()
             ->findAllAppModules($filter);
+    }
+
+    /**
+     * Files named like a Facade that discovery did not turn into a module.
+     *
+     * The inverse of findAllAppModules(): every check works from the modules
+     * that were found, so one that was never found is invisible to all of them.
+     *
+     * @return list<UndiscoveredFacadeFile>
+     */
+    public function findUndiscoveredFacadeFiles(): array
+    {
+        return $this->getFactory()
+            ->createUndiscoveredFacadeFinder()
+            ->find();
     }
 
     /**

@@ -78,6 +78,12 @@ Seven of the built-in checks report the same kind of fault: **configuration a pr
 - **service extensions** — an `extendService()` id no Provider ever `set()`s. A typo, or an id registered only through `bind()`/`singleton()`, which do not drain the extension queue. An `extendProviderService()` id is held against the Provider it names, which is the sharper miss: not "nobody set this id" but "the Provider you named does not", so an id some *other* Provider registers is still reported.
 - **tagged services** — a `tag()` id nothing can answer. `Container::tagged()` resolves each id in turn and gives back `null` for one naming nothing, so the group a module iterates carries a hole and the failure lands on the consumer as "Call to a member function … on null", pointing at the loop rather than the registration. An id is answerable when a Provider `set()`s it or it names a class the container can construct, so a tag grouping plain service ids is left alone.
 
+A separate check answers the opposite question — **a module that was never found at all**. Every other check works from the modules discovery returned, so one it skipped is invisible to all of them, and `list:modules` names the cause only when *nothing* was discovered. One broken Facade in fifty leaves forty-nine modules and silence.
+
+The **undiscovered facades** check reports a file named the way the scaffolder names a module's Facade — `Blog/BlogFacade.php`, or `Blog/Facade.php` for `--short-name`, under any configured suffix — that produced no module. Either PHP cannot load the class (a psr-4 prefix that does not cover the directory, a `namespace` disagreeing with the path, a classmap never dumped again) or it loads and does not extend `AbstractFacade`, which is the `extends` nobody wrote on a new module. Those have different fixes, so the remediation names the right one.
+
+It is a warning, not an error: `Facade` is an ordinary word, and a project beside a framework with its own facades should not have a build failed by a naming coincidence. `--strict` is how a project opts in. Only names matching the scaffolder's own pattern count, so a `NullFacade` is left alone here — the [`GacelaSuffixExtends`](static-analysis.md) rule is what has an opinion about naming, and this check is about the module that went missing.
+
 ## Production
 
 | Command | What it does |

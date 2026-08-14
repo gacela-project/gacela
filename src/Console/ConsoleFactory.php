@@ -12,6 +12,7 @@ use Gacela\Console\Application\IdeMeta\IdeMetadataScanner;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\AllAppModules\ExcludedDirectories;
+use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeFinder;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
 use Gacela\Console\Domain\DtoGenerate\DtoClassBuilder;
@@ -170,6 +171,14 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
+    public function createUndiscoveredFacadeFinder(): UndiscoveredFacadeFinder
+    {
+        return new UndiscoveredFacadeFinder(
+            $this->createModuleScanIterator(),
+            $this->facadeSuffixes(),
+        );
+    }
+
     public function createDtoGenerator(): DtoGenerator
     {
         return new DtoGenerator(
@@ -284,6 +293,28 @@ final class ConsoleFactory extends AbstractFactory
         }
 
         return $result;
+    }
+
+    /**
+     * Read from the same place `doctor` reads the rest of the suffix map, rather
+     * than from `ResolvableTypes`' static: that one is synced from configuration
+     * and a check has no way to know whether it has been yet.
+     *
+     * @return list<string>
+     */
+    private function facadeSuffixes(): array
+    {
+        $configured = Config::getInstance()
+            ->getFactory()
+            ->createGacelaFileConfig()
+            ->getSuffixTypes();
+
+        $suffixes = ResolvableTypes::BUILT_IN[ResolvableTypes::FACADE];
+        foreach ($configured[ResolvableTypes::FACADE] ?? [] as $suffix) {
+            $suffixes[] = $suffix;
+        }
+
+        return array_values(array_unique($suffixes));
     }
 
     /**

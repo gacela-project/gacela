@@ -39,7 +39,8 @@ final class DebugModulesCommand extends Command
             ->setDescription('Show dependency resolvability of every Gacela module pillar (Facade, Factory, Config, Provider)')
             ->setHelp($this->getHelpText())
             ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict output to a namespace substring (e.g. "App\\\\Shop") or a directory on disk (e.g. "src/")', '')
-            ->addOption('detail', 'd', InputOption::VALUE_NONE, 'Include every parameter, not just unresolvable ones');
+            ->addOption('detail', 'd', InputOption::VALUE_NONE, 'Include every parameter, not just unresolvable ones')
+            ->addOption('check', null, InputOption::VALUE_NONE, 'Exit non-zero when a pillar has a parameter the container cannot satisfy, for CI');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -74,6 +75,8 @@ final class DebugModulesCommand extends Command
         $moduleCount = 0;
         $pillarCount = 0;
         $unresolvableTotal = 0;
+        $faultTotal = 0;
+        $notInspectedTotal = 0;
 
         foreach ($modules as $module) {
             $pillars = $this->existingPillarClasses($module);
@@ -85,6 +88,8 @@ final class DebugModulesCommand extends Command
                 ++$pillarCount;
                 $inspection = $inspector->inspect($pillarClass);
                 $unresolvableTotal += $inspection->unresolvableCount();
+                $faultTotal += $inspection->faultCount();
+                $notInspectedTotal += $inspection->notInspectedCount();
 
                 $this->writePillar($output, $inspection, $detail);
             }
@@ -94,7 +99,47 @@ final class DebugModulesCommand extends Command
 
         $this->writeSummary($output, $moduleCount, $pillarCount, $unresolvableTotal);
 
-        return Command::SUCCESS;
+        if ($input->getOption('check') !== true) {
+            return Command::SUCCESS;
+        }
+
+        return $this->checkVerdict($output, $faultTotal, $notInspectedTotal);
+    }
+
+    /**
+     * The CI half. This command already counted the pillars nothing can build
+     * and exited `SUCCESS` regardless, so acting on the count meant grepping
+     * the output -- which is what an exit code exists to avoid.
+     *
+     * Only faults fail. A union-typed parameter is reported as unresolvable
+     * because the inspector does not walk one, and failing a build over that
+     * would blame a project for a gap in this tool rather than for anything it
+     * did. It is still named, so a passing `--check` does not read as "every
+     * parameter was checked".
+     */
+    private function checkVerdict(OutputInterface $output, int $faultTotal, int $notInspectedTotal): int
+    {
+        if ($notInspectedTotal > 0) {
+            $output->writeln(sprintf(
+                '<comment>%d parameter%s not inspected (union or intersection types), and not counted against this check.</comment>',
+                $notInspectedTotal,
+                $notInspectedTotal === 1 ? '' : 's',
+            ));
+        }
+
+        if ($faultTotal === 0) {
+            $output->writeln('<fg=green>✓ Every inspected parameter can be satisfied.</>');
+
+            return Command::SUCCESS;
+        }
+
+        $output->writeln(sprintf(
+            '<error>✗ %d parameter%s the container cannot satisfy.</error>',
+            $faultTotal,
+            $faultTotal === 1 ? '' : 's',
+        ));
+
+        return Command::FAILURE;
     }
 
     private function asPathFilter(string $filter): ?string

@@ -4,6 +4,8 @@
 
 ### Added
 
+- Fail a `debug:modules` run on an unsatisfiable pillar with `--check`. The command already counted the constructor parameters the container cannot supply and exited `SUCCESS` regardless, so acting on that count meant grepping the output. Only faults fail it — an unbound interface, a scalar with no default, a missing type hint, a type that does not exist. A union or intersection type is not walked by the inspector, so it is reported and deliberately does not fail the run: that is a gap in the tool rather than a fault in the project
+
 - Document `setAppModulePaths()`, which decides how much of a project every CLI command walks. Unconfigured, the module scan starts at the project root: on this repository that is 14,290 filesystem entries against 1,826 when narrowed, same modules found, discovery dropping from roughly 220 ms to 157 ms. It is a CLI and `cache:warm` cost, not a request-time one, so the note sits with the commands and is linked from the deploy step that pays it
 - Preview what a scaffolder would write with `--dry-run`, on `make:module`, `make:file` and `stubs:publish`. The preview resolves its paths through the same code generation uses, so it names the files the real run writes, and it refuses where the real run refuses. "Would replace" is said separately from "would create", because losing a file's content is the case a preview exists to check
 - Emit the effective configuration from `debug:config --json`, for diffing environments. Each key carries its `declared`/`undeclared`/`missing` verdict against the schema, values keep their own types (`true` a boolean, `42` an int), and a filter matching nothing is an empty list

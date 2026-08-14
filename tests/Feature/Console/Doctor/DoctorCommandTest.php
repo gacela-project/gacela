@@ -442,6 +442,23 @@ final class DoctorCommandTest extends TestCase
         );
     }
 
+    /**
+     * Two spellings grew side by side -- `--json` where a command has exactly
+     * two formats, `--format` where it has more -- and a reader who learned one
+     * met "The --json option does not exist." on the other. Both work now.
+     */
+    public function test_json_shorthand_gives_the_same_document_as_the_format_option(): void
+    {
+        $shorthand = $this->doctor([], ['--json' => true])->getDisplay();
+        $explicit = $this->doctor([], ['--format' => 'json'])->getDisplay();
+
+        self::assertJson($shorthand);
+        self::assertSame(
+            json_decode($explicit, true, 512, JSON_THROW_ON_ERROR),
+            json_decode($shorthand, true, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
     private function writeCacheEntry(string $key, string $className): void
     {
         file_put_contents(

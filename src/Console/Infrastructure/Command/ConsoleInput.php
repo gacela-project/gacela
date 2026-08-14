@@ -29,6 +29,31 @@ final class ConsoleInput
         return self::asString($input->getOption($name));
     }
 
+    /**
+     * The output format, honouring `--json` as a spelling of `--format=json`.
+     *
+     * Two conventions grew side by side: `--json` where a command has exactly
+     * two formats (`debug:module`, `debug:provides`) and `--format` where it
+     * has more (`debug:graph`, `profile:report`). Both are defensible, and a
+     * reader who learned one met "The --json option does not exist." on the
+     * other. `--json` now works everywhere; `--format` still chooses among the
+     * ones that offer a choice.
+     */
+    public static function format(InputInterface $input, string $default = 'text'): string
+    {
+        if ($input->hasOption('json') && $input->getOption('json') === true) {
+            return 'json';
+        }
+
+        if (!$input->hasOption('format')) {
+            return $default;
+        }
+
+        $format = self::option($input, 'format');
+
+        return $format === '' ? $default : $format;
+    }
+
     private static function asString(mixed $value): string
     {
         return is_string($value) ? $value : '';

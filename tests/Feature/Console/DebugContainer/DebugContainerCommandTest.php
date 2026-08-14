@@ -196,6 +196,124 @@ final class DebugContainerCommandTest extends TestCase
     }
 
     /**
+     * `--json` on every command that can emit it was the point of the sweep
+     * that unified the two spellings; this one still answered `The "--json"
+     * option does not exist.`
+     */
+    public function test_json_reports_the_statistics_as_a_document(): void
+    {
+        $document = $this->debugContainerAsJson([], static function (GacelaConfig $config): void {
+            $config->addBinding(BoundContract::class, BoundImplementation::class);
+        });
+
+        self::assertSame(1, $document['stats']['bindings']);
+        self::assertSame(0, $document['stats']['registeredServices']);
+        self::assertSame([BoundContract::class => BoundImplementation::class], $document['bindings']);
+    }
+
+    /**
+     * Bytes rather than the "10 MB" the text prints: a document is compared and
+     * charted, and a formatted string is neither.
+     */
+    public function test_the_process_memory_is_reported_in_bytes(): void
+    {
+        $document = $this->debugContainerAsJson([]);
+
+        self::assertIsInt($document['stats']['processMemoryBytes']);
+        self::assertGreaterThan(0, $document['stats']['processMemoryBytes']);
+    }
+
+    /**
+     * An empty map stays an object. Encoding an empty PHP array yields `[]`,
+     * so a consumer indexing `bindings` by name would meet a list on exactly
+     * the runs where there is nothing to index.
+     */
+    public function test_an_empty_binding_map_stays_an_object(): void
+    {
+        self::assertStringContainsString('"bindings": {}', $this->debugContainer(['--json' => true])->getDisplay());
+    }
+
+    public function test_json_reports_the_dependency_tree_with_its_shape_kept(): void
+    {
+        $document = $this->debugContainerAsJson(['class' => TreeRoot::class]);
+
+        self::assertSame(TreeRoot::class, $document['class']);
+        self::assertTrue($document['containerAvailable']);
+
+        $tree = $document['tree'];
+        self::assertCount(2, $tree);
+        self::assertSame(TreeMiddle::class, $tree[0]['class']);
+        self::assertSame('middle', $tree[0]['parameter']);
+        self::assertSame('autowired', $tree[0]['status']);
+        self::assertFalse($tree[0]['repeated']);
+        self::assertSame(TreeLeaf::class, $tree[0]['children'][0]['class']);
+    }
+
+    /**
+     * `total` counts distinct classes and `tree` keeps the shape, so a class
+     * two parents ask for is one in the count and twice in the tree. Both
+     * answers are wanted, and a document carrying only one of them would be
+     * the wrong one for somebody.
+     */
+    public function test_total_counts_a_shared_dependency_once_while_the_tree_repeats_it(): void
+    {
+        $document = $this->debugContainerAsJson(['class' => TreeRoot::class]);
+
+        self::assertSame(2, $document['total']);
+        self::assertSame(
+            [TreeMiddle::class, TreeLeaf::class],
+            [$document['tree'][0]['class'], $document['tree'][1]['class']],
+        );
+    }
+
+    public function test_an_unknown_class_is_an_error_document_rather_than_a_line_of_prose(): void
+    {
+        $tester = $this->debugContainer(['class' => 'NoSuchClassAnywhere', '--json' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame(
+            ['error' => 'class "NoSuchClassAnywhere" does not exist'],
+            json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
+    public function test_the_tree_flag_without_a_class_is_an_error_document_too(): void
+    {
+        $tester = $this->debugContainer(['--tree' => true, '--json' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertIsArray(json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * The precedence the text report already has, kept in the document: a
+     * `--stats` run reports statistics whatever else was passed.
+     */
+    public function test_stats_takes_precedence_over_the_class_argument_in_json_too(): void
+    {
+        $document = $this->debugContainerAsJson(['class' => TreeRoot::class, '--stats' => true]);
+
+        self::assertArrayHasKey('stats', $document);
+        self::assertArrayNotHasKey('tree', $document);
+    }
+
+    /**
+     * @param array<string, bool|string> $input
+     * @param null|Closure(GacelaConfig):void $configFn
+     *
+     * @return array<string, mixed>
+     */
+    private function debugContainerAsJson(array $input, ?Closure $configFn = null): array
+    {
+        $display = $this->debugContainer($input + ['--json' => true], $configFn)->getDisplay();
+
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
+    }
+
+    /**
      * @param array<string, bool|string> $input
      * @param null|Closure(GacelaConfig):void $configFn
      */
@@ -212,5 +330,26 @@ final class DebugContainerCommandTest extends TestCase
         $tester->execute($input);
 
         return $tester;
+    }
+}
+
+final class TreeLeaf
+{
+}
+
+final class TreeMiddle
+{
+    public function __construct(
+        public readonly TreeLeaf $leaf,
+    ) {
+    }
+}
+
+final class TreeRoot
+{
+    public function __construct(
+        public readonly TreeMiddle $middle,
+        public readonly TreeLeaf $leaf,
+    ) {
     }
 }

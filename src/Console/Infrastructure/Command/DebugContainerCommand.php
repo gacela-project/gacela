@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Debug\DependencyTreeInspector;
+use Gacela\Console\Application\Debug\DependencyTreeNode;
 use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Container\ContainerStats;
@@ -17,9 +18,15 @@ use Symfony\Component\Console\Input\InputOption;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function array_map;
 use function class_exists;
 use function count;
+use function json_encode;
 use function sprintf;
+
+use const JSON_PRETTY_PRINT;
+use const JSON_THROW_ON_ERROR;
+use const JSON_UNESCAPED_SLASHES;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -36,7 +43,8 @@ final class DebugContainerCommand extends Command
             ->setHelp($this->getHelpText())
             ->addArgument('class', InputArgument::OPTIONAL, 'Fully qualified class name to show dependency tree for')
             ->addOption('stats', 's', InputOption::VALUE_NONE, 'Show container statistics')
-            ->addOption('tree', 't', InputOption::VALUE_NONE, 'Show dependency tree for specified class');
+            ->addOption('tree', 't', InputOption::VALUE_NONE, 'Show dependency tree for specified class')
+            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Report as a JSON document instead of text');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,22 +53,107 @@ final class DebugContainerCommand extends Command
         $className = $input->getArgument('class');
         $showStats = $input->getOption('stats') === true;
         $showTree = $input->getOption('tree') === true;
+        $asJson = ConsoleInput::format($input) === 'json';
 
         // --stats takes precedence, even when combined with a class argument
         if ($showStats) {
-            return $this->displayStats($output);
+            return $this->reportStats($output, $asJson);
         }
 
         if ($showTree && $className === null) {
-            $output->writeln('<error>The --tree option requires a class name argument</error>');
+            // A document either way, so a consumer piping this into a parser
+            // gets one on the run that refused too.
+            $output->writeln($asJson
+                ? $this->encode(['error' => 'the --tree option requires a class name argument'])
+                : '<error>The --tree option requires a class name argument</error>');
+
             return Command::FAILURE;
         }
 
         if ($className !== null) {
+            return $this->reportDependencyTree($output, $className, $asJson);
+        }
+
+        return $this->reportStats($output, $asJson);
+    }
+
+    private function reportStats(OutputInterface $output, bool $asJson): int
+    {
+        if (!$asJson) {
+            return $this->displayStats($output);
+        }
+
+        $stats = $this->getFacade()->getContainerStats();
+
+        $output->writeln($this->encode([
+            'stats' => [
+                'registeredServices' => $stats->registeredServices,
+                'frozenServices' => $stats->frozenServices,
+                'factoryServices' => $stats->factoryServices,
+                'bindings' => $stats->bindings,
+                'cachedDependencies' => $stats->cachedDependencies,
+                // Bytes rather than the "10 MB" the text prints: a document is
+                // compared and charted, and a formatted string is neither.
+                'processMemoryBytes' => $stats->processMemoryBytes,
+            ],
+            // An object keyed by abstract, which is how the text reads it out
+            // and how a consumer looks one up. Empty stays `{}` rather than
+            // becoming `[]`, so the shape does not change with the contents.
+            'bindings' => (object)$this->getFacade()->getContainerBindings(),
+        ]));
+
+        return Command::SUCCESS;
+    }
+
+    private function reportDependencyTree(OutputInterface $output, string $className, bool $asJson): int
+    {
+        if (!$asJson) {
             return $this->displayDependencyTree($output, $className);
         }
 
-        return $this->displayStats($output);
+        if (!class_exists($className)) {
+            $output->writeln($this->encode(['error' => sprintf('class "%s" does not exist', $className)]));
+
+            return Command::FAILURE;
+        }
+
+        $inspection = (new DependencyTreeInspector())->inspect($className);
+
+        $output->writeln($this->encode([
+            'class' => $inspection->className,
+            // A container that was never bootstrapped is a different answer
+            // from a class with no dependencies, and the text report says so.
+            'containerAvailable' => $inspection->containerAvailable,
+            'fullyProvided' => $inspection->isFullyProvided(),
+            'total' => count($inspection->nodes),
+            'tree' => array_map($this->treeNode(...), $inspection->tree),
+        ]));
+
+        return Command::SUCCESS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function treeNode(DependencyTreeNode $node): array
+    {
+        return [
+            'class' => $node->className,
+            'parameter' => $node->parameter,
+            'status' => $node->status->value,
+            // The graph was cut here rather than recursed into, so an empty
+            // `children` on a repeated node means "already drawn above".
+            'repeated' => $node->repeated,
+            'children' => array_map($this->treeNode(...), $node->children),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     */
+    private function encode(array $document): string
+    {
+        return json_encode($document, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     private function displayStats(OutputInterface $output): int

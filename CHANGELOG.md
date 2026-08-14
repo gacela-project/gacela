@@ -4,6 +4,8 @@
 
 ### Added
 
+- Fail a `validate:config` run on warnings with `--strict`, the bargain `doctor` has always offered: a warning is worth reading but not worth failing a build over, until a project says it is. The command reported warnings — an incompatible binding value, for one — and exited `SUCCESS` regardless, leaving grep as the only way to act on one, which is what an exit code exists to avoid. Errors still fail without it, and a clean run still passes with it
+
 - Report `doctor` as a document with `--format=json`. `--strict` already answers "did anything go wrong" with an exit code, and a job that wants to say *which* check, or repeat its remediation into a review comment, had to parse the prose — which is why `debug:graph --check` grew the same flag first. Every check is reported with its `name`, `status`, `details` and `remediation`, under an overall `status`; `--only-problems` narrows it exactly as it narrows the text report, and the exit code is unchanged. The statuses are the values `CheckStatus` already carries — `ok`, `warn`, `error` — rather than a second vocabulary invented for the report
 
 - Find which Provider declares an id with `debug:provides`. `getProvidedDependency()` answers `null` for an id nothing declares and says nothing about it, so the question that follows is "who was supposed to declare this?" — and the only way to ask it was `debug:module`, once per module. The argument narrows to ids containing it, `--json` carries the same answer, and an id nothing declares says so rather than printing an empty table. Two modules declaring one id keep both rows: each resolves through its own container, so that is two modules answering for themselves rather than a collision

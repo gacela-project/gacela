@@ -23,7 +23,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function count;
 use function implode;
-use function in_array;
 use function is_array;
 use function is_file;
 use function json_decode;
@@ -58,8 +57,9 @@ final class DebugGraphCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $format = ConsoleInput::format($input);
-        if (!in_array($format, self::FORMATS, true)) {
-            $output->writeln(sprintf('<error>Unknown format "%s". Use one of: text, mermaid, graphviz, json</error>', $format));
+        $unknownFormat = ConsoleChoice::unknown('format', $format, self::FORMATS);
+        if ($unknownFormat !== null) {
+            $output->writeln($unknownFormat);
 
             return self::FAILURE;
         }

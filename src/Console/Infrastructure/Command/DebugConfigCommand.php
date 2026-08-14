@@ -35,6 +35,8 @@ final class DebugConfigCommand extends Command
 {
     use ServiceResolverAwareTrait;
 
+    private const FORMATS = ['text', 'json'];
+
     private const SCHEMA_DECLARED = 'declared';
 
     private const SCHEMA_UNDECLARED = 'undeclared';
@@ -53,10 +55,18 @@ final class DebugConfigCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $format = ConsoleInput::format($input);
+        $unknownFormat = ConsoleChoice::unknown('format', $format, self::FORMATS);
+        if ($unknownFormat !== null) {
+            $output->writeln($unknownFormat);
+
+            return Command::FAILURE;
+        }
+
         $filter = ConsoleInput::argument($input, 'filter');
         $entries = $this->collect($filter);
 
-        if (ConsoleInput::format($input) === 'json') {
+        if ($format === 'json') {
             $output->writeln(json_encode(
                 $entries,
                 JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,

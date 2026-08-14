@@ -105,6 +105,20 @@ final class DoctorCommandTest extends TestCase
         self::assertSame($unfiltered, $filtered);
     }
 
+    /**
+     * `--format=xml` used to print the text report and exit 0, so a pipeline
+     * that asked for a document it cannot produce could not tell that run apart
+     * from a healthy one.
+     */
+    public function test_an_unknown_format_is_refused_rather_than_answered_with_text(): void
+    {
+        $tester = $this->doctor([], ['--format' => 'xml']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown format "xml". Use one of: text, json', $tester->getDisplay());
+        self::assertStringNotContainsString('Gacela Doctor', $tester->getDisplay());
+    }
+
     public function test_reports_every_built_in_check_when_nothing_is_registered(): void
     {
         $tester = $this->doctor([]);

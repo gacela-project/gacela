@@ -90,6 +90,8 @@ This is a CLI and `cache:warm` cost, not a request-time one — resolving a Faca
 
 Every command that can emit JSON accepts `--json`. Where a command has more than two output formats — `debug:graph`, `profile:report` — `--format=` chooses among them and `--json` is shorthand for the one you were going to pick anyway.
 
+A value none of them accepts is refused, naming the ones that would have worked, and exits non-zero. `profile:report --sort` answers the same way. That matters for a pipeline: `--format=jsno` used to print the human-readable report and exit `0`, so the run that produced no document at all was indistinguishable from a healthy one.
+
 `doctor` also runs any check you registered with `GacelaConfig::addHealthCheck()` — see [module health checks](module-health-checks.md).
 
 Seven of the built-in checks report the same kind of fault: **configuration a project declared that nothing acts on**. Each is accepted at bootstrap, costs nothing at runtime, and does exactly nothing — which is why a command has to be the one to say so. Under `--strict` any of them fails the run.

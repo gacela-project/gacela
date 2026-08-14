@@ -16,6 +16,15 @@ use function sprintf;
 
 final class DebugConfigCommandTest extends TestCase
 {
+    public function test_an_unknown_format_is_refused_rather_than_answered_with_text(): void
+    {
+        $tester = $this->debugConfig(['--format' => 'xml'], ['alpha' => 'first']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown format "xml". Use one of: text, json', $tester->getDisplay());
+        self::assertStringNotContainsString('alpha', $tester->getDisplay());
+    }
+
     public function test_renders_every_value_type_sorted_by_key(): void
     {
         // Declared out of order on purpose: the report sorts the keys itself.

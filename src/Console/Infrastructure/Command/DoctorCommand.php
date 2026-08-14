@@ -60,6 +60,8 @@ final class DoctorCommand extends Command
 {
     use ServiceResolverAwareTrait;
 
+    private const FORMATS = ['text', 'json'];
+
     protected function configure(): void
     {
         $this->setName('doctor')
@@ -78,7 +80,15 @@ final class DoctorCommand extends Command
         $strict = $input->getOption('strict') === true;
         $onlyProblems = $input->getOption('only-problems') === true;
 
-        if (ConsoleInput::format($input) === 'json') {
+        $format = ConsoleInput::format($input);
+        $unknownFormat = ConsoleChoice::unknown('format', $format, self::FORMATS);
+        if ($unknownFormat !== null) {
+            $output->writeln($unknownFormat);
+
+            return Command::FAILURE;
+        }
+
+        if ($format === 'json') {
             return $this->renderJson($output, $this->buildChecks($filter), $strict, $onlyProblems);
         }
 

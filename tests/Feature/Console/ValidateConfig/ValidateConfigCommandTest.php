@@ -421,7 +421,38 @@ final class ValidateConfigCommandTest extends TestCase
     /**
      * @param Closure(GacelaConfig):void $configFn
      */
-    private function validate(Closure $configFn): CommandTester
+    /**
+     * `doctor --strict` has always offered this bargain: a warning is worth
+     * reading but not worth failing a build over, until a project says it is.
+     * This command reported warnings and exited SUCCESS with no way to say so,
+     * leaving grep as the only way to act on one -- which is what an exit code
+     * exists to avoid.
+     */
+    public function test_a_warning_fails_a_strict_run(): void
+    {
+        $tester = $this->validate(
+            static function (GacelaConfig $config): void {
+                $config->addBinding(SomeContract::class, MismatchedImplementation::class);
+            },
+            ['--strict' => true],
+        );
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('⚠ Validation completed with warnings', $tester->getDisplay());
+    }
+
+    public function test_a_clean_run_still_passes_under_strict(): void
+    {
+        $tester = $this->validate(static function (GacelaConfig $config): void {
+        }, ['--strict' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     */
+    private function validate(Closure $configFn, array $input = []): CommandTester
     {
         Gacela::bootstrap($this->appRoot, static function (GacelaConfig $config) use ($configFn): void {
             $config->resetInMemoryCache();
@@ -429,7 +460,7 @@ final class ValidateConfigCommandTest extends TestCase
         });
 
         $tester = new CommandTester(new ValidateConfigCommand());
-        $tester->execute([]);
+        $tester->execute($input);
 
         return $tester;
     }

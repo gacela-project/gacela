@@ -10,6 +10,7 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
@@ -32,6 +33,7 @@ final class ValidateConfigCommand extends Command
     {
         $this->setName('validate:config')
             ->setDescription('Validate Gacela configuration for errors and best practices')
+            ->addOption('strict', null, InputOption::VALUE_NONE, 'Exit with a failure code on warnings too, for CI')
             ->setHelp($this->getHelpText());
     }
 
@@ -69,7 +71,12 @@ final class ValidateConfigCommand extends Command
         if ($hasWarnings) {
             $output->writeln('<fg=yellow>⚠ Validation completed with warnings</fg=yellow>');
             $output->writeln('');
-            return Command::SUCCESS;
+
+            // The same bargain `doctor --strict` offers: a warning is worth
+            // reading but not worth failing a build over, until a project says
+            // it is. Without this the only way to act on one was to grep the
+            // output, which is what an exit code exists to avoid.
+            return $input->getOption('strict') === true ? Command::FAILURE : Command::SUCCESS;
         }
 
         $output->writeln('<fg=green>✓ Configuration is valid!</fg=green>');

@@ -10,7 +10,7 @@ return static function (GacelaConfig $config): void {
     $config->addAppConfig('config/*.php', 'config/local.php');
 
     // Namespaces Gacela scans when resolving a module's pillars.
-    $config->setProjectNamespaces(['App']);
+    $config->setProjectNamespaces($PROJECT_NAMESPACES$);
 
     // Always pass an explicit directory. Without one the cache falls back to
     // the system temp directory, which is shared with every other app on the

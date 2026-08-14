@@ -40,7 +40,7 @@ final class InitCommandTest extends TestCase
         // directory it made before anything is removed under it.
         self::assertStringStartsWith(sys_get_temp_dir() . '/gacela-init-test-', $this->appRoot);
 
-        foreach (['/gacela.php', '/config/app.php'] as $relative) {
+        foreach (['/gacela.php', '/config/app.php', '/composer.json'] as $relative) {
             $file = $this->appRoot . $relative;
             if (is_file($file)) {
                 unlink($file);
@@ -175,12 +175,97 @@ final class InitCommandTest extends TestCase
     }
 
     /**
+     * The generated `setProjectNamespaces()` used to be the literal `['App']`
+     * for every project — right for the ones that use it, quietly wrong for the
+     * rest.
+     *
+     * It is not decoration. The resolver builds
+     * `\{projectNamespace}\{Module}\{Module}Factory` from these and tries them
+     * *before* the module's own namespace, so a wrong prefix costs a failed
+     * lookup on every cold resolution, and resolves the wrong class outright
+     * for a project that does have an `App\` module of the same name.
+     */
+    public function test_the_generated_config_names_the_projects_own_namespace(): void
+    {
+        $this->writeComposerJson(['autoload' => ['psr-4' => ['Acme\\' => 'src']]]);
+
+        $this->init($this->appRoot, []);
+
+        self::assertStringContainsString(
+            "setProjectNamespaces(['Acme'])",
+            (string)file_get_contents($this->appRoot . '/gacela.php'),
+        );
+    }
+
+    public function test_every_declared_prefix_is_named(): void
+    {
+        $this->writeComposerJson(['autoload' => ['psr-4' => ['Acme\\' => 'src', 'Shop\\' => 'shop']]]);
+
+        $this->init($this->appRoot, []);
+
+        self::assertStringContainsString(
+            "setProjectNamespaces(['Acme', 'Shop'])",
+            (string)file_get_contents($this->appRoot . '/gacela.php'),
+        );
+    }
+
+    /**
+     * `App` is the convention, and a better guess than an empty list — which
+     * would read as a decision the project had made.
+     */
+    public function test_a_project_with_no_manifest_falls_back_to_the_convention(): void
+    {
+        $this->init($this->appRoot, []);
+
+        self::assertStringContainsString(
+            "setProjectNamespaces(['App'])",
+            (string)file_get_contents($this->appRoot . '/gacela.php'),
+        );
+    }
+
+    public function test_a_manifest_declaring_no_autoloading_falls_back_too(): void
+    {
+        $this->writeComposerJson(['name' => 'acme/app']);
+
+        $this->init($this->appRoot, []);
+
+        self::assertStringContainsString(
+            "setProjectNamespaces(['App'])",
+            (string)file_get_contents($this->appRoot . '/gacela.php'),
+        );
+    }
+
+    /**
+     * The suggested next command has to be one that works here: `App/YourModule`
+     * scaffolds into a namespace composer does not map.
+     */
+    public function test_the_next_step_names_the_projects_own_namespace(): void
+    {
+        $this->writeComposerJson(['autoload' => ['psr-4' => ['Acme\\' => 'src']]]);
+
+        $tester = $this->init($this->appRoot, []);
+
+        self::assertStringContainsString('make:module Acme/YourModule', $tester->getDisplay());
+    }
+
+    /**
      * As the command spells it, so a mismatch is a real difference rather than
      * a separator.
      */
     private function configPath(): string
     {
         return 'config' . DIRECTORY_SEPARATOR . 'app.php';
+    }
+
+    /**
+     * @param array<string, mixed> $manifest
+     */
+    private function writeComposerJson(array $manifest): void
+    {
+        file_put_contents(
+            $this->appRoot . '/composer.json',
+            json_encode($manifest, JSON_THROW_ON_ERROR),
+        );
     }
 
     /**

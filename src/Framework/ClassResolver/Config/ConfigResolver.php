@@ -15,12 +15,12 @@ final class ConfigResolver extends AbstractClassResolver
 {
     public const TYPE = 'Config';
 
-    /**
-     * @param object|class-string $caller
-     */
     /** @var object|class-string|null */
     private object|string|null $caller = null;
 
+    /**
+     * @param object|class-string $caller
+     */
     public function resolve(object|string $caller): AbstractConfig
     {
         // See FactoryResolver: kept so the stand-in can name the module.

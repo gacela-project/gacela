@@ -31,6 +31,10 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
 
     public const PROVIDER = 'Provider';
 
+    /**
+     * The pillars, which every project has. `make:module` scaffolds exactly
+     * these; a declared kind is generated one file at a time by `make:file`.
+     */
     public const EXPECTED_FILENAMES = [
         self::FACADE,
         self::FACTORY,
@@ -38,10 +42,6 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
         self::PROVIDER,
     ];
 
-    /**
-     * The pillars, which every project has. `make:module` scaffolds exactly
-     * these; a declared kind is generated one file at a time by `make:file`.
-     */
     /**
      * Names a kind answers to besides its own, lowercased.
      *

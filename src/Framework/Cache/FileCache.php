@@ -405,18 +405,6 @@ final class FileCache
     }
 
     /**
-     * Defensive normalization of the cache directory input:
-     *
-     *   - trim surrounding whitespace
-     *   - if a Windows-style absolute path (e.g. `C:\...`) is embedded mid-string,
-     *     keep only the substring from the last such occurrence. This protects against
-     *     callers that accidentally concatenate `getcwd()` with an already-absolute
-     *     path such as `sys_get_temp_dir()` on Windows
-     *   - fold both `/` and `\` to `DIRECTORY_SEPARATOR`, preserving a leading
-     *     `\\` UNC prefix on Windows
-     *   - collapse runs of the separator and trim trailing separators
-     */
-    /**
      * The cache files on disk, or none when there is nowhere to look.
      *
      * {@see CacheFilePath} owns the "nowhere is not the root" rule, which
@@ -434,6 +422,19 @@ final class FileCache
 
         return glob($pattern) ?: [];
     }
+
+    /**
+     * Defensive normalization of the cache directory input:
+     *
+     *   - trim surrounding whitespace
+     *   - if a Windows-style absolute path (e.g. `C:\...`) is embedded mid-string,
+     *     keep only the substring from the last such occurrence. This protects against
+     *     callers that accidentally concatenate `getcwd()` with an already-absolute
+     *     path such as `sys_get_temp_dir()` on Windows
+     *   - fold both `/` and `\` to `DIRECTORY_SEPARATOR`, preserving a leading
+     *     `\\` UNC prefix on Windows
+     *   - collapse runs of the separator and trim trailing separators
+     */
 
     private function normalizeDirectory(string $dir): string
     {

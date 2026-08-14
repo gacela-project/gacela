@@ -200,10 +200,14 @@ trait ContainerFixture
     }
 
     /**
-     * Create (on first access) and return a unique temporary directory
-     * for the current test method. The directory is automatically
-     * removed at the end of the PHP process via a shutdown function,
-     * so tests do not need to clean up manually.
+     * Create and return a **new** temporary directory, one per call. Two calls
+     * in one test method hand back two directories, which
+     * {@see \GacelaTest\Unit\Framework\Testing\ContainerFixtureTest::test_container_temp_dir_returns_unique_existing_directory}
+     * pins -- so hold the return value rather than calling this again to name
+     * the same place twice.
+     *
+     * Every directory handed out is removed at the end of the PHP process via a
+     * shutdown function, so tests do not need to clean up manually.
      */
     protected function containerTempDir(): string
     {

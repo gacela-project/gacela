@@ -12,7 +12,9 @@ use GacelaTest\Feature\Console\DebugDependencies\Fixtures\AutowirableCollaborato
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundContract;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\BoundImplementation;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\FrameworkInjectService;
+use GacelaTest\Feature\Console\DebugDependencies\Fixtures\InjectMissingImplementationService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\InjectService;
+use GacelaTest\Feature\Console\DebugDependencies\Fixtures\InjectUnboundService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\MixedDependenciesService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\NoConstructorService;
 use GacelaTest\Feature\Console\DebugDependencies\Fixtures\UntypedAndUnionService;
@@ -139,6 +141,40 @@ final class ConstructorInspectorTest extends TestCase
         self::assertSame(ParameterStatus::Inject, $inspection->parameters[0]->status);
         self::assertSame('inject', $inspection->parameters[0]->detail);
         self::assertTrue($inspection->parameters[0]->isResolvable());
+    }
+
+    /**
+     * The attribute names *what* to inject; it is not evidence that anything
+     * can supply it. A bare `#[Inject]` on an unbound interface used to be
+     * reported as resolvable, so `debug:modules --check` passed for a module
+     * that throws `DependencyNotFoundException` the moment it is built.
+     */
+    public function test_a_bare_inject_on_an_unbound_interface_is_unresolvable(): void
+    {
+        $inspection = $this->inspector->inspect(InjectUnboundService::class);
+
+        $parameter = $inspection->parameters[0];
+
+        self::assertSame(ParameterStatus::UnboundInterface, $parameter->status);
+        self::assertSame('interface, no binding', $parameter->detail);
+        self::assertFalse($parameter->isResolvable());
+        self::assertSame(1, $inspection->faultCount());
+    }
+
+    /**
+     * A named implementation that does not exist is the same fault as a type
+     * that does not exist, and is caught nowhere else: the container reads the
+     * name only when it builds.
+     */
+    public function test_an_inject_naming_a_class_that_does_not_exist_is_a_fault(): void
+    {
+        $inspection = $this->inspector->inspect(InjectMissingImplementationService::class);
+
+        $parameter = $inspection->parameters[0];
+
+        self::assertSame(ParameterStatus::MissingType, $parameter->status);
+        self::assertStringContainsString('NoSuchImplementation', $parameter->detail);
+        self::assertFalse($parameter->isResolvable());
     }
 
     public function test_inject_parameter_with_override_shows_implementation(): void

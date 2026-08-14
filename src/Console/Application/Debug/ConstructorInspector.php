@@ -59,11 +59,45 @@ final class ConstructorInspector
         $renderedType = $this->renderType($type);
 
         $inject = $this->readInject($parameter);
-        if ($inject !== null) {
-            return new ParameterInspection($name, $renderedType, ParameterStatus::Inject, $inject);
+
+        if (!$inject instanceof InjectedImplementation) {
+            return $this->inspectByType($parameter, $type, $name, $renderedType, $bindings);
         }
 
-        if ($type === null) {
+        // `#[Inject(RedisCache::class)]` names what to inject, so that class
+        // decides. A name nothing declares is the same fault as a type that
+        // does not exist -- and is caught nowhere else, since the container
+        // reads the name only when it builds.
+        if ($inject->exists !== null) {
+            return $inject->exists
+                ? new ParameterInspection($name, $renderedType, ParameterStatus::Inject, $inject->detail)
+                : new ParameterInspection($name, $renderedType, ParameterStatus::MissingType, $inject->detail);
+        }
+
+        // A bare `#[Inject]` names nothing: the container resolves the
+        // parameter's own type, exactly as it would without the attribute. This
+        // used to return here regardless, which made the attribute read as proof
+        // that something could supply the type -- so `--check` passed for an
+        // unbound interface that throws `DependencyNotFoundException` the moment
+        // the module is built. It labels the answer below; it is not the answer.
+        $inspection = $this->inspectByType($parameter, $type, $name, $renderedType, $bindings);
+
+        return $inspection->isResolvable()
+            ? new ParameterInspection($name, $renderedType, ParameterStatus::Inject, $inject->detail)
+            : $inspection;
+    }
+
+    /**
+     * @param BindingsMap $bindings
+     */
+    private function inspectByType(
+        ReflectionParameter $parameter,
+        ?ReflectionType $type,
+        string $name,
+        string $renderedType,
+        array $bindings,
+    ): ParameterInspection {
+        if (!$type instanceof ReflectionType) {
             return $parameter->isDefaultValueAvailable()
                 ? new ParameterInspection($name, $renderedType, ParameterStatus::HasDefault, $this->defaultDetail($parameter))
                 : new ParameterInspection($name, $renderedType, ParameterStatus::NoTypeHint, 'no type hint and no default');
@@ -150,7 +184,10 @@ final class ConstructorInspector
         }
     }
 
-    private function readInject(ReflectionParameter $parameter): ?string
+    /**
+     * What `#[Inject]` says about this parameter, or null when it is absent.
+     */
+    private function readInject(ReflectionParameter $parameter): ?InjectedImplementation
     {
         // IS_INSTANCEOF, so the framework's `Inject`, which subclasses this one to
         // re-present it under `Gacela\Framework`, reports the same. An exact match
@@ -160,9 +197,15 @@ final class ConstructorInspector
             return null;
         }
 
-        $inject = $attributes[0]->newInstance();
-        return $inject->implementation !== null
-            ? sprintf('inject -> %s', $inject->implementation)
-            : 'inject';
+        $implementation = $attributes[0]->newInstance()->implementation;
+
+        if ($implementation === null) {
+            return new InjectedImplementation('inject', null);
+        }
+
+        return new InjectedImplementation(
+            sprintf('inject -> %s', $implementation),
+            class_exists($implementation),
+        );
     }
 }

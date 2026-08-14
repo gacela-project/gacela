@@ -49,6 +49,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 | `list:modules` | Renders every module found |
 | `debug:modules` | Dependency resolvability of every module pillar |
 | `debug:module App/Blog` | One module: resolved classes, the ids its Provider declares with `#[Provides]`, container bindings, dependency tree |
+| `debug:provides ID` | Which Provider declares an id with `#[Provides]`, across every module — the inverse of `getProvidedDependency()`, which answers `null` for an id nothing declares and says nothing about it. The argument narrows to ids containing it; `--json` for a script |
 | `debug:config` | The effective merged configuration, after every source and override, each key marked `declared`, `undeclared` or `missing` against the [schema](config-schema.md) |
 | `debug:container` | Container contents — user bindings and plugins only |
 | `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable` |

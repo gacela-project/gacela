@@ -1,0 +1,9 @@
+includes:
+    - ../../../../phpstan-gacela.neon
+
+parameters:
+    level: max
+    paths:
+        - .
+    excludePaths:
+        - phpstan-suffixfixture.neon

@@ -12,6 +12,7 @@ use Gacela\Console\Application\Doctor\Check\ConfigSourceCheck;
 use Gacela\Console\Application\Doctor\Check\DuplicateProvidedIdCheck;
 use Gacela\Console\Application\Doctor\Check\EventListenerTargetCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
+use Gacela\Console\Application\Doctor\Check\HandlerRegistryCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
 use Gacela\Console\Application\Doctor\Check\PackageManifestCheck;
@@ -214,6 +215,7 @@ final class DoctorCommand extends Command
             new UnresolvedPillarFileCheck($modules, $suffixTypes),
             new CacheableStorageCheck($modules, CacheableConfig::hasUserSuppliedStorage()),
             new PluginStackCheck($config->getSetupGacela()->getPluginStacks()),
+            new HandlerRegistryCheck($config->getSetupGacela()->getHandlerRegistries()),
             new DuplicateProvidedIdCheck($modules),
             new UnusableProvidesCheck($modules),
             new ConfigSourceCheck(

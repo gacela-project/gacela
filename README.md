@@ -45,12 +45,14 @@ app/
 ├── gacela.php
 ├── config/
 └── src/
-    └── ModuleA/
-        ├── Facade.php
-        ├── Factory.php
-        ├── Provider.php
-        └── Config.php
+    └── Blog/
+        ├── BlogFacade.php
+        ├── BlogFactory.php
+        ├── BlogProvider.php
+        └── BlogConfig.php
 ```
+
+That is what `make:module App/Blog` below writes. Pass `--short-name` for `Facade.php` instead of `BlogFacade.php` — both resolve; the prefix is the default because it survives being read out of context.
 
 ## CLI
 

@@ -122,10 +122,10 @@ Add the optional pillars only when you actually need them:
 Scaffold just the two-file floor with the CLI:
 
 ```bash
-vendor/bin/gacela make:module App/Hello --minimal
+vendor/bin/gacela make:module App/Hello --minimal --short-name
 ```
 
-Use `make:module App/Hello` (or `--template=basic`) for the full four-pillar shape, or `--template=service` for a module wired to a `Domain` service.
+`--short-name` is what writes `Facade.php` rather than `HelloFacade.php`, matching the tree above; drop it for the prefixed names the rest of the docs use. Use `make:module App/Hello` (or `--template=basic`) for the full four-pillar shape, or `--template=service` for a module wired to a `Domain` service.
 
 `src/Hello/Greeter.php`
 ```php

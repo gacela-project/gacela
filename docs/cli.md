@@ -46,7 +46,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 | Command | What it does |
 |---|---|
-| `list:modules` | Renders every module found |
+| `list:modules` | Renders every module found. `--detailed` for one block per module; `--json` for the whole inventory with every pillar, filter and all |
 | `debug:modules` | Dependency resolvability of every module pillar |
 | `debug:module App/Blog` | One module: resolved classes, the ids its Provider declares with `#[Provides]`, container bindings, dependency tree |
 | `debug:provides ID` | Which Provider declares an id with `#[Provides]`, across every module — the inverse of `getProvidedDependency()`, which answers `null` for an id nothing declares and says nothing about it. The argument narrows to ids containing it; `--json` for a script |

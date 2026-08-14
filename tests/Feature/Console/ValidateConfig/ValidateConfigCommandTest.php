@@ -492,8 +492,12 @@ final class ValidateConfigCommandTest extends TestCase
             $config->addBinding(SomeContract::class, MismatchedImplementation::class);
         }, ['--json' => true]);
 
-        $finding = $this->check($this->decode($tester), 'bindings')['findings'][0];
+        $bindings = $this->check($this->decode($tester), 'bindings');
+        $finding = $bindings['findings'][0];
 
+        // The check carries the worst of what it found, so a warning is visible
+        // without walking the findings.
+        self::assertSame('warn', $bindings['status']);
         self::assertSame('warn', $finding['status']);
         self::assertSame([
             'expected interface: ' . SomeContract::class,
@@ -525,6 +529,52 @@ final class ValidateConfigCommandTest extends TestCase
         self::assertStringStartsWith('{', ltrim($display));
         self::assertStringNotContainsString('Validating Gacela Configuration', $display);
         self::assertStringNotContainsString('Checking bindings...', $display);
+    }
+
+    /**
+     * A binding that passed still has to say which binding passed. It is the
+     * one finding printed with no label -- the bare `✓ Key` -- so it is the one
+     * whose message comes from the subject alone, and asserting only the
+     * failures would have left that branch reporting an empty string with
+     * nothing to notice.
+     */
+    public function test_json_names_the_binding_behind_a_passing_finding(): void
+    {
+        $tester = $this->validate(static function (GacelaConfig $config): void {
+            $config->addBinding(SomeContract::class, SomeImplementation::class);
+        }, ['--json' => true]);
+
+        $findings = $this->check($this->decode($tester), 'bindings')['findings'];
+
+        self::assertSame('ok', $findings[0]['status']);
+        self::assertSame(SomeContract::class, $findings[0]['message']);
+    }
+
+    /**
+     * The text report opens by naming the `gacela.php` it found, and a document
+     * that dropped it would be answering a narrower question than the prose.
+     * Absent is reported as absent rather than omitted: the key is always there,
+     * so a consumer reads a value instead of probing for one.
+     */
+    public function test_json_names_the_config_file_when_there_is_one(): void
+    {
+        file_put_contents(
+            $this->appRoot . '/gacela.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn static function (): void {\n};\n",
+        );
+
+        $report = $this->decode($this->validate(static function (): void {
+        }, ['--json' => true]));
+
+        self::assertStringEndsWith('gacela.php', $report['configFile']);
+    }
+
+    public function test_json_reports_no_config_file_as_an_empty_value(): void
+    {
+        $report = $this->decode($this->validate(static function (): void {
+        }, ['--json' => true]));
+
+        self::assertSame('', $report['configFile']);
     }
 
     /**

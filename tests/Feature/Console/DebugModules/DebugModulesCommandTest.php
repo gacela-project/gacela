@@ -23,10 +23,16 @@ use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function array_column;
 use function explode;
+use function json_decode;
 use function rtrim;
 use function spl_autoload_register;
 use function spl_autoload_unregister;
+
+use function sprintf;
+
+use const JSON_THROW_ON_ERROR;
 
 final class DebugModulesCommandTest extends TestCase
 {
@@ -284,6 +290,143 @@ final class DebugModulesCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertStringNotContainsString('the container cannot satisfy', $tester->getDisplay());
+    }
+
+    /**
+     * `--check` answers "did anything fail" with an exit code; a job that wants
+     * to say *which* pillar, and repeat the parameter into a review comment,
+     * had to parse the prose. The same reason `doctor --json` exists.
+     */
+    public function test_json_names_the_pillar_and_the_parameter_that_cannot_be_satisfied(): void
+    {
+        $document = $this->debugModulesAsJson('BrokenFixtures', []);
+
+        self::assertSame('error', $document['status']);
+        self::assertSame(
+            [['name' => 'dependency', 'type' => UnboundDependency::class, 'status' => 'unbound-interface',
+                'detail' => 'interface, no binding', 'resolvable' => false]],
+            $this->parametersOf($document, BrokenModuleFactory::class),
+        );
+    }
+
+    /**
+     * Without the sigil the text report prints: a document is matched against
+     * a reflection parameter rather than read.
+     */
+    public function test_the_parameter_name_carries_no_dollar_sign(): void
+    {
+        $document = $this->debugModulesAsJson('BrokenFixtures', []);
+
+        self::assertSame('dependency', $this->parametersOf($document, BrokenModuleFactory::class)[0]['name']);
+    }
+
+    public function test_the_summary_counts_match_the_text_report(): void
+    {
+        $document = $this->debugModulesAsJson('MixedFixtures', []);
+
+        self::assertSame(
+            ['modules' => 2, 'pillars' => 5, 'unresolvable' => 2, 'faults' => 2, 'notInspected' => 0],
+            $document['summary'],
+        );
+    }
+
+    /**
+     * The distinction `--check` turns on, carried as its own field: a union
+     * type is unresolvable and is not a fault, and a consumer deciding whether
+     * to fail a build needs to tell those apart the way the exit code does.
+     */
+    public function test_a_parameter_the_inspector_declined_is_counted_apart_from_a_fault(): void
+    {
+        $document = $this->debugModulesAsJson('UnionFixtures', []);
+
+        self::assertSame('ok', $document['status']);
+        self::assertSame(1, $document['summary']['unresolvable']);
+        self::assertSame(0, $document['summary']['faults']);
+        self::assertSame(1, $document['summary']['notInspected']);
+    }
+
+    /**
+     * `--detail` means in the document what it means in the text report, rather
+     * than the document always carrying everything.
+     */
+    public function test_detail_adds_the_resolvable_parameters_to_the_document(): void
+    {
+        $without = $this->debugModulesAsJson('MixedFixtures', []);
+        $with = $this->debugModulesAsJson('MixedFixtures', ['--detail' => true]);
+
+        $names = fn (array $document): array => array_column(
+            $this->parametersOf($document, AlphaModuleFactory::class),
+            'name',
+        );
+
+        self::assertSame(['mandatory', 'count'], $names($without));
+        self::assertSame(['collaborator', 'mandatory', 'count'], $names($with));
+    }
+
+    /**
+     * `--json` on its own does not become a gate: the verdict is in the
+     * document on every run, and only `--check` turns it into an exit code.
+     */
+    public function test_json_alone_does_not_fail_a_broken_module(): void
+    {
+        $tester = $this->debugModules('BrokenFixtures', ['--json' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('"status": "error"', $tester->getDisplay());
+    }
+
+    public function test_json_with_check_fails_and_still_emits_only_a_document(): void
+    {
+        $tester = $this->debugModules('BrokenFixtures', ['--json' => true, '--check' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        // The prose the text report ends with must not land inside the document.
+        self::assertStringNotContainsString('the container cannot satisfy', $tester->getDisplay());
+        self::assertIsArray(json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_a_filter_matching_nothing_is_an_empty_list_rather_than_a_sentence(): void
+    {
+        $document = $this->debugModulesAsJson('Fixtures', ['filter' => 'DoesNotExist']);
+
+        self::assertSame([], $document['modules']);
+        self::assertSame(0, $document['summary']['modules']);
+    }
+
+    /**
+     * @param array<string, bool|string> $input
+     *
+     * @return array<string, mixed>
+     */
+    private function debugModulesAsJson(string $fixtureDirectory, array $input): array
+    {
+        $display = $this->debugModules($fixtureDirectory, $input + ['--json' => true])->getDisplay();
+
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function parametersOf(array $document, string $pillarClass): array
+    {
+        /** @var list<array{pillars: list<array{class: string, parameters: list<array<string, mixed>>}>}> $modules */
+        $modules = $document['modules'];
+
+        foreach ($modules as $module) {
+            foreach ($module['pillars'] as $pillar) {
+                if ($pillar['class'] === $pillarClass) {
+                    return $pillar['parameters'];
+                }
+            }
+        }
+
+        self::fail(sprintf('no pillar %s in the document', $pillarClass));
     }
 
     /**

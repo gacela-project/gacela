@@ -21,9 +21,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use Throwable;
 
+use function array_map;
 use function class_exists;
+use function count;
+use function json_encode;
 use function sprintf;
 use function strlen;
+
+use const JSON_PRETTY_PRINT;
+use const JSON_THROW_ON_ERROR;
+use const JSON_UNESCAPED_SLASHES;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -40,7 +47,8 @@ final class DebugModulesCommand extends Command
             ->setHelp($this->getHelpText())
             ->addArgument('filter', InputArgument::OPTIONAL, 'Restrict output to a namespace substring (e.g. "App\\\\Shop") or a directory on disk (e.g. "src/")', '')
             ->addOption('detail', 'd', InputOption::VALUE_NONE, 'Include every parameter, not just unresolvable ones')
-            ->addOption('check', null, InputOption::VALUE_NONE, 'Exit non-zero when a pillar has a parameter the container cannot satisfy, for CI');
+            ->addOption('check', null, InputOption::VALUE_NONE, 'Exit non-zero when a pillar has a parameter the container cannot satisfy, for CI')
+            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Report as a JSON document instead of text');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -48,6 +56,8 @@ final class DebugModulesCommand extends Command
         /** @var string $filter */
         $filter = $input->getArgument('filter');
         $detail = $input->getOption('detail') === true;
+        $check = $input->getOption('check') === true;
+        $asJson = ConsoleInput::format($input) === 'json';
 
         $pathFilter = $this->asPathFilter($filter);
         $namespaceFilter = $pathFilter === null ? $filter : '';
@@ -55,12 +65,26 @@ final class DebugModulesCommand extends Command
         try {
             $modules = $this->getFacade()->findAllAppModules($namespaceFilter);
         } catch (Throwable $throwable) {
-            $output->writeln(sprintf('<error>Could not discover modules: %s</error>', $throwable->getMessage()));
+            // A document either way: a consumer that pipes this into a parser
+            // gets one on the run that failed too, rather than a line of prose
+            // where it expected JSON.
+            $output->writeln($asJson
+                ? $this->encode(['status' => 'error', 'error' => $throwable->getMessage()])
+                : sprintf('<error>Could not discover modules: %s</error>', $throwable->getMessage()));
+
             return Command::FAILURE;
         }
 
         if ($pathFilter !== null) {
             $modules = $this->filterModulesByPath($modules, $pathFilter);
+        }
+
+        $inspected = $this->inspect($modules);
+
+        if ($asJson) {
+            $output->writeln($this->encode($this->asDocument($inspected, $detail)));
+
+            return $check ? $this->checkExitCode($inspected['faults']) : Command::SUCCESS;
         }
 
         $this->writeHeader($output, $filter);
@@ -71,39 +95,151 @@ final class DebugModulesCommand extends Command
             return Command::SUCCESS;
         }
 
+        $this->writeModules($output, $inspected['modules'], $detail);
+        $this->writeSummary($output, $inspected['moduleCount'], $inspected['pillarCount'], $inspected['unresolvable']);
+
+        if (!$check) {
+            return Command::SUCCESS;
+        }
+
+        $this->writeCheckProse($output, $inspected['faults'], $inspected['notInspected']);
+
+        return $this->checkExitCode($inspected['faults']);
+    }
+
+    /**
+     * Every pillar of every module, inspected once.
+     *
+     * The counting used to happen while the text was being written, which is
+     * why there was no second way to render it. Nothing here writes.
+     *
+     * @param list<AppModule> $modules
+     *
+     * @return array{modules: list<array{name: string, pillars: list<ConstructorInspection>}>, moduleCount: int, pillarCount: int, unresolvable: int, faults: int, notInspected: int}
+     */
+    private function inspect(array $modules): array
+    {
         $inspector = new ConstructorInspector();
-        $moduleCount = 0;
+        $rows = [];
         $pillarCount = 0;
-        $unresolvableTotal = 0;
-        $faultTotal = 0;
-        $notInspectedTotal = 0;
+        $unresolvable = 0;
+        $faults = 0;
+        $notInspected = 0;
 
         foreach ($modules as $module) {
-            $pillars = $this->existingPillarClasses($module);
+            $pillars = [];
 
-            ++$moduleCount;
-            $output->writeln(sprintf('  <fg=green>%s</>', $module->fullModuleName()));
-
-            foreach ($pillars as $pillarClass) {
+            foreach ($this->existingPillarClasses($module) as $pillarClass) {
                 ++$pillarCount;
                 $inspection = $inspector->inspect($pillarClass);
-                $unresolvableTotal += $inspection->unresolvableCount();
-                $faultTotal += $inspection->faultCount();
-                $notInspectedTotal += $inspection->notInspectedCount();
+                $unresolvable += $inspection->unresolvableCount();
+                $faults += $inspection->faultCount();
+                $notInspected += $inspection->notInspectedCount();
 
+                $pillars[] = $inspection;
+            }
+
+            $rows[] = ['name' => $module->fullModuleName(), 'pillars' => $pillars];
+        }
+
+        return [
+            'modules' => $rows,
+            'moduleCount' => count($rows),
+            'pillarCount' => $pillarCount,
+            'unresolvable' => $unresolvable,
+            'faults' => $faults,
+            'notInspected' => $notInspected,
+        ];
+    }
+
+    /**
+     * The same report as a document, for the CI job `--check` already serves.
+     *
+     * `--check` answers "did anything fail" with an exit code; a job that wants
+     * to say *which* pillar, and repeat the parameter into a review comment,
+     * had to parse the prose. `doctor --json` and `debug:graph --check
+     * --format=json` exist for the same reason.
+     *
+     * `--detail` means here what it means in the text report: without it only
+     * the unresolvable parameters are listed. `status` carries the verdict on
+     * every run, but the exit code still only changes under `--check`, so
+     * adding `--json` to an existing command cannot alter what a build does.
+     *
+     * @param array{modules: list<array{name: string, pillars: list<ConstructorInspection>}>, moduleCount: int, pillarCount: int, unresolvable: int, faults: int, notInspected: int} $inspected
+     *
+     * @return array<string, mixed>
+     */
+    private function asDocument(array $inspected, bool $detail): array
+    {
+        $modules = [];
+
+        foreach ($inspected['modules'] as $module) {
+            $pillars = [];
+
+            foreach ($module['pillars'] as $inspection) {
+                $parameters = $detail ? $inspection->parameters : $inspection->unresolvableParameters();
+
+                $pillars[] = [
+                    'class' => $inspection->className,
+                    'hasConstructor' => $inspection->hasConstructor,
+                    'resolvable' => $inspection->resolvableCount(),
+                    'unresolvable' => $inspection->unresolvableCount(),
+                    'parameters' => array_map(
+                        static fn (ParameterInspection $parameter): array => [
+                            // The inspector stores the name with its `$`, which
+                            // is how both text reports print it. A document is
+                            // matched against reflection rather than read, so
+                            // it carries the name itself. `ltrim` stays right
+                            // if that sigil ever moves to the render site.
+                            'name' => ltrim($parameter->name, '$'),
+                            'type' => $parameter->renderedType,
+                            'status' => $parameter->status->value,
+                            'detail' => $parameter->detail,
+                            'resolvable' => $parameter->isResolvable(),
+                        ],
+                        $parameters,
+                    ),
+                ];
+            }
+
+            $modules[] = ['name' => $module['name'], 'pillars' => $pillars];
+        }
+
+        return [
+            'status' => $inspected['faults'] === 0 ? 'ok' : 'error',
+            'summary' => [
+                'modules' => $inspected['moduleCount'],
+                'pillars' => $inspected['pillarCount'],
+                'unresolvable' => $inspected['unresolvable'],
+                'faults' => $inspected['faults'],
+                'notInspected' => $inspected['notInspected'],
+            ],
+            'modules' => $modules,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     */
+    private function encode(array $document): string
+    {
+        return json_encode($document, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * @param list<array{name: string, pillars: list<ConstructorInspection>}> $modules
+     */
+    private function writeModules(OutputInterface $output, array $modules, bool $detail): void
+    {
+        foreach ($modules as $module) {
+            $output->writeln(sprintf('  <fg=green>%s</>', $module['name']));
+
+            foreach ($module['pillars'] as $inspection) {
                 $this->writePillar($output, $inspection, $detail);
             }
 
             $output->writeln('');
         }
-
-        $this->writeSummary($output, $moduleCount, $pillarCount, $unresolvableTotal);
-
-        if ($input->getOption('check') !== true) {
-            return Command::SUCCESS;
-        }
-
-        return $this->checkVerdict($output, $faultTotal, $notInspectedTotal);
     }
 
     /**
@@ -117,7 +253,7 @@ final class DebugModulesCommand extends Command
      * did. It is still named, so a passing `--check` does not read as "every
      * parameter was checked".
      */
-    private function checkVerdict(OutputInterface $output, int $faultTotal, int $notInspectedTotal): int
+    private function writeCheckProse(OutputInterface $output, int $faultTotal, int $notInspectedTotal): void
     {
         if ($notInspectedTotal > 0) {
             $output->writeln(sprintf(
@@ -130,7 +266,7 @@ final class DebugModulesCommand extends Command
         if ($faultTotal === 0) {
             $output->writeln('<fg=green>✓ Every inspected parameter can be satisfied.</>');
 
-            return Command::SUCCESS;
+            return;
         }
 
         $output->writeln(sprintf(
@@ -138,8 +274,15 @@ final class DebugModulesCommand extends Command
             $faultTotal,
             $faultTotal === 1 ? '' : 's',
         ));
+    }
 
-        return Command::FAILURE;
+    /**
+     * Separated from the prose above so `--json --check` returns the same code
+     * without writing a line into the document.
+     */
+    private function checkExitCode(int $faultTotal): int
+    {
+        return $faultTotal === 0 ? Command::SUCCESS : Command::FAILURE;
     }
 
     private function asPathFilter(string $filter): ?string

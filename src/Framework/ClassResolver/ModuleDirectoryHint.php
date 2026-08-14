@@ -110,14 +110,34 @@ final class ModuleDirectoryHint
         }
 
         if (self::extendsTheBaseClassOf($file, $resolvableType)) {
+            // Names the wanted class rather than pointing at "the list above":
+            // the other message this hint appears under has no list, and the
+            // name is the thing to act on either way. It is dropped when there
+            // is none -- the candidates cannot be rebuilt without a
+            // bootstrapped Config, and `looks for ``` says nothing.
+            $wanted = self::firstOf($expected);
+
             return sprintf(
-                '%s extends Abstract%s, under a name none of the candidates above has -- rename it to one of them',
+                '%s extends Abstract%s under another name%s',
                 basename($file),
                 $resolvableType,
+                $wanted === '' ? '' : sprintf(' -- the resolver looks for `%s`', $wanted),
             );
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string,string> $expected
+     */
+    private static function firstOf(array $expected): string
+    {
+        foreach ($expected as $className) {
+            return $className;
+        }
+
+        return '';
     }
 
     /**

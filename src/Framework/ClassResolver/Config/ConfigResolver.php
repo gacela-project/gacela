@@ -40,10 +40,15 @@ final class ConfigResolver extends AbstractClassResolver
     protected function createDefaultGacelaClass(): AbstractConfig
     {
         $moduleName = ClassInfo::from($this->caller ?? self::class, self::TYPE)->getModuleName();
+        $caller = $this->caller;
 
-        return new class($moduleName) extends AbstractConfig {
+        return new class($moduleName, $caller) extends AbstractConfig {
+            /**
+             * @param object|class-string|null $caller
+             */
             public function __construct(
                 private readonly string $moduleName,
+                private readonly object|string|null $caller,
             ) {
             }
 
@@ -57,6 +62,7 @@ final class ConfigResolver extends AbstractClassResolver
                     $this->moduleName,
                     $name,
                     sprintf('%s%s', $this->moduleName, ConfigResolver::TYPE),
+                    $this->caller,
                 );
             }
         };

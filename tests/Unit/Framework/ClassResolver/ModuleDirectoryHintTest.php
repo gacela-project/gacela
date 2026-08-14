@@ -62,8 +62,8 @@ final class ModuleDirectoryHintTest extends TestCase
         $hints = ModuleDirectoryHint::findNear($caller, 'Provider', ['\\X\\Typo\\TypoProvider']);
 
         self::assertSame(
-            ['TypoProvidr.php extends AbstractProvider, under a name none of'
-                . ' the candidates above has -- rename it to one of them'],
+            ['TypoProvidr.php extends AbstractProvider under another name'
+                . ' -- the resolver looks for `X\\Typo\\TypoProvider`'],
             $hints,
         );
     }
@@ -263,6 +263,26 @@ final class ModuleDirectoryHintTest extends TestCase
         $hints = ModuleDirectoryHint::findNear($caller, 'Provider', ['\\X\\Many\\ManyProvider']);
 
         self::assertCount(3, $hints);
+    }
+
+    /**
+     * A caller whose candidates could not be reproduced -- the finder needs a
+     * bootstrapped Config to build them -- still gets the base-class finding,
+     * with nothing to name as the wanted class.
+     */
+    public function test_with_no_candidates_the_finding_names_no_wanted_class(): void
+    {
+        $caller = $this->moduleWith('Nameless', [
+            'NamelessFactory' => 'extends \\Gacela\\Framework\\AbstractFactory',
+            'NamelessProvidr' => 'extends \\Gacela\\Framework\\AbstractProvider',
+        ]);
+
+        $hints = ModuleDirectoryHint::findNear($caller, 'Provider', []);
+
+        self::assertSame(
+            ['NamelessProvidr.php extends AbstractProvider under another name'],
+            $hints,
+        );
     }
 
     /**

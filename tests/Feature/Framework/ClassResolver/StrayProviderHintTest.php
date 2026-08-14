@@ -35,8 +35,8 @@ final class StrayProviderHintTest extends TestCase
 
         self::assertStringContainsString("Found in the module directory:\n", $message);
         self::assertStringContainsString(
-            '  - StrayProviderProvidr.php extends AbstractProvider, under a name none of'
-            . " the candidates above has -- rename it to one of them\n",
+            '  - StrayProviderProvidr.php extends AbstractProvider under another name -- the resolver looks for'
+            . " `GacelaTest\\Feature\\Framework\\ClassResolver\\StrayProvider\\StrayProviderProvider`\n",
             $message,
         );
     }

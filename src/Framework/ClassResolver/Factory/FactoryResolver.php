@@ -43,12 +43,17 @@ final class FactoryResolver extends AbstractClassResolver
     protected function createDefaultGacelaClass(): AbstractFactory
     {
         $moduleName = ClassInfo::from($this->caller ?? self::class, self::TYPE)->getModuleName();
+        $caller = $this->caller;
 
         return new /**
          * @extends AbstractFactory<AbstractConfig>
-         */ class($moduleName) extends AbstractFactory {
+         */ class($moduleName, $caller) extends AbstractFactory {
+            /**
+             * @param object|class-string|null $caller
+             */
             public function __construct(
                 private readonly string $moduleName,
+                private readonly object|string|null $caller,
             ) {
             }
 
@@ -62,6 +67,7 @@ final class FactoryResolver extends AbstractClassResolver
                     $this->moduleName,
                     $name,
                     sprintf('%s%s', $this->moduleName, FactoryResolver::TYPE),
+                    $this->caller,
                 );
             }
         };

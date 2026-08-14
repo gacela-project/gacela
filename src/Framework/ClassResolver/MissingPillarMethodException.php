@@ -24,15 +24,47 @@ use function sprintf;
  */
 final class MissingPillarMethodException extends RuntimeException
 {
-    public static function onDefault(string $kind, string $moduleName, string $method, string $expectedClass): self
-    {
-        return new self(sprintf(
+    /**
+     * @param object|class-string|null $caller the class that asked, when known, so the
+     *                                         file already in its directory can be named
+     */
+    public static function onDefault(
+        string $kind,
+        string $moduleName,
+        string $method,
+        string $expectedClass,
+        object|string|null $caller = null,
+    ): self {
+        $message = sprintf(
             "Module `%s` has no `%s`, so `%s()` has nowhere to be defined.\n"
             . 'Add `%s` (or check its filename matches its class name -- `gacela doctor` reports that too).',
             $moduleName,
             $kind,
             $method,
             $expectedClass,
-        ));
+        );
+
+        return new self($message . self::hintFor($caller, $kind, $expectedClass));
+    }
+
+    /**
+     * "Add `WalletFactory`" is the wrong instruction whenever the file is
+     * written and misnamed, which is the common way a module ends up on the
+     * stand-in. The same hint the resolver exceptions carry answers it here.
+     *
+     * @param object|class-string|null $caller
+     */
+    private static function hintFor(object|string|null $caller, string $kind, string $expectedClass): string
+    {
+        if ($caller === null) {
+            return '';
+        }
+
+        $hints = ModuleDirectoryHint::findNear($caller, $kind, [$expectedClass]);
+        if ($hints === []) {
+            return '';
+        }
+
+        return "\nFound in the module directory:\n  - " . implode("\n  - ", $hints);
     }
 }

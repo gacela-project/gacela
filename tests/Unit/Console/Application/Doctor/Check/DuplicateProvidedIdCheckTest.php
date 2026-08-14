@@ -75,7 +75,23 @@ final class DuplicateProvidedIdCheckTest extends TestCase
         self::assertSame(['4 declared id(s), none repeated'], $result->details);
     }
 
-    public function test_a_module_without_a_provider_is_skipped(): void
+    /**
+     * The module with no Provider comes first, so skipping it has to *continue*
+     * rather than stop: were it last, abandoning the loop there would count the
+     * same two ids and look correct.
+     */
+    public function test_a_module_without_a_provider_is_skipped_and_the_next_one_still_read(): void
+    {
+        $result = (new DuplicateProvidedIdCheck([
+            $this->module(null),
+            $this->module(UniqueIdProvider::class),
+        ]))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['2 declared id(s), none repeated'], $result->details);
+    }
+
+    public function test_a_provider_that_declares_nothing_counts_nothing(): void
     {
         $result = (new DuplicateProvidedIdCheck([$this->module(null)]))->run();
 

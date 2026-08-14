@@ -22,16 +22,21 @@ final class RepeatedIdProvider extends AbstractProvider
     {
     }
 
-    #[Provides(self::THING)]
-    public function early(): string
-    {
-        return 'early';
-    }
-
+    /**
+     * Declared first on purpose. It is the id with nothing wrong with it, so
+     * the check skips it -- and a skip that is reached last is a `continue`
+     * a `break` mutant can replace without failing anything.
+     */
     #[Provides(self::OTHER)]
     public function other(): string
     {
         return 'other';
+    }
+
+    #[Provides(self::THING)]
+    public function early(): string
+    {
+        return 'early';
     }
 
     #[Provides(self::THING)]

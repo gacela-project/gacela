@@ -26,7 +26,9 @@ use function array_filter;
 use function array_unique;
 use function array_values;
 use function bin2hex;
+use function count;
 use function explode;
+use function file_get_contents;
 use function is_dir;
 use function json_decode;
 use function mkdir;
@@ -456,6 +458,40 @@ final class DoctorCommandTest extends TestCase
         self::assertSame(
             json_decode($explicit, true, 512, JSON_THROW_ON_ERROR),
             json_decode($shorthand, true, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
+    /**
+     * The `--only-problems` changelog entry opens "Fourteen checks is a lot of
+     * ✓ to read to find the one ⚠", and adding a check makes that wrong. It has
+     * been wrong twice: #796 took it to thirteen and #797 to fourteen, both
+     * caught by hand, both while still in `## Unreleased` and shipping.
+     *
+     * #798 guarded the sibling count in `docs/cli.md` and deliberately left
+     * this one alone, because it needed the number of checks the command
+     * actually registers and coupling a text assertion to the command looked
+     * fragile. `doctor --json` removed that objection: the count is a field in
+     * a document now.
+     */
+    public function test_the_changelog_counts_the_checks_doctor_actually_runs(): void
+    {
+        /** @var array{checks: list<mixed>} $report */
+        $report = json_decode($this->doctor([], ['--json' => true])->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+        $actual = count($report['checks']);
+
+        $words = [
+            10 => 'Ten', 11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen',
+            15 => 'Fifteen', 16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen',
+            19 => 'Nineteen', 20 => 'Twenty',
+        ];
+        self::assertArrayHasKey($actual, $words, 'the doctor grew past the words this test knows');
+
+        $changelog = (string) file_get_contents(__DIR__ . '/../../../../CHANGELOG.md');
+
+        self::assertMatchesRegularExpression(
+            '/^- Print only the checks that found something with `doctor --only-problems`\. ' . $words[$actual] . ' checks/m',
+            $changelog,
+            sprintf('doctor runs %d checks; the --only-problems changelog entry says otherwise', $actual),
         );
     }
 

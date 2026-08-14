@@ -68,7 +68,8 @@ final class DoctorCommand extends Command
             ->addOption('strict', null, InputOption::VALUE_NONE, 'Exit with a failure code on warnings too, for CI')
             ->addOption('only-problems', null, InputOption::VALUE_NONE, 'Report only the checks that found something')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: text|json', 'text')
-            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Shorthand for --format=json');
+            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Shorthand for --format=json')
+            ->setHelp($this->getHelpText());
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -369,5 +370,52 @@ final class DoctorCommand extends Command
         $output->writeln($line);
         $output->writeln('');
         return $code;
+    }
+
+    /**
+     * Deliberately free of a check list or a count: both would go stale the
+     * next time one is added, and a run already names every check it made.
+     * What is not visible from a run is the verdict model, which is what this
+     * explains.
+     */
+    private function getHelpText(): string
+    {
+        return <<<'HELP'
+Runs every built-in health check against the current setup, plus any registered
+with `GacelaConfig::addHealthCheck()`. Each check names what it found and how to
+fix it; a run lists them all, so this help does not repeat them.
+
+<info>Errors and warnings are different claims:</info>
+  <error>Errors</error>   something is broken now -- a pillar file nothing can load, a
+           binding whose class does not exist. These always fail the run.
+  <fg=yellow>Warnings</fg=yellow> something is inert or will not do what it looks like it does --
+           a listener nothing can dispatch to, a `#[Cacheable]` method on
+           storage that dies with the process. These pass by default,
+           because several of them are correct in some deployments.
+
+<info>Examples:</info>
+  # Report everything
+  bin/gacela doctor
+
+  # Fail the build on warnings too -- the usual CI setting
+  bin/gacela doctor --strict
+
+  # Only what found something, for a short report
+  bin/gacela doctor --only-problems
+
+  # Say which check failed, for a job that acts on it
+  bin/gacela doctor --json
+
+  # Narrow the module-scoped checks to one namespace
+  bin/gacela doctor App/Checkout
+
+<comment>The filter narrows which modules get inspected, not which checks run.</comment>
+Every check still reports; the ones about configuration, caches and manifests
+describe the whole project and ignore it.
+
+<comment>Complements:</comment>
+  bin/gacela validate:config       bindings, dependency cycles, config schema
+  bin/gacela debug:modules --check whether each pillar's constructor resolves
+HELP;
     }
 }

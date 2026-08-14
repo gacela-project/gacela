@@ -72,6 +72,39 @@ final class DoctorCommandTest extends TestCase
         }
     }
 
+    /**
+     * `doctor` runs more checks than any other command and is the only one
+     * whose exit code depends on a distinction the flags do not explain: an
+     * error always fails, a warning fails only under `--strict`.
+     *
+     * The help is asserted for that model rather than for a list of checks --
+     * a run already names every check it made, and a list here would go stale
+     * the next time one is added.
+     */
+    public function test_the_help_explains_the_verdict_model(): void
+    {
+        $help = (new DoctorCommand())->getHelp();
+
+        self::assertStringContainsString('always fail the run', $help);
+        self::assertStringContainsString('--strict', $help);
+        self::assertStringContainsString('narrows which modules get inspected, not which checks run', $help);
+    }
+
+    /**
+     * The claim above about the filter, checked against the command rather than
+     * trusted: every check reports either way, and only the modules they walk
+     * change.
+     */
+    public function test_a_filter_matching_nothing_still_reports_every_check(): void
+    {
+        $unfiltered = $this->statusLinesOf($this->doctor([]));
+        $filtered = $this->statusLinesOf($this->doctor([], ['filter' => 'NoSuchNamespaceXYZ']));
+
+        // Two empty lists are also "the same", and would prove nothing.
+        self::assertGreaterThan(10, count($unfiltered));
+        self::assertSame($unfiltered, $filtered);
+    }
+
     public function test_reports_every_built_in_check_when_nothing_is_registered(): void
     {
         $tester = $this->doctor([]);

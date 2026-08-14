@@ -332,6 +332,13 @@ final class GacelaConfig
 
     /**
      * Shortcut to setFileCache(true)
+     *
+     * `$dir` is resolved **relative to the app root**, and a leading `/` does
+     * not escape it -- `'/var/cache'` writes to `{appRoot}/var/cache`. The
+     * exceptions are a path already inside the app root, and a Windows
+     * drive-letter path, both of which are taken as given. For a directory
+     * genuinely outside the project, use `GACELA_CACHE_DIR`: it is read first,
+     * taken verbatim, and means the same thing on either platform.
      */
     public function enableFileCache(?string $dir = null): self
     {

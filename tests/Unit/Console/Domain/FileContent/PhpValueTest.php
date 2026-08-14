@@ -23,7 +23,8 @@ final class PhpValueTest extends TestCase
     {
         foreach ([[], [1, 2], ['a' => 1], ['a' => ['b' => ['c' => 1]]], 'x', 1, null] as $value) {
             self::assertStringNotContainsString(
-                "\n", PhpValue::export($value),
+                "\n",
+                PhpValue::export($value),
                 'a line break would break every caller',
             );
         }

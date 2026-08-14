@@ -216,6 +216,48 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ---
 
+## 2.2 → 2.3
+
+Two changes, both in the scaffolder, both affecting scripts rather than application code. Nothing to change if you only ever run `make:module` and `make:file` by hand, on names that do not exist yet.
+
+### 1. Generating over existing files is refused
+
+`make:module` and `make:file` used to replace whatever was already there and report `created successfully` for each file. There was no prompt and no flag: the only record that hand-written code had been there was the file just written over it.
+
+Both now check **every** target before writing the first, so a run that would replace something writes nothing at all:
+
+```
+$ vendor/bin/gacela make:module App/Ledger
+src/Ledger/LedgerFacade.php, src/Ledger/LedgerFactory.php, src/Ledger/LedgerProvider.php already exist.
+Nothing was written. Pass --force to replace them.
+```
+
+It exits `1`. **If a script of yours regenerates a module in place, it now fails there** — add `--force` if replacing really is the intent.
+
+The all-or-nothing part is worth knowing when only some files are missing. In the run above `LedgerConfig.php` did not exist, and it was still not written, because three of its siblings were in the way. To fill one gap without touching the rest, ask for that file:
+
+```bash
+vendor/bin/gacela make:file App/Ledger Config
+```
+
+`make:module --force` is the other option and a blunter one: it rewrites all four pillars, including the three you wanted to keep.
+
+### 2. A kind Gacela does not have is refused, not approximated
+
+`make:file` used to answer an unrecognised kind with the closest pillar. `Repository` produced a `Factory`; `Controller`, `Service` and `Middleware` produced a `Provider`; `Migration` produced a `Factory` — each reported as created, under a name you did not ask for.
+
+```
+$ vendor/bin/gacela make:file App/Wallet Repository
+"Repository" is not one of the filenames make:file can generate: Facade, Factory, Config, Provider.
+Declare it with addResolvableType('Repository') in gacela.php to generate it as a kind of its own.
+```
+
+Also exits `1`. Abbreviations still work — matching is the letters you typed, in order, somewhere in the kind's name — so `cade`, `tory`, `fig` and `de-pr` reach their pillars as before. What no longer resolves is a word that is not an abbreviation of any of them.
+
+If you were relying on one of those to stand in for a real kind, `addResolvableType()` makes it real, with its own suffix, resolver and stub — see [Resolve a kind of my own](docs/getting-a-dependency.md#resolve-a-kind-of-my-own).
+
+---
+
 ## Deprecated in 2.0, removed in 3.0
 
 Not blocking this upgrade, but the notices start now.

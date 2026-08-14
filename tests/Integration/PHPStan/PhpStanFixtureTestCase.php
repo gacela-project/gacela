@@ -7,7 +7,9 @@ namespace GacelaTest\Integration\PHPStan;
 use PHPUnit\Framework\TestCase;
 
 use function escapeshellarg;
+use function exec;
 use function getenv;
+use function implode;
 use function putenv;
 use function shell_exec;
 use function sprintf;
@@ -43,6 +45,25 @@ abstract class PhpStanFixtureTestCase extends TestCase
 
     private function runPhpStan(): string
     {
+        // PHPStan keys its result cache on the analysed files, not on the rules
+        // that judged them -- so editing a rule and re-running these tests can
+        // be answered from before the edit, and a rule that has stopped
+        // reporting still looks green. Psalm's harness beside this one passes
+        // `--no-cache`; PHPStan has no such flag, so the cache is cleared
+        // instead. Once per config, since the analysis below is memoized.
+        $clear = sprintf(
+            '%s clear-result-cache -c %s 2>&1',
+            escapeshellarg(self::ROOT . '/vendor/bin/phpstan'),
+            escapeshellarg(static::configPath()),
+        );
+
+        // Checked rather than fired and forgotten. The first version of this
+        // passed `--no-progress`, which `clear-result-cache` does not accept:
+        // it failed, `shell_exec()` swallowed that, and the cache went on
+        // answering -- a silent no-op that looked exactly like a working one.
+        exec($clear, $clearOutput, $clearStatus);
+        self::assertSame(0, $clearStatus, 'could not clear phpstan result cache: ' . implode("\n", $clearOutput));
+
         $command = sprintf(
             '%s analyse -c %s --memory-limit=1G --no-progress --error-format=raw 2>&1',
             escapeshellarg(self::ROOT . '/vendor/bin/phpstan'),

@@ -60,6 +60,25 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 `debug:graph --check` is the one built for CI; see [module boundaries](module-boundaries.md) for wiring it into a workflow.
 
+### Where these commands look for modules
+
+Every command above finds modules the same way: it walks the project for `.php` files, loads each one, and keeps the classes that descend from `AbstractFacade`. Hidden directories, `vendor/` and `node_modules/` are skipped; **everything else is descended into**, because guessing that a project's `build/` or `data/` holds no modules is how discovery starts silently missing them.
+
+With no configuration that walk starts at the project root. `setAppModulePaths()` narrows it to the directories your modules actually live in:
+
+```php
+// gacela.php
+return static function (GacelaConfig $config): void {
+    $config->setAppModulePaths(['src']);
+};
+```
+
+It is worth setting. On this repository, restricting the scan to the directories that hold modules cuts the walk from **14,290 filesystem entries to 1,826** and discovery from roughly **220 ms to 157 ms**, finding the same modules either way — the difference is entirely `docs/`, `tools/`, `build/` and friends being walked and rejected. A project with a large `var/`, `storage/` or `public/` tree saves more.
+
+Paths are relative to the app root. Every module has to be under one of them: a Facade outside the listed paths is not found, and nothing reports it as missing, so widen the list rather than trimming it to the minimum.
+
+This is a CLI and `cache:warm` cost, not a request-time one — resolving a Facade at runtime does not walk anything.
+
 ## Validating
 
 | Command | What it does |

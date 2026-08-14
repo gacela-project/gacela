@@ -34,6 +34,8 @@ Run `cache:warm` as a deploy step, after `composer install` and before traffic i
 
 `cache:warm` warms *one bootstrap*: the class-name cache file is keyed by the bootstrap's `projectNamespaces` and suffix types, so a deploy with several entrypoints that bootstrap differently runs it once per entrypoint — each writes its own file, and none answers for another.
 
+What `cache:warm` spends most of its time on is finding the modules, and with no `setAppModulePaths()` that walk starts at the project root. Narrowing it to the directories that hold modules is the cheapest thing you can do to a deploy step — see [where the CLI looks for modules](cli.md#where-these-commands-look-for-modules). It changes nothing at request time.
+
 ## 3. Preload the framework into opcache
 
 Point `opcache.preload` at `resources/gacela-preload.php` to load the framework into shared memory at PHP startup, removing its compilation and linking cost from every request. The script discovers what to load, so it covers the whole framework and cannot fall behind a rename.

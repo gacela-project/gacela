@@ -34,7 +34,8 @@ final class StubsPublishCommand extends Command
         $this->setName('stubs:publish')
             ->setDescription("Copy the scaffolder's templates into the project, so make:module generates your house style")
             ->addOption('template', 't', InputOption::VALUE_REQUIRED, 'Publish only one template set: basic or service')
-            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite stubs the project already published');
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite stubs the project already published')
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Report the stubs that would be published, and write nothing');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -50,15 +51,19 @@ final class StubsPublishCommand extends Command
             return self::FAILURE;
         }
 
+        $dryRun = $input->getOption('dry-run') === true;
         $stubsDir = $this->getFacade()->stubsDir();
         $result = $this->getFacade()->publishStubs(
             $stubsDir,
             $this->stubsOf($template),
             $input->getOption('force') === true,
+            $dryRun,
         );
 
         foreach ($result->written as $path) {
-            $output->writeln(sprintf('<fg=green>✓</> %s', $path));
+            $output->writeln($dryRun
+                ? sprintf("> Would publish '%s'", $path)
+                : sprintf('<fg=green>✓</> %s', $path));
         }
 
         if ($result->hasSkipped()) {
@@ -73,7 +78,13 @@ final class StubsPublishCommand extends Command
         }
 
         $output->writeln('');
-        $output->writeln(sprintf('<info>%d stub(s) published into %s</info>', count($result->written), $stubsDir));
+        $output->writeln($dryRun
+            ? sprintf(
+                '<comment>Dry run: nothing was written (%d stub(s) would go into %s).</comment>',
+                count($result->written),
+                $stubsDir,
+            )
+            : sprintf('<info>%d stub(s) published into %s</info>', count($result->written), $stubsDir));
 
         return self::SUCCESS;
     }

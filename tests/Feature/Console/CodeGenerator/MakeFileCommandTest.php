@@ -65,6 +65,31 @@ final class MakeFileCommandTest extends TestCase
     }
 
     /**
+     * `make:file` writes into an existing module, so a preview matters most
+     * here: the directory it targets already has hand-written code in it.
+     */
+    public function test_a_dry_run_names_the_file_and_writes_nothing(): void
+    {
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+
+        $exitCode = $bootstrap->run(
+            new StringInput('make:file Psr4CodeGenerator/DryRunFileModule Facade --dry-run'),
+            $output,
+        );
+
+        $display = $output->fetch();
+
+        self::assertSame(Command::SUCCESS, $exitCode, $display);
+        self::assertStringContainsString("Would create 'src/DryRunFileModule/DryRunFileModuleFacade.php'", $display);
+        self::assertStringContainsString('Dry run: nothing was written (1 file).', $display);
+        self::assertFileDoesNotExist('./src/DryRunFileModule/DryRunFileModuleFacade.php');
+        self::assertDirectoryDoesNotExist('./src/DryRunFileModule');
+    }
+
+    /**
      * The same rule `make:module` applies, and for the same reason: every
      * segment becomes a namespace and a class name, so generating from one that
      * is not a PHP label writes files that do not parse and reports them as

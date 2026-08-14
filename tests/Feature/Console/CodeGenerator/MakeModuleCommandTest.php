@@ -31,6 +31,9 @@ final class MakeModuleCommandTest extends TestCase
         DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalModule');
         DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalTemplateModule');
         DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalRunModule');
+        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'PreviewModule');
+        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ExistingModule');
+        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ReplaceModule');
     }
 
     protected function setUp(): void
@@ -92,6 +95,94 @@ OUT;
     {
         yield 'module' => ['TestModule', false];
         yield 'module -s' => ['', true];
+    }
+
+    /**
+     * Scaffolding writes into somebody's project, and `--force` replaces what
+     * is there. `dto:generate` could already answer "what would this do?" and
+     * the commands that write whole modules could not.
+     */
+    public function test_a_dry_run_writes_nothing(): void
+    {
+        $tester = new CommandTester(new MakeModuleCommand());
+        $exitCode = $tester->execute(['path' => 'Psr4CodeGeneratorData/DryRunModule', '--dry-run' => true]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertDirectoryDoesNotExist(getcwd() . '/data/DryRunModule');
+    }
+
+    public function test_a_dry_run_names_every_file_and_says_it_wrote_none(): void
+    {
+        $tester = new CommandTester(new MakeModuleCommand());
+        $tester->execute(['path' => 'Psr4CodeGeneratorData/DryRunModule', '--dry-run' => true]);
+
+        $display = $tester->getDisplay();
+
+        foreach (['Facade', 'Factory', 'Config', 'Provider'] as $pillar) {
+            self::assertStringContainsString(
+                sprintf("Would create 'data/DryRunModule/DryRunModule%s.php'", $pillar),
+                $display,
+            );
+        }
+
+        self::assertStringContainsString('Dry run: nothing was written (4 files).', $display);
+    }
+
+    /**
+     * The property that makes a preview worth reading: it names the paths the
+     * real run writes. Asserting the preview alone would pass for a preview
+     * that invented them.
+     */
+    public function test_the_dry_run_names_the_paths_the_real_run_writes(): void
+    {
+        $preview = new CommandTester(new MakeModuleCommand());
+        $preview->execute(['path' => 'Psr4CodeGeneratorData/PreviewModule', '--dry-run' => true]);
+
+        $real = new CommandTester(new MakeModuleCommand());
+        $real->execute(['path' => 'Psr4CodeGeneratorData/PreviewModule']);
+
+        self::assertSame(
+            $this->pathsIn($preview->getDisplay()),
+            $this->pathsIn($real->getDisplay()),
+        );
+    }
+
+    /**
+     * A preview only predicts the real run if it refuses where the real run
+     * refuses -- otherwise it reports four files a real run would never write.
+     */
+    public function test_a_dry_run_refuses_over_an_existing_module_just_as_a_real_run_does(): void
+    {
+        $first = new CommandTester(new MakeModuleCommand());
+        $first->execute(['path' => 'Psr4CodeGeneratorData/ExistingModule']);
+
+        $tester = new CommandTester(new MakeModuleCommand());
+        $exitCode = $tester->execute(['path' => 'Psr4CodeGeneratorData/ExistingModule', '--dry-run' => true]);
+
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('already exist', $tester->getDisplay());
+        self::assertStringNotContainsString('Would create', $tester->getDisplay());
+    }
+
+    /**
+     * "would replace" is not "would create". One of them loses whatever is in
+     * the file, and that is the case somebody runs a preview to check.
+     */
+    public function test_a_forced_dry_run_says_it_would_replace_rather_than_create(): void
+    {
+        $first = new CommandTester(new MakeModuleCommand());
+        $first->execute(['path' => 'Psr4CodeGeneratorData/ReplaceModule']);
+
+        $tester = new CommandTester(new MakeModuleCommand());
+        $exitCode = $tester->execute([
+            'path' => 'Psr4CodeGeneratorData/ReplaceModule',
+            '--dry-run' => true,
+            '--force' => true,
+        ]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertStringContainsString("Would replace 'data/ReplaceModule/ReplaceModuleFacade.php'", $tester->getDisplay());
+        self::assertStringNotContainsString('Would create', $tester->getDisplay());
     }
 
     /**
@@ -307,5 +398,17 @@ OUT;
 
         self::assertSame(1, $exitCode);
         self::assertStringContainsString('Unknown template "nope"', $output->fetch());
+    }
+
+    /**
+     * The quoted path of every reported line, whichever verb reported it.
+     *
+     * @return list<string>
+     */
+    private function pathsIn(string $display): array
+    {
+        preg_match_all("/'([^']+\.php)'/", $display, $matches);
+
+        return $matches[1];
     }
 }

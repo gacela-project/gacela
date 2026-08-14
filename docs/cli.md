@@ -14,9 +14,9 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 | Command | What it does |
 |---|---|
 | `init` | Creates the `gacela.php` a project needs before anything else works, plus the `config/app.php` it declares. `--force` regenerates `gacela.php` and never touches your config |
-| `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests` (service template only — refused on the others rather than ignored), `--short-name`, `--force` to replace files that already exist |
-| `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared. `--short-name`, `--force` to replace files that already exist |
-| `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force` |
+| `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests` (service template only — refused on the others rather than ignored), `--short-name`, `--force` to replace files that already exist, `--dry-run` to see what it would write |
+| `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared. `--short-name`, `--force` to replace files that already exist, `--dry-run` to see what it would write |
+| `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force`, `--dry-run` |
 
 ### Your own stubs
 
@@ -26,7 +26,10 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 vendor/bin/gacela stubs:publish                    # every stub
 vendor/bin/gacela stubs:publish --template=basic   # one template set
 vendor/bin/gacela stubs:publish --force            # replace ones already published
+vendor/bin/gacela stubs:publish --dry-run          # say what it would write, write nothing
 ```
+
+`--dry-run` works the same way on `make:module` and `make:file`. It resolves the target paths through the code that generates them, so the preview names the files the real run writes rather than a second guess at them — and it refuses where the real run refuses, so a preview over an existing module reports the refusal instead of listing files nothing would write.
 
 From then on a generated file uses the project's stub when there is one and the built-in template when there is not — **per file**, so publishing your Facade stub does not freeze the Factory at the version it was copied from. Without `--force` nothing already published is overwritten: it is a file somebody changed on purpose.
 

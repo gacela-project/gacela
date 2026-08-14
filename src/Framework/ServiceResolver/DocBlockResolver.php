@@ -42,6 +42,16 @@ final class DocBlockResolver
     private static array $warned = [];
 
     /**
+     * The other half of `getDocBlockResolvable()`. `getClassName()` reads
+     * through `ServiceResolverCache`; the normalization applied to its answer
+     * did not, and it is the more expensive of the two -- up to three `is_a()`
+     * class lookups per call, repeated for a class whose answer cannot change.
+     *
+     * @var array<string,string> [className => normalized resolvable type]
+     */
+    private static array $normalizedTypes = [];
+
+    /**
      * @param class-string $callerClass
      */
     private function __construct(private readonly string $callerClass)
@@ -59,6 +69,17 @@ final class DocBlockResolver
     public static function fromClassName(string $callerClass): self
     {
         return new self($callerClass);
+    }
+
+    /**
+     * Deliberately only `$normalizedTypes`. The two statics beside it outlive a
+     * reset on purpose -- file contents cannot change under a compiled process,
+     * and re-warning about a fallback already reported would be noise -- so
+     * clearing them here would undo a decision, not a cache.
+     */
+    public static function resetCache(): void
+    {
+        self::$normalizedTypes = [];
     }
 
     public function getDocBlockResolvable(string $method): DocBlockResolvable
@@ -226,6 +247,11 @@ final class DocBlockResolver
      * like `FacaModuleA` matches neither and keeps its own name, as before.
      */
     private function normalizeResolvableType(string $resolvableType): string
+    {
+        return self::$normalizedTypes[$resolvableType] ??= $this->computeResolvableType($resolvableType);
+    }
+
+    private function computeResolvableType(string $resolvableType): string
     {
         /** @var non-empty-list<string> $resolvableTypeParts */
         $resolvableTypeParts = explode('\\', $resolvableType);

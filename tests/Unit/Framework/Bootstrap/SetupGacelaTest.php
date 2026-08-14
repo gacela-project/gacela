@@ -453,6 +453,9 @@ final class SetupGacelaTest extends TestCase
     public function test_from_file_throws_for_missing_path(): void
     {
         $this->expectException(RuntimeException::class);
+        // The path is the whole content of this failure: naming a file that is
+        // not there is the only way the reader learns which one was looked for.
+        $this->expectExceptionMessage("Invalid file path: '/nonexistent/dir/gacela.php'");
 
         SetupGacela::fromFile('/nonexistent/dir/gacela.php');
     }

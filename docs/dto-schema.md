@@ -76,7 +76,7 @@ A shape under a namespace no `autoload` prefix covers is reported and the comman
 - **The output is derived. Do not edit it.** Regenerating an unchanged declaration produces a byte-identical file, so a repeat run leaves version control quiet.
 - **Declaration order never matters.** Shapes and properties are emitted sorted, so two config sources produce the same class whichever loads first.
 - **Required and defaulted are exclusive.** A default is what makes an absent value legitimate; requiring it as well is two answers to one question, and is refused.
-- **`toArray()` omits what was never set**, so `fromArray($order->toArray())` round-trips to an equal instance.
+- **`toArray()` carries every property that has a value**, and omits the ones that do not — so `fromArray($order->toArray())` round-trips to an equal instance. A declared default *is* a value: `currency` appears as `'EUR'` in the array even though nobody set it, while `couponCode` — optional and undefaulted — is absent. Worth knowing where the array becomes JSON, because the consumer cannot tell a `currency` somebody chose from one nobody did.
 - **Nothing is generated while booting.** The declaration is only read by `dto:generate`.
 
 ## Not here yet

@@ -113,6 +113,29 @@ final class DtoGenerateCommandTest extends TestCase
         self::assertNull($order->getCouponCode());
     }
 
+    /**
+     * What "omits what was never set" excludes, and what it does not. An
+     * optional property nobody set has no value and is absent; one with a
+     * declared default has a value, so it is present -- and only the round-trip
+     * was asserted, which holds either way because the default would reapply.
+     *
+     * It shows in what a consumer sees: `toArray()` reaches JSON, and a reader
+     * cannot tell a `currency` somebody chose from one nobody did.
+     */
+    public function test_an_array_carries_a_default_and_omits_a_property_with_no_value(): void
+    {
+        $this->generate();
+        require_once $this->orderFile();
+
+        /** @var class-string $class */
+        $class = $this->orderClass();
+
+        $array = $class::fromArray(['reference' => 'ord-1187', 'total' => 4990])->toArray();
+
+        self::assertSame('EUR', $array['currency'] ?? null, 'a declared default is a value, so it is carried');
+        self::assertArrayNotHasKey('couponCode', $array, 'optional with no default and never set: nothing to carry');
+    }
+
     public function test_an_array_round_trips(): void
     {
         $this->generate();

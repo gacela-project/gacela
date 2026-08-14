@@ -28,9 +28,17 @@ final class StubPublisher
 
     /**
      * @param list<string> $only the stub files to publish; every one when empty
+     * @param bool $dryRun work out the same answer and write none of it. The
+     *                     result reports what *would* be written, decided by
+     *                     the same rules -- a preview resolved any other way
+     *                     could disagree with the run it previews
      */
-    public function publish(string $stubsDir, array $only = [], bool $force = false): StubPublishResult
-    {
+    public function publish(
+        string $stubsDir,
+        array $only = [],
+        bool $force = false,
+        bool $dryRun = false,
+    ): StubPublishResult {
         $written = [];
         $skipped = [];
 
@@ -45,8 +53,11 @@ final class StubPublisher
                 continue;
             }
 
-            $this->io->mkdir(dirname($path));
-            $this->io->filePutContents($path, $contents);
+            if (!$dryRun) {
+                $this->io->mkdir(dirname($path));
+                $this->io->filePutContents($path, $contents);
+            }
+
             $written[] = $path;
         }
 

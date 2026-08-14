@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\Stubs;
 
+use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Console\Infrastructure\Command\StubsPublishCommand;
@@ -89,6 +90,52 @@ final class StubsPublishCommandTest extends TestCase
 
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('Already published:', $tester->getDisplay());
+        self::assertSame('house style', (string)file_get_contents($this->stubsDir . '/facade-maker.txt'));
+    }
+
+    /**
+     * `stubs:publish` writes into somebody's project and `--force` replaces
+     * files they edited on purpose, so saying what it would do is worth having.
+     */
+    public function test_a_dry_run_names_the_stubs_and_writes_none_of_them(): void
+    {
+        $tester = $this->execute(new StubsPublishCommand(), ['--dry-run' => true]);
+
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Would publish', $display);
+        self::assertStringContainsString('Dry run: nothing was written', $display);
+        self::assertDirectoryDoesNotExist($this->stubsDir);
+    }
+
+    /**
+     * The preview names what the real run writes. Asserting the preview alone
+     * would pass for one that invented the list.
+     */
+    public function test_the_dry_run_names_the_stubs_the_real_run_publishes(): void
+    {
+        $preview = $this->execute(new StubsPublishCommand(), ['--dry-run' => true]);
+        $real = $this->execute(new StubsPublishCommand());
+
+        self::assertSame(
+            $this->stubNamesIn($preview->getDisplay()),
+            $this->stubNamesIn($real->getDisplay()),
+        );
+    }
+
+    /**
+     * Not overwriting is the default on the facade too, not only on the command
+     * that happens to pass the flag every time. A published stub is a file
+     * somebody changed on purpose, and the default is the safety net.
+     */
+    public function test_the_facade_does_not_overwrite_unless_asked(): void
+    {
+        $this->publishStub('facade-maker.txt', 'house style');
+
+        $result = (new ConsoleFacade())->publishStubs($this->stubsDir);
+
+        self::assertContains($this->stubsDir . '/facade-maker.txt', $result->skipped);
         self::assertSame('house style', (string)file_get_contents($this->stubsDir . '/facade-maker.txt'));
     }
 
@@ -195,6 +242,18 @@ final class StubsPublishCommandTest extends TestCase
      * The repository is its own scaffolding target: `data/` is a psr-4 path
      * here, and the generator writes relative to the working directory.
      */
+    /**
+     * The stub filenames a run reported, whichever verb reported them.
+     *
+     * @return list<string>
+     */
+    private function stubNamesIn(string $display): array
+    {
+        preg_match_all('/([\w-]+\.txt)/', $display, $matches);
+
+        return $matches[1];
+    }
+
     private function bootstrapRepositoryWithStubsDir(): void
     {
         $stubsDir = $this->stubsDir;

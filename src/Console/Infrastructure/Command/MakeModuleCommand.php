@@ -39,7 +39,8 @@ final class MakeModuleCommand extends Command
             ->addOption('template', 't', InputOption::VALUE_REQUIRED, 'Module template: basic, service (Facade wired to a Domain service), or minimal (Facade + Factory only)', 'basic')
             ->addOption('minimal', null, InputOption::VALUE_NONE, 'Scaffold only the Facade and Factory pillars (shorthand for --template=minimal)')
             ->addOption('with-tests', null, InputOption::VALUE_NONE, 'Also scaffold a facade test (service template only)')
-            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Replace files that already exist');
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Replace files that already exist')
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Report the files that would be written, and write nothing');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -112,6 +113,18 @@ final class MakeModuleCommand extends Command
 
                 return self::FAILURE;
             }
+        }
+
+        // After the refusal above, not before it: a preview is only worth
+        // reading if it predicts the run it previews, and a run without --force
+        // over an existing module refuses rather than writing.
+        if ($input->getOption('dry-run') === true) {
+            ConsoleSection::plannedFiles(
+                $output,
+                $this->getFacade()->plannedGeneratedFiles($commandArguments, $files, $shortName),
+            );
+
+            return self::SUCCESS;
         }
 
         foreach ($files as [$filename, $subDirectory]) {

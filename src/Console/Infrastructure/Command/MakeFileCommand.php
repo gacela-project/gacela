@@ -41,7 +41,8 @@ final class MakeFileCommand extends Command
             ->addArgument('path', InputArgument::REQUIRED, 'The file path. For example "App/TestModule/TestSubModule"')
             ->addArgument('filenames', InputArgument::REQUIRED | InputArgument::IS_ARRAY, $filenames)
             ->addOption('short-name', 's', InputOption::VALUE_NONE, 'Remove module prefix to the class name')
-            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Replace files that already exist');
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Replace files that already exist')
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Report the files that would be written, and write nothing');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -96,6 +97,17 @@ final class MakeFileCommand extends Command
 
                 return self::FAILURE;
             }
+        }
+
+        // After the refusal above, for the same reason make:module does it
+        // there: a preview is worth reading only if it predicts the real run.
+        if ($input->getOption('dry-run') === true) {
+            ConsoleSection::plannedFiles(
+                $output,
+                $this->getFacade()->plannedGeneratedFiles($commandArguments, $files, $shortName),
+            );
+
+            return self::SUCCESS;
         }
 
         foreach ($filenames as $filename) {

@@ -58,6 +58,19 @@ final class FileContentGenerator implements FileContentGeneratorInterface
         return $existing;
     }
 
+    public function plannedTargets(CommandArguments $commandArguments, array $files, bool $withShortName): array
+    {
+        $planned = [];
+
+        foreach ($files as [$filename, $subDirectory]) {
+            $path = $this->targetPath($commandArguments, $filename, $withShortName, $subDirectory);
+
+            $planned[] = ['path' => $path, 'exists' => $this->fileContentIo->existsFile($path)];
+        }
+
+        return $planned;
+    }
+
     public function generate(CommandArguments $commandArguments, string $filename, bool $withShortName = false, string $subDirectory = ''): string
     {
         $targetDirectory = $commandArguments->directory();

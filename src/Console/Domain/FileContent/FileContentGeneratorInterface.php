@@ -32,4 +32,17 @@ interface FileContentGeneratorInterface
      * @return list<string> the paths that exist, in the order given
      */
     public function existingTargets(CommandArguments $commandArguments, array $files, bool $withShortName): array;
+
+    /**
+     * Every target a run would write, and whether each one is already there.
+     *
+     * What `--dry-run` reports. It resolves the paths through the same method
+     * generation does, so a preview cannot disagree with the run it previews --
+     * which is the only property that makes a preview worth reading.
+     *
+     * @param list<array{string, string}> $files [filename, subDirectory] pairs
+     *
+     * @return list<array{path: string, exists: bool}> in the order given
+     */
+    public function plannedTargets(CommandArguments $commandArguments, array $files, bool $withShortName): array;
 }

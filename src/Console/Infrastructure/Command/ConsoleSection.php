@@ -63,6 +63,31 @@ final class ConsoleSection
     }
 
     /**
+     * What a `--dry-run` would write.
+     *
+     * "would replace" is said separately from "would create" because they are
+     * different answers: one of them loses whatever is in the file, and a
+     * preview that called both "would write" would hide exactly the case
+     * somebody runs a preview to check.
+     *
+     * @param list<array{path: string, exists: bool}> $planned
+     */
+    public static function plannedFiles(OutputInterface $output, array $planned): void
+    {
+        foreach ($planned as $file) {
+            $output->writeln($file['exists']
+                ? sprintf("> Would <fg=yellow>replace</> '%s'", $file['path'])
+                : sprintf("> Would create '%s'", $file['path']));
+        }
+
+        $output->writeln(sprintf(
+            '<comment>Dry run: nothing was written (%d file%s).</comment>',
+            count($planned),
+            count($planned) === 1 ? '' : 's',
+        ));
+    }
+
+    /**
      * Why a `make:*` run wrote nothing, in one place so both makers refuse in
      * the same words.
      *

@@ -72,6 +72,27 @@ final class ConsoleFacade extends AbstractFacade
             ->existingTargets($commandArguments, $files, $withShortName);
     }
 
+    /**
+     * Every file a `make:*` run would write, and whether each is already there.
+     *
+     * What `--dry-run` reports, resolved through the same path logic generation
+     * uses -- a preview that could disagree with the run it previews would be
+     * worse than none.
+     *
+     * @param list<array{string, string}> $files [filename, subDirectory] pairs
+     *
+     * @return list<array{path: string, exists: bool}>
+     */
+    public function plannedGeneratedFiles(
+        CommandArguments $commandArguments,
+        array $files,
+        bool $withShortName,
+    ): array {
+        return $this->getFactory()
+            ->createFileContentGenerator()
+            ->plannedTargets($commandArguments, $files, $withShortName);
+    }
+
     public function generateServiceFileContent(
         CommandArguments $commandArguments,
         string $filename,
@@ -218,11 +239,15 @@ final class ConsoleFacade extends AbstractFacade
      *
      * @param list<string> $only the stub files to publish; every one when empty
      */
-    public function publishStubs(string $stubsDir, array $only = [], bool $force = false): StubPublishResult
-    {
+    public function publishStubs(
+        string $stubsDir,
+        array $only = [],
+        bool $force = false,
+        bool $dryRun = false,
+    ): StubPublishResult {
         return $this->getFactory()
             ->createStubPublisher()
-            ->publish($stubsDir, $only, $force);
+            ->publish($stubsDir, $only, $force, $dryRun);
     }
 
     public function getContainerStats(): ContainerStats

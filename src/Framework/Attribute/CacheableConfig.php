@@ -55,6 +55,20 @@ final class CacheableConfig
     }
 
     /**
+     * Whether the application registered a backend, or is running on the
+     * in-memory default.
+     *
+     * Asked by `doctor`: the default dies with the process, so a `#[Cacheable]`
+     * method behind it caches nothing across requests. Reading it rather than
+     * `getStorage()` on purpose -- calling that would *create* the default and
+     * make the answer true for anyone who asked afterwards.
+     */
+    public static function hasUserSuppliedStorage(): bool
+    {
+        return self::$storageIsUserSupplied;
+    }
+
+    /**
      * @param array<string,int> $overrides map of "Class::method" => ttl in seconds, following
      *                                     the contract in {@see CacheStorageInterface::set()}:
      *                                     0 stores without expiry, negative is already expired

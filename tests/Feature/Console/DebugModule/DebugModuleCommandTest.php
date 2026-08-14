@@ -164,6 +164,8 @@ final class DebugModuleCommandTest extends TestCase
             'factory' => null,
             'config' => null,
             'provider' => null,
+            // WiredModule has no Provider at all, so there is nothing to declare.
+            'provides' => [],
             'bindings' => [PaymentGatewayInterface::class => StripeGateway::class],
             'contextualBindings' => [],
             'dependencyTree' => [WiredCollaborator::class],
@@ -172,6 +174,57 @@ final class DebugModuleCommandTest extends TestCase
         // JSON_UNESCAPED_SLASHES keeps the "bin/gacela"-style paths readable; the
         // namespace separators must still be escaped as JSON requires.
         self::assertStringContainsString('GacelaTest\\\\Feature', $display);
+    }
+
+    /**
+     * The Provider is listed as one of the four pillars, and what it declares
+     * is the question `getProvidedDependency('...')` asks. Nothing here
+     * answered it: `Bindings` below reports the application's container, which
+     * is the same list for every module printed.
+     */
+    public function test_lists_the_ids_the_modules_provider_declares(): void
+    {
+        $tester = $this->debugModule(['module' => 'CheckoutModule']);
+
+        $display = $tester->getDisplay();
+        self::assertStringContainsString('Provides (#[Provides]):', $display);
+        self::assertStringContainsString(CheckoutModuleProvider::GATEWAY, $display);
+        self::assertStringContainsString(CheckoutModuleProvider::RETRIES, $display);
+    }
+
+    /**
+     * Sorted, so the section does not reorder itself between runs on a
+     * Provider whose methods get shuffled around.
+     */
+    public function test_the_provided_ids_are_listed_in_a_stable_order(): void
+    {
+        $display = $this->debugModule(['module' => 'CheckoutModule'])->getDisplay();
+
+        self::assertLessThan(
+            strpos($display, CheckoutModuleProvider::RETRIES),
+            strpos($display, CheckoutModuleProvider::GATEWAY),
+        );
+    }
+
+    public function test_a_module_without_a_provider_declares_nothing(): void
+    {
+        $display = $this->debugModule(['module' => 'WiredModule'])->getDisplay();
+
+        self::assertStringContainsString('Provides (#[Provides]):', $display);
+        self::assertMatchesRegularExpression('/Provides \(#\[Provides\]\):\s*\R\s*\(none\)/u', $display);
+    }
+
+    public function test_json_carries_the_provided_ids_too(): void
+    {
+        $display = $this->debugModule(['module' => 'CheckoutModule', '--json' => true])->getDisplay();
+
+        /** @var list<array<string, mixed>> $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame(
+            [CheckoutModuleProvider::GATEWAY, CheckoutModuleProvider::RETRIES],
+            $decoded[0]['provides'],
+        );
     }
 
     public function test_tree_option_limits_output_to_the_dependency_tree(): void

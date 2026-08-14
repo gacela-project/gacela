@@ -293,6 +293,37 @@ final class DtoGenerateCommandTest extends TestCase
     }
 
     /**
+     * An array default used to be written by `var_export()`, which puts
+     * `array (` on its own line and indents the body from column zero -- so the
+     * generated constructor call came out across five mangled lines, in a file
+     * whoever ran the command commits and reads.
+     */
+    public function test_an_array_default_is_written_as_one_readable_expression(): void
+    {
+        $orderClass = $this->orderClass();
+
+        Gacela::bootstrap($this->projectDir, static function (GacelaConfig $config) use ($orderClass): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+            $config->declareDtoSchema($orderClass, [
+                'reference' => DtoType::string()->required(),
+                'tags' => DtoType::array()->default(['eur', 'usd']),
+                'meta' => DtoType::array()->default(['a' => 1, 'b' => ['c' => 2]]),
+                'empty' => DtoType::array()->default([]),
+            ]);
+        });
+
+        (new CommandTester(new DtoGenerateCommand()))->execute([]);
+
+        $generated = (string)file_get_contents($this->orderFile());
+
+        self::assertStringContainsString("\$data['tags'] ?? ['eur', 'usd'],", $generated);
+        self::assertStringContainsString("\$data['meta'] ?? ['a' => 1, 'b' => ['c' => 2]],", $generated);
+        self::assertStringContainsString("\$data['empty'] ?? [],", $generated);
+        self::assertStringNotContainsString('array (', $generated);
+    }
+
+    /**
      * @param list<string> $classNames
      */
     private function generateMany(array $classNames): CommandTester

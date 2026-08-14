@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\Debug;
 
+use Gacela\Console\Domain\FileContent\PhpValue;
+
 use Gacela\Container\Attribute\Inject;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
@@ -19,7 +21,6 @@ use function interface_exists;
 use function is_callable;
 use function is_object;
 use function sprintf;
-use function var_export;
 
 /**
  * @psalm-import-type BindingsMap from GacelaConfigFileInterface
@@ -118,7 +119,7 @@ final class ConstructorInspector
     {
         /** @var mixed $default */
         $default = $parameter->getDefaultValue();
-        return sprintf('= %s', var_export($default, true));
+        return sprintf('= %s', PhpValue::export($default));
     }
 
     /**

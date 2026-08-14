@@ -8,6 +8,7 @@ use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSourceCheck;
+use Gacela\Console\Application\Doctor\Check\DuplicateProvidedIdCheck;
 use Gacela\Console\Application\Doctor\Check\EventListenerTargetCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
@@ -134,6 +135,7 @@ final class DoctorCommand extends Command
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules, $suffixTypes),
+            new DuplicateProvidedIdCheck($modules),
             new ConfigSourceCheck(
                 $configLoader->patternsMatchingNothing(),
                 count($configLoader->declaredPatterns()),

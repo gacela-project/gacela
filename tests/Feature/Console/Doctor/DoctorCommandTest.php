@@ -73,6 +73,7 @@ final class DoctorCommandTest extends TestCase
             '✓ cache directory',
             '✓ suffix configuration',
             '✓ class filenames',
+            '✓ duplicate provided ids',
             '✓ config sources',
             '✓ config schema',
             '✓ published stubs',

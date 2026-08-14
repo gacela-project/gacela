@@ -49,6 +49,8 @@
 
 ### Fixed
 
+- Generate a `gacela.php` that names the project's own namespaces. `init` wrote the literal `setProjectNamespaces(['App'])` into every project it scaffolded, which is right for the ones that use `App\` and quietly wrong for the rest — the resolver tries those prefixes *before* the module's own namespace, so a wrong one costs a failed lookup on every cold resolution and resolves the wrong class for a project that does have an `App\` module of the same name. The prefixes now come from `composer.json`, falling back to `['App']` when there is no manifest
+
 - Reattach nine docblocks in the shipped code that described nothing, orphaned when a method was added between an existing docblock and its signature. Both halves stay valid php, so the analysers only object when the annotation was load-bearing for a type. A test now walks the shipped directories and fails on any docblock whose next meaningful token is another docblock
 - Say whose bindings `debug:module` is listing. The section headed `Bindings` reports the application's container, the same list whichever module is named, so it is now `Application bindings (project-wide)`; `Provides (#[Provides])` above it is the section that answers for the module. The `--json` field keeps its name
 - Document the Symfony bridge's `enabled` key: `enabled: false` keeps the bundle in `config/bundles.php` while leaving Gacela un-bootstrapped, and the only way to find it was to read the config tree. A test now asserts every declared key appears in the README, so the next one fails rather than shipping undiscoverable

@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Console\Domain\FileContent\JsonFile;
+use Gacela\Console\Domain\PackageManifest\ComposerPackage;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function array_keys;
 use function dirname;
+use function implode;
 use function is_dir;
 use function is_file;
 use function mkdir;
 use function sprintf;
+use function str_replace;
+use function trim;
 
 /**
  * Scaffolds the `gacela.php` a project needs before anything else works.
@@ -75,7 +81,13 @@ final class InitCommand extends Command
         }
 
         $output->writeln('');
-        $output->writeln('Next: <comment>bin/gacela make:module App/YourModule --minimal</comment>');
+        // Named after the project's own prefix, so the suggested command is one
+        // that works here rather than one that scaffolds into a namespace
+        // composer does not map.
+        $output->writeln(sprintf(
+            'Next: <comment>bin/gacela make:module %s/YourModule --minimal</comment>',
+            $this->projectNamespaces()[0] ?? 'App',
+        ));
 
         return self::SUCCESS;
     }
@@ -124,6 +136,52 @@ final class InitCommand extends Command
             throw new RuntimeException(sprintf('Template "%s" could not be read', self::TEMPLATE));
         }
 
-        return $template;
+        return str_replace('$PROJECT_NAMESPACES$', $this->renderProjectNamespaces(), $template);
+    }
+
+    /**
+     * The project's own psr-4 prefixes, as a php array literal.
+     *
+     * This used to be the literal `['App']` for every project, which is right
+     * for the projects that use it and quietly wrong for the rest. It is not
+     * decoration: the resolver builds `\{projectNamespace}\{Module}\{Module}Factory`
+     * from these and tries them *before* the module's own namespace, so a wrong
+     * prefix costs a failed lookup on every cold resolution -- and resolves the
+     * wrong class outright for a project that does have an `App\` module of the
+     * same name.
+     */
+    private function renderProjectNamespaces(): string
+    {
+        $prefixes = $this->projectNamespaces();
+
+        if ($prefixes === []) {
+            // No manifest, or one that declares no autoloading. `App` is the
+            // convention and a better guess than an empty list, which would
+            // read as a decision.
+            return "['App']";
+        }
+
+        return sprintf("['%s']", implode("', '", $prefixes));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function projectNamespaces(): array
+    {
+        $decoded = JsonFile::decode($this->appRootDir . DIRECTORY_SEPARATOR . 'composer.json');
+        if ($decoded === null) {
+            return [];
+        }
+
+        $namespaces = [];
+        foreach (array_keys(ComposerPackage::autoloadPrefixesOf($decoded)) as $prefix) {
+            $trimmed = trim($prefix, '\\');
+            if ($trimmed !== '') {
+                $namespaces[] = $trimmed;
+            }
+        }
+
+        return $namespaces;
     }
 }

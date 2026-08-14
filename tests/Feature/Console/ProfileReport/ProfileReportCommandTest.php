@@ -58,6 +58,41 @@ final class ProfileReportCommandTest extends TestCase
         self::assertStringContainsString("\$profiler->stop('db-query', 'users')", $help);
     }
 
+    public function test_an_unknown_format_is_refused_rather_than_answered_with_a_table(): void
+    {
+        $tester = $this->runCommand(['--format' => 'xml']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown format "xml". Use one of: table, json, summary', $tester->getDisplay());
+    }
+
+    /**
+     * The same for `--sort`, which silently fell back to `duration` -- a report
+     * ordered by something other than what was asked for, and no way to tell.
+     */
+    public function test_an_unknown_sort_is_refused(): void
+    {
+        $tester = $this->runCommand(['--sort' => 'meory']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown sort "meory". Use one of: duration, memory, operation', $tester->getDisplay());
+    }
+
+    /**
+     * Refused before the profiler is asked whether it is enabled: a disabled
+     * profiler returns early, and a misspelling would then be answered only on
+     * the runs that happened to have data.
+     */
+    public function test_a_bad_option_is_refused_even_when_the_profiler_is_disabled(): void
+    {
+        $this->profiler->disable();
+
+        $tester = $this->runCommand(['--sort' => 'meory']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringNotContainsString('Profiler is not enabled', $tester->getDisplay());
+    }
+
     public function test_reports_that_the_profiler_is_disabled(): void
     {
         $this->profiler->disable();

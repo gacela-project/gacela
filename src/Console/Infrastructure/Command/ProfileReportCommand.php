@@ -6,6 +6,7 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Framework\Profiler\Profiler;
 use Gacela\Framework\Profiler\TProfileEntry;
+use LogicException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,6 +18,19 @@ use function usort;
 
 final class ProfileReportCommand extends Command
 {
+    private const FORMATS = ['table', 'json', 'summary'];
+
+    private const SORTS = ['duration', 'memory', 'operation'];
+
+    /**
+     * Unreachable: the value was checked against the list above before we got
+     * here. It is a throw rather than a `default` arm doing something sensible
+     * because the way this becomes reachable is adding an entry to one of those
+     * lists and not wiring it up -- and then a `default` would quietly render
+     * the table for a format someone just added.
+     */
+    private const UNWIRED = 'A value accepted by %s reached a match that does not handle it: "%s".';
+
     protected function configure(): void
     {
         $this->setName('profile:report')
@@ -46,6 +60,19 @@ final class ProfileReportCommand extends Command
         // consumer reaches: those are the two runs where there is nothing to
         // report, which is exactly when a CI job is parsing the output.
         $format = ConsoleInput::format($input, 'table');
+        $sortBy = ConsoleInput::option($input, 'sort');
+
+        // Both refused before the early returns below, so a misspelling is
+        // reported on a run with nothing to report too -- otherwise `--sort=meory`
+        // is only ever answered when the profiler happens to have entries.
+        foreach ([['format', $format, self::FORMATS], ['sort', $sortBy, self::SORTS]] as [$option, $value, $allowed]) {
+            $unknown = ConsoleChoice::unknown($option, $value, $allowed);
+            if ($unknown !== null) {
+                $output->writeln($unknown);
+
+                return self::FAILURE;
+            }
+        }
 
         if (!$profiler->isEnabled()) {
             if ($format === 'json') {
@@ -79,14 +106,16 @@ final class ProfileReportCommand extends Command
             return self::SUCCESS;
         }
 
-        $sortBy = ConsoleInput::option($input, 'sort');
-
         $entries = $this->sortEntries($entries, $sortBy);
 
+        // `table` by name rather than as the default arm: the value is one of
+        // self::FORMATS by now, so an arm that catches "anything else" would
+        // only catch a format added to that list and never wired up here.
         match ($format) {
             'json' => $this->outputJson($entries, $profiler, $output),
             'summary' => $this->outputSummary($profiler, $output),
-            default => $this->outputTable($entries, $profiler, $output),
+            'table' => $this->outputTable($entries, $profiler, $output),
+            default => throw new LogicException(sprintf(self::UNWIRED, 'FORMATS', $format)),
         };
 
         // Not for `json`, whose consumer parses a document rather than reading
@@ -137,7 +166,8 @@ final class ProfileReportCommand extends Command
         usort($entries, static fn (TProfileEntry $a, TProfileEntry $b): int => match ($sortBy) {
             'memory' => $b->memoryUsage <=> $a->memoryUsage,
             'operation' => $a->operation <=> $b->operation,
-            default => $b->duration <=> $a->duration,
+            'duration' => $b->duration <=> $a->duration,
+            default => throw new LogicException(sprintf(self::UNWIRED, 'SORTS', $sortBy)),
         });
 
         return $entries;

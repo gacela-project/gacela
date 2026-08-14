@@ -98,6 +98,16 @@ final class ValidateConfigCommandTest extends TestCase
         self::assertStringContainsString('absence is not an error', $help);
     }
 
+    public function test_an_unknown_format_is_refused_rather_than_answered_with_text(): void
+    {
+        $tester = $this->validate(static function (): void {
+        }, ['--format' => 'xml']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown format "xml". Use one of: text, json', $tester->getDisplay());
+        self::assertStringNotContainsString('Validating Gacela Configuration', $tester->getDisplay());
+    }
+
     public function test_an_empty_configuration_is_valid_and_stays_silent_about_gacela_php(): void
     {
         $tester = $this->validate(static function (): void {

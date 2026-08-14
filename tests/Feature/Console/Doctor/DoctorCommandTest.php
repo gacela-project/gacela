@@ -133,6 +133,7 @@ final class DoctorCommandTest extends TestCase
             '✓ unresolved pillar files',
             '✓ cacheable storage',
             '✓ plugin stacks',
+            '✓ handler registries',
             '✓ duplicate provided ids',
             '✓ unusable #[Provides]',
             '✓ config sources',

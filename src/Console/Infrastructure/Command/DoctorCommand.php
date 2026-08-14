@@ -21,8 +21,8 @@ use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\TaggedServiceTargetCheck;
 use Gacela\Console\Application\Doctor\Check\UndiscoveredFacadeCheck;
-use Gacela\Console\Application\Doctor\Check\UnreachableProvidesCheck;
 use Gacela\Console\Application\Doctor\Check\UnresolvedPillarFileCheck;
+use Gacela\Console\Application\Doctor\Check\UnusableProvidesCheck;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
@@ -215,7 +215,7 @@ final class DoctorCommand extends Command
             new CacheableStorageCheck($modules, CacheableConfig::hasUserSuppliedStorage()),
             new PluginStackCheck($config->getSetupGacela()->getPluginStacks()),
             new DuplicateProvidedIdCheck($modules),
-            new UnreachableProvidesCheck($modules),
+            new UnusableProvidesCheck($modules),
             new ConfigSourceCheck(
                 $configLoader->patternsMatchingNothing(),
                 count($configLoader->declaredPatterns()),

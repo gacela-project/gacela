@@ -112,7 +112,7 @@ return static function (RectorConfig $rectorConfig): void {
             __DIR__ . '/laravel-bridge/tests/Fixtures/PrivateSetterConsumer.php',
             // A private #[Provides] method that exists to be *reported*: the
             // scanner reads public methods only, so nothing may call it -- and
-            // deleting it deletes the fault UnreachableProvidesCheck is asserted
+            // deleting it deletes the fault UnusableProvidesCheck is asserted
             // against.
             __DIR__ . '/tests/Unit/Console/Application/Doctor/Check/Fixtures/HiddenProvidesProvider.php',
         ],

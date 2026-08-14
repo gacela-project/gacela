@@ -93,6 +93,45 @@ final class ListModulesCommandTest extends TestCase
         self::assertStringNotContainsString('ToBeIgnored', $out);
     }
 
+    /**
+     * A filter that matched nothing and a project where nothing is a module are
+     * different answers. With no argument the command used to give the second
+     * in the words of the first -- `No modules match filter ""`, quoting an
+     * empty filter as though the reader had typed one.
+     *
+     * The hint names the cause worth naming: discovery reflects on the class to
+     * see whether it descends from `AbstractFacade`, so a Facade whose
+     * namespace composer cannot map is skipped in silence, and the files sitting
+     * on disk make the empty list read as a bug in the command. It cost me an
+     * investigation before it cost anyone else one.
+     */
+    public function test_finding_nothing_without_a_filter_does_not_quote_an_empty_one(): void
+    {
+        // A real directory with nothing in it: pointing at one that does not
+        // exist makes Gacela warn about the path instead, which is a different
+        // report and would leave this asserting on the wrong thing.
+        $emptyDir = sys_get_temp_dir() . '/gacela-empty-' . bin2hex(random_bytes(4));
+        mkdir($emptyDir, 0777, true);
+
+        try {
+            Gacela::bootstrap($emptyDir, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->setAppModulePaths(['.']);
+            });
+
+            $tester = new CommandTester(new ListModulesCommand());
+            $tester->execute([]);
+            $display = $tester->getDisplay();
+
+            self::assertStringContainsString('No modules found.', $display);
+            self::assertStringNotContainsString('filter ""', $display);
+            self::assertStringContainsString('autoloadable', $display);
+        } finally {
+            // Names exactly what this test created.
+            rmdir($emptyDir);
+        }
+    }
+
     public function test_non_matching_filter_reports_no_modules(): void
     {
         $this->command->execute(['filter' => 'NoSuchModuleXYZ']);

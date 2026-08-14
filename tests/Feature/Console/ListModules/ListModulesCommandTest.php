@@ -152,10 +152,116 @@ final class ListModulesCommandTest extends TestCase
         );
     }
 
+    /**
+     * The project's module inventory, for something other than a reader.
+     * `debug:module --json` describes the modules matching a filter and takes a
+     * required argument, so asking it for "everything" meant inventing a
+     * substring that happens to match everything -- which is not a question it
+     * was built to answer, and quietly wrong for a project whose modules share
+     * no common fragment.
+     */
+    public function test_json_describes_every_module_with_its_pillars(): void
+    {
+        $decoded = $this->listModulesAsJson([]);
+
+        self::assertCount(3, $decoded);
+        self::assertSame([
+            'module' => 'TestModule1',
+            'fullModuleName' => 'GacelaTest\\Feature\\Console\\ListModules\\TestModule1',
+            'facade' => \GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Facade::class,
+            'factory' => \GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Factory::class,
+            'config' => null,
+            'provider' => \GacelaTest\Feature\Console\ListModules\TestModule1\TestModule1Provider::class,
+        ], $this->moduleNamed($decoded, 'TestModule1'));
+    }
+
+    /**
+     * A pillar the module does not have is `null`, not an omitted key: the
+     * shape is the same for every module, so a consumer reads a value rather
+     * than probing for one. The table prints a blank cell for the same reason.
+     */
+    public function test_json_reports_a_missing_pillar_as_null(): void
+    {
+        $module = $this->moduleNamed($this->listModulesAsJson([]), 'TestModule2');
+
+        self::assertNull($module['factory']);
+        self::assertNull($module['config']);
+        self::assertNull($module['provider']);
+        self::assertIsString($module['facade']);
+    }
+
+    public function test_json_narrows_to_the_filter_like_the_table_does(): void
+    {
+        $decoded = $this->listModulesAsJson(['filter' => 'TestModule1']);
+
+        self::assertCount(1, $decoded);
+        self::assertSame('TestModule1', $decoded[0]['module']);
+    }
+
+    /**
+     * The run a CI job most often gets, and the one that used to break it: a
+     * filter matching nothing printed a sentence, so a consumer piping this to
+     * a parser got a syntax error exactly when the answer was "none". An empty
+     * list says the same thing and parses.
+     */
+    public function test_a_filter_matching_nothing_is_an_empty_document(): void
+    {
+        $tester = new CommandTester(new ListModulesCommand());
+        $tester->execute(['filter' => 'NoSuchModuleXYZ', '--json' => true]);
+
+        self::assertSame([], json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR));
+        self::assertStringNotContainsString('No modules match', $tester->getDisplay());
+    }
+
+    /**
+     * `--detailed` chooses between two ways of printing for a reader. A
+     * consumer that asked for a document wants the fields either way, so the
+     * flag has nothing to say about it.
+     */
+    public function test_detailed_makes_no_difference_to_the_document(): void
+    {
+        self::assertSame(
+            $this->listModulesAsJson([]),
+            $this->listModulesAsJson(['--detailed' => true]),
+        );
+    }
+
     public static function commandInputProvider(): iterable
     {
         yield 'slashes' => ['ListModules/TestModule1'];
         yield 'backward slashes' => ['ListModules\\TestModule1'];
+    }
+
+    /**
+     * @param array<string, bool|string> $input
+     *
+     * @return list<array{module: string, fullModuleName: string, facade: string, factory: ?string, config: ?string, provider: ?string}>
+     */
+    private function listModulesAsJson(array $input): array
+    {
+        $tester = new CommandTester(new ListModulesCommand());
+        $tester->execute($input + ['--json' => true]);
+
+        /** @var list<array{module: string, fullModuleName: string, facade: string, factory: ?string, config: ?string, provider: ?string}> $decoded */
+        $decoded = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
+    }
+
+    /**
+     * @param list<array{module: string, fullModuleName: string, facade: string, factory: ?string, config: ?string, provider: ?string}> $modules
+     *
+     * @return array{module: string, fullModuleName: string, facade: string, factory: ?string, config: ?string, provider: ?string}
+     */
+    private function moduleNamed(array $modules, string $name): array
+    {
+        foreach ($modules as $module) {
+            if ($module['module'] === $name) {
+                return $module;
+            }
+        }
+
+        self::fail(sprintf('No module named "%s" in the document', $name));
     }
 
     /**

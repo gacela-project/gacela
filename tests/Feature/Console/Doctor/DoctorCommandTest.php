@@ -82,6 +82,7 @@ final class DoctorCommandTest extends TestCase
             '✓ cache directory',
             '✓ suffix configuration',
             '✓ class filenames',
+            '✓ undiscovered facades',
             '✓ duplicate provided ids',
             '✓ unreachable #[Provides]',
             '✓ config sources',

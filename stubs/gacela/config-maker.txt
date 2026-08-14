@@ -1,0 +1,11 @@
+<?php
+
+declare(strict_types=1);
+
+namespace $NAMESPACE$;
+
+use Gacela\Framework\AbstractConfig;
+
+final class $CLASS_NAME$ extends AbstractConfig
+{
+}

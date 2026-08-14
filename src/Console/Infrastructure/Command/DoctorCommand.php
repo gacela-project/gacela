@@ -18,6 +18,7 @@ use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\TaggedServiceTargetCheck;
+use Gacela\Console\Application\Doctor\Check\UndiscoveredFacadeCheck;
 use Gacela\Console\Application\Doctor\Check\UnreachableProvidesCheck;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
@@ -194,6 +195,7 @@ final class DoctorCommand extends Command
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules, $suffixTypes),
+            new UndiscoveredFacadeCheck($this->getFacade()->findUndiscoveredFacadeFiles()),
             new DuplicateProvidedIdCheck($modules),
             new UnreachableProvidesCheck($modules),
             new ConfigSourceCheck(

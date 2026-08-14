@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace $NAMESPACE$\Tests;
+
+use $NAMESPACE$\$MODULE_NAME$Facade;
+use Gacela\Framework\Testing\GacelaTestCase;
+
+final class $CLASS_NAME$ extends GacelaTestCase
+{
+    public function test_execute(): void
+    {
+        $this->bootstrapGacela(__DIR__);
+
+        self::assertSame('Hello from $MODULE_NAME$Service!', (new $MODULE_NAME$Facade())->execute());
+    }
+}

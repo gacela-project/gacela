@@ -49,7 +49,7 @@ final class ListModulesCommand extends Command
         $modules = $this->getFacade()->findAllAppModules($filter);
 
         if ($modules === []) {
-            $output->writeln(sprintf('<comment>No modules match filter "%s".</comment>', $filter));
+            $this->reportNothingFound($output, $filter);
 
             return self::SUCCESS;
         }
@@ -65,6 +65,32 @@ final class ListModulesCommand extends Command
     private function output(): OutputInterface
     {
         return $this->output ?? new ConsoleOutput();
+    }
+
+    /**
+     * A filter that matched nothing and a project where nothing is a module are
+     * different answers, and `No modules match filter ""` gave the second one
+     * in the words of the first -- quoting an empty filter as though the reader
+     * had typed it.
+     *
+     * The hint is the cause worth naming: discovery reflects on the class to
+     * see whether it descends from `AbstractFacade`, so a file whose namespace
+     * composer cannot map is skipped in silence. The files are right there on
+     * disk, which is what makes the empty list read as a bug in the command.
+     */
+    private function reportNothingFound(OutputInterface $output, string $filter): void
+    {
+        if ($filter !== '') {
+            $output->writeln(sprintf('<comment>No modules match filter "%s".</comment>', $filter));
+
+            return;
+        }
+
+        $output->writeln('<comment>No modules found.</comment>');
+        $output->writeln(
+            'A module is found by its Facade: the filename carries the suffix, and the class has to be'
+            . ' autoloadable. If the files are there, check the psr-4 mapping in composer.json.',
+        );
     }
 
     /**

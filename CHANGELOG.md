@@ -36,6 +36,8 @@
 
 ### Changed
 
+- Say what an empty `list:modules` means. With no argument it reported `No modules match filter ""`, quoting a filter the reader never typed and giving "nothing here is a module" in the words of "your filter matched nothing". It now names the two apart, and the empty case points at the cause worth naming: discovery reflects on the class to see whether it descends from `AbstractFacade`, so a Facade whose namespace composer cannot map is skipped in silence — and the files sitting on disk are what make the empty list read as a bug in the command
+
 - Memoize the resolvable-type normalization in `DocBlockResolver`, cutting service resolution by 10–16% on all four `DocBlockResolverBench` subjects (1.130 → 0.968 µs attribute, 1.158 → 0.974 µs phpdoc, rstdev ≤ 2.9%). `getDocBlockResolvable()` asks two questions about a caller: which class the accessor names, already read through `ServiceResolverCache`, and which kind that class's suffix belongs to, which was recomputed on every call — up to three `is_a()` class lookups for an answer fixed once the class is loaded. Cleared by `Gacela::resetCache()` like the caches beside it
 
 - Name the class in the docblock-fallback deprecation, so the `#[ServiceMap]` line it suggests can be pasted. The notice printed a literal `className: ...` while reporting that it had just resolved that very class — handing back the one question it had already answered, and for a pillar named unqualified the answer depends on the file's imports *and* its namespace. It is now spelled `\Fully\Qualified\Name::class`, which pastes into any namespace unchanged

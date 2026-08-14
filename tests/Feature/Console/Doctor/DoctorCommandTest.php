@@ -174,9 +174,15 @@ final class DoctorCommandTest extends TestCase
     }
 
     /**
-     * Twelve checks is a lot of "✓" to read to find the one "⚠". `-q` is not
-     * the answer: it suppresses everything, so `--strict -q` fails a build with
-     * no indication of what failed.
+     * A full run is a lot of "✓" to read to find the one "⚠". `-q` is not the
+     * answer: it suppresses everything, so `--strict -q` fails a build with no
+     * indication of what failed.
+     *
+     * The count is deliberately not written out here. The changelog's copy of
+     * this sentence is guarded by
+     * `test_the_changelog_counts_the_checks_doctor_actually_runs()`; an
+     * unguarded second copy would just be one more number to get wrong -- as
+     * this one was, sitting at "Twelve" through six more checks.
      */
     public function test_only_problems_hides_the_passing_checks(): void
     {
@@ -495,10 +501,11 @@ final class DoctorCommandTest extends TestCase
     }
 
     /**
-     * The `--only-problems` changelog entry opens "Fourteen checks is a lot of
-     * ✓ to read to find the one ⚠", and adding a check makes that wrong. It has
-     * been wrong twice: #796 took it to thirteen and #797 to fourteen, both
-     * caught by hand, both while still in `## Unreleased` and shipping.
+     * The `--only-problems` changelog entry opens by counting the checks in
+     * words -- "<N> checks is a lot of ✓ to read to find the one ⚠" -- and
+     * adding a check makes that wrong. It had been wrong twice before this
+     * guard: #796 took it to thirteen and #797 to fourteen, both caught by
+     * hand, both while still in `## Unreleased` and shipping.
      *
      * #798 guarded the sibling count in `docs/cli.md` and deliberately left
      * this one alone, because it needed the number of checks the command

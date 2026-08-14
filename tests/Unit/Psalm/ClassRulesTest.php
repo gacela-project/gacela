@@ -44,6 +44,11 @@ final class ClassRulesTest extends TestCase
     /**
      * The second method-level rule. Psalm's own integration test drives it in a
      * subprocess, which coverage cannot see, so the wiring is proven here.
+     *
+     * The body calls `cached()` around a delegating closure so this stays about
+     * the key. An empty body brings `gacela.cacheableWithoutCachedCall`, and a
+     * closure that does its own work brings `gacela.facadeOnlyDelegates` --
+     * either way the assertion would be about more than one rule.
      */
     public function test_it_runs_the_cacheable_key_rule(): void
     {
@@ -52,7 +57,7 @@ final class ClassRulesTest extends TestCase
             final class CheckoutFacade
             {
                 #[Cacheable(key: 'thing')]
-                public function doThing(int $id) {}
+                public function doThing(int $id) { return $this->cached(fn () => $this->getFactory()->doThing($id)); }
             }
             PHP;
 

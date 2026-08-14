@@ -44,6 +44,9 @@ services:
         class: Gacela\PHPStan\Rules\CacheableKeyIgnoresArgumentsRule
         tags: [phpstan.rules.rule]
     -
+        class: Gacela\PHPStan\Rules\CacheableWithoutCachedCallRule
+        tags: [phpstan.rules.rule]
+    -
         class: Gacela\PHPStan\Rules\FactoryDoesNotCallFacadeRule
         tags: [phpstan.rules.rule]
     # Self-limiting: only fires for a facade that explicitly implements the

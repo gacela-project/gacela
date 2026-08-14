@@ -12,6 +12,7 @@ use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\MethodAnalyserInterface;
 use Gacela\StaticAnalysis\Rules\CacheableKeyIgnoresArgumentsAnalyser;
+use Gacela\StaticAnalysis\Rules\CacheableWithoutCachedCallAnalyser;
 use Gacela\StaticAnalysis\Rules\FacadeInterfaceInSyncAnalyser;
 use Gacela\StaticAnalysis\Rules\FacadeOnlyDelegatesAnalyser;
 use Gacela\StaticAnalysis\Rules\FactoryDoesNotCallFacadeAnalyser;
@@ -114,6 +115,7 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
     private static function classAnalysers(): array
     {
         return self::$classAnalysers ??= [
+            new CacheableWithoutCachedCallAnalyser(),
             new SuffixExtendsAnalyser('Facade', AbstractFacade::class),
             new SuffixExtendsAnalyser('Factory', AbstractFactory::class),
             new SuffixExtendsAnalyser('Provider', AbstractProvider::class),

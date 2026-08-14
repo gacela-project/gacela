@@ -106,6 +106,10 @@
 - Preload the framework and the packages it runs on, discovered rather than named in a list. A preloaded class is only kept if everything it extends, implements and uses came along, so the hand-written list silently linked none of the pillars, the resolvers or either container
 - Read `gacela.php` once when bootstrapping without a closure, instead of loading it as a config source it is already the source of. Everything the project declared arrived twice: one `addAppConfig()` globbed twice, a plugin declared once ran twice. Passing a closure to `Gacela::bootstrap()` was never affected
 
+### Internal
+
+- Delete `ContextualBindingRegistrar`. It narrowed the stored `mixed` before handing it to the container's `give()` — class strings and objects through, anything else wrapped in a closure — and its only remaining reason was that `give(null)` threw upstream. That shipped in container 2.0 (container#169), so the class had become a pass-through. All nine implementation shapes were compared through it and around it before removing it, and its tests were rewritten against the call it used to make rather than deleted with it
+
 ### Documentation
 
 - Correct the remedy offered for a misspelled provided-dependency id. "Check `debug:module`, which lists every id that module's Provider declares" does not hold: the command lists what `#[Provides]` declares and not what a Provider registers imperatively with `$container->set()`, so the module the advice was written for prints `(none)` however many ids it has. Declaring with the attribute is what makes an id visible to tooling, which is now what the page says

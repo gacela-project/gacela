@@ -498,10 +498,6 @@
             ignore: [
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateChain",
                 "Gacela\\StaticAnalysis\\Rules\\CrossModuleViaFacadeAnalyser::referencedClasses",
-                // Negating both existence checks routes every string through the
-                // same branch for all realistic inputs (the container injects raw
-                // scalars and pass-through strings identically).
-                "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
                 // Same shape: only a name that is neither a class nor an
                 // interface tells the two branches apart, and a #[Provides]
                 // method whose return type names no existing class fails
@@ -523,13 +519,9 @@
         UnwrapStrToLower: {
             ignore: ["Gacela\\Console\\Application\\IdeMeta\\IdeMetadataScanner::resolveRelativeType"],
         },
-        // Closures are objects and the container evaluates wrapped closures to
-        // the same injected value, so the or-variant mutants on the registrar's
-        // object/callable pass-through are observationally equivalent.
         LogicalOr: {
             ignore: [
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isCachedDelegation",
-                "Gacela\\Framework\\Container\\ContextualBindingRegistrar::register",
             ],
         },
         // warmAttributeCache() breaks out of the prefix scan after the first

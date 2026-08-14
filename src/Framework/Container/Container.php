@@ -630,7 +630,7 @@ final class Container implements ContainerInterface
             /** @var mixed $implementation */
             foreach ($needs as $abstract => $implementation) {
                 /** @var class-string $concrete */
-                ContextualBindingRegistrar::register($container, $concrete, $abstract, $implementation);
+                $container->when($concrete)->needs($abstract)->give($implementation);
                 self::notifyBindingRegistered($abstract);
             }
         }

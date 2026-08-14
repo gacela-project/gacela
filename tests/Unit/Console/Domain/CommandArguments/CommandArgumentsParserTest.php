@@ -82,6 +82,37 @@ final class CommandArgumentsParserTest extends TestCase
         $parser->parse('Unknown/Module');
     }
 
+    /**
+     * `autoload-dev` prefixes are resolvable -- that is what "Read autoload-dev
+     * psr-4 namespaces for gacela make commands" shipped. Pinned here because
+     * nothing else at this level says so, which is how the message below came
+     * to disagree with it.
+     */
+    public function test_a_namespace_declared_only_in_autoload_dev_resolves(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleComposerJsonWithAutoloadDev());
+
+        self::assertSame('tests/Wallet', $parser->parse('AppTest/Wallet')->directory());
+    }
+
+    /**
+     * The list is the only thing the reader has to compare a typo against, so
+     * it has to be every prefix the lookup searched. It was built from
+     * `autoload` alone while the lookup used `autoload + autoload-dev`: someone
+     * mistyping a dev namespace was shown a list without a single dev prefix in
+     * it, and would conclude Gacela does not read them -- about namespaces it
+     * had just been willing to resolve.
+     */
+    public function test_the_known_list_names_the_autoload_dev_prefixes_too(): void
+    {
+        $this->expectExceptionMessage(
+            'No autoload psr-4 match found for AppTst/Wallet. Known PSR-4: App, AppTest, Fixtures',
+        );
+
+        $parser = new CommandArgumentsParser($this->exampleComposerJsonWithAutoloadDev());
+        $parser->parse('AppTst/Wallet');
+    }
+
     public function test_parse_with_multibyte_namespace(): void
     {
         $parser = new CommandArgumentsParser($this->exampleMultibyteComposerJson());
@@ -214,6 +245,30 @@ JSON;
     }
 }
 JSON;
+        return json_decode($composerJson, true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @return array{autoload: array{psr-4: array<string,string>}, autoload-dev: array{psr-4: array<string,string>}}
+     */
+    private function exampleComposerJsonWithAutoloadDev(): array
+    {
+        $composerJson = <<<'JSON'
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AppTest\\": "tests/",
+            "Fixtures\\": "fixtures/"
+        }
+    }
+}
+JSON;
+
         return json_decode($composerJson, true, 512, JSON_THROW_ON_ERROR);
     }
 

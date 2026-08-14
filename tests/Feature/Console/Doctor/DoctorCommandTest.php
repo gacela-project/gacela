@@ -369,10 +369,6 @@ final class DoctorCommandTest extends TestCase
     }
 
     /**
-     * @param list<object|string> $healthChecks
-     * @param array<string, bool|string> $input
-     */
-    /**
      * `--strict` already answers "did anything go wrong" with an exit code. A
      * job that wants to say *which* check, and repeat its remediation into a
      * review comment, had to parse the prose -- which is why
@@ -509,6 +505,10 @@ final class DoctorCommandTest extends TestCase
         );
     }
 
+    /**
+     * @param list<object|string> $healthChecks
+     * @param array<string, bool|string> $input
+     */
     private function doctor(array $healthChecks, array $input = []): CommandTester
     {
         $this->bootstrapDoctor($healthChecks);

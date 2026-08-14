@@ -336,9 +336,6 @@ final class AfterResolvingHookTest extends TestCase
     }
 
     /**
-     * @param callable(GacelaConfig):void $configFn
-     */
-    /**
      * Resolving through `?->` made a service that failed to resolve read as a
      * null logger, so the assertion failed on the value instead of on the cause.
      */
@@ -358,6 +355,9 @@ final class AfterResolvingHookTest extends TestCase
         return $service;
     }
 
+    /**
+     * @param callable(GacelaConfig):void $configFn
+     */
     private function bootstrapWith(callable $configFn): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($configFn): void {

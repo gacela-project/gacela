@@ -177,9 +177,6 @@ final class ProfileReportCommandTest extends TestCase
     }
 
     /**
-     * @param array<string, string> $input
-     */
-    /**
      * An operation missing from the report because its `stop()` misspelled the
      * subject looks exactly like one that was never instrumented. This is the
      * difference.
@@ -303,6 +300,9 @@ final class ProfileReportCommandTest extends TestCase
         self::assertStringNotContainsString('Started and never stopped', $display);
     }
 
+    /**
+     * @param array<string, string> $input
+     */
     private function runCommand(array $input): CommandTester
     {
         $tester = new CommandTester(new ProfileReportCommand());

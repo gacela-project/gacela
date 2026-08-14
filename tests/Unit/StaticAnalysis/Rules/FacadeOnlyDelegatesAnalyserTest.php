@@ -178,9 +178,6 @@ final class FacadeOnlyDelegatesAnalyserTest extends TestCase
     }
 
     /**
-     * @return list<Violation>
-     */
-    /**
      * A static method has no `$this` to delegate through, so no body it could
      * hold would satisfy this rule -- and the tip names a call it cannot make.
      * Reporting it leaves a rename or a baseline entry as the only way out,
@@ -202,6 +199,9 @@ final class FacadeOnlyDelegatesAnalyserTest extends TestCase
         self::assertNotSame([], $this->analyse('$x = 1; return $x + 1;'));
     }
 
+    /**
+     * @return list<Violation>
+     */
     private function analyse(string $body, string $visibility = 'public'): array
     {
         return $this->analyseSource(

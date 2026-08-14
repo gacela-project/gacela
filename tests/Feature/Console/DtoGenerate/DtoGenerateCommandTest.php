@@ -224,9 +224,6 @@ final class DtoGenerateCommandTest extends TestCase
     }
 
     /**
-     * @param list<string> $classNames
-     */
-    /**
      * The CI question this command could not answer: are the generated classes
      * in the repository up to date with what `gacela.php` declares? `--dry-run`
      * reports it and exits 0 either way, so a job had to parse the output.
@@ -295,6 +292,9 @@ final class DtoGenerateCommandTest extends TestCase
         );
     }
 
+    /**
+     * @param list<string> $classNames
+     */
     private function generateMany(array $classNames): CommandTester
     {
         Gacela::bootstrap($this->projectDir, static function (GacelaConfig $config) use ($classNames): void {

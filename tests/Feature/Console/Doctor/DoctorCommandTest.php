@@ -74,6 +74,7 @@ final class DoctorCommandTest extends TestCase
             '✓ suffix configuration',
             '✓ class filenames',
             '✓ duplicate provided ids',
+            '✓ unreachable #[Provides]',
             '✓ config sources',
             '✓ config schema',
             '✓ published stubs',

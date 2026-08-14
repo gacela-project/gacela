@@ -18,6 +18,7 @@ use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\Check\SuffixMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\TaggedServiceTargetCheck;
+use Gacela\Console\Application\Doctor\Check\UnreachableProvidesCheck;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
@@ -136,6 +137,7 @@ final class DoctorCommand extends Command
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules, $suffixTypes),
             new DuplicateProvidedIdCheck($modules),
+            new UnreachableProvidesCheck($modules),
             new ConfigSourceCheck(
                 $configLoader->patternsMatchingNothing(),
                 count($configLoader->declaredPatterns()),

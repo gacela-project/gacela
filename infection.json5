@@ -172,7 +172,7 @@
         },
         // normalizeDirectory(): Windows-specific branches (UNC/backslash folding)
         // that are dead code on the POSIX machines running this suite.
-        // createAppModule()/getNamespace(): the realPath and file_get_contents
+        // findFacadeClass()/getNamespace(): the realPath and file_get_contents
         // false-branches need a file that vanishes or turns unreadable between the
         // directory scan and the read, i.e. a filesystem race. buildClassName()'s
         // `strpos() !== false` needs an extensionless file, which the .php filter
@@ -183,7 +183,7 @@
         FalseValue: {
             ignore: [
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
-                "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::createAppModule",
+                "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::findFacadeClass",
                 "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::getNamespace",
                 "Gacela\\Console\\Domain\\AllAppModules\\AllAppModulesFinder::buildClassName",
                 "Gacela\\Console\\Domain\\AllAppModules\\AppModuleCreator::fullModuleName",

@@ -156,6 +156,14 @@ One file, two readers, on purpose: a boundary that holds in CI and not in the ed
 
 The rules are **self-invalidating**, like the cycle allow list. A `from`, `allow` or `deny` naming a namespace that matches no module fails the check — a rule about a module nobody has any more still reads as a boundary being watched. A `deny` that never fires is not an error; that is the rule doing its job.
 
+**Only `debug:graph --check --rules` reports that**, and it is worth a CI step for it alone:
+
+```
+✗ Module rule governs nothing: App\Paymnet matches no module. Remove the rule, or fix the namespace.
+```
+
+Neither analyser can. They are handed one class at a time and asked whether *this* dependency is allowed; deciding that a namespace matches **no** module needs the whole graph, which only the command builds. So a rule with a typo in it passes PHPStan and Psalm in silence, enforcing nothing — the precise failure the paragraph above is about. The JSON report names them under `unknownRuleNamespaces`.
+
 `--rules` cannot be combined with a filter argument: in a narrowed graph, a rule about a filtered-out module is indistinguishable from a rule about a module that no longer exists, and those two must not look alike.
 
 `--check --format=json` writes the findings as a report instead of lines, for a CI job that wants more than an exit code:

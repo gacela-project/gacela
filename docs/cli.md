@@ -50,7 +50,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 | Command | What it does |
 |---|---|
 | `list:modules` | Renders every module found. `--detailed` for one block per module; `--json` for the whole inventory with every pillar, filter and all |
-| `debug:modules` | Dependency resolvability of every module pillar. `--detail` for every parameter rather than only the unresolvable ones; `--check` exits non-zero when the container cannot satisfy one, for CI |
+| `debug:modules` | Dependency resolvability of every module pillar. `--detail` for every parameter rather than only the unresolvable ones; `--check` exits non-zero when the container cannot satisfy one, for CI; `--json` for the same report as a document |
 | `debug:module App/Blog` | One module: resolved classes, the ids its Provider declares with `#[Provides]`, container bindings, dependency tree |
 | `debug:provides ID` | Which Provider declares an id with `#[Provides]`, across every module — the inverse of `getProvidedDependency()`, which answers `null` for an id nothing declares and says nothing about it. The argument narrows to ids containing it; `--json` for a script |
 | `debug:config` | The effective merged configuration, after every source and override, each key marked `declared`, `undeclared` or `missing` against the [schema](config-schema.md). `--json` keeps the values as their own types, for diffing one environment against another |
@@ -58,7 +58,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 | `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable` |
 | `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--compare-to`. `--allowed-cycles` and `--rules` are read only by `--check`, and are refused without it |
 
-Two of these are built for CI. `debug:graph --check` fails on a dependency cycle — see [module boundaries](module-boundaries.md) for wiring it into a workflow — and `debug:modules --check` fails when a pillar needs a constructor parameter the container cannot satisfy.
+Two of these are built for CI. `debug:graph --check` fails on a dependency cycle — see [module boundaries](module-boundaries.md) for wiring it into a workflow — and `debug:modules --check` fails when a pillar needs a constructor parameter the container cannot satisfy. Both pair with `--json`, so a job can say *which* module and *which* parameter rather than only that something failed; `debug:modules --json` carries a `faults` count apart from `unresolvable`, which is the distinction `--check` fails on.
 
 `--check` fails only on parameters the inspector looked at and rejected: an unbound interface, a scalar with no default, a missing type hint, a type that does not exist. A union or intersection type is **not** walked, so it is reported as unresolvable and does not fail the run — that is a gap in the tool rather than a fault in your project. The count of those is printed, so a passing `--check` does not read as "every parameter was checked".
 

@@ -41,8 +41,18 @@ final class ProfileReportCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $profiler = Profiler::getInstance();
+        // Read before the early returns below, both of which a `--format=json`
+        // consumer reaches: those are the two runs where there is nothing to
+        // report, which is exactly when a CI job is parsing the output.
+        $format = ConsoleInput::option($input, 'format');
 
         if (!$profiler->isEnabled()) {
+            if ($format === 'json') {
+                $this->outputJson([], $profiler, $output);
+
+                return self::SUCCESS;
+            }
+
             $output->writeln('<comment>Profiler is not enabled. Enable it with Profiler::getInstance()->enable()</comment>');
             $output->writeln('');
 
@@ -53,6 +63,14 @@ final class ProfileReportCommand extends Command
         $unfinished = $profiler->getUnfinishedOperations();
 
         if ($entries === []) {
+            // Not merely empty: everything started and nothing stopped lands
+            // here too, and then `unfinished` is the whole of the report.
+            if ($format === 'json') {
+                $this->outputJson([], $profiler, $output);
+
+                return self::SUCCESS;
+            }
+
             $output->writeln('<info>No profiling data available</info>');
             $this->writeUnfinished($unfinished, $output);
             $output->writeln('');
@@ -60,7 +78,6 @@ final class ProfileReportCommand extends Command
             return self::SUCCESS;
         }
 
-        $format = ConsoleInput::option($input, 'format');
         $sortBy = ConsoleInput::option($input, 'sort');
 
         $entries = $this->sortEntries($entries, $sortBy);

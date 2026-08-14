@@ -46,11 +46,6 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
-     * Generate a file from the `service` template set.
-     *
-     * @param string $subDirectory optional sub-directory (relative to the module dir) to place the file in
-     */
-    /**
      * Which of the files a `make:*` run would write already exist.
      *
      * A target path is built from the module arguments alone -- the stubs a
@@ -93,6 +88,11 @@ final class ConsoleFacade extends AbstractFacade
             ->plannedTargets($commandArguments, $files, $withShortName);
     }
 
+    /**
+     * Generate a file from the `service` template set.
+     *
+     * @param string $subDirectory optional sub-directory (relative to the module dir) to place the file in
+     */
     public function generateServiceFileContent(
         CommandArguments $commandArguments,
         string $filename,

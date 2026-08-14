@@ -6,7 +6,6 @@ namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
 use Gacela\Framework\AbstractFacade;
 use Gacela\StaticAnalysis\Rules\FacadeInterfaceInSyncAnalyser;
-use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
 use PHPUnit\Framework\TestCase;
@@ -18,13 +17,12 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
      * the scan, not end it, or a single private method near the top of a facade
      * hides every drifted method behind it.
      *
+     * The static method sits *between* two instance methods for the same
+     * reason: it is skipped, and skipping must not abandon the methods after
+     * it. With it last, `continue` and `break` are indistinguishable.
+     *
      * Kept as a string rather than a fixture file because cs-fixer reorders a
      * real class by visibility, which would undo exactly that ordering.
-     */
-    /**
-     * The static method sits *between* two instance methods on purpose: it is
-     * skipped, and skipping must not abandon the methods after it. With it
-     * last, `continue` and `break` are indistinguishable.
      */
     private const SOURCE = <<<'PHP'
         <?php
@@ -133,11 +131,6 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
     }
 
     /**
-     * @param list<string> $declaredInInterface
-     *
-     * @return list<Violation>
-     */
-    /**
      * The drift this rule catches is a consumer holding the interface being
      * unable to reach a method. A static one is not reached through an
      * instance anyway, so requiring it would force every implementer -- test
@@ -151,6 +144,11 @@ final class FacadeInterfaceInSyncAnalyserTest extends TestCase
         self::assertSame([], $violations);
     }
 
+    /**
+     * @param list<string> $declaredInInterface
+     *
+     * @return list<Violation>
+     */
     private function analyse(array $declaredInInterface): array
     {
         $analyser = new FacadeInterfaceInSyncAnalyser();

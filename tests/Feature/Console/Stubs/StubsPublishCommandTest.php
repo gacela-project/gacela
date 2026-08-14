@@ -239,10 +239,6 @@ final class StubsPublishCommandTest extends TestCase
     }
 
     /**
-     * The repository is its own scaffolding target: `data/` is a psr-4 path
-     * here, and the generator writes relative to the working directory.
-     */
-    /**
      * The stub filenames a run reported, whichever verb reported them.
      *
      * @return list<string>
@@ -254,6 +250,10 @@ final class StubsPublishCommandTest extends TestCase
         return $matches[1];
     }
 
+    /**
+     * The repository is its own scaffolding target: `data/` is a psr-4 path
+     * here, and the generator writes relative to the working directory.
+     */
     private function bootstrapRepositoryWithStubsDir(): void
     {
         $stubsDir = $this->stubsDir;

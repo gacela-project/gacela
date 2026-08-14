@@ -75,11 +75,6 @@ final class LazyPluginStackTest extends TestCase
     }
 
     /**
-     * A class name in gacela.php is a string until something loads it, so the
-     * contract is checked on first resolve -- and the failure names the class
-     * and the stack, instead of a TypeError wherever the consumer used it.
-     */
-    /**
      * A class name in `gacela.php` is a string until something loads it, and
      * the container answers `null` for one that resolves to nothing -- so the
      * contract check reported a missing class as one that "does not implement"

@@ -419,9 +419,6 @@ final class ValidateConfigCommandTest extends TestCase
     }
 
     /**
-     * @param Closure(GacelaConfig):void $configFn
-     */
-    /**
      * `doctor --strict` has always offered this bargain: a warning is worth
      * reading but not worth failing a build over, until a project says it is.
      * This command reported warnings and exited SUCCESS with no way to say so,
@@ -639,6 +636,7 @@ final class ValidateConfigCommandTest extends TestCase
     }
 
     /**
+     * @param Closure(GacelaConfig):void $configFn
      * @param array<string, mixed> $input
      */
     private function validate(Closure $configFn, array $input = []): CommandTester

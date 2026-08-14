@@ -128,9 +128,6 @@ final class ServiceExtensionTargetCheckTest extends TestCase
     }
 
     /**
-     * @param class-string|null $providerClass
-     */
-    /**
      * `extendProviderService()` names the Provider, so the miss is sharper
      * than the app-wide one: not "nobody set this id" but "the Provider you
      * named does not". Its own docblock promised `doctor` reported this, and
@@ -221,6 +218,9 @@ final class ServiceExtensionTargetCheckTest extends TestCase
         self::assertContains('2 extension id(s) matched', $check->run()->details);
     }
 
+    /**
+     * @param class-string|null $providerClass
+     */
     private function module(?string $providerClass): AppModule
     {
         return new AppModule(

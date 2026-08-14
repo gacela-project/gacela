@@ -30,28 +30,32 @@ use function token_get_all;
  * analysers only notice when the annotation was load-bearing for a type, which
  * is how one of these reached `main` and stayed.
  *
- * There were nine in `src/` when this test was written, and three more
- * introduced in a single afternoon. It is an easy edit to make and an easy one
- * to miss in review, which is exactly the kind a test should own.
+ * There were twenty-one across the repository when this test was written,
+ * three of them introduced in a single afternoon. It is an easy edit to make
+ * and an easy one to miss in review, which is exactly the kind a test should
+ * own.
  *
- * `tests/` is not covered yet -- the same fault is there and is tracked
- * separately, so this starts where a wrong `@param` reaches a reader of the
- * shipped code.
+ * `tests/` is covered too: the annotations there feed psalm and phpstan the
+ * same way, so a `@param list<string>` attached to the wrong method is a type
+ * assertion about the wrong thing wherever it sits.
  */
 final class OrphanedDocblockTest extends TestCase
 {
     /** @var list<string> */
-    private const SHIPPED_DIRECTORIES = [
+    private const SCANNED_DIRECTORIES = [
         'src',
+        'tests',
         'symfony-bridge/src',
         'laravel-bridge/src',
+        'symfony-bridge/tests',
+        'laravel-bridge/tests',
     ];
 
     public function test_no_docblock_describes_another_docblock(): void
     {
         $orphans = [];
 
-        foreach (self::SHIPPED_DIRECTORIES as $directory) {
+        foreach (self::SCANNED_DIRECTORIES as $directory) {
             foreach ($this->phpFilesIn($directory) as $file) {
                 foreach ($this->orphansIn($file) as $line) {
                     $orphans[] = sprintf('%s:%d', $this->relative($file), $line);
@@ -67,13 +71,13 @@ final class OrphanedDocblockTest extends TestCase
     }
 
     /**
-     * The scan finds something, so an empty result means the shipped code is
+     * The scan finds something, so an empty result means the code is
      * clean rather than the walk being broken.
      */
-    public function test_the_scan_reaches_the_shipped_code(): void
+    public function test_the_scan_reaches_the_code(): void
     {
         $files = [];
-        foreach (self::SHIPPED_DIRECTORIES as $directory) {
+        foreach (self::SCANNED_DIRECTORIES as $directory) {
             foreach ($this->phpFilesIn($directory) as $file) {
                 $files[] = $file;
             }

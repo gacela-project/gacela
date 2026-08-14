@@ -399,9 +399,6 @@ $reference = ' . stdClass::class . '::class;
     }
 
     /**
-     * @param array<string, mixed> $options
-     */
-    /**
      * `DependencyTreeInspector` catches `GacelaNotBootstrappedException` from
      * `Gacela::container()` and reports `containerAvailable: false`, which is
      * the one line the reader sees for it. Nothing asserted that line, and the
@@ -429,6 +426,9 @@ $reference = ' . stdClass::class . '::class;
         }
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     private function inspect(string $argument, array $options = []): CommandTester
     {
         $tester = new CommandTester(new DebugDependenciesCommand());

@@ -52,9 +52,8 @@ final class UndiscoveredFacadeCheckTest extends TestCase
     /**
      * The two faults have different fixes, which is the whole reason to tell
      * them apart rather than report "not found".
-     */
-    /**
-     * Whole sentences, not fragments of them. A remediation is the one line a
+     *
+     * Whole sentences, not fragments of them: a remediation is the one line a
      * reader acts on, and `assertStringContainsString('psr-4', ...)` passes just
      * as happily for half a sentence in the wrong order.
      */

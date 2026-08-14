@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Psalm;
 
 use Gacela\Psalm\Issue\GacelaCacheableKeyIgnoresArguments;
+use Gacela\Psalm\Issue\GacelaCacheableWithoutCachedCall;
 use Gacela\Psalm\Issue\GacelaCrossModuleAccess;
 use Gacela\Psalm\Issue\GacelaCrossModuleMethodCall;
 use Gacela\Psalm\Issue\GacelaDeclaredModuleDependency;
@@ -44,6 +45,7 @@ final class ReportedIssues
         'gacela.suffixExtends' => GacelaSuffixExtends::class,
         'gacela.facadeOnlyDelegates' => GacelaFacadeOnlyDelegates::class,
         'gacela.cacheableKeyIgnoresArguments' => GacelaCacheableKeyIgnoresArguments::class,
+        'gacela.cacheableWithoutCachedCall' => GacelaCacheableWithoutCachedCall::class,
         'gacela.factoryInstantiatesFacade' => GacelaFacadeInstantiation::class,
         'gacela.factoryCallsGetFacade' => GacelaFactoryFacadeAccess::class,
         'gacela.facadeInterfaceDrift' => GacelaFacadeInterfaceDrift::class,

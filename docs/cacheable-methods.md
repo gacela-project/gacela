@@ -29,6 +29,8 @@ Subsequent calls within the TTL return the cached value without invoking the cal
 
 `#[Cacheable]` is metadata only. The real caching happens inside `$this->cached(...)`, which:
 
+Because it is metadata only, an attributed method that never reaches `cached()` is simply not cached — at runtime nothing says so, and the attribute sits directly above the body claiming otherwise. Both analysers report it as `gacela.cacheableWithoutCachedCall` (`GacelaCacheableWithoutCachedCall`), on by default. A method that hands off to a helper which calls `cached()` is accepted, since [that is a documented shape](#opting-out-of-backtrace).
+
 1. Reads the attribute via reflection (memoized per `Class::method`).
 2. Builds a cache key from the class, method, and arguments.
 3. Returns the cached value on hit, or runs the callback and stores the result on miss.

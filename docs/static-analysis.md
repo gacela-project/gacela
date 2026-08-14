@@ -73,6 +73,7 @@ Each rule reports under a PHPStan error identifier and a Psalm issue class; both
 | `*Facade`/`*Factory`/`*Provider`/`*Config` extends its pillar base | `gacela.suffixExtends` | `GacelaSuffixExtends` | on |
 | A Facade method only delegates | `gacela.facadeOnlyDelegates` | `GacelaFacadeOnlyDelegates` | on |
 | A `#[Cacheable]` key mentions the arguments | `gacela.cacheableKeyIgnoresArguments` | `GacelaCacheableKeyIgnoresArguments` | on |
+| A `#[Cacheable]` method reaches `$this->cached()` | `gacela.cacheableWithoutCachedCall` | `GacelaCacheableWithoutCachedCall` | on |
 | A Factory does not `new` a Facade | `gacela.factoryInstantiatesFacade` | `GacelaFacadeInstantiation` | on |
 | A Factory does not call `$this->getFacade()` | `gacela.factoryCallsGetFacade` | `GacelaFactoryFacadeAccess` | on |
 | A Facade's public methods are in its `*FacadeInterface` | `gacela.facadeInterfaceDrift` | `GacelaFacadeInterfaceDrift` | on |

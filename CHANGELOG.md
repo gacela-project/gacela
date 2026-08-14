@@ -33,6 +33,8 @@
 
 ### Fixed
 
+- Throw `GacelaNotBootstrappedException` from `Config::getInstance()`, like `Gacela::container()` and `Gacela::rootDir()` already did. It threw a bare `RuntimeException` telling you to `call createWithSetup() first` — an `@internal` method only `Gacela::bootstrap()` calls, so the one instruction the message gave was one you must not follow. It is also the way a project reaches this state first: every pillar goes through `Config::getInstance()`, so a `new SomeFacade()` before the bootstrap landed here rather than on the two that were right. Catching the typed exception to degrade, as `debug:container` and `debug:dependencies` do, therefore missed the commonest case
+
 - Register `dto:generate`, `ide:meta` and `stubs:publish` in the Symfony and Laravel bridges. Both bridges keep a hand-written list of the commands they expose, and those three were never added — so `bin/console` and `artisan` could not run commands `vendor/bin/gacela` could, including the `dto:generate --check` a CI job wants. All three write files into the project exactly like `make:module` and `init`, which were listed. A test in each bridge now reads the command directory and fails when the list falls behind it
 
 - Round the per-operation `total_duration` in `Profiler::getStats()` like every other duration in that payload. It was handed on as summed, one line from its rounded twin, so float addition noise reached `profile:report --format=json` in one field and not its siblings — `0.1 + 0.2` arriving as `0.30000000000000004` next to a `total_duration` of `0.3`

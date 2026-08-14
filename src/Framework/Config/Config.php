@@ -14,7 +14,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Exception\ConfigException;
-use RuntimeException;
+use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
 use function array_key_exists;
 use function array_keys;
@@ -59,10 +59,13 @@ final class Config implements ConfigInterface
         return self::$instance;
     }
 
+    /**
+     * @throws GacelaNotBootstrappedException if Gacela has not been bootstrapped yet
+     */
     public static function getInstance(): self
     {
         if (!self::$instance instanceof self) {
-            throw new RuntimeException('You have to call createWithSetup() first. Have you forgot to bootstrap Gacela?');
+            throw new GacelaNotBootstrappedException();
         }
 
         return self::$instance;

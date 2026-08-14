@@ -8,9 +8,9 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
+use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 use function getcwd;
 use function putenv;
@@ -51,12 +51,22 @@ final class ConfigTest extends TestCase
         self::assertSame(DIRECTORY_SEPARATOR . 'directory2', $config->getAppRootDir());
     }
 
-    public function test_get_instance_throws_when_not_bootstrapped(): void
+    /**
+     * The way a project reaches an unbootstrapped Gacela first: every pillar
+     * goes through here, so a `new SomeFacade()` before the bootstrap lands on
+     * this and not on `Gacela::container()` or `Gacela::rootDir()`, which
+     * already threw `GacelaNotBootstrappedException`.
+     *
+     * Asserting the type, not just a fragment of the text, is the point: code
+     * catching that exception to degrade -- as `ConstructorInspector` and
+     * `DependencyTreeInspector` do -- never caught the one thrown from here.
+     */
+    public function test_get_instance_throws_the_not_bootstrapped_exception(): void
     {
         Config::resetInstance();
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('bootstrap Gacela');
+        $this->expectException(GacelaNotBootstrappedException::class);
+        $this->expectExceptionMessage(GacelaNotBootstrappedException::MESSAGE);
 
         Config::getInstance();
     }

@@ -450,6 +450,195 @@ final class ValidateConfigCommandTest extends TestCase
     }
 
     /**
+     * `doctor` reports as a document, and this command could not: the
+     * validators wrote straight to the output and returned two booleans, so
+     * there was nothing to serialise -- the messages *were* the report. A job
+     * wanting to know which binding failed, or to repeat the reason into a
+     * review comment, had to parse the prose.
+     *
+     * The two commands do not overlap either: only `doctor` checks config
+     * sources, and only this one checks binding cycles, so a job wanting both
+     * runs both and could parse only one of them.
+     */
+    public function test_json_names_the_check_that_failed_and_why(): void
+    {
+        $tester = $this->validate(static function (GacelaConfig $config): void {
+            $config->addBinding(SomeContract::class, self::MISSING_CLASS);
+        }, ['--json' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+
+        $report = $this->decode($tester);
+
+        self::assertSame('error', $report['status']);
+        self::assertSame('error', $this->check($report, 'bindings')['status']);
+        self::assertSame(
+            sprintf('Binding value class does not exist: %s -> %s', SomeContract::class, self::MISSING_CLASS),
+            $this->check($report, 'bindings')['findings'][0]['message'],
+        );
+
+        // The other checks answer for themselves rather than being dragged down
+        // with it -- which is the whole reason to report per check.
+        self::assertSame('ok', $this->check($report, 'circular-dependencies')['status']);
+    }
+
+    /**
+     * The lines under a warning are what makes it actionable, and dropping them
+     * would leave the document saying less than the prose it replaces.
+     */
+    public function test_json_carries_the_detail_lines_the_text_report_prints(): void
+    {
+        $tester = $this->validate(static function (GacelaConfig $config): void {
+            $config->addBinding(SomeContract::class, MismatchedImplementation::class);
+        }, ['--json' => true]);
+
+        $bindings = $this->check($this->decode($tester), 'bindings');
+        $finding = $bindings['findings'][0];
+
+        // The check carries the worst of what it found, so a warning is visible
+        // without walking the findings.
+        self::assertSame('warn', $bindings['status']);
+        self::assertSame('warn', $finding['status']);
+        self::assertSame([
+            'expected interface: ' . SomeContract::class,
+            sprintf(
+                'actual:       %s | extends %s | implements %s',
+                MismatchedImplementation::class,
+                BaseImplementation::class,
+                OtherContract::class,
+            ),
+            sprintf(
+                'hint:         make %s extend or implement %s',
+                MismatchedImplementation::class,
+                SomeContract::class,
+            ),
+        ], $finding['details']);
+    }
+
+    /**
+     * A document with a banner printed above it is not a document.
+     */
+    public function test_json_emits_nothing_but_the_document(): void
+    {
+        $tester = $this->validate(static function (GacelaConfig $config): void {
+            $config->addBinding(SomeContract::class, SomeImplementation::class);
+        }, ['--json' => true]);
+
+        $display = $tester->getDisplay();
+
+        self::assertStringStartsWith('{', ltrim($display));
+        self::assertStringNotContainsString('Validating Gacela Configuration', $display);
+        self::assertStringNotContainsString('Checking bindings...', $display);
+    }
+
+    /**
+     * A binding that passed still has to say which binding passed. It is the
+     * one finding printed with no label -- the bare `✓ Key` -- so it is the one
+     * whose message comes from the subject alone, and asserting only the
+     * failures would have left that branch reporting an empty string with
+     * nothing to notice.
+     */
+    public function test_json_names_the_binding_behind_a_passing_finding(): void
+    {
+        $tester = $this->validate(static function (GacelaConfig $config): void {
+            $config->addBinding(SomeContract::class, SomeImplementation::class);
+        }, ['--json' => true]);
+
+        $findings = $this->check($this->decode($tester), 'bindings')['findings'];
+
+        self::assertSame('ok', $findings[0]['status']);
+        self::assertSame(SomeContract::class, $findings[0]['message']);
+    }
+
+    /**
+     * The text report opens by naming the `gacela.php` it found, and a document
+     * that dropped it would be answering a narrower question than the prose.
+     * Absent is reported as absent rather than omitted: the key is always there,
+     * so a consumer reads a value instead of probing for one.
+     */
+    public function test_json_names_the_config_file_when_there_is_one(): void
+    {
+        file_put_contents(
+            $this->appRoot . '/gacela.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn static function (): void {\n};\n",
+        );
+
+        $report = $this->decode($this->validate(static function (): void {
+        }, ['--json' => true]));
+
+        self::assertStringEndsWith('gacela.php', $report['configFile']);
+    }
+
+    public function test_json_reports_no_config_file_as_an_empty_value(): void
+    {
+        $report = $this->decode($this->validate(static function (): void {
+        }, ['--json' => true]));
+
+        self::assertSame('', $report['configFile']);
+    }
+
+    /**
+     * `--json` and `--format=json` are two spellings of one request: a reader
+     * who learned the one this command did not have met `The "--json" option
+     * does not exist.`, which is what made every command accept both.
+     */
+    public function test_the_json_flag_and_the_format_option_produce_one_document(): void
+    {
+        $binding = static function (GacelaConfig $config): void {
+            $config->addBinding(SomeContract::class, MismatchedImplementation::class);
+        };
+
+        self::assertSame(
+            $this->validate($binding, ['--json' => true])->getDisplay(),
+            $this->validate($binding, ['--format' => 'json'])->getDisplay(),
+        );
+    }
+
+    /**
+     * The exit code is what a job acts on, and reading the report a different
+     * way is not a reason for a different verdict.
+     */
+    public function test_json_reaches_the_same_verdict_as_the_text_report(): void
+    {
+        $warning = static function (GacelaConfig $config): void {
+            $config->addBinding(SomeContract::class, MismatchedImplementation::class);
+        };
+
+        self::assertSame(Command::SUCCESS, $this->validate($warning, ['--json' => true])->getStatusCode());
+        self::assertSame(
+            Command::FAILURE,
+            $this->validate($warning, ['--json' => true, '--strict' => true])->getStatusCode(),
+        );
+    }
+
+    /**
+     * @return array{status: string, configFile: string, checks: list<array{name: string, status: string, findings: list<array{status: string, message: string, details: list<string>}>}>}
+     */
+    private function decode(CommandTester $tester): array
+    {
+        /** @var array{status: string, configFile: string, checks: list<array{name: string, status: string, findings: list<array{status: string, message: string, details: list<string>}>}>} $decoded */
+        $decoded = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
+    }
+
+    /**
+     * @param array{checks: list<array{name: string, status: string, findings: list<array{status: string, message: string, details: list<string>}>}>} $report
+     *
+     * @return array{name: string, status: string, findings: list<array{status: string, message: string, details: list<string>}>}
+     */
+    private function check(array $report, string $name): array
+    {
+        foreach ($report['checks'] as $check) {
+            if ($check['name'] === $name) {
+                return $check;
+            }
+        }
+
+        self::fail(sprintf('no check named "%s" in the report', $name));
+    }
+
+    /**
      * @param array<string, mixed> $input
      */
     private function validate(Closure $configFn, array $input = []): CommandTester

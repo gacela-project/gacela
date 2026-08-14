@@ -55,7 +55,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 | `debug:provides ID` | Which Provider declares an id with `#[Provides]`, across every module — the inverse of `getProvidedDependency()`, which answers `null` for an id nothing declares and says nothing about it. The argument narrows to ids containing it; `--json` for a script |
 | `debug:config` | The effective merged configuration, after every source and override, each key marked `declared`, `undeclared` or `missing` against the [schema](config-schema.md). `--json` keeps the values as their own types, for diffing one environment against another |
 | `debug:container` | Container contents — user bindings and plugins only. A class argument (or `--tree`) draws its dependency tree; `--json` for either as a document |
-| `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable` |
+| `debug:dependencies Foo::class` | A class's constructor parameters and whether the container can supply each. `--tree` walks the whole graph and marks every node `binding`, `instance`, `autowired` or `unresolvable`; `--json` for either as a document |
 | `debug:graph` | The module dependency graph. `--format=text\|mermaid\|graphviz\|json`, `--check` to fail on cycles, `--compare-to`. `--allowed-cycles` and `--rules` are read only by `--check`, and are refused without it |
 
 Two of these are built for CI. `debug:graph --check` fails on a dependency cycle — see [module boundaries](module-boundaries.md) for wiring it into a workflow — and `debug:modules --check` fails when a pillar needs a constructor parameter the container cannot satisfy. Both pair with `--json`, so a job can say *which* module and *which* parameter rather than only that something failed; `debug:modules --json` carries a `faults` count apart from `unresolvable`, which is the distinction `--check` fails on.
@@ -89,6 +89,8 @@ This is a CLI and `cache:warm` cost, not a request-time one — resolving a Faca
 | `validate:config` | Checks the configuration for errors and best-practice violations, and against the [declared schema](config-schema.md). `--strict` exits non-zero on warnings too, as on `doctor`; `--json` reports which check found what |
 
 Every command that can emit JSON accepts `--json`. Where a command has more than two output formats — `debug:graph`, `profile:report` — `--format=` chooses among them and `--json` is shorthand for the one you were going to pick anyway.
+
+The three `debug:` commands that describe a class — `debug:modules`, `debug:dependencies` and `debug:container` — use one vocabulary in `--json`: a parameter is always `name` (without its `$`), `type`, `status`, `detail` and `resolvable`, and a tree node is always `class`, `parameter`, `status`, `repeated` and `children`. So a script that reads one reads the others.
 
 A value none of them accepts is refused, naming the ones that would have worked, and exits non-zero. `profile:report --sort` answers the same way. That matters for a pipeline: `--format=jsno` used to print the human-readable report and exit `0`, so the run that produced no document at all was indistinguishable from a healthy one.
 

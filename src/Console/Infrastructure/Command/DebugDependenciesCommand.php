@@ -8,6 +8,7 @@ use Gacela\Console\Application\Debug\ConstructorInspection;
 use Gacela\Console\Application\Debug\ConstructorInspector;
 use Gacela\Console\Application\Debug\DependencyTreeInspection;
 use Gacela\Console\Application\Debug\DependencyTreeInspector;
+use Gacela\Console\Application\Debug\DependencyTreeNode;
 use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\Application\Debug\ParameterInspection;
 use Gacela\Console\Application\Debug\ParameterStatus;
@@ -19,11 +20,17 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function array_map;
 use function class_exists;
 use function count;
 use function interface_exists;
+use function json_encode;
 use function ltrim;
 use function sprintf;
+
+use const JSON_PRETTY_PRINT;
+use const JSON_THROW_ON_ERROR;
+use const JSON_UNESCAPED_SLASHES;
 
 final class DebugDependenciesCommand extends Command
 {
@@ -33,43 +40,152 @@ final class DebugDependenciesCommand extends Command
             ->setDescription('Show the constructor parameters of a class and their resolvability through the container')
             ->setHelp($this->getHelpText())
             ->addArgument('class', InputArgument::REQUIRED, 'Fully qualified class name or a path to a PHP file declaring the class')
-            ->addOption('tree', null, InputOption::VALUE_NONE, 'Also show the transitive dependency tree as the container resolves it');
+            ->addOption('tree', null, InputOption::VALUE_NONE, 'Also show the transitive dependency tree as the container resolves it')
+            ->addOption('json', 'j', InputOption::VALUE_NONE, 'Report as a JSON document instead of text');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @var string $argument */
         $argument = $input->getArgument('class');
+        $withTree = $input->getOption('tree') === true;
+        $asJson = ConsoleInput::format($input) === 'json';
 
-        $className = $this->resolveClassName($argument, $output);
+        $className = $this->resolveClassName($argument, $output, $asJson);
         if ($className === null) {
             return Command::FAILURE;
         }
 
+        // Inline rather than inside the helper below: this pair is what narrows
+        // `string` to `class-string` for the inspectors, and the project's
+        // static-analysis rules forbid doing that with an inline `@var`.
         if (!class_exists($className) && !interface_exists($className)) {
-            $output->writeln(sprintf('<error>Class "%s" does not exist</error>', $className));
+            $this->writeError($output, sprintf('Class "%s" does not exist', $className), $asJson);
+
             return Command::FAILURE;
         }
 
-        $reflection = new ReflectionClass($className);
+        $refusal = $this->refuseNonConcrete($className);
+        if ($refusal !== null) {
+            $this->writeError($output, $refusal, $asJson);
 
-        if ($reflection->isInterface()) {
-            $output->writeln(sprintf('<error>"%s" is an interface — pass a concrete class instead</error>', $className));
             return Command::FAILURE;
         }
 
-        if ($reflection->isAbstract()) {
-            $output->writeln(sprintf('<error>"%s" is abstract — pass a concrete class instead</error>', $className));
-            return Command::FAILURE;
+        $inspection = (new ConstructorInspector())->inspect($className);
+
+        if ($asJson) {
+            $output->writeln($this->encode($this->asDocument(
+                $inspection,
+                $withTree ? (new DependencyTreeInspector())->inspect($className) : null,
+            )));
+
+            return Command::SUCCESS;
         }
 
-        $this->renderInspection($output, (new ConstructorInspector())->inspect($className));
+        $this->renderInspection($output, $inspection);
 
-        if ($input->getOption('tree') === true) {
+        if ($withTree) {
             $this->renderTree($output, (new DependencyTreeInspector())->inspect($className));
         }
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Why an existing class-like cannot be inspected, or null when it can.
+     *
+     * @param class-string $className
+     */
+    private function refuseNonConcrete(string $className): ?string
+    {
+        $reflection = new ReflectionClass($className);
+
+        if ($reflection->isInterface()) {
+            return sprintf('"%s" is an interface — pass a concrete class instead', $className);
+        }
+
+        if ($reflection->isAbstract()) {
+            return sprintf('"%s" is abstract — pass a concrete class instead', $className);
+        }
+
+        return null;
+    }
+
+    /**
+     * One message, said in whichever shape the run asked for -- so a consumer
+     * piping this into a parser gets a document on the runs that refused too.
+     */
+    private function writeError(OutputInterface $output, string $message, bool $asJson): void
+    {
+        $output->writeln($asJson ? $this->encode(['error' => $message]) : sprintf('<error>%s</error>', $message));
+    }
+
+    /**
+     * The same report as a document.
+     *
+     * `parameters` is the shape `debug:modules --json` uses for a pillar and
+     * `tree` the one `debug:container --json` uses for a class, so the three
+     * commands describe one parameter and one tree the same way rather than
+     * inventing a vocabulary each.
+     *
+     * `tree` is present only with `--tree`, exactly as the text report only
+     * grows that section with the flag: it means the same thing in both
+     * formats, and building a transitive graph nobody asked for is not free.
+     *
+     * @return array<string, mixed>
+     */
+    private function asDocument(ConstructorInspection $inspection, ?DependencyTreeInspection $tree): array
+    {
+        $document = [
+            'class' => $inspection->className,
+            'hasConstructor' => $inspection->hasConstructor,
+            'resolvable' => $inspection->resolvableCount(),
+            'unresolvable' => $inspection->unresolvableCount(),
+            'parameters' => array_map(
+                static fn (ParameterInspection $parameter): array => [
+                    // Without the `$` the text prints, matching
+                    // `debug:modules --json`: a document is matched against a
+                    // reflection parameter rather than read.
+                    'name' => ltrim($parameter->name, '$'),
+                    'type' => $parameter->renderedType,
+                    'status' => $parameter->status->value,
+                    'detail' => $parameter->detail,
+                    'resolvable' => $parameter->isResolvable(),
+                ],
+                $inspection->parameters,
+            ),
+        ];
+
+        if ($tree instanceof DependencyTreeInspection) {
+            $document['containerAvailable'] = $tree->containerAvailable;
+            $document['total'] = count($tree->nodes);
+            $document['tree'] = array_map($this->treeNode(...), $tree->tree);
+        }
+
+        return $document;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function treeNode(DependencyTreeNode $node): array
+    {
+        return [
+            'class' => $node->className,
+            'parameter' => $node->parameter,
+            'status' => $node->status->value,
+            'repeated' => $node->repeated,
+            'children' => array_map($this->treeNode(...), $node->children),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     */
+    private function encode(array $document): string
+    {
+        return json_encode($document, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     private function renderTree(OutputInterface $output, DependencyTreeInspection $inspection): void
@@ -149,7 +265,7 @@ final class DebugDependenciesCommand extends Command
         return '(' . $parameter->detail . ')';
     }
 
-    private function resolveClassName(string $argument, OutputInterface $output): ?string
+    private function resolveClassName(string $argument, OutputInterface $output, bool $asJson): ?string
     {
         if (!is_file($argument)) {
             return ltrim($argument, '\\');
@@ -159,10 +275,12 @@ final class DebugDependenciesCommand extends Command
         $fqcn = $this->extractFqcnFromSource($contents);
 
         if ($fqcn === null) {
-            $output->writeln(sprintf(
-                '<error>File "%s" does not declare a class, interface, trait, or enum</error>',
-                $argument,
-            ));
+            $this->writeError(
+                $output,
+                sprintf('File "%s" does not declare a class, interface, trait, or enum', $argument),
+                $asJson,
+            );
+
             return null;
         }
 

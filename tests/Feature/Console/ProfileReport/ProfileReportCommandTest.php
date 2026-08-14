@@ -222,6 +222,58 @@ final class ProfileReportCommandTest extends TestCase
     }
 
     /**
+     * The same run as above, asked for as JSON. Both early returns in the
+     * command -- profiler off, and nothing recorded -- printed prose whatever
+     * `--format` said, and they are the two runs a CI job most often gets: a
+     * consumer piping this to a parser got a syntax error rather than a
+     * document saying there was nothing.
+     *
+     * The command already states the rule for the populated path: "Not for
+     * `json`, whose consumer parses a document rather than reading prose."
+     */
+    public function test_json_stays_parseable_when_no_entry_completed(): void
+    {
+        $this->profiler->start('render', 'page');
+
+        $display = $this->runCommand(['--format' => 'json'])->getDisplay();
+
+        /** @var array<string, mixed>|null $decoded */
+        $decoded = json_decode($display, true);
+
+        self::assertIsArray($decoded, 'a --format=json run must emit a document, not prose');
+        self::assertSame([], $decoded['entries']);
+        // The whole of the report in this run: nothing finished, so the open
+        // span is the only thing there is to say.
+        self::assertSame(['render:page' => 1], $decoded['unfinished']);
+    }
+
+    public function test_json_stays_parseable_when_the_profiler_is_disabled(): void
+    {
+        $this->profiler->disable();
+
+        $display = $this->runCommand(['--format' => 'json'])->getDisplay();
+
+        /** @var array<string, mixed>|null $decoded */
+        $decoded = json_decode($display, true);
+
+        self::assertIsArray($decoded, 'a --format=json run must emit a document, not prose');
+        self::assertSame([], $decoded['entries']);
+        self::assertSame(0, $decoded['stats']['total_operations']);
+    }
+
+    /**
+     * The text report keeps its prose. Making every path emit JSON would have
+     * been the other way to read this, and it is not the one: a person running
+     * the command without `--format` is reading, not parsing.
+     */
+    public function test_the_text_report_still_says_it_in_words(): void
+    {
+        $this->profiler->disable();
+
+        self::assertStringContainsString('Profiler is not enabled', $this->runCommand([])->getDisplay());
+    }
+
+    /**
      * Several spans of one operation open at once are counted, because naming
      * it once would understate what is still outstanding.
      */

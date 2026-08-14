@@ -106,21 +106,6 @@ final class MergedConfigCache
     }
 
     /**
-     * Hashed rather than spelled out, and absent entirely when nothing is
-     * declared.
-     *
-     * Absent, because a project that declares no dimension must keep the
-     * filename it already has: spelling one out would invalidate every warm
-     * cache on upgrade for a feature the project does not use.
-     *
-     * Hashed, because further readable segments cannot be told apart from an
-     * env that contains the separator. `-prod-eu` is either the env `prod-eu`
-     * with no dimensions or the env `prod` in region `eu`, and hyphenated env
-     * names are ordinary -- so the two configurations would share one file and
-     * silently serve each other. The same reason the class-name cache carries
-     * an opaque bootstrap fingerprint instead of a readable one.
-     */
-    /**
      * The dimension tuples of this app and env, whichever values they carry.
      *
      * @return list<string>
@@ -143,6 +128,22 @@ final class MergedConfigCache
 
         return glob($stem . '-*' . self::FILENAME_EXTENSION) ?: [];
     }
+
+    /**
+     * Hashed rather than spelled out, and absent entirely when nothing is
+     * declared.
+     *
+     * Absent, because a project that declares no dimension must keep the
+     * filename it already has: spelling one out would invalidate every warm
+     * cache on upgrade for a feature the project does not use.
+     *
+     * Hashed, because further readable segments cannot be told apart from an
+     * env that contains the separator. `-prod-eu` is either the env `prod-eu`
+     * with no dimensions or the env `prod` in region `eu`, and hyphenated env
+     * names are ordinary -- so the two configurations would share one file and
+     * silently serve each other. The same reason the class-name cache carries
+     * an opaque bootstrap fingerprint instead of a readable one.
+     */
 
     private function dimensionSuffix(): string
     {

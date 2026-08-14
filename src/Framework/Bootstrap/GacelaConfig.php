@@ -440,13 +440,6 @@ final class GacelaConfig
     }
 
     /**
-     * Check the declared schema on every bootstrap, and fail there.
-     *
-     * For local development: it moves the report from a command you have to
-     * remember to run to the first thing that boots. Leave it off in
-     * production, where the deploy gate has already answered the question.
-     */
-    /**
      * Declare a data shape, by the class it generates.
      *
      * ```php
@@ -499,6 +492,14 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Check the declared schema on every bootstrap, and fail there.
+     *
+     * For local development: it moves the report from a command you have to
+     * remember to run to the first thing that boots. Leave it off in
+     * production, where the deploy gate has already answered the question.
+     */
+
     public function validateConfigSchemaOnBoot(bool $enabled = true): self
     {
         $this->shouldValidateConfigSchemaOnBoot = $enabled;
@@ -522,9 +523,6 @@ final class GacelaConfig
     }
 
     /**
-     * Do not dispatch any event in the application.
-     */
-    /**
      * Replace the dispatcher entirely -- to bridge Gacela's events onto a PSR-14
      * bus, or to answer `hasListeners()` yourself so the framework skips
      * allocating the events you do not want.
@@ -544,6 +542,10 @@ final class GacelaConfig
 
         return $this;
     }
+
+    /**
+     * Do not dispatch any event in the application.
+     */
 
     public function disableEventListeners(): self
     {

@@ -16,12 +16,12 @@ final class FactoryResolver extends AbstractClassResolver
 {
     public const TYPE = 'Factory';
 
-    /**
-     * @param object|class-string $caller
-     */
     /** @var object|class-string|null */
     private object|string|null $caller = null;
 
+    /**
+     * @param object|class-string $caller
+     */
     public function resolve(object|string $caller): AbstractFactory
     {
         // Kept so the stand-in below can name the module. doResolve() does not

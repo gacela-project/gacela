@@ -53,16 +53,26 @@ final class UndiscoveredFacadeCheckTest extends TestCase
      * The two faults have different fixes, which is the whole reason to tell
      * them apart rather than report "not found".
      */
+    /**
+     * Whole sentences, not fragments of them. A remediation is the one line a
+     * reader acts on, and `assertStringContainsString('psr-4', ...)` passes just
+     * as happily for half a sentence in the wrong order.
+     */
     public function test_the_remediation_matches_the_kind_of_fault(): void
     {
         $loadable = (new UndiscoveredFacadeCheck([$this->notLoadable()]))->run();
         $notFacade = (new UndiscoveredFacadeCheck([$this->notAFacade()]))->run();
 
-        self::assertStringContainsString('psr-4', $loadable->remediation);
-        self::assertStringNotContainsString('extend AbstractFacade', $loadable->remediation);
+        self::assertSame(
+            'check the psr-4 prefix covers the directory and the namespace declaration '
+            . 'matches the path, then `composer dump-autoload`',
+            $loadable->remediation,
+        );
 
-        self::assertStringContainsString('extend AbstractFacade', $notFacade->remediation);
-        self::assertStringNotContainsString('psr-4', $notFacade->remediation);
+        self::assertSame(
+            'extend AbstractFacade, or rename the class if it was never meant to be a module',
+            $notFacade->remediation,
+        );
     }
 
     /**
@@ -73,8 +83,11 @@ final class UndiscoveredFacadeCheckTest extends TestCase
     {
         $result = (new UndiscoveredFacadeCheck([$this->notLoadable(), $this->notAFacade()]))->run();
 
-        self::assertStringContainsString('psr-4', $result->remediation);
-        self::assertStringContainsString('extend AbstractFacade', $result->remediation);
+        self::assertSame(
+            'for the unloadable ones check the psr-4 prefix and `composer dump-autoload`; '
+            . 'for the rest extend AbstractFacade, or rename the class if it was never meant to be a module',
+            $result->remediation,
+        );
         self::assertCount(2, $result->details);
     }
 

@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+namespace $NAMESPACE$\Domain;
+
+final class $CLASS_NAME$
+{
+    public function execute(): string
+    {
+        return 'Hello from $MODULE_NAME$Service!';
+    }
+}

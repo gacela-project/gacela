@@ -170,27 +170,131 @@ final class UndiscoveredFacadeFinderTest extends TestCase
     }
 
     /**
+     * A directory entry is not a file. Without this the whole guard collapses
+     * into its first clause and nothing notices.
+     */
+    public function test_an_entry_that_is_not_a_file_is_ignored(): void
+    {
+        $path = $this->writeModuleFile('Blog', 'BlogFacade', 'Nowhere\\Nothing\\Blog');
+
+        self::assertSame([], $this->find($path, isFile: false));
+    }
+
+    /**
+     * `vendor` is matched as a directory, not as a word: a project directory
+     * merely starting with it is its own code and is reported like any other.
+     */
+    public function test_a_directory_only_starting_with_vendor_is_not_skipped(): void
+    {
+        $path = $this->writeModuleFile('Blog', 'BlogFacade', 'Nowhere\\Nothing\\Blog', 'vendorish');
+
+        self::assertCount(1, $this->find($path));
+    }
+
+    /**
+     * Sorted, so two runs of one project agree and a report does not reshuffle
+     * itself between them. Every other case here has a single finding, which is
+     * an order no ordering can get wrong.
+     */
+    public function test_findings_are_sorted_by_class_name(): void
+    {
+        $zebra = $this->writeModuleFile('Zebra', 'ZebraFacade', 'Nowhere\\Nothing\\Zebra');
+        $apple = $this->writeModuleFile('Apple', 'AppleFacade', 'Nowhere\\Nothing\\Apple');
+
+        $found = $this->findAll([$zebra, $apple]);
+
+        self::assertSame(
+            ['Nowhere\\Nothing\\Apple\\AppleFacade', 'Nowhere\\Nothing\\Zebra\\ZebraFacade'],
+            array_map(static fn (UndiscoveredFacadeFile $f): string => $f->className, $found),
+        );
+    }
+
+    /**
+     * An interface, a trait and an abstract class named like a module's Facade
+     * all load and are all not modules. Reporting them would be reporting a
+     * decision -- and an abstract one is the shape a project's own base facade
+     * takes, so it would fire on every project that has one.
+     */
+    public function test_an_interface_named_like_a_facade_is_not_reported(): void
+    {
+        self::assertSame([], $this->find($this->fixturePath('Contract', 'ContractFacade')));
+    }
+
+    public function test_a_trait_named_like_a_facade_is_not_reported(): void
+    {
+        self::assertSame([], $this->find($this->fixturePath('Mixin', 'MixinFacade')));
+    }
+
+    public function test_an_abstract_class_named_like_a_facade_is_not_reported(): void
+    {
+        self::assertSame([], $this->find($this->fixturePath('Base', 'BaseFacade')));
+    }
+
+    private function fixturePath(string $moduleName, string $className): string
+    {
+        return __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures'
+            . DIRECTORY_SEPARATOR . $moduleName
+            . DIRECTORY_SEPARATOR . $className . '.php';
+    }
+
+    /**
      * @param list<string> $suffixes
      *
      * @return list<UndiscoveredFacadeFile>
      */
-    private function find(string $path, array $suffixes = ['Facade'], string $extension = 'php'): array
-    {
-        $fileInfo = $this->createStub(SplFileInfo::class);
-        $fileInfo->method('isFile')->willReturn(true);
-        $fileInfo->method('getExtension')->willReturn($extension);
-        $fileInfo->method('getRealPath')->willReturn($path);
-        $fileInfo->method('getFilename')->willReturn(basename($path));
+    private function find(
+        string $path,
+        array $suffixes = ['Facade'],
+        string $extension = 'php',
+        bool $isFile = true,
+    ): array {
+        return $this->findAll([$path], $suffixes, $extension, $isFile);
+    }
+
+    /**
+     * @param list<string> $paths
+     * @param list<string> $suffixes
+     *
+     * @return list<UndiscoveredFacadeFile>
+     */
+    private function findAll(
+        array $paths,
+        array $suffixes = ['Facade'],
+        string $extension = 'php',
+        bool $isFile = true,
+    ): array {
+        $files = [];
+        foreach ($paths as $path) {
+            $fileInfo = $this->createStub(SplFileInfo::class);
+            $fileInfo->method('isFile')->willReturn($isFile);
+            $fileInfo->method('getExtension')->willReturn($extension);
+            $fileInfo->method('getRealPath')->willReturn($path);
+            $fileInfo->method('getFilename')->willReturn(basename($path));
+            $files[] = $fileInfo;
+        }
 
         return (new UndiscoveredFacadeFinder(
-            new IteratorIterator(new ArrayIterator([$fileInfo])),
+            new IteratorIterator(new ArrayIterator($files)),
             $suffixes,
         ))->find();
     }
 
-    private function writeModuleFile(string $moduleName, string $className, string $namespace): string
-    {
-        $dir = $this->tempDir . DIRECTORY_SEPARATOR . $moduleName;
+    private function writeModuleFile(
+        string $moduleName,
+        string $className,
+        string $namespace,
+        string $parentDir = '',
+    ): string {
+        $base = $parentDir === ''
+            ? $this->tempDir
+            : $this->tempDir . DIRECTORY_SEPARATOR . $parentDir;
+
+        if ($parentDir !== '' && !is_dir($base)) {
+            mkdir($base, 0777, true);
+            $this->createdDirs[] = $base;
+        }
+
+        $dir = $base . DIRECTORY_SEPARATOR . $moduleName;
         if (!is_dir($dir)) {
             mkdir($dir, 0777, true);
             $this->createdDirs[] = $dir;

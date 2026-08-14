@@ -130,7 +130,11 @@ $config->addBinding(PaymentGateway::class, StripeGateway::class);
 
 The concrete-class row is why it cannot simply throw: the container autowires a class it can construct, which is the behaviour `make()` relies on. But it means a typo in a string id is not reported anywhere — the `null` travels until something calls a method on it, and the stack points at the consumer rather than at the id.
 
-Two habits cost nothing and remove the guesswork: declare ids as constants on the Provider (`Provider::BILLING_FACADE`, not `'billing.facade'`), so a typo is a fatal undefined-constant at the call site; and check `vendor/bin/gacela debug:module App/Blog`, which lists every id that module's Provider declares.
+Two habits cost nothing and remove the guesswork.
+
+Declare ids as **constants on the Provider** (`Provider::BILLING_FACADE`, not `'billing.facade'`), so a typo is a fatal undefined-constant at the call site instead of a `null` that travels.
+
+Declare the dependency with **`#[Provides]`**, which is what puts the id in `vendor/bin/gacela debug:module App/Blog`. That command lists the ids the attribute declares and not the ones a Provider registers imperatively with `$container->set()` — its heading says `Provides (#[Provides])` for exactly that reason. A module wired the imperative way prints `(none)` there however many ids it registers, so the attribute is what makes an id visible to tooling at all.
 
 This is the same shape as an [unanswerable tagged id](cli.md), which `doctor` reports — a group iterating one hole, failing on the consumer. Nothing reports this one, because an id may legitimately come from another module's Provider, from `addBinding()`, or from `extendService()`, so "no Provider declares it" is not the same as "it is wrong".
 

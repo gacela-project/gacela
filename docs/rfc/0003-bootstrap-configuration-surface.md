@@ -90,6 +90,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `resetInMemoryCache()` | — | exception: an operational instruction to the bootstrap, not surface configuration; both host bridges call it per boot (#666) |
 | `setAppModulePaths()` | `set*` | conforms |
 | `setFileCache()` | `set*` | conforms |
+| `setEventDispatcher()` | `set*` | conforms — replaces the dispatcher rather than adding to what listens, and takes precedence over `disableEventListeners()`, which governs the one Gacela would build |
 | `setProjectNamespaces()` | `set*` | conforms |
 | `setStubsDir()` | `set*` | conforms |
 | `tag()` | — | exception: the domain word is the API; `addTag()` would read as tagging a tag |

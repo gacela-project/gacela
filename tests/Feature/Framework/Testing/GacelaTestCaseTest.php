@@ -7,11 +7,11 @@ namespace GacelaTest\Feature\Framework\Testing;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Container\BindingRegisteredEvent;
+use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Testing\GacelaTestCase;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
-use RuntimeException;
 use Throwable;
 
 use function count;
@@ -86,7 +86,11 @@ final class GacelaTestCaseTest extends GacelaTestCase
 
         $this->tearDown();
 
-        $this->expectException(RuntimeException::class);
+        // The typed exception, not the base class: `tearDown()` leaving the
+        // process unbootstrapped is the same condition `Gacela::container()`
+        // and `Gacela::rootDir()` report, and asserting the base class here
+        // would pass for any RuntimeException at all.
+        $this->expectException(GacelaNotBootstrappedException::class);
         Config::getInstance();
     }
 

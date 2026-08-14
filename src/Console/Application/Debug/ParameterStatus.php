@@ -23,4 +23,29 @@ enum ParameterStatus: string
             default => false,
         };
     }
+
+    /**
+     * The inspector declined to look, rather than looked and found a problem.
+     *
+     * Union and intersection types are not walked, so a parameter typed that
+     * way is unresolvable only in the sense that nothing here has an opinion
+     * about it. That is a gap in this tool, and a check that failed a build
+     * over it would be blaming a project for using a language feature.
+     */
+    public function isNotInspected(): bool
+    {
+        return $this === self::UnsupportedType;
+    }
+
+    /**
+     * The container cannot satisfy this parameter, and said so after looking.
+     *
+     * `MissingType` belongs here rather than beside `UnsupportedType`: a type
+     * that does not exist is a typo or a deleted class, not a shape the
+     * inspector declined to read.
+     */
+    public function isFault(): bool
+    {
+        return !$this->isResolvable() && !$this->isNotInspected();
+    }
 }

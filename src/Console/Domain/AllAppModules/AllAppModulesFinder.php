@@ -69,7 +69,16 @@ final class AllAppModulesFinder
             return null;
         }
 
-        $namespace = $this->getNamespace($fileInfo);
+        $fileContent = file_get_contents($realPath);
+        if ($fileContent === false) {
+            return null;
+        }
+
+        if (!$this->declaresSomethingThatExtends($fileContent)) {
+            return null;
+        }
+
+        $namespace = $this->getNamespace($fileContent);
         $className = $this->buildClassName($fileInfo);
 
         if ($className === '' || $namespace === '') {
@@ -100,18 +109,29 @@ final class AllAppModulesFinder
         return $fullyQualifiedClassName;
     }
 
-    private function getNamespace(SplFileInfo $fileInfo): string
+    /**
+     * Whether the file declares a class that extends anything at all.
+     *
+     * A Facade is accepted by descent from `AbstractFacade`, so a file where
+     * no class extends anything cannot hold one -- and `class_exists()` on it
+     * costs the autoloader a compile of a class this finder will reject. That
+     * is most of the project: 454 of 1627 classes here.
+     *
+     * Loose on purpose, and matched anywhere rather than anchored to the start
+     * of a line. The two directions are not symmetric: a false positive costs
+     * one load, and a false negative loses a module silently -- the fault this
+     * finder's own history is full of. So the pattern is written to over-match.
+     * Text inside a comment or a heredoc counts, an attribute or a modifier
+     * before `class` does not hide it, and `class Foo\n    extends Bar` is
+     * matched because `\s+` spans newlines.
+     */
+    private function declaresSomethingThatExtends(string $fileContent): bool
     {
-        $realPath = $fileInfo->getRealPath();
-        if ($realPath === false) {
-            return '';
-        }
+        return preg_match('/\bclass\s+\w+\s+extends\b/', $fileContent) === 1;
+    }
 
-        $fileContent = file_get_contents($realPath);
-        if ($fileContent === false) {
-            return '';
-        }
-
+    private function getNamespace(string $fileContent): string
+    {
         preg_match('#namespace (.*);#', $fileContent, $matches);
 
         return $matches[1] ?? '';

@@ -14,6 +14,7 @@ use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use IteratorIterator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -22,6 +23,7 @@ use RuntimeException;
 use SplFileInfo;
 
 use function dirname;
+use function sprintf;
 
 final class AllAppModulesFinderTest extends TestCase
 {
@@ -348,6 +350,83 @@ final class AllAppModulesFinderTest extends TestCase
         } finally {
             $this->removeDirectory($tempDir);
         }
+    }
+
+    /**
+     * A file where nothing extends anything cannot hold a Facade, so it is
+     * never loaded. This is the cheap half of the filter and the safe one.
+     */
+    public function test_a_file_where_no_class_extends_anything_is_not_a_module(): void
+    {
+        $dir = $this->createTempModuleDirectory('NoExtends');
+        $path = $dir . '/PlainFacade.php';
+        file_put_contents($path, "<?php\n\nnamespace TempNoExtends;\n\nfinal class PlainFacade\n{\n}\n");
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($path, 'PlainFacade.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($dir);
+        }
+    }
+
+    /**
+     * The dangerous half. A pattern that missed an `extends` would drop the
+     * module from list, doctor, graph and cache-warm without saying so, which
+     * is the fault this finder's history is full of -- so the shapes that are
+     * legal but unusual are pinned rather than assumed.
+     *
+     * @param non-empty-string $declaration
+     */
+    #[DataProvider('unusualExtendsProvider')]
+    public function test_a_facade_is_found_however_its_extends_is_written(string $declaration, string $className): void
+    {
+        $dir = $this->createTempModuleDirectory('OddExtends');
+        $path = $dir . '/' . $className . '.php';
+        file_put_contents($path, sprintf(
+            "<?php\n\nnamespace TempOddExtends;\n\nuse Gacela\\Framework\\AbstractFacade;\n\n%s\n{\n}\n",
+            $declaration,
+        ));
+        require_once $path;
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($path, $className . '.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            self::assertCount(1, $finder->findAllAppModules(''), $declaration);
+        } finally {
+            $this->removeDirectory($dir);
+        }
+    }
+
+    public static function unusualExtendsProvider(): iterable
+    {
+        yield 'plain' => ['final class OddPlainFacade extends AbstractFacade', 'OddPlainFacade'];
+
+        // `\s+` has to span newlines, or a long declaration wrapped by a
+        // formatter stops being a module.
+        yield 'extends on its own line' => [
+            "final class OddWrappedFacade\n    extends AbstractFacade",
+            'OddWrappedFacade',
+        ];
+
+        // Nothing is anchored to the start of a line, so a modifier or an
+        // attribute in front does not hide the declaration.
+        yield 'attribute on the same line' => [
+            '#[\Attribute] final class OddAttributedFacade extends AbstractFacade',
+            'OddAttributedFacade',
+        ];
+
+        yield 'fully qualified parent' => [
+            'final class OddFqcnFacade extends \Gacela\Framework\AbstractFacade',
+            'OddFqcnFacade',
+        ];
     }
 
     private function fileInfoFor(string $path, string $filename, string $extension = 'php'): SplFileInfo

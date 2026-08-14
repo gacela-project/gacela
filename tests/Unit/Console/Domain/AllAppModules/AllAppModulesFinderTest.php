@@ -13,6 +13,7 @@ use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use GacelaTest\Unit\Console\Domain\AllAppModules\Fixtures\NotLoaded\ExtendsNothing;
 use IteratorIterator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -350,6 +351,44 @@ final class AllAppModulesFinderTest extends TestCase
         } finally {
             $this->removeDirectory($tempDir);
         }
+    }
+
+    /**
+     * The skip itself, which the module list cannot show.
+     *
+     * A class that extends nothing is not a Facade, so asserting "no module
+     * came back" passes whether or not the file was ever opened -- the guard is
+     * an optimisation, and its result is identical to not having it. What is
+     * observable is that the class is never *loaded*: this fixture is
+     * autoloadable and named only as a string, so it is declared after
+     * discovery exactly when the guard is missing.
+     */
+    public function test_a_file_that_extends_nothing_is_never_loaded(): void
+    {
+        // ::class is resolved at compile time and autoloads nothing, so naming
+        // the fixture this way does not itself spoil the observation.
+        $className = ExtendsNothing::class;
+        $path = __DIR__ . '/Fixtures/NotLoaded/ExtendsNothing.php';
+
+        self::assertFalse(
+            class_exists($className, false),
+            'something already loaded the fixture, so this test cannot see the difference',
+        );
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($path, 'ExtendsNothing.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        self::assertSame([], $finder->findAllAppModules(''));
+        self::assertFalse(
+            class_exists($className, false),
+            'discovery loaded a class whose file declares nothing that extends anything',
+        );
+
+        // Last, because it loads the class: without it a deleted fixture would
+        // be "not loaded" both times and this would pass for nothing.
+        self::assertTrue(class_exists($className), 'the fixture is gone, so nothing above was observed');
     }
 
     /**

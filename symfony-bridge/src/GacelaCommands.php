@@ -4,25 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\SymfonyBridge;
 
-use Gacela\Console\Infrastructure\Command\CacheClearCommand;
-use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
-use Gacela\Console\Infrastructure\Command\DebugConfigCommand;
-use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
-use Gacela\Console\Infrastructure\Command\DebugDependenciesCommand;
-use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
-use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
-use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
-use Gacela\Console\Infrastructure\Command\DebugProvidesCommand;
-use Gacela\Console\Infrastructure\Command\DoctorCommand;
-use Gacela\Console\Infrastructure\Command\DtoGenerateCommand;
-use Gacela\Console\Infrastructure\Command\IdeMetaCommand;
-use Gacela\Console\Infrastructure\Command\InitCommand;
-use Gacela\Console\Infrastructure\Command\ListModulesCommand;
-use Gacela\Console\Infrastructure\Command\MakeFileCommand;
-use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
-use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
-use Gacela\Console\Infrastructure\Command\StubsPublishCommand;
-use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
+use Gacela\Console\Infrastructure\Command\CommandCatalog;
 use Symfony\Component\Console\Command\Command;
 
 /**
@@ -36,33 +18,10 @@ use Symfony\Component\Console\Command\Command;
  */
 final class GacelaCommands
 {
-    /** @var list<class-string<Command>> */
-    private const CLASSES = [
-        MakeFileCommand::class,
-        MakeModuleCommand::class,
-        ListModulesCommand::class,
-        DebugConfigCommand::class,
-        DebugContainerCommand::class,
-        DebugDependenciesCommand::class,
-        DebugGraphCommand::class,
-        DebugModuleCommand::class,
-        DebugModulesCommand::class,
-        DebugProvidesCommand::class,
-        CacheWarmCommand::class,
-        CacheClearCommand::class,
-        ValidateConfigCommand::class,
-        ProfileReportCommand::class,
-        DoctorCommand::class,
-        InitCommand::class,
-        DtoGenerateCommand::class,
-        IdeMetaCommand::class,
-        StubsPublishCommand::class,
-    ];
-
     /**
-     * Constructing a command runs its `configure()`, which sets a name and
-     * options and touches nothing else -- no bootstrap, no filesystem -- so it
-     * is safe while Symfony's container is still being compiled.
+     * Read off {@see CommandCatalog}, the one list, rather than a copy of it
+     * kept here. Constructing a command is safe while Symfony's container is still being compiled:
+     * see the catalog for why.
      *
      * @return array<class-string<Command>, string>
      */
@@ -70,9 +29,8 @@ final class GacelaCommands
     {
         $names = [];
 
-        foreach (self::CLASSES as $class) {
-            $command = $class === InitCommand::class ? new InitCommand('') : new $class();
-            $names[$class] = (string)$command->getName();
+        foreach (CommandCatalog::instances('') as $command) {
+            $names[$command::class] = (string)$command->getName();
         }
 
         return $names;

@@ -5,25 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console;
 
 use Gacela\Console\Domain\FilenameSanitizer\FilenameSanitizer;
-use Gacela\Console\Infrastructure\Command\CacheClearCommand;
-use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
-use Gacela\Console\Infrastructure\Command\DebugConfigCommand;
-use Gacela\Console\Infrastructure\Command\DebugContainerCommand;
-use Gacela\Console\Infrastructure\Command\DebugDependenciesCommand;
-use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
-use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
-use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
-use Gacela\Console\Infrastructure\Command\DebugProvidesCommand;
-use Gacela\Console\Infrastructure\Command\DoctorCommand;
-use Gacela\Console\Infrastructure\Command\DtoGenerateCommand;
-use Gacela\Console\Infrastructure\Command\IdeMetaCommand;
-use Gacela\Console\Infrastructure\Command\InitCommand;
-use Gacela\Console\Infrastructure\Command\ListModulesCommand;
-use Gacela\Console\Infrastructure\Command\MakeFileCommand;
-use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
-use Gacela\Console\Infrastructure\Command\ProfileReportCommand;
-use Gacela\Console\Infrastructure\Command\StubsPublishCommand;
-use Gacela\Console\Infrastructure\Command\ValidateConfigCommand;
+use Gacela\Console\Infrastructure\Command\CommandCatalog;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Attribute\Provides;
 use Gacela\Framework\Config\Config;
@@ -46,27 +28,7 @@ final class ConsoleProvider extends AbstractProvider
     #[Provides(self::COMMANDS)]
     public function commands(): array
     {
-        return [
-            new MakeFileCommand(),
-            new MakeModuleCommand(),
-            new ListModulesCommand(),
-            new DebugConfigCommand(),
-            new DebugContainerCommand(),
-            new DebugDependenciesCommand(),
-            new DebugGraphCommand(),
-            new DebugModuleCommand(),
-            new DebugModulesCommand(),
-            new DebugProvidesCommand(),
-            new CacheWarmCommand(),
-            new CacheClearCommand(),
-            new ValidateConfigCommand(),
-            new ProfileReportCommand(),
-            new DoctorCommand(),
-            new DtoGenerateCommand(),
-            new IdeMetaCommand(),
-            new InitCommand(Config::getInstance()->getAppRootDir()),
-            new StubsPublishCommand(),
-        ];
+        return CommandCatalog::instances(Config::getInstance()->getAppRootDir());
     }
 
     /**

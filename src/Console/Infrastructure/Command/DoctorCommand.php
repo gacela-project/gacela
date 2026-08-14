@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Console\Application\Doctor\Check\CacheableStorageCheck;
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
@@ -26,6 +27,7 @@ use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
+use Gacela\Framework\Attribute\CacheableConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
@@ -198,6 +200,7 @@ final class DoctorCommand extends Command
             new FilenameMismatchCheck($modules, $suffixTypes),
             new UndiscoveredFacadeCheck($this->getFacade()->findUndiscoveredFacadeFiles()),
             new UnresolvedPillarFileCheck($modules, $suffixTypes),
+            new CacheableStorageCheck($modules, CacheableConfig::hasUserSuppliedStorage()),
             new DuplicateProvidedIdCheck($modules),
             new UnreachableProvidesCheck($modules),
             new ConfigSourceCheck(

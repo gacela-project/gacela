@@ -110,6 +110,7 @@
 
 ### Internal
 
+- Move the bridge bootstrapping into `Gacela\Framework\Bootstrap\IntegrationBootstrapper`. Both bridges held a copy of it that was byte-identical once the docblocks were stripped, and none of it was specific to a framework — including the `resetInMemoryCache()` call that keeps a host booting twice in one process from serving the previous boot's container, which each bridge had to learn separately. The host is reached through a closure rather than a PSR-11 container, so this carries no dependency an integration might not have. Each bridge keeps its own `GacelaBootstrapper` name and constructor, now an adapter
 - Delete `ContextualBindingRegistrar`. It narrowed the stored `mixed` before handing it to the container's `give()` — class strings and objects through, anything else wrapped in a closure — and its only remaining reason was that `give(null)` threw upstream. That shipped in container 2.0 (container#169), so the class had become a pass-through. All nine implementation shapes were compared through it and around it before removing it, and its tests were rewritten against the call it used to make rather than deleted with it
 
 ### Documentation

@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Gacela\SymfonyBridge;
 
-use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\Gacela;
+use Gacela\Framework\Bootstrap\IntegrationBootstrapper;
 use Psr\Container\ContainerInterface;
-
-use function class_exists;
-use function interface_exists;
 
 /**
  * Bootstraps Gacela from what the Symfony kernel already knows.
  *
- * Every Symfony project that uses Gacela writes this by hand -- the project
- * dir, the environment, the handful of Symfony services a Factory needs to
- * reach. It is the same code every time, which is what a bridge is for.
+ * Everything it does is {@see IntegrationBootstrapper}, which is where the logic lives: none of it
+ * was specific to Symfony, and both bridges held a byte-identical copy of it.
+ * This is the adapter -- it turns Symfony's container into the lookup that
+ * takes, and keeps the name and constructor the bundle registers as a service and checks with `instanceof`.
  *
  * A kernel can boot more than once in one process (functional tests do it
  * constantly), so bootstrapping is idempotent by being repeated: each boot
@@ -24,78 +21,33 @@ use function interface_exists;
  */
 final class GacelaBootstrapper
 {
+    private readonly IntegrationBootstrapper $inner;
+
     /**
      * @param array{cache_dir: ?string, file_cache: ?bool, project_namespaces: list<string>} $options
      * @param array<string, string> $externalServices gacela key => symfony service id
      */
     public function __construct(
-        private readonly string $appRootDir,
-        private readonly array $options,
-        private readonly ContainerInterface $services,
-        private readonly array $externalServices = [],
+        string $appRootDir,
+        array $options,
+        ContainerInterface $services,
+        array $externalServices = [],
     ) {
+        $this->inner = new IntegrationBootstrapper(
+            $appRootDir,
+            $options,
+            static function (string $serviceId) use ($services): object {
+                /** @var object $service */
+                $service = $services->get($serviceId);
+
+                return $service;
+            },
+            $externalServices,
+        );
     }
 
     public function bootstrap(): void
     {
-        Gacela::bootstrap($this->appRootDir, function (GacelaConfig $config): void {
-            // Without this, a re-bootstrap keeps the previous boot's locator,
-            // which keeps serving the previous boot's container -- the #597
-            // class of bug, one layer down (#666). A first boot resets nothing
-            // but empty caches, so it only costs where it is needed.
-            $config->resetInMemoryCache();
-
-            $this->applyOptions($config);
-            $this->applyExternalServices($config);
-        });
-    }
-
-    private function applyOptions(GacelaConfig $config): void
-    {
-        if ($this->options['file_cache'] !== null) {
-            $config->setFileCache($this->options['file_cache'], $this->options['cache_dir']);
-        } elseif ($this->options['cache_dir'] !== null) {
-            $config->enableFileCache($this->options['cache_dir']);
-        }
-
-        if ($this->options['project_namespaces'] !== []) {
-            $config->setProjectNamespaces($this->options['project_namespaces']);
-        }
-    }
-
-    /**
-     * A listed service reaches Gacela two ways, and which ones apply is decided
-     * by the key the project chose.
-     *
-     * Every key becomes an external service: that is what a project's own
-     * `gacela.php` reads through `getExternalService()` when it declares its
-     * bindings. A key that *names a type* additionally becomes a binding, so
-     * `LoggerInterface::class => 'monolog.logger'` is resolvable on its own --
-     * by `Gacela::get()`, by autowiring, by `#[Inject]`. Bindings map types to
-     * implementations, so a key like `logger` has no business being one.
-     *
-     * Both take a closure, so a Symfony service reaches Gacela without being
-     * constructed by the act of configuring it: a bridge that instantiated the
-     * entity manager on every boot would cost more than it saves.
-     */
-    private function applyExternalServices(GacelaConfig $config): void
-    {
-        foreach ($this->externalServices as $key => $serviceId) {
-            $factory = fn (): object => $this->service($serviceId);
-
-            $config->addExternalService($key, $factory);
-
-            if (class_exists($key) || interface_exists($key)) {
-                $config->addBinding($key, $factory);
-            }
-        }
-    }
-
-    private function service(string $serviceId): object
-    {
-        /** @var object $service */
-        $service = $this->services->get($serviceId);
-
-        return $service;
+        $this->inner->bootstrap();
     }
 }

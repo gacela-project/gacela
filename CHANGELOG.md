@@ -53,6 +53,8 @@
 
 ### Fixed
 
+- Document the Symfony bridge's `enabled` key, which the configuration has always declared and the README never mentioned. `GacelaExtension::load()` returns before registering the bootstrapper, the cache warmer or the commands when it is false, so `enabled: false` is the supported way to keep the bundle in `config/bundles.php` while leaving Gacela un-bootstrapped — and the only way to find it was to read the tree. The Laravel bridge's README already listed its own. A test now walks the config tree and asserts every declared key appears in the README, so the next one added fails rather than shipping undiscoverable
+
 - Emit a document from `profile:report --format=json` on the two runs that report nothing: profiler disabled, and nothing recorded. Both returned before the format was read and printed prose, so a consumer piping the output to a parser got a syntax error rather than an empty report — and those are the two runs a CI job most often gets. The second matters twice over: a span started and never stopped leaves `entries` empty while `unfinished` holds the only thing there is to say, and that was exactly what the JSON consumer lost. The text report still says it in words
 
 - List the `autoload-dev` prefixes too when `make:*` cannot match a namespace. The lookup searches `autoload` and `autoload-dev` together — that is what "Read autoload-dev psr-4 namespaces for gacela make commands" shipped — but the `Known PSR-4:` list it prints on a miss was built from `autoload` alone. Mistyping a namespace that lives in `autoload-dev` produced a list with no dev prefix in it at all, about namespaces Gacela had just been willing to resolve, and the list is the only thing the reader has to compare the typo against

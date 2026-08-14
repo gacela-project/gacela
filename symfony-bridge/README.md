@@ -31,6 +31,7 @@ Plus the `#[Inject]` compiler pass, described at the bottom.
 ```yaml
 # config/packages/gacela.yaml
 gacela:
+    enabled: true                          # false leaves the kernel un-bootstrapped
     app_root_dir: '%kernel.project_dir%'   # where gacela.php lives
     cache_dir: '%kernel.cache_dir%/gacela'
     file_cache: true
@@ -43,6 +44,8 @@ gacela:
 ```
 
 Every key is validated at compile time — a mistyped one fails the build instead of quietly configuring nothing. `cache_dir` and `file_cache` left unset leave Gacela's own defaults in place.
+
+`enabled: false` is how you keep the bundle registered while leaving Gacela un-bootstrapped: the extension returns before wiring anything, so no services are registered and no commands are added. Useful for an environment that loads the bundle from `config/bundles.php` under `['all' => true]` but should not run Gacela — removing the bundle per-environment is the alternative, and this is the one you can toggle from a config file.
 
 ### External services
 

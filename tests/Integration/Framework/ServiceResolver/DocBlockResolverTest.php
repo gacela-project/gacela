@@ -22,6 +22,7 @@ use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeNoDocBlockComman
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeProseCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeRandomService;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use stdClass;
 
 use function sprintf;
@@ -110,6 +111,52 @@ final class DocBlockResolverTest extends TestCase
 
         self::assertEquals(new DocBlockResolvable(FakeFactory::class, 'Factory'), $fromClassName);
         self::assertEquals($fromCaller, $fromClassName);
+    }
+
+    /**
+     * The normalization is memoized, and asserting the value cannot show it:
+     * the computation is pure, so a build that recomputes on every call returns
+     * exactly the same string. Only reading the memo is observable, so the test
+     * writes a sentinel into it and asks whether the next call comes back with
+     * that -- which it can only do by consulting the memo rather than the class.
+     */
+    public function test_the_normalized_type_is_read_from_the_memo_not_recomputed(): void
+    {
+        $first = DocBlockResolver::fromClassName(FakeFacade::class)->getDocBlockResolvable('getFactory');
+
+        // Keyed by the name as resolved, which the use-statement scan hands
+        // back with a leading `\` -- so the key is taken from the answer rather
+        // than spelled here.
+        $this->pokeNormalizedType($first->className(), 'SentinelKind');
+
+        self::assertSame(
+            'SentinelKind',
+            DocBlockResolver::fromClassName(FakeFacade::class)
+                ->getDocBlockResolvable('getFactory')
+                ->resolvableType(),
+        );
+    }
+
+    /**
+     * And the memo is dropped by a cache reset, so the sentinel above cannot
+     * outlive one -- a memo nothing clears is the other half of the bargain.
+     */
+    public function test_a_cache_reset_drops_the_memoized_normalization(): void
+    {
+        $first = DocBlockResolver::fromClassName(FakeFacade::class)->getDocBlockResolvable('getFactory');
+        $this->pokeNormalizedType($first->className(), 'SentinelKind');
+
+        Gacela::resetCache();
+        // resetCache() drops the Config singleton along with the caches, so the
+        // next resolve needs a bootstrapped framework to run in at all.
+        $this->setUp();
+
+        self::assertSame(
+            'Factory',
+            DocBlockResolver::fromClassName(FakeFacade::class)
+                ->getDocBlockResolvable('getFactory')
+                ->resolvableType(),
+        );
     }
 
     public function test_class_without_docblock_throws_missing_definition(): void
@@ -217,5 +264,14 @@ final class DocBlockResolverTest extends TestCase
             FakeRandomService::class,
             'FakeRandomService',
         ];
+    }
+
+    private function pokeNormalizedType(string $className, string $value): void
+    {
+        $property = new ReflectionProperty(DocBlockResolver::class, 'normalizedTypes');
+        /** @var array<string,string> $memo */
+        $memo = $property->getValue();
+        $memo[$className] = $value;
+        $property->setValue(null, $memo);
     }
 }

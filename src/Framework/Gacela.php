@@ -29,6 +29,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Exception\ServiceNotFoundException;
 use Gacela\Framework\Health\HealthCheckRegistry;
+use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use Gacela\Framework\ServiceResolver\ServiceResolverCache;
 
 use function is_string;
@@ -205,6 +206,7 @@ final class Gacela
         AbstractPhpFileCache::resetCache();
         WritableDirectory::resetCache();
         ServiceResolverCache::resetCache();
+        DocBlockResolver::resetCache();
         ClassResolverCache::resetCache();
         ConfigFactory::resetCache();
         PathFinder::resetCache();

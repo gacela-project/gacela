@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.3.0](https://github.com/gacela-project/gacela/compare/2.2.0...2.3.0) - 2026-08-15
+
 ### Added
 
 #### Doctor checks

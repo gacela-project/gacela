@@ -4,94 +4,119 @@
 
 ### Added
 
-- Report a registration that cannot be satisfied, with `doctor`'s new **plugin stacks** and **handler registries** checks: a class that does not exist, reported apart from one that does not implement the contract. `LazyPluginStack` and `LazyHandlerRegistry` both resolve on first access — and the registry never refuses a wrong-typed handler at all — so a stack nothing has iterated and a key no run takes are the registrations nobody has checked. Every registry finding names the key, since the same handler can be registered under several
-- Report a module that is not where it looks like it is, with `doctor`'s new **unresolved pillar files** and **undiscovered facades** checks: a `BlogFactory.php` sitting on disk that resolves to nothing, which the filename check misses because the names agree and the namespace is what is wrong, and a facade PHP cannot load or that loads without extending `AbstractFacade`. Warnings, and only names matching the scaffolder's own pattern count
-- Report in `doctor` what a project declared and nothing acts on: an `extendService()` id no Provider `set()`s, a listener target no dispatched event can be, an `addAppConfig()` path matching no file, a tagged id nothing can answer, listeners registered while `disableEventListeners()` is in effect, an unwritable cache directory, a package importing a namespace its `composer.json` never mentions, and stale editor metadata. Two concern `#[Provides]`: one on a private or protected method, where the scanner reads public methods only so `getProvidedDependency()` answers `null`, and one id declared twice on the same Provider, where the last method wins and every one before it is dead while reading as live
-- Report `#[Cacheable]` methods running on the default storage, with `doctor`'s new **cacheable storage** check. That backend dies with the process, so under PHP-FPM an hour's TTL is recomputed every request and the attribute buys nothing. A warning, since the default is right wherever the process outlives the work
-- Print only the checks that found something with `doctor --only-problems`. Nineteen checks is a lot of "✓" to read to find the one "⚠", and `-q` suppresses everything, so `--strict -q` fails a build without saying what failed
-- Report a `#[Cacheable]` method that never reaches `$this->cached()`, through PHPStan (`gacela.cacheableWithoutCachedCall`) and Psalm (`GacelaCacheableWithoutCachedCall`), on by default. The attribute is metadata that `cached()` reads, so a method carrying it and not calling it is simply not cached. It judges the class, not the method, because `cached()` may live in a documented private helper
-- Report a `#[Cacheable]` key that never mentions the arguments, through PHPStan (`gacela.cacheableKeyIgnoresArguments`) and Psalm (`GacelaCacheableKeyIgnoresArguments`). A key without a `{N}` placeholder is the same string for every call, so `getUser(2)` is answered with user 1's row
-- Find the pillar accessors 3.0 removes, with an opt-in rule for both analysers (`gacela.serviceMapMissing`, `GacelaServiceMapMissing`). A `@method` accessor with no `#[ServiceMap]` is resolved by reading the class's source at runtime; each finding names the attribute to paste. Off by default, because what it reports is not wrong on 2.x
-- Report `debug:dependencies`, `debug:container` and `debug:modules` as documents with `--json`, in one shared vocabulary: `parameters` and `tree` mean the same in all three, `--tree` means what it means in the text report, `processMemoryBytes` is the number rather than `10 MB`, an empty binding map stays `{}`, `total` counts distinct classes while `tree` repeats a class two parents ask for, and `debug:modules`' `summary` counts `faults` apart from `unresolvable` — the distinction `--check` fails on. Every refusal answers with a document too, and `--json` alone is not a gate: only `--check` turns a verdict into an exit code
-- Emit a document with `--json` from the commands that answer a question about the project: `doctor`, where every check carries its `name`, `status`, `details` and `remediation` under an overall `status`, narrowed the same way by `--only-problems` and with the exit code unchanged; `validate:config`, which also gained `--strict` to fail on warnings, the bargain `doctor` has always offered; `debug:config`, whose values keep their own types and whose keys each carry a `declared`/`undeclared`/`missing` verdict against the schema; and `list:modules`, where a pillar the module does not have is `null` rather than an omitted key
-- Fail a `debug:modules` run on an unsatisfiable pillar with `--check`. Only faults fail it; a union or intersection type is reported and deliberately does not, being a gap in the inspector rather than a fault in the project
-- Find which Provider declares an id with `debug:provides`. Two modules declaring one id keep both rows: each resolves through its own container
-- List what a module's Provider declares in `debug:module`, under `Provides (#[Provides])`. Attribute-declared ids only, and labelled as such: finding the imperative `set()`s means running the Provider
-- Name what `profile:report` never saw finish. A `stop()` that misspells its operation vanishes and looks like code nobody instrumented; `--format=json` carries the same answer in an `unfinished` field
-- Answer "are the generated DTO classes up to date?" with `dto:generate --check`: it writes nothing, names each stale file, and exits non-zero
-- Preview what a scaffolder would write with `--dry-run`, on `make:module`, `make:file` and `stubs:publish`. "Would replace" is said separately from "would create"
-- Declare a data shape with `declareDtoSchema()` and generate the immutable class with `dto:generate`: typed getters, `with*()` copies, `toArray()` and `fromArray()`. Declarations of one shape union, so a project extends a packaged shape without forking it
-- Declare an extension point with `addPluginStack()`: every implementation of one interface, in declaration order, resolved lazily and read back typed through `getPluginStack()`
-- Declare a class kind of your own with `addResolvableType()`, resolved by suffix like the four pillars and reached through `DeclaredTypeResolverAwareTrait`; the `addSuffixType*()` verbs are now sugar over it. Generate one with `make:file App/Wallet Exporter`
-- Select configuration by more than `APP_ENV` with `addConfigDimension()`, so `config/app-prod-eu.php` refines `config/app-prod.php`. The merged-config cache is keyed by the whole tuple
-- Wrap a service as one Provider registers it with `extendProviderService()`, leaving every other module that reuses the same id alone
-- Set a custom event dispatcher with `GacelaConfig::setEventDispatcher()`. A supplied dispatcher takes precedence over `disableEventListeners()`
-- Generate editor metadata for `getProvidedDependency()` with `ide:meta`. An id two providers type differently is listed rather than written
+#### Doctor checks
+
+- **plugin stacks** and **handler registries** report a registration that cannot be satisfied: a missing class, or one that does not implement its contract. Both resolve on first access, so nothing else checks them; registry findings name the key
+- **unresolved pillar files** and **undiscovered facades** report a module that is not where it looks: a pillar file on disk that resolves to nothing, and a facade PHP cannot load or that does not extend `AbstractFacade`
+- **unusable `#[Provides]`** reports a method that cannot supply what it promises: non-public (the scanner reads public methods only), a required parameter (`ArgumentCountError`), or a `void`/`never` return (the id answers `null`). An optional parameter is not a fault
+- **duplicate provided id** reports one id declared twice on the same Provider: the last method wins, every one before it is dead, and all of them read as live
+- **cacheable storage** reports `#[Cacheable]` on the default backend, which dies with the process, so under PHP-FPM an hour's TTL is recomputed every request
+- More inert declarations: an `extendService()` id no Provider `set()`s, a listener target no dispatched event can be, an `addAppConfig()` path matching no file, a tagged id nothing can answer, listeners registered under `disableEventListeners()`, an unwritable cache directory, a namespace a package's `composer.json` never mentions, and stale editor metadata
+- Print only the checks that found something with `doctor --only-problems`. Nineteen checks is a lot of "✓" to read to find the one "⚠", and `--strict -q` fails a build without saying what failed
+
+#### Static analysis
+
+- `gacela.cacheableWithoutCachedCall` / `GacelaCacheableWithoutCachedCall`: a `#[Cacheable]` method that never reaches `$this->cached()` is simply not cached, the attribute being metadata `cached()` reads. On by default, and judges the class, since `cached()` may live in a documented private helper
+- `gacela.cacheableKeyIgnoresArguments` / `GacelaCacheableKeyIgnoresArguments`: a key with no `{N}` placeholder is the same string for every call, so `getUser(2)` is answered with user 1's row. On by default
+- `gacela.serviceMapMissing` / `GacelaServiceMapMissing` finds the pillar accessors 3.0 removes, naming the `#[ServiceMap]` to paste. Off by default, since a `@method` accessor is not wrong on 2.x
+
+#### JSON output
+
+- `debug:dependencies`, `debug:container` and `debug:modules` share one vocabulary: `parameters` and `tree` mean the same in all three, `processMemoryBytes` is a number rather than `10 MB`, an empty binding map stays `{}`, `total` counts distinct classes while `tree` repeats one two parents ask for, and `summary` counts `faults` apart from `unresolvable`
+- `doctor` carries each check's `name`, `status`, `details` and `remediation` under an overall `status`, narrowed by `--only-problems`; `debug:config` marks every key `declared`, `undeclared` or `missing`; `list:modules` writes `null` for a pillar a module does not have; `validate:config` also gained `--strict`, failing on warnings as `doctor` does
+- Every refusal answers with a document too, and `--json` alone is never a gate — only `--check` turns a verdict into an exit code
+
+#### Commands
+
+- `debug:modules --check` fails on an unsatisfiable pillar. Only faults fail it: a union or intersection type is a gap in the inspector, not the project
+- `debug:provides` finds which Provider declares an id, keeping both rows when two modules declare one; `debug:module` lists a module's own under `Provides (#[Provides])`. Attribute-declared ids only — finding the imperative `set()`s means running the Provider
+- `profile:report` names what it never saw finish: a `stop()` misspelling its operation vanished and looked like code nobody instrumented. `--format=json` carries the same answer in an `unfinished` field
+- `--dry-run` previews what `make:module`, `make:file` and `stubs:publish` would write, saying "would replace" apart from "would create"
+- `ide:meta` generates editor metadata for `getProvidedDependency()`; an id two Providers type differently is listed rather than written
+
+#### Declarations
+
+- `declareDtoSchema()` declares a data shape and `dto:generate` writes the immutable class: typed getters, `with*()` copies, `toArray()` and `fromArray()`. Declarations of one shape union, so a project extends a packaged shape without forking it, and `--check` writes nothing, names each stale file and exits non-zero
+- `addPluginStack()` declares an extension point: every implementation of one interface, in declaration order, resolved lazily and read back typed through `getPluginStack()`
+- `addResolvableType()` declares a class kind of your own, resolved by suffix like the four pillars and reached through `DeclaredTypeResolverAwareTrait`. The `addSuffixType*()` verbs are now sugar over it, and `make:file App/Wallet Exporter` generates one
+- `addConfigDimension()` selects configuration by more than `APP_ENV`, so `config/app-prod-eu.php` refines `config/app-prod.php`. The merged-config cache is keyed by the whole tuple
+- `extendProviderService()` wraps a service as one Provider registers it, leaving every other module on the same id alone
+- `GacelaConfig::setEventDispatcher()` sets a custom dispatcher, which takes precedence over `disableEventListeners()`
 
 ### Changed
 
-- Report two more ways a `#[Provides]` cannot supply what it promises, and rename the check to **unusable `#[Provides]`** to say so: a required parameter (the scanner calls with none, so resolving raises `ArgumentCountError`) and a `void`/`never` return (the id answers `null`). An optional parameter is not a fault
-- Point a "cannot resolve" error at the file already in the module directory — one named as expected whose namespace does not match, or one extending the right base under a name no finder rule builds — and name the misnamed file in the "module has no `Factory`" error too, since the common reason a module lands on the stand-in is a misspelled file rather than a missing one. Read from the file's tokens rather than by name similarity, which would offer `WalletFacade` as the missing Provider
-- Refuse an output format the command does not have, in `doctor`, `validate:config`, `debug:config` and `profile:report`, and refuse an unknown `profile:report --sort`. `--format=jsno` printed the text report and exited `0`, so a pipeline could not tell that run from a healthy one. `--json` is now accepted on every command that can emit it, while `--format` still chooses among the commands offering a real choice. **This changes existing behaviour**: a script passing a format that was silently ignored now fails
-- Refuse a `make:file` kind Gacela does not have, instead of generating the closest pillar — `Repository` wrote a `Factory`. A word that reaches nothing is refused with the `addResolvableType()` call that would make it real. **This changes existing behaviour**
-- Refuse to overwrite in `make:module` and `make:file`, and add `--force`. Every target is checked before the first is written, so a run that would replace something writes nothing. **This changes existing behaviour**
-- Skip loading a file where no class extends anything, and ask whether a class is a Facade before building a module out of it: 454 of 1627 classes here are never loaded, and 1292 constructions become the 121 that are kept. Each takes about 13 ms off a median discovery run. The file check is deliberately loose — a false positive costs one load, a false negative silently drops a module
-- Memoize the resolvable-type normalization in `DocBlockResolver`, cutting service resolution 10–16% on all four `DocBlockResolverBench` subjects. Cleared by `Gacela::resetCache()` like the caches beside it
-- Resolve a class name to its kind through the configured suffixes rather than the four literal pillar names, so `overrideExistingResolvedClass()` takes effect on a project using `addSuffixTypeFacade('PublicApi')`
-- Say what an empty module listing means, in `list:modules`, `debug:graph` and `debug:modules` alike: one message names the cause worth naming, a Facade whose namespace composer cannot map
-- Name the class in the docblock-fallback deprecation, spelled `\Fully\Qualified\Name::class`, so the `#[ServiceMap]` line it suggests pastes into any namespace unchanged
+- Refuse three things that used to be accepted silently. **This changes existing behaviour in all three.** An output format the command does not have, in `doctor`, `validate:config`, `debug:config` and `profile:report`, plus an unknown `profile:report --sort`: `--format=jsno` printed the text report and exited `0`. A `make:file` kind Gacela does not have, instead of generating the closest pillar — `Repository` wrote a `Factory` — refused with the `addResolvableType()` call that would make it real. And an overwrite in `make:module` or `make:file` without `--force`, every target checked before the first is written
+- Accept `--json` on every command that can emit it; `--format` still chooses among the commands offering a real choice
+- Point a "cannot resolve" error at the file already in the module directory — one whose namespace does not match, or one extending the right base under a name no finder rule builds — and name it in the "module has no `Factory`" error too. Read from the file's tokens, not name similarity, which would offer `WalletFacade` as the missing Provider
+- Skip loading a file where no class extends anything, and ask whether a class is a Facade before building a module out of it: 454 of 1627 classes here never load, and 1292 constructions become the 121 kept. About 13 ms off a median discovery run each
+- Memoize the resolvable-type normalization in `DocBlockResolver`: service resolution 10–16% faster on all four `DocBlockResolverBench` subjects, cleared by `Gacela::resetCache()`
+- Resolve a class name to its kind through the configured suffixes rather than the four literal pillar names, so `overrideExistingResolvedClass()` takes effect under `addSuffixTypeFacade('PublicApi')`
+- Say what an empty module listing means, in `list:modules`, `debug:graph` and `debug:modules` alike: a Facade whose namespace composer cannot map
+- Name the class in the docblock-fallback deprecation as `\Fully\Qualified\Name::class`, so the `#[ServiceMap]` line it suggests pastes into any namespace unchanged
 
 ### Fixed
 
-- Stop `#[Inject]` hiding a parameter the container cannot satisfy. The attribute short-circuited the inspection, so a bare `#[Inject]` on an unbound interface was reported resolvable and `debug:modules --check` exited `0` for a module that throws `DependencyNotFoundException` when built. It now labels the answer rather than being it, and a named class that does not exist is a fault
-- Write an array default as one readable expression in `dto:generate`'s output and in `debug:dependencies`/`debug:modules`. `var_export()` put `array (` on its own line and indented from column zero, mangling generated code, a one-parameter-per-line listing, and a JSON `detail` field
-- Generate a `gacela.php` that names the project's own namespaces. `init` wrote the literal `setProjectNamespaces(['App'])` everywhere, which costs a failed lookup on every cold resolution — and resolves the wrong class for a project that does have an `App\` module of that name. The prefixes now come from `composer.json`
-- Keep cache files inside the directory they were meant for. `''`, `'/'` and whitespace all normalized to an empty directory, so `FileCache` entries landed at `'/<sha1>.php'` and `ScopedCache` persisted its dependency graph to `/`; `CacheFilePath` now answers "nowhere" rather than "the root". `APP_ENV` is held to the same alphabet as a declared config dimension, since `APP_ENV=../escaped` wrote the merged-config cache outside its directory and `APP_ENV=x/../../pwned` failed the write silently and booted uncached
-- Treat a class as a pillar because it **is** one, not because its name contains the word. A service called `ConfigReader` was classified as the module's pillar and an anonymous stand-in returned instead, ignoring an explicit `#[ServiceMap]`
-- Resolve a short class name against the name an import defines, not the end of the `use` line. A module whose facade is called exactly `Facade` was answered by any neighbouring `*Facade` import, aliases included
-- Find a pillar accessor by its `@method` tag, not by the first docblock line mentioning its name. `Use getFacade() to reach the module.` resolved to a class called `wrapper.`
-- Let the cache directory agree with itself: it is normalized on every `getCacheDir()` call rather than only the first, so callers no longer disagree about a trailing slash, and the on-disk class-name cache is keyed by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps sharing a cache dir no longer serve each other's classes
-- Read `gacela.php` once when bootstrapping without a closure. Everything the project declared arrived twice: one `addAppConfig()` globbed twice, a plugin declared once ran twice
+#### Resolution
+
+- Stop `#[Inject]` hiding a parameter the container cannot satisfy. It short-circuited the inspection, so `debug:modules --check` exited `0` for a module that throws `DependencyNotFoundException` when built; it now labels the answer rather than being it, and a named class that does not exist is a fault
+- Stop matching a pillar by resemblance: a class is one because it **is** one, not because its name contains the word (a `ConfigReader` service was returned as the module's `Config`, ignoring an explicit `#[ServiceMap]`); a short name resolves against the name an import defines, not the end of the `use` line, so a facade called exactly `Facade` no longer matches any neighbouring `*Facade` import; and an accessor is found by its `@method` tag, not the first docblock line naming it
+- Read `gacela.php` once when bootstrapping without a closure. Everything declared arrived twice: one `addAppConfig()` globbed twice, a plugin declared once ran twice
 - Refuse a redefined DTO property when one source declares the same class twice, not only when two sources meet. An identical redeclaration stays allowed
-- Warm the accessors `cache:warm --attributes` is documented to warm, and stop raising a deprecation per facade while doing it: it resolved real methods, which `__call()` never reaches, so every entry it wrote was one nothing could look up
-- Register `dto:generate`, `ide:meta` and `stubs:publish` in the Symfony and Laravel bridges, whose hand-written lists never gained them. A test in each bridge now reads the command directory and fails when the list falls behind
-- Preload the framework and the packages it runs on, discovered rather than named in a list: the hand-written one silently linked none of the pillars, the resolvers or either container
-- Report in `doctor` an `extendProviderService()` id the named Provider never `set()`s, as its own docblock promised
-- Report a `#[Cacheable]` key whose placeholders all point past the method's arguments; one placeholder in range is enough, and a variadic is not judged on the index
-- Refuse `debug:graph --rules` and `--allowed-cycles` without `--check`, instead of ignoring them: the run was a gate that looks green while checking nothing
-- Refuse a `make:module --with-tests` on a template that scaffolds no test, so a reader who asked for a test is not told they have one, and refuse a `make:module` or `make:file` path whose segments cannot be PHP names, before writing anything. Accented and non-latin names are still accepted
-- Create `config/app.php` in `init`, alongside the `gacela.php` that declares `config/*.php`, so `doctor` on a fresh scaffold reports no config path loading nothing
-- Emit a document from `profile:report --format=json` on the two runs that report nothing, so a consumer gets JSON exactly when `unfinished` holds the only thing to say
-- Round the per-operation `total_duration` in `Profiler::getStats()` like every other duration in that payload
-- Stop `validate:config` ticking a binding it just warned about, and stop `debug:container` calling a container empty while reporting what is in it
-- Say whose bindings `debug:module` lists: the section is now `Application bindings (project-wide)`, since it reports the same list whichever module is named
-- List the `autoload-dev` prefixes too when `make:*` cannot match a namespace: the lookup searches both, and the `Known PSR-4:` list was built from `autoload` alone
-- Throw `GacelaNotBootstrappedException` from `Config::getInstance()`, like `Gacela::container()` already did, so catching the typed exception no longer misses the commonest case
-- Name what was meant when configuration goes wrong: the file in "must return a `callable(GacelaConfig)`" and in "The PHP config file must return an array…", which both always said `gacela.php` so a broken `gacela-prod.php` sent you to the file that was fine, and the available keys from all six typed getters when a key is not found
-- Report the shape of an `--allowed-cycles` file before judging its entries, and say either to wrap a stray entry in `[ ]` or that `--rules` is the flag taking an object
-- Name the module and the file when a `Factory` or `Config` a module never declared is called, instead of PHP's `Call to undefined method …@anonymous::createThing()`
-- Point the resolver's advice at something that exists: it advises on the kind that failed, names the module-prefixed class in its `E.g.` line, carries the class-not-found tips on both exceptions that name a class, and the "missing return type" exception now names the namespace `ServiceMap` actually lives in rather than one that does not exist
-- Say so when a plugin's class does not exist, instead of reporting it as one that "does not implement" the contract
-- Stop the architecture rules reporting what they cannot mean: a Facade may delegate to a kind declared with `addResolvableType()`, which `FacadeOnlyDelegates` did not know about, so two shipped features contradicted each other; `gacela.suffixExtends` no longer reports a class that already extends something else, which single inheritance makes impossible; and a Facade's static methods are no longer reported as failing to delegate or as missing from its interface, having no `$this` and never being reached through an instance
-- Answer a mistyped Laravel bridge config key with the one that was meant, as Symfony's config tree does
+
+#### Caches
+
+- Keep cache files inside the directory meant for them. `''`, `'/'` and whitespace all normalized to nothing, so `FileCache` wrote `'/<sha1>.php'` and `ScopedCache` persisted its graph to `/`; `APP_ENV` is now held to a declared dimension's alphabet, since `APP_ENV=../escaped` wrote the merged-config cache outside its directory and `APP_ENV=x/../../pwned` failed silently and booted uncached
+- Let the cache directory agree with itself: normalized on every `getCacheDir()` call rather than the first, and the class-name cache keyed by the bootstrap's `projectNamespaces` and suffix types, so two bootstraps sharing a directory cannot serve each other's classes
+- Warm the accessors `cache:warm --attributes` documents, without a deprecation per facade. It resolved real methods, which `__call()` never reaches, so every entry it wrote was one nothing could look up
+- Preload the framework and its packages by discovery rather than a hand-written list, which linked none of the pillars, the resolvers or either container
+
+#### Commands
+
+- Generate a `gacela.php` naming the project's own namespaces, read from `composer.json`, and create `config/app.php` beside it. `init` wrote the literal `setProjectNamespaces(['App'])`, costing a failed lookup on every cold resolution and resolving the wrong class for a project that has an `App\` module
+- Write an array default as one readable expression in `dto:generate`, `debug:dependencies` and `debug:modules`; `var_export()` put `array (` on its own line, mangling generated code and a JSON `detail` field
+- Refuse `debug:graph --rules` and `--allowed-cycles` without `--check`: the run was a gate that looked green while checking nothing
+- Refuse `make:module --with-tests` on a template that scaffolds no test, and any `make:*` path whose segments cannot be PHP names, before writing anything. Accented and non-latin names are still accepted
+- List the `autoload-dev` prefixes too when `make:*` cannot match a namespace: the lookup searches both, and `Known PSR-4:` was built from `autoload` alone
+- Stop `validate:config` ticking a binding it just warned about, and `debug:container` calling a container empty while reporting what is in it
+- Say whose bindings `debug:module` lists — `Application bindings (project-wide)` — since it reports the same list whichever module is named
+- Emit a document from `profile:report --format=json` on the two runs that report nothing, and round the per-operation `total_duration` in `Profiler::getStats()` like every other duration there
+- Report an `extendProviderService()` id the named Provider never `set()`s, as `doctor`'s own docblock promised
+- Report a `#[Cacheable]` key whose placeholders all point past the arguments; one in range is enough, and a variadic is not judged on the index
+
+#### Error messages
+
+- Name the module and the file when an undeclared `Factory` or `Config` is called, instead of `Call to undefined method …@anonymous::createThing()`
+- Point the resolver's advice at something that exists: the kind that failed, the module-prefixed class in its `E.g.` line, the class-not-found tips on both exceptions naming a class, and the namespace `ServiceMap` actually lives in
+- Name what was meant when configuration goes wrong: the file in "must return a `callable(GacelaConfig)`" and in "The PHP config file must return an array…", which always said `gacela.php` and so sent you away from a broken `gacela-prod.php`, and the available keys from all six typed getters
+- Report an `--allowed-cycles` file's shape before judging its entries, saying either to wrap a stray entry in `[ ]` or that `--rules` is the flag taking an object
+- Say a plugin's class does not exist, instead of reporting it as one that "does not implement" the contract
+- Throw `GacelaNotBootstrappedException` from `Config::getInstance()`, as `Gacela::container()` already did, so catching the typed exception no longer misses the commonest case
 - Name the cause when `assertServiceResolved()` has no events to read: only `bootstrapGacela()` registers the collecting listener
-- Declare `psr/container` in both bridge manifests and `symfony/console` in the Laravel bridge's, and demote test-only requirements to `require-dev`
-- Reattach nine docblocks in the shipped code that described nothing, orphaned when a method was added between a docblock and its signature. A test now fails on any docblock whose next meaningful token is another docblock
+
+#### Static analysis
+
+- Stop the rules reporting the impossible: a Facade may delegate to a kind declared with `addResolvableType()`, which `FacadeOnlyDelegates` did not know about; `gacela.suffixExtends` no longer flags a class that already extends something else; and a Facade's static methods are no longer judged on delegation or interface sync, having no `$this`
+- Reattach nine orphaned docblocks in the shipped code, left describing nothing when a method was added between a docblock and its signature. A test now fails on any docblock whose next meaningful token is another docblock
+
+#### Bridges
+
+- Ship both bridges complete: `dto:generate`, `ide:meta` and `stubs:publish` are registered in each, `psr/container` is declared in both manifests and `symfony/console` in Laravel's, and test-only requirements are demoted to `require-dev`. A test in each bridge now reads the command directory and fails when the list falls behind
+- Answer a mistyped Laravel bridge config key with the one that was meant, as Symfony's config tree does
 
 ### Internal
 
-- Clear PHPStan's result cache before the fixture tests analyse. It is keyed on the analysed files, not the rules judging them, so editing a rule could be answered from before the edit and a rule that had stopped reporting still looked green. The clear is checked, because the first attempt passed an unsupported option, failed, and was swallowed
-- Drive every default-on PHPStan rule from a test. Three of five had the analyser's unit tests and nothing reaching the rule itself, and a rule whose adaptation is broken analyses clean. Found by silencing each analyser and seeing which tests noticed
+- Clear PHPStan's result cache before the fixture tests analyse. It is keyed on the analysed files, not the rules judging them, so a rule that had stopped reporting still looked green. The clear is checked, the first attempt having passed an unsupported option and been swallowed
+- Drive every default-on PHPStan rule from a test. Three of five had unit tests for the analyser and nothing reaching the rule itself, and a rule whose adaptation is broken analyses clean
 - Give the method-level static-analysis rules the `MethodAnalyserInterface` the class-level ones have, so both hosts adapt them as a list instead of once per rule
-- Move the bridge bootstrapping into `Gacela\Framework\Bootstrap\IntegrationBootstrapper`. Both bridges held a byte-identical copy, including the `resetInMemoryCache()` call each had to learn separately. The host is reached through a closure, so this carries no dependency an integration might not have
-- List the commands once in `CommandCatalog` instead of once per registry. The same nineteen were written out in `ConsoleProvider` and in each bridge, and three had already been missed
-- Delete `ContextualBindingRegistrar`, a pass-through since container 2.0 shipped `give(null)` (container#169). All nine implementation shapes were compared through it and around it before removing it
+- Move the bridge bootstrapping into `Gacela\Framework\Bootstrap\IntegrationBootstrapper`. Both bridges held a byte-identical copy, including a `resetInMemoryCache()` call each had to learn separately; the host arrives through a closure, so this adds no dependency
+- List the commands once in `CommandCatalog` rather than once per registry. The same nineteen were written out in `ConsoleProvider` and in each bridge, and three had already been missed
+- Delete `ContextualBindingRegistrar`, a pass-through since container 2.0 shipped `give(null)` (container#169)
 
 ### Documentation
 
-- Correct the remedy offered for a misspelled provided-dependency id: `debug:module` lists what `#[Provides]` declares, not what a Provider registers imperatively, so the module the advice was written for prints `(none)`. Declaring with the attribute is what makes an id visible to tooling
+- Correct the remedy for a misspelled provided-dependency id: `debug:module` lists what `#[Provides]` declares, not what a Provider registers imperatively, so the module the advice was written for prints `(none)`
 - Document `setAppModulePaths()`, which decides how much of a project every CLI command walks: 14,290 filesystem entries against 1,826 when narrowed, same modules found
-- Document the Symfony bridge's `enabled` key, and assert in a test that every declared key appears in the README
+- Document the Symfony bridge's `enabled` key, asserted by a test against the README
 
 ## [2.2.0](https://github.com/gacela-project/gacela/compare/2.1.0...2.2.0) - 2026-08-11
 

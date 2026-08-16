@@ -23,6 +23,10 @@ jobs:
   regression-guard:
     name: "Performance regression guard"
     runs-on: ubuntu-latest
+    # Observed 1.5-6 min. The widest margin of the fast jobs: it runs composer
+    # install twice, once for the base checkout and once for the head, so a
+    # cold cache legitimately costs several times the median.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:

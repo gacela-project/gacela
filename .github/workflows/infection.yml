@@ -50,6 +50,8 @@ jobs:
     name: "Mutation testing (changed lines)"
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    # Scoped to the diff, but a wide PR can still mutate a lot of lines.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -112,6 +114,8 @@ jobs:
     name: "Mutation testing (full, min MSI 90%)"
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # The longest job in the repository: every mutant, not just the diff.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 

@@ -4,16 +4,21 @@
 
 ### Added
 
-- `doctor` reports the filter it ran under, and says when it matched no modules. The filter narrows which modules get inspected, not which checks run, so one matching nothing left every module-scoped check reporting "no modules discovered" and the run ending in `All checks passed` — a typo in `doctor App/Blog` read as a clean bill of health. `--format=json` carries `filter` and `modules` alongside `scanned`. `Scanned:` could not answer this one: the paths really were walked, and the filter excluded what they found afterwards
-- A **module paths** doctor check reports an `appModulePaths` entry that is not a directory. Discovery skips it and every module-scoped check works from the modules discovery returned, so one mistyped entry narrows all of them at once and the run still ends in a screen of ticks. A warning, so `--strict` is how a project whose paths are fixed opts into failing on it
-- `doctor` names the paths discovery walked, as `Scanned: src` above the checks and a `scanned` key in `--format=json`. Every check works from the modules discovery returned, so `appModulePaths` narrowing the scan narrows all twenty at once — a run over a project with a hundred modules can inspect one and still print a screen of ticks
-- `list:modules`, `debug:modules` and `debug:graph` name the paths they scanned when they find nothing: `Scanned: src`. `appModulePaths` narrows discovery to a subset of the project, so a module outside that subset is missing for a reason nothing about the module itself reveals — the report already said to check the psr-4 mapping, but never said where it had looked. Read from the configured entries rather than their resolved absolute paths, because the entry is what you would edit
+#### What a run actually looked at
+
+Every check and every module listing works from what discovery returned, so anything narrowing that narrows all of it at once — silently, and a narrowed run still ends in a screen of ticks. Four things now say what a run looked at:
+
+- **The paths walked.** `Scanned: src`, on `doctor` always and on `list:modules`, `debug:modules` and `debug:graph` when they find nothing. The configured `appModulePaths` entries rather than their resolved absolute paths, because the entry is what you would edit
+- **The paths skipped.** An entry that is not a directory is reported apart from the ones that were walked, as `Not scanned, not a directory: …`, never among them: one says where to look for the missing module, the other that the configuration names somewhere that is not there
+- **The filter.** `doctor` names it and how many modules it matched, including none — which otherwise left every module-scoped check reporting "no modules discovered" and the run ending in `All checks passed`, so a typo in `doctor App/Blog` read as a clean bill of health
+- **A `module paths` check**, so the one genuine fault among these is something `--strict` can fail a build on rather than a header line read once. A warning, since a project may point at a directory some environment generates
+
+`doctor --format=json` carries the same four as `scanned`, `unscanned`, `filter` and `modules`.
 
 ### Fixed
 
-- `Scanned:` no longer lists an `appModulePaths` entry that is not a directory. Discovery skips those, so naming them as scanned stated something that did not happen — to a reader looking at an empty module list precisely because it did not. They are reported on their own line (`Not scanned, not a directory: …`) by `list:modules`, `debug:modules`, `debug:graph` and `doctor` — the last also carrying them as an `unscanned` key in `--format=json` — because the two need opposite reactions: one says where to look for the missing module, the other that the configuration names somewhere that is not there
-- The suffix-mismatch doctor check told you to "add the missing suffix via `SuffixTypesBuilder::addFacade` in gacela.php". `SuffixTypesBuilder` is a private collaborator of `GacelaConfig`, and what gacela.php hands you is the `GacelaConfig` — which has no `addFacade()`. Both remediations now name `GacelaConfig::addSuffixTypeFacade()` and its siblings, verified to take the check from error to ok. A new architecture test walks every backticked `Class::method()` in the checks' string literals and fails when one names a method that does not exist
 - The "no modules found" hint said a module is found because "the filename carries the suffix". Discovery accepts by inheritance and never reads a suffix — a class extending `AbstractFacade` is a module whatever it is called — so the sentence sent a reader whose module was missing off to rename files that were never the cause. It now names the real conditions: extends `AbstractFacade`, named after the file that declares it, and autoloadable. Both are pinned by tests, the second being the true part the old wording was reaching for
+- The suffix-mismatch doctor check told you to "add the missing suffix via `SuffixTypesBuilder::addFacade` in gacela.php". `SuffixTypesBuilder` is a private collaborator of `GacelaConfig`, and what gacela.php hands you is the `GacelaConfig` — which has no `addFacade()`. Both remediations now name `GacelaConfig::addSuffixTypeFacade()` and its siblings, verified to take the check from error to ok. A new architecture test walks every backticked `Class::method()` in the checks' string literals and fails when one names a method that does not exist
 
 ### Changed
 

@@ -6,7 +6,6 @@ namespace Gacela\Console\Application\Doctor\Check;
 
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
-use ReflectionClass;
 
 use function class_exists;
 use function count;
@@ -17,20 +16,15 @@ use function sprintf;
  * Every `registerSpecificListener()` target, checked against something an event
  * can actually be.
  *
- * The dispatcher matches on `$event::class` -- the exact, concrete class. So a
- * listener registered for an interface never fires, even for events that
- * implement it, and neither does one registered for an abstract class or a name
- * with a typo in it. All three are accepted at bootstrap and simply never run.
+ * The dispatcher matches by inheritance, so a parent class or an interface is a
+ * legitimate target: it covers the whole family below it. What is left is the
+ * name that is not a type at all -- a typo, or a class that moved. It is
+ * accepted at bootstrap and simply never runs.
  *
- * The interface case is the one worth catching. `Container::afterResolving()`
- * in this same framework matches by `instanceof`, so registering against a
- * contract is a reasonable thing to expect to work, and nothing says otherwise
- * until an event that should have been handled quietly is not.
- *
- * Only names that can never equal `$event::class` are reported. A concrete
- * class that exists is left alone whether or not it is ever dispatched: a
- * listener for an event this deployment happens not to raise is waiting, not
- * broken.
+ * Only names that can never equal, extend or implement a dispatched event are
+ * reported. A type that exists is left alone whether or not it is ever
+ * dispatched: a listener for an event this deployment happens not to raise is
+ * waiting, not broken.
  */
 final class EventListenerTargetCheck implements HealthCheck
 {
@@ -90,7 +84,7 @@ final class EventListenerTargetCheck implements HealthCheck
 
         return CheckResult::ok(
             $this->name(),
-            sprintf('%d listener target(s) name a concrete event', count($this->listenerTargets)),
+            sprintf('%d listener target(s) name a known event type', count($this->listenerTargets)),
         );
     }
 
@@ -104,24 +98,13 @@ final class EventListenerTargetCheck implements HealthCheck
             return 'remove disableEventListeners() to let them run, or drop the registrations -- nothing here can tell a deliberate kill switch from a forgotten one';
         }
 
-        return 'a specific listener runs only when the dispatched event is exactly that class -- register the concrete event, or use registerGenericListener() and filter inside it';
+        return 'a specific listener runs for the event class named and everything below it -- pass `EventClass::class` rather than a hand-written string, so a rename cannot leave it behind';
     }
 
     private function whyItCanNeverFire(string $target): ?string
     {
-        if (interface_exists($target)) {
-            return 'is an interface, and events are matched by exact class';
-        }
-
-        if (!class_exists($target)) {
-            return 'names no class';
-        }
-
-        /** @var ReflectionClass<object> $reflection */
-        $reflection = new ReflectionClass($target);
-
-        if ($reflection->isAbstract()) {
-            return 'is abstract, so no dispatched event can be exactly it';
+        if (!class_exists($target) && !interface_exists($target)) {
+            return 'names no class or interface';
         }
 
         return null;

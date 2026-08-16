@@ -218,9 +218,17 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ## 2.3 → 2.4
 
-One change, in `#[Cacheable]`, and only if you set a custom `key:` template. Nothing to do otherwise.
+Two changes: `#[Cacheable]`, if you set a custom `key:` template, and `registerSpecificListener()`, if you ever pointed one at a parent class or an interface.
 
-### 1. A custom cache key is scoped to its class and method
+### 1. A specific listener matches by inheritance
+
+`registerSpecificListener()` compared `$event::class` exactly, so a target that was an interface or an abstract parent matched nothing and the listener never ran. It now matches the class named **and everything that extends or implements it**.
+
+Nothing to do if every target you registered is a concrete event class — that keeps matching exactly one event. The one thing to look for is a listener that was registered against a parent class or an interface and has been silently inert: it starts running, for every event below that type. `vendor/bin/gacela doctor` used to report those targets as unfireable and no longer does, so if the report is where you would have seen it, look for it in the code instead.
+
+The upside is that this is now the cheap way to observe a family. `registerSpecificListener(AbstractGacelaClassResolverEvent::class, …)` covers all four resolver events and leaves every other dispatch site allocating nothing, where the generic-listener-plus-`instanceof` pattern the docs used to teach allocates every event in the framework to throw most of them away.
+
+### 2. A custom cache key is scoped to its class and method
 
 A `key:` template used to be the whole stored key. Two classes writing the same template — `key: 'user:{0}'` in two facades — therefore shared one entry, and the second to ask was served the first one's data. It also put those entries out of reach of `clearMethodCacheFor()`, which deletes by a `Class::method::` prefix the template never carried.
 

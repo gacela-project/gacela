@@ -7,6 +7,8 @@ Gacela dispatches domain events while it works: bootstrapping, reading config, r
 - Every event is a small immutable class implementing `GacelaEventInterface` (one `toString()` method).
 - By default nothing listens: the dispatcher is a `NullEventDispatcher`, and every dispatch site is guarded by `EventDispatcherInterface::hasListeners()`, so **no event object is even allocated** unless a listener is registered for it. Events are zero-cost when unused, including on the class-resolution hot path.
 - Registering any listener switches to a `ConfigurableEventDispatcher`. Listeners are plain callables receiving the event object; they are notify-only (events are immutable, there is no propagation stopping).
+- A specific listener matches **by inheritance**: it runs for the class it names and for every event that extends or implements it. `AbstractGacelaClassResolverEvent::class` covers all four resolver events, and `GacelaEventInterface::class` covers every event there is — the typed way to listen to everything. The applicable listeners are worked out **once per concrete event class** and kept, so past the first dispatch of a class the guard is a single array lookup, exactly as when matching was on the exact class.
+- A listener that throws propagates. Nothing catches it, so a logging listener that blows up takes the resolve down with it — which is the right default for a framework (swallowing would hide the bug), but it means listener bodies belong in a `try` if the work in them can fail.
 - `GacelaConfig::disableEventListeners()` turns the whole mechanism off regardless of what was registered — the dispatcher is never built, so registered listeners silently do not run. That is the point in production, and the first thing to check when a listener appears dead. `vendor/bin/gacela doctor` reports the combination, so you do not have to remember to look.
 
 Two kinds of listeners:
@@ -23,7 +25,7 @@ Gacela::bootstrap($appRootDir, static function (GacelaConfig $config): void {
         error_log($event->toString());
     });
 
-    // Specific: receives only that event class
+    // Specific: receives that event class and everything below it
     $config->registerSpecificListener(
         ResolvedClassCreatedEvent::class,
         static function (ResolvedClassCreatedEvent $event): void {
@@ -33,7 +35,9 @@ Gacela::bootstrap($appRootDir, static function (GacelaConfig $config): void {
 });
 ```
 
-A generic listener makes *every* dispatch site allocate its event, including hot paths — prefer specific listeners in production.
+A generic listener makes *every* dispatch site allocate its event, including hot paths — prefer specific listeners in production, and name the narrowest type that covers what you want. `AbstractGacelaClassResolverEvent::class` costs you the four resolver events and nothing else; a generic listener costs you every event in the catalog below.
+
+`registerSpecificListener(GacelaEventInterface::class, …)` is the typed way to listen to everything: same reach and same cost as a generic listener, but the callable is declared against a type, so the parameter you write is checked instead of silently never matching.
 
 ## Lifecycle ordering
 
@@ -143,16 +147,17 @@ All four resolver events extend `AbstractGacelaClassResolverEvent` and expose `c
 ### Log every resolved class
 
 ```php
-use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Event\ClassResolver\AbstractGacelaClassResolverEvent;
-use Gacela\Framework\Event\GacelaEventInterface;
 
-$config->registerGenericListener(static function (GacelaEventInterface $event): void {
-    if ($event instanceof AbstractGacelaClassResolverEvent) {
+$config->registerSpecificListener(
+    AbstractGacelaClassResolverEvent::class,
+    static function (AbstractGacelaClassResolverEvent $event): void {
         error_log($event->toString());
-    }
-});
+    },
+);
 ```
+
+The abstract parent covers all four resolver events, and nothing else pays for it: every other dispatch site still skips allocating its event. A generic listener with an `instanceof` filter reaches the same four and allocates all the rest to throw them away.
 
 ### Time the bootstrap
 

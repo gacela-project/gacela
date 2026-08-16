@@ -551,6 +551,15 @@
                 // observable changes.
                 "Gacela\\Psalm\\ClassRules::classAnalysers",
                 "Gacela\\Psalm\\ClassRules::methodAnalysers",
+                // Which listeners apply to a concrete event class is a pure
+                // function of what has been registered, and both registration
+                // methods throw the memo away. So recomputing it on every
+                // lookup -- what the mutant does -- returns the same list; it
+                // only turns the hot guard from an array read back into a walk
+                // of every registered target. EventDispatchBench is what fails
+                // when that regresses, not a mutant.
+                "Gacela\\Framework\\Event\\Dispatcher\\ConfigurableEventDispatcher::hasListeners",
+                "Gacela\\Framework\\Event\\Dispatcher\\ConfigurableEventDispatcher::dispatch",
             ],
         },
         // ReturnRemoval arrived with infection 0.34 and reads every early

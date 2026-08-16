@@ -571,8 +571,20 @@ final class GacelaConfig
     /**
      * Register a listener when some event happens.
      *
-     * @param class-string $event
-     * @param callable(GacelaEventInterface):void $listener
+     * The listener runs for that event class and for every event that extends
+     * or implements it: `AbstractGacelaClassResolverEvent::class` covers all of
+     * the resolver events, and `GacelaEventInterface::class` covers every event
+     * there is -- the same reach as {@see registerGenericListener()}, with a
+     * callable static analysis can check.
+     *
+     * The event class is what types the callable, so declaring the listener
+     * against the wrong event is an error before it is a listener that never
+     * runs.
+     *
+     * @template T of GacelaEventInterface
+     *
+     * @param class-string<T> $event
+     * @param callable(T):void $listener
      */
     public function registerSpecificListener(string $event, callable $listener): self
     {

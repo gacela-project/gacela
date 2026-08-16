@@ -7,6 +7,7 @@ namespace GacelaTest\Unit\Console\Application\Doctor\Check;
 use Gacela\Console\Application\Doctor\Check\UnusableProvidesCheck;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\ContainerProvidesProvider;
 use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\HiddenProvidesProvider;
 use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\StubFacade;
 use GacelaTest\Unit\Console\Application\Doctor\Check\Fixtures\UncallableProvidesProvider;
@@ -135,6 +136,36 @@ final class UnusableProvidesCheckTest extends TestCase
         $result = (new UnusableProvidesCheck([$this->module(UncallableProvidesProvider::class)]))->run();
 
         self::assertCount(2, $result->details);
+    }
+
+    /**
+     * A `Container` parameter is the one required parameter the scanner does
+     * supply: `ProvidesScanner::scan()` reads the signature and passes it
+     * through, which is the shape `#[Provides]`'s own example is written in.
+     * Counting it reported every Provider that reaches the locator.
+     */
+    public function test_a_container_parameter_is_not_a_fault(): void
+    {
+        $result = (new UnusableProvidesCheck([$this->module(ContainerProvidesProvider::class)]))->run();
+
+        foreach ($result->details as $detail) {
+            self::assertStringNotContainsString('fromContainer()', $detail);
+        }
+    }
+
+    /**
+     * And the parameter beside it still is: exempting the container must not
+     * exempt the method carrying it.
+     */
+    public function test_a_further_required_parameter_is_still_reported(): void
+    {
+        $result = (new UnusableProvidesCheck([$this->module(ContainerProvidesProvider::class)]))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertStringContainsString(
+            'requires 1 argument(s)',
+            $this->detailMentioning($result->details, 'containerAndMore()'),
+        );
     }
 
     /**

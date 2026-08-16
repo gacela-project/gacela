@@ -8,6 +8,8 @@ use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\Attribute\Provides;
+use Gacela\Framework\Attribute\ProvidesScanner;
+use Gacela\Framework\Container\Container;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
@@ -25,9 +27,11 @@ use function sprintf;
  *  - **not seen** -- `ProvidesScanner::entriesFor()` reads
  *    `getMethods(ReflectionMethod::IS_PUBLIC)`, so the attribute on a private
  *    or protected method is not there as far as the container is concerned;
- *  - **not callable** -- a method with a required parameter is registered and
- *    then invoked with none, so resolving the id raises `ArgumentCountError`
- *    at whatever point something first asks for it;
+ *  - **not callable** -- a method with a required parameter the scanner has no
+ *    value for is registered and then invoked without it, so resolving the id
+ *    raises `ArgumentCountError` at whatever point something first asks for it.
+ *    A `Container` parameter is not one of those: the scanner reads the
+ *    signature and passes the container through;
  *  - **nothing to supply** -- a method returning `void` or `never` registers
  *    an id whose value is `null`.
  *
@@ -133,10 +137,12 @@ final class UnusableProvidesCheck implements HealthCheck
             );
         }
 
-        if ($method->getNumberOfRequiredParameters() > 0) {
+        $unsupplied = $this->unsuppliedParameterCount($method);
+
+        if ($unsupplied > 0) {
             return sprintf(
                 'which requires %d argument(s) -- the scanner calls it with none, so resolving the id raises ArgumentCountError',
-                $method->getNumberOfRequiredParameters(),
+                $unsupplied,
             );
         }
 
@@ -150,6 +156,36 @@ final class UnusableProvidesCheck implements HealthCheck
         }
 
         return null;
+    }
+
+    /**
+     * Required parameters the scanner has no value for.
+     *
+     * A `Container` parameter is not one of them: {@see ProvidesScanner::scan()}
+     * reads the signature and passes the container through, which is the
+     * documented way for a provided method to reach the locator. Counting it as
+     * a fault reported every Provider written the way `#[Provides]`'s own
+     * example is -- the check contradicting the feature it checks.
+     */
+    private function unsuppliedParameterCount(ReflectionMethod $method): int
+    {
+        $count = 0;
+
+        foreach ($method->getParameters() as $parameter) {
+            if ($parameter->isOptional()) {
+                continue;
+            }
+
+            $type = $parameter->getType();
+
+            if ($type instanceof ReflectionNamedType && $type->getName() === Container::class) {
+                continue;
+            }
+
+            ++$count;
+        }
+
+        return $count;
     }
 
     private function visibilityOf(ReflectionMethod $method): string

@@ -35,6 +35,7 @@ Lists every event the framework can dispatch, which of them your project listens
 
 ### Fixed
 
+- **`doctor` no longer reports a `#[Provides]` method that declares a `Container` parameter.** That is the shape the attribute documents, and the scanner reads the signature and passes the container through — a project writing it could not have a green `doctor --strict`
 - **A `#[Provides]` method that resolves the id it declares throws `CircularProvidesException`** naming the provider, the method and the id — instead of a stack overflow with a hundred thousand anonymous-closure frames. A loop through a second id names the whole chain
 - **Event listeners registered in a bootstrap closure and in `gacela.php` at the same time now all fire.** The merge replaced one side's generic listeners and the bootstrap memoized the pre-merge dispatcher, so one set was silently dead
 - **A `#[Cacheable]` custom key is scoped to the class and method that produced it.** Two classes with the same template shared one entry, and custom-keyed entries were invisible to `clearMethodCacheFor()`. **Stored keys change shape** — see [UPGRADE.md](UPGRADE.md#23--24)

@@ -15,6 +15,7 @@ use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
 use Gacela\Console\Application\Doctor\Check\HandlerRegistryCheck;
 use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
+use Gacela\Console\Application\Doctor\Check\ModulePathCheck;
 use Gacela\Console\Application\Doctor\Check\PackageManifestCheck;
 use Gacela\Console\Application\Doctor\Check\PluginStackCheck;
 use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
@@ -97,7 +98,7 @@ final class DoctorCommand extends Command
 
         // Every check below works from the modules discovery returned, so the
         // paths it walked bound all of them at once. `appModulePaths` narrowing
-        // the scan is invisible in a report of nineteen ticks otherwise.
+        // the scan is invisible in a report of twenty ticks otherwise.
         $output->writeln(sprintf(
             'Scanned: %s',
             implode(', ', $this->getFacade()->scannedModulePaths()),
@@ -231,6 +232,13 @@ final class DoctorCommand extends Command
             new CacheWritabilityCheck(
                 $config->getSetupGacela()->isFileCacheEnabled(),
                 $config->getCacheDir(),
+            ),
+            // Ahead of every module-scoped check below, because it is about
+            // the input all of them share: a path that scanned nothing makes
+            // each of them pass over less than the reader thinks it did.
+            new ModulePathCheck(
+                $this->getFacade()->scannedModulePaths(),
+                $this->getFacade()->unscannedModulePaths(),
             ),
             new SuffixMismatchCheck($modules, $suffixTypes),
             new FilenameMismatchCheck($modules, $suffixTypes),

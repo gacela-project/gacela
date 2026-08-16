@@ -4,7 +4,8 @@
 
 ### Added
 
-- `doctor` names the paths discovery walked, as `Scanned: src` above the checks and a `scanned` key in `--format=json`. Every check works from the modules discovery returned, so `appModulePaths` narrowing the scan narrows all nineteen at once — a run over a project with a hundred modules can inspect one and still print a screen of ticks
+- A **module paths** doctor check reports an `appModulePaths` entry that is not a directory. Discovery skips it and every module-scoped check works from the modules discovery returned, so one mistyped entry narrows all of them at once and the run still ends in a screen of ticks. A warning, so `--strict` is how a project whose paths are fixed opts into failing on it
+- `doctor` names the paths discovery walked, as `Scanned: src` above the checks and a `scanned` key in `--format=json`. Every check works from the modules discovery returned, so `appModulePaths` narrowing the scan narrows all twenty at once — a run over a project with a hundred modules can inspect one and still print a screen of ticks
 - `list:modules`, `debug:modules` and `debug:graph` name the paths they scanned when they find nothing: `Scanned: src`. `appModulePaths` narrows discovery to a subset of the project, so a module outside that subset is missing for a reason nothing about the module itself reveals — the report already said to check the psr-4 mapping, but never said where it had looked. Read from the configured entries rather than their resolved absolute paths, because the entry is what you would edit
 
 ### Fixed
@@ -29,7 +30,7 @@
 - **duplicate provided id** reports one id declared twice on the same Provider: the last method wins, every one before it is dead, and all of them read as live
 - **cacheable storage** reports `#[Cacheable]` on the default backend, which dies with the process, so under PHP-FPM an hour's TTL is recomputed every request
 - More inert declarations: an `extendService()` id no Provider `set()`s, a listener target no dispatched event can be, an `addAppConfig()` path matching no file, a tagged id nothing can answer, listeners registered under `disableEventListeners()`, an unwritable cache directory, a namespace a package's `composer.json` never mentions, and stale editor metadata
-- Print only the checks that found something with `doctor --only-problems`. Nineteen checks is a lot of "✓" to read to find the one "⚠", and `--strict -q` fails a build without saying what failed
+- Print only the checks that found something with `doctor --only-problems`. Twenty checks is a lot of "✓" to read to find the one "⚠", and `--strict -q` fails a build without saying what failed
 
 #### Static analysis
 

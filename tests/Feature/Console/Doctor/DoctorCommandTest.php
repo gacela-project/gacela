@@ -153,6 +153,11 @@ final class DoctorCommandTest extends TestCase
             self::assertStringContainsString('Scanned: real', $display);
             self::assertStringNotContainsString('Scanned: real, not-there', $display);
             self::assertStringContainsString('not-there', $display);
+
+            // Reported as a check too, not only as a header line: a header is
+            // read once, and `--strict` is what a CI job can fail on.
+            self::assertStringContainsString('module paths', $display);
+            self::assertStringNotContainsString('✓ All checks passed', $display);
         } finally {
             restore_error_handler();
             // Names exactly what this test created.
@@ -198,6 +203,9 @@ final class DoctorCommandTest extends TestCase
         self::assertSame([
             '✓ cache staleness',
             '✓ cache directory',
+            // Ahead of every module-scoped check, because it is about the
+            // input all of them share.
+            '✓ module paths',
             '✓ suffix configuration',
             '✓ class filenames',
             '✓ undiscovered facades',

@@ -6,6 +6,10 @@ namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
 use Gacela\StaticAnalysis\Rules\CrossModuleMethodCallAnalyser;
 use Gacela\StaticAnalysis\Violation;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingChildException;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingContract;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingException;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingValueObject;
 use PHPUnit\Framework\TestCase;
 
 final class CrossModuleMethodCallAnalyserTest extends TestCase
@@ -13,6 +17,11 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
     private const ROOT = 'App\Modules';
 
     private const CALLER = 'App\Modules\Checkout\CheckoutFactory';
+
+    /** Real classes, for the exemptions matched by `is_a()` rather than by name. */
+    private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
+
+    private const FIXTURE_CALLER = self::FIXTURE_ROOT . '\Checkout\CheckoutFactory';
 
     public function test_a_call_on_another_modules_type_is_reported(): void
     {
@@ -142,6 +151,124 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
     }
 
     /**
+     * A module throws its own exception type and a neighbour catches it and
+     * asks for `getMessage()`. That is reading, not collaborating: the boundary
+     * a Facade protects is not crossed by it, and reporting it made every
+     * `catch` of a typed exception a finding -- 24 of the 53 raised on
+     * phel-lang.
+     */
+    public function test_a_call_on_an_exception_from_another_module_is_allowed(): void
+    {
+        self::assertSame([], $this->analyseReal([BillingException::class]));
+    }
+
+    /**
+     * Matched by `is_a()` rather than by name, so a project's own exception
+     * hierarchy is covered without naming every leaf.
+     */
+    public function test_a_call_on_an_exception_subclass_is_allowed(): void
+    {
+        self::assertSame([], $this->analyseReal([BillingChildException::class]));
+    }
+
+    public function test_a_call_on_a_named_receiver_is_allowed(): void
+    {
+        self::assertSame(
+            [],
+            $this->analyse(
+                ['App\Modules\Billing\Domain\InvoiceRepository'],
+                ignoreReceivers: ['App\Modules\Billing\Domain\InvoiceRepository'],
+            ),
+        );
+    }
+
+    /**
+     * Naming an interface covers what implements it, which is the point: a
+     * project names the contract once rather than every class behind it.
+     */
+    public function test_naming_an_interface_covers_what_implements_it(): void
+    {
+        self::assertSame(
+            [],
+            $this->analyseReal([BillingValueObject::class], [BillingContract::class]),
+        );
+    }
+
+    /**
+     * The exempt branch comes first here, so ending the scan instead of
+     * continuing it would swallow the crossing behind it.
+     */
+    public function test_a_union_is_scanned_past_an_exempt_receiver(): void
+    {
+        self::assertCount(
+            1,
+            $this->analyse(
+                [
+                    'App\Modules\Billing\Domain\EmitterResult',
+                    'App\Modules\Billing\Domain\InvoiceRepository',
+                ],
+                ignoreReceivers: ['App\Modules\Billing\Domain\EmitterResult'],
+            ),
+        );
+    }
+
+    /**
+     * The precondition for every exemption above. The fixtures all sit one
+     * segment under the fixture root, in a module the caller is not in, so a
+     * green assertion up there means the exemption did it -- and not the fixture
+     * living somewhere the boundary ignores anyway.
+     */
+    public function test_a_fixture_receiver_with_no_exemption_is_reported(): void
+    {
+        self::assertCount(1, $this->analyseReal([BillingValueObject::class]));
+    }
+
+    /**
+     * An entry naming something the analysis cannot load still exempts itself.
+     * `is_a()` answers false for an unloadable name, so the exact match is what
+     * carries a receiver the host resolved but nothing can autoload.
+     */
+    public function test_an_ignored_receiver_that_does_not_exist_still_exempts_itself(): void
+    {
+        self::assertSame(
+            [],
+            $this->analyse(
+                ['App\Modules\Billing\Domain\Gone'],
+                ignoreReceivers: ['App\Modules\Billing\Domain\Gone'],
+            ),
+        );
+    }
+
+    public function test_a_receiver_not_on_the_list_is_still_reported(): void
+    {
+        self::assertCount(
+            1,
+            $this->analyse(
+                ['App\Modules\Billing\Domain\InvoiceRepository'],
+                ignoreReceivers: ['App\Modules\Billing\Domain\SomethingElse'],
+            ),
+        );
+    }
+
+    /**
+     * The list is scanned past a non-match, or only the first entry would ever
+     * exempt anything.
+     */
+    public function test_every_entry_on_the_list_is_considered(): void
+    {
+        self::assertSame(
+            [],
+            $this->analyse(
+                ['App\Modules\Billing\Domain\InvoiceRepository'],
+                ignoreReceivers: [
+                    'App\Modules\Billing\Domain\SomethingElse',
+                    'App\Modules\Billing\Domain\InvoiceRepository',
+                ],
+            ),
+        );
+    }
+
+    /**
      * Left out, the depth is one segment under the root.
      */
     public function test_the_module_depth_defaults_to_one_segment(): void
@@ -168,6 +295,7 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
     /**
      * @param list<string> $receiverClasses
      * @param list<string> $sharedNamespaces
+     * @param list<string> $ignoreReceivers
      *
      * @return list<Violation>
      */
@@ -175,9 +303,26 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
         array $receiverClasses,
         string $caller = self::CALLER,
         array $sharedNamespaces = [],
+        array $ignoreReceivers = [],
     ): array {
-        $analyser = new CrossModuleMethodCallAnalyser(self::ROOT, 1, $sharedNamespaces);
+        $analyser = new CrossModuleMethodCallAnalyser(self::ROOT, 1, $sharedNamespaces, $ignoreReceivers);
 
         return $analyser->analyse($caller, $receiverClasses);
+    }
+
+    /**
+     * The same, rooted at the fixture namespace so the receivers are classes
+     * that really load.
+     *
+     * @param list<string> $receiverClasses
+     * @param list<string> $ignoreReceivers
+     *
+     * @return list<Violation>
+     */
+    private function analyseReal(array $receiverClasses, array $ignoreReceivers = []): array
+    {
+        $analyser = new CrossModuleMethodCallAnalyser(self::FIXTURE_ROOT, 1, [], $ignoreReceivers);
+
+        return $analyser->analyse(self::FIXTURE_CALLER, $receiverClasses);
     }
 }

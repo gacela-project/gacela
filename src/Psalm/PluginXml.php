@@ -78,15 +78,39 @@ final class PluginXml
      */
     public static function sharedNamespaces(SimpleXMLElement $element): array
     {
-        $namespaces = [];
+        return self::childValues($element, 'sharedNamespace');
+    }
 
-        foreach ($element->sharedNamespace as $sharedNamespace) {
-            $name = trim((string)$sharedNamespace);
-            if ($name !== '') {
-                $namespaces[] = $name;
+    /**
+     * Receivers a cross-module call may land on whatever module they belong to.
+     *
+     * @return list<string>
+     */
+    public static function ignoreReceivers(SimpleXMLElement $element): array
+    {
+        return self::childValues($element, 'ignoreReceiver');
+    }
+
+    /**
+     * Every non-empty `<$child>` under the element, trimmed -- whitespace around
+     * an xml value is formatting rather than part of the name.
+     *
+     * @return list<string>
+     */
+    private static function childValues(SimpleXMLElement $element, string $child): array
+    {
+        $values = [];
+
+        /** @var iterable<SimpleXMLElement> $nodes reading a child by name yields the elements with it */
+        $nodes = $element->{$child};
+
+        foreach ($nodes as $node) {
+            $value = trim((string)$node);
+            if ($value !== '') {
+                $values[] = $value;
             }
         }
 
-        return $namespaces;
+        return $values;
     }
 }

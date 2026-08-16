@@ -81,6 +81,13 @@ services:
     #         modulePathSegments: 1
     #         sharedNamespaces:
     #             - App\Modules\Shared
+    #         # Receivers a call may land on whatever module they belong to, for
+    #         # the value objects a project treats as public contracts. Naming an
+    #         # interface or a base class covers what implements or extends it.
+    #         # Throwable receivers are exempt already: a caught exception is read,
+    #         # not collaborated with.
+    #         ignoreReceivers:
+    #             - App\Modules\Shared\GlobalEnvironmentInterface
 
     # Opt-in: pillar accessors still resolved from a `@method` docblock, which
     # 3.0 removes in favour of #[ServiceMap]. Not on by default because what it

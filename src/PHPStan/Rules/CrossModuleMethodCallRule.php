@@ -23,13 +23,21 @@ final class CrossModuleMethodCallRule implements Rule
     /**
      * @param list<string> $sharedNamespaces namespaces exempt from the boundary
      *                                       check (shared kernels)
+     * @param list<string> $ignoreReceivers  classes and interfaces a call may land
+     *                                       on whatever module they belong to
      */
     public function __construct(
         string $rootNamespace,
         int $modulePathSegments = 1,
         array $sharedNamespaces = [],
+        array $ignoreReceivers = [],
     ) {
-        $this->analyser = new CrossModuleMethodCallAnalyser($rootNamespace, $modulePathSegments, $sharedNamespaces);
+        $this->analyser = new CrossModuleMethodCallAnalyser(
+            $rootNamespace,
+            $modulePathSegments,
+            $sharedNamespaces,
+            $ignoreReceivers,
+        );
     }
 
     /**

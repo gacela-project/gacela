@@ -46,6 +46,8 @@ services:
             modulePathSegments: 1
             sharedNamespaces:
                 - App\Modules\Shared
+            ignoreReceivers:      # optional: receivers a call may land on, whatever module they are in
+                - App\Modules\Shop\GlobalEnvironmentInterface
 ```
 
 ### Psalm
@@ -57,6 +59,7 @@ One `<crossModule>` element enables both halves:
     <pluginClass class="Gacela\Psalm\Plugin">
         <crossModule rootNamespace="App\Modules" modulePathSegments="1">
             <sharedNamespace>App\Modules\Shared</sharedNamespace>
+            <ignoreReceiver>App\Modules\Shop\GlobalEnvironmentInterface</ignoreReceiver>
         </crossModule>
     </pluginClass>
 </plugins>
@@ -68,6 +71,9 @@ A `<crossModule>` without a `rootNamespace` is a configuration error and stops t
 
 - `sharedNamespaces` entries are exempt in both directions: references into them are always allowed, and classes inside them are not checked. Matching is namespace-boundary aware — `App\Modules\Shared` does not exempt `App\Modules\SharedFoo`.
 - A **call** on a `*Facade` or a `*FacadeInterface` is allowed; consumers type-hint the interface, which is the same sanctioned crossing. A **written reference** is allowed only for `*Facade`, because naming `SomeFacadeInterface::class` is not a call through one.
+- A **call on a `Throwable`** is allowed, always. A module throws its own exception type and a neighbour catches it and asks for `getMessage()`: that is reading, not collaborating, and the boundary a Facade protects is not crossed by it. Without this, every `catch` block of a typed exception is a finding — 24 of the 53 the rule raised on a 1100-file codebase were exactly that. The *named* reference is still reported: `new ShopException(...)` writes another module's name, which is the other half's business.
+- `ignoreReceivers` entries are receivers a **call** may land on, whatever module they belong to — the value objects a project has decided are public contracts. Matched by `is_a()`, so naming an interface covers what implements it and naming a base covers what extends it. It is read by the method-call half only: the other half matches written names, and a name is not a receiver.
+- `ignoreReceivers` is a constructor parameter rather than a screenful of `ignoreErrors`, which is PHPStan's own convention for a structural rule and is not the same thing: an error-message ignore also silences the *next* crossing that happens to be phrased the same way, and says nothing about which decision it is recording.
 - A receiver the analyser cannot resolve is not reported. An unknown type is not evidence of a violation, and guessing there would make the rule noise.
 - One line can produce two findings — `(new ShopService())->run()` both names the other module and calls into it. Those are two crossings with two corrections, so both are reported.
 

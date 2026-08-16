@@ -12,6 +12,7 @@ use Gacela\Console\Domain\FileContent\StubPublishResult;
 use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
 use Gacela\Console\Domain\ModuleGraph\GraphDiffResult;
 use Gacela\Console\Domain\ModuleGraph\ModuleRuleCheckResult;
+use Gacela\Console\Domain\ServiceMapMigration\MigrationResult;
 use Gacela\Container\ContainerStats;
 use Gacela\Framework\AbstractFacade;
 use Gacela\StaticAnalysis\ModuleRules\ModuleRuleSet;
@@ -112,6 +113,23 @@ final class ConsoleFacade extends AbstractFacade
         return $this->getFactory()
             ->createAllAppModulesFinder()
             ->findAllAppModules($filter);
+    }
+
+    /**
+     * Writes the `#[ServiceMap]` attribute the static analysis reports as
+     * missing, across every scanned file.
+     *
+     * The last rung of the 3.0 migration ladder: deprecate, detect, suggest --
+     * and then apply, which users were doing by hand from a suggestion the
+     * tooling had already computed.
+     *
+     * @return list<MigrationResult> only the files that changed
+     */
+    public function migrateServiceMaps(string $filter = '', bool $dryRun = false): array
+    {
+        return $this->getFactory()
+            ->createServiceMapMigrationRunner()
+            ->run($filter, $dryRun);
     }
 
     /**

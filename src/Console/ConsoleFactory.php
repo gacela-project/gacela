@@ -38,6 +38,8 @@ use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
 use Gacela\Console\Domain\ModuleGraph\ModuleRuleChecker;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
 use Gacela\Console\Domain\PackageManifest\ComposerPackage;
+use Gacela\Console\Domain\ServiceMapMigration\ServiceMapMigrationRunner;
+use Gacela\Console\Domain\ServiceMapMigration\ServiceMapMigrator;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Container\ContainerStats;
 use Gacela\Framework\AbstractFactory;
@@ -49,7 +51,9 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Dto\Schema\DtoSchema;
 use Gacela\Framework\Gacela;
+use Gacela\StaticAnalysis\Rules\ServiceMapMissingAnalyser;
 use OuterIterator;
+use PhpParser\ParserFactory;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -168,6 +172,18 @@ final class ConsoleFactory extends AbstractFactory
         return new AllAppModulesFinder(
             $this->createModuleScanIterator(),
             $this->createAppModuleCreator(),
+        );
+    }
+
+    public function createServiceMapMigrationRunner(): ServiceMapMigrationRunner
+    {
+        return new ServiceMapMigrationRunner(
+            $this->createModuleScanIterator(),
+            new ServiceMapMigrator(
+                (new ParserFactory())->createForNewestSupportedVersion(),
+                new ServiceMapMissingAnalyser(),
+            ),
+            $this->createFileContentIo(),
         );
     }
 

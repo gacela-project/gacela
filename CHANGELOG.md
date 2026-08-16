@@ -4,6 +4,15 @@
 
 ### Added
 
+#### `migrate:service-map`
+
+The last rung of the 3.0 migration ladder. Resolving a pillar accessor from its `@method` docblock is deprecated in 2.x and removed in 3.0; the `gacela.serviceMapMissing` analysis already reported each one and printed the exact attribute to declare it with — and then stopped, leaving every user to hand-apply an edit the tooling had computed, one class at a time, finding the classes only as cold resolves happened to reach them. The command writes that attribute for every class at once.
+
+- `--dry-run` reports what would change and writes nothing; an optional argument narrows to paths containing it
+- Which accessors need an attribute is asked of the analyser, not decided again, so a migration cannot rewrite a different set than the analysis reports
+- The edit is textual: only the attribute and, when missing, the `ServiceMap` import are added. Nothing else in the file moves, and running it twice changes nothing
+- An accessor whose `@method` type is not a single class name — a union, a nullable, a generic, `self` — is left for a human, and the analysis no longer suggests one either. `A|B::class` parses, as a bitwise or of a constant and a string, so it would have failed when the attribute was read rather than when it was written
+
 #### What a run actually looked at
 
 Every check and every module listing works from what discovery returned, so anything narrowing that narrows all of it at once — silently, and a narrowed run still ends in a screen of ticks. Four things now say what a run looked at:

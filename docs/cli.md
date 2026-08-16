@@ -49,6 +49,7 @@ Nothing ships for such a kind, so its stub is one you write: `stubs/gacela/expor
 
 | Command | What it does |
 |---|---|
+| `migrate:service-map` | Writes the `#[ServiceMap]` attribute the `gacela.serviceMapMissing` analysis reports as missing, for every class at once. Resolving a pillar accessor from its `@method` docblock is deprecated in 2.x and removed in 3.0, and the runtime notice only fires for accessors a run actually reaches, on a cold resolve — so a migration driven by notices covers the code paths your tests happen to execute. `--dry-run` reports what would change and writes nothing; an optional argument narrows to paths containing it. Only the attribute and, when missing, the import are added — nothing else in the file moves, and running it twice changes nothing |
 | `list:modules` | Renders every module found. `--detailed` for one block per module; `--json` for the whole inventory with every pillar, filter and all |
 | `debug:modules` | Dependency resolvability of every module pillar. `--detail` for every parameter rather than only the unresolvable ones; `--check` exits non-zero when the container cannot satisfy one, for CI; `--json` for the same report as a document |
 | `debug:module App/Blog` | One module: resolved classes, the ids its Provider declares with `#[Provides]`, container bindings, dependency tree |

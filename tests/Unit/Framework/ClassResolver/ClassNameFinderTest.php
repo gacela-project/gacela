@@ -126,8 +126,13 @@ final class ClassNameFinderTest extends TestCase
         $cache = new InMemoryCache(ClassInfo::class);
         $cache->put('cacheKey', '\cached\class');
 
+        // The cached name is checked before it is trusted, so a hit only comes
+        // back when the class it names still exists.
+        $classValidator = $this->createStub(ClassValidatorInterface::class);
+        $classValidator->method('isClassNameValid')->willReturn(true);
+
         $classNameFinder = new ClassNameFinder(
-            $this->createStub(ClassValidatorInterface::class),
+            $classValidator,
             [],
             $cache,
             [],
@@ -142,6 +147,60 @@ final class ClassNameFinderTest extends TestCase
             static fn (\Gacela\Framework\Event\GacelaEventInterface $event): bool => $event instanceof \Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameCachedFoundEvent,
         );
         self::assertCount(1, $cachedFoundEvents);
+    }
+
+    /**
+     * A persisted cache entry outlives the class it names.
+     *
+     * Rename or delete a Factory and deploy without clearing the cache dir and
+     * the entry still resolves -- to a class that is gone. Nothing downstream
+     * catches it: the container answers `null` for a class it cannot find, and
+     * `AbstractClassResolver::createInstance()` is typed to return an object,
+     * so the run dies on a `TypeError` naming neither the class, nor the cache,
+     * nor `cache:clear`.
+     *
+     * So a hit is checked before it is trusted, and a stale one falls through
+     * to the finder rules, which overwrite it. The user does nothing.
+     */
+    public function test_a_cached_class_that_no_longer_exists_is_refound_not_returned(): void
+    {
+        $cache = new InMemoryCache(ClassInfo::class);
+        $cache->put('cacheKey', '\gone\class');
+
+        $classValidator = $this->createStub(ClassValidatorInterface::class);
+        $classValidator->method('isClassNameValid')
+            ->willReturnCallback(static fn (string $className): bool => $className === self::CANDIDATE);
+
+        $finderRule = $this->createStub(FinderRuleInterface::class);
+        $finderRule->method('buildClassCandidate')->willReturn(self::CANDIDATE);
+
+        $classNameFinder = new ClassNameFinder($classValidator, [$finderRule], $cache, []);
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
+
+        self::assertSame(self::CANDIDATE, $classNameFinder->findClassName($classInfo, ['A']));
+
+        // Self-healing: the next resolution must not pay for the same miss, so
+        // the stale entry is replaced rather than merely bypassed.
+        self::assertSame(self::CANDIDATE, $cache->get('cacheKey'));
+    }
+
+    /**
+     * The stale entry must not survive as a fallback when nothing replaces it
+     * either: returning a class that does not exist is the failure, and having
+     * found no better answer does not make it a better answer.
+     */
+    public function test_a_stale_cached_class_is_not_returned_when_no_rule_matches(): void
+    {
+        $cache = new InMemoryCache(ClassInfo::class);
+        $cache->put('cacheKey', '\gone\class');
+
+        $classValidator = $this->createStub(ClassValidatorInterface::class);
+        $classValidator->method('isClassNameValid')->willReturn(false);
+
+        $classNameFinder = new ClassNameFinder($classValidator, [], $cache, []);
+        $classInfo = new ClassInfo('callerNamespace', 'callerModuleName', 'cacheKey');
+
+        self::assertNull($classNameFinder->findClassName($classInfo, ['A']));
     }
 
     /**

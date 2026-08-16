@@ -56,10 +56,11 @@ parameters:
         # generic service caches, so the class-string-ness cannot be proven here.
         # Fixing this properly means typing the cache storage (and the on-disk
         # payload it is rehydrated from) as class-string maps.
-        -
-            message: '#should return class-string\|null but returns string#'
-            path: src/Framework/ClassResolver/ClassNameFinder/ClassNameFinder.php
-            count: 1
+        #
+        # ClassNameFinder no longer needs this: it validates a cache hit before
+        # returning it, and ClassValidatorInterface::isClassNameValid() carries
+        # `@phpstan-assert-if-true class-string`, so the narrowing is proven
+        # rather than assumed. The suppression went with the guess.
         -
             message: '#should return class-string but returns string#'
             path: src/Framework/ServiceResolver/DocBlockResolver.php

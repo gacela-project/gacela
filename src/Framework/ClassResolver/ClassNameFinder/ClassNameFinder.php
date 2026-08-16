@@ -38,13 +38,30 @@ final class ClassNameFinder implements ClassNameFinderInterface
     {
         $cacheKey = $classInfo->getCacheKey();
 
+        // A persisted entry outlives the class it names: rename or delete a
+        // Factory and deploy without clearing the cache dir, and the hit still
+        // resolves to a class that is gone. Nothing downstream catches it --
+        // the container answers `null` for a class it cannot find, and
+        // `AbstractClassResolver::createInstance()` is typed to return an
+        // object -- so the run dies on a TypeError naming neither the class,
+        // the cache, nor `cache:clear`.
+        //
+        // Checking costs nothing on the warm path: ClassValidator memoizes
+        // class_exists, and a name that survives this is about to be autoloaded
+        // anyway to be instantiated.
         if ($this->cache->has($cacheKey)) {
             $cached = $this->cache->get($cacheKey);
-            if (self::shouldDispatch(ClassNameCachedFoundEvent::class)) {
-                self::dispatchEvent(new ClassNameCachedFoundEvent($cacheKey, $cached));
+
+            if ($this->classValidator->isClassNameValid($cached)) {
+                if (self::shouldDispatch(ClassNameCachedFoundEvent::class)) {
+                    self::dispatchEvent(new ClassNameCachedFoundEvent($cacheKey, $cached));
+                }
+
+                return $cached;
             }
 
-            return $cached;
+            // Stale: fall through to the rules below, whose `put()` overwrites
+            // the entry, so the next resolution does not pay for this miss.
         }
 
         $projectNamespaces = $this->projectNamespaces;

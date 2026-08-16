@@ -319,6 +319,55 @@ final class SetupMergerTest extends TestCase
         );
     }
 
+    /**
+     * `gacela.php` is where a project writes this, beside `setProjectNamespaces()`
+     * -- and until the merger carried it, writing it there did nothing: every
+     * command went on walking the whole application root, and `doctor` reported
+     * the closure's paths as the ones being scanned.
+     */
+    public function test_app_module_paths_declared_by_the_second_setup_are_the_ones_scanned(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addAppConfigKeyValue('unrelated', true);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->setAppModulePaths(['src/Billing', 'src/Customer']);
+        });
+
+        self::assertSame(['src/Billing', 'src/Customer'], $setup1->merge($setup2)->getAppModulePaths());
+    }
+
+    /**
+     * Replaced, not appended: the list names every directory to scan, so a
+     * source that writes it is answering the whole question.
+     */
+    public function test_app_module_paths_replace_rather_than_accumulate(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->setAppModulePaths(['src/Legacy']);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->setAppModulePaths(['src/Billing']);
+        });
+
+        self::assertSame(['src/Billing'], $setup1->merge($setup2)->getAppModulePaths());
+    }
+
+    public function test_a_setup_that_declares_no_app_module_paths_does_not_drop_the_originals(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->setAppModulePaths(['src/Billing']);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addAppConfigKeyValue('unrelated', true);
+        });
+
+        self::assertSame(['src/Billing'], $setup1->merge($setup2)->getAppModulePaths());
+    }
+
     public function test_merge_handler_registries_from_two_setups(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

@@ -72,6 +72,19 @@ All classes live under `Gacela\Framework\Event\`. "Hot path" marks events fired 
 | `ConfigKeyNotFoundEvent` | `Config::get()` misses (default returned or exception thrown) | `key()` | no |
 | `ConfigReader\ReadPhpConfigEvent` | a PHP config file is read | `absolutePath()` | no |
 
+### Cacheable methods (`Event\Attribute`)
+
+| Event | Fires when | Payload | Hot path |
+|---|---|---|---|
+| `CacheableHitEvent` | a `#[Cacheable]` method is answered from storage | `className()`, `method()`, `cacheKey()` | **yes** |
+| `CacheableMissEvent` | a `#[Cacheable]` method runs its callback | `className()`, `method()`, `cacheKey()`, `computeMilliseconds()`, `ttl()` | **yes** |
+
+Together these make a hit rate measurable, which is the question worth asking of any cache. It is also the one that catches the default-storage trap in production: `InMemoryCacheStorage` dies with the process, so under PHP-FPM a method annotated for an hour's TTL is recomputed on every request — every call reports a miss, and nothing else says so. `doctor` reports the same thing from the configuration, before a request is served.
+
+`computeMilliseconds()` times the callback alone, not the storage write: what a hit saves you is the callback, and a backend's own latency is the backend's to report.
+
+Both are guarded like every other dispatch, and the guard is what makes them free — `CacheableBench` is unchanged with nothing listening (0.732μs, identical to before they existed).
+
 ### Class resolution (`Event\ClassResolver`)
 
 All four resolver events extend `AbstractGacelaClassResolverEvent` and expose `classInfo()`.

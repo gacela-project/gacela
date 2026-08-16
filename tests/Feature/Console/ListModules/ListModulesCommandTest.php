@@ -126,6 +126,12 @@ final class ListModulesCommandTest extends TestCase
             self::assertStringContainsString('No modules found.', $display);
             self::assertStringNotContainsString('filter ""', $display);
             self::assertStringContainsString('autoloadable', $display);
+
+            // Discovery accepts by inheritance and never reads a suffix, so the
+            // hint must not send a reader off to rename files. Pinned as words
+            // because that is the whole of what this sentence is.
+            self::assertStringContainsString('extending AbstractFacade', $display);
+            self::assertStringNotContainsString('the filename carries the suffix', $display);
         } finally {
             // Names exactly what this test created.
             rmdir($emptyDir);

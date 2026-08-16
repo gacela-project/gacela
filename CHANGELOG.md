@@ -6,6 +6,10 @@
 
 - `list:modules`, `debug:modules` and `debug:graph` name the paths they scanned when they find nothing: `Scanned: src`. `appModulePaths` narrows discovery to a subset of the project, so a module outside that subset is missing for a reason nothing about the module itself reveals — the report already said to check the psr-4 mapping, but never said where it had looked. Read from the configured entries rather than their resolved absolute paths, because the entry is what you would edit
 
+### Fixed
+
+- The "no modules found" hint said a module is found because "the filename carries the suffix". Discovery accepts by inheritance and never reads a suffix — a class extending `AbstractFacade` is a module whatever it is called — so the sentence sent a reader whose module was missing off to rename files that were never the cause. It now names the real conditions: extends `AbstractFacade`, named after the file that declares it, and autoloadable. Both are pinned by tests, the second being the true part the old wording was reaching for
+
 ### Changed
 
 - Every CI job declares `timeout-minutes`, sized against observed durations: 10 for the sub-minute gates, 20 for `Tests` and `PHPBench`, 45 for either mutation-testing job. Without one a job inherits GitHub's 6-hour default, so a runner that stalls seconds after starting — five times in one day on `PHPBench` — holds a pull request's checks open until somebody cancels the run by hand, and a cancel alone marks it failed rather than re-queueing it. A timeout turns the same stall into an ordinary red check anyone can re-run. An architecture test fails the build if a new job forgets one

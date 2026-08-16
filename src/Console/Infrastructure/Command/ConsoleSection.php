@@ -46,6 +46,15 @@ final class ConsoleSection
      * there on disk, which is what makes an empty list read as a bug in the
      * command rather than in the autoload map.
      *
+     * It used to say "the filename carries the suffix", which is not what
+     * decides anything here: `AllAppModulesFinder` accepts by inheritance and
+     * never looks at a suffix, so a class extending `AbstractFacade` is a
+     * module whatever it is called. Sending a reader whose module is missing
+     * to rename files costs them the one thing this sentence exists to save.
+     * What the filename *does* decide is the class name discovery looks for,
+     * so a file declaring a differently named class is skipped -- which is the
+     * true half of what the old wording was reaching for.
+     *
      * Both answers name the paths that were scanned. `appModulePaths` narrows
      * discovery to a subset of the project, so a module outside that subset is
      * absent for a reason no amount of looking at the module itself reveals.
@@ -68,8 +77,9 @@ final class ConsoleSection
         $output->writeln(sprintf('%s<comment>No modules found.</comment>', $indent));
         self::writeScannedPaths($output, $indent, $scannedPaths);
         $output->writeln(sprintf(
-            '%sA module is found by its Facade: the filename carries the suffix, and the class has to be'
-            . ' autoloadable. If the files are there, check the psr-4 mapping in composer.json.',
+            '%sA module is found by its Facade: a class extending AbstractFacade, named after the file that'
+            . ' declares it, and autoloadable. The suffix is not what decides it.'
+            . ' If the files are there, check the psr-4 mapping in composer.json.',
             $indent,
         ));
     }

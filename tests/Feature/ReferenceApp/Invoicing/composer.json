@@ -1,0 +1,9 @@
+{
+    "description": "Manifest of the reference application. Not installed: it is here because `dto:generate` reads the psr-4 map to decide where a declared shape is written, and `doctor` reads it to check what each package imports.",
+    "autoload": {
+        "psr-4": {
+            "GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Billing\\": "Billing",
+            "GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Customer\\": "Customer"
+        }
+    }
+}

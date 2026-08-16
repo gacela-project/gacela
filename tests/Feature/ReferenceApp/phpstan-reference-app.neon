@@ -1,0 +1,72 @@
+# The shipped Gacela rules, run over the reference application at level max.
+#
+# The repo's own `phpstan-tests.neon` analyses `tests/` at level 0 without these
+# rules -- deliberately, because most of `tests/` is fixtures written to be
+# wrong. The reference application is the opposite: it is what a project should
+# look like, so it is analysed the way a project would analyse itself, with the
+# three opt-in rules turned on as well.
+#
+# Driven by GacelaTest\Integration\PHPStan\ReferenceAppTest.
+includes:
+    - ../../../phpstan-gacela.neon
+
+services:
+    # Module A reaches module B only through B's Facade -- checked wherever the
+    # source writes another module's name.
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Feature\ReferenceApp\Invoicing
+            modulePathSegments: 1
+            sharedNamespaces:
+                - GacelaTest\Feature\ReferenceApp\Invoicing\Shared
+    # The other half: a boundary crossed through an injected dependency writes
+    # no name at the call site, so this one resolves the receiver by type.
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Feature\ReferenceApp\Invoicing
+            modulePathSegments: 1
+            sharedNamespaces:
+                - GacelaTest\Feature\ReferenceApp\Invoicing\Shared
+            # The two declared shapes are this application's public contracts:
+            # Billing hands its invoices to Reporting, which reads them. Reading
+            # a value object is not collaborating with the module that owns it.
+            ignoreReceivers:
+                - GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceRecord
+                - GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain\CustomerProfile
+    # The same `module-rules.json` that `debug:graph --check --rules` reads, so
+    # a boundary holds in the editor and in CI or in neither.
+    -
+        class: Gacela\PHPStan\Rules\DeclaredModuleDependencyRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Feature\ReferenceApp\Invoicing
+            rulesFile: %currentWorkingDirectory%/tests/Feature/ReferenceApp/Invoicing/module-rules.json
+            modulePathSegments: 1
+            sharedNamespaces:
+                - GacelaTest\Feature\ReferenceApp\Invoicing\Shared
+    # Every pillar accessor declares `#[ServiceMap]`; nothing here is left on the
+    # `@method` fallback 3.0 removes.
+    -
+        class: Gacela\PHPStan\Rules\ServiceMapMissingRule
+        tags: [phpstan.rules.rule]
+
+parameters:
+    level: max
+    paths:
+        - Invoicing
+    ignoreErrors:
+        # `dto:generate` writes `new self($data['x'] ?? null, ...)` from an
+        # `array<string, mixed>`, which is `mixed` per argument. The generator
+        # emits `@psalm-suppress MixedArgument` and nothing for PHPStan, and the
+        # file's own header says not to edit it -- so the only place this can be
+        # answered is here, scoped to the two files it is true of.
+        -
+            identifier: argument.type
+            path: Invoicing/Billing/Domain/InvoiceRecord.php
+        -
+            identifier: argument.type
+            path: Invoicing/Customer/Domain/CustomerProfile.php

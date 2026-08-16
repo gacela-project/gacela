@@ -1,0 +1,22 @@
+{
+    "rules": [
+        {
+            "from": "GacelaTest\\Feature\\ReferenceApp\\Invoicing",
+            "deny": ["GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Reporting"],
+            "reason": "reporting is a leaf: it reads the ledger, and nothing reads it back — an import in this direction would make the thing being reported on depend on its own report"
+        },
+        {
+            "from": "GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Reporting",
+            "allow": [
+                "GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Billing",
+                "GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Customer"
+            ],
+            "reason": "a report is a read of the ledger and of who the invoices belong to; reaching anything else would make reporting a place where behaviour accumulates"
+        },
+        {
+            "from": "GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Billing",
+            "deny": ["GacelaTest\\Feature\\ReferenceApp\\Invoicing\\Payment"],
+            "reason": "billing decides what is owed; how it is collected is downstream, and an invoice that knows about gateways cannot be issued without one"
+        }
+    ]
+}

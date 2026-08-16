@@ -33,6 +33,10 @@ Lists every event the framework can dispatch, which of them your project listens
 - **Paths skipped** — an `appModulePaths` entry that is not a directory is reported as `Not scanned, not a directory: …`, and by a new `module paths` doctor check so `--strict` can fail on it
 - **The filter** — `doctor` names it and how many modules it matched, including none, which used to end in `All checks passed`
 
+#### Reference application
+
+An invoicing SaaS under `tests/Feature/ReferenceApp/`, wired with every feature at once and run on every pull request. Five modules, a three-layer harness — behaviour, every shipped command, and a guard that fails when a new `GacelaConfig` method, attribute or command is not used by it — and both analysers over the application with the opt-in architecture rules turned on. See [docs/reference-app.md](docs/reference-app.md).
+
 ### Fixed
 
 - **A second bootstrap in one process resolves against its own bindings.** `AbstractClassResolver` memoized the merged `gacela.php` on the instance, and those instances are held by a trait static that no reset reaches — so an application that had used a `#[ServiceMap]` accessor went on resolving its pillars from the previous application's configuration, reported as "no concrete class was found" for a binding that was plainly there

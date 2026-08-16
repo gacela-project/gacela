@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+    The same architecture rules as `phpstan-reference-app.neon`, through the
+    other analyser. One application, two readers: a boundary that holds in one
+    and not the other is a boundary nobody trusts.
+
+    The repo's own `psalm.xml` lists only `src/`, so without this file the
+    shipped plugin never sees an application at all.
+
+    Driven by GacelaTest\Integration\Psalm\ReferenceAppTest.
+-->
+<psalm errorLevel="1" resolveFromConfigFile="true" findUnusedBaselineEntry="false" findUnusedCode="false">
+    <projectFiles>
+        <directory name="Invoicing"/>
+        <ignoreFiles>
+            <!--
+                Written by `dto:generate`, whose header says not to edit it. The
+                generator emits `@psalm-suppress MixedArgument` for the one
+                thing Psalm objects to, but `findUnusedPsalmSuppress` is not the
+                only issue a generated file can raise, and a project cannot fix
+                any of them.
+            -->
+            <file name="Invoicing/Billing/Domain/InvoiceRecord.php"/>
+            <file name="Invoicing/Customer/Domain/CustomerProfile.php"/>
+        </ignoreFiles>
+    </projectFiles>
+
+    <plugins>
+        <pluginClass class="Gacela\Psalm\Plugin">
+            <crossModule rootNamespace="GacelaTest\Feature\ReferenceApp\Invoicing" modulePathSegments="1">
+                <sharedNamespace>GacelaTest\Feature\ReferenceApp\Invoicing\Shared</sharedNamespace>
+                <ignoreReceiver>GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceRecord</ignoreReceiver>
+                <ignoreReceiver>GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain\CustomerProfile</ignoreReceiver>
+            </crossModule>
+            <moduleRules
+                rootNamespace="GacelaTest\Feature\ReferenceApp\Invoicing"
+                file="Invoicing/module-rules.json"
+                modulePathSegments="1"
+            >
+                <sharedNamespace>GacelaTest\Feature\ReferenceApp\Invoicing\Shared</sharedNamespace>
+            </moduleRules>
+            <serviceMapMissing/>
+        </pluginClass>
+    </plugins>
+
+    <issueHandlers>
+        <MissingOverrideAttribute errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

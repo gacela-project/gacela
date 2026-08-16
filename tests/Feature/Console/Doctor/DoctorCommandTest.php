@@ -182,6 +182,60 @@ final class DoctorCommandTest extends TestCase
     }
 
     /**
+     * The filter narrows which modules get inspected, not which checks run, so
+     * a filter matching nothing leaves every module-scoped check reporting "no
+     * modules discovered" and the run ending in `All checks passed`. A typo in
+     * `doctor App/Blog` therefore reads as a clean bill of health.
+     *
+     * `Scanned:` cannot answer this one: the paths really were walked, and the
+     * filter excluded what they found afterwards.
+     */
+    public function test_a_filter_that_matched_no_module_says_so(): void
+    {
+        $display = $this->doctor([], ['filter' => 'NoSuchNamespaceXYZ'])->getDisplay();
+
+        self::assertStringContainsString('NoSuchNamespaceXYZ', $display);
+        self::assertStringContainsString('matched no modules', $display);
+    }
+
+    /**
+     * The positive branch needs a root that actually has modules, and this
+     * test's own directory has none -- which is why the filter cases here all
+     * report zero. `ListModules` carries three fixture modules.
+     */
+    public function test_a_filter_that_matched_modules_is_reported_without_the_warning(): void
+    {
+        Gacela::bootstrap(__DIR__ . '/../ListModules', static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $tester = new CommandTester(new DoctorCommand());
+        $tester->execute(['filter' => 'TestModule1']);
+
+        $display = $tester->getDisplay();
+
+        self::assertStringContainsString('Filter: TestModule1', $display);
+        self::assertStringContainsString('1 module(s)', $display);
+        self::assertStringNotContainsString('matched no modules', $display);
+    }
+
+    public function test_no_filter_says_nothing_about_one(): void
+    {
+        self::assertStringNotContainsString('Filter:', $this->doctor([])->getDisplay());
+    }
+
+    public function test_the_json_report_carries_the_filter_and_the_module_count(): void
+    {
+        $tester = $this->doctor([], ['filter' => 'NoSuchNamespaceXYZ', '--format' => 'json']);
+
+        /** @var array{filter: string, modules: int} $decoded */
+        $decoded = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('NoSuchNamespaceXYZ', $decoded['filter']);
+        self::assertSame(0, $decoded['modules']);
+    }
+
+    /**
      * `--format=xml` used to print the text report and exit 0, so a pipeline
      * that asked for a document it cannot produce could not tell that run apart
      * from a healthy one.

@@ -29,6 +29,7 @@ use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\CheckStatus;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\ConsoleFacade;
+use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
 use Gacela\Framework\Attribute\CacheableConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
@@ -90,8 +91,20 @@ final class DoctorCommand extends Command
             return Command::FAILURE;
         }
 
+        // Discovered once, here rather than inside buildChecks(), because the
+        // report says how many modules the run actually inspected and a second
+        // call would walk the project again to answer it.
+        $modules = $this->getFacade()->findAllAppModules($filter);
+
         if ($format === 'json') {
-            return $this->renderJson($output, $this->buildChecks($filter), $strict, $onlyProblems);
+            return $this->renderJson(
+                $output,
+                $this->buildChecks($modules),
+                $strict,
+                $onlyProblems,
+                $filter,
+                count($modules),
+            );
         }
 
         ConsoleSection::title($output, 'Gacela Doctor');
@@ -115,9 +128,20 @@ final class DoctorCommand extends Command
             ));
         }
 
+        // The filter narrows which modules get inspected, not which checks run,
+        // so one matching nothing leaves every module-scoped check reporting
+        // "no modules discovered" and the run ending in "All checks passed".
+        // `Scanned:` cannot answer this: the paths were walked, and the filter
+        // excluded what they found afterwards.
+        if ($filter !== '') {
+            $output->writeln($modules === []
+                ? sprintf('<comment>Filter: %s — matched no modules</comment>', $filter)
+                : sprintf('Filter: %s — %d module(s)', $filter, count($modules)));
+        }
+
         $output->writeln('');
 
-        $checks = $this->buildChecks($filter);
+        $checks = $this->buildChecks($modules);
         $worst = CheckStatus::Ok;
         $rendered = false;
 
@@ -168,8 +192,14 @@ final class DoctorCommand extends Command
      *
      * @param list<HealthCheck> $checks
      */
-    private function renderJson(OutputInterface $output, array $checks, bool $strict, bool $onlyProblems): int
-    {
+    private function renderJson(
+        OutputInterface $output,
+        array $checks,
+        bool $strict,
+        bool $onlyProblems,
+        string $filter,
+        int $moduleCount,
+    ): int {
         $worst = CheckStatus::Ok;
         $reported = [];
 
@@ -193,6 +223,8 @@ final class DoctorCommand extends Command
             'status' => $worst->value,
             'scanned' => $this->getFacade()->scannedModulePaths(),
             'unscanned' => $this->getFacade()->unscannedModulePaths(),
+            'filter' => $filter,
+            'modules' => $moduleCount,
             'checks' => $reported,
         ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
@@ -204,12 +236,13 @@ final class DoctorCommand extends Command
     }
 
     /**
+     * @param list<AppModule> $modules discovered once by the caller, which also reports on them
+     *
      * @return list<HealthCheck>
      */
-    private function buildChecks(string $filter): array
+    private function buildChecks(array $modules): array
     {
         $config = Config::getInstance();
-        $modules = $this->getFacade()->findAllAppModules($filter);
         $configFactory = $config->getFactory();
         $gacelaFileConfig = $configFactory->createGacelaFileConfig();
         $configLoader = $configFactory->createConfigLoader();

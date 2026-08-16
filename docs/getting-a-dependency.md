@@ -138,6 +138,27 @@ Declare the dependency with **`#[Provides]`**, which is what puts the id in `ven
 
 This is the same shape as an [unanswerable tagged id](cli.md), which `doctor` reports — a group iterating one hole, failing on the consumer. Nothing reports this one, because an id may legitimately come from another module's Provider, from `addBinding()`, or from `extendService()`, so "no Provider declares it" is not the same as "it is wrong".
 
+### A provided method must not ask for its own id
+
+The body of a `#[Provides]` method **builds** the service. Resolving the id it declares makes providing it start by providing it:
+
+```php
+#[Provides(PaymentGateway::class)]
+public function paymentGateway(Container $container): PaymentGateway
+{
+    return $container->get(PaymentGateway::class); // meant StripeGateway::class
+}
+```
+
+That is accepted at registration and fails at the first resolution, so nothing before it — not `composer install`, not `doctor` — has anything to say. Gacela reports it there, naming the provider, the method and the id:
+
+```
+App\AppProvider::paymentGateway() is declared #[Provides(App\PaymentGateway::class)] and its
+body resolves "App\PaymentGateway" from the container, so providing it starts by providing it.
+```
+
+A loop through a second id is reported the same way, with the whole chain named — nothing about either method reveals it on its own. Resolving a *different* provided id from a provided method is ordinary and stays that way; only coming back to the same declaration is a cycle.
+
 ## Collect several implementations
 
 Two shapes, and which one you want is decided by a single question: **do you look a member up, or do you use all of them?**

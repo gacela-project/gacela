@@ -132,6 +132,39 @@ final class ListModulesCommandTest extends TestCase
         }
     }
 
+    /**
+     * The empty report says what to check but never said where it looked.
+     *
+     * `appModulePaths` narrows discovery to a subset of the project -- this
+     * repository's own `gacela.php` pins it to `src` -- and a reader whose
+     * module sits outside that subset sees files on disk, an empty list, and
+     * no way to connect the two without opening the config. Naming the paths
+     * turns "why is my module missing" into one line of output.
+     */
+    public function test_finding_nothing_names_the_paths_that_were_scanned(): void
+    {
+        $emptyDir = sys_get_temp_dir() . '/gacela-scanned-' . bin2hex(random_bytes(4));
+        mkdir($emptyDir . '/inner', 0777, true);
+
+        try {
+            Gacela::bootstrap($emptyDir, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->setAppModulePaths(['inner']);
+            });
+
+            $tester = new CommandTester(new ListModulesCommand());
+            $tester->execute([]);
+            $display = $tester->getDisplay();
+
+            self::assertStringContainsString('No modules found.', $display);
+            self::assertStringContainsString('Scanned: inner', $display);
+        } finally {
+            // Names exactly what this test created.
+            rmdir($emptyDir . '/inner');
+            rmdir($emptyDir);
+        }
+    }
+
     public function test_non_matching_filter_reports_no_modules(): void
     {
         $this->command->execute(['filter' => 'NoSuchModuleXYZ']);
@@ -140,6 +173,17 @@ final class ListModulesCommandTest extends TestCase
 
         self::assertStringContainsString('No modules match filter "NoSuchModuleXYZ".', $output);
         self::assertStringNotContainsString('┌────', $output);
+    }
+
+    /**
+     * A filter that matched nothing has the same question behind it as an empty
+     * project: the answer depends on where discovery was pointed.
+     */
+    public function test_a_non_matching_filter_also_names_the_paths_that_were_scanned(): void
+    {
+        $this->command->execute(['filter' => 'NoSuchModuleXYZ']);
+
+        self::assertStringContainsString('Scanned: ', $this->command->getDisplay());
     }
 
     public function test_non_matching_filter_reports_no_modules_in_detailed_view(): void

@@ -45,16 +45,28 @@ final class ConsoleSection
      * namespace composer cannot map is skipped in silence. The files are right
      * there on disk, which is what makes an empty list read as a bug in the
      * command rather than in the autoload map.
+     *
+     * Both answers name the paths that were scanned. `appModulePaths` narrows
+     * discovery to a subset of the project, so a module outside that subset is
+     * absent for a reason no amount of looking at the module itself reveals.
+     *
+     * @param list<string> $scannedPaths
      */
-    public static function noModulesFound(OutputInterface $output, string $filter, string $indent = ''): void
-    {
+    public static function noModulesFound(
+        OutputInterface $output,
+        string $filter,
+        string $indent = '',
+        array $scannedPaths = [],
+    ): void {
         if ($filter !== '') {
             $output->writeln(sprintf('%s<comment>No modules match filter "%s".</comment>', $indent, $filter));
+            self::writeScannedPaths($output, $indent, $scannedPaths);
 
             return;
         }
 
         $output->writeln(sprintf('%s<comment>No modules found.</comment>', $indent));
+        self::writeScannedPaths($output, $indent, $scannedPaths);
         $output->writeln(sprintf(
             '%sA module is found by its Facade: the filename carries the suffix, and the class has to be'
             . ' autoloadable. If the files are there, check the psr-4 mapping in composer.json.',
@@ -104,5 +116,17 @@ final class ConsoleSection
             'Nothing was written. Pass <comment>--force</comment> to replace %s.',
             count($paths) === 1 ? 'it' : 'them',
         ));
+    }
+
+    /**
+     * @param list<string> $scannedPaths
+     */
+    private static function writeScannedPaths(OutputInterface $output, string $indent, array $scannedPaths): void
+    {
+        if ($scannedPaths === []) {
+            return;
+        }
+
+        $output->writeln(sprintf('%sScanned: %s', $indent, implode(', ', $scannedPaths)));
     }
 }

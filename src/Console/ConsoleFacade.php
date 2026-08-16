@@ -115,6 +115,17 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
+     * The `appModulePaths` entries discovery walked, for a report that found
+     * nothing and has to say where it looked.
+     *
+     * @return list<string>
+     */
+    public function scannedModulePaths(): array
+    {
+        return $this->getFactory()->scannedModulePaths();
+    }
+
+    /**
      * Files named like a Facade that discovery did not turn into a module.
      *
      * The inverse of findAllAppModules(): every check works from the modules

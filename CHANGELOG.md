@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- The suffix-mismatch doctor check told you to "add the missing suffix via `SuffixTypesBuilder::addFacade` in gacela.php". `SuffixTypesBuilder` is a private collaborator of `GacelaConfig`, and what gacela.php hands you is the `GacelaConfig` — which has no `addFacade()`. Both remediations now name `GacelaConfig::addSuffixTypeFacade()` and its siblings, verified to take the check from error to ok. A new architecture test walks every backticked `Class::method()` in the checks' string literals and fails when one names a method that does not exist
 - The "no modules found" hint said a module is found because "the filename carries the suffix". Discovery accepts by inheritance and never reads a suffix — a class extending `AbstractFacade` is a module whatever it is called — so the sentence sent a reader whose module was missing off to rename files that were never the cause. It now names the real conditions: extends `AbstractFacade`, named after the file that declares it, and autoloadable. Both are pinned by tests, the second being the true part the old wording was reaching for
 
 ### Changed

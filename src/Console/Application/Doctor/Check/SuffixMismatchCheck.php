@@ -76,7 +76,7 @@ final class SuffixMismatchCheck implements HealthCheck
             return CheckResult::error(
                 $this->name(),
                 [...$errors, ...$warnings],
-                'add the missing suffix via `SuffixTypesBuilder::addFacade/Factory/Config/Provider` in gacela.php',
+                'add the missing suffix in gacela.php with `GacelaConfig::addSuffixTypeFacade()`, or its Factory, Config and Provider siblings',
             );
         }
 
@@ -84,7 +84,7 @@ final class SuffixMismatchCheck implements HealthCheck
             return CheckResult::warn(
                 $this->name(),
                 $warnings,
-                'configure the suffix in gacela.php or rename the file to match a configured suffix',
+                'configure the suffix in gacela.php with `GacelaConfig::addSuffixTypeFactory()` (or its Config and Provider siblings), or rename the file to match a configured suffix',
             );
         }
 

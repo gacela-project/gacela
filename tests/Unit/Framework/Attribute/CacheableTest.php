@@ -183,6 +183,12 @@ final class CacheableTest extends TestCase
         self::assertSame(3600, $storage->sets[0]['ttl']);
     }
 
+    /**
+     * The template is interpolated into a key scoped to the class and method
+     * that produced it. It used to *be* the key, so two classes writing the
+     * same template shared one entry and the second to ask was served the
+     * first one's data.
+     */
     public function test_key_template_interpolates_scalar_args(): void
     {
         $facade = new TestFacadeWithTemplatedKey();
@@ -191,8 +197,40 @@ final class CacheableTest extends TestCase
         $facade->lookup(42);
 
         $storage = CacheableConfig::getStorage();
-        self::assertTrue($storage->has('user:42'));
+        self::assertTrue($storage->has(TestFacadeWithTemplatedKey::class . '::lookup::user:42'));
         self::assertSame(1, $facade->getCallCount());
+    }
+
+    /**
+     * The bug the scoping fixes: identical templates in two classes are two
+     * entries, not one shared one.
+     */
+    public function test_the_same_template_in_two_classes_does_not_share_an_entry(): void
+    {
+        $first = new TestFacadeWithTemplatedKey();
+        $second = new OtherFacadeWithTheSameTemplatedKey();
+
+        self::assertSame('user-42', $first->lookup(42));
+        self::assertSame('other-42', $second->lookup(42));
+    }
+
+    /**
+     * `clearMethodCacheFor()` deletes by the `Class::method::` prefix, which a
+     * bare template never carried -- so the call that exists to invalidate a
+     * method did nothing for exactly the methods that customised their key.
+     */
+    public function test_clear_method_cache_for_evicts_a_custom_keyed_entry(): void
+    {
+        $facade = new TestFacadeWithTemplatedKey();
+
+        $facade->lookup(42);
+        $facade->lookup(42);
+        self::assertSame(1, $facade->getCallCount());
+
+        TestFacadeWithTemplatedKey::clearMethodCacheFor('lookup');
+        $facade->lookup(42);
+
+        self::assertSame(2, $facade->getCallCount());
     }
 
     public function test_bare_key_without_placeholders_is_shared_across_args(): void
@@ -297,7 +335,9 @@ final class CacheableTest extends TestCase
 
         $facade->sparseKey(7);
 
-        self::assertTrue(CacheableConfig::getStorage()->has('sparse:'));
+        self::assertTrue(CacheableConfig::getStorage()->has(
+            TestFacadeWithTemplateEdgeCases::class . '::sparseKey::sparse:',
+        ));
     }
 
     public function test_template_with_non_scalar_arg_uses_serialized_hash(): void
@@ -555,6 +595,20 @@ final class TestChildFacadeWithCache extends TestParentFacadeWithCache
     public function getChildCallCount(): int
     {
         return $this->childCallCount;
+    }
+}
+
+/**
+ * Deliberately spells the same key template as {@see TestFacadeWithTemplatedKey}.
+ */
+final class OtherFacadeWithTheSameTemplatedKey
+{
+    use CacheableTrait;
+
+    #[Cacheable(key: 'user:{0}')]
+    public function lookup(int $id): string
+    {
+        return $this->cached(static fn (): string => 'other-' . $id);
     }
 }
 

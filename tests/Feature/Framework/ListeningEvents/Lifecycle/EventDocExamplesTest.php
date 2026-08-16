@@ -7,7 +7,6 @@ namespace GacelaTest\Feature\Framework\ListeningEvents\Lifecycle;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
 use Gacela\Framework\Event\ClassResolver\AbstractGacelaClassResolverEvent;
-use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
@@ -25,11 +24,12 @@ final class EventDocExamplesTest extends TestCase
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$logged): void {
             $config->resetInMemoryCache();
 
-            $config->registerGenericListener(static function (GacelaEventInterface $event) use (&$logged): void {
-                if ($event instanceof AbstractGacelaClassResolverEvent) {
+            $config->registerSpecificListener(
+                AbstractGacelaClassResolverEvent::class,
+                static function (AbstractGacelaClassResolverEvent $event) use (&$logged): void {
                     $logged[] = $event->toString();
-                }
-            });
+                },
+            );
         });
 
         (new Module\Facade())->greet();

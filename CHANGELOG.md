@@ -35,6 +35,9 @@ Every check and module listing works from what discovery returned, so anything n
 
 ### Changed
 
+- **`registerSpecificListener()` matches by inheritance.** The listener runs for the event class named and for every event that extends or implements it, so `AbstractGacelaClassResolverEvent::class` covers all four resolver events and `GacelaEventInterface::class` covers every event there is — the typed way to listen to everything. Previously the dispatcher compared `$event::class` exactly, so a parent class or an interface matched nothing and the listener was silently inert; that is the one thing to look for when upgrading, see [UPGRADE.md](UPGRADE.md#23--24). The applicable listeners are computed once per concrete event class and kept, so the hot guard stays a single array lookup — `EventDispatchBench` is unchanged
+- The callable is now typed through the event class (`@template T of GacelaEventInterface`), so a listener declared against the wrong event is a static-analysis error rather than a listener that never runs. The `docs/events.md` recipe for logging every resolved class is one specific listener on the abstract parent, instead of a generic listener plus an `instanceof` filter — which allocated every event in the framework to keep four of them
+- The `event listeners` doctor check no longer warns about an interface or abstract target, because those now fire. It still reports a target that is no type at all, and listeners registered while `disableEventListeners()` is in effect
 - Every CI job declares `timeout-minutes` (10 for the sub-minute gates, 20 for `Tests` and `PHPBench`, 45 for mutation testing), so a stalled runner is an ordinary red check anyone can re-run instead of a PR blocked for GitHub's default six hours. A test fails the build if a new job forgets one
 
 ## [2.3.0](https://github.com/gacela-project/gacela/compare/2.2.0...2.3.0) - 2026-08-15

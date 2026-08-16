@@ -106,6 +106,36 @@ final class DoctorCommandTest extends TestCase
     }
 
     /**
+     * Every check works from the modules discovery returned, so a narrowed scan
+     * narrows all of them at once -- silently. `appModulePaths` is what narrows
+     * it, and this repository's own gacela.php pins it to `src`, which is how a
+     * run over a project with a hundred modules can inspect one and look fine.
+     *
+     * The report names the paths it walked, so the scope of every verdict below
+     * it is on the screen rather than in a config file the reader has to think
+     * of opening.
+     */
+    public function test_the_report_names_the_paths_discovery_walked(): void
+    {
+        $display = $this->doctor([])->getDisplay();
+
+        self::assertStringContainsString('Scanned: ', $display);
+    }
+
+    public function test_the_json_report_carries_the_scanned_paths_too(): void
+    {
+        $tester = $this->doctor([], ['--format' => 'json']);
+
+        /** @var array{scanned: list<string>, checks: list<array<string, mixed>>} $decoded */
+        $decoded = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertArrayHasKey('scanned', $decoded);
+        self::assertNotEmpty($decoded['scanned']);
+        // Still a document about checks; the scope is added, not substituted.
+        self::assertArrayHasKey('checks', $decoded);
+    }
+
+    /**
      * `--format=xml` used to print the text report and exit 0, so a pipeline
      * that asked for a document it cannot produce could not tell that run apart
      * from a healthy one.

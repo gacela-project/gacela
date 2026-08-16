@@ -85,7 +85,7 @@ This is a CLI and `cache:warm` cost, not a request-time one — resolving a Faca
 
 | Command | What it does |
 |---|---|
-| `doctor` | Environmental and wiring health checks, including the [declared config schema](config-schema.md) and each package's `composer.json` against what it imports. Takes an optional namespace to restrict module-scoped checks, `--strict` to exit non-zero on warnings too, `--only-problems` to print just the checks that found something, and `--format=json` for a CI job that wants to say *which* check failed rather than only that one did |
+| `doctor` | Environmental and wiring health checks, including the [declared config schema](config-schema.md) and each package's `composer.json` against what it imports. Takes an optional namespace to restrict module-scoped checks, `--strict` to exit non-zero on warnings too, `--only-problems` to print just the checks that found something, and `--format=json` for a CI job that wants to say *which* check failed rather than only that one did. Every run names the paths discovery walked (`Scanned: src`, and a `scanned` key in the JSON): every check works from the modules discovery returned, so `appModulePaths` narrowing the scan narrows all of them at once |
 | `validate:config` | Checks the configuration for errors and best-practice violations, and against the [declared schema](config-schema.md). `--strict` exits non-zero on warnings too, as on `doctor`; `--json` reports which check found what |
 
 Every command that can emit JSON accepts `--json`. Where a command has more than two output formats — `debug:graph`, `profile:report` — `--format=` chooses among them and `--json` is shorthand for the one you were going to pick anyway.

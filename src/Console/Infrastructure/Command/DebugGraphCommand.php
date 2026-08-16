@@ -94,7 +94,7 @@ final class DebugGraphCommand extends Command
         }
 
         if ($graph === []) {
-            ConsoleSection::noModulesFound($output, $filter);
+            ConsoleSection::noModulesFound($output, $filter, '', $this->getFacade()->scannedModulePaths());
 
             return self::SUCCESS;
         }

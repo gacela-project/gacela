@@ -296,6 +296,25 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
+     * The directories discovery actually walked, as configured rather than as
+     * resolved: `appModulePaths` is what a reader would edit, and an absolute
+     * path expanded from it is noise next to the entry it came from.
+     *
+     * An entry that is not a directory is reported all the same. It scans
+     * nothing, which is exactly what someone reading an empty module list
+     * needs to see -- the `trigger_error` above says so once, on a stream the
+     * command's own output may not share.
+     *
+     * @return list<string>
+     */
+    public function scannedModulePaths(): array
+    {
+        $paths = Config::getInstance()->getSetupGacela()->getAppModulePaths();
+
+        return $paths === [] ? [Gacela::rootDir()] : $paths;
+    }
+
+    /**
      * Read from the same place `doctor` reads the rest of the suffix map, rather
      * than from `ResolvableTypes`' static: that one is synced from configuration
      * and a check has no way to know whether it has been yet.

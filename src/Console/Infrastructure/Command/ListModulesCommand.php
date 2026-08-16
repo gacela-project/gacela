@@ -63,7 +63,7 @@ final class ListModulesCommand extends Command
         }
 
         if ($modules === []) {
-            ConsoleSection::noModulesFound($output, $filter);
+            ConsoleSection::noModulesFound($output, $filter, '', $this->getFacade()->scannedModulePaths());
 
             return self::SUCCESS;
         }

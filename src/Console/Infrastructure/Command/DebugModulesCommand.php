@@ -90,7 +90,7 @@ final class DebugModulesCommand extends Command
         $this->writeHeader($output, $filter);
 
         if ($modules === []) {
-            ConsoleSection::noModulesFound($output, $filter, '  ');
+            ConsoleSection::noModulesFound($output, $filter, '  ', $this->getFacade()->scannedModulePaths());
             $output->writeln('');
             return Command::SUCCESS;
         }

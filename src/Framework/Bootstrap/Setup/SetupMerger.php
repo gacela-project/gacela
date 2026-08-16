@@ -28,6 +28,13 @@ final class SetupMerger
 
         $this->whenChanged($other, SetupGacela::externalServices, fn () => $this->original->mergeExternalServices($other->externalServices()));
         $this->whenChanged($other, SetupGacela::projectNamespaces, fn () => $this->original->mergeProjectNamespaces($other->getProjectNamespaces()));
+        // Replaced rather than merged, unlike the namespaces above: this is the
+        // list of directories to scan, and a source that names it is naming all
+        // of them. Missing entirely until now, so `setAppModulePaths()` written
+        // in `gacela.php` -- where a project naturally writes it, beside
+        // `setProjectNamespaces()` -- was silently ignored and every command
+        // walked the whole application root.
+        $this->whenChanged($other, SetupGacela::appModulePaths, fn (): SetupGacela => $this->original->setAppModulePaths($other->getAppModulePaths()));
         $this->whenChanged($other, SetupGacela::configDimensions, fn () => $this->original->mergeConfigDimensions($other->getConfigDimensions()));
         $this->whenChanged($other, SetupGacela::configKeyValues, fn () => $this->original->mergeConfigKeyValues($other->getConfigKeyValues()));
         $this->whenChanged($other, SetupGacela::configSchema, fn () => $this->original->mergeConfigSchema($other->getConfigSchema()));

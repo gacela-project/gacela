@@ -216,6 +216,23 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ---
 
+## 2.3 → 2.4
+
+One change, in `#[Cacheable]`, and only if you set a custom `key:` template. Nothing to do otherwise.
+
+### 1. A custom cache key is scoped to its class and method
+
+A `key:` template used to be the whole stored key. Two classes writing the same template — `key: 'user:{0}'` in two facades — therefore shared one entry, and the second to ask was served the first one's data. It also put those entries out of reach of `clearMethodCacheFor()`, which deletes by a `Class::method::` prefix the template never carried.
+
+The stored key is now `Class::method::` followed by the interpolated template. Two consequences:
+
+- **A persistent backend takes one cold pass after upgrading.** Entries written under the old shape are never read again; they expire on their own TTL. If your backend has no eviction and the volume matters, `clearMethodCache()` once after deploying drops them
+- **A template can no longer share one entry across classes.** If two facades deliberately cached the same value under the same template, each now caches its own. That was a coincidence of spelling rather than a feature; if sharing is what you want, cache in the one place that owns the value and call it from both
+
+`clearMethodCacheFor()` now reaches custom-keyed entries like any other, so the "invalidate through the storage backend directly" workaround the docs used to describe is no longer needed.
+
+---
+
 ## 2.2 → 2.3
 
 Two changes, both in the scaffolder, both affecting scripts rather than application code. Nothing to change if you only ever run `make:module` and `make:file` by hand, on names that do not exist yet.

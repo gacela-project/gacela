@@ -10,6 +10,11 @@ use Gacela\Framework\Attribute\CacheableConfig;
 use Gacela\Framework\Attribute\CacheableTrait;
 use Gacela\Framework\Attribute\CacheStorageInterface;
 use Gacela\Framework\Attribute\InMemoryCacheStorage;
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Event\Attribute\CacheableHitEvent;
+use Gacela\Framework\Event\Attribute\CacheableMissEvent;
+use Gacela\Framework\Event\GacelaEventInterface;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -199,6 +204,45 @@ final class CacheableTest extends TestCase
         $storage = CacheableConfig::getStorage();
         self::assertTrue($storage->has(TestFacadeWithTemplatedKey::class . '::lookup::user:42'));
         self::assertSame(1, $facade->getCallCount());
+    }
+
+    /**
+     * A caching feature you cannot observe is one you cannot tune. Until these
+     * events existed, whether `#[Cacheable]` ever returned a stored value was
+     * not answerable from inside the application -- which is exactly the
+     * question to ask on PHP-FPM, where the default storage dies with the
+     * process and every request recomputes.
+     */
+    public function test_a_hit_and_a_miss_each_dispatch_their_event(): void
+    {
+        $events = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$events): void {
+            $config->resetInMemoryCache();
+            $config->registerGenericListener(static function (GacelaEventInterface $event) use (&$events): void {
+                $events[] = $event;
+            });
+        });
+
+        $facade = new TestFacadeWithTemplatedKey();
+        $facade->lookup(42);
+        $facade->lookup(42);
+
+        $misses = array_values(array_filter($events, static fn (GacelaEventInterface $e): bool => $e instanceof CacheableMissEvent));
+        $hits = array_values(array_filter($events, static fn (GacelaEventInterface $e): bool => $e instanceof CacheableHitEvent));
+
+        self::assertCount(1, $misses, 'the first call should report a miss');
+        self::assertCount(1, $hits, 'the second call should report a hit');
+
+        self::assertSame(TestFacadeWithTemplatedKey::class, $misses[0]->className());
+        self::assertSame('lookup', $misses[0]->method());
+        self::assertSame(TestFacadeWithTemplatedKey::class . '::lookup::user:42', $misses[0]->cacheKey());
+        self::assertSame(3600, $misses[0]->ttl());
+        // Bounded on both sides. `>= 0` is satisfied by every arithmetic
+        // mistake the conversion could make, so it asserts nothing.
+        self::assertGreaterThan(0, $misses[0]->computeNanoseconds());
+        self::assertLessThan(1000.0, $misses[0]->computeMilliseconds());
+
+        self::assertSame($misses[0]->cacheKey(), $hits[0]->cacheKey());
     }
 
     /**

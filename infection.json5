@@ -443,7 +443,14 @@
         // Same for the bootstrap-duration event, and getFloat()'s widening
         // return: int-to-float applies via the float return type anyway.
         CastFloat: {
-            ignore: ["Gacela\\Framework\\Profiler\\Profiler::getCurrentTime"],
+            ignore: [
+                "Gacela\\Framework\\Profiler\\Profiler::getCurrentTime",
+                // int / float is already float in PHP, so dropping the cast
+                // changes nothing. It is there because psalm's strict binary
+                // operands mode refuses the expression without it -- one tool
+                // requires the cast and the other cannot see past it.
+                "Gacela\\Framework\\Event\\Attribute\\CacheableMissEvent::computeMilliseconds",
+            ],
             ignoreSourceCodeByRegex: [
                 '.*return \\(float\\) \\$value;.*',
                 '.*\\(float\\) \\(hrtime\\(true\\) - \\$startTime\\).*',

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\Attribute;
 
 use Closure;
+use Gacela\Framework\Event\Attribute\CacheableHitEvent;
+use Gacela\Framework\Event\Attribute\CacheableMissEvent;
+use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use ReflectionMethod;
 use stdClass;
 
@@ -12,6 +15,7 @@ use function count;
 use function debug_backtrace;
 use function end;
 use function explode;
+use function hrtime;
 use function is_int;
 use function is_scalar;
 use function is_string;
@@ -56,6 +60,8 @@ use function str_contains;
  */
 trait CacheableTrait
 {
+    use EventDispatchingCapabilities;
+
     /** @var array<string, Cacheable|false> */
     private static array $attributeCache = [];
 
@@ -118,15 +124,35 @@ trait CacheableTrait
         /** @var mixed $cached */
         $cached = $storage->get($cacheKey, $miss);
         if ($cached !== $miss) {
+            if (self::shouldDispatch(CacheableHitEvent::class)) {
+                self::dispatchEvent(new CacheableHitEvent(static::class, $method, $cacheKey));
+            }
+
             /** @var T $hit */
             $hit = $cached;
 
             return $hit;
         }
 
+        // Timed unconditionally: a miss runs the callback and writes to
+        // storage, so one hrtime() beside that is noise -- and a sentinel for
+        // the unobserved branch would be a value nothing ever reads.
+        $startedAt = hrtime(true);
+
         $result = $callback();
+
         $ttl = CacheableConfig::resolveTtl(sprintf('%s::%s', static::class, $method), $attribute->ttl);
         $storage->set($cacheKey, $result, $ttl);
+
+        if (self::shouldDispatch(CacheableMissEvent::class)) {
+            self::dispatchEvent(new CacheableMissEvent(
+                static::class,
+                $method,
+                $cacheKey,
+                hrtime(true) - $startedAt,
+                $ttl,
+            ));
+        }
 
         return $result;
     }

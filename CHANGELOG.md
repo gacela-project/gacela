@@ -4,6 +4,7 @@
 
 ### Added
 
+- `CacheableHitEvent` and `CacheableMissEvent` report every `#[Cacheable]` hit and miss, so a hit rate — the one number worth knowing about a cache — is measurable. The attribute cached silently before: whether it ever returned a stored value was not answerable from inside the application. It is also the question that catches the default-storage trap in production, where `InMemoryCacheStorage` dies with the process and a method annotated for an hour's TTL is recomputed on every request under PHP-FPM. The miss carries what the callback cost and the TTL it was stored under. Free when unobserved: `hrtime()` runs only once something listens, and `CacheableBench` is unchanged at 0.732μs with no listener
 #### `migrate:service-map`
 
 The last rung of the 3.0 migration ladder. Resolving a pillar accessor from its `@method` docblock is deprecated in 2.x and removed in 3.0; the `gacela.serviceMapMissing` analysis already reported each one and printed the exact attribute to declare it with — and then stopped, leaving every user to hand-apply an edit the tooling had computed, one class at a time, finding the classes only as cold resolves happened to reach them. The command writes that attribute for every class at once.

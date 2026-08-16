@@ -42,7 +42,7 @@ final class WorkflowJobTimeoutTest extends TestCase
         foreach (self::workflowFiles() as $file) {
             $name = basename($file);
 
-            foreach (self::jobsOf($file) as $job => $timeout) {
+            foreach (self::jobTimeoutsIn($file) as $job => $timeout) {
                 yield sprintf('%s: %s', $name, $job) => [$name, $job, $timeout];
             }
         }
@@ -86,7 +86,7 @@ final class WorkflowJobTimeoutTest extends TestCase
     public function test_every_workflow_declares_at_least_one_job(): void
     {
         foreach (self::workflowFiles() as $file) {
-            self::assertNotEmpty(self::jobsOf($file), sprintf(
+            self::assertNotEmpty(self::jobTimeoutsIn($file), sprintf(
                 '%s parsed to no jobs at all; the guard would pass vacuously.',
                 basename($file),
             ));
@@ -103,7 +103,7 @@ final class WorkflowJobTimeoutTest extends TestCase
      */
     private static function workflowFiles(): array
     {
-        $found = glob(dirname(__DIR__, 3) . '/.github/workflows/*.yml');
+        $found = glob(dirname(__DIR__, 3) . '/.github/workflows/*.{yml,yaml}', GLOB_BRACE);
 
         return is_array($found) ? $found : [];
     }
@@ -118,7 +118,7 @@ final class WorkflowJobTimeoutTest extends TestCase
      *
      * @return array<string, int|null>
      */
-    private static function jobsOf(string $file): array
+    private static function jobTimeoutsIn(string $file): array
     {
         $jobs = [];
         $current = null;

@@ -6,51 +6,51 @@
 
 #### `migrate:service-map`
 
-Writes the `#[ServiceMap]` attribute for every pillar accessor still resolved from a `@method` docblock — the resolution 3.0 removes. The `gacela.serviceMapMissing` analysis already reported each one with the line to paste; this applies it, for every class at once, without waiting for a cold resolve to reach each class.
+Writes the `#[ServiceMap]` attribute for every pillar accessor still resolved from a `@method` docblock — the resolution 3.0 removes — across the whole project in one run.
 
-- `--dry-run` reports and writes nothing; an optional argument narrows to paths containing it
-- Textual and idempotent: only the attribute and, when missing, its import are added, below the docblock; nothing else in the file moves, and a second run is a no-op
-- An accessor whose `@method` type is not a single class name (`A|B`, `?A`, `array<A>`, `self`) is left for a human — and the analysis no longer suggests `A|B::class` for it, which parses and then fails when the attribute is read
+- `--dry-run` writes nothing; an optional argument narrows to paths containing it
+- Textual and idempotent: adds only the attribute and, when missing, its import; a second run is a no-op
+- An accessor whose `@method` type is not a single class name (`A|B`, `?A`, `array<A>`, `self`) is left alone, and `gacela.serviceMapMissing` no longer suggests `A|B::class` for it
 
 #### `debug:events`
 
-Every event the framework can dispatch, which of them your project listens to, and which are dispatched on the class-resolution hot path. Until now the only way to know a listener was registered was that it fired, and the only way to know one was dead was `doctor` — which reports a target no event can ever be, not a target nothing this deployment raises.
+Lists every event the framework can dispatch, which of them your project listens to, and which fire on the class-resolution hot path.
 
-- The catalog is read off the event classes, not a list in the command, so a new event appears without anybody remembering it
-- A specific listener matches by inheritance, so an event can be covered by a registration that never names it: the listener column names the target that does, and one listener on `AbstractGacelaClassResolverEvent` reads as the four events it covers
-- An optional argument narrows by class name, `--listened` to the events something watches, and `--json` reports the same document a script can read. It also says when `disableEventListeners()` is in effect, so a full table of registrations does not read as a working one
-- The [event catalog in the docs](docs/events.md) is now checked against the classes on disk in both directions, so an event added without a row, or a row outliving its class, fails the build rather than leaving the only inventory a reader has quietly wrong
+- The catalog is read off the event classes, so a new event appears without anybody remembering it
+- A listener that matches by inheritance is shown against every event it covers, naming the registered target
+- An optional argument narrows by class name, `--listened` keeps only watched events, `--json` emits the same document; says when `disableEventListeners()` is in effect
+- The [event catalog in the docs](docs/events.md) is checked against the classes on disk in both directions
 
 #### Cacheable events
 
-- `CacheableHitEvent` and `CacheableMissEvent`, so a `#[Cacheable]` hit rate is measurable and the miss carries what the callback cost (`computeNanoseconds()`/`computeMilliseconds()`) and the TTL it was stored under. This is also how to see the default-storage trap in production: under PHP-FPM `InMemoryCacheStorage` dies with the process, so every call is a miss and nothing else says so. Free when nothing listens
+- `CacheableHitEvent` and `CacheableMissEvent` make a `#[Cacheable]` hit rate measurable; the miss carries what the callback cost (`computeNanoseconds()`/`computeMilliseconds()`) and the TTL. Free when nothing listens
 
 #### What a run actually looked at
 
-Every check and module listing works from what discovery returned, so anything narrowing that narrows all of it — silently. Four things now say what a run looked at, in text and as `scanned`, `unscanned`, `filter` and `modules` in `doctor --format=json`:
+`doctor` and the module listings now say what discovery walked, in text and as `scanned`, `unscanned`, `filter` and `modules` in `doctor --format=json`:
 
-- **The paths walked** — `Scanned: src`, on `doctor` always and on `list:modules`, `debug:modules`, `debug:graph` when they find nothing. Configured entries, not resolved absolute paths, because the entry is what you would edit
-- **The paths skipped** — an `appModulePaths` entry that is not a directory is reported apart, as `Not scanned, not a directory: …`, and by a new `module paths` doctor check so `--strict` can fail on it
-- **The filter** — `doctor` names it and how many modules it matched, including none, which otherwise left every module-scoped check reporting "no modules discovered" and the run ending in `All checks passed`
+- **Paths walked** — `Scanned: src`, always on `doctor` and on `list:modules`, `debug:modules`, `debug:graph` when they find nothing
+- **Paths skipped** — an `appModulePaths` entry that is not a directory is reported as `Not scanned, not a directory: …`, and by a new `module paths` doctor check so `--strict` can fail on it
+- **The filter** — `doctor` names it and how many modules it matched, including none, which used to end in `All checks passed`
 
 ### Fixed
 
-- **A `#[Provides]` method that resolves the id it declares is reported instead of overflowing the stack.** The declaration is accepted at registration, so the first resolution was a `get()` calling the method calling `get()` — on CLI, PHP's own "Maximum call stack size … Infinite recursion?", carrying a hundred thousand identical frames and naming neither the provider nor the id. It now throws `CircularProvidesException` naming the provider class, the method and the id, which is what only Gacela knows: by the time the container sees the loop, the declaration is an anonymous closure. A loop through a second id is reported the same way with the whole chain named, and one provided method resolving *another* provided id is unaffected
-- **Event listeners registered in a bootstrap closure and in `gacela.php` at the same time now all fire.** The merge replaced the generic listeners of one side with the other's, and the bootstrap memoized the pre-merge dispatcher, so depending on which side registered what, one set was silently dead
-- **A `#[Cacheable]` custom key is scoped to the class and method that produced it.** Two classes writing the same template shared one entry, and the second to ask was served the first one's data. It also puts custom-keyed entries within reach of `clearMethodCacheFor()`, which could not see them before. **Stored keys change shape** — see [UPGRADE.md](UPGRADE.md#23--24)
-- **`@method` service resolution reads every form of `use` statement.** A PSR-12 group import, a comma list, or a group wrapped across lines matched nothing and fell back to the caller's namespace — usually a `MissingClassDefinitionException`, and where a same-named class existed there, a silent wrong injection
-- **A stale class-name cache entry heals itself.** Rename or delete a Factory, Config or Provider and deploy without clearing the cache dir, and resolution died on a `TypeError` naming neither the class nor the cache. A persisted hit is now checked before it is trusted, and re-found when stale, at no warm-path cost
-- The "no modules found" hint said a module is found because "the filename carries the suffix". Discovery accepts by inheritance from `AbstractFacade` and never reads a suffix; the hint now names the real conditions
-- The suffix-mismatch doctor check named `SuffixTypesBuilder::addFacade`, which `gacela.php` cannot call. It names `GacelaConfig::addSuffixTypeFacade()` and its siblings, and an architecture test now fails when any check's remediation names a method that does not exist
+- **A `#[Provides]` method that resolves the id it declares throws `CircularProvidesException`** naming the provider, the method and the id — instead of a stack overflow with a hundred thousand anonymous-closure frames. A loop through a second id names the whole chain
+- **Event listeners registered in a bootstrap closure and in `gacela.php` at the same time now all fire.** The merge replaced one side's generic listeners and the bootstrap memoized the pre-merge dispatcher, so one set was silently dead
+- **A `#[Cacheable]` custom key is scoped to the class and method that produced it.** Two classes with the same template shared one entry, and custom-keyed entries were invisible to `clearMethodCacheFor()`. **Stored keys change shape** — see [UPGRADE.md](UPGRADE.md#23--24)
+- **`@method` service resolution reads every form of `use` statement.** A group import, a comma list, or a group wrapped across lines fell back to the caller's namespace — a `MissingClassDefinitionException`, or a silent wrong injection
+- **A stale class-name cache entry heals itself.** Rename a Factory, Config or Provider and deploy without clearing the cache dir, and resolution died on a `TypeError`; the persisted hit is now validated and re-found when stale, at no warm-path cost
+- The "no modules found" hint said discovery goes by filename suffix; it goes by inheritance from `AbstractFacade`, and the hint now says so
+- The suffix-mismatch doctor check named `SuffixTypesBuilder::addFacade`, which `gacela.php` cannot call; it names `GacelaConfig::addSuffixTypeFacade()`, and a test fails when any remediation names a method that does not exist
 
 ### Changed
 
-- **`CrossModuleMethodCallRule` no longer reports a call on a `Throwable`.** A module throws its own exception type and a neighbour catches it and asks for `getMessage()` — reading, not collaborating, and the boundary a Facade protects is not crossed by it. Reported, it made every `catch` block of a typed exception a finding: on a 1100-file codebase, 24 of the 53 the rule raised. The *named* reference is unaffected, because `new ShopException(...)` writes another module's name and that is the sibling rule's business
-- **The same rule takes an `ignoreReceivers` list**, for the value objects a project has decided are public contracts whatever module they live in — a constructor parameter, which is PHPStan's convention for a structural rule, rather than a screenful of `ignoreErrors` restating decisions already made. Matched by `is_a()`, so naming an interface covers what implements it. Configured on both hosts: `ignoreReceivers` in the neon service arguments, `<ignoreReceiver>` under `<crossModule>` for Psalm
-- **`registerSpecificListener()` matches by inheritance.** The listener runs for the event class named and for every event that extends or implements it, so `AbstractGacelaClassResolverEvent::class` covers all four resolver events and `GacelaEventInterface::class` covers every event there is — the typed way to listen to everything. Previously the dispatcher compared `$event::class` exactly, so a parent class or an interface matched nothing and the listener was silently inert; that is the one thing to look for when upgrading, see [UPGRADE.md](UPGRADE.md#23--24). The applicable listeners are computed once per concrete event class and kept, so the hot guard stays a single array lookup — `EventDispatchBench` is unchanged
-- The callable is now typed through the event class (`@template T of GacelaEventInterface`), so a listener declared against the wrong event is a static-analysis error rather than a listener that never runs. The `docs/events.md` recipe for logging every resolved class is one specific listener on the abstract parent, instead of a generic listener plus an `instanceof` filter — which allocated every event in the framework to keep four of them
-- The `event listeners` doctor check no longer warns about an interface or abstract target, because those now fire. It still reports a target that is no type at all, and listeners registered while `disableEventListeners()` is in effect
-- Every CI job declares `timeout-minutes` (10 for the sub-minute gates, 20 for `Tests` and `PHPBench`, 45 for mutation testing), so a stalled runner is an ordinary red check anyone can re-run instead of a PR blocked for GitHub's default six hours. A test fails the build if a new job forgets one
+- **`CrossModuleMethodCallRule` no longer reports a call on a `Throwable`.** Catching a neighbour's exception and reading `getMessage()` is not a boundary crossing; reported, it made every typed `catch` a finding — 24 of 53 on a 1100-file codebase. `new ShopException(...)` is still the sibling rule's business
+- **The same rule takes an `ignoreReceivers` list** for value objects a project treats as public contracts, matched by `is_a()` so an interface covers its implementations. `ignoreReceivers` in the neon service arguments, `<ignoreReceiver>` under `<crossModule>` for Psalm
+- **`registerSpecificListener()` matches by inheritance.** `AbstractGacelaClassResolverEvent::class` covers all four resolver events and `GacelaEventInterface::class` covers every event. Previously a parent class or interface matched nothing — see [UPGRADE.md](UPGRADE.md#23--24). Applicable listeners are memoized per event class; `EventDispatchBench` is unchanged
+- The listener callable is typed through the event class (`@template T of GacelaEventInterface`), so a listener declared against the wrong event is a static-analysis error. The `docs/events.md` recipe for logging resolved classes is one specific listener on the abstract parent
+- The `event listeners` doctor check no longer warns about an interface or abstract target, since those now fire
+- Every CI job declares `timeout-minutes` (10/20/45), so a stalled runner is a red check to re-run instead of a six-hour block. A test fails the build if a new job forgets one
 
 ## [2.3.0](https://github.com/gacela-project/gacela/compare/2.2.0...2.3.0) - 2026-08-15
 

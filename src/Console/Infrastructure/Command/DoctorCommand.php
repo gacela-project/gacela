@@ -102,6 +102,18 @@ final class DoctorCommand extends Command
             'Scanned: %s',
             implode(', ', $this->getFacade()->scannedModulePaths()),
         ));
+
+        // Dropping these silently is the same failure as calling them scanned,
+        // one report further along: every check below ran without them, and a
+        // screen of ticks is exactly what makes that look fine.
+        $unscanned = $this->getFacade()->unscannedModulePaths();
+        if ($unscanned !== []) {
+            $output->writeln(sprintf(
+                '<comment>Not scanned, not a directory: %s</comment>',
+                implode(', ', $unscanned),
+            ));
+        }
+
         $output->writeln('');
 
         $checks = $this->buildChecks($filter);
@@ -179,6 +191,7 @@ final class DoctorCommand extends Command
         $output->writeln(json_encode([
             'status' => $worst->value,
             'scanned' => $this->getFacade()->scannedModulePaths(),
+            'unscanned' => $this->getFacade()->unscannedModulePaths(),
             'checks' => $reported,
         ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 

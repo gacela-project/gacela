@@ -122,6 +122,47 @@ final class DoctorCommandTest extends TestCase
         self::assertStringContainsString('Scanned: ', $display);
     }
 
+    /**
+     * The scope line is only worth having if it is true. An `appModulePaths`
+     * entry that is not a directory is skipped by discovery, so every check
+     * below runs without it -- and dropping it from the report silently is the
+     * same failure as listing it as scanned, one report further along.
+     */
+    public function test_a_configured_path_that_scans_nothing_is_reported_not_dropped(): void
+    {
+        $root = sys_get_temp_dir() . '/gacela-doctor-badpath-' . bin2hex(random_bytes(4));
+        mkdir($root . '/real', 0777, true);
+
+        $notices = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$notices): bool {
+            $notices[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            Gacela::bootstrap($root, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->setAppModulePaths(['real', 'not-there']);
+            });
+
+            $tester = new CommandTester(new DoctorCommand());
+            $tester->execute([]);
+            $display = $tester->getDisplay();
+
+            self::assertStringContainsString('Scanned: real', $display);
+            self::assertStringNotContainsString('Scanned: real, not-there', $display);
+            self::assertStringContainsString('not-there', $display);
+        } finally {
+            restore_error_handler();
+            // Names exactly what this test created.
+            rmdir($root . '/real');
+            rmdir($root);
+        }
+
+        self::assertNotEmpty($notices, 'discovery no longer reports the skipped entry at all');
+    }
+
     public function test_the_json_report_carries_the_scanned_paths_too(): void
     {
         $tester = $this->doctor([], ['--format' => 'json']);

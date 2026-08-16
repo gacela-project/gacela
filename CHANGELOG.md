@@ -35,6 +35,7 @@ Lists every event the framework can dispatch, which of them your project listens
 
 ### Fixed
 
+- **A second bootstrap in one process resolves against its own bindings.** `AbstractClassResolver` memoized the merged `gacela.php` on the instance, and those instances are held by a trait static that no reset reaches — so an application that had used a `#[ServiceMap]` accessor went on resolving its pillars from the previous application's configuration, reported as "no concrete class was found" for a binding that was plainly there
 - **`setAppModulePaths()` written in `gacela.php` is honoured.** The setup merger carried 24 properties and not that one, so the value survived only from a bootstrap closure: every command walked the whole application root, and `doctor`'s own `module paths` check reported the list that was not in force
 - **`doctor` no longer reports a `#[Provides]` method that declares a `Container` parameter.** That is the shape the attribute documents, and the scanner reads the signature and passes the container through — a project writing it could not have a green `doctor --strict`
 - **A `#[Provides]` method that resolves the id it declares throws `CircularProvidesException`** naming the provider, the method and the id — instead of a stack overflow with a hundred thousand anonymous-closure frames. A loop through a second id names the whole chain

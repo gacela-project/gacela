@@ -12,6 +12,14 @@ Writes the `#[ServiceMap]` attribute for every pillar accessor still resolved fr
 - Textual and idempotent: only the attribute and, when missing, its import are added, below the docblock; nothing else in the file moves, and a second run is a no-op
 - An accessor whose `@method` type is not a single class name (`A|B`, `?A`, `array<A>`, `self`) is left for a human — and the analysis no longer suggests `A|B::class` for it, which parses and then fails when the attribute is read
 
+#### `debug:events`
+
+Every event the framework can dispatch, which of them your project listens to, and which are dispatched on the class-resolution hot path. Until now the only way to know a listener was registered was that it fired, and the only way to know one was dead was `doctor` — which reports a target no event can ever be, not a target nothing this deployment raises.
+
+- The catalog is read off the event classes, not a list in the command, so a new event appears without anybody remembering it
+- A specific listener matches by inheritance, so an event can be covered by a registration that never names it: the listener column names the target that does, and one listener on `AbstractGacelaClassResolverEvent` reads as the four events it covers
+- An optional argument narrows by class name, `--listened` to the events something watches, and `--json` reports the same document a script can read. It also says when `disableEventListeners()` is in effect, so a full table of registrations does not read as a working one
+
 #### Cacheable events
 
 - `CacheableHitEvent` and `CacheableMissEvent`, so a `#[Cacheable]` hit rate is measurable and the miss carries what the callback cost (`computeNanoseconds()`/`computeMilliseconds()`) and the TTL it was stored under. This is also how to see the default-storage trap in production: under PHP-FPM `InMemoryCacheStorage` dies with the process, so every call is a miss and nothing else says so. Free when nothing listens

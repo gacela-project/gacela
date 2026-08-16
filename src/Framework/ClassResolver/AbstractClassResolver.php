@@ -35,8 +35,6 @@ abstract class AbstractClassResolver
      */
     private static ?Container $container = null;
 
-    private ?GacelaConfigFileInterface $gacelaFileConfig = null;
-
     /**
      * @internal remove all cached instances: facade, factory, config, dependency-provider
      */
@@ -181,14 +179,29 @@ abstract class AbstractClassResolver
         return $instance;
     }
 
+    /**
+     * Asked of the ConfigFactory every time rather than memoized here.
+     *
+     * A resolver instance can outlive the bootstrap that built it -- the ones
+     * held by `ServiceResolverAwareTrait::$docBlockServiceResolvers` are a trait
+     * static, which no reset can reach -- and a memo on this object was then a
+     * copy of the *previous* application's merged configuration, from which
+     * `createInstance()` built the shared container. A second bootstrap in one
+     * process therefore resolved its pillars against the first application's
+     * bindings: silently, and only for whoever had used a `#[ServiceMap]`
+     * accessor before.
+     *
+     * Nothing is re-derived by removing it. `ConfigFactory::createGacelaFileConfig()`
+     * memoizes the assembled file config itself, keyed by the app root and the
+     * setup identity -- which is exactly the pair that changes across a
+     * bootstrap, and exactly what this memo could not see. This is also the
+     * cold path: the callers are the class-name finder on a cache miss, and the
+     * one-time container build.
+     */
     private function getGacelaConfigFile(): GacelaConfigFileInterface
     {
-        if (!$this->gacelaFileConfig instanceof GacelaConfigFileInterface) {
-            $this->gacelaFileConfig = Config::getInstance()
-                ->getFactory()
-                ->createGacelaFileConfig();
-        }
-
-        return $this->gacelaFileConfig;
+        return Config::getInstance()
+            ->getFactory()
+            ->createGacelaFileConfig();
     }
 }

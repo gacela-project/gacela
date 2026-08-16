@@ -24,6 +24,8 @@ jobs:
   graph-diff:
     name: "Module dependency graph"
     runs-on: ubuntu-latest
+    # Finishes in under a minute; the margin is for a cold composer cache.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:

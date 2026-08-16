@@ -19,6 +19,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
 use Override;
 
 use RuntimeException;
@@ -596,6 +597,11 @@ final class SetupGacela extends AbstractSetupGacela
     public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
     {
         $this->properties->eventDispatcher = $eventDispatcher;
+
+        // The provider memoizes whatever the resolver last returned, and the
+        // resolver reads this property -- so replacing the dispatcher without
+        // saying so leaves every later dispatch going to the old one.
+        EventDispatcherProvider::refresh();
 
         return $this;
     }

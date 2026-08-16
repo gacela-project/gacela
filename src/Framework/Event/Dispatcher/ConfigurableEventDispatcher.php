@@ -16,11 +16,27 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
     private array $specificListeners = [];
 
     /**
+     * Adds to the listeners already registered, the way
+     * {@see registerSpecificListener()} does.
+     *
+     * It used to assign. `SetupMerger` merges one setup's listeners into
+     * another's by calling this, and appends the specific ones in the very
+     * next lines -- so combining a bootstrap closure with a `gacela.php`
+     * replaced the generic listeners of whichever side was merged into, or
+     * wiped them to none when the other side had registered any. The listener
+     * was registered, nothing failed, and it never fired.
+     *
+     * The other caller, {@see \Gacela\Framework\Bootstrap\SetupEventDispatcher},
+     * builds a fresh dispatcher, where appending and assigning are the same
+     * thing.
+     *
      * @param list<callable> $genericListeners
      */
     public function registerGenericListeners(array $genericListeners): void
     {
-        $this->genericListeners = $genericListeners;
+        foreach ($genericListeners as $listener) {
+            $this->genericListeners[] = $listener;
+        }
     }
 
     /**

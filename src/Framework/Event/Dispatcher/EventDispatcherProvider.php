@@ -29,6 +29,23 @@ final class EventDispatcherProvider
         self::$dispatcher = null;
     }
 
+    /**
+     * Drops the memoized dispatcher, keeping the resolver that built it.
+     *
+     * `Gacela::bootstrap()` dispatches `GacelaBootstrapStartedEvent` before
+     * `Config::init()`, so the guard on that dispatch memoizes the dispatcher
+     * the setup held *before* `gacela.php` was merged in. When the merge then
+     * installs a different one, every later dispatch still went to the old
+     * object: listeners the merged setup registered never fired.
+     *
+     * The memo itself stays -- `shouldDispatch` guards sit on bench-gated hot
+     * paths, so resolving per dispatch is not an option.
+     */
+    public static function refresh(): void
+    {
+        self::$dispatcher = null;
+    }
+
     public static function get(): EventDispatcherInterface
     {
         if (self::$dispatcher instanceof EventDispatcherInterface) {

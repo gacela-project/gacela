@@ -1,6 +1,7 @@
 # Gacela Documentation
 
 - [Getting started](getting-started.md) — install and build your first module
+- [Reference application](reference-app.md) — an invoicing SaaS inside this repository that uses every feature at once, and the three-layer harness that keeps it that way
 - [CLI commands](cli.md) — every `vendor/bin/gacela` command, what it is for
 - [Getting a dependency](getting-a-dependency.md) — one primary path per intent, and when the other paths are right
 - [Container configuration](container-configuration.md) — factories, aliases, contextual bindings

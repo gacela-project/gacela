@@ -305,6 +305,47 @@ final class SuffixMismatchCheckTest extends TestCase
     }
 
     /**
+     * The remediation used to name `SuffixTypesBuilder::addFacade`, which is a
+     * private collaborator of `GacelaConfig` -- so the reader was told to call
+     * something that does not exist on the object gacela.php hands them.
+     *
+     * Asserted through a real run rather than by reading the source, because
+     * the architecture test that scans these strings reads the file from disk
+     * and so cannot see the method name go wrong at runtime.
+     */
+    public function test_the_error_remediation_names_the_method_that_widens_a_facade_suffix(): void
+    {
+        $module = new AppModule('App\\Foo', 'Foo', 'App\\Foo\\FooPublicApi');
+
+        $result = (new SuffixMismatchCheck([$module], $this->defaultSuffixes()))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertStringContainsString('GacelaConfig::addSuffixTypeFacade()', $result->remediation);
+        self::assertStringContainsString('siblings', $result->remediation);
+        self::assertStringNotContainsString('SuffixTypesBuilder', $result->remediation);
+    }
+
+    /**
+     * The warning branch said only "configure the suffix in gacela.php", which
+     * leaves the reader with the question the sentence exists to answer.
+     */
+    public function test_the_warning_remediation_names_the_method_too(): void
+    {
+        $module = new AppModule(
+            'App\\Foo',
+            'Foo',
+            'App\\Foo\\FooFacade',
+            'App\\Foo\\FooBuilder',
+        );
+
+        $result = (new SuffixMismatchCheck([$module], $this->defaultSuffixes()))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertStringContainsString('GacelaConfig::addSuffixTypeFactory()', $result->remediation);
+        self::assertStringContainsString('rename the file', $result->remediation);
+    }
+
+    /**
      * @return array{Facade: list<string>, Factory: list<string>, Config: list<string>, Provider: list<string>}
      */
     private function defaultSuffixes(): array

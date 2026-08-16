@@ -88,6 +88,78 @@ final class UseBlockParserTest extends TestCase
         ];
 
         yield 'leading backslash' => ['use \App\Shared\MoneyService;', 'MoneyService'];
+
+        // A `use function` must not stop the scan: the class import after it
+        // still has to answer.
+        yield 'after a function import' => [
+            "use function App\\Shared\\helper;\nuse App\\Shared\\MoneyService;",
+            'MoneyService',
+        ];
+
+        // The entry after an aliased one inside a group is imported under its
+        // own name, not swallowed by the alias that preceded it.
+        yield 'group entry following an alias' => [
+            'use App\\Shared\\{Other as O, MoneyService};',
+            'MoneyService',
+        ];
+    }
+
+    /**
+     * `use` inside a class body imports a trait, not a name -- and a closure's
+     * `use ($x)` imports neither. Both are spelled with the same keyword, so
+     * reading the whole file for `use` would take them for imports and answer
+     * a resolution with a trait.
+     *
+     * Scanning stops at the first declaration, which is where imports can no
+     * longer appear.
+     */
+    public function test_a_trait_use_inside_a_class_is_not_an_import(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            final class Wallet
+            {
+                use SomeTrait;
+
+                public function run(): callable
+                {
+                    $x = 1;
+
+                    return function () use ($x): int {
+                        return $x;
+                    };
+                }
+            }
+            PHP;
+
+        // Falls back to the current namespace, as for any name not imported.
+        self::assertSame('\App\Wallet\SomeTrait', $this->parser->getUseStatement('SomeTrait', $phpCode));
+    }
+
+    /**
+     * The stop is at the *first* declaration, so an import that really is one
+     * still answers when a class follows it.
+     */
+    public function test_an_import_before_the_class_still_answers(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use App\Shared\MoneyService;
+
+            final class Wallet
+            {
+                use SomeTrait;
+            }
+            PHP;
+
+        self::assertSame('\App\Shared\MoneyService', $this->parser->getUseStatement('MoneyService', $phpCode));
+        self::assertSame('\App\Wallet\SomeTrait', $this->parser->getUseStatement('SomeTrait', $phpCode));
     }
 
     /**

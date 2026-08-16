@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\DocBlockService;
 
-use function count;
 use function in_array;
 use function is_array;
 use function ltrim;
@@ -55,6 +54,15 @@ final class UseBlockParser
      */
     private const DECLARATION_TOKENS = [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM, T_FUNCTION];
 
+    private const OUTSIDE = 0;
+
+    private const IN_USE = 1;
+
+    private const EXPECT_ALIAS = 2;
+
+    /** Inside a `use function`/`use const`, whose names answer for no class. */
+    private const SKIPPING = 3;
+
     public function getUseStatement(string $className, string $phpCode): string
     {
         if ($className === '' || $phpCode === '') {
@@ -85,78 +93,67 @@ final class UseBlockParser
      * spends tokens instead of a regex: a wrong match here is not a wasted
      * lookup, it is the wrong service.
      *
+     * One pass, no index arithmetic: an off-by-one over a token stream padded
+     * with whitespace is unobservable, so it would be a seam nothing could
+     * test.
+     *
      * @return array<string, string> name in scope => fully qualified name
      */
     private function importsOf(string $phpCode): array
     {
-        $tokens = token_get_all($phpCode);
         $imports = [];
-        $position = 0;
-        $count = count($tokens);
-
-        while ($position < $count) {
-            $token = $tokens[$position];
-
-            // Imports precede the first declaration, so stopping here keeps
-            // `class X { use SomeTrait; }` and `function () use ($x)` -- both
-            // spelled with the same keyword -- out of the map entirely.
-            if (is_array($token) && in_array($token[0], self::DECLARATION_TOKENS, true)) {
-                break;
-            }
-
-            if (is_array($token) && $token[0] === T_USE) {
-                $position = $this->readUseStatement($tokens, $position + 1, $imports);
-                continue;
-            }
-
-            ++$position;
-        }
-
-        return $imports;
-    }
-
-    /**
-     * Reads one `use` statement into $imports and answers where it ended.
-     *
-     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
-     * @param array<string, string> $imports
-     */
-    private function readUseStatement(array $tokens, int $position, array &$imports): int
-    {
-        $count = count($tokens);
+        $state = self::OUTSIDE;
         $prefix = '';
         $name = '';
         $alias = '';
-        $expectingAlias = false;
 
-        while ($position < $count) {
-            $token = $tokens[$position];
-            ++$position;
-
+        foreach (token_get_all($phpCode) as $token) {
             if (is_array($token)) {
                 if (in_array($token[0], self::IGNORED_TOKENS, true)) {
+                    continue;
+                }
+
+                if ($state === self::OUTSIDE) {
+                    if ($token[0] === T_USE) {
+                        $state = self::IN_USE;
+                        continue;
+                    }
+
+                    // Imports precede the first declaration, so stopping here
+                    // keeps `class X { use SomeTrait; }` and
+                    // `function () use ($x)` -- both spelled with the same
+                    // keyword -- out of the map entirely.
+                    if (in_array($token[0], self::DECLARATION_TOKENS, true)) {
+                        break;
+                    }
+
                     continue;
                 }
 
                 // `use function`/`use const` import neither a class nor a name
                 // that can answer for one, grouped or not.
                 if ($token[0] === T_FUNCTION || $token[0] === T_CONST) {
-                    return $this->skipToEndOfStatement($tokens, $position);
+                    $state = self::SKIPPING;
+                    continue;
                 }
 
                 if ($token[0] === T_AS) {
-                    $expectingAlias = true;
+                    $state = self::EXPECT_ALIAS;
                     continue;
                 }
 
                 if (in_array($token[0], self::NAME_TOKENS, true)) {
-                    if ($expectingAlias) {
+                    if ($state === self::EXPECT_ALIAS) {
                         $alias = $token[1];
-                    } else {
+                    } elseif ($state === self::IN_USE) {
                         $name .= $token[1];
                     }
                 }
 
+                continue;
+            }
+
+            if ($state === self::OUTSIDE) {
                 continue;
             }
 
@@ -167,40 +164,29 @@ final class UseBlockParser
             }
 
             if (in_array($token, [',', '}', ';'], true)) {
-                $this->remember($imports, $prefix, $name, $alias);
+                if ($state !== self::SKIPPING) {
+                    $this->remember($imports, $prefix, $name, $alias);
+                }
+
                 $name = '';
                 $alias = '';
-                $expectingAlias = false;
+
+                if ($state === self::EXPECT_ALIAS) {
+                    $state = self::IN_USE;
+                }
 
                 if ($token === '}') {
                     $prefix = '';
                 }
 
                 if ($token === ';') {
-                    return $position;
+                    $state = self::OUTSIDE;
+                    $prefix = '';
                 }
             }
         }
 
-        return $position;
-    }
-
-    /**
-     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
-     */
-    private function skipToEndOfStatement(array $tokens, int $position): int
-    {
-        $count = count($tokens);
-
-        while ($position < $count) {
-            if ($tokens[$position] === ';') {
-                return $position + 1;
-            }
-
-            ++$position;
-        }
-
-        return $position;
+        return $imports;
     }
 
     /**

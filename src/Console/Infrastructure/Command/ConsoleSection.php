@@ -59,23 +59,30 @@ final class ConsoleSection
      * discovery to a subset of the project, so a module outside that subset is
      * absent for a reason no amount of looking at the module itself reveals.
      *
+     * An entry that is not a directory is reported apart from the ones that
+     * were walked, never among them: the two need opposite reactions, one
+     * saying where to look for the missing module and the other that the
+     * configuration names somewhere that is not there.
+     *
      * @param list<string> $scannedPaths
+     * @param list<string> $unscannedPaths configured entries that are not directories
      */
     public static function noModulesFound(
         OutputInterface $output,
         string $filter,
         string $indent = '',
         array $scannedPaths = [],
+        array $unscannedPaths = [],
     ): void {
         if ($filter !== '') {
             $output->writeln(sprintf('%s<comment>No modules match filter "%s".</comment>', $indent, $filter));
-            self::writeScannedPaths($output, $indent, $scannedPaths);
+            self::writeScannedPaths($output, $indent, $scannedPaths, $unscannedPaths);
 
             return;
         }
 
         $output->writeln(sprintf('%s<comment>No modules found.</comment>', $indent));
-        self::writeScannedPaths($output, $indent, $scannedPaths);
+        self::writeScannedPaths($output, $indent, $scannedPaths, $unscannedPaths);
         $output->writeln(sprintf(
             '%sA module is found by its Facade: a class extending AbstractFacade, named after the file that'
             . ' declares it, and autoloadable. The suffix is not what decides it.'
@@ -130,13 +137,24 @@ final class ConsoleSection
 
     /**
      * @param list<string> $scannedPaths
+     * @param list<string> $unscannedPaths
      */
-    private static function writeScannedPaths(OutputInterface $output, string $indent, array $scannedPaths): void
-    {
-        if ($scannedPaths === []) {
-            return;
+    private static function writeScannedPaths(
+        OutputInterface $output,
+        string $indent,
+        array $scannedPaths,
+        array $unscannedPaths = [],
+    ): void {
+        if ($scannedPaths !== []) {
+            $output->writeln(sprintf('%sScanned: %s', $indent, implode(', ', $scannedPaths)));
         }
 
-        $output->writeln(sprintf('%sScanned: %s', $indent, implode(', ', $scannedPaths)));
+        if ($unscannedPaths !== []) {
+            $output->writeln(sprintf(
+                '%sNot scanned, not a directory: %s',
+                $indent,
+                implode(', ', $unscannedPaths),
+            ));
+        }
     }
 }

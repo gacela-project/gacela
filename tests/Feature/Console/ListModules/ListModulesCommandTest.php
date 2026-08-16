@@ -182,6 +182,58 @@ final class ListModulesCommandTest extends TestCase
     }
 
     /**
+     * An `appModulePaths` entry that is not a directory is skipped, so listing
+     * it under "Scanned" states something that did not happen -- to a reader
+     * who is looking at an empty list precisely because it did not.
+     *
+     * The two belong on separate lines because they need opposite reactions:
+     * one says where to look for the missing module, the other says the config
+     * names somewhere that isn't there.
+     */
+    public function test_a_configured_path_that_is_not_a_directory_is_not_called_scanned(): void
+    {
+        $emptyDir = sys_get_temp_dir() . '/gacela-badpath-' . bin2hex(random_bytes(4));
+        mkdir($emptyDir . '/real', 0777, true);
+
+        try {
+            Gacela::bootstrap($emptyDir, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->setAppModulePaths(['real', 'not-there']);
+            });
+
+            // Discovery also trigger_errors about the entry. That is the
+            // report this one exists to duplicate onto the command's own
+            // output, and phpunit fails the run on a stray warning, so it is
+            // captured and asserted rather than left to escape.
+            $notices = [];
+            set_error_handler(static function (int $errno, string $errstr) use (&$notices): bool {
+                $notices[] = $errstr;
+
+                return true;
+            });
+
+            try {
+                $tester = new CommandTester(new ListModulesCommand());
+                $tester->execute([]);
+            } finally {
+                restore_error_handler();
+            }
+
+            $display = $tester->getDisplay();
+
+            self::assertStringContainsString('Scanned: real', $display);
+            self::assertStringNotContainsString('Scanned: real, not-there', $display);
+            self::assertStringContainsString('not-there', $display);
+            self::assertStringContainsString('not a directory', $display);
+            self::assertNotEmpty($notices, 'discovery no longer reports the skipped entry at all');
+        } finally {
+            // Names exactly what this test created.
+            rmdir($emptyDir . '/real');
+            rmdir($emptyDir);
+        }
+    }
+
+    /**
      * A filter that matched nothing has the same question behind it as an empty
      * project: the answer depends on where discovery was pointed.
      */

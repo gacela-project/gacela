@@ -129,6 +129,70 @@ final class AllAppModulesFinderTest extends TestCase
     }
 
     /**
+     * Discovery accepts by inheritance, not by name: nothing here looks at the
+     * filename suffix, so a class descending from `AbstractFacade` is a module
+     * whatever it is called. The empty report used to say the opposite -- "the
+     * filename carries the suffix" -- which sends a reader whose module is
+     * missing to rename files that were never the cause.
+     *
+     * The suffix does decide other things (which files the undiscovered-facades
+     * check looks at, how the pillars of a found module are resolved), so the
+     * contract is pinned here rather than left to the wording of a message.
+     */
+    public function test_a_facade_is_found_even_when_its_filename_carries_no_suffix(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('nosuffix');
+        $filePath = $tempDir . '/Whatever.php';
+        $className = 'TempAllAppModulesNoSuffix\\Whatever';
+
+        $this->writeTempFacadeFile($filePath, $className);
+        require_once $filePath;
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($filePath, 'Whatever.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            $modules = $finder->findAllAppModules('');
+
+            self::assertCount(1, $modules);
+            self::assertSame($className, $modules[0]->facadeClass());
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    /**
+     * The other half of the same contract, and the half the old wording was
+     * groping at: the class name comes from the *filename*, so a file whose
+     * declared class is named something else is invisible to discovery even
+     * though the class itself loads perfectly well.
+     */
+    public function test_a_facade_whose_class_name_does_not_match_its_filename_is_not_found(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('mismatch');
+        $filePath = $tempDir . '/Mismatch.php';
+
+        // Declares TempAllAppModulesMismatch\DifferentName, not ...\Mismatch.
+        $this->writeTempFacadeFile($filePath, 'TempAllAppModulesMismatch\\DifferentName');
+        require_once $filePath;
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($filePath, 'Mismatch.php')),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            // The class is loaded, so this can only be the filename deciding.
+            self::assertTrue(class_exists('TempAllAppModulesMismatch\\DifferentName', false));
+            self::assertSame([], $finder->findAllAppModules(''));
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
+    /**
      * Widening to "any descendant" must not widen to "any class at all".
      */
     public function test_a_class_that_does_not_extend_abstract_facade_is_not_a_module(): void

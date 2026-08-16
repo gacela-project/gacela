@@ -8,7 +8,10 @@ use Gacela\StaticAnalysis\Rules\ServiceMapMissingAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use function sprintf;
 
 final class ServiceMapMissingAnalyserTest extends TestCase
 {
@@ -361,6 +364,121 @@ final class ServiceMapMissingAnalyserTest extends TestCase
                 final class WalletCommand { use ServiceResolverAwareTrait; }
                 PHP,
         ));
+    }
+
+    /**
+     * A tip is only worth printing if pasting it works. `A|B::class` even
+     * parses -- as a bitwise or of a constant and a string -- so suggesting it
+     * would fail when the attribute is read rather than when it is written,
+     * which is the worst place to find out. `migrate:service-map` writes what
+     * this reports, so the same guard keeps a codemod from producing it.
+     *
+     * @param non-empty-string $type
+     */
+    #[DataProvider('undeclarableTypeProvider')]
+    public function test_a_type_that_cannot_be_written_as_a_class_constant_is_not_reported(string $type): void
+    {
+        $violations = $this->analyse(sprintf(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                /** @method %s getFacade() */
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+            $type,
+        ));
+
+        self::assertSame([], $violations, $type);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function undeclarableTypeProvider(): iterable
+    {
+        yield 'union' => ['WalletFacade|OtherFacade'];
+        yield 'intersection' => ['WalletFacade&Countable'];
+        yield 'nullable' => ['?WalletFacade'];
+        yield 'generic' => ['array<WalletFacade>'];
+        yield 'self' => ['self'];
+        yield 'static' => ['static'];
+        yield 'scalar' => ['string'];
+    }
+
+    /**
+     * A class commonly documents several accessors and only one of them is
+     * undeclarable. Stopping at it would drop every accessor written after it,
+     * so the class would read as half-migrated with nothing saying why.
+     */
+    public function test_an_undeclarable_type_does_not_hide_the_accessors_after_it(): void
+    {
+        $violations = $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                /**
+                 * @method WalletFacade|OtherFacade getFacade()
+                 * @method WalletFactory getFactory()
+                 */
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+        );
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('getFactory()', $violations[0]->message);
+    }
+
+    /**
+     * The reserved names are matched case-insensitively and past a leading
+     * backslash: PHP accepts `Self` for `self`, and the pattern above admits a
+     * leading `\` that would otherwise smuggle `\string` through as a class.
+     *
+     * @param non-empty-string $type
+     */
+    #[DataProvider('reservedNameSpellingProvider')]
+    public function test_a_reserved_name_is_rejected_however_it_is_spelled(string $type): void
+    {
+        self::assertSame([], $this->analyse(sprintf(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                /** @method %s getFacade() */
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+            $type,
+        )), $type);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function reservedNameSpellingProvider(): iterable
+    {
+        yield 'capitalised self' => ['Self'];
+        yield 'uppercase scalar' => ['STRING'];
+        yield 'leading backslash' => ['\string'];
+    }
+
+    /**
+     * The guard must not swallow the ordinary cases it sits next to.
+     */
+    public function test_a_qualified_class_name_is_still_reported(): void
+    {
+        $violations = $this->analyse(
+            <<<'PHP'
+                <?php
+                namespace App\Wallet;
+                use Gacela\Framework\ServiceResolverAwareTrait;
+                /** @method \App\Other\WalletFacade getFacade() */
+                final class WalletCommand { use ServiceResolverAwareTrait; }
+                PHP,
+        );
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('\App\Other\WalletFacade::class', (string)$violations[0]->tip);
     }
 
     /**

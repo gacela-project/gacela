@@ -18,9 +18,12 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\TraitUse;
 
 use function in_array;
+use function ltrim;
+use function preg_match;
 use function preg_match_all;
-
 use function sprintf;
+
+use function strtolower;
 
 use const PREG_SET_ORDER;
 
@@ -64,6 +67,18 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
 {
     private const ATTRIBUTE = 'ServiceMap';
 
+    /** One class name, optionally qualified, and nothing else. */
+    private const CLASS_NAME = '#^\\\\?[A-Za-z_\\x80-\\xff][A-Za-z0-9_\\x80-\\xff]*(?:\\\\[A-Za-z_\\x80-\\xff][A-Za-z0-9_\\x80-\\xff]*)*$#';
+
+    /**
+     * Names the pattern above accepts that still are not a class to declare.
+     * `self::class` would resolve to the caller, not to what it returns.
+     */
+    private const NOT_A_CLASS = [
+        'self', 'static', 'parent', 'string', 'int', 'float', 'bool', 'array',
+        'object', 'mixed', 'callable', 'iterable', 'void', 'never', 'null', 'false', 'true',
+    ];
+
     /**
      * `@method [static] <type> <name>`. A tag written without a return type
      * does not match, and is left alone: nothing can be suggested for it.
@@ -79,26 +94,9 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
      */
     public function analyse(ClassLike $node, AnalysedClassInterface $class): array
     {
-        if (!$this->usesTheResolverTrait($node)) {
-            return [];
-        }
-
-        // No early return for a class without a docblock: there is nothing to
-        // match in an empty string, so the loop below is already the answer.
-        $docBlock = $node->getDocComment()?->getText() ?? '';
-
-        $declared = $this->accessorsDeclaredByAttribute($node);
         $violations = [];
 
-        foreach ($this->accessorsDocumented($docBlock) as $method => $type) {
-            if (in_array($method, $declared, true)) {
-                continue;
-            }
-
-            if ($node->getMethod($method) instanceof ClassMethod) {
-                continue;
-            }
-
+        foreach ($this->missingAccessors($node) as $method => $type) {
             $violations[] = new Violation(
                 sprintf(
                     '%s::%s() is resolved from its @method docblock, which is deprecated and removed in 3.0',
@@ -115,6 +113,68 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
         }
 
         return $violations;
+    }
+
+    /**
+     * The accessors this class resolves from its docblock, each with the type
+     * to declare it as.
+     *
+     * Public because `migrate:service-map` writes the attribute this reports,
+     * and the two must not be able to disagree about which accessors need one:
+     * a codemod that migrated a different set than the analysis reported would
+     * leave a build failing on the classes it just rewrote.
+     *
+     * @return array<string, string> method name => type as written
+     */
+    public function missingAccessors(ClassLike $node): array
+    {
+        if (!$this->usesTheResolverTrait($node)) {
+            return [];
+        }
+
+        // No early return for a class without a docblock: there is nothing to
+        // match in an empty string, so the loop below is already the answer.
+        $docBlock = $node->getDocComment()?->getText() ?? '';
+
+        $declared = $this->accessorsDeclaredByAttribute($node);
+        $missing = [];
+
+        foreach ($this->accessorsDocumented($docBlock) as $method => $type) {
+            if (in_array($method, $declared, true)) {
+                continue;
+            }
+
+            if ($node->getMethod($method) instanceof ClassMethod) {
+                continue;
+            }
+
+            // A type that cannot be written as `X::class` cannot be declared.
+            // `A|B::class` even parses -- as a bitwise or of a constant and a
+            // string -- so it fails when the attribute is read rather than
+            // when it is written, which is the worst place to find out.
+            if (!$this->isDeclarableType($type)) {
+                continue;
+            }
+
+            $missing[$method] = $type;
+        }
+
+        return $missing;
+    }
+
+    /**
+     * A single class name, qualified or not. Never a union, an intersection, a
+     * nullable, a generic, a scalar, or `self`/`static`/`parent`: `::class` on
+     * any of those is either meaningless or resolves relative to a class that
+     * is not the one the accessor returns.
+     */
+    private function isDeclarableType(string $type): bool
+    {
+        if (preg_match(self::CLASS_NAME, $type) !== 1) {
+            return false;
+        }
+
+        return !in_array(strtolower(ltrim($type, '\\')), self::NOT_A_CLASS, true);
     }
 
     private function usesTheResolverTrait(ClassLike $node): bool

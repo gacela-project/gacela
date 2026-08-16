@@ -34,6 +34,7 @@ final class CommandCatalog
         MakeFileCommand::class,
         MakeModuleCommand::class,
         ListModulesCommand::class,
+        MigrateServiceMapCommand::class,
         DebugConfigCommand::class,
         DebugContainerCommand::class,
         DebugDependenciesCommand::class,

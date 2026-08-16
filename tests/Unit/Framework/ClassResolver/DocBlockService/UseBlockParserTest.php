@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\ClassResolver\DocBlockService;
 
 use Gacela\Framework\ClassResolver\DocBlockService\UseBlockParser;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use function sprintf;
 
 final class UseBlockParserTest extends TestCase
 {
@@ -38,6 +41,148 @@ final class UseBlockParserTest extends TestCase
         $actual = $this->parser->getUseStatement('ExistingClassInOtherNs', $this->phpCode());
 
         self::assertSame('\Ns\Test\Other\ExistingClassInOtherNs', $actual);
+    }
+
+    /**
+     * PSR-12 group imports, which PhpStorm generates, resolved to the caller's
+     * own namespace instead of the imported one -- the parser's pattern could
+     * not match a `{`, so every grouped import looked like no import at all.
+     *
+     * Usually that surfaces as a `MissingClassDefinitionException` for a class
+     * the file plainly imports. The worse case is silent: when a class of the
+     * same short name *does* exist in the caller's namespace, it is injected
+     * instead -- the wrong-object failure this parser's own docblock records
+     * fighting once already.
+     *
+     * @param non-empty-string $useBlock
+     * @param non-empty-string $askedFor
+     */
+    #[DataProvider('importFormProvider')]
+    public function test_every_import_form_resolves_to_the_imported_class(string $useBlock, string $askedFor): void
+    {
+        $phpCode = sprintf("<?php\n\nnamespace App\\Wallet;\n\n%s\n\nfinal class Wallet\n{\n}\n", $useBlock);
+
+        self::assertSame(
+            '\App\Shared\MoneyService',
+            $this->parser->getUseStatement($askedFor, $phpCode),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function importFormProvider(): iterable
+    {
+        yield 'plain' => ['use App\Shared\MoneyService;', 'MoneyService'];
+        yield 'alias' => ['use App\Shared\MoneyService as MS;', 'MS'];
+        yield 'group of one' => ['use App\Shared\{MoneyService};', 'MoneyService'];
+        yield 'group of several' => ['use App\Shared\{Other, MoneyService};', 'MoneyService'];
+        yield 'group with alias' => ['use App\Shared\{MoneyService as MS};', 'MS'];
+        yield 'comma list' => ['use App\Other\Thing, App\Shared\MoneyService;', 'MoneyService'];
+
+        // Exactly how a formatter wraps a long group, so the statement spans
+        // lines and a line-anchored pattern sees only its first one.
+        yield 'group across lines' => [
+            "use App\\Shared\\{\n    Other,\n    MoneyService,\n};",
+            'MoneyService',
+        ];
+
+        yield 'leading backslash' => ['use \App\Shared\MoneyService;', 'MoneyService'];
+
+        // A `use function` must not stop the scan: the class import after it
+        // still has to answer.
+        yield 'after a function import' => [
+            "use function App\\Shared\\helper;\nuse App\\Shared\\MoneyService;",
+            'MoneyService',
+        ];
+
+        // The entry after an aliased one inside a group is imported under its
+        // own name, not swallowed by the alias that preceded it.
+        yield 'group entry following an alias' => [
+            'use App\\Shared\\{Other as O, MoneyService};',
+            'MoneyService',
+        ];
+    }
+
+    /**
+     * `use` inside a class body imports a trait, not a name -- and a closure's
+     * `use ($x)` imports neither. Both are spelled with the same keyword, so
+     * reading the whole file for `use` would take them for imports and answer
+     * a resolution with a trait.
+     *
+     * Scanning stops at the first declaration, which is where imports can no
+     * longer appear.
+     */
+    public function test_a_trait_use_inside_a_class_is_not_an_import(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            final class Wallet
+            {
+                use SomeTrait;
+
+                public function run(): callable
+                {
+                    $x = 1;
+
+                    return function () use ($x): int {
+                        return $x;
+                    };
+                }
+            }
+            PHP;
+
+        // Falls back to the current namespace, as for any name not imported.
+        self::assertSame('\App\Wallet\SomeTrait', $this->parser->getUseStatement('SomeTrait', $phpCode));
+    }
+
+    /**
+     * The stop is at the *first* declaration, so an import that really is one
+     * still answers when a class follows it.
+     */
+    public function test_an_import_before_the_class_still_answers(): void
+    {
+        $phpCode = <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use App\Shared\MoneyService;
+
+            final class Wallet
+            {
+                use SomeTrait;
+            }
+            PHP;
+
+        self::assertSame('\App\Shared\MoneyService', $this->parser->getUseStatement('MoneyService', $phpCode));
+        self::assertSame('\App\Wallet\SomeTrait', $this->parser->getUseStatement('SomeTrait', $phpCode));
+    }
+
+    /**
+     * A grouped import must not answer for a name it does not bring into
+     * scope, the way the group's own prefix could if the prefix were treated
+     * as an import in its own right.
+     */
+    public function test_a_group_prefix_is_not_itself_an_import(): void
+    {
+        $phpCode = "<?php\n\nnamespace App\\Wallet;\n\nuse App\\Shared\\{MoneyService};\n";
+
+        self::assertSame('\App\Wallet\Shared', $this->parser->getUseStatement('Shared', $phpCode));
+    }
+
+    /**
+     * `use function`/`use const` inside a group import neither, so they cannot
+     * answer for a class name that happens to match.
+     */
+    public function test_a_grouped_function_import_does_not_answer_for_a_class_name(): void
+    {
+        $phpCode = "<?php\n\nnamespace App\\Wallet;\n\nuse function App\\Shared\\{helper};\n";
+
+        self::assertSame('\App\Wallet\helper', $this->parser->getUseStatement('helper', $phpCode));
     }
 
     public function test_get_class_in_same_namespace(): void

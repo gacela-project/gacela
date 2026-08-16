@@ -61,7 +61,9 @@ Single `int` or `string` arguments become part of the key directly (`Facade::met
 
 ## Custom key templates
 
-Use `key` with `{N}` placeholders to interpolate the Nth argument into the cache key — useful for shared keys across modules or for readable keys in an external cache.
+Use `key` with `{N}` placeholders to interpolate the Nth argument into the cache key — useful for readable keys in an external cache.
+
+A template names an entry *within* the declaring class and method, never across them: what is stored is `Class::method::` followed by the interpolated template. Two classes writing the same template keep their own entries. Until 2.x this was not so — the template was the whole key, so `key: 'user:{0}'` in two facades shared one entry and the second to ask was served the first one's data.
 
 ```php
 #[Cacheable(ttl: 3600, key: 'user:{0}')]
@@ -93,7 +95,7 @@ CatalogFacade::clearMethodCache();
 
 `clearMethodCacheFor()` matches on the exact `Class::method::` prefix. Passing `'get'` does **not** clear every method whose name starts with `get`.
 
-It also cannot see entries written under a custom `key:` template — those keys are the interpolated template (`user:42`), which carries no `Class::method::` prefix to match. A method with a custom key has to be invalidated through the storage backend directly.
+It reaches an entry written under a custom `key:` template like any other, because those keys now carry the same prefix. Until 2.x they did not, so this call silently did nothing for exactly the methods that had customised their key.
 
 ## Pluggable storage backend
 

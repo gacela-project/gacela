@@ -19,6 +19,13 @@ use Attribute;
  * A bare string with no placeholders is args-agnostic and shared across all
  * calls — rarely what you want when the method takes parameters.
  *
+ * A template names an entry *within* the declaring class and method, never
+ * across them: the stored key is `Class::method::` followed by the interpolated
+ * template. Two classes writing the same template therefore keep their own
+ * entries, and `clearMethodCacheFor()` — which deletes by that prefix — reaches
+ * a custom-keyed entry like any other. Sharing one entry between classes is not
+ * something a template can do.
+ *
  * Example:
  * ```php
  * use Gacela\Framework\Attribute\Cacheable;

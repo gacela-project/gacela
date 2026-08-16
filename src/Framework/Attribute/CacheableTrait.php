@@ -144,15 +144,35 @@ trait CacheableTrait
     }
 
     /**
+     * Every key is scoped to the class and method that produced it, custom or
+     * not.
+     *
+     * A custom template used to be the whole key. Two classes writing the same
+     * template -- `key: 'user:{0}'`, which is the one this attribute's own
+     * docblock advertises -- therefore shared one entry, and the second one to
+     * ask was served the first one's data. Nothing failed; the wrong object
+     * simply came back.
+     *
+     * It also put those entries out of reach of `clearMethodCacheFor()`, which
+     * deletes by the `Class::method::` prefix -- so the invalidation call that
+     * exists for exactly this method did nothing, for exactly the methods that
+     * had customised their key.
+     *
+     * A template that deliberately shares an entry across classes is no longer
+     * possible. That is a feature worth asking for explicitly rather than
+     * getting from two classes happening to spell a string the same way.
+     *
      * @param list<mixed> $args
      */
     private function buildCacheKey(string $method, array $args, Cacheable $attribute): string
     {
+        $scope = sprintf('%s::%s::', static::class, $method);
+
         if ($attribute->key !== null) {
-            return $this->interpolateKey($attribute->key, $args);
+            return $scope . $this->interpolateKey($attribute->key, $args);
         }
 
-        return sprintf('%s::%s::%s', static::class, $method, $this->hashArgs($args));
+        return $scope . $this->hashArgs($args);
     }
 
     /**

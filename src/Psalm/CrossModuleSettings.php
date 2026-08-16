@@ -18,6 +18,7 @@ use SimpleXMLElement;
  * <pluginClass class="Gacela\Psalm\Plugin">
  *     <crossModule rootNamespace="App\Modules" modulePathSegments="1">
  *         <sharedNamespace>App\Modules\Shared</sharedNamespace>
+ *         <ignoreReceiver>App\Modules\Shop\GlobalEnvironmentInterface</ignoreReceiver>
  *     </crossModule>
  * </pluginClass>
  * ```
@@ -26,11 +27,15 @@ final class CrossModuleSettings
 {
     /**
      * @param list<string> $sharedNamespaces
+     * @param list<string> $ignoreReceivers  read by the method-call half only: it is
+     *                                       about what a call may land on, and the other
+     *                                       half matches written names rather than receivers
      */
     private function __construct(
         public readonly string $rootNamespace,
         public readonly int $modulePathSegments,
         public readonly array $sharedNamespaces,
+        public readonly array $ignoreReceivers = [],
     ) {
     }
 
@@ -59,6 +64,7 @@ final class CrossModuleSettings
             ),
             PluginXml::modulePathSegments($crossModule),
             PluginXml::sharedNamespaces($crossModule),
+            PluginXml::ignoreReceivers($crossModule),
         );
     }
 }

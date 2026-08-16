@@ -7,7 +7,9 @@ namespace Gacela\StaticAnalysis\Rules;
 use Gacela\StaticAnalysis\ModuleBoundary;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
+use Throwable;
 
+use function is_a;
 use function sprintf;
 use function str_ends_with;
 
@@ -41,11 +43,14 @@ final class CrossModuleMethodCallAnalyser
 
     /**
      * @param list<string> $sharedNamespaces namespaces exempt from the boundary check
+     * @param list<string> $ignoreReceivers  classes and interfaces a call may land on
+     *                                       whatever module they belong to
      */
     public function __construct(
         string $rootNamespace,
         int $modulePathSegments = 1,
         array $sharedNamespaces = [],
+        private readonly array $ignoreReceivers = [],
     ) {
         $this->boundary = new ModuleBoundary($rootNamespace, $modulePathSegments, $sharedNamespaces);
     }
@@ -77,6 +82,10 @@ final class CrossModuleMethodCallAnalyser
                 continue;
             }
 
+            if ($this->isExempt($receiver)) {
+                continue;
+            }
+
             $module = $this->boundary->crossedBy($callingModule, $receiver);
             if ($module === null) {
                 continue;
@@ -102,5 +111,47 @@ final class CrossModuleMethodCallAnalyser
         $shortName = ShortName::of($class);
 
         return str_ends_with($shortName, 'Facade') || str_ends_with($shortName, 'FacadeInterface');
+    }
+
+    /**
+     * The two crossings that are not collaborations.
+     *
+     * An **exception** is read, not worked with. A module throws its own type
+     * and a neighbour catches it and asks for `getMessage()` -- the boundary a
+     * Facade protects is not crossed by that, and reporting it means every
+     * `catch` block of a typed exception is a finding. Measured on phel-lang,
+     * 24 of the 53 findings the rule raised were exactly this.
+     *
+     * A **named receiver** is the project saying "this one is a public contract
+     * whatever module it lives in". PHPStan's convention for a structural rule
+     * is a constructor parameter rather than a screenful of `ignoreErrors`
+     * restating decisions already made -- an error-message ignore also silences
+     * the *next* crossing that happens to be phrased the same way.
+     *
+     * `is_a()` with `allow_string` rather than a name comparison, so naming an
+     * interface covers what implements it and naming a base covers what extends
+     * it. It answers false for a class the analysis cannot load, which is why
+     * the exact name is tried first: an entry naming something unloadable still
+     * exempts itself.
+     */
+    private function isExempt(string $receiver): bool
+    {
+        if (is_a($receiver, Throwable::class, true)) {
+            return true;
+        }
+
+        foreach ($this->ignoreReceivers as $ignored) {
+            /**
+             * @psalm-suppress ArgumentTypeCoercion a configured entry is a string
+             *                 somebody typed, not a proven class-string; `is_a()`
+             *                 answering false for one that names nothing is the
+             *                 behaviour the exact match above exists to cover
+             */
+            if ($receiver === $ignored || is_a($receiver, $ignored, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

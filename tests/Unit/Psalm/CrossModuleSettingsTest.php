@@ -61,6 +61,52 @@ final class CrossModuleSettingsTest extends TestCase
         self::assertSame(['App\Modules\Shared', 'App\Modules\Kernel'], $settings->sharedNamespaces);
     }
 
+    public function test_a_class_with_no_ignored_receivers_has_none(): void
+    {
+        self::assertSame([], $this->settings('<crossModule rootNamespace="App\Modules"/>')->ignoreReceivers);
+    }
+
+    public function test_it_reads_every_ignored_receiver(): void
+    {
+        $settings = $this->settings(
+            '<crossModule rootNamespace="App\Modules">'
+            . '<ignoreReceiver>App\Modules\Shop\GlobalEnvironmentInterface</ignoreReceiver>'
+            . '<ignoreReceiver>App\Modules\Shop\EmitterResult</ignoreReceiver>'
+            . '</crossModule>',
+        );
+
+        self::assertSame(
+            ['App\Modules\Shop\GlobalEnvironmentInterface', 'App\Modules\Shop\EmitterResult'],
+            $settings->ignoreReceivers,
+        );
+    }
+
+    public function test_an_empty_ignored_receiver_is_not_a_receiver(): void
+    {
+        $settings = $this->settings(
+            '<crossModule rootNamespace="App\Modules"><ignoreReceiver>  </ignoreReceiver></crossModule>',
+        );
+
+        self::assertSame([], $settings->ignoreReceivers);
+    }
+
+    /**
+     * The two lists are read off different children, so one does not collect
+     * the other's entries.
+     */
+    public function test_shared_namespaces_and_ignored_receivers_are_read_apart(): void
+    {
+        $settings = $this->settings(
+            '<crossModule rootNamespace="App\Modules">'
+            . '<sharedNamespace>App\Modules\Shared</sharedNamespace>'
+            . '<ignoreReceiver>App\Modules\Shop\EmitterResult</ignoreReceiver>'
+            . '</crossModule>',
+        );
+
+        self::assertSame(['App\Modules\Shared'], $settings->sharedNamespaces);
+        self::assertSame(['App\Modules\Shop\EmitterResult'], $settings->ignoreReceivers);
+    }
+
     /**
      * Whitespace around an xml value is formatting, not part of the namespace.
      */
@@ -69,11 +115,13 @@ final class CrossModuleSettingsTest extends TestCase
         $settings = $this->settings(
             '<crossModule rootNamespace=" App\\Modules ">'
             . "<sharedNamespace>\n    App\\Modules\\Shared\n</sharedNamespace>"
+            . "<ignoreReceiver>\n    App\\Modules\\Shop\\EmitterResult\n</ignoreReceiver>"
             . '</crossModule>',
         );
 
         self::assertSame('App\Modules', $settings->rootNamespace);
         self::assertSame(['App\Modules\Shared'], $settings->sharedNamespaces);
+        self::assertSame(['App\Modules\Shop\EmitterResult'], $settings->ignoreReceivers);
     }
 
     public function test_an_empty_shared_namespace_is_not_a_namespace(): void

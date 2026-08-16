@@ -11,6 +11,7 @@
         <pluginClass class="Gacela\Psalm\Plugin">
             <crossModule rootNamespace="GacelaTest\Integration\Psalm\CrossModuleFixture" modulePathSegments="1">
                 <sharedNamespace>GacelaTest\Integration\Psalm\CrossModuleFixture\Shared</sharedNamespace>
+                <ignoreReceiver>GacelaTest\Integration\Psalm\CrossModuleFixture\Shop\Domain\ShopEnvironmentInterface</ignoreReceiver>
             </crossModule>
         </pluginClass>
     </plugins>

@@ -20,6 +20,9 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
     /** @var list<string> */
     private array $sharedNamespaces = [];
 
+    /** @var list<string> */
+    private array $ignoreReceivers = [];
+
     private ?Rule $rule = null;
 
     /**
@@ -97,6 +100,39 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
     }
 
     /**
+     * A module throws its own exception type and a neighbour catches it and
+     * asks for `getMessage()`. Reading, not collaborating -- and reported, this
+     * made every `catch` of a typed exception a finding.
+     */
+    public function test_a_call_on_a_caught_exception_from_another_module_is_allowed(): void
+    {
+        $this->analyse([__DIR__ . '/Fixture/CrossModule/UserCalls/CatchesForeignExceptionFactory.php'], []);
+    }
+
+    /**
+     * The same call with no exemption. Naming the interface is what silences it,
+     * so the assertion above cannot pass because the fixture never crossed.
+     */
+    public function test_a_call_on_another_modules_contract_is_reported_when_not_ignored(): void
+    {
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/UserCalls/EnvironmentCallFactory.php'],
+            [[
+                $this->expectedError('EnvironmentCallFactory', 'Shop\Domain\ShopEnvironmentInterface', 'Shop'),
+                18,
+                $this->expectedTip('Shop'),
+            ]],
+        );
+    }
+
+    public function test_a_call_on_an_ignored_receiver_is_allowed(): void
+    {
+        $this->ignoreReceivers = [self::ROOT . '\Shop\Domain\ShopEnvironmentInterface'];
+
+        $this->analyse([__DIR__ . '/Fixture/CrossModule/UserCalls/EnvironmentCallFactory.php'], []);
+    }
+
+    /**
      * Registered with nothing but the root namespace, the shape the docs show
      * for a project that keeps its modules one segment down.
      */
@@ -112,7 +148,12 @@ final class CrossModuleMethodCallRuleTest extends RuleTestCase
 
     protected function getRule(): Rule
     {
-        return $this->rule ??= new CrossModuleMethodCallRule(self::ROOT, 1, $this->sharedNamespaces);
+        return $this->rule ??= new CrossModuleMethodCallRule(
+            self::ROOT,
+            1,
+            $this->sharedNamespaces,
+            $this->ignoreReceivers,
+        );
     }
 
     private function expectedTip(string $module): string

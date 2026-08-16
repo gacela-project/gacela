@@ -291,7 +291,7 @@ composer remove --dev gacela-project/phpstan-extension
 | `parameters.gacela.modulesNamespace` | `rootNamespace`, on the two cross-module rules |
 | `parameters.gacela.excludedNamespaces` | `sharedNamespaces`, on the same two rules |
 
-Its `EnforceModuleBoundariesForMethodCallRule` is `CrossModuleMethodCallRule` here, and the boundary check now has a second half — the references a source names — that the package never covered. See [Module boundaries](module-boundaries.md) for the configuration.
+Its `EnforceModuleBoundariesForMethodCallRule` is `CrossModuleMethodCallRule` here, and the boundary check now has a second half — the references a source names — that the package never covered. It also takes an `ignoreReceivers` list the package had no equivalent for, and exempts calls on a `Throwable` without being asked: an exception a neighbour catches and reads is not a boundary crossing, and reporting it made every `catch` of a typed exception a finding. See [Module boundaries](module-boundaries.md) for the configuration.
 
 ## Troubleshooting
 

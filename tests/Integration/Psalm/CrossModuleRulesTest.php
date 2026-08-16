@@ -55,6 +55,34 @@ final class CrossModuleRulesTest extends PsalmFixtureTestCase
     }
 
     /**
+     * A module throws its own exception type and a neighbour catches it and
+     * asks for `getMessage()`. Exempt by default on both hosts, or every
+     * `catch` of a typed exception is a finding.
+     */
+    public function test_a_call_on_a_caught_exception_is_silent(): void
+    {
+        $errors = $this->analyseFixture();
+        $this->skipIfPsalmCannotRun($errors);
+
+        self::assertStringContainsString('GacelaCrossModule', $errors, 'precondition: the check ran at all');
+        self::assertSame('', $this->errorsIn('CatchesTheOtherModulesException.php'));
+    }
+
+    /**
+     * The `<ignoreReceiver>` half, through a real Psalm run: the same call is
+     * reported when the receiver is not named, which is what
+     * `UsesANamespaceStartingWithShared.php` proves for the other list.
+     */
+    public function test_a_call_on_an_ignored_receiver_is_silent(): void
+    {
+        $errors = $this->analyseFixture();
+        $this->skipIfPsalmCannotRun($errors);
+
+        self::assertStringContainsString('GacelaCrossModule', $errors, 'precondition: the check ran at all');
+        self::assertSame('', $this->errorsIn('CallsAnIgnoredReceiver.php'));
+    }
+
+    /**
      * `Shared` is a raw-string prefix of `SharedFoo` but not a namespace
      * boundary. Matching on the prefix would silently exempt every module whose
      * name merely starts with an allowlisted one.

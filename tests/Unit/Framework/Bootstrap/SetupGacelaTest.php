@@ -410,10 +410,23 @@ final class SetupGacelaTest extends TestCase
         self::assertSame([$fn1, $fn2, $fn3], $setup1->getServicesToExtend()['service']);
     }
 
+    /**
+     * The merge used to replace the generic listeners with the other side's,
+     * so a setup merged against one that registered none lost its own -- and
+     * this test dispatched the event without ever asking whether the listener
+     * ran, so it passed throughout. The bug shipped under a test named for it.
+     */
     public function test_merge_event_dispatcher_when_other_has_only_specific_listeners(): void
     {
-        $genericListener = static function (GacelaEventInterface $event): void {};
-        $specificListener = static function (GacelaEventInterface $event): void {};
+        $genericFired = false;
+        $specificFired = false;
+
+        $genericListener = static function (GacelaEventInterface $event) use (&$genericFired): void {
+            $genericFired = true;
+        };
+        $specificListener = static function (GacelaEventInterface $event) use (&$specificFired): void {
+            $specificFired = true;
+        };
 
         $setup1 = SetupGacela::fromGacelaConfig(
             (new GacelaConfig())->registerGenericListener($genericListener),
@@ -427,6 +440,40 @@ final class SetupGacelaTest extends TestCase
         $setup1->getEventDispatcher()->dispatch(new FakeEvent());
 
         self::assertInstanceOf(ConfigurableEventDispatcher::class, $setup1->getEventDispatcher());
+        self::assertTrue($genericFired, 'the original generic listener did not survive the merge');
+        self::assertTrue($specificFired, 'the merged specific listener did not fire');
+    }
+
+    /**
+     * Both sides keep their generic listeners, the way both sides keep their
+     * specific ones -- the merger appends those in the very next lines, and
+     * the asymmetry was the bug.
+     */
+    public function test_merging_generic_listeners_keeps_both_sides(): void
+    {
+        $originalFired = false;
+        $otherFired = false;
+
+        $setup1 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->registerGenericListener(
+                static function (GacelaEventInterface $event) use (&$originalFired): void {
+                    $originalFired = true;
+                },
+            ),
+        );
+        $setup2 = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->registerGenericListener(
+                static function (GacelaEventInterface $event) use (&$otherFired): void {
+                    $otherFired = true;
+                },
+            ),
+        );
+
+        $setup1->merge($setup2);
+        $setup1->getEventDispatcher()->dispatch(new FakeEvent());
+
+        self::assertTrue($originalFired, 'the original generic listener was replaced');
+        self::assertTrue($otherFired, 'the merged generic listener did not fire');
     }
 
     public function test_merge_registers_generic_listeners_from_other(): void

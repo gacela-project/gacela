@@ -309,9 +309,50 @@ final class ConsoleFactory extends AbstractFactory
      */
     public function scannedModulePaths(): array
     {
-        $paths = Config::getInstance()->getSetupGacela()->getAppModulePaths();
+        return $this->partitionedModulePaths()['scanned'];
+    }
 
-        return $paths === [] ? [Gacela::rootDir()] : $paths;
+    /**
+     * The configured entries that are not directories, so discovery skipped
+     * them.
+     *
+     * Listing one under "Scanned" states something that did not happen, to a
+     * reader who is looking at an empty module list precisely because it did
+     * not. `createModuleScanIterator()` already `trigger_error`s about these,
+     * on a stream a command's own output may not share and which a reader
+     * scanning a report has no reason to be watching.
+     *
+     * @return list<string>
+     */
+    public function unscannedModulePaths(): array
+    {
+        return $this->partitionedModulePaths()['unscanned'];
+    }
+
+    /**
+     * @return array{scanned: list<string>, unscanned: list<string>}
+     */
+    private function partitionedModulePaths(): array
+    {
+        $paths = Config::getInstance()->getSetupGacela()->getAppModulePaths();
+        $rootDir = Gacela::rootDir();
+
+        if ($paths === []) {
+            return ['scanned' => [$rootDir], 'unscanned' => []];
+        }
+
+        $scanned = [];
+        $unscanned = [];
+
+        foreach ($paths as $path) {
+            if (is_dir($this->resolveScanPath($path, $rootDir))) {
+                $scanned[] = $path;
+            } else {
+                $unscanned[] = $path;
+            }
+        }
+
+        return ['scanned' => $scanned, 'unscanned' => $unscanned];
     }
 
     /**

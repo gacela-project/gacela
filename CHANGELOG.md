@@ -19,6 +19,7 @@ Every event the framework can dispatch, which of them your project listens to, a
 - The catalog is read off the event classes, not a list in the command, so a new event appears without anybody remembering it
 - A specific listener matches by inheritance, so an event can be covered by a registration that never names it: the listener column names the target that does, and one listener on `AbstractGacelaClassResolverEvent` reads as the four events it covers
 - An optional argument narrows by class name, `--listened` to the events something watches, and `--json` reports the same document a script can read. It also says when `disableEventListeners()` is in effect, so a full table of registrations does not read as a working one
+- The [event catalog in the docs](docs/events.md) is now checked against the classes on disk in both directions, so an event added without a row, or a row outliving its class, fails the build rather than leaving the only inventory a reader has quietly wrong
 
 #### Cacheable events
 

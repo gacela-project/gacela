@@ -95,6 +95,15 @@ final class DoctorCommand extends Command
 
         ConsoleSection::title($output, 'Gacela Doctor');
 
+        // Every check below works from the modules discovery returned, so the
+        // paths it walked bound all of them at once. `appModulePaths` narrowing
+        // the scan is invisible in a report of nineteen ticks otherwise.
+        $output->writeln(sprintf(
+            'Scanned: %s',
+            implode(', ', $this->getFacade()->scannedModulePaths()),
+        ));
+        $output->writeln('');
+
         $checks = $this->buildChecks($filter);
         $worst = CheckStatus::Ok;
         $rendered = false;
@@ -169,6 +178,7 @@ final class DoctorCommand extends Command
 
         $output->writeln(json_encode([
             'status' => $worst->value,
+            'scanned' => $this->getFacade()->scannedModulePaths(),
             'checks' => $reported,
         ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 

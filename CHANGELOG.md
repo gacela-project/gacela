@@ -4,6 +4,7 @@
 
 ### Added
 
+- `doctor` names the paths discovery walked, as `Scanned: src` above the checks and a `scanned` key in `--format=json`. Every check works from the modules discovery returned, so `appModulePaths` narrowing the scan narrows all nineteen at once — a run over a project with a hundred modules can inspect one and still print a screen of ticks
 - `list:modules`, `debug:modules` and `debug:graph` name the paths they scanned when they find nothing: `Scanned: src`. `appModulePaths` narrows discovery to a subset of the project, so a module outside that subset is missing for a reason nothing about the module itself reveals — the report already said to check the psr-4 mapping, but never said where it had looked. Read from the configured entries rather than their resolved absolute paths, because the entry is what you would edit
 
 ### Fixed

@@ -56,6 +56,18 @@ first Facade/Factory/Config access (per module)
  └─ ServiceResolvedEvent             (per service, first `get()` on the container)
 ```
 
+## Seeing what listens
+
+```bash
+vendor/bin/gacela debug:events
+```
+
+The same catalog as below, read off the classes rather than this page, with the listeners *your* project registered against each one. Because a specific listener matches by inheritance, an event can be covered by a registration that never names it — the listener column names the target that does, so one listener on `AbstractGacelaClassResolverEvent` reads as four covered events rather than four mysteries.
+
+`--listened` narrows to the events something watches, an optional argument narrows by class name, and `--json` reports the same thing as a document. It also says when `disableEventListeners()` is in effect, which is the state in which everything below is registered and none of it runs.
+
+Where `doctor` answers "is this listener target a thing an event can be", this answers "what does the framework offer, and what am I actually watching".
+
 ## Event catalog
 
 All classes live under `Gacela\Framework\Event\`. "Hot path" marks events fired on every warm resolve — with only unrelated listeners registered they still cost nothing.

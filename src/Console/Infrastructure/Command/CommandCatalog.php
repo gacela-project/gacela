@@ -38,6 +38,7 @@ final class CommandCatalog
         DebugConfigCommand::class,
         DebugContainerCommand::class,
         DebugDependenciesCommand::class,
+        DebugEventsCommand::class,
         DebugGraphCommand::class,
         DebugModuleCommand::class,
         DebugModulesCommand::class,

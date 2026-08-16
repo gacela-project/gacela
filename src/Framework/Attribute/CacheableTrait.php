@@ -134,18 +134,17 @@ trait CacheableTrait
             return $hit;
         }
 
-        // Timed only when something is listening: hrtime() twice per miss is
-        // not free, and the guard is what keeps an unobserved application
-        // paying nothing for the observability it did not ask for.
-        $observed = self::shouldDispatch(CacheableMissEvent::class);
-        $startedAt = $observed ? hrtime(true) : 0;
+        // Timed unconditionally: a miss runs the callback and writes to
+        // storage, so one hrtime() beside that is noise -- and a sentinel for
+        // the unobserved branch would be a value nothing ever reads.
+        $startedAt = hrtime(true);
 
         $result = $callback();
 
         $ttl = CacheableConfig::resolveTtl(sprintf('%s::%s', static::class, $method), $attribute->ttl);
         $storage->set($cacheKey, $result, $ttl);
 
-        if ($observed) {
+        if (self::shouldDispatch(CacheableMissEvent::class)) {
             self::dispatchEvent(new CacheableMissEvent(
                 static::class,
                 $method,

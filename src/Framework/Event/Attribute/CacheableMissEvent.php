@@ -27,7 +27,7 @@ final class CacheableMissEvent implements GacelaEventInterface
         private readonly string $className,
         private readonly string $method,
         private readonly string $cacheKey,
-        private readonly float $computeMilliseconds,
+        private readonly int $computeNanoseconds,
         private readonly int $ttl,
     ) {
     }
@@ -47,9 +47,22 @@ final class CacheableMissEvent implements GacelaEventInterface
         return $this->cacheKey;
     }
 
+    /**
+     * Raw, as `hrtime()` reported it.
+     *
+     * Carried in nanoseconds and converted here rather than at the call site
+     * so the conversion is a pure function of an argument: a duration computed
+     * inline against a clock can only be asserted as "some non-negative
+     * number", which is an assertion every arithmetic mistake also satisfies.
+     */
+    public function computeNanoseconds(): int
+    {
+        return $this->computeNanoseconds;
+    }
+
     public function computeMilliseconds(): float
     {
-        return $this->computeMilliseconds;
+        return (float)$this->computeNanoseconds / 1e6;
     }
 
     public function ttl(): int
@@ -65,7 +78,7 @@ final class CacheableMissEvent implements GacelaEventInterface
             $this->className,
             $this->method,
             $this->cacheKey,
-            $this->computeMilliseconds,
+            $this->computeMilliseconds(),
             $this->ttl,
         );
     }

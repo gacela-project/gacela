@@ -77,11 +77,11 @@ All classes live under `Gacela\Framework\Event\`. "Hot path" marks events fired 
 | Event | Fires when | Payload | Hot path |
 |---|---|---|---|
 | `CacheableHitEvent` | a `#[Cacheable]` method is answered from storage | `className()`, `method()`, `cacheKey()` | **yes** |
-| `CacheableMissEvent` | a `#[Cacheable]` method runs its callback | `className()`, `method()`, `cacheKey()`, `computeMilliseconds()`, `ttl()` | **yes** |
+| `CacheableMissEvent` | a `#[Cacheable]` method runs its callback | `className()`, `method()`, `cacheKey()`, `computeNanoseconds()`, `computeMilliseconds()`, `ttl()` | **yes** |
 
 Together these make a hit rate measurable, which is the question worth asking of any cache. It is also the one that catches the default-storage trap in production: `InMemoryCacheStorage` dies with the process, so under PHP-FPM a method annotated for an hour's TTL is recomputed on every request — every call reports a miss, and nothing else says so. `doctor` reports the same thing from the configuration, before a request is served.
 
-`computeMilliseconds()` times the callback alone, not the storage write: what a hit saves you is the callback, and a backend's own latency is the backend's to report.
+The duration is carried in nanoseconds as `hrtime()` reported it, with `computeMilliseconds()` converting; it times the callback alone, not the storage write: what a hit saves you is the callback, and a backend's own latency is the backend's to report.
 
 Both are guarded like every other dispatch, and the guard is what makes them free — `CacheableBench` is unchanged with nothing listening (0.732μs, identical to before they existed).
 

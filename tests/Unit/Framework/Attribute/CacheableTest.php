@@ -237,7 +237,10 @@ final class CacheableTest extends TestCase
         self::assertSame('lookup', $misses[0]->method());
         self::assertSame(TestFacadeWithTemplatedKey::class . '::lookup::user:42', $misses[0]->cacheKey());
         self::assertSame(3600, $misses[0]->ttl());
-        self::assertGreaterThanOrEqual(0.0, $misses[0]->computeMilliseconds());
+        // Bounded on both sides. `>= 0` is satisfied by every arithmetic
+        // mistake the conversion could make, so it asserts nothing.
+        self::assertGreaterThan(0, $misses[0]->computeNanoseconds());
+        self::assertLessThan(1000.0, $misses[0]->computeMilliseconds());
 
         self::assertSame($misses[0]->cacheKey(), $hits[0]->cacheKey());
     }

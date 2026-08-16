@@ -150,7 +150,7 @@ trait CacheableTrait
                 static::class,
                 $method,
                 $cacheKey,
-                (float)(hrtime(true) - $startedAt) / 1e6,
+                hrtime(true) - $startedAt,
                 $ttl,
             ));
         }

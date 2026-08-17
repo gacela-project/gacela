@@ -20,8 +20,9 @@ use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
+use Gacela\Framework\Event\Dispatcher\PsrEventDispatcherAdapter;
 use Override;
-
+use Psr\EventDispatcher\EventDispatcherInterface as PsrEventDispatcherInterface;
 use RuntimeException;
 
 use function is_callable;
@@ -609,11 +610,18 @@ final class SetupGacela extends AbstractSetupGacela
      * application made. With any listener registered, the two are composed --
      * see {@see \Gacela\Framework\Event\Dispatcher\CompositeEventDispatcher}.
      *
+     * A `Psr\EventDispatcher\EventDispatcherInterface` is accepted too and
+     * wrapped in {@see \Gacela\Framework\Event\Dispatcher\PsrEventDispatcherAdapter},
+     * so a host framework's own bus can be handed over as it is. Everything
+     * downstream of this line sees one interface.
+     *
      * Takes precedence over `disableEventListeners()`: that switch governs the
      * dispatcher Gacela would *build*, and this is one it does not build.
      */
-    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
+    public function setEventDispatcher(EventDispatcherInterface|PsrEventDispatcherInterface $eventDispatcher): self
     {
+        $eventDispatcher = PsrEventDispatcherAdapter::wrap($eventDispatcher);
+
         if ($eventDispatcher === $this->properties->eventDispatcher) {
             // Handing back the dispatcher Gacela derived for this very setup is
             // not a handover. Recording it would compose it with the listeners

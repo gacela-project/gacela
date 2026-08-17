@@ -218,7 +218,7 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ## 2.3 → 2.4
 
-Five changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; the two opt-in cross-module rules, if you have them enabled; and `addAppConfig()` with a wildcard, if a file in that directory is named after another one with a `-suffix`.
+Six changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; the two opt-in cross-module rules, if you have them enabled; `addAppConfig()` with a wildcard, if a file in that directory is named after another one with a `-suffix`; and `doctor`, if you run it with `--strict` and register a listener against something that is not an event type.
 
 ### 1. A specific listener matches by inheritance
 
@@ -313,6 +313,25 @@ The base layer now excludes any match named after another match plus one or more
 If a file in that list is not an environment layer, rename it so it is not named after another one, or give it its own `addAppConfig()` path. The check is a pass, not a warning: for every project that uses `APP_ENV` or a dimension, this is what correct looks like.
 
 **Run `cache:clear` after deploying this** if you have `enableFileCache()` on. The merged-config cache is a file of *values*, invalidated by the mtimes of the files that produced them — and upgrading Gacela touches none of those, so a warm cache goes on serving the old merge and this change appears not to have happened.
+### 6. `doctor` reports a listener target that no event can be
+
+Only if you register specific listeners, and only a new **warning** — which fails the command under `--strict`, so a CI job running `vendor/bin/gacela doctor --strict` is where you would meet it.
+
+The check used to accept any target that named a real class or interface. It now also asks whether an event could ever match it, against the framework's events *and* your own, and reports a target that is neither an event type nor something a known event extends or implements:
+
+```
+⚠ event listeners
+  App\Billing\InvoiceIssued is not an event type, and no known event extends or
+  implements it -- so nothing can ever match it
+```
+
+Almost always this is the mistake it looks like: a class of your own that is missing `implements GacelaEventInterface`. The registration was accepted, the dispatcher could never match it, and nothing said so before. Adding the interface fixes both the report and the listener.
+
+The other way to meet it is an event of yours that Gacela does not know about, because the class sits outside the paths discovery walks. `vendor/bin/gacela debug:events` lists the events it found — if yours is missing from that listing, widen `appModulePaths` or `setProjectNamespaces()` rather than changing the listener. Nothing is reported when the catalog is empty, which is what keeps a scoped run from calling every target dead.
+
+A target that exists and *can* match is still left alone whether or not this deployment dispatches it: a listener waiting for an event nobody raises is waiting, not broken.
+
+Two additions come with it, neither of which can break anything: `debug:events` lists your own events beside the framework's with a `source` field in `--json`, and `setEventDispatcher()` now also accepts a PSR-14 dispatcher. If you already wrote an adapter around your bus to satisfy Gacela's interface, keep it — it answers `hasListeners()` for itself, which the built-in wrapper cannot.
 
 ---
 

@@ -15,4 +15,13 @@ final class Facade extends AbstractFacade
     {
         return $this->getFactory()->createGreeting();
     }
+
+    public function announce(string $name): void
+    {
+        $events = $this->getFactory()->getEventDispatcher();
+
+        if ($events->hasListeners(GreetedEvent::class)) {
+            $events->dispatch(new GreetedEvent($name));
+        }
+    }
 }

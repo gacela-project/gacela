@@ -168,6 +168,7 @@ final class PreloaderTest extends TestCase
         self::assertArrayHasKey('Gacela\\Framework\\', $prefixes);
         self::assertArrayHasKey('Gacela\\Container\\', $prefixes);
         self::assertArrayHasKey('Psr\\Container\\', $prefixes);
+        self::assertArrayHasKey('Psr\\EventDispatcher\\', $prefixes);
     }
 
     public function test_every_prefix_points_at_a_directory_that_exists(): void
@@ -190,6 +191,7 @@ final class PreloaderTest extends TestCase
             'Gacela\\Framework\\' => $root . '/src/Framework/',
             'Gacela\\Container\\' => $root . '/vendor/gacela-project/container/src/Container/',
             'Psr\\Container\\' => $root . '/vendor/psr/container/src/',
+            'Psr\\EventDispatcher\\' => $root . '/vendor/psr/event-dispatcher/src/',
         ], Preloader::autoloadPrefixes($root));
     }
 
@@ -205,12 +207,14 @@ final class PreloaderTest extends TestCase
 
         mkdir($installed . '/src/Framework', 0o777, true);
         mkdir($vendor . '/psr/container/src', 0o777, true);
+        mkdir($vendor . '/psr/event-dispatcher/src', 0o777, true);
         mkdir($vendor . '/gacela-project/container/src/Container', 0o777, true);
 
         self::assertSame([
             'Gacela\\Framework\\' => $installed . '/src/Framework/',
             'Gacela\\Container\\' => $vendor . '/gacela-project/container/src/Container/',
             'Psr\\Container\\' => $vendor . '/psr/container/src/',
+            'Psr\\EventDispatcher\\' => $vendor . '/psr/event-dispatcher/src/',
         ], Preloader::autoloadPrefixes($installed));
     }
 

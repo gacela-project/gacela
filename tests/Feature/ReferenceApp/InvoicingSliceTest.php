@@ -11,6 +11,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Testing\GacelaTestCase;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\BillingFacade;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Event\InvoiceIssuedEvent;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\CustomerFacade;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain\CustomerDirectory;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain\CustomerProfile;
@@ -26,7 +27,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 use function array_map;
 
 /**
- * The Billing module on its own, with the two modules it depends on replaced.
+ * The Billing module on its own, with its neighbours replaced.
  *
  * This is the test a team writes every day and the reason `bootstrapModule()`
  * exists: one call instead of a bootstrap, three override APIs and the question
@@ -34,6 +35,13 @@ use function array_map;
  * replaced two different ways on purpose -- Notification through its Facade,
  * which the module leaves open for exactly this, and Customer through its
  * Factory, because `CustomerFacade` is `final` and nothing can stand in for it.
+ *
+ * The two are not the same kind of neighbour. Customer is a dependency: Billing
+ * names its Facade and cannot issue an invoice without it. Notification only
+ * *reacts* -- Billing dispatches `InvoiceIssuedEvent` and `gacela.php` wires the
+ * reaction -- so doubling it replaces the module the announcement reaches, not
+ * something Billing asked for. Both are worth doubling, and only one of them is
+ * an edge in the module graph.
  *
  * What makes it a *slice* rather than a bootstrap with doubles is the last two
  * tests: the replaced modules are never built, and module discovery sees one
@@ -67,6 +75,11 @@ final class InvoicingSliceTest extends GacelaTestCase
     /**
      * The whole flow the module is for, with nothing behind it: the same
      * invoice number, tax and total the end-to-end test produces.
+     *
+     * The last assertion is the event arriving: Billing dispatched, the listener
+     * `gacela.php` registered ran, and it reached the double standing in for the
+     * Notification module -- three things a slice has to get right for the
+     * announcement to be observable at all.
      */
     public function test_billing_issues_an_invoice_with_both_neighbours_replaced(): void
     {
@@ -81,7 +94,10 @@ final class InvoicingSliceTest extends GacelaTestCase
         self::assertSame(ReferenceApp::FIXED_TODAY, $invoice->getIssuedOn());
 
         // The double was reached, rather than the module merely not complaining.
+        // It is reached through the event, so this is also the proof that the
+        // announcement survives a slice.
         self::assertSame(['ACME-INV-01001'], $notifications->suppressed());
+        $this->assertEventDispatched(InvoiceIssuedEvent::class);
     }
 
     /**
@@ -163,14 +179,19 @@ final class InvoicingSliceTest extends GacelaTestCase
      * Billing's own boundary, written where Billing's tests are. Reporting
      * reads the ledger, so nothing forbids Billing from reaching it except this
      * -- which is the decision worth stating next to the module.
+     *
+     * Customer and nothing else: Notification sends the mail when an invoice is
+     * issued, and is not in this list. Billing dispatches `InvoiceIssuedEvent`
+     * and `gacela.php` decides who hears it, so the module that reacts is not a
+     * module Billing depends on -- which is the whole claim of the arrangement,
+     * asserted here rather than described.
      */
-    public function test_billing_depends_on_customer_and_notification_and_nothing_else(): void
+    public function test_billing_depends_on_customer_and_nothing_else(): void
     {
         ReferenceApp::bootstrap();
 
         self::assertModuleDependsOnlyOn(BillingFacade::class, [
             CustomerFacade::class,
-            NotificationFacade::class,
         ]);
 
         self::assertModuleDependsOnlyOn(ReportingFacade::class, [

@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Console\Application\Debug;
 
 use Gacela\Console\Application\Debug\EventCatalog;
 use Gacela\Console\Application\Debug\EventInspection;
+use Gacela\Console\Application\Debug\EventSource;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
 use Gacela\Framework\Event\ClassResolver\AbstractGacelaClassResolverEvent;
 use Gacela\Framework\Event\ClassResolver\Cache\ClassNameCacheCachedEvent;
@@ -14,6 +15,7 @@ use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Event\Provider\ProviderRegisteredEvent;
+use GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture\SomethingHappenedEvent;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
@@ -268,6 +270,104 @@ final class EventCatalogTest extends TestCase
     public function test_inspecting_nothing_returns_nothing(): void
     {
         self::assertSame([], (new EventCatalog())->inspect([], [GacelaEventInterface::class => 1], 1));
+    }
+
+    public function test_an_events_source_says_who_declared_it(): void
+    {
+        $inspections = (new EventCatalog())->inspect(
+            [ProviderRegisteredEvent::class],
+            [],
+            0,
+            [SomethingHappenedEvent::class],
+        );
+
+        self::assertSame(EventSource::Framework, $inspections[0]->source);
+        self::assertSame(EventSource::Project, $inspections[1]->source);
+    }
+
+    /**
+     * Written out in full, unlike a framework event's: there is no root to make
+     * it relative to, and the namespace is what tells a reader which of their
+     * modules the event belongs to.
+     */
+    public function test_a_project_event_is_grouped_by_its_own_namespace(): void
+    {
+        $inspections = (new EventCatalog())->inspect([], [], 0, [SomethingHappenedEvent::class]);
+
+        self::assertSame(
+            'GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture',
+            $inspections[0]->group,
+        );
+    }
+
+    /**
+     * Two runs rather than one interleaved list. Ordering by the namespace
+     * alone would scatter a project's events through the framework's, and
+     * "which of these are mine" is the first question a project asks of this
+     * report.
+     */
+    public function test_the_frameworks_events_come_before_the_projects(): void
+    {
+        $inspections = (new EventCatalog())->inspect(
+            // A project namespace sorting before `Provider` on its own.
+            [ProviderRegisteredEvent::class],
+            [],
+            0,
+            [SomethingHappenedEvent::class],
+        );
+
+        self::assertSame([
+            ProviderRegisteredEvent::class,
+            SomethingHappenedEvent::class,
+        ], array_map(
+            static fn (EventInspection $inspection): string => $inspection->className,
+            $inspections,
+        ));
+    }
+
+    /**
+     * The hot path is a property of the framework's own dispatch sites, and the
+     * list of them is written in this class. Nothing a project declares can be
+     * on it.
+     */
+    public function test_a_project_event_is_never_on_the_hot_path(): void
+    {
+        $inspections = (new EventCatalog())->inspect([], [], 0, [SomethingHappenedEvent::class]);
+
+        self::assertFalse($inspections[0]->isHotPath);
+    }
+
+    /**
+     * The listener matching does not care where an event came from, so neither
+     * does the report: a project event registered against by name, by a parent
+     * or by the interface reads exactly like a framework one.
+     */
+    public function test_a_listener_target_covers_a_project_event_the_same_way(): void
+    {
+        $inspections = (new EventCatalog())->inspect(
+            [],
+            [GacelaEventInterface::class => 1, SomethingHappenedEvent::class => 2],
+            0,
+            [SomethingHappenedEvent::class],
+        );
+
+        self::assertSame([
+            GacelaEventInterface::class => 1,
+            SomethingHappenedEvent::class => 2,
+        ], $inspections[0]->matchedTargets);
+        self::assertTrue($inspections[0]->isWatched());
+    }
+
+    /**
+     * `eventClasses()` is what `docs/events.md` is compared against in both
+     * directions. A project's events must not leak into it: the page could then
+     * neither be complete nor stay right.
+     */
+    public function test_the_shipped_catalog_holds_only_the_frameworks_own_events(): void
+    {
+        foreach ((new EventCatalog())->eventClasses() as $class) {
+            self::assertStringStartsWith('Gacela\Framework\Event\\', $class);
+        }
     }
 
     /**

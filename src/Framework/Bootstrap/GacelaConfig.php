@@ -17,10 +17,12 @@ use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Dto\Schema\MalformedDtoSchemaException;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\PsrEventDispatcherAdapter;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use InvalidArgumentException;
+use Psr\EventDispatcher\EventDispatcherInterface as PsrEventDispatcherInterface;
 
 use function array_key_exists;
 use function is_array;
@@ -531,9 +533,20 @@ final class GacelaConfig
     }
 
     /**
-     * Replace the dispatcher entirely -- to bridge Gacela's events onto a PSR-14
-     * bus, or to answer `hasListeners()` yourself so the framework skips
-     * allocating the events you do not want.
+     * Replace the dispatcher entirely -- to route Gacela's events onto the bus
+     * the application already has, or to answer `hasListeners()` yourself so
+     * the framework skips allocating the events you do not want.
+     *
+     * Either interface is accepted:
+     *
+     * - Gacela's `EventDispatcherInterface`, which also answers `hasListeners()`
+     *   and so decides for itself which events are worth allocating;
+     * - any `Psr\EventDispatcher\EventDispatcherInterface` -- Symfony's,
+     *   Laravel's, whatever a host framework installed -- which is wrapped in
+     *   {@see \Gacela\Framework\Event\Dispatcher\PsrEventDispatcherAdapter}.
+     *   PSR-14 cannot be asked what it listens to, so that adapter answers
+     *   `hasListeners()` with true and every dispatch site allocates its event;
+     *   the price is paid only by an application that installed a bus.
      *
      * `SetupGacela::setEventDispatcher()` has always accepted one; this is the
      * way to reach it from `Gacela::bootstrap()`, whose closure is handed a
@@ -544,9 +557,9 @@ final class GacelaConfig
      * application that hands over a dispatcher is the thing deciding what runs,
      * so decline in `hasListeners()` rather than reaching for the switch.
      */
-    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
+    public function setEventDispatcher(EventDispatcherInterface|PsrEventDispatcherInterface $eventDispatcher): self
     {
-        $this->eventDispatcher = $eventDispatcher;
+        $this->eventDispatcher = PsrEventDispatcherAdapter::wrap($eventDispatcher);
 
         return $this;
     }

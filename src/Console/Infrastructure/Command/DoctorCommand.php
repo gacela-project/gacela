@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Infrastructure\Command;
 
+use Gacela\Console\Application\Debug\EventCatalog;
 use Gacela\Console\Application\Doctor\Check\CacheableStorageCheck;
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
@@ -300,6 +301,7 @@ final class DoctorCommand extends Command
                 $this->specificListenerTargets(),
                 $this->genericListenerCount(),
                 $this->eventDispatcherCanBeBuilt(),
+                $this->knownEventClasses(),
             ),
             new ServiceExtensionTargetCheck(
                 $modules,
@@ -350,6 +352,29 @@ final class DoctorCommand extends Command
         $targets = array_keys($setup->getSpecificListeners() ?? []);
 
         return $targets;
+    }
+
+    /**
+     * The events a listener target can be judged against: the framework's
+     * catalog and the ones this project declares.
+     *
+     * Skipped entirely when no target is registered. The project half is a walk
+     * of the application's files, and `doctor` should not pay for it to answer a
+     * question nobody asked -- the check returns early on an empty target list
+     * anyway.
+     *
+     * @return list<class-string>
+     */
+    private function knownEventClasses(): array
+    {
+        if ($this->specificListenerTargets() === []) {
+            return [];
+        }
+
+        return [
+            ...(new EventCatalog())->eventClasses(),
+            ...$this->getFacade()->findProjectEventClasses(),
+        ];
     }
 
     /**

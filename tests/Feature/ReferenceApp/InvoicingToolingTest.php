@@ -379,17 +379,48 @@ final class InvoicingToolingTest extends TestCase
         $display = $tester->getDisplay();
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
-        self::assertStringNotContainsString('Nothing listens to any Gacela event.', $display);
+        self::assertStringNotContainsString('Nothing listens to any event', $display);
         // One registration against the abstract parent, so all four resolver
         // events are covered by it and the target is named on each row.
         self::assertStringContainsString('1 listener via AbstractGacelaClassResolverEvent', $display);
-        self::assertStringContainsString('4 with listeners', $display);
+        // Those four and this application's own InvoiceIssuedEvent, which the
+        // command reports on the same terms as the framework's -- the report
+        // would otherwise contradict the very use it exists to support.
+        self::assertStringContainsString('5 with listeners', $display);
+        self::assertStringContainsString('1 listener via InvoiceIssuedEvent', $display);
+        self::assertStringContainsString('1 declared by this project', $display);
+    }
+
+    /**
+     * The module-to-module recipe, as the tooling sees it: Billing's event, in
+     * Billing's namespace, marked as this application's own and carrying the
+     * listener that wires it to Notification.
+     */
+    public function test_debug_events_lists_the_applications_own_event(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DebugEventsCommand(), ['filter' => 'InvoiceIssued']);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
+        self::assertStringContainsString('InvoiceIssuedEvent', $display);
+        self::assertStringContainsString('project', $display);
+        self::assertStringContainsString(
+            'GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Event',
+            $display,
+        );
     }
 
     /**
      * The other half of #887: `doctor`'s event-listener check reported "no
      * specific listeners registered" for an application whose `gacela.php`
      * registers one -- and could therefore never judge its target either.
+     *
+     * Two targets now: a framework event and one of this application's own. The
+     * second is the case the check needs the project's catalog for -- a listener
+     * on a class that forgot `implements GacelaEventInterface` can never fire,
+     * and a listener on one that has it must not be called dead.
      */
     public function test_doctor_reports_the_listener_registered_in_the_gacela_file(): void
     {
@@ -399,8 +430,9 @@ final class InvoicingToolingTest extends TestCase
         $display = $tester->getDisplay();
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
-        self::assertStringContainsString('1 listener target(s) name a known event type', $display);
+        self::assertStringContainsString('2 listener target(s) name a known event type', $display);
         self::assertStringNotContainsString('no specific listeners registered', $display);
+        self::assertStringNotContainsString('nothing can ever match it', $display);
     }
 
     /**

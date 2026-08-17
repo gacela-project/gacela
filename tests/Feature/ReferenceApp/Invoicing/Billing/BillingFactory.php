@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\ReferenceApp\Invoicing\Billing;
 
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Plugins\PluginStack;
-use Gacela\Framework\ServiceResolver\ServiceMap;
-use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\CountryRegistry;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceIssuer;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceNumbering;
@@ -15,26 +14,23 @@ use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceRepository;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Tax\TaxCalculatorInterface;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Validation\InvoiceValidatorInterface;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\CustomerFacade;
-use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\NotificationFacade;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Clock\ClockInterface;
 
 /**
- * Two ways of reaching another module sit side by side here on purpose.
+ * Two ways of depending on something else sit side by side here on purpose.
  *
  * The Customer facade comes through the Provider, because Billing depends on
  * customers for its whole reason to exist and that dependency is worth writing
- * down. The Notification facade comes through `#[ServiceMap]`, which is the
- * shorter path for the one call that only announces what already happened --
- * declared as an attribute rather than a `@method` docblock, so a rename moves
- * it and `migrate:service-map` has nothing left to report.
+ * down. The event dispatcher comes through the Provider as well -- it is a
+ * dependency like any other, which is the whole point of the arrangement: no
+ * trait, no static call, and a test can hand this Factory a dispatcher of its
+ * own. What Billing announces through it reaches whoever `gacela.php` says, and
+ * this module never learns who that is.
  *
  * @extends AbstractFactory<BillingConfig>
  */
-#[ServiceMap(method: 'getNotificationFacade', className: NotificationFacade::class)]
 final class BillingFactory extends AbstractFactory
 {
-    use ServiceResolverAwareTrait;
-
     public function __construct(
         private readonly ClockInterface $clock,
     ) {
@@ -42,9 +38,6 @@ final class BillingFactory extends AbstractFactory
 
     public function createInvoiceIssuer(): InvoiceIssuer
     {
-        /** @var NotificationFacade $notifications */
-        $notifications = $this->getNotificationFacade();
-
         return new InvoiceIssuer(
             $this->getInvoiceRepository(),
             $this->getInvoiceNumbering(),
@@ -52,11 +45,21 @@ final class BillingFactory extends AbstractFactory
             $this->getValidators(),
             $this->getCountryRegistry(),
             $this->getCustomerFacade(),
-            $notifications,
+            $this->getEventDispatcher(),
             $this->clock,
             $this->getNumberPrefix(),
             $this->getConfig()->currency(),
         );
+    }
+
+    /**
+     * The dispatcher the application is running with, asked for by its
+     * interface. Whatever `setEventDispatcher()` installed is what arrives
+     * here -- including a host framework's own PSR-14 bus.
+     */
+    public function getEventDispatcher(): EventDispatcherInterface
+    {
+        return $this->getProvidedDependency(EventDispatcherInterface::class);
     }
 
     public function getInvoiceRepository(): InvoiceRepository

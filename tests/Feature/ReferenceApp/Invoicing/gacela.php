@@ -7,6 +7,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Event\ClassResolver\AbstractGacelaClassResolverEvent;
+use Gacela\Framework\Gacela;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\BillingProvider;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\CountryRegistry;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceNumbering;
@@ -16,11 +17,13 @@ use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Tax\TaxCalculatorIn
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Tax\TaxRateTable;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Validation\NonEmptyReferenceValidator;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Validation\PositiveAmountValidator;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Event\InvoiceIssuedEvent;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Health\LedgerHealthCheck;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain\CustomerProfile;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\Channel\EmailChannel;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\Channel\NotificationChannelInterface;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Infrastructure\ResolverActivityLog;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\NotificationFacade;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\NotificationProvider;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Payment\AbstractGateway;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Payment\Domain\AttemptId;
@@ -273,6 +276,30 @@ return static function (GacelaConfig $config): void {
         // Nothing from this file is captured: the log is process-wide, like the
         // resolver it watches.
         static fn (AbstractGacelaClassResolverEvent $event) => ResolverActivityLog::record($event),
+    );
+
+    // ------------------------------------------------------------------
+    // What reacts to what
+    // ------------------------------------------------------------------
+
+    // Billing announces that an invoice exists; Notification sends the mail.
+    // This line is the only place both modules are named, which is what lets
+    // `Billing` be written without knowing `Notification` exists -- `debug:graph`
+    // draws no edge between them, and the analysers agree.
+    //
+    // A second reaction -- Reporting updating a projection, an audit log -- is
+    // another registration here and no change to Billing at all.
+    //
+    // Resolved through the locator rather than constructed: that is the path a
+    // module double travels, so a test that replaces the Notification module
+    // replaces the thing this listener reaches.
+    $config->registerSpecificListener(
+        InvoiceIssuedEvent::class,
+        static function (InvoiceIssuedEvent $event): void {
+            /** @var NotificationFacade $notifications */
+            $notifications = Gacela::getRequired(NotificationFacade::class);
+            $notifications->onInvoiceIssued($event);
+        },
     );
 
     $config->addHealthCheck(LedgerHealthCheck::class);

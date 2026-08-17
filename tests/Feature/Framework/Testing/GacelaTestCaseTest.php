@@ -6,7 +6,9 @@ namespace GacelaTest\Feature\Framework\Testing;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
 use Gacela\Framework\Event\Container\BindingRegisteredEvent;
+use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Testing\GacelaTestCase;
@@ -201,6 +203,88 @@ final class GacelaTestCaseTest extends GacelaTestCase
         self::assertTrue($seen);
         self::assertSame('yes', Config::getInstance()->getString('from-closure'));
         self::assertNotSame([], $this->recordedGacelaEvents());
+    }
+
+    public function test_assert_event_dispatched_passes_for_a_framework_event(): void
+    {
+        $this->bootstrapGacela(__DIR__);
+
+        $this->assertEventDispatched(GacelaBootstrapFinishedEvent::class);
+    }
+
+    /**
+     * The point of the assertion: an event the *application* dispatched, through
+     * the dispatcher its module was given. Nothing about the recording is
+     * framework-specific, and a test of a project's own events should not have
+     * to build its own listener to see them.
+     */
+    public function test_assert_event_dispatched_passes_for_a_project_event(): void
+    {
+        $this->bootstrapGacela(__DIR__);
+
+        (new Module\Facade())->announce('Ada');
+
+        $this->assertEventDispatched(Module\GreetedEvent::class);
+    }
+
+    /**
+     * The same inheritance rule the dispatcher matches by, so an assertion can
+     * name a family: `GacelaEventInterface::class` is every event there is.
+     */
+    public function test_assert_event_dispatched_matches_by_inheritance(): void
+    {
+        $this->bootstrapGacela(__DIR__);
+
+        (new Module\Facade())->announce('Ada');
+
+        $this->assertEventDispatched(GacelaEventInterface::class);
+    }
+
+    public function test_assert_event_dispatched_fails_naming_the_event_that_never_arrived(): void
+    {
+        $this->bootstrapGacela(__DIR__);
+
+        $message = $this->messageFromFailedAssertion(
+            fn (): mixed => $this->assertEventDispatched(Module\GreetedEvent::class),
+        );
+
+        self::assertStringContainsString(Module\GreetedEvent::class, $message);
+        // And what did arrive, which is usually where the answer is: a listener
+        // wired to the wrong class, or a flow that stopped earlier than the
+        // test assumed.
+        self::assertStringContainsString(GacelaBootstrapFinishedEvent::class, $message);
+        self::assertStringNotContainsString('No Gacela events were recorded', $message);
+    }
+
+    /**
+     * Same guard as the other two assertions: a test that bootstrapped Gacela
+     * itself records nothing, and must be told that rather than that its event
+     * did not happen.
+     */
+    public function test_assert_event_dispatched_names_the_missing_recording_first(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $message = $this->messageFromFailedAssertion(
+            fn (): mixed => $this->assertEventDispatched(GacelaBootstrapFinishedEvent::class),
+        );
+
+        self::assertStringContainsString('No Gacela events were recorded', $message);
+        self::assertStringContainsString('bootstrapGacela', $message);
+    }
+
+    public function test_recorded_events_of_sees_a_project_event(): void
+    {
+        $this->bootstrapGacela(__DIR__);
+
+        (new Module\Facade())->announce('Grace');
+
+        $greeted = $this->recordedGacelaEventsOf(Module\GreetedEvent::class);
+
+        self::assertCount(1, $greeted);
+        self::assertSame('Grace', $greeted[0]->name());
     }
 
     /**

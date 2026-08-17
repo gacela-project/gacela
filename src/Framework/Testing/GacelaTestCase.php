@@ -25,6 +25,7 @@ use function array_map;
 use function array_values;
 use function class_exists;
 use function dirname;
+use function implode;
 use function interface_exists;
 use function is_object;
 use function is_string;
@@ -210,6 +211,40 @@ abstract class GacelaTestCase extends TestCase
         return array_values(array_filter(
             $this->recordedGacelaEvents,
             static fn (GacelaEventInterface $event): bool => $event instanceof $eventClass,
+        ));
+    }
+
+    /**
+     * Assert that an event of the given class was dispatched since the last
+     * bootstrap.
+     *
+     * Works for the events the application dispatches as readily as for the
+     * framework's own: `bootstrapGacela()` registers a generic listener, and a
+     * project event goes through the same dispatcher.
+     *
+     * ```php
+     * $this->bootstrapGacela(__DIR__);
+     *
+     * (new BillingFacade())->issueInvoice('acme', 10_000);
+     *
+     * $this->assertEventDispatched(InvoiceIssuedEvent::class);
+     * ```
+     *
+     * Matched by inheritance, the way `registerSpecificListener()` matches, so
+     * naming a parent class or an interface asserts about the whole family
+     * below it. To assert on a payload, read the events instead:
+     * {@see recordedGacelaEventsOf()} returns them typed and in dispatch order.
+     *
+     * @param class-string<GacelaEventInterface> $eventClass
+     */
+    protected function assertEventDispatched(string $eventClass): void
+    {
+        $this->assertGacelaEventsAreBeingRecorded();
+
+        self::assertNotSame([], $this->recordedGacelaEventsOf($eventClass), sprintf(
+            'No "%s" was dispatched. Dispatched: %s.',
+            $eventClass,
+            $this->dispatchedClassList(),
         ));
     }
 
@@ -483,5 +518,27 @@ abstract class GacelaTestCase extends TestCase
             MESSAGE;
 
         self::assertNotSame([], $this->recordedGacelaEvents, $message);
+    }
+
+    /**
+     * The distinct event classes recorded, in dispatch order.
+     *
+     * Named in the failure message because the useful answer to "my event was
+     * not dispatched" is usually another event that was -- a listener wired to
+     * the wrong class, or a flow that stopped earlier than the test assumed.
+     * Distinct, because the resolver events alone would otherwise fill the
+     * message hundreds of lines deep.
+     */
+    private function dispatchedClassList(): string
+    {
+        $classes = [];
+
+        foreach ($this->recordedGacelaEvents as $event) {
+            // Keyed by the name and holding it: the key is what makes the list
+            // distinct, the value is what gets printed.
+            $classes[$event::class] = $event::class;
+        }
+
+        return $classes === [] ? 'nothing' : implode(', ', $classes);
     }
 }

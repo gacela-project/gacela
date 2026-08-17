@@ -9,6 +9,8 @@ use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Event\Provider\ProviderRegisteredEvent;
 use Gacela\Framework\Exception\PluginStackException;
@@ -174,6 +176,7 @@ abstract class AbstractFactory
     private function createContainerWithProvidedDependencies(): Container
     {
         $container = $this->appContainer()->createScope();
+        $this->provideEventDispatcher($container);
         $this->scheduleAppWideExtensions($container);
 
         $resolver = (new ProviderResolver())->resolve($this);
@@ -198,6 +201,42 @@ abstract class AbstractFactory
         self::$providerless[static::class] = $resolver === null;
 
         return $container;
+    }
+
+    /**
+     * The event dispatcher, in the one place a module reads its dependencies
+     * from.
+     *
+     * This is what makes a project's own events ordinary: a Factory writes
+     * `getProvidedDependency(EventDispatcherInterface::class)` and dispatches
+     * through the same object the framework does -- no trait, no static
+     * provider, and no second event system beside Gacela's.
+     *
+     * On the module scope rather than on the application container, because the
+     * scope is where *provided dependencies* live. The application container is
+     * what `debug:container` and `validate:config` report, and it should
+     * describe the application: a framework service registered there would
+     * appear in every project's binding report, and would stop `debug:container`
+     * from ever saying "Container is empty" -- which is a diagnostic, and would
+     * be answering about Gacela rather than about the reader's wiring.
+     *
+     * Skipped when anything already provides the id, so an application that
+     * binds its own dispatcher app-wide keeps it; registered before the module's
+     * Provider runs, so a Provider registering one for its own module wins too.
+     * Resolved through {@see EventDispatcherProvider} on every `get()` rather
+     * than captured here, so a scope built early never hands out a dispatcher
+     * the setup has since replaced.
+     */
+    private function provideEventDispatcher(Container $scope): void
+    {
+        if ($scope->provides(EventDispatcherInterface::class)) {
+            return;
+        }
+
+        $scope->set(
+            EventDispatcherInterface::class,
+            $scope->factory(static fn (): EventDispatcherInterface => EventDispatcherProvider::get()),
+        );
     }
 
     /**

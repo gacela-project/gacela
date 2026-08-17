@@ -11,8 +11,12 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
+use Gacela\Framework\Event\Dispatcher\Psr14EventDispatcher;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface as PsrEventDispatcherInterface;
+
+use function array_map;
 
 /**
  * `docs/events.md` documents replacing the dispatcher — "`SetupGacela::setEventDispatcher()`
@@ -132,6 +136,70 @@ final class CustomDispatcherFromBootstrapTest extends TestCase
         self::assertSame(2, $calls, 'once at bootstrap and once here -- any more is a listener registered twice');
     }
 
+    /**
+     * The host's own bus, handed over as-is. A Symfony or Laravel application
+     * has a PSR-14 dispatcher and no reason to write an adapter for it, so the
+     * parameter accepts one and Gacela wraps it.
+     */
+    public function test_a_psr14_dispatcher_is_accepted_and_receives_the_events(): void
+    {
+        $bus = new RecordingPsr14Bus();
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use ($bus): void {
+            $config->setEventDispatcher($bus);
+        });
+
+        self::assertContains(GacelaBootstrapFinishedEvent::class, $bus->receivedClasses());
+    }
+
+    /**
+     * Same composition as a Gacela dispatcher gets, because by the time the
+     * setup holds it there is no difference left: the wrapping happens at the
+     * setter, so everything downstream sees one `EventDispatcherInterface`.
+     */
+    public function test_a_psr14_dispatcher_composes_with_the_listeners_registered_beside_it(): void
+    {
+        $bus = new RecordingPsr14Bus();
+        $calls = 0;
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use ($bus, &$calls): void {
+            $config->setEventDispatcher($bus);
+            $config->registerSpecificListener(
+                GacelaBootstrapFinishedEvent::class,
+                static function () use (&$calls): void {
+                    ++$calls;
+                },
+            );
+        });
+
+        self::assertSame(1, $calls, 'the listener registered beside the bus never ran');
+        self::assertContains(GacelaBootstrapFinishedEvent::class, $bus->receivedClasses());
+    }
+
+    /**
+     * The other direction: a library that type-hints PSR-14 can be handed the
+     * dispatcher this application configured, listeners and all.
+     */
+    public function test_the_configured_dispatcher_can_be_handed_to_a_psr14_consumer(): void
+    {
+        $calls = 0;
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$calls): void {
+            $config->registerSpecificListener(
+                GacelaBootstrapFinishedEvent::class,
+                static function () use (&$calls): void {
+                    ++$calls;
+                },
+            );
+        });
+
+        $psr = new Psr14EventDispatcher(EventDispatcherProvider::get());
+        $event = new GacelaBootstrapFinishedEvent(1.0);
+
+        self::assertSame($event, $psr->dispatch($event));
+        self::assertSame(2, $calls, 'once at bootstrap, once through the PSR-14 view of the same dispatcher');
+    }
+
     private function bootstrapWith(callable $setup): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($setup): void {
@@ -160,5 +228,30 @@ final class CustomDispatcherFromBootstrapTest extends TestCase
                 ++$this->dispatched;
             }
         };
+    }
+}
+
+/**
+ * The shape a host application already has: PSR-14 and nothing else. No
+ * `hasListeners()`, because PSR-14 has no such method to implement.
+ */
+final class RecordingPsr14Bus implements PsrEventDispatcherInterface
+{
+    /** @var list<object> */
+    private array $received = [];
+
+    public function dispatch(object $event): object
+    {
+        $this->received[] = $event;
+
+        return $event;
+    }
+
+    /**
+     * @return list<class-string>
+     */
+    public function receivedClasses(): array
+    {
+        return array_map(static fn (object $event): string => $event::class, $this->received);
     }
 }

@@ -6,10 +6,12 @@ namespace Gacela\Console\Application\Doctor\Check;
 
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
+use Gacela\Framework\Event\GacelaEventInterface;
 
 use function class_exists;
 use function count;
 use function interface_exists;
+use function is_a;
 use function sprintf;
 
 /**
@@ -18,11 +20,19 @@ use function sprintf;
  *
  * The dispatcher matches by inheritance, so a parent class or an interface is a
  * legitimate target: it covers the whole family below it. What is left is the
- * name that is not a type at all -- a typo, or a class that moved. It is
- * accepted at bootstrap and simply never runs.
+ * name that is not a type at all -- a typo, or a class that moved -- and the
+ * name that is a type no event can ever be. Both are accepted at bootstrap and
+ * simply never run.
  *
- * Only names that can never equal, extend or implement a dispatched event are
- * reported. A type that exists is left alone whether or not it is ever
+ * The second case is what a project's own events made worth reporting. An event
+ * of Gacela's is a `GacelaEventInterface` by construction; an event of yours is
+ * one because you wrote `implements GacelaEventInterface`, and forgetting it
+ * leaves a class that looks exactly like an event, a registration that is
+ * accepted, and a listener that never fires. That is why the check is given the
+ * catalog -- the framework's events *and* the project's: a target neither an
+ * event type itself nor a supertype of any known event cannot match a dispatch.
+ *
+ * A type that exists and *can* match is left alone whether or not it is ever
  * dispatched: a listener for an event this deployment happens not to raise is
  * waiting, not broken.
  */
@@ -34,11 +44,16 @@ final class EventListenerTargetCheck implements HealthCheck
      *                                           they carry no target, so they are invisible to the checks below
      * @param bool         $dispatcherEnabled    false when `disableEventListeners()` was called, which
      *                                           builds no dispatcher at all. Defaults to Gacela's own default
+     * @param list<class-string> $knownEventClasses the catalog to judge a target against: the framework's
+     *                                           events and the project's. Empty means "do not judge" --
+     *                                           `doctor` skips the project scan when nothing is registered,
+     *                                           and a check with no catalog must not call every target dead
      */
     public function __construct(
         private readonly array $listenerTargets,
         private readonly int $genericListenerCount = 0,
         private readonly bool $dispatcherEnabled = true,
+        private readonly array $knownEventClasses = [],
     ) {
     }
 
@@ -98,7 +113,7 @@ final class EventListenerTargetCheck implements HealthCheck
             return 'remove disableEventListeners() to let them run, or drop the registrations -- nothing here can tell a deliberate kill switch from a forgotten one';
         }
 
-        return 'a specific listener runs for the event class named and everything below it -- pass `EventClass::class` rather than a hand-written string, so a rename cannot leave it behind';
+        return 'a specific listener runs for the event class named and everything below it -- pass `EventClass::class` rather than a hand-written string, so a rename cannot leave it behind, and check that an event of your own implements GacelaEventInterface (`debug:events` lists the ones Gacela found)';
     }
 
     private function whyItCanNeverFire(string $target): ?string
@@ -107,6 +122,25 @@ final class EventListenerTargetCheck implements HealthCheck
             return 'names no class or interface';
         }
 
-        return null;
+        if (is_a($target, GacelaEventInterface::class, true)) {
+            // An event type. Whether anything dispatches it is another
+            // question, and not one a health check should answer: a listener
+            // for an event this deployment does not raise is waiting.
+            return null;
+        }
+
+        if ($this->knownEventClasses === []) {
+            return null;
+        }
+
+        foreach ($this->knownEventClasses as $eventClass) {
+            if (is_a($eventClass, $target, true)) {
+                // A marker interface or a base class that events do implement,
+                // without being an event type itself. It matches, so it fires.
+                return null;
+            }
+        }
+
+        return 'is not an event type, and no known event extends or implements it -- so nothing can ever match it';
     }
 }

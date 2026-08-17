@@ -6,7 +6,7 @@ namespace Gacela\Framework\Bootstrap\Setup;
 
 use Closure;
 use Gacela\Framework\Bootstrap\SetupGacela;
-use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 
 /**
  * Merges two SetupGacela instances together with conditional logic based on change tracking.
@@ -72,28 +72,37 @@ final class SetupMerger
         }
     }
 
+    /**
+     * The listeners are carried onto the merged setup the way every other
+     * property here is, and the dispatcher is *derived* from it afterwards --
+     * one source of truth, and the one `doctor` and `debug:events` read.
+     *
+     * They used to be registered straight onto the dispatcher instead. The
+     * listener ran and nothing recorded it, so both commands answered "nothing
+     * is listening" about a listener that was firing (#887). Registering as we
+     * go *and* recording is the trap: the dispatcher is rebuilt from the setup,
+     * so anything registered by hand as well arrives twice.
+     *
+     * The handover is carried separately from the listeners, because it answers
+     * a different question -- what delivers the events, rather than what runs.
+     * A setup that brought listeners used to have a fresh
+     * `ConfigurableEventDispatcher` installed to hold them, and since that class
+     * is `final` an application's own dispatcher could never be the one kept:
+     * `setEventDispatcher()` plus one listener in `gacela.php` dropped the
+     * application's bus (#888).
+     */
     private function mergeEventDispatcher(SetupGacela $other): void
     {
         if ($other->canCreateEventDispatcher()) {
-            if ($this->original->getEventDispatcher() instanceof ConfigurableEventDispatcher) {
-                $eventDispatcher = $this->original->getEventDispatcher();
-            } else {
-                $eventDispatcher = new ConfigurableEventDispatcher();
-            }
-
-            /** @var ConfigurableEventDispatcher $eventDispatcher */
-            $eventDispatcher->registerGenericListeners($other->getGenericListeners() ?? []);
-
-            foreach ($other->getSpecificListeners() ?? [] as $event => $listeners) {
-                foreach ($listeners as $callable) {
-                    $eventDispatcher->registerSpecificListener($event, $callable);
-                }
-            }
-        } else {
-            $eventDispatcher = $this->original->getEventDispatcher();
+            $this->original->mergeGenericListeners($other->getGenericListeners() ?? []);
+            $this->original->mergeSpecificListeners($other->getSpecificListeners() ?? []);
         }
 
-        $this->original->setEventDispatcher($eventDispatcher);
+        $suppliedByOther = $other->getSuppliedEventDispatcher();
+
+        if ($suppliedByOther instanceof EventDispatcherInterface) {
+            $this->original->setEventDispatcher($suppliedByOther);
+        }
     }
 
     private function mergeServicesToExtend(SetupGacela $other): void

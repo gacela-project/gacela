@@ -97,20 +97,21 @@ final class PluginXml
      * writes none -- the same default `CrossModuleMethodCallRule` carries on the
      * PHPStan side, from the same constant, so the two hosts cannot drift.
      *
-     * The *elements* are counted rather than their values, which is what makes
-     * "not configured" and "configured with nothing" different answers: a lone
-     * `<publicApiSegment/>` turns the convention off and leaves `#[PublicApi]` as
-     * the only way to export a class. Filtering on the values instead would make
-     * opting out impossible to write.
+     * Whether an element was *written* decides, not what it says -- which is what
+     * makes "not configured" and "configured with nothing" different answers: a
+     * lone `<publicApiSegment/>` turns the convention off and leaves
+     * `#[PublicApi]` as the only way to export a class. Reading the values first
+     * would collapse the two, since {@see childValues()} drops the empty one, and
+     * opting out would have no spelling at all.
+     *
+     * {@see element()} is what tells them apart, for the same reason it does
+     * there: an absent child reads as an empty element rather than as null.
      *
      * @return list<string>
      */
     public static function publicApiSegments(SimpleXMLElement $element): array
     {
-        /** @var iterable<SimpleXMLElement> $nodes reading a child by name yields the elements with it */
-        $nodes = $element->publicApiSegment;
-
-        if (count($nodes) === 0) {
+        if (!self::element($element->publicApiSegment) instanceof SimpleXMLElement) {
             return PublicApiSurface::DEFAULT_SEGMENTS;
         }
 

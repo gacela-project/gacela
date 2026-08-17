@@ -8,6 +8,9 @@ use Gacela\Framework\Attribute\PublicApi;
 use ReflectionClass;
 use Throwable;
 
+use function class_exists;
+use function interface_exists;
+
 /**
  * What a module publishes, read the same way for every host.
  *
@@ -42,13 +45,24 @@ final class PublicApiSurface
      *
      * False for anything that cannot be loaded. A rule that crashed on an
      * unresolvable name would fail the run rather than report a boundary, and the
-     * analysers already treat "cannot tell" as "no finding" -- so `Throwable`
-     * rather than `ReflectionException`, since the failure can also come out of
-     * an autoloader rather than out of reflection.
+     * analysers already treat "cannot tell" as "no finding".
+     *
+     * Both guards are needed and neither is redundant. What arrives here is a
+     * name a host resolved or a path this scanner turned into one, never a proven
+     * class-string, so existence is asked first -- `interface_exists()` beside
+     * `class_exists()` because an interface is not a class to either function,
+     * and an interface is exactly the kind of thing a module publishes. The
+     * `catch` then covers the rest: autoloading runs arbitrary project code, and
+     * `Throwable` rather than `ReflectionException` because what it throws is the
+     * project's business.
      */
     public static function isDeclaredOn(string $class): bool
     {
         try {
+            if (!class_exists($class) && !interface_exists($class)) {
+                return false;
+            }
+
             $reflection = new ReflectionClass($class);
         } catch (Throwable) {
             return false;

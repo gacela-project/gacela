@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\StaticAnalysis;
 
+use function array_pop;
 use function array_slice;
 use function count;
 use function explode;
@@ -99,7 +100,11 @@ final class ModuleBoundary
             return false;
         }
 
-        return PublicApiSurface::isDeclaredOn($class) || $this->isUnderAPublicSegment($class);
+        if (PublicApiSurface::isDeclaredOn($class)) {
+            return true;
+        }
+
+        return $this->isUnderAPublicSegment($class);
     }
 
     /**

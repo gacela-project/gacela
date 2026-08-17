@@ -92,7 +92,11 @@ final class ModulePublicApiScanner
 
         /** @var SplFileInfo $fileInfo */
         foreach ($iterator as $fileInfo) {
-            if (!$fileInfo->isFile() || $fileInfo->getExtension() !== 'php') {
+            if (!$fileInfo->isFile()) {
+                continue;
+            }
+
+            if ($fileInfo->getExtension() !== 'php') {
                 continue;
             }
 

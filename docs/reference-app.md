@@ -22,10 +22,10 @@ The application root is
 | Module | What it is, and what it shows |
 |---|---|
 | `Customer` | The customer directory. A `#[Cacheable]` lookup with a per-reference key, and a shape declared with `declareDtoSchema()` whose generated class is committed. |
-| `Billing` | Issues invoices. Reaches `Customer` through `#[Provides]` + `getProvidedDependency()` and `Notification` through a `#[ServiceMap]` accessor; runs a plugin stack of tax rules and a tagged set of validators; reads typed configuration against a declared schema. |
+| `Billing` | Issues invoices. Reaches `Customer` through `#[Provides]` + `getProvidedDependency()`, and announces `Billing\Event\InvoiceIssuedEvent` through the injected event dispatcher without naming whoever reacts; runs a plugin stack of tax rules and a tagged set of validators; reads typed configuration against a declared schema. |
 | `Payment` | Takes the money. Declares a fifth resolvable kind, `Gateway`; dispatches by key through a handler registry; gets a stricter retry policy than the rest of the application through a contextual binding. Its four pillars carry the names it arrived with — `PaymentApi`, `PaymentBuilder`, `PaymentSettings`, `PaymentDependencyProvider` — which is what `addSuffixTypeFacade()` and its three siblings are for. |
-| `Notification` | Delivers. A plugin stack of channels, a header list the application extends with `extendService()`, and the resolver-event listener registered in `gacela.php`. |
-| `Reporting` | Reads. Billing's declared shapes and Customer's names, through their facades and nothing else — the module the boundary rules are written about. |
+| `Notification` | Delivers, and reacts. It handles Billing's `InvoiceIssuedEvent` — the subscriber names the event, the publisher names nobody — behind a plugin stack of channels, a header list the application extends with `extendService()`, and the resolver-event listener registered in `gacela.php`. |
+| `Reporting` | Reads. Billing's declared shapes through `#[Provides]` and Customer's names through a `#[ServiceMap]` accessor, and nothing else — the module the boundary rules are written about. |
 
 Beside them, `Shared/` is a shared kernel rather than a module: a clock the host
 supplies, a retry policy, the invokables that extend the configuration, and the
@@ -112,9 +112,15 @@ fixed. The loop:
 
 The module graph is built from `use` imports at module granularity, so
 `module-rules.json` can say that nothing may depend on `Reporting` and cannot
-say that Billing may reach only Notification's *facade*. That second rule is the
+say that Reporting may reach only Billing's *facade*. That second rule is the
 analysers' job, and it is why `CrossModuleViaFacadeRule` and its method-call half
 are both enabled in the configurations above.
+
+It also cannot say anything about `Notification` reacting to `Billing`. An event
+leaves no import behind in the module that dispatched it, so no graph and no rule
+can tell you who is listening — `debug:events` can, which is the report that
+answers it, and the registration in `gacela.php` is the one place it is written
+down.
 
 And the two generated shapes are excluded from both analysers. `dto:generate`
 writes a `@psalm-suppress` for the one thing Psalm objects to and nothing for

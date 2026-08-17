@@ -6,9 +6,11 @@ namespace GacelaTest\Feature\ReferenceApp\Invoicing\Notification;
 
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Plugins\PluginStack;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Event\InvoiceIssuedEvent;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\Channel\NotificationChannelInterface;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\DeliveryLog;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\NotificationDispatcher;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\NotificationMessage;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Resilience\RetryPolicyInterface;
 
 /**
@@ -51,6 +53,23 @@ final class NotificationFactory extends AbstractFactory
     public function subjectFor(string $invoiceNumber): string
     {
         return $this->getConfig()->subjectPrefix() . ' ' . $invoiceNumber;
+    }
+
+    /**
+     * Billing's event, as this module's own message.
+     *
+     * The one place the two vocabularies meet, and it belongs here: the subject
+     * is Notification's (its prefix is this module's configuration), while the
+     * recipient and the amount are facts the event carried. Nothing else in the
+     * module knows an event was involved.
+     */
+    public function messageForInvoiceIssued(InvoiceIssuedEvent $event): NotificationMessage
+    {
+        return new NotificationMessage(
+            $event->customerName(),
+            $this->subjectFor($event->invoiceNumber()),
+            $event->amountDue(),
+        );
     }
 
     /**

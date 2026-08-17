@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\ReferenceApp\Invoicing\Notification;
 
 use Gacela\Framework\AbstractFacade;
-use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\NotificationMessage;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Event\InvoiceIssuedEvent;
 
 /**
  * Not `final`, unlike every other class here: this is the one seam a caller is
@@ -22,12 +22,23 @@ use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Domain\NotificationMe
 class NotificationFacade extends AbstractFacade
 {
     /**
+     * This module's reaction to an invoice being issued.
+     *
+     * The subscriber names the event; the publisher names nobody. Billing
+     * dispatches `InvoiceIssuedEvent` and has no idea this method exists --
+     * `gacela.php` is where the two are wired together, and a second reaction to
+     * the same event changes nothing in Billing.
+     *
+     * Reading the event is the Factory's job, like every other translation into
+     * this module's own shapes: a Facade only delegates, which the shipped
+     * `gacela.facadeOnlyDelegates` rule holds this application to.
+     *
      * @return list<string> one delivery receipt per channel
      */
-    public function notifyInvoiceIssued(string $recipient, string $invoiceNumber, string $body): array
+    public function onInvoiceIssued(InvoiceIssuedEvent $event): array
     {
         return $this->getFactory()->createDispatcher()->dispatch(
-            new NotificationMessage($recipient, $this->getFactory()->subjectFor($invoiceNumber), $body),
+            $this->getFactory()->messageForInvoiceIssued($event),
         );
     }
 

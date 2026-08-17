@@ -11,12 +11,14 @@ use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\BillingFacade;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Event\InvoiceIssuedEvent;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\CustomerFacade;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Infrastructure\ResolverActivityLog;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\NotificationFacade;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Payment\PaymentApi;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Reporting\ReportingFacade;
 use GacelaTest\Feature\ReferenceApp\Support\RecordingEventDispatcher;
+use GacelaTest\Feature\ReferenceApp\Support\RecordingPsr14Bus;
 use GacelaTest\Feature\ReferenceApp\Support\ReferenceApp;
 use GacelaTest\Feature\ReferenceApp\Support\SilentNotificationFacade;
 use InvalidArgumentException;
@@ -190,8 +192,12 @@ final class InvoicingFlowTest extends TestCase
     }
 
     /**
-     * Swapping a whole module out at the seam Gacela provides for it. Billing
-     * reaches notifications through `#[ServiceMap]` and is not told.
+     * Swapping a whole module out at the seam Gacela provides for it.
+     *
+     * Billing is not told, and this time it could not be: it dispatches an event
+     * and never names the module that reacts. What the override replaces is what
+     * the listener in `gacela.php` resolves -- which is why that listener asks
+     * the locator for the facade instead of constructing one.
      */
     public function test_a_stub_notification_facade_takes_the_place_of_the_real_one(): void
     {
@@ -204,6 +210,87 @@ final class InvoicingFlowTest extends TestCase
         (new BillingFacade())->issueInvoice('acme-nl', 10_000);
 
         self::assertSame(['ACME-INV-01001'], $silent->suppressed());
+    }
+
+    /**
+     * The module-to-module acceptance criterion, from the outside.
+     *
+     * `Billing` announces that an invoice exists and `Notification` sends the
+     * mail, with no import, no injected facade and no name of `Notification`
+     * anywhere in `Billing` -- see
+     * {@see InvoicingSliceTest::test_billing_depends_on_customer_and_nothing_else},
+     * which asserts that half against the module graph the analysers and
+     * `debug:graph --check --rules` read.
+     *
+     * A second listener on the same event is a line in `gacela.php` and no
+     * change to `Billing` at all, which is what the decoupling buys.
+     */
+    public function test_the_module_that_reacts_to_an_invoice_is_never_named_by_the_one_that_issues_it(): void
+    {
+        $heard = [];
+
+        ReferenceApp::bootstrap(static function (GacelaConfig $config) use (&$heard): void {
+            $config->registerSpecificListener(
+                InvoiceIssuedEvent::class,
+                static function (InvoiceIssuedEvent $event) use (&$heard): void {
+                    $heard[] = $event->toString();
+                },
+            );
+        });
+
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+        (new BillingFacade())->issueInvoice('acme-nl', 10_000);
+
+        // The listener this test added, beside the one `gacela.php` registers:
+        // both ran, and neither is known to Billing.
+        self::assertSame(['Invoice ACME-INV-01001 issued: 12100 EUR due'], $heard);
+        self::assertSame(
+            ['email:Acme BV:Invoice ACME-INV-01001'],
+            (new NotificationFacade())->deliveries(),
+        );
+    }
+
+    /**
+     * The other side of the guard: an application that registers no listener at
+     * all pays nothing for the announcement, because the event is never built.
+     * `disableEventListeners()` is the bluntest way to arrange that.
+     */
+    public function test_an_invoice_is_issued_with_no_listener_and_nothing_is_announced(): void
+    {
+        ReferenceApp::bootstrap(static function (GacelaConfig $config): void {
+            $config->disableEventListeners();
+        });
+
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+        $invoice = (new BillingFacade())->issueInvoice('acme-nl', 10_000);
+
+        self::assertSame('ACME-INV-01001', $invoice->getNumber());
+        self::assertSame([], (new NotificationFacade())->deliveries());
+    }
+
+    /**
+     * A project's own event, on the host's own bus: the application hands Gacela
+     * a PSR-14 dispatcher, and `InvoiceIssuedEvent` arrives on it beside the
+     * framework's events. Nothing in `Billing` changes -- it dispatches into
+     * whatever the application installed.
+     */
+    public function test_the_applications_own_event_reaches_a_supplied_psr14_bus(): void
+    {
+        $bus = new RecordingPsr14Bus();
+
+        ReferenceApp::bootstrap(static function (GacelaConfig $config) use ($bus): void {
+            $config->setEventDispatcher($bus);
+        });
+
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+        (new BillingFacade())->issueInvoice('acme-nl', 10_000);
+
+        self::assertSame(
+            ['Invoice ACME-INV-01001 issued: 12100 EUR due'],
+            $bus->descriptionsOf(InvoiceIssuedEvent::class),
+        );
+        // The framework's events reach it too: one dispatcher, both kinds.
+        self::assertContains(GacelaBootstrapFinishedEvent::class, $bus->receivedClasses());
     }
 
     /**

@@ -98,11 +98,43 @@ final class Container implements ContainerInterface
         ))->withSelfReference($this);
     }
 
+    /**
+     * The application container: every registration the configuration declares,
+     * applied in the order {@see withContainerConfiguration()} fixes, and
+     * announced as it goes.
+     */
     public static function withConfig(Config $config): self
     {
         return self::withContainerConfiguration(
             $config->getSetupGacela(),
             $config->getFactory()->createGacelaFileConfig()->getBindings(),
+        );
+    }
+
+    /**
+     * The container the four pillars -- Facade, Factory, Config, Provider --
+     * are constructed from, configured exactly like {@see withConfig()}.
+     *
+     * It used to be built from bindings and contextual bindings alone, so a
+     * pillar constructor was the one place `loadDefinitions()`, `addAlias()`
+     * and `extendService()` did not reach, and the container a project meets
+     * first disagreed with `Gacela::container()` about the same id.
+     *
+     * Silent, where `withConfig()` announces. `BindingRegisteredEvent` describes
+     * *the configuration*, which is walked once however many containers apply
+     * it; dispatching again here would double every count a listener keeps and
+     * make `assertBindingRegistered()` report a registration that happened once
+     * as though it had happened twice. The application container is where the
+     * walk is announced, and this one applies the same declarations quietly.
+     *
+     * @internal
+     */
+    public static function forPillars(Config $config): self
+    {
+        return self::withContainerConfiguration(
+            $config->getSetupGacela(),
+            $config->getFactory()->createGacelaFileConfig()->getBindings(),
+            announce: false,
         );
     }
 
@@ -596,11 +628,22 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * The one place a Gacela configuration becomes a container. Both entry
+     * points above route through it so that "what a container is configured
+     * with" has a single answer: a second implementation is a second thing to
+     * drift, which is exactly how the pillar container came to disagree with
+     * the application one.
+     *
+     * $announce is off for every container after the first built from a given
+     * configuration -- see {@see forPillars()} for why the events belong to the
+     * configuration rather than to the container.
+     *
      * @param BindingsMap $bindings
      */
     private static function withContainerConfiguration(
         ContainerConfigurationInterface $containerConfig,
         array $bindings,
+        bool $announce = true,
     ): self {
         $container = new self(
             $bindings,
@@ -608,22 +651,22 @@ final class Container implements ContainerInterface
         );
 
         foreach (array_keys($bindings) as $id) {
-            self::notifyBindingRegistered($id);
+            self::notifyBindingRegistered($id, $announce);
         }
 
         foreach ($containerConfig->getFactories() as $id => $factory) {
             $container->set($id, $container->factory($factory));
-            self::notifyBindingRegistered($id);
+            self::notifyBindingRegistered($id, $announce);
         }
 
         foreach ($containerConfig->getProtectedServices() as $id => $service) {
             $container->set($id, $container->protect($service));
-            self::notifyBindingRegistered($id);
+            self::notifyBindingRegistered($id, $announce);
         }
 
         foreach ($containerConfig->getAliases() as $alias => $id) {
             $container->alias($alias, $id);
-            self::notifyBindingRegistered($alias);
+            self::notifyBindingRegistered($alias, $announce);
         }
 
         foreach ($containerConfig->getContextualBindings() as $concrete => $needs) {
@@ -631,7 +674,7 @@ final class Container implements ContainerInterface
             foreach ($needs as $abstract => $implementation) {
                 /** @var class-string $concrete */
                 $container->when($concrete)->needs($abstract)->give($implementation);
-                self::notifyBindingRegistered($abstract);
+                self::notifyBindingRegistered($abstract, $announce);
             }
         }
 
@@ -659,14 +702,14 @@ final class Container implements ContainerInterface
 
         foreach ($containerConfig->getLazyServices() as $id => $lazyFactory) {
             $container->set($id, $container->factory(static fn (): mixed => $lazyFactory($container)));
-            self::notifyBindingRegistered($id);
+            self::notifyBindingRegistered($id, $announce);
         }
 
         // Last, so the data layer wins: a definitions file is loaded to override
         // what the config declares imperatively, and could not do that from any
         // earlier position. Sources apply in declaration order, so the last one
         // wins among themselves too.
-        $container->loadDefinitions($containerConfig->getDefinitions());
+        $container->loadDefinitions($containerConfig->getDefinitions(), $announce);
 
         return $container;
     }
@@ -685,7 +728,7 @@ final class Container implements ContainerInterface
      *
      * @param DefinitionSources $sources
      */
-    private function loadDefinitions(array $sources): void
+    private function loadDefinitions(array $sources, bool $announce): void
     {
         if ($sources === []) {
             return;
@@ -693,7 +736,7 @@ final class Container implements ContainerInterface
 
         // Guarded like every other dispatch site, so a container with no
         // listener does not pay for a per-id callback it will never use.
-        $onRegistered = self::shouldDispatch(BindingRegisteredEvent::class)
+        $onRegistered = $announce && self::shouldDispatch(BindingRegisteredEvent::class)
             ? static fn (string $id): null => self::dispatchEvent(new BindingRegisteredEvent($id))
             : null;
 
@@ -739,9 +782,9 @@ final class Container implements ContainerInterface
         }
     }
 
-    private static function notifyBindingRegistered(string $id): void
+    private static function notifyBindingRegistered(string $id, bool $announce): void
     {
-        if (self::shouldDispatch(BindingRegisteredEvent::class)) {
+        if ($announce && self::shouldDispatch(BindingRegisteredEvent::class)) {
             self::dispatchEvent(new BindingRegisteredEvent($id));
         }
     }

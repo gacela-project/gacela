@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver;
 
-use Gacela\Container\Container;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassNameFinderInterface;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
-use Gacela\Framework\Container\SharedPlanCache;
+use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCachedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassTriedFromParentEvent;
@@ -30,8 +29,8 @@ abstract class AbstractClassResolver
     private static ?ClassNameFinderInterface $classNameFinder = null;
 
     /**
-     * Shared across every resolver instance/subclass: the bindings and
-     * contextual bindings are process-global, so one Container serves all.
+     * Shared across every resolver instance/subclass: the configuration is
+     * process-global, so one Container serves all.
      */
     private static ?Container $container = null;
 
@@ -49,6 +48,27 @@ abstract class AbstractClassResolver
      * @param object|class-string $caller
      */
     abstract public function resolve(object|string $caller): ?object;
+
+    /**
+     * The container the four pillars are constructed from.
+     *
+     * Exposed so a tool that reports on pillar construction can ask the
+     * container that performs it rather than `Gacela::container()`, which is
+     * configured from the same declarations but is not the one doing the
+     * building -- so any disagreement between the two is invisible to it.
+     * {@see \Gacela\Console\Application\Debug\ConstructorInspector}
+     *
+     * Built on first pillar resolution rather than at bootstrap: a process that
+     * resolves no pillar -- a console command reading config, say -- should not
+     * pay to assemble it, which is also why {@see \Gacela\Framework\AbstractFactory}
+     * defers the application container.
+     *
+     * @internal
+     */
+    public static function pillarContainer(): Container
+    {
+        return self::$container ??= Container::forPillars(Config::getInstance());
+    }
 
     abstract protected function getResolvableType(): string;
 
@@ -156,25 +176,10 @@ abstract class AbstractClassResolver
      */
     private function createInstance(string $resolvedClassName): object
     {
-        if (!self::$container instanceof Container) {
-            self::$container = new Container(
-                $this->getGacelaConfigFile()->getBindings(),
-                planCache: SharedPlanCache::getInstance(),
-            );
-
-            foreach (Config::getInstance()->getSetupGacela()->getContextualBindings() as $concrete => $needs) {
-                /** @var mixed $implementation */
-                foreach ($needs as $abstract => $implementation) {
-                    /** @var class-string $concrete */
-                    self::$container->when($concrete)->needs($abstract)->give($implementation);
-                }
-            }
-        }
-
         // The finder yields `\Fq\Class\Name` while contextual bindings are keyed
         // by `Fq\Class\Name::class`; normalize so the container can match them.
         /** @var object $instance */
-        $instance = self::$container->get(ltrim($resolvedClassName, '\\'));
+        $instance = self::pillarContainer()->get(ltrim($resolvedClassName, '\\'));
 
         return $instance;
     }

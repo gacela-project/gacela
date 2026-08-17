@@ -9,6 +9,8 @@ use Gacela\Console\Application\Debug\DependencyTreeNode;
 use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Container\ContainerStats;
+use Gacela\Framework\Bootstrap\Package\DiscoveredPackage;
+use Gacela\Framework\Bootstrap\Package\RefusedPackage;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -100,9 +102,50 @@ final class DebugContainerCommand extends Command
             // and how a consumer looks one up. Empty stays `{}` rather than
             // becoming `[]`, so the shape does not change with the contents.
             'bindings' => (object)$this->getFacade()->getContainerBindings(),
+            // Additive: a consumer reading `stats` or `bindings` is unaffected,
+            // and one asking what an install put in the container has an answer.
+            'packages' => $this->packagesDocument(),
         ]));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function packagesDocument(): array
+    {
+        $report = $this->getFacade()->getPackageDiscoveryReport();
+
+        return [
+            'installedJson' => $report->hasInstalledJson,
+            'discoveryDisabled' => $report->discoveryDisabled,
+            'declared' => $report->declaredNames(),
+            // The input, next to the outcomes: `dontDiscover()` is what decided
+            // which of the declared configs below ran, and it is the one part of
+            // that decision the human-readable section cannot show -- an entry
+            // naming a package nobody installed refuses nothing, so it appears
+            // in neither `discovered` nor `refused`. `doctor` judges those; this
+            // document is what an operator reads them out of.
+            'optedOut' => $report->optedOut,
+            'discovered' => array_map(
+                static fn (DiscoveredPackage $package): array => [
+                    'name' => $package->name,
+                    'configFile' => $package->configFile,
+                    'position' => $package->position,
+                    'contributed' => (object)$package->contribution->items(),
+                ],
+                $report->discovered,
+            ),
+            'refused' => array_map(
+                static fn (RefusedPackage $package): array => [
+                    'name' => $package->name,
+                    'configFile' => $package->configFile,
+                    'reason' => $package->reason->value,
+                ],
+                $report->refused,
+            ),
+        ];
     }
 
     private function reportDependencyTree(OutputInterface $output, string $className, bool $asJson): int
@@ -186,6 +229,8 @@ final class DebugContainerCommand extends Command
             $output->writeln('');
         }
 
+        $this->displayDiscoveredPackages($output);
+
         // Every counter, not just the services: a binding registers none, so
         // keying the hint on that one printed "Container is empty" directly
         // under "User Bindings: 1" -- and checking that a binding landed is the
@@ -200,6 +245,55 @@ final class DebugContainerCommand extends Command
         $output->writeln('');
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Who put what in here that this application never wrote down.
+     *
+     * A binding is printed above with no hint of where it came from, and a
+     * discovered package is the one source a reader cannot find by searching the
+     * project: nothing in it names the package. So this names the package, the
+     * file that ran, and what that file declared.
+     *
+     * Silent when no package declares a config, which is every application that
+     * has not installed one -- a section saying "none" on every project is a
+     * section people stop reading.
+     */
+    private function displayDiscoveredPackages(OutputInterface $output): void
+    {
+        $report = $this->getFacade()->getPackageDiscoveryReport();
+
+        if ($report->declarations === []) {
+            return;
+        }
+
+        $output->writeln('<fg=cyan>Discovered packages:</>');
+
+        if ($report->discoveryDisabled) {
+            $output->writeln(sprintf(
+                "  <comment>none read: dontDiscover(['*']) — %d package(s) declare one</comment>",
+                count($report->declarations),
+            ));
+        }
+
+        foreach ($report->discovered as $package) {
+            $output->writeln(sprintf('  %d. %s', $package->position, $package->name));
+            $output->writeln(sprintf('     %s', $package->configFile));
+
+            foreach ($package->contribution->items() as $kind => $labels) {
+                $output->writeln(sprintf('     %s: %s', $kind, implode(', ', $labels)));
+            }
+
+            if ($package->contribution->isEmpty()) {
+                $output->writeln('     declares nothing');
+            }
+        }
+
+        foreach ($report->refused as $package) {
+            $output->writeln(sprintf('  ✗ %s — %s', $package->name, $package->reason->value));
+        }
+
+        $output->writeln('');
     }
 
     /**

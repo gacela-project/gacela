@@ -1,0 +1,12 @@
+{
+    "name": "gacela-fixture/audit-override",
+    "description": "A third Gacela package, here to disagree: it declares the same config key and the same binding `gacela-fixture/audit-trail` declares, so which of the two an application ends up with is decided by Composer's installed order and by nothing else. It ships no classes of its own, because the disagreement is the whole of it.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

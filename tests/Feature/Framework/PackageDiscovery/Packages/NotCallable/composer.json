@@ -1,0 +1,12 @@
+{
+    "name": "gacela-fixture/not-callable",
+    "description": "Ships a Gacela config that returns an array instead of a `callable(GacelaConfig)`. Same contract as the package above: the application still boots, and `doctor` names the file.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

@@ -66,8 +66,19 @@ final class NoCircularDependenciesTest extends TestCase
         //     types, and SetupMerger alone reads 17 of its constants.
         //   - Container + Locator: a container and its service locator, both
         //     @internal, one concept split across two classes.
+        //
+        // Package discovery joined it rather than widened it: it is one more
+        // reader of a file that returns a `callable(GacelaConfig)`, so it points
+        // at the same factory `ConfigFactory` does and produces the same
+        // `SetupGacela`. Its own edges (Package\* -> SetupGacela, ConfigFactory ->
+        // Package\PackageDiscovery) both close through the knot above, and cutting
+        // that knot cuts these with it.
         \Gacela\Framework\Bootstrap\AbstractSetupGacela::class
             . ' | Gacela\Framework\Bootstrap\GacelaConfig'
+            . ' | Gacela\Framework\Bootstrap\Package\DiscoveredPackage'
+            . ' | Gacela\Framework\Bootstrap\Package\PackageContribution'
+            . ' | Gacela\Framework\Bootstrap\Package\PackageDiscovery'
+            . ' | Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry'
             . ' | Gacela\Framework\Bootstrap\SetupEventDispatcher'
             . ' | Gacela\Framework\Bootstrap\SetupGacela'
             . ' | Gacela\Framework\Bootstrap\SetupGacelaInterface'
@@ -115,6 +126,7 @@ final class NoCircularDependenciesTest extends TestCase
         'Gacela\Framework'
             . ' | Gacela\Framework\Attribute'
             . ' | Gacela\Framework\Bootstrap'
+            . ' | Gacela\Framework\Bootstrap\Package'
             . ' | Gacela\Framework\Bootstrap\Setup'
             . ' | Gacela\Framework\ClassResolver'
             . ' | Gacela\Framework\ClassResolver\Cache'

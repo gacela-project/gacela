@@ -343,6 +343,32 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * @internal Used by SetupInitializer - do not call directly
+     *
+     * @param ?list<string> $packages
+     */
+    public function setDontDiscover(?array $packages): self
+    {
+        $this->properties->dontDiscover = $this->setPropertyWithTracking(
+            self::dontDiscover,
+            $packages,
+            self::DEFAULT_DONT_DISCOVER,
+        );
+
+        return $this;
+    }
+
+    /**
+     * The packages whose declared Gacela config must not be read.
+     *
+     * @return list<string>
+     */
+    public function getDontDiscover(): array
+    {
+        return $this->properties->dontDiscover ?? self::DEFAULT_DONT_DISCOVER;
+    }
+
+    /**
      * @return ConfigKeyValues
      */
     public function getConfigKeyValues(): array
@@ -689,6 +715,16 @@ final class SetupGacela extends AbstractSetupGacela
     public function mergeProjectNamespaces(array $list): void
     {
         $this->propertyMerger->mergeProjectNamespaces($list);
+    }
+
+    /**
+     * @internal Used by SetupMerger - do not call directly
+     *
+     * @param list<string> $list
+     */
+    public function mergeDontDiscover(array $list): void
+    {
+        $this->propertyMerger->mergeDontDiscover($list);
     }
 
     /**

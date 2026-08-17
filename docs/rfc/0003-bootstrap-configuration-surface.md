@@ -78,6 +78,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `declareConfigSchema()` | `declare*` | conforms |
 | `declareDtoSchema()` | `declare*` | conforms |
 | `disableEventListeners()` | — | exception: `enable*`'s negative twin; the grammar deliberately has no `disable*` row because most toggles default off, and this one defaults on |
+| `dontDiscover()` | — | exception: refuses the configuration named packages declare in `composer.json`, and a refusal is not a setting. `setDontDiscover()` conforms and reads as configuring a list, which is the opposite of what the call is for — it is the security control over code an install would otherwise run at boot, and it is named after the `extra.laravel.dont-discover` key every reader already knows |
 | `enableFileCache()` | `enable*` | conforms — sugar over `setFileCache(true)` |
 | `extendGacelaConfig()` | `extend*` | exception in meaning: composes another configuration surface into this one rather than wrapping a registered service; predates the grammar |
 | `extendGacelaConfigs()` | `extend*` | same as `extendGacelaConfig()`, plural variant |
@@ -98,7 +99,8 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `validateConfigSchemaOnBoot()` | — | exception: semantically `enable*` (`enableConfigSchemaValidationOnBoot()` conforms and says less); recorded rather than renamed |
 | `when()` | — | exception: the head of the contextual-binding DSL (`when(X)->needs(Y)->give(Z)`); a prefix would break the sentence it starts |
 
-Eleven exceptions, each with the reason it stays. A twelfth needs a reason this table can hold.
+Every exception carries the reason it stays. A new one needs a reason this table
+can hold — the count is not the gate, the reason is.
 
 ## Non-goals
 

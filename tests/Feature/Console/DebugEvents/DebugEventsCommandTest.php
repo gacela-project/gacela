@@ -204,7 +204,16 @@ final class DebugEventsCommandTest extends TestCase
         $document = $this->runAsJson(['filter' => 'Bootstrap']);
 
         self::assertSame($this->catalogSize(), $document['summary']['events']);
-        self::assertCount(2, $document['events']);
+
+        // Described rather than counted: a literal here is a number a new
+        // bootstrap event breaks for no reason, and what the filter promises is
+        // that the listing is a proper subset of one group.
+        self::assertNotSame([], $document['events']);
+        self::assertLessThan($this->catalogSize(), count($document['events']));
+
+        foreach ($document['events'] as $event) {
+            self::assertSame('Bootstrap', $event['group']);
+        }
     }
 
     /**

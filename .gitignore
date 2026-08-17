@@ -43,3 +43,7 @@ gacela-doctor-strict-*/
 # is the directory that broke every Windows job once already: the name is not a
 # valid path there, so `git checkout` fails outright if it is ever committed.
 [\\]*
+
+# The reference application ships a hand-written `vendor/composer/installed.json`:
+# it is what package discovery reads, and the demonstration needs one on disk.
+!tests/Feature/ReferenceApp/Invoicing/vendor/

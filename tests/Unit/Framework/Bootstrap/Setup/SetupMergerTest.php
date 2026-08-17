@@ -368,6 +368,40 @@ final class SetupMergerTest extends TestCase
         self::assertSame(['src/Billing'], $setup1->merge($setup2)->getAppModulePaths());
     }
 
+    /**
+     * The opposite of the app module paths above: `dontDiscover()` accumulates.
+     *
+     * A bootstrap closure and a `gacela.php` that each refuse a package are
+     * refusing both, and the one that ran second is not overruling the other --
+     * a refusal is not a list of everything to refuse, it is one decision. A
+     * name both of them wrote appears once.
+     */
+    public function test_dont_discover_accumulates_across_two_setups(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->dontDiscover(['acme/legacy']);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->dontDiscover(['acme/legacy', 'acme/older']);
+        });
+
+        self::assertSame(['acme/legacy', 'acme/older'], $setup1->merge($setup2)->getDontDiscover());
+    }
+
+    public function test_a_setup_that_refuses_nothing_does_not_drop_the_refusals_already_made(): void
+    {
+        $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->dontDiscover(['acme/legacy']);
+        });
+
+        $setup2 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addAppConfigKeyValue('unrelated', true);
+        });
+
+        self::assertSame(['acme/legacy'], $setup1->merge($setup2)->getDontDiscover());
+    }
+
     public function test_merge_handler_registries_from_two_setups(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

@@ -11,6 +11,7 @@ use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigEnvironmentLayerCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSourceCheck;
+use Gacela\Console\Application\Doctor\Check\DiscoveredPackagesCheck;
 use Gacela\Console\Application\Doctor\Check\DuplicateProvidedIdCheck;
 use Gacela\Console\Application\Doctor\Check\EventListenerTargetCheck;
 use Gacela\Console\Application\Doctor\Check\FilenameMismatchCheck;
@@ -319,6 +320,11 @@ final class DoctorCommand extends Command
             // namespace filter left behind would report every scoped run as
             // stale.
             new PackageManifestCheck($config->getAppRootDir()),
+            // One capture, taken through the facade `debug:container` uses, so
+            // the verdict here and the description there cannot disagree about
+            // the same boot -- and there is one place that reads the opt-out
+            // list off the concrete setup instead of two.
+            new DiscoveredPackagesCheck($this->getFacade()->getPackageDiscoveryReport()),
             new IdeMetadataStalenessCheck(
                 $config->getAppRootDir(),
                 fn (): IdeMetadataResult => $this->getFacade()->generateIdeMetadata(dryRun: true),

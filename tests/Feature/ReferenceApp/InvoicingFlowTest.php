@@ -17,6 +17,7 @@ use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\Infrastructure\Resolv
 use GacelaTest\Feature\ReferenceApp\Invoicing\Notification\NotificationFacade;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Payment\PaymentApi;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Reporting\ReportingFacade;
+use GacelaTest\Feature\ReferenceApp\Packages\InvoiceAudit\AuditTrail;
 use GacelaTest\Feature\ReferenceApp\Support\RecordingEventDispatcher;
 use GacelaTest\Feature\ReferenceApp\Support\RecordingPsr14Bus;
 use GacelaTest\Feature\ReferenceApp\Support\ReferenceApp;
@@ -48,12 +49,46 @@ final class InvoicingFlowTest extends TestCase
         // some other application on this machine left in the system temp dir.
         $this->cacheDir = ReferenceApp::createTempDirectory('flow-cache');
         putenv('GACELA_CACHE_DIR=' . $this->cacheDir);
+
+        // Here as well as in tearDown, and not only for symmetry: the trail is
+        // process-global, every test in this class issues an invoice, and each
+        // one numbers its first invoice `01001` because the numbering starts
+        // from the same place on a fresh bootstrap. So anything left behind is
+        // indistinguishable from what this test produced itself, and a tearDown
+        // that did not run -- an error before it, or a test added elsewhere that
+        // writes here -- becomes a count this test asserts. Resetting on the way
+        // in owes nothing to whatever ran before.
+        AuditTrail::reset();
     }
 
     protected function tearDown(): void
     {
         ReferenceApp::reset();
         ReferenceApp::removeTempDirectory($this->cacheDir);
+        AuditTrail::reset();
+    }
+
+    /**
+     * Two packages are installed against this application and neither is named
+     * anywhere in it except once, to refuse one of them.
+     *
+     * The kept one reacts to `InvoiceIssuedEvent` -- an event `Billing`
+     * announces to nobody in particular -- so a package extends this application
+     * on exactly the terms another module would. The refused one would have
+     * replaced the invoice number format, and the number below is the proof that
+     * `dontDiscover()` stopped its file from being read at all.
+     */
+    public function test_an_installed_package_contributes_and_a_refused_one_does_not(): void
+    {
+        ReferenceApp::bootstrap();
+
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+        $invoice = (new BillingFacade())->issueInvoice('acme-nl', 10_000);
+
+        self::assertSame(['ACME-INV-01001 12100 EUR'], AuditTrail::entries());
+
+        // `gacela-fixture/legacy-numbering` formats this as `ACME-INV/1001`.
+        self::assertSame('ACME-INV-01001', $invoice->getNumber());
     }
 
     public function test_an_invoice_goes_out_taxed_notified_paid_and_reported(): void
@@ -72,9 +107,17 @@ final class InvoicingFlowTest extends TestCase
         self::assertSame('EUR', $invoice->getCurrency());
         self::assertSame(ReferenceApp::FIXED_TODAY, $invoice->getIssuedOn());
 
-        // Email only: the webhook is a production channel.
+        // Audit first, then email: the webhook is a production channel, and the
+        // audit channel is not this application's at all -- it arrived with the
+        // `gacela-fixture/invoice-audit` package, which `gacela.php` never
+        // mentions. Package configuration is merged before the project's own, so
+        // what a package appends to a stack sits in front of what the project
+        // appends.
         self::assertSame(
-            ['email:Acme BV:Invoice ACME-INV-01001'],
+            [
+                'audit:Acme BV:Invoice ACME-INV-01001',
+                'email:Acme BV:Invoice ACME-INV-01001',
+            ],
             (new NotificationFacade())->deliveries(),
         );
 
@@ -114,10 +157,12 @@ final class InvoicingFlowTest extends TestCase
         self::assertSame(2_200, $invoice->getTaxCents());
         self::assertSame(12_200, $invoice->getGrossCents());
 
-        // The webhook channel is added by the same production config, and both
-        // channels see the header the application appended with extendService().
+        // The webhook channel is added by the same production config, and all
+        // three channels see the header the application appended with
+        // extendService() -- including the one an installed package contributed.
         self::assertSame(
             [
+                'audit:Acme BV:Invoice ACME-INV-01001',
                 'email:Acme BV:Invoice ACME-INV-01001',
                 'webhook:Acme BV:X-Invoicing-Source,X-Invoicing-App',
             ],
@@ -245,7 +290,10 @@ final class InvoicingFlowTest extends TestCase
         // both ran, and neither is known to Billing.
         self::assertSame(['Invoice ACME-INV-01001 issued: 12100 EUR due'], $heard);
         self::assertSame(
-            ['email:Acme BV:Invoice ACME-INV-01001'],
+            [
+                'audit:Acme BV:Invoice ACME-INV-01001',
+                'email:Acme BV:Invoice ACME-INV-01001',
+            ],
             (new NotificationFacade())->deliveries(),
         );
     }
@@ -377,7 +425,7 @@ final class InvoicingFlowTest extends TestCase
 
         self::assertSame('sandbox.acme-pay.test', (new PaymentApi())->gatewayEndpoint());
         self::assertSame('EUR', (new BillingFacade())->currency());
-        self::assertSame(['email'], (new NotificationFacade())->channelNames());
+        self::assertSame(['audit', 'email'], (new NotificationFacade())->channelNames());
     }
 
     /**

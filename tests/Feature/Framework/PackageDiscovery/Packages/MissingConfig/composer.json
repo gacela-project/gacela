@@ -1,0 +1,12 @@
+{
+    "name": "gacela-fixture/missing-config",
+    "description": "Declares a Gacela config it does not ship. Installing it must not stop an application from booting, and `doctor` is where that is reported -- so this directory deliberately has no `config/` in it.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

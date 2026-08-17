@@ -162,6 +162,17 @@
                 // kept as the documented override convention, not as behavior.
                 "Gacela\\SymfonyBridge\\GacelaBundle::build",
             ],
+            ignoreSourceCodeByRegex: [
+                // Not an untested line: `composer test` fails on
+                // ResetCacheCoverageTest with this call removed, which is the
+                // test that exists to catch a reset nothing calls. It asserts by
+                // reading the source of Gacela::resetCache() rather than by
+                // executing it, so it covers none of that method's lines and a
+                // coverage-driven run never selects it for a mutant of them.
+                // Scoped to this one call by regex rather than to the method,
+                // because the resets around it are pinned by tests that do run.
+                '.*PackageContribution::resetCache\\(\\);.*',
+            ],
         },
         IfNegation: {
             ignore: [
@@ -211,7 +222,34 @@
             ],
         },
         ArrayItemRemoval: {
-            ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
+            ignore: [
+                "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
+                // normalize() folds `['/', '\\']` to the local separator. Dropping
+                // `'/'` is the identity on POSIX, where DIRECTORY_SEPARATOR is
+                // already "/" -- the same reason as the
+                // `str_replace('/', DIRECTORY_SEPARATOR` regex above, which does
+                // not match this two-element call. Dropping `'\\'` *is* killed
+                // here, by the windows-drive install path in
+                // PackageConfigFinderTest, and the windows matrix is what
+                // enforces the other half.
+                "Gacela\\Framework\\Bootstrap\\Package\\PackageConfigFinder::normalize",
+            ],
+        },
+        // normalize() splits a windows drive off the front of the path before
+        // resolving the segments. Without the caret the pattern still matches at
+        // offset 0 for every path that has a drive, and for one that does not it
+        // takes the first two characters as the "drive" and the rest as the path
+        // -- which are then concatenated back together, byte for byte, because
+        // the split lands inside the first segment's name. Only a path whose
+        // first segment is a single character *and* whose second is `..` *and*
+        // which carries a drive-letter sequence further along could tell the two
+        // apart, and this method is only ever given an absolute directory
+        // followed by a declared relative path. The caret in isAbsolute(), where
+        // dropping it does change the answer, is pinned by name.
+        PregMatchRemoveCaret: {
+            ignore: [
+                "Gacela\\Framework\\Bootstrap\\Package\\PackageConfigFinder::normalize",
+            ],
         },
         LogicalAnd: {
             ignore: [
@@ -489,7 +527,6 @@
                 // one prefix twice) and restores the list shape the return type
                 // declares. Every consumer foreaches the result, so the key shape is
                 // not observable.
-                "Gacela\\Console\\Application\\Doctor\\Check\\PackageManifestCheck::installedPackages",
                 "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::from",
                 "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::undeclaredImportsOf",
                 "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
@@ -622,6 +659,12 @@
                 // identical condition and throws the identical exception, so no
                 // input can tell || from && at this call site.
                 "Gacela\\Framework\\Testing\\GacelaTestCase::assertNamesAFacade",
+                // fingerprint() asks filemtime() and filesize() about a path the
+                // is_file() right above it just accepted, so neither can be
+                // false unless the file vanished in between -- a filesystem
+                // race. Both halves of the `||` are unreachable from a test, for
+                // the same reason the CastInt entries above are.
+                "Gacela\\Framework\\Bootstrap\\Package\\InstalledPackagesReader::fingerprint",
             ],
         },
         // warmAttributeCache() breaks out of the prefix scan after the first
@@ -653,17 +696,20 @@
                 // when that regresses, not a mutant.
                 "Gacela\\Framework\\Event\\Dispatcher\\ConfigurableEventDispatcher::hasListeners",
                 "Gacela\\Framework\\Event\\Dispatcher\\ConfigurableEventDispatcher::dispatch",
+                // resolvableKinds() memoizes what an *empty* setup assembles to,
+                // so that reporting on N discovered packages costs one assembly
+                // instead of N. Recomputing it per call -- what the mutant does
+                // -- is always at least as correct: it is the staleness the memo
+                // risks that PackageContribution::resetCache() exists to undo, so
+                // no assertion can see the memo being right. Only the work is
+                // observable, and BootstrapBench is what fails when it grows.
+                "Gacela\\Framework\\Bootstrap\\Package\\PackageContribution::resolvableKinds",
             ],
         },
         // ReturnRemoval arrived with infection 0.34 and reads every early
         // return as behaviour. These two are allocation guards, not behaviour.
         ReturnRemoval: {
             ignore: [
-                // Same shape one level up: with no installed.json the guard
-                // returns null, and falling through reads an offset off null,
-                // which is null, which fails the is_array() below and returns
-                // null anyway. The guard is what keeps a php warning out of it.
-                "Gacela\\Console\\Application\\Doctor\\Check\\PackageManifestCheck::installedPackages",
                 // The early return for a non-object `autoload` is a guard, not a branch:
                 // falling through leaves the accumulator empty and returns the same [].
                 "Gacela\\Console\\Domain\\PackageManifest\\ComposerPackage::prefixesOf",
@@ -706,6 +752,26 @@
                 // list. Only the work is observable, and the generation stamp is
                 // what makes the memo safe to keep.
                 "Gacela\\Framework\\ClassResolver\\ResolvableTypes::matchOrder",
+                // The three guards that refuse a manifest, a cache entry or a
+                // package entry that is not the shape it has to be. Falling
+                // through reads an offset off the non-array with `??`, which is
+                // null without a warning, which fails the is_array()/is_string()
+                // below and returns the identical null. Same shape as
+                // ComposerPackage::prefixesOf above -- and the same reasoning the
+                // `PackageManifestCheck::installedPackages` entry carried before
+                // that method's reader moved down into the framework.
+                "Gacela\\Framework\\Bootstrap\\Package\\InstalledPackagesReader::read",
+                "Gacela\\Framework\\Bootstrap\\Package\\PackageConfigCache::read",
+                "Gacela\\Framework\\Bootstrap\\Package\\PackageConfigFinder::declarationOf",
+                // announceDiscoveredPackages() opens with the hasListeners()
+                // guard every framework dispatch site carries, so an event is
+                // only built when something is listening. Removing it dispatches
+                // to nobody, which the dispatcher already treats as a no-op: the
+                // guard is what keeps a boot from allocating one event per
+                // discovered package for nothing. What the events *say* when a
+                // listener is registered is pinned by PackageDiscoveryTest's
+                // merge-order test.
+                "Gacela\\Framework\\Config\\ConfigFactory::announceDiscoveredPackages",
             ],
         },
         LogicalOrSingleSubExprNegation: {

@@ -1,0 +1,17 @@
+{
+    "name": "gacela-fixture/invoice-audit",
+    "description": "A Gacela package the reference application installs and keeps. `extra.gacela.config` below is the only wiring: `Invoicing/gacela.php` never names this package, and the channel it adds still delivers.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "GacelaTest\\Feature\\ReferenceApp\\Packages\\InvoiceAudit\\": "src"
+        }
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

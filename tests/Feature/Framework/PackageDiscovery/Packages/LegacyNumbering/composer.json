@@ -1,0 +1,12 @@
+{
+    "name": "gacela-fixture/legacy-numbering",
+    "description": "A second Gacela package, here to be refused: the application names it in `dontDiscover()` and the config below is never read.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

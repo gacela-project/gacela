@@ -69,6 +69,9 @@ final class GacelaConfig
     /** @var list<string> */
     private ?array $appModulePaths = null;
 
+    /** @var list<string> */
+    private ?array $dontDiscover = null;
+
     /** @var ConfigKeyValues */
     private ?array $configKeyValues = null;
 
@@ -400,6 +403,41 @@ final class GacelaConfig
     public function setAppModulePaths(array $paths): self
     {
         $this->appModulePaths = $paths;
+
+        return $this;
+    }
+
+    /**
+     * Refuse the Gacela configuration an installed package declares in its
+     * `composer.json` under `extra.gacela.config`.
+     *
+     * A discovered config is arbitrary PHP, executed during
+     * `Gacela::bootstrap()` in the same process as the application -- exactly
+     * like a Laravel service provider registered through `extra.laravel`. This
+     * is the control over it. Naming a package here means its file is never
+     * read, not that its effects are undone afterwards.
+     *
+     * ```php
+     * $config->dontDiscover(['acme/legacy-invoicing']);
+     * $config->dontDiscover(['*']); // no package config is read at all
+     * ```
+     *
+     * Names are the Composer package names as `composer.json` writes them,
+     * matched exactly. `'*'` refuses every package, including ones installed
+     * later, and is the switch to reach for when a project wants nothing but
+     * its own `gacela.php` deciding what runs at boot.
+     *
+     * Read from the bootstrap closure and from `gacela.php`, and merged across
+     * both. It cannot be read from `gacela-{env}.php`: an environment file is
+     * merged *after* the packages, so an opt-out written there would arrive
+     * once the code it refuses had already run. `doctor` reports one written
+     * there rather than letting it look effective.
+     *
+     * @param list<string> $packages
+     */
+    public function dontDiscover(array $packages): self
+    {
+        $this->dontDiscover = $packages;
 
         return $this;
     }
@@ -1039,6 +1077,7 @@ final class GacelaConfig
             $this->projectNamespaces,
             $this->configDimensions,
             $this->appModulePaths,
+            $this->dontDiscover,
             $this->configKeyValues,
             $this->genericListeners,
             $this->specificListeners,

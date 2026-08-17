@@ -29,6 +29,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string appModulePaths = 'appModulePaths';
 
+    public const string dontDiscover = 'dontDiscover';
+
     public const string configKeyValues = 'configKeyValues';
 
     public const string configSchema = 'configSchema';
@@ -78,6 +80,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
     protected const array DEFAULT_CONFIG_DIMENSIONS = [];
 
     protected const array DEFAULT_APP_MODULE_PATHS = [];
+
+    protected const array DEFAULT_DONT_DISCOVER = [];
 
     protected const array DEFAULT_CONFIG_KEY_VALUES = [];
 

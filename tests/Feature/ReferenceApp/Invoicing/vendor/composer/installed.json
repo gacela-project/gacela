@@ -1,0 +1,26 @@
+{
+    "_note": "Hand-written, like the composer.json beside this application: nothing is installed here. It is what package discovery reads, so it is what makes the two packages under ../../Packages real -- one contributes a delivery channel and a listener, the other is refused by name in gacela.php. install-path is relative to this directory, exactly as Composer writes it.",
+    "packages": [
+        {
+            "name": "gacela-fixture/invoice-audit",
+            "version": "1.0.0",
+            "install-path": "../../../Packages/invoice-audit",
+            "extra": {
+                "gacela": {
+                    "config": "config/gacela.php"
+                }
+            }
+        },
+        {
+            "name": "gacela-fixture/legacy-numbering",
+            "version": "1.0.0",
+            "install-path": "../../../Packages/legacy-numbering",
+            "extra": {
+                "gacela": {
+                    "config": "config/gacela.php"
+                }
+            }
+        }
+    ],
+    "dev": true
+}

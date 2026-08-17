@@ -11,6 +11,7 @@
 - [Module boundaries](module-boundaries.md) — the cross-module rules, dependency-cycle gate, declared rules file, and CI graph review
 - [Module health checks](module-health-checks.md) — report module operational status
 - [Profiling](profiling.md) — instrument code with the in-memory `Profiler` and read it back with `profile:report`
+- [Shipping a Gacela package](packages.md) — let an installed Composer package contribute its own configuration, and control what a project discovers
 - [Events](events.md) — listen to Gacela internals: dispatch model, event catalog, cookbook
 - [Testing](testing.md) — `GacelaTestCase`: bootstrap isolation, module slices with doubles, container and boundary assertions
 - [Caching](caching.md) — overview of Gacela's three caching layers and when to reach for each

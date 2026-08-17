@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use function array_flip;
 use function basename;
 use function strlen;
 use function strpos;
@@ -62,16 +63,15 @@ final class EnvironmentLayer
      * is what stops the exclusion turning "read the wrong file" into "read
      * nothing".
      *
-     * @param list<string> $paths every file one base pattern matched
+     * @param array<array-key,string> $paths every file one base pattern matched
      *
      * @return array<string,self> keyed by the layer's own path
      */
     public static function within(array $paths): array
     {
-        $matched = [];
-        foreach ($paths as $path) {
-            $matched[$path] = true;
-        }
+        // Flipped so a sibling can be looked up by name rather than searched
+        // for: the rule asks about a candidate once per dash in every basename.
+        $matched = array_flip($paths);
 
         $layers = [];
         foreach ($paths as $path) {
@@ -86,7 +86,7 @@ final class EnvironmentLayer
     }
 
     /**
-     * @param array<string,true> $matched
+     * @param array<string,array-key> $matched every matched path, as a key
      */
     private static function of(string $path, array $matched): ?self
     {

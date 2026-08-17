@@ -489,6 +489,12 @@
                 // list shape the return type declares after array_unique()
                 // punched holes in the keys, and every consumer foreaches it.
                 "Gacela\\Framework\\Config\\ConfigLoader::sourceFiles",
+                // Same shape one level down: array_filter() keeps the keys of the
+                // base-pattern matches it dropped the environment layers from, and
+                // array_values() restores the list the return type declares. The
+                // two callers append to it and foreach it, so the keys are not
+                // observable -- only the order is, and filtering preserves that.
+                "Gacela\\Framework\\Config\\ConfigLoader::baseLayerFiles",
             ],
         },
         // hrtime(true) is an int; dividing by a float yields a float either way.

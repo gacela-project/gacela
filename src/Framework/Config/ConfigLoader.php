@@ -196,13 +196,17 @@ final class ConfigLoader
     }
 
     /**
-     * @return list<string>
+     * Not re-indexed: every caller either filters through `array_values()` or
+     * only looks the paths up by name, so the glob's own keys are nobody's
+     * business.
+     *
+     * @return array<array-key,string>
      */
     private function basePatternMatches(GacelaConfigItem $configItem): array
     {
-        return array_values($this->pathFinder->matchingPattern(
+        return $this->pathFinder->matchingPattern(
             $this->pathNormalizer->normalizePathPattern($configItem),
-        ));
+        );
     }
 
     /**

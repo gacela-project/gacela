@@ -162,7 +162,9 @@ Three reports, and one event.
 what that file declared — the one source in an application a reader cannot find
 by searching it, because nothing in the project names the package. It names the
 refused ones too, so "opted out" is distinguishable from "not installed".
-`--json` carries the same under a `packages` key.
+`--json` carries the same under a `packages` key, and the `dontDiscover()` list
+that decided it under `optedOut` — including an entry that refused nothing,
+which appears in neither of the other two lists.
 
 `debug:events` lists a listener a package registered on the same terms as one the
 application registered: the listener registry is read off the configuration, so

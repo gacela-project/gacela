@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console;
 
+use Gacela\Console\Application\Debug\PackageDiscoveryReport;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeFile;
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
@@ -328,6 +329,11 @@ final class ConsoleFacade extends AbstractFacade
     public function getContainerBindings(): array
     {
         return $this->getFactory()->getContainerBindings();
+    }
+
+    public function getPackageDiscoveryReport(): PackageDiscoveryReport
+    {
+        return $this->getFactory()->getPackageDiscoveryReport();
     }
 
     /**

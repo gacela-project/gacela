@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Package;
 
 use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Config\GacelaFileConfig\Factory\GacelaConfigFileAssembler;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 
+use function array_diff;
 use function array_filter;
 use function array_keys;
 use function array_map;
@@ -31,6 +33,13 @@ use function sprintf;
 final class PackageContribution
 {
     /**
+     * What an empty setup assembles to, which is what nobody declared.
+     *
+     * @var ?array<string, list<string>>
+     */
+    private static ?array $baselineSuffixTypes = null;
+
+    /**
      * @param array<string, list<string>> $items kind => what it declared, in declaration order
      */
     private function __construct(
@@ -42,7 +51,7 @@ final class PackageContribution
     {
         $items = [
             'bindings' => self::stringKeys($configFile->getBindings()),
-            'resolvable kinds' => array_keys(array_filter($configFile->getSuffixTypes(), static fn (array $suffixes): bool => $suffixes !== [])),
+            'resolvable kinds' => self::resolvableKinds($configFile),
             'plugins' => array_map(self::label(), $setup->getPlugins()),
             'plugin stacks' => self::pluginStacks($setup),
             'listeners' => self::listeners($setup),
@@ -102,6 +111,32 @@ final class PackageContribution
         }
 
         return implode(', ', $parts);
+    }
+
+    /**
+     * The kinds and suffixes this package added, and not the four every
+     * assembled configuration carries.
+     *
+     * Diffed against an empty setup rather than read off the builder: the
+     * builder holds the four defaults and what a source added, with nothing to
+     * tell them apart, so a report taken from it credited every package with
+     * declaring Facade, Factory, Config and Provider.
+     *
+     * @return list<string>
+     */
+    private static function resolvableKinds(GacelaConfigFileInterface $configFile): array
+    {
+        $baseline = self::$baselineSuffixTypes ??= GacelaConfigFileAssembler::assemble(new SetupGacela())->getSuffixTypes();
+
+        $kinds = [];
+
+        foreach ($configFile->getSuffixTypes() as $kind => $suffixes) {
+            foreach (array_diff($suffixes, $baseline[$kind] ?? []) as $suffix) {
+                $kinds[] = sprintf('%s => %s', $kind, $suffix);
+            }
+        }
+
+        return $kinds;
     }
 
     /**

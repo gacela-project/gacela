@@ -6,6 +6,7 @@ namespace Gacela\Console;
 
 use AppendIterator;
 use FilesystemIterator;
+use Gacela\Console\Application\Debug\PackageDiscoveryReport;
 use Gacela\Console\Application\DtoGenerate\DtoGenerator;
 use Gacela\Console\Application\IdeMeta\IdeMetadataGenerator;
 use Gacela\Console\Application\IdeMeta\IdeMetadataScanner;
@@ -44,6 +45,7 @@ use Gacela\Console\Domain\ServiceMapMigration\ServiceMapMigrator;
 use Gacela\Console\Infrastructure\FileContentIo;
 use Gacela\Container\ContainerStats;
 use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
@@ -306,6 +308,22 @@ final class ConsoleFactory extends AbstractFactory
         }
 
         return $result;
+    }
+
+    /**
+     * What the packages installed against this application contributed.
+     *
+     * Same source as the `doctor` check that judges it, so a description and a
+     * verdict of one boot cannot disagree.
+     */
+    public function getPackageDiscoveryReport(): PackageDiscoveryReport
+    {
+        $setup = Config::getInstance()->getSetupGacela();
+
+        return PackageDiscoveryReport::capture(
+            Config::getInstance()->getAppRootDir(),
+            $setup instanceof SetupGacela ? $setup->getDontDiscover() : [],
+        );
     }
 
     /**

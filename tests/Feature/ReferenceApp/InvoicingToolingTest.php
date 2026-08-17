@@ -325,6 +325,64 @@ final class InvoicingToolingTest extends TestCase
         self::assertStringContainsString('ClockInterface', $display);
     }
 
+    /**
+     * The one thing in this application a reader cannot find by searching it:
+     * the notification channel nothing here registers. `debug:container` names
+     * the package, the file that ran, and what that file declared -- and names
+     * the refused one as refused, so an operator can tell "opted out" apart from
+     * "not installed".
+     */
+    public function test_debug_container_attributes_what_the_installed_packages_contributed(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DebugContainerCommand(), ['--stats' => true]);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
+        self::assertStringContainsString('Discovered packages:', $display);
+        self::assertStringContainsString('1. gacela-fixture/invoice-audit', $display);
+        self::assertStringContainsString('invoice-audit' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'gacela.php', $display);
+        self::assertStringContainsString('AuditChannel', $display);
+        self::assertStringContainsString('InvoiceIssuedEvent', $display);
+        self::assertStringContainsString('gacela-fixture/legacy-numbering — opted out', $display);
+    }
+
+    public function test_debug_container_reports_the_packages_as_a_document(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DebugContainerCommand(), ['--stats' => true, '--json' => true]);
+
+        /** @var array{packages: array{installedJson: bool, discoveryDisabled: bool, declared: list<string>, discovered: list<array{name: string, position: int}>, refused: list<array{name: string, reason: string}>}} $report */
+        $report = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+        $packages = $report['packages'];
+
+        self::assertTrue($packages['installedJson']);
+        self::assertFalse($packages['discoveryDisabled']);
+        self::assertSame(['gacela-fixture/invoice-audit', 'gacela-fixture/legacy-numbering'], $packages['declared']);
+        self::assertSame('gacela-fixture/invoice-audit', $packages['discovered'][0]['name']);
+        self::assertSame(1, $packages['discovered'][0]['position']);
+        self::assertSame('gacela-fixture/legacy-numbering', $packages['refused'][0]['name']);
+        self::assertSame('opted out', $packages['refused'][0]['reason']);
+    }
+
+    /**
+     * The refusal is a decision, not a fault, and the check that reports broken
+     * declarations has to say so -- a `doctor` that warned about a working
+     * opt-out would train people to ignore it.
+     */
+    public function test_doctor_passes_the_discovered_packages_check(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DoctorCommand(), []);
+        $display = $tester->getDisplay();
+
+        self::assertStringContainsString('✓ discovered packages', $display);
+        self::assertStringContainsString('1 of 2 declared package config(s) merged', $display);
+    }
+
     public function test_debug_config_marks_every_key_as_declared(): void
     {
         ReferenceApp::bootstrap();

@@ -48,8 +48,11 @@ use function in_array;
  */
 final class PackageDiscovery
 {
-    /** Refuses every package, installed now or later. */
-    private const string EVERYTHING = '*';
+    /**
+     * Refuses every package, installed now or later. Public because `doctor` has
+     * to know that this one entry names no package.
+     */
+    public const string EVERYTHING = '*';
 
     /**
      * @param ?Closure(): string $cacheDirProvider where to remember the resolved

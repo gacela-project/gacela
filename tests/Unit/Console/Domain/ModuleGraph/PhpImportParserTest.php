@@ -227,11 +227,118 @@ final class PhpImportParserTest extends TestCase
         self::assertSame([], $this->parse('<?php final class Foo {}'));
     }
 
+    public function test_an_import_carries_the_line_it_is_declared_on(): void
+    {
+        $source = <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace App\Reporting;
+
+            use App\Billing\Invoice;
+            use App\Orders\Order;
+            PHP;
+
+        self::assertSame(
+            [
+                ['name' => 'App\Billing\Invoice', 'line' => 7],
+                ['name' => 'App\Orders\Order', 'line' => 8],
+            ],
+            $this->parseWithLines($source),
+        );
+    }
+
+    /**
+     * Every name in one statement reports the line the statement starts on --
+     * the `use` keyword -- rather than the line its own entry sits on. A caller
+     * pointing a reader at the import has the statement to show them, and
+     * splitting the entries apart would mean re-tokenizing the group body for a
+     * distinction nobody reading a violation needs.
+     */
+    public function test_every_name_of_a_multi_line_group_reports_the_line_the_statement_opens_on(): void
+    {
+        $source = <<<'PHP'
+            <?php
+
+            use App\{
+                Billing\Invoice,
+                Orders\Order,
+            };
+            PHP;
+
+        self::assertSame(
+            [
+                ['name' => 'App\Billing\Invoice', 'line' => 3],
+                ['name' => 'App\Orders\Order', 'line' => 3],
+            ],
+            $this->parseWithLines($source),
+        );
+    }
+
+    /**
+     * The trait `use` is skipped, so the import after the class body keeps its
+     * own line instead of inheriting the position of whatever was counted last.
+     */
+    public function test_a_skipped_trait_use_does_not_shift_the_lines_that_follow(): void
+    {
+        $source = <<<'PHP'
+            <?php
+
+            use App\Billing\Invoice;
+
+            final class Foo
+            {
+                use App\Shared\SomeTrait;
+            }
+
+            use App\Orders\Order;
+            PHP;
+
+        self::assertSame(
+            [
+                ['name' => 'App\Billing\Invoice', 'line' => 3],
+                ['name' => 'App\Orders\Order', 'line' => 10],
+            ],
+            $this->parseWithLines($source),
+        );
+    }
+
+    /**
+     * The two methods answer the same question, so the names must not drift
+     * apart: one is the other with the positions dropped.
+     */
+    public function test_the_names_are_the_same_whether_or_not_the_lines_are_asked_for(): void
+    {
+        $source = <<<'PHP'
+            <?php
+
+            use App\{Billing\Invoice, function Orders\total};
+            use App\Orders\Order as SalesOrder;
+            use function App\Billing\calculate;
+            PHP;
+
+        $parser = new PhpImportParser();
+
+        self::assertSame(
+            $parser->importsIn($source),
+            array_column($parser->importsWithLinesIn($source), 'name'),
+        );
+    }
+
     /**
      * @return list<string>
      */
     private function parse(string $source): array
     {
         return (new PhpImportParser())->importsIn($source);
+    }
+
+    /**
+     * @return list<array{name: string, line: int}>
+     */
+    private function parseWithLines(string $source): array
+    {
+        return (new PhpImportParser())->importsWithLinesIn($source);
     }
 }

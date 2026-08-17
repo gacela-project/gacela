@@ -27,6 +27,18 @@ use function sprintf;
  * Cycles are the one thing the graph could refuse on its own. Everything else --
  * billing must not reach back-office, reporting reads and nothing more -- is a
  * decision that has to be written down before any tool can hold anyone to it.
+ *
+ * `#[PublicApi]` is deliberately *not* honoured here, unlike in the two
+ * cross-module rules. Those ask "may this class be touched without going through
+ * the Facade", which is what publishing a class answers. This one asks whether
+ * two modules may be coupled at all, and a published class does not make a
+ * forbidden edge allowed -- the edge is the finding, whatever sits at the end
+ * of it.
+ *
+ * `debug:graph --check` enforces the same rules file over module-to-module edges
+ * built from imports, where no attribute is visible. Exempting here alone would
+ * leave the editor green and the CI gate red on the same code, and the paragraph
+ * above is what says why that is not worth doing.
  */
 final class DeclaredModuleDependencyAnalyser implements ClassAnalyserInterface
 {
@@ -44,7 +56,9 @@ final class DeclaredModuleDependencyAnalyser implements ClassAnalyserInterface
         int $modulePathSegments = 1,
         array $sharedNamespaces = [],
     ) {
-        $this->boundary = new ModuleBoundary($rootNamespace, $modulePathSegments, $sharedNamespaces);
+        // No public-api segments: see the class docblock. What a module exports
+        // is not what a rules file allows another module to depend on.
+        $this->boundary = new ModuleBoundary($rootNamespace, $modulePathSegments, $sharedNamespaces, []);
     }
 
     /**

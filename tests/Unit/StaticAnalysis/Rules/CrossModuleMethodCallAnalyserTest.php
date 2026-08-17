@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
+use Gacela\StaticAnalysis\PublicApiSurface;
 use Gacela\StaticAnalysis\Rules\CrossModuleMethodCallAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingChildException;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingContract;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingException;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingValueObject;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\UnpublishedInvoiceDraft;
 use PHPUnit\Framework\TestCase;
 
 final class CrossModuleMethodCallAnalyserTest extends TestCase
@@ -293,9 +296,80 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
     }
 
     /**
+     * The module published it, so reading it is not a crossing to justify --
+     * which is the whole point of a DTO leaving the module that built it.
+     */
+    public function test_a_call_on_a_published_receiver_is_allowed(): void
+    {
+        self::assertSame([], $this->analyseReal([PublishedInvoice::class]));
+    }
+
+    /**
+     * The attribute answers on its own: a project that turns the namespace
+     * convention off keeps the escape hatch for the odd class.
+     */
+    public function test_the_attribute_publishes_with_the_convention_turned_off(): void
+    {
+        self::assertSame([], $this->analyseReal([PublishedInvoice::class], publicApiSegments: []));
+    }
+
+    /**
+     * Publishing a base class must not publish everything anyone extends from
+     * it, or one annotation opens a module's whole hierarchy.
+     */
+    public function test_a_call_on_a_subclass_of_a_published_class_is_reported(): void
+    {
+        self::assertCount(1, $this->analyseReal([UnpublishedInvoiceDraft::class]));
+    }
+
+    public function test_a_call_on_a_class_in_a_published_sub_namespace_is_allowed(): void
+    {
+        self::assertSame([], $this->analyse(['App\Modules\Billing\Shared\Invoice']));
+    }
+
+    /**
+     * Whole segments, never prefixes: `Event` publishing every module's
+     * `EventHandler\` would export its internals on a naming coincidence.
+     */
+    public function test_a_call_on_a_namespace_that_merely_starts_with_a_published_one_is_reported(): void
+    {
+        self::assertCount(1, $this->analyse(['App\Modules\Billing\EventHandler\Invoices']));
+    }
+
+    public function test_the_published_sub_namespaces_are_configurable(): void
+    {
+        self::assertSame(
+            [],
+            $this->analyse(['App\Modules\Billing\Contract\Invoice'], publicApiSegments: ['Contract']),
+        );
+    }
+
+    /**
+     * An explicitly empty list turns the convention off, leaving only the
+     * attribute -- the way a project that dislikes conventions opts out.
+     */
+    public function test_an_empty_segment_list_turns_the_convention_off(): void
+    {
+        self::assertCount(1, $this->analyse(['App\Modules\Billing\Shared\Invoice'], publicApiSegments: []));
+    }
+
+    /**
+     * The published branch comes first, so ending the scan instead of
+     * continuing it would swallow the crossing behind it.
+     */
+    public function test_a_union_is_scanned_past_a_published_receiver(): void
+    {
+        self::assertCount(1, $this->analyse([
+            'App\Modules\Billing\Shared\Invoice',
+            'App\Modules\Billing\Domain\InvoiceRepository',
+        ]));
+    }
+
+    /**
      * @param list<string> $receiverClasses
      * @param list<string> $sharedNamespaces
      * @param list<string> $ignoreReceivers
+     * @param list<string> $publicApiSegments
      *
      * @return list<Violation>
      */
@@ -304,8 +378,15 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
         string $caller = self::CALLER,
         array $sharedNamespaces = [],
         array $ignoreReceivers = [],
+        array $publicApiSegments = PublicApiSurface::DEFAULT_SEGMENTS,
     ): array {
-        $analyser = new CrossModuleMethodCallAnalyser(self::ROOT, 1, $sharedNamespaces, $ignoreReceivers);
+        $analyser = new CrossModuleMethodCallAnalyser(
+            self::ROOT,
+            1,
+            $sharedNamespaces,
+            $ignoreReceivers,
+            $publicApiSegments,
+        );
 
         return $analyser->analyse($caller, $receiverClasses);
     }
@@ -316,12 +397,22 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
      *
      * @param list<string> $receiverClasses
      * @param list<string> $ignoreReceivers
+     * @param list<string> $publicApiSegments
      *
      * @return list<Violation>
      */
-    private function analyseReal(array $receiverClasses, array $ignoreReceivers = []): array
-    {
-        $analyser = new CrossModuleMethodCallAnalyser(self::FIXTURE_ROOT, 1, [], $ignoreReceivers);
+    private function analyseReal(
+        array $receiverClasses,
+        array $ignoreReceivers = [],
+        array $publicApiSegments = PublicApiSurface::DEFAULT_SEGMENTS,
+    ): array {
+        $analyser = new CrossModuleMethodCallAnalyser(
+            self::FIXTURE_ROOT,
+            1,
+            [],
+            $ignoreReceivers,
+            $publicApiSegments,
+        );
 
         return $analyser->analyse(self::FIXTURE_CALLER, $receiverClasses);
     }

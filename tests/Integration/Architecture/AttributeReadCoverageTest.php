@@ -48,7 +48,7 @@ final class AttributeReadCoverageTest extends TestCase
     /** @var list<string> */
     private const array ROOTS = [
         __DIR__ . '/../../../src',
-        __DIR__ . '/../../../symfony-bridge/src',
+        __DIR__ . '/../../../bridges/symfony-bridge/src',
     ];
 
     public function test_every_non_final_attribute_is_read_with_is_instanceof(): void

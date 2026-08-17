@@ -68,8 +68,8 @@
     "autoload": {
         "psr-4": {
             "Gacela\\": "src/",
-            "Gacela\\LaravelBridge\\": "laravel-bridge/src/",
-            "Gacela\\SymfonyBridge\\": "symfony-bridge/src/"
+            "Gacela\\LaravelBridge\\": "bridges/laravel-bridge/src/",
+            "Gacela\\SymfonyBridge\\": "bridges/symfony-bridge/src/"
         }
     },
     "autoload-dev": {
@@ -78,8 +78,8 @@
             "GacelaTest\\": "tests/",
             "GacelaTest\\Feature\\Framework\\PackageDiscovery\\Packages\\AuditTrail\\": "tests/Feature/Framework/PackageDiscovery/Packages/AuditTrail/src",
             "GacelaTest\\Feature\\ReferenceApp\\Packages\\InvoiceAudit\\": "tests/Feature/ReferenceApp/Packages/invoice-audit/src",
-            "GacelaTest\\LaravelBridge\\": "laravel-bridge/tests/",
-            "GacelaTest\\SymfonyBridge\\": "symfony-bridge/tests/"
+            "GacelaTest\\LaravelBridge\\": "bridges/laravel-bridge/tests/",
+            "GacelaTest\\SymfonyBridge\\": "bridges/symfony-bridge/tests/"
         }
     },
     "bin": [

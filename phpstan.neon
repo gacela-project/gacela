@@ -12,8 +12,8 @@ parameters:
     level: max
     paths:
         - %currentWorkingDirectory%/src/
-        - %currentWorkingDirectory%/symfony-bridge/src/
-        - %currentWorkingDirectory%/laravel-bridge/src/
+        - %currentWorkingDirectory%/bridges/symfony-bridge/src/
+        - %currentWorkingDirectory%/bridges/laravel-bridge/src/
     parallel:
         maximumNumberOfProcesses: 4
     excludePaths:

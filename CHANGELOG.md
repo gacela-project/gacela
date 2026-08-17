@@ -4,6 +4,24 @@
 
 ### Added
 
+#### Your application's own events
+
+The dispatcher, the guard, the inheritance matching and the tooling were all scoped to the framework's own introspection events. A project can now dispatch its own through the same dispatcher, which is how one module reacts to another without depending on it.
+
+- The dispatcher is an ordinary dependency: `getProvidedDependency(EventDispatcherInterface::class)` in a Factory, resolved to whatever `setEventDispatcher()` installed. Nothing was added to `AbstractFacade`/`AbstractFactory` — that is the point. An application binding for the id still wins, and so does a module Provider registering its own
+- Registered on the module scope rather than the application container, so `debug:container` and `validate:config` keep describing the application
+- `debug:events` lists a project's events beside the framework's, marked `project`, with a `source` field in `--json` and a count in the summary. Found under the paths discovery already walks — never `vendor/` — by implementing `GacelaEventInterface` or being named `*Event`, narrowed by `setProjectNamespaces()`
+- `doctor` judges a listener target against that catalog: a listener registered on a class that forgot `implements GacelaEventInterface` can never fire, which nothing reported before
+- `GacelaTestCase::assertEventDispatched()` answers from the recording `bootstrapGacela()` already installs, for a project's events as readily as for Gacela's
+- `EventDispatchingCapabilities` is marked `@internal`: it is how the framework's own pre-injection classes dispatch, and an application injects the dispatcher instead
+- The reference application shows the module-to-module case: `Billing` announces `InvoiceIssuedEvent`, `Notification` handles it, and a test asserts Billing depends on `Customer` and nothing else. See [your own events](docs/events.md#your-own-events)
+
+#### PSR-14 interop
+
+- `setEventDispatcher()` accepts a `Psr\EventDispatcher\EventDispatcherInterface` — Symfony's, Laravel's, any of them — and wraps it, so a hosted application routes Gacela's events onto the bus it already has. `psr/event-dispatcher` is now a hard requirement; it is interface-only
+- PSR-14 cannot be asked what it listens to, so the adapter's `hasListeners()` answers true and every dispatch site allocates. The cost falls only on an application that supplied one: with none, the hot-path guard is the single array lookup it always was (`EventDispatchBench` unmoved). To answer narrowly, implement Gacela's interface directly
+- `Psr14EventDispatcher` goes the other way, for a library that expects PSR-14: it returns the event, honours `hasListeners()`, and does not dispatch one that arrives already stopped. `ConfigurableEventDispatcher` deliberately does not claim the interface itself — its `void` return satisfies the signature and breaks the contract
+
 #### A module can declare its public API
 
 A module's surface is wider than its Facade — DTOs, enums, value objects, events — and until now the only way to say so was an ignore list in `phpstan.neon`, repeated in `psalm.xml`, outside the module that owns the class.

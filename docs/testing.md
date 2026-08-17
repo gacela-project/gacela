@@ -31,10 +31,13 @@ What it gives you:
 ```php
 $this->assertServiceResolved('checkout-gateway');       // ServiceResolvedEvent seen
 $this->assertBindingRegistered(PaymentGateway::class);  // BindingRegisteredEvent seen
+$this->assertEventDispatched(InvoiceIssued::class);     // any event, yours included
 
 $events = $this->recordedGacelaEvents();                              // all of them
 $resolved = $this->recordedGacelaEventsOf(ServiceResolvedEvent::class); // one type
 ```
+
+`assertEventDispatched()` and `recordedGacelaEventsOf()` answer about [your own events](events.md#your-own-events) as readily as about the framework's — one dispatcher, one recording — so a test of a module that announces something needs no listener of its own. Both match by inheritance, the way `registerSpecificListener()` does, so naming a base class or `GacelaEventInterface::class` asks about the whole family. To assert on a payload, read the events: `recordedGacelaEventsOf()` returns them typed and in dispatch order.
 
 If you only need the reset helpers inside an existing test hierarchy, use the [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait directly — `GacelaTestCase` builds on it.
 

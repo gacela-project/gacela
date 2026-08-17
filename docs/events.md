@@ -4,7 +4,7 @@ Gacela dispatches domain events while it works: bootstrapping, reading config, r
 
 ## Dispatch model
 
-- Every event is a small immutable class implementing `GacelaEventInterface` (one `toString()` method).
+- Every event is a small immutable class implementing `GacelaEventInterface` (one `toString()` method) — the framework's, and [your own](#your-own-events).
 - By default nothing listens: the dispatcher is a `NullEventDispatcher`, and every dispatch site is guarded by `EventDispatcherInterface::hasListeners()`, so **no event object is even allocated** unless a listener is registered for it. Events are zero-cost when unused, including on the class-resolution hot path.
 - Registering any listener switches to a `ConfigurableEventDispatcher`. Listeners are plain callables receiving the event object; they are notify-only (events are immutable, there is no propagation stopping).
 - A specific listener matches **by inheritance**: it runs for the class it names and for every event that extends or implements it. `AbstractGacelaClassResolverEvent::class` covers all four resolver events, and `GacelaEventInterface::class` covers every event there is — the typed way to listen to everything. The applicable listeners are worked out **once per concrete event class** and kept, so past the first dispatch of a class the guard is a single array lookup, exactly as when matching was on the exact class.
@@ -64,6 +64,108 @@ first Facade/Factory/Config access (per module)
  └─ ServiceResolvedEvent             (per service, first `get()` on the container)
 ```
 
+## Your own events
+
+The dispatcher is not the framework's private property: a module can dispatch its own events through it, which is how one module reacts to another without depending on it. `InvoiceIssued` → Notification sends the mail, Reporting updates a projection, and Billing knows about none of them.
+
+Three pieces, and nothing else:
+
+**1. The event is a class implementing `GacelaEventInterface`.** One `toString()` method, immutable, carrying facts rather than a handle onto the module that raised it.
+
+```php
+namespace App\Billing\Event;
+
+use Gacela\Framework\Event\GacelaEventInterface;
+
+final class InvoiceIssued implements GacelaEventInterface
+{
+    public function __construct(
+        private readonly string $invoiceNumber,
+        private readonly string $customerName,
+    ) {
+    }
+
+    public function invoiceNumber(): string
+    {
+        return $this->invoiceNumber;
+    }
+
+    public function customerName(): string
+    {
+        return $this->customerName;
+    }
+
+    public function toString(): string
+    {
+        return 'Invoice issued: ' . $this->invoiceNumber;
+    }
+}
+```
+
+**2. The dispatcher is an ordinary dependency.** A Factory asks for it by interface, like a repository or a clock — there is no trait to mix in and no static call to make:
+
+```php
+use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+
+final class BillingFactory extends AbstractFactory
+{
+    public function createInvoiceIssuer(): InvoiceIssuer
+    {
+        return new InvoiceIssuer($this->getEventDispatcher());
+    }
+
+    public function getEventDispatcher(): EventDispatcherInterface
+    {
+        return $this->getProvidedDependency(EventDispatcherInterface::class);
+    }
+}
+```
+
+Whatever `setEventDispatcher()` installed is what arrives — including a host framework's own bus. The id is a default rather than a reservation: an application that binds something else under `EventDispatcherInterface::class`, app-wide or in one module's Provider, gets what it declared.
+
+Then dispatch, behind the same guard the framework uses on its own dispatch sites:
+
+```php
+if ($this->events->hasListeners(InvoiceIssued::class)) {
+    $this->events->dispatch(new InvoiceIssued($number, $customerName));
+}
+```
+
+The guard is worth writing. With nothing listening the event object is never constructed, so an announcement costs a single array lookup — and a module keeps that property whether or not this deployment cares about the event.
+
+**3. The listener is registered where every listener is:** in the `Gacela::bootstrap()` closure or in `gacela.php`.
+
+```php
+use App\Billing\Event\InvoiceIssued;
+use App\Notification\NotificationFacade;
+use Gacela\Framework\Gacela;
+
+$config->registerSpecificListener(
+    InvoiceIssued::class,
+    static function (InvoiceIssued $event): void {
+        /** @var NotificationFacade $notifications */
+        $notifications = Gacela::getRequired(NotificationFacade::class);
+        $notifications->onInvoiceIssued($event);
+    },
+);
+```
+
+That line is the only place both modules are named, and `gacela.php` is the composition root — the one file allowed to know both sides. Resolve the facade through the locator rather than constructing it, so a test that replaces the module also replaces what the listener reaches.
+
+What this buys, and what it costs:
+
+- **The publisher names nobody.** `debug:graph --check --rules` draws no edge from Billing to Notification and the analysers' cross-module rules see nothing to complain about, because there is no import to see. A second reaction is another registration and no change to Billing.
+- **The subscriber names the event.** It has to: it type-hints it. Put the event in the module's `Event` sub-namespace — `App\Billing\Event\InvoiceIssued` — which is one of the namespaces a module publishes by convention, so a subscriber may name it while the rest of `App\Billing` stays private. See [module boundaries](module-boundaries.md).
+- **Nothing draws the wiring for you.** An event leaves no import behind, so no graph can tell you who listens. `debug:events` can, and it is the report to reach for.
+- **A Facade only delegates**, so reading an event is the Factory's job — the shipped `gacela.facadeOnlyDelegates` rule holds a project to that.
+
+Everything the framework's own events get applies unchanged: the typed `registerSpecificListener()`, matching by inheritance (a project's own base event covers the family below it, `GacelaEventInterface::class` covers everything), the per-class listener memo, and the `hasListeners()` guard.
+
+In tests, `GacelaTestCase::assertEventDispatched()` answers from the recording `bootstrapGacela()` installs, for a project's events as readily as for Gacela's — see [testing](testing.md).
+
+The [reference application](reference-app.md) does exactly this: `Billing` announces `InvoiceIssuedEvent`, `Notification` handles it, and a test asserts that Billing depends on `Customer` and nothing else.
+
 ## Seeing what listens
 
 ```bash
@@ -72,9 +174,11 @@ vendor/bin/gacela debug:events
 
 The same catalog as below, read off the classes rather than this page, with the listeners *your* project registered against each one. Because a specific listener matches by inheritance, an event can be covered by a registration that never names it — the listener column names the target that does, so one listener on `AbstractGacelaClassResolverEvent` reads as four covered events rather than four mysteries.
 
-`--listened` narrows to the events something watches, an optional argument narrows by class name, and `--json` reports the same thing as a document. It also says when `disableEventListeners()` is in effect, which is the state in which everything below is registered and none of it runs, and when a dispatcher was supplied through `setEventDispatcher()` — the listener table is what the *configuration* registered, and a supplied dispatcher carries every event on to a bus this command cannot see into.
+**Your own events are listed too**, under their own namespace and marked `project`. They are found under the paths module discovery walks — `appModulePaths`, or the application root — by implementing `GacelaEventInterface` or being named `*Event`, and narrowed to `setProjectNamespaces()` when you declared it. Nothing in `vendor/` is scanned. An event of yours that is *missing* from the listing is one no listener registration can be checked against, and the fix is usually the interface: a class that forgot `implements GacelaEventInterface` looks exactly like an event, is accepted by `registerSpecificListener()`, and never fires. `doctor` reports that target as one nothing can ever match.
 
-Where `doctor` answers "is this listener target a thing an event can be", this answers "what does the framework offer, and what am I actually watching".
+`--listened` narrows to the events something watches, an optional argument narrows by class name — `debug:events App\` for your own, if they share a prefix — and `--json` reports the same thing as a document, with a `source` field per event and a `projectEvents` count in the summary. It also says when `disableEventListeners()` is in effect, which is the state in which everything below is registered and none of it runs, and when a dispatcher was supplied through `setEventDispatcher()` — the listener table is what the *configuration* registered, and a supplied dispatcher carries every event on to a bus this command cannot see into.
+
+Where `doctor` answers "is this listener target a thing an event can be", this answers "what does the framework offer, what do I offer, and what am I actually watching".
 
 ## Event catalog
 
@@ -243,9 +347,51 @@ Set it from the bootstrap closure, the same place everything else is configured:
 
 ```php
 Gacela::bootstrap($appRootDir, static function (GacelaConfig $config): void {
-    $config->setEventDispatcher(new Psr14Bridge($myBus));
+    $config->setEventDispatcher(new MyDispatcher($myBus));
 });
 ```
+
+### PSR-14, for a hosted application
+
+A Symfony or Laravel application already has a bus, and one event system per application is the point — so `setEventDispatcher()` also accepts a `Psr\EventDispatcher\EventDispatcherInterface` and wraps it for you. No adapter to write:
+
+```php
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
+Gacela::bootstrap($appRootDir, static function (GacelaConfig $config) use ($dispatcher): void {
+    // Symfony's, Laravel's, or any other PSR-14 implementation.
+    $config->setEventDispatcher($dispatcher);
+});
+```
+
+Gacela's events then arrive on the host's bus, the listeners you registered beside it still run (see below), and your own events go to the same place — nothing is dispatched twice and there is no second event system beside the first.
+
+**One thing to know about the cost.** PSR-14 offers no way to ask what is subscribed, so the adapter's `hasListeners()` answers `true` for everything: every guarded dispatch site allocates its event and hands it over, including the ones on the class-resolution hot path. That is the price of routing events to a bus that cannot be asked, and it is paid only by an application that installed one — supply no dispatcher and the guard is the single array lookup it has always been. If you want a narrower answer, implement Gacela's `EventDispatcherInterface` yourself and say so in `hasListeners()`; that is exactly what this section's first paragraph is for.
+
+The other direction is a class rather than a parameter: a library that type-hints PSR-14 can be handed the dispatcher this application configured, listeners and all.
+
+```php
+use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\Dispatcher\Psr14EventDispatcher;
+
+final class ReportingFactory extends AbstractFactory
+{
+    public function createLibrary(): SomeLibrary
+    {
+        return new SomeLibrary(new Psr14EventDispatcher(
+            $this->getProvidedDependency(EventDispatcherInterface::class),
+        ));
+    }
+}
+```
+
+Outside a module, `Config::getInstance()->getSetupGacela()->getEventDispatcher()` is the same object.
+
+It returns the event, as PSR-14 requires, and honours both halves of the contract Gacela's own dispatch sites honour: a dispatcher that declines the class in `hasListeners()` is not told, and an event that arrives already stopped is not dispatched. Gacela's listeners are notify-only, so propagation cannot be stopped *between* them.
+
+`ConfigurableEventDispatcher` deliberately does not implement PSR-14 itself. Its `dispatch()` returns `void`, which satisfies the signature — PSR-14 declares no return type — while breaking the contract, which says the event comes back. A class that is a PSR-14 dispatcher in name and returns nothing is worse than one that honestly is not, so the conversion is explicit.
 
 A dispatcher you supply **takes precedence over `disableEventListeners()`**: that switch governs the dispatcher Gacela would *build*, and this is one it does not build. To go quiet, return `false` from `hasListeners()` — which also skips allocating the events, where the switch would only stop them being delivered.
 

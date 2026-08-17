@@ -96,7 +96,8 @@ final class ModuleBoundary
      */
     public function isPublicApi(string $class): bool
     {
-        if ($this->moduleOf($class) === null) {
+        $module = $this->moduleOf($class);
+        if ($module === null) {
             return false;
         }
 
@@ -104,7 +105,7 @@ final class ModuleBoundary
             return true;
         }
 
-        return $this->isUnderAPublicSegment($class);
+        return $this->isUnderAPublicSegment($class, $module);
     }
 
     /**
@@ -127,16 +128,17 @@ final class ModuleBoundary
      * short name, matched whole.
      *
      * A class sitting directly in its module -- `App\Billing\BillingFacade` --
-     * has none, so nothing there is ever published by convention.
+     * has none, so nothing there is ever published by convention. Nor is
+     * anything when no segment is configured, which needs no special case: there
+     * is simply nothing for a segment to equal.
+     *
+     * The module arrives as an argument rather than being looked up again, so
+     * the caller's null check is the only one and the offset below cannot be
+     * measured against a different answer than the one that got us here.
      */
-    private function isUnderAPublicSegment(string $class): bool
+    private function isUnderAPublicSegment(string $class, string $module): bool
     {
-        if ($this->publicApiSegments === []) {
-            return false;
-        }
-
-        $module = (string)$this->moduleOf($class);
-        $segments = explode('\\', substr($class, strlen($module) + 1));
+        $segments = explode('\\', substr($class, strlen($module . '\\')));
         // The class's own name is not a namespace segment.
         array_pop($segments);
 

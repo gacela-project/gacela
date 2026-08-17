@@ -44,8 +44,8 @@ use function trait_exists;
  * Composer's autoloader is deliberately not the one used: it runs every
  * installed package's `files` entries, and the preload context forbids the I/O
  * some of them do at load time -- one `fopen('php://stdout')` in a stream
- * library aborts the entire preload. Gacela's runtime closure is three
- * packages, so those prefixes are named below instead.
+ * library aborts the entire preload. Gacela's runtime closure is a handful of
+ * packages, so those prefixes are named in {@see autoloadPrefixes()} instead.
  */
 final class Preloader
 {
@@ -140,6 +140,11 @@ final class Preloader
 
         $prefixes['Gacela\\Container\\'] = $vendorDir . '/gacela-project/container/src/Container/';
         $prefixes['Psr\\Container\\'] = $vendorDir . '/psr/container/src/';
+        // Named for the same reason as the two above: `Psr14EventDispatcher`
+        // implements an interface from here, and a class whose interface is
+        // missing is dropped from the image with a startup warning rather than
+        // linked.
+        $prefixes['Psr\\EventDispatcher\\'] = $vendorDir . '/psr/event-dispatcher/src/';
 
         return $prefixes;
     }

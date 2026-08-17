@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\BillingProvider;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Validation\MaximumAmountValidator;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Resilience\RetryPolicyInterface;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Resilience\SingleAttemptPolicy;
 
 /**
  * Wiring that is data rather than code, read by `loadDefinitions()`.
@@ -16,14 +18,15 @@ use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\Validation\MaximumA
  * accumulate rather than override, which is what lets a generated or
  * environment-specific file contribute to a group it did not declare.
  *
- * What does *not* belong here: anything a Facade, Factory, Config or Provider
- * asks for in its constructor. Those four are built by the class resolver,
- * which reads `addBinding()` and nothing else -- see `gacela.php`, where the
- * retry policy is bound for that reason.
+ * The retry policy is a constructor argument of `NotificationFactory`, which
+ * the class resolver builds -- and a definition reaches a pillar constructor
+ * exactly as `addBinding()` does, so the choice between the two is about where
+ * the declaration reads best rather than about where it will be seen.
  */
 return [
     MaximumAmountValidator::class => [
         'singleton' => MaximumAmountValidator::class,
         'tags' => [BillingProvider::VALIDATOR_TAG],
     ],
+    RetryPolicyInterface::class => ['singleton' => SingleAttemptPolicy::class],
 ];

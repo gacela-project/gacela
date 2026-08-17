@@ -36,7 +36,6 @@ use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Bootstrap\RegisterCacheable
 use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Clock\ClockInterface;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Packaging\InvoicingPackageDefaults;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Resilience\RetryPolicyInterface;
-use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Resilience\SingleAttemptPolicy;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Shared\Resilience\ThreeAttemptPolicy;
 
 /**
@@ -158,19 +157,14 @@ return static function (GacelaConfig $config): void {
     // one already.
     $config->extendGacelaConfig(InvoicingPackageDefaults::class);
 
-    // Try once, everywhere except payments -- see the contextual binding below.
-    //
-    // A binding rather than a definition on purpose: the four pillars are built
-    // by the class resolver, which reads bindings and contextual bindings and
-    // nothing else, so an interface a Factory asks for in its constructor has
-    // to be bound here.
-    $config->addBinding(RetryPolicyInterface::class, SingleAttemptPolicy::class);
-
     // Service wiring that is data rather than code, for the services the
-    // application containers build.
+    // application containers build. The retry policy lives there: it is a
+    // default this application picks, not a decision the bootstrap makes, and
+    // `NotificationFactory` takes it as a constructor argument.
     $config->loadDefinitions(__DIR__ . '/services.php');
 
-    // A capture worth retrying, and nothing else in the application is.
+    // Try once, everywhere except payments. A capture is worth retrying, and
+    // nothing else in the application is.
     $config->when(PaymentBuilder::class)
         ->needs(RetryPolicyInterface::class)
         ->give(ThreeAttemptPolicy::class);

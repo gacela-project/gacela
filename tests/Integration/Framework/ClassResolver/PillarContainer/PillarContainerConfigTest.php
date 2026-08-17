@@ -101,6 +101,29 @@ final class PillarContainerConfigTest extends TestCase
         self::assertSame([Greeting\Factory::class], $resolved);
     }
 
+    /**
+     * The id-keyed verbs never fill a constructor parameter -- autowiring
+     * matches by type, in every container -- but a Provider reading one off
+     * this container used to get nothing at all.
+     */
+    public function test_the_id_keyed_registrations_reach_the_pillar_container(): void
+    {
+        $this->bootstrapWith(static function (GacelaConfig $config): void {
+            $config->addFactory('greeter.factory', static fn (): GreeterInterface => new FriendlyGreeter());
+            $config->addLazy('greeter.lazy', static fn (): GreeterInterface => new FriendlyGreeter());
+            $config->addAlias('greeter.alias', FriendlyGreeter::class);
+            $config->addFactory('greeter.extended', static fn (): GreeterInterface => new FriendlyGreeter());
+            $config->extendService('greeter.extended', static fn (): GreeterInterface => new GrumpyGreeter());
+        });
+
+        $container = AbstractClassResolver::pillarContainer();
+
+        self::assertInstanceOf(FriendlyGreeter::class, $container->get('greeter.factory'));
+        self::assertInstanceOf(FriendlyGreeter::class, $container->get('greeter.lazy'));
+        self::assertInstanceOf(FriendlyGreeter::class, $container->get('greeter.alias'));
+        self::assertInstanceOf(GrumpyGreeter::class, $container->get('greeter.extended'));
+    }
+
     public function test_building_the_pillar_container_announces_no_second_registration(): void
     {
         $registered = [];

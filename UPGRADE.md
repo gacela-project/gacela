@@ -218,7 +218,7 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ## 2.3 → 2.4
 
-Six changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; the two opt-in cross-module rules, if you have them enabled; `addAppConfig()` with a wildcard, if a file in that directory is named after another one with a `-suffix`; and `doctor`, if you run it with `--strict` and register a listener against something that is not an event type.
+Seven changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; the two opt-in cross-module rules, if you have them enabled; `addAppConfig()` with a wildcard, if a file in that directory is named after another one with a `-suffix`; `doctor`, if you run it with `--strict` and register a listener against something that is not an event type; and the container the four pillars are built from, which now applies the whole of `gacela.php`.
 
 ### 1. A specific listener matches by inheritance
 
@@ -332,6 +332,20 @@ The other way to meet it is an event of yours that Gacela does not know about, b
 A target that exists and *can* match is still left alone whether or not this deployment dispatches it: a listener waiting for an event nobody raises is waiting, not broken.
 
 Two additions come with it, neither of which can break anything: `debug:events` lists your own events beside the framework's with a `source` field in `--json`, and `setEventDispatcher()` now also accepts a PSR-14 dispatcher. If you already wrote an adapter around your bus to satisfy Gacela's interface, keep it — it answers `hasListeners()` for itself, which the built-in wrapper cannot.
+
+### 6. A pillar's constructor sees the whole configuration
+
+The class resolver builds your Facade, Factory, Config and Provider from a container of its own. That container was seeded with `addBinding()` and `when()` and nothing else, so everything else in `gacela.php` — `loadDefinitions()`, `extendService()`, `afterResolving()`, the id-keyed verbs, tags, handler registries, plugin stacks — reached every container *except* the one that builds the four classes a module is made of. It is now configured exactly like the application container.
+
+Mostly this only turns failures into successes: a pillar constructor asking for an interface a definitions file declared threw `DependencyNotFoundException` while `Gacela::container()->get()` returned it happily, and now builds. Three things change for code that was already working:
+
+- **A definition now beats an `addBinding()` for a pillar constructor**, as it already did everywhere else. Definitions apply last so the data layer can override the imperative one; the pillar container never applied them, so it kept the `addBinding()` value. If you declare the same id both ways *and* a pillar takes it in its constructor, that pillar gets the definition's implementation now
+- **`afterResolving()` fires for pillars.** A hook registered against a Facade, Factory, Config or Provider class — or against an interface one of them implements — did not run when the class resolver built it, and does now. A hook that appends to a collection or increments a counter runs once more per pillar than it used to
+- **A Provider reading an id off the resolver's container gets the configured answer.** `addFactory()`, `addProtected()`, `addAlias()`, `addLazy()`, the tags, the handler registries, the plugin stacks and the `extendService()` decorations are all present there now, where before every one of them was missing. None of them fills a *constructor parameter* — autowiring matches by type and those register by id, in every container — so nothing that resolved before resolves differently
+
+`BindingRegisteredEvent` is unchanged: the pillar container applies the same declarations silently, because the event describes the configuration and the configuration is still walked once. Counts, `assertBindingRegistered()` and `debug:events` see exactly what they saw before.
+
+**One thing can turn a green build red.** `debug:modules --check` used to read the bindings of `Gacela::container()`; it now reads the container that does the building. Where something reaches the application container and not the configuration — a plugin calling `bind()` at runtime is the plain case — a pillar depending on it was reported as fine and is now reported as a fault. That report is correct: the class resolver cannot build that pillar. Move the registration into `gacela.php`, where the class resolver can see it.
 
 ---
 

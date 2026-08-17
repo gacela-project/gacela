@@ -261,7 +261,9 @@ Nullability changes nothing on its own: a `?Foo` with no default and no binding 
 ### Interactions
 
 - Contextual bindings win over global `addBinding` — by name at step 2, by type at step 5, both before `addBinding` at step 6.
+- **Only the by-type registrations can fill a parameter.** The list above never consults the id-keyed registries, so `addFactory()`, `addProtected()`, `addAlias()` and `addLazy()` do not satisfy a constructor argument — read those back with `get($id)`. `addBinding()`, `when()` and `loadDefinitions()` are the ones autowiring sees.
 - Protected services (`addProtected`) cannot be injected — they're stored as raw closures and the container won't instantiate them.
+- The same list applies wherever the container builds something, **including the constructor of a Facade, Factory, Config or Provider**. Those four are built by the class resolver, from its own container — configured from this same `gacela.php`, so a declaration reaches them exactly as it reaches a module's services.
 - `#[Inject]` does not replace `#[ServiceMap]` or `ServiceResolverAwareTrait` — those serve a different `__call`-based dispatch use case and remain supported.
 
 ### Visibility in tooling
@@ -442,7 +444,7 @@ Each entry ends up calling the registration method it stands for, so a definitio
 
 **Ordering.** Sources apply in the order declared, and *after* the imperative registrations — so a later source overrides an earlier one, and a definitions file overrides `addBinding()`. That is the point: an environment override file that lost to the code it is meant to override could not do its job. `tags` accumulate instead of overriding, the way `tag()` does.
 
-**Scope.** App-wide, reaching every module container, like `addBinding()`. For definitions local to one module, call `Container::load()` in that module's Provider:
+**Scope.** App-wide, reaching every module container *and* the container that builds the four pillars, like `addBinding()` — so an interface a Facade, Factory, Config or Provider takes in its constructor can be declared as data. For definitions local to one module, call `Container::load()` in that module's Provider:
 
 ```php
 final class Provider extends AbstractProvider

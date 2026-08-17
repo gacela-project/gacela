@@ -11,6 +11,7 @@ use PhpBench\Attributes\Assert;
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
+use PhpBench\Attributes\RetryThreshold;
 use PhpBench\Attributes\Revs;
 
 /**
@@ -24,6 +25,7 @@ use PhpBench\Attributes\Revs;
  */
 #[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
 #[BeforeMethods('setUp')]
+#[RetryThreshold(20)]
 #[Groups(['informational', 'micro', 'resolve'])]
 #[Revs(1000)]
 #[Iterations(5)]

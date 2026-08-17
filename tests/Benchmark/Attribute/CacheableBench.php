@@ -11,6 +11,7 @@ use Gacela\Framework\Attribute\InMemoryCacheStorage;
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
+use PhpBench\Attributes\RetryThreshold;
 use PhpBench\Attributes\Revs;
 
 /**
@@ -22,6 +23,7 @@ use PhpBench\Attributes\Revs;
  * well within CI timer noise, so it must not fail the performance regression guard.
  */
 #[BeforeMethods('setUp')]
+#[RetryThreshold(20)]
 #[Groups(['informational', 'cacheable'])]
 #[Revs(1000)]
 #[Iterations(5)]

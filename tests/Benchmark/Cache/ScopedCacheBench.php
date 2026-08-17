@@ -11,6 +11,7 @@ use PhpBench\Attributes\Assert;
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
+use PhpBench\Attributes\RetryThreshold;
 use PhpBench\Attributes\Revs;
 
 use function bin2hex;
@@ -46,6 +47,7 @@ use function unlink;
 #[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
 #[BeforeMethods('setUp')]
 #[AfterMethods('tearDown')]
+#[RetryThreshold(20)]
 #[Groups(['informational', 'cache'])]
 #[Revs(50)]
 #[Iterations(5)]

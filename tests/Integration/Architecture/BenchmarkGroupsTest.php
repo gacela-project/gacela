@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Architecture;
 
 use PhpBench\Attributes\Groups;
+use PhpBench\Attributes\RetryThreshold;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -16,6 +17,7 @@ use function array_values;
 use function count;
 use function dirname;
 use function implode;
+use function in_array;
 use function sprintf;
 use function str_replace;
 
@@ -36,6 +38,9 @@ use function str_replace;
 final class BenchmarkGroupsTest extends TestCase
 {
     private const array GATING_GROUPS = ['gate', 'informational'];
+
+    /** Kept in one place so the benches and this guard cannot disagree. */
+    private const int INFORMATIONAL_RETRY_THRESHOLD = 20;
 
     /**
      * @return iterable<string, array{class-string}>
@@ -86,6 +91,56 @@ final class BenchmarkGroupsTest extends TestCase
             implode(', ', $groups),
             implode(', ', self::GATING_GROUPS),
         ));
+    }
+
+    /**
+     * An `informational` class must loosen its retry threshold; a `gate` class
+     * must not.
+     *
+     * `phpbench.json` sets `runner.retry_threshold: 5` for the whole suite, and
+     * a retry is **unbounded** — phpbench 1.7 has `setRetryLimit()` and calls it
+     * from nowhere, so there is no cap and no config key for one. A group whose
+     * numbers are never asserted therefore pays an open-ended amount of CI time
+     * to stabilise a reading nothing reads: measured on `ScopedCacheBench`, one
+     * machine, one commit, 34s at threshold 5 against 6.3s at 10. That is what
+     * made the guard's baseline step run 11–12 minutes and get killed by the job
+     * timeout while the gate step beside it passed in 15 seconds.
+     *
+     * The gate group keeps the strict 5, because a ±10% assertion means nothing
+     * on top of an unstable reading. See tests/Benchmark/README.md.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('benchClassProvider')]
+    public function test_only_the_informational_benches_loosen_the_retry_threshold(string $class): void
+    {
+        $reflection = new ReflectionClass($class);
+
+        /** @var list<string> $groups */
+        $groups = $reflection->getAttributes(Groups::class)[0]->getArguments()[0];
+        $isInformational = in_array('informational', $groups, true);
+        $retry = $reflection->getAttributes(RetryThreshold::class);
+
+        if (!$isInformational) {
+            self::assertSame([], $retry, sprintf(
+                '%s is gated and declares #[RetryThreshold]. A gated subject keeps the strict '
+                . 'phpbench.json threshold: the ±10%% assertion is only meaningful on a stable reading.',
+                $class,
+            ));
+
+            return;
+        }
+
+        self::assertCount(1, $retry, sprintf(
+            '%s is informational and declares no #[RetryThreshold]. Retries are unbounded, so a '
+            . 'reading nothing asserts on can stall CI until the job timeout. Add #[RetryThreshold(%d)].',
+            $class,
+            self::INFORMATIONAL_RETRY_THRESHOLD,
+        ));
+
+        self::assertSame(
+            self::INFORMATIONAL_RETRY_THRESHOLD,
+            $retry[0]->getArguments()[0],
+            sprintf('%s should use the same threshold as every other informational bench.', $class),
+        );
     }
 
     public function test_the_suite_has_benches_to_check(): void

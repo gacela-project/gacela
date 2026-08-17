@@ -10,6 +10,7 @@ use Gacela\Framework\Gacela;
 use PhpBench\Attributes\Assert;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
+use PhpBench\Attributes\RetryThreshold;
 use PhpBench\Attributes\Revs;
 
 /**
@@ -28,6 +29,7 @@ use PhpBench\Attributes\Revs;
  * @BeforeMethods("setUp")
  */
 #[Assert('mode(variant.time.avg) <= mode(baseline.time.avg) +/- 1000%')]
+#[RetryThreshold(20)]
 #[Groups(['informational', 'micro', 'config'])]
 #[Revs(1000)]
 #[Iterations(5)]

@@ -8,6 +8,7 @@ use Gacela\Container\Container;
 use Gacela\Container\PlanCache;
 use GacelaTest\Benchmark\Container\Fixtures\DeepD;
 use PhpBench\Attributes\Groups;
+use PhpBench\Attributes\RetryThreshold;
 
 /**
  * Gacela's containers are sibling roots -- one per Factory class -- resolving
@@ -22,6 +23,7 @@ use PhpBench\Attributes\Groups;
  * Informational, not gated: the isolated subject is a deliberate slow path
  * kept for comparison, so gating it would gate a baseline nobody ships.
  */
+#[RetryThreshold(20)]
 #[Groups(['informational', 'container'])]
 final class SharedPlanCacheBench
 {

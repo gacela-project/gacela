@@ -379,7 +379,7 @@ final class InvoicingToolingTest extends TestCase
         $display = $tester->getDisplay();
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
-        self::assertStringNotContainsString('Nothing listens to any Gacela event.', $display);
+        self::assertStringNotContainsString('Nothing listens to any event', $display);
         // One registration against the abstract parent, so all four resolver
         // events are covered by it and the target is named on each row.
         self::assertStringContainsString('1 listener via AbstractGacelaClassResolverEvent', $display);

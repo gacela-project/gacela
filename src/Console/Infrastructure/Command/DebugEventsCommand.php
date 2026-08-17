@@ -334,13 +334,18 @@ final class DebugEventsCommand extends Command
         $output->writeln('');
     }
 
+    /**
+     * Both messages speak for the whole listing, the project's events included:
+     * "no Gacela event contains this" beside a table that also holds the
+     * reader's own events answers a narrower question than the one they asked.
+     */
     private function nothingToShow(string $filter, bool $listenedOnly): string
     {
         if ($listenedOnly) {
-            return '  <comment>Nothing listens to any Gacela event.</comment>';
+            return "  <comment>Nothing listens to any event, Gacela's or this project's.</comment>";
         }
 
-        return sprintf('  <comment>No Gacela event contains "%s".</comment>', $filter);
+        return sprintf('  <comment>No event contains "%s".</comment>', $filter);
     }
 
     /**

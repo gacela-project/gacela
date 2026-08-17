@@ -125,7 +125,7 @@ final class DebugEventsCommandTest extends TestCase
         $tester = $this->runCommand(['filter' => 'NoSuchEvent']);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('No Gacela event contains "NoSuchEvent"', $tester->getDisplay());
+        self::assertStringContainsString('No event contains "NoSuchEvent"', $tester->getDisplay());
     }
 
     public function test_listened_with_nothing_registered_says_so(): void
@@ -134,7 +134,7 @@ final class DebugEventsCommandTest extends TestCase
 
         $display = $this->runCommand(['--listened' => true])->getDisplay();
 
-        self::assertStringContainsString('Nothing listens to any Gacela event.', $display);
+        self::assertStringContainsString("Nothing listens to any event, Gacela's or this project's.", $display);
     }
 
     /**

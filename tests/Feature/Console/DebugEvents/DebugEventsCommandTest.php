@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Console\DebugEvents;
 
 use Gacela\Console\Application\Debug\EventCatalog;
+use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Infrastructure\Command\DebugEventsCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Event\ClassResolver\AbstractGacelaClassResolverEvent;
@@ -13,6 +14,7 @@ use Gacela\Framework\Event\Config\ConfigKeyReadEvent;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Event\Provider\ProviderRegisteredEvent;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Console\DebugEvents\Fixture\StockRunLowEvent;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -249,9 +251,98 @@ final class DebugEventsCommandTest extends TestCase
         );
     }
 
+    /**
+     * The half of the report that used to be missing: an event the application
+     * declared. Listed under its own namespace and marked `project`, so a
+     * reader can tell what Gacela found from what Gacela ships -- and, when a
+     * class of theirs is absent, that no listener registration against it can
+     * be checked.
+     */
+    public function test_a_project_event_is_listed_and_marked_as_the_projects(): void
+    {
+        $this->bootstrapWithoutListeners();
+
+        $display = $this->runCommand([])->getDisplay();
+
+        self::assertStringContainsString('StockRunLowEvent', $display);
+        self::assertStringContainsString('project', $display);
+        // Grouped by its own namespace, written out in full: there is no
+        // framework root to make it relative to.
+        self::assertStringContainsString('GacelaTest\Feature\Console\DebugEvents\Fixture', $display);
+        self::assertStringContainsString('1 declared by this project', $display);
+    }
+
+    public function test_the_project_marker_is_absent_when_only_the_frameworks_events_are_shown(): void
+    {
+        $this->bootstrapWithoutListeners();
+
+        $display = $this->runCommand(['filter' => 'ClassResolver'])->getDisplay();
+
+        self::assertStringNotContainsString('StockRunLowEvent', $display);
+        // The summary still counts the whole catalog, so the project line stays.
+        self::assertStringContainsString('1 declared by this project', $display);
+    }
+
+    /**
+     * The doctor's counterpart to this: a listener on a project event is a
+     * listener like any other, and the table has to say so or `debug:events`
+     * cannot answer "is my listener registered" for the events a project cares
+     * about most.
+     */
+    public function test_a_listener_on_a_project_event_is_reported(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->registerSpecificListener(StockRunLowEvent::class, static function (): void {});
+        });
+
+        $display = $this->runCommand(['--listened' => true])->getDisplay();
+
+        self::assertStringContainsString('StockRunLowEvent', $display);
+        self::assertStringContainsString('1 listener via StockRunLowEvent', $display);
+        self::assertStringContainsString('1 with listeners', $display);
+    }
+
+    public function test_the_json_names_the_source_of_every_event(): void
+    {
+        $this->bootstrapWithoutListeners();
+
+        $document = $this->runAsJson([]);
+
+        self::assertSame('project', $this->eventNamed($document, StockRunLowEvent::class)['source']);
+        self::assertSame('framework', $this->eventNamed($document, ResolvedClassCachedEvent::class)['source']);
+        self::assertSame(1, $document['summary']['projectEvents']);
+    }
+
+    /**
+     * Framework first, then the project's -- two runs rather than one
+     * interleaved list, so "my events" is a place in the output and not a
+     * search.
+     */
+    public function test_the_frameworks_events_are_listed_before_the_projects(): void
+    {
+        $this->bootstrapWithoutListeners();
+
+        /** @var list<array<string, mixed>> $events */
+        $events = $this->runAsJson([])['events'];
+        $sources = [];
+
+        foreach ($events as $event) {
+            $sources[] = $event['source'];
+        }
+
+        self::assertSame('framework', $sources[0]);
+        self::assertSame('project', $sources[count($sources) - 1]);
+    }
+
+    /**
+     * Everything the command lists: the framework's catalog and the events of
+     * the fixture application it is pointed at.
+     */
     private function catalogSize(): int
     {
-        return count((new EventCatalog())->eventClasses());
+        return count((new EventCatalog())->eventClasses())
+            + count((new ConsoleFacade())->findProjectEventClasses());
     }
 
     private function bootstrapWithoutListeners(): void

@@ -133,6 +133,23 @@ final class ConsoleFacade extends AbstractFacade
     }
 
     /**
+     * The event classes the application declares, as opposed to the ones the
+     * framework ships.
+     *
+     * Read by `debug:events`, which lists them beside Gacela's own, and by
+     * `doctor`, which cannot judge a listener target without knowing the events
+     * a project has. Found by walking the paths discovery walks -- see
+     * {@see \Gacela\Console\Domain\ProjectEvents\ProjectEventFinder} for what
+     * makes a file worth opening.
+     *
+     * @return list<class-string>
+     */
+    public function findProjectEventClasses(): array
+    {
+        return $this->getFactory()->createProjectEventFinder()->find();
+    }
+
+    /**
      * The `appModulePaths` entries discovery walked, for a report that found
      * nothing and has to say where it looked.
      *

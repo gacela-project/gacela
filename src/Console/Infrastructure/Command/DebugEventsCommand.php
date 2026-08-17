@@ -6,9 +6,13 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Debug\EventCatalog;
 use Gacela\Console\Application\Debug\EventInspection;
+use Gacela\Console\Application\Debug\EventSource;
+use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\ServiceResolver\ServiceMap;
+use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,7 +38,8 @@ use const JSON_UNESCAPED_SLASHES;
 
 /**
  * Every event Gacela can dispatch, which of them anything listens to, and which
- * sit on the hot path.
+ * sit on the hot path -- and the same for the events the application declares
+ * itself.
  *
  * Until now the only way to know a listener is registered was that it fired,
  * and the only way to know one is dead was `doctor` -- which reports a target
@@ -45,13 +50,23 @@ use const JSON_UNESCAPED_SLASHES;
  * It reads as the counterpart to the matching rule. A listener registered
  * against `AbstractGacelaClassResolverEvent` covers four events, and this is
  * where you see the four.
+ *
+ * A project's own events are listed under their own heading, marked `project`.
+ * For those the question is often the other one -- not "what listens to this"
+ * but "does Gacela see my event at all" -- and a class missing from this table
+ * is one no `registerSpecificListener()` can be checked against.
+ *
+ * @method ConsoleFacade getFacade()
  */
+#[ServiceMap(method: 'getFacade', className: ConsoleFacade::class)]
 final class DebugEventsCommand extends Command
 {
+    use ServiceResolverAwareTrait;
+
     protected function configure(): void
     {
         $this->setName('debug:events')
-            ->setDescription('List every Gacela event, which have listeners, and which are on the hot path')
+            ->setDescription('List every Gacela and project event, which have listeners, and which are on the hot path')
             ->setHelp($this->getHelpText())
             ->addArgument('filter', InputArgument::OPTIONAL, 'Only events whose class name contains this text', '')
             ->addOption('listened', 'l', InputOption::VALUE_NONE, 'Only events something listens to')
@@ -69,6 +84,7 @@ final class DebugEventsCommand extends Command
             $catalog->eventClasses(),
             $this->specificListenerCounts(),
             $this->genericListenerCount(),
+            $this->getFacade()->findProjectEventClasses(),
         );
 
         $shown = $this->applyFilters($inspections, $filter, $listenedOnly);
@@ -134,6 +150,7 @@ final class DebugEventsCommand extends Command
             'status' => $listenersEnabled ? 'ok' : 'error',
             'summary' => [
                 'events' => count($all),
+                'projectEvents' => count($this->projectOf($all)),
                 'withListeners' => count($this->listenedOf($all)),
                 'hotPath' => count($this->hotPathOf($all)),
                 'listeners' => $listeners,
@@ -145,6 +162,7 @@ final class DebugEventsCommand extends Command
                 static fn (EventInspection $inspection): array => [
                     'class' => $inspection->className,
                     'group' => $inspection->group,
+                    'source' => $inspection->source->value,
                     'abstract' => $inspection->isAbstract,
                     'hotPath' => $inspection->isHotPath,
                     'listeners' => $inspection->listenerCount(),
@@ -205,7 +223,7 @@ final class DebugEventsCommand extends Command
         $name = $inspection->shortName();
         $padding = str_repeat(' ', $width - strlen($name));
 
-        // Trimmed: the hot-path column is padded so the listener note lines up,
+        // Trimmed: the source column is padded so the listener note lines up,
         // and a row with neither would otherwise carry the padding to the end
         // of the line, which every diff of captured output then argues about.
         return rtrim(sprintf(
@@ -213,9 +231,32 @@ final class DebugEventsCommand extends Command
             $marker,
             $name,
             $padding,
-            $inspection->isHotPath ? '<fg=yellow>hot path</>' : '        ',
+            $this->sourceColumn($inspection),
             $this->listenerNote($inspection),
         ));
+    }
+
+    /**
+     * One column carrying both facts, because they cannot both be true: the hot
+     * path is the framework's list of events dispatched on every warm resolve,
+     * and a project event is never on it.
+     *
+     * A project event is marked rather than left blank. The group heading above
+     * it is a namespace, which a reader may or may not recognise as their own,
+     * and the fact worth stating in a report of "every event there is" is which
+     * of them the application declared.
+     */
+    private function sourceColumn(EventInspection $inspection): string
+    {
+        if ($inspection->isHotPath) {
+            return '<fg=yellow>hot path</>';
+        }
+
+        if ($inspection->source === EventSource::Project) {
+            return '<fg=magenta>project </>';
+        }
+
+        return '        ';
     }
 
     /**
@@ -253,6 +294,7 @@ final class DebugEventsCommand extends Command
     private function writeSummary(OutputInterface $output, array $all): void
     {
         $listened = count($this->listenedOf($all));
+        $project = count($this->projectOf($all));
 
         $output->writeln(sprintf(
             '<fg=cyan>Summary:</> %d events, %d with listeners, %d on the hot path',
@@ -260,6 +302,17 @@ final class DebugEventsCommand extends Command
             $listened,
             count($this->hotPathOf($all)),
         ));
+
+        // Only when there are any: an application that dispatches none of its
+        // own should not be told about a number that is always zero, and a
+        // project that expected some and reads "0 declared by this project" is
+        // being told the scan found nothing -- which is the answer it needs.
+        if ($project > 0) {
+            $output->writeln(sprintf(
+                '<fg=cyan>Of these:</> %d declared by this project',
+                $project,
+            ));
+        }
 
         if (!$this->listenersEnabled()) {
             $output->writeln('<comment>disableEventListeners() is in effect, so none of these listeners runs.</comment>');
@@ -306,6 +359,24 @@ final class DebugEventsCommand extends Command
         }
 
         return $listened;
+    }
+
+    /**
+     * @param list<EventInspection> $inspections
+     *
+     * @return list<EventInspection>
+     */
+    private function projectOf(array $inspections): array
+    {
+        $project = [];
+
+        foreach ($inspections as $inspection) {
+            if ($inspection->source === EventSource::Project) {
+                $project[] = $inspection;
+            }
+        }
+
+        return $project;
     }
 
     /**
@@ -447,12 +518,18 @@ final class DebugEventsCommand extends Command
 Lists every event class the framework can dispatch, whether anything listens to
 it, and whether it is dispatched on the class-resolution hot path.
 
+The events this project declares are listed too, marked `project`. They are
+found under the paths module discovery walks -- `appModulePaths`, or the
+application root -- by implementing GacelaEventInterface or being named
+`*Event`. An event of yours that is missing is one no listener registration can
+be checked against.
+
 A specific listener matches by inheritance, so an event can be covered by a
 listener that never names it -- one registered against a parent class or against
 GacelaEventInterface. The listener column names the target that covers it.
 
 <info>Examples:</info>
-  # The whole catalog
+  # The whole catalog, the framework's events and yours
   bin/gacela debug:events
 
   # Only the events something listens to
@@ -460,6 +537,9 @@ GacelaEventInterface. The listener column names the target that covers it.
 
   # Only the class-resolution events
   bin/gacela debug:events ClassResolver
+
+  # Only your own, if they share a namespace
+  bin/gacela debug:events App\\
 
 <comment>Complements:</comment>
   bin/gacela doctor                names a listener target no event can ever be

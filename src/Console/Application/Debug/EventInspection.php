@@ -15,11 +15,12 @@ final class EventInspection
 {
     /**
      * @param class-string          $className
-     * @param string                $group                the namespace under `Gacela\Framework\Event\`, e.g. `ClassResolver\Cache`
+     * @param string                $group                the namespace under `Gacela\Framework\Event\`, e.g. `ClassResolver\Cache`; a project event carries its own namespace in full
      * @param bool                  $isAbstract           a target listeners can be registered against, never itself dispatched
      * @param bool                  $isHotPath            dispatched on every warm resolve
      * @param array<class-string, int> $matchedTargets    registered target => how many listeners it carries, for the targets that cover this event
      * @param int                   $genericListenerCount registerGenericListener() callables, which cover every event
+     * @param EventSource           $source               who declared it: the framework, or the application
      */
     public function __construct(
         public readonly string $className,
@@ -28,6 +29,7 @@ final class EventInspection
         public readonly bool $isHotPath,
         public readonly array $matchedTargets,
         public readonly int $genericListenerCount,
+        public readonly EventSource $source,
     ) {
     }
 

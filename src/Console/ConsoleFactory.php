@@ -38,6 +38,7 @@ use Gacela\Console\Domain\ModuleGraph\ModuleGraphDiffer;
 use Gacela\Console\Domain\ModuleGraph\ModuleRuleChecker;
 use Gacela\Console\Domain\ModuleGraph\TextGraphFormatter;
 use Gacela\Console\Domain\PackageManifest\ComposerPackage;
+use Gacela\Console\Domain\ProjectEvents\ProjectEventFinder;
 use Gacela\Console\Domain\ServiceMapMigration\ServiceMapMigrationRunner;
 use Gacela\Console\Domain\ServiceMapMigration\ServiceMapMigrator;
 use Gacela\Console\Infrastructure\FileContentIo;
@@ -192,6 +193,18 @@ final class ConsoleFactory extends AbstractFactory
         return new UndiscoveredFacadeFinder(
             $this->createModuleScanIterator(),
             $this->facadeSuffixes(),
+        );
+    }
+
+    /**
+     * The same file iterator the module finders take, so a project's events are
+     * looked for exactly where its modules are, and never in `vendor/`.
+     */
+    public function createProjectEventFinder(): ProjectEventFinder
+    {
+        return new ProjectEventFinder(
+            $this->createModuleScanIterator(),
+            Config::getInstance()->getSetupGacela()->getProjectNamespaces(),
         );
     }
 

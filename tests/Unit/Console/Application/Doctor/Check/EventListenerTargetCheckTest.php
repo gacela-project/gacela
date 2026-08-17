@@ -125,8 +125,8 @@ final class EventListenerTargetCheckTest extends TestCase
     }
 
     /**
-     * A type that exists is waiting, not broken, whether it is concrete,
-     * abstract or an interface: only names that are no type at all are reported.
+     * A type that exists and can match is waiting, not broken, whether it is
+     * concrete, abstract or an interface.
      */
     public function test_every_unfireable_target_is_named_and_the_valid_ones_are_not(): void
     {
@@ -138,5 +138,99 @@ final class EventListenerTargetCheckTest extends TestCase
 
         self::assertSame(CheckStatus::Warn, $result->status);
         self::assertSame(['App\Event\Mispelled names no class or interface'], $result->details);
+    }
+
+    /**
+     * A project's own event is an event because it says
+     * `implements GacelaEventInterface`. Without that it is an ordinary class:
+     * the registration is accepted, the dispatcher can never match it, and
+     * nothing said so until the catalog was here to judge against.
+     */
+    public function test_a_target_that_is_not_an_event_type_is_reported(): void
+    {
+        $result = (new EventListenerTargetCheck(
+            [NotAnEvent::class],
+            knownEventClasses: [GacelaBootstrapStartedEvent::class],
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(
+            [NotAnEvent::class . ' is not an event type, and no known event extends or implements it'
+                . ' -- so nothing can ever match it'],
+            $result->details,
+        );
+        self::assertStringContainsString('GacelaEventInterface', $result->remediation);
+    }
+
+    /**
+     * The project's events are in the catalog too, so a listener on one is a
+     * listener like any other -- the tooling must not contradict the very use
+     * it is there to support.
+     */
+    public function test_a_target_that_is_a_project_event_passes(): void
+    {
+        $result = (new EventListenerTargetCheck(
+            [ProjectEvent::class],
+            knownEventClasses: [GacelaBootstrapStartedEvent::class, ProjectEvent::class],
+        ))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['1 listener target(s) name a known event type'], $result->details);
+    }
+
+    /**
+     * A marker interface an event implements is a legitimate target: it is not
+     * an event type itself, and the dispatcher matches it by inheritance all
+     * the same. Answering from `GacelaEventInterface` alone would report every
+     * one of those as dead.
+     */
+    public function test_a_marker_interface_a_known_event_implements_passes(): void
+    {
+        $result = (new EventListenerTargetCheck(
+            [AuditableInterface::class],
+            knownEventClasses: [AuditedProjectEvent::class],
+        ))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+    }
+
+    /**
+     * With no catalog to judge against, the old answer stands: only a name that
+     * is no type at all is reported. `doctor` skips the project scan when
+     * nothing is registered, and a check with an empty catalog must not start
+     * calling every target dead.
+     */
+    public function test_without_a_catalog_a_type_that_exists_is_left_alone(): void
+    {
+        $result = (new EventListenerTargetCheck([NotAnEvent::class]))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+    }
+}
+
+/**
+ * A real class that is not an event: the shape of forgetting the interface.
+ */
+final class NotAnEvent
+{
+}
+
+interface AuditableInterface
+{
+}
+
+final class ProjectEvent implements GacelaEventInterface
+{
+    public function toString(): string
+    {
+        return 'a project event';
+    }
+}
+
+final class AuditedProjectEvent implements AuditableInterface, GacelaEventInterface
+{
+    public function toString(): string
+    {
+        return 'an audited project event';
     }
 }

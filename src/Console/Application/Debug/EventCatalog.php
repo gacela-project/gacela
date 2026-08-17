@@ -31,6 +31,14 @@ use const DIRECTORY_SEPARATOR;
  * Read off the directory rather than listed here: a catalog restating the
  * classes is a second place to forget, which is the fault `docs/events.md`
  * already has -- two events were added in #867 and had to be remembered.
+ *
+ * {@see eventClasses()} stays the framework's own, and nothing else: it is what
+ * `EventCatalogDocsTest` compares `docs/events.md` against in both directions,
+ * and a project's events appearing in it would make that page's tables either
+ * wrong or impossible to satisfy. An application's events are found by
+ * {@see \Gacela\Console\Domain\ProjectEvents\ProjectEventFinder} and handed to
+ * {@see inspect()}, which marks each row with the {@see EventSource} it came
+ * from.
  */
 final class EventCatalog
 {
@@ -107,35 +115,71 @@ final class EventCatalog
      * @param list<class-string>  $eventClasses           what {@see eventClasses()} found
      * @param array<class-string, int> $specificListenerCounts registered target => how many listeners it carries
      * @param int                 $genericListenerCount   registerGenericListener() callables
+     * @param list<class-string>  $projectEventClasses    what the application declared, from
+     *   {@see \Gacela\Console\Domain\ProjectEvents\ProjectEventFinder}
      *
      * @return list<EventInspection>
      */
-    public function inspect(array $eventClasses, array $specificListenerCounts, int $genericListenerCount): array
-    {
+    public function inspect(
+        array $eventClasses,
+        array $specificListenerCounts,
+        int $genericListenerCount,
+        array $projectEventClasses = [],
+    ): array {
         $inspections = [];
 
         foreach ($eventClasses as $eventClass) {
-            $inspections[] = new EventInspection(
+            $inspections[] = $this->inspectOne(
                 $eventClass,
-                $this->groupOf($eventClass),
-                $this->isAbstract($eventClass),
-                in_array($eventClass, self::HOT_PATH_EVENTS, true),
-                $this->targetsCovering($eventClass, $specificListenerCounts),
+                EventSource::Framework,
+                $specificListenerCounts,
                 $genericListenerCount,
             );
         }
 
-        // By group first, so a namespace is one contiguous run. Sorting the
-        // class names instead splits `ClassResolver` around its own
-        // subdirectories -- `ClassResolver\Cache` sorts between the abstract
-        // parent and the four `ResolvedClass*` events beside it.
+        foreach ($projectEventClasses as $eventClass) {
+            $inspections[] = $this->inspectOne(
+                $eventClass,
+                EventSource::Project,
+                $specificListenerCounts,
+                $genericListenerCount,
+            );
+        }
+
+        // Source first, so the framework's catalog and the project's own events
+        // are two runs rather than one interleaved list -- a reader scanning for
+        // "my events" should not have to read the whole table. Then by group, so
+        // a namespace is contiguous: sorting the class names instead splits
+        // `ClassResolver` around its own subdirectories, with `ClassResolver\Cache`
+        // between the abstract parent and the four `ResolvedClass*` events.
         usort(
             $inspections,
-            static fn (EventInspection $a, EventInspection $b): int => [$a->group, $a->shortName()]
-                <=> [$b->group, $b->shortName()],
+            static fn (EventInspection $a, EventInspection $b): int => [$a->source->order(), $a->group, $a->shortName()]
+                <=> [$b->source->order(), $b->group, $b->shortName()],
         );
 
         return $inspections;
+    }
+
+    /**
+     * @param class-string $eventClass
+     * @param array<class-string, int> $specificListenerCounts
+     */
+    private function inspectOne(
+        string $eventClass,
+        EventSource $source,
+        array $specificListenerCounts,
+        int $genericListenerCount,
+    ): EventInspection {
+        return new EventInspection(
+            $eventClass,
+            $this->groupOf($eventClass, $source),
+            $this->isAbstract($eventClass),
+            in_array($eventClass, self::HOT_PATH_EVENTS, true),
+            $this->targetsCovering($eventClass, $specificListenerCounts),
+            $genericListenerCount,
+            $source,
+        );
     }
 
     /**
@@ -164,10 +208,17 @@ final class EventCatalog
     /**
      * The namespace below `Gacela\Framework\Event\`, empty for an event sitting
      * directly in it.
+     *
+     * A project's event is grouped by its own namespace instead, written out in
+     * full: there is no root to make it relative to, and the namespace is
+     * exactly what tells a reader which module the event belongs to.
      */
-    private function groupOf(string $eventClass): string
+    private function groupOf(string $eventClass, EventSource $source): string
     {
-        $relative = substr($eventClass, strlen(self::EVENT_NAMESPACE));
+        $relative = $source === EventSource::Framework
+            ? substr($eventClass, strlen(self::EVENT_NAMESPACE))
+            : $eventClass;
+
         $position = strrpos($relative, '\\');
 
         return $position === false ? '' : substr($relative, 0, $position);

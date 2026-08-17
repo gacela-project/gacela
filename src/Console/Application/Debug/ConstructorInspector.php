@@ -7,9 +7,9 @@ namespace Gacela\Console\Application\Debug;
 use Gacela\Console\Domain\FileContent\PhpValue;
 
 use Gacela\Container\Attribute\Inject;
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
-use Gacela\Framework\Gacela;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
@@ -173,12 +173,24 @@ final class ConstructorInspector
     }
 
     /**
+     * The bindings of the container that *builds* the pillars, which is not the
+     * application container.
+     *
+     * Both are configured from the same declarations, so most of the time they
+     * answer alike -- and this used to read `Gacela::container()` for that
+     * reason. They part company whenever something reaches one and not the
+     * other: a plugin registering on the application container at runtime, or
+     * anything a future registration path applies in one place only. Reading
+     * the application container there reports a pillar as buildable that the
+     * class resolver cannot build, which is precisely the failure `--check`
+     * exists to catch.
+     *
      * @return BindingsMap
      */
     private function containerBindings(): array
     {
         try {
-            return Gacela::container()->getBindings();
+            return AbstractClassResolver::pillarContainer()->getBindings();
         } catch (GacelaNotBootstrappedException) {
             return [];
         }

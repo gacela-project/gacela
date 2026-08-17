@@ -258,6 +258,28 @@ final class SetupMergerEventDispatcherTest extends TestCase
     }
 
     /**
+     * The dispatcher is derived and memoized, and `Gacela::bootstrap()` derives
+     * it early -- it dispatches its first event before `gacela.php` has been
+     * read. So a handover arriving after that has to throw the memo away, or it
+     * is recorded and never used, which is the shape #866 hid in.
+     */
+    public function test_a_dispatcher_supplied_after_one_was_derived_takes_effect(): void
+    {
+        $supplied = new RecordingDispatcher();
+
+        $setup = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->registerSpecificListener(FakeEvent::class, static function (): void {});
+        });
+
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+
+        $setup->setEventDispatcher($supplied);
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+
+        self::assertSame([FakeEvent::class], $supplied->received);
+    }
+
+    /**
      * Nothing supplied and listeners registered: exactly what it built before,
      * with no composition in the way of the hot-path guard.
      */

@@ -272,7 +272,11 @@ final class InvoicingFlowTest extends TestCase
         (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
 
         self::assertNotSame([], ResolverActivityLog::entries(), 'the listener registered in gacela.php never fired');
-        self::assertNotSame([], $dispatcher->received(), 'the supplied dispatcher was never told');
+        // The same event the `gacela.php` listener is registered against, so
+        // one dispatch has to reach both -- which is the composition. Before
+        // it, the dispatcher built to hold that listener replaced the supplied
+        // one, and only one of the two ever heard about a resolver event.
+        self::assertContains(ResolvedClassCreatedEvent::class, $dispatcher->received());
     }
 
     /**

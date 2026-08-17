@@ -39,6 +39,14 @@ A generic listener makes *every* dispatch site allocate its event, including hot
 
 `registerSpecificListener(GacelaEventInterface::class, …)` is the typed way to listen to everything: same reach and same cost as a generic listener, but the callable is declared against a type, so the parameter you write is checked instead of silently never matching.
 
+## Two sources, one set of listeners
+
+Listeners can be registered in the `Gacela::bootstrap()` closure and in `gacela.php` (and in `gacela-{APP_ENV}.php`). Both contribute: the closure is the base and the files merge onto it, so nothing replaces anything.
+
+- Every registration runs, exactly once. Registering the same callable in both places registers it twice, and it runs twice — nothing deduplicates them.
+- Order is the order of declaration, with the closure's first. Generic listeners run before specific ones for the same event.
+- The merged set is what `doctor` and `debug:events` report. They read the configuration rather than the dispatcher, so a listener declared in `gacela.php` shows up there like any other — which is what makes `debug:events` usable for answering "is my listener registered".
+
 ## Lifecycle ordering
 
 ```
@@ -64,7 +72,7 @@ vendor/bin/gacela debug:events
 
 The same catalog as below, read off the classes rather than this page, with the listeners *your* project registered against each one. Because a specific listener matches by inheritance, an event can be covered by a registration that never names it — the listener column names the target that does, so one listener on `AbstractGacelaClassResolverEvent` reads as four covered events rather than four mysteries.
 
-`--listened` narrows to the events something watches, an optional argument narrows by class name, and `--json` reports the same thing as a document. It also says when `disableEventListeners()` is in effect, which is the state in which everything below is registered and none of it runs.
+`--listened` narrows to the events something watches, an optional argument narrows by class name, and `--json` reports the same thing as a document. It also says when `disableEventListeners()` is in effect, which is the state in which everything below is registered and none of it runs, and when a dispatcher was supplied through `setEventDispatcher()` — the listener table is what the *configuration* registered, and a supplied dispatcher carries every event on to a bus this command cannot see into.
 
 Where `doctor` answers "is this listener target a thing an event can be", this answers "what does the framework offer, and what am I actually watching".
 
@@ -240,4 +248,17 @@ Gacela::bootstrap($appRootDir, static function (GacelaConfig $config): void {
 ```
 
 A dispatcher you supply **takes precedence over `disableEventListeners()`**: that switch governs the dispatcher Gacela would *build*, and this is one it does not build. To go quiet, return `false` from `hasListeners()` — which also skips allocating the events, where the switch would only stop them being delivered.
+
+### What it composes with
+
+`setEventDispatcher()` says what *delivers* the events; `registerGenericListener()` and `registerSpecificListener()` say what must *run*. They answer different questions, so supplying a dispatcher does not cancel the listeners registered beside it — in the same closure, or in `gacela.php`. Both happen:
+
+1. The configured listeners run first, in registration order.
+2. Then the event is offered to the dispatcher you supplied, which receives it if its `hasListeners()` says yes.
+
+So `hasListeners()` on the composition is true when *either* side would act, and returning `false` from yours still means yours is not told — a configured listener interested in the same event does not smuggle it through to you.
+
+With no listeners registered anywhere, the dispatcher you supply *is* the dispatcher: nothing is composed, and it is the object every dispatch site talks to.
+
+Handing back a dispatcher Gacela built for the same setup (`$setup->setEventDispatcher($setup->getEventDispatcher())`) is a no-op rather than a composition — otherwise its own listeners would be delivered twice.
 

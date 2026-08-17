@@ -1,0 +1,11 @@
+{
+    "rules": [
+        {
+            "from": "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Alpha",
+            "deny": [
+                "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Beta"
+            ],
+            "reason": "alpha owns the decision and beta only carries it out"
+        }
+    ]
+}

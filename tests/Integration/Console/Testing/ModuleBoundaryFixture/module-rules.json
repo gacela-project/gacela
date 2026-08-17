@@ -1,0 +1,12 @@
+{
+    "rules": [
+        {
+            "from": "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Gamma",
+            "deny": [
+                "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Alpha",
+                "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Beta"
+            ],
+            "reason": "gamma is a leaf: it is read from and reads nothing back"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "rules": [
+        {
+            "from": "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Delta",
+            "deny": [
+                "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Alpha"
+            ],
+            "reason": "delta was deleted, and this rule outlived it"
+        }
+    ]
+}

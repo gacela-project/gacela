@@ -48,10 +48,13 @@ the host's, and the point here is the wiring.
 - [`module-rules.json`](../tests/Feature/ReferenceApp/Invoicing/module-rules.json)
   — the boundaries, read by `debug:graph --check --rules` and by both analysers.
 
-`config/app.php` names every key the application reads, even where the value is
-the uninteresting one. That is deliberate: `addAppConfig('config/*.php')` globs
-the environment files too, so a key introduced by `config/app-prod.php` and
-absent from the base would reach a developer's machine.
+`config/app.php` names only the keys that mean something in every environment.
+`payment.default_method` is set in `config/app-prod.php` and nowhere else, so
+outside production the schema's declared default answers for it — the
+demonstration that the base layer
+[excludes the environment files](config-schema.md#which-files-the-keys-come-from)
+`addAppConfig('config/*.php')` also matches. Before it did, that key reached a
+developer's machine and invoices settled by SEPA on a laptop.
 
 ## The harness
 

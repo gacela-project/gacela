@@ -52,6 +52,28 @@ Moves the report from a command you have to remember to run to the first thing t
 
 Declared **defaults** are applied either way: a key with a default is not missing, it is provided by the declaration.
 
+## Which files the keys come from
+
+A schema is only as useful as the merge it is checked against, and the merge has one rule worth knowing here: **the base config layer excludes the environment files matching the same pattern.**
+
+`addAppConfig('config/*.php')` is a glob, so it matches `config/app-prod.php` as happily as `config/app.php`. A match is excluded from the base layer when stripping one or more trailing `-<segment>` parts from its basename yields another file the same pattern matched:
+
+| File | Read |
+|---|---|
+| `config/app.php` | always — the base layer |
+| `config/app-prod.php` | only when the chain resolves to `prod` — a layer of `app.php` |
+| `config/app-prod-eu.php` | only when it resolves to `prod-eu` — also a layer of `app.php` |
+| `config/local.php` | always — nothing to strip |
+
+Two consequences for a declaration:
+
+- **A key only one environment sets is genuinely absent elsewhere.** Declare it `ConfigType::…->default(…)` if code outside that environment reads it, and leave it undeclared-as-required if nothing does. Before this rule, the base glob read every environment's file on every run, so such a key arrived everywhere — which is why a schema could pass in development on a value only production was supposed to have.
+- **A file that is not an environment layer is excluded anyway.** `config/app-extra.php` beside `config/app.php` matches the naming scheme whatever you wrote it for, so it is read only when the chain resolves to `extra`, and a key it was the only source of turns up as a schema violation. The rule reads names; it cannot know intent.
+
+`vendor/bin/gacela doctor` names every file excluded this way — its **config environment layers** check reports the file, the base file it is taken to refine, and the values that put it in play. If one of them is not an environment layer, rename it so it is not named after another file, or give it its own `addAppConfig()` path.
+
+The [config precedence list](getting-started.md#config-precedence) has the whole merge order.
+
 ## See also
 
 - [CLI commands](cli.md)

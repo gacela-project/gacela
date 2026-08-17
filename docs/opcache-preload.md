@@ -36,7 +36,7 @@ class_exists(App\User\UserFacade::class);
 class_exists(App\Product\ProductFacade::class);
 ```
 
-> **Keep it outside your config glob.** This file is a script, not configuration: it returns nothing. Put it in `config/` and the default `addAppConfig('config/*.php')` matches it, so the next bootstrap dies with `The PHP config file "…/config/app-preload.php" must return an array or a JsonSerializable object!` — before anything preloads.
+> **Keep it outside your config glob.** This file is a script, not configuration: it returns nothing. Put it in `config/` and the default `addAppConfig('config/*.php')` matches it. Beside a `config/app.php` it is then taken for an [environment layer](getting-started.md#the-base-layer-excludes-the-environment-files) of that file — `doctor` reports it as one — and a run with `APP_ENV=preload` dies with `The PHP config file "…/config/app-preload.php" must return an array or a JsonSerializable object!` before anything preloads. Without an `app.php` beside it there is nothing for it to be a layer of, and every bootstrap dies that way.
 
 Wire it via env var in your FPM pool:
 

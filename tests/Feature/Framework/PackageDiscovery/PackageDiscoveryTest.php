@@ -201,6 +201,26 @@ final class PackageDiscoveryTest extends TestCase
     }
 
     /**
+     * `Gacela::resetCache()` drops the merged configuration the registry
+     * describes, so the registry goes with it. One surviving the other is
+     * `debug:container` and `doctor` describing packages that are in no
+     * configuration this process still holds.
+     */
+    public function test_resetting_the_caches_forgets_what_was_discovered(): void
+    {
+        $this->installed->install(['MissingConfig', 'AuditTrail']);
+        $this->bootstrap();
+
+        self::assertSame(['gacela-fixture/audit-trail'], $this->discoveredNames());
+
+        Gacela::resetCache();
+
+        self::assertSame([], PackageDiscoveryRegistry::discovered());
+        self::assertSame([], PackageDiscoveryRegistry::refused());
+        self::assertFalse(PackageDiscoveryRegistry::isDisabled());
+    }
+
+    /**
      * The harder half: `gacela.php` is read *after* the packages are merged, so
      * an opt-out written there is only in time because the file is read for the
      * opt-out before any package's code runs.
@@ -334,6 +354,57 @@ final class PackageDiscoveryTest extends TestCase
     public function test_without_installed_json_nothing_is_discovered_and_nothing_complains(): void
     {
         $this->bootstrap();
+
+        self::assertSame([], $this->discoveredNames());
+        self::assertSame([], PackageDiscoveryRegistry::refused());
+        self::assertFalse(PackageDiscoveryRegistry::isDisabled());
+    }
+
+    /**
+     * A root with no manifest is the one path that never reaches discovery, so
+     * it is the one that has to clear the registry itself: without that, the
+     * packages of the *previous* application are still standing there, and
+     * `debug:container` under this one attributes bindings to packages it never
+     * installed.
+     */
+    public function test_an_application_with_no_manifest_forgets_the_previous_ones_packages(): void
+    {
+        $this->installed->install(['AuditTrail']);
+        Gacela::bootstrap($this->installed->appRoot, static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+        });
+
+        self::assertSame(['gacela-fixture/audit-trail'], $this->discoveredNames());
+
+        $bare = new InstalledPackages();
+
+        try {
+            Gacela::bootstrap($bare->appRoot, static function (GacelaConfig $config): void {
+                $config->setFileCache(false);
+            });
+
+            self::assertSame([], $this->discoveredNames());
+        } finally {
+            $bare->remove();
+        }
+    }
+
+    /**
+     * The same root, with the switch thrown: no manifest is answered before the
+     * opt-out is even looked at, so nothing is read and nothing is reported as
+     * having been refused.
+     *
+     * `discoveryDisabled` stays false on purpose. It is what makes `doctor` say
+     * "%d package(s) declare a config and none was read" and `debug:container`
+     * print the same, both about declarations -- and there are none here. What
+     * happened to this application is that there was nothing to discover, which
+     * is what the report says instead.
+     */
+    public function test_refusing_everything_under_a_root_with_no_manifest_reports_nothing_to_discover(): void
+    {
+        $this->bootstrap(static function (GacelaConfig $config): void {
+            $config->dontDiscover(['*']);
+        });
 
         self::assertSame([], $this->discoveredNames());
         self::assertSame([], PackageDiscoveryRegistry::refused());

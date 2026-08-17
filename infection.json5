@@ -162,6 +162,17 @@
                 // kept as the documented override convention, not as behavior.
                 "Gacela\\SymfonyBridge\\GacelaBundle::build",
             ],
+            ignoreSourceCodeByRegex: [
+                // Not an untested line: `composer test` fails on
+                // ResetCacheCoverageTest with this call removed, which is the
+                // test that exists to catch a reset nothing calls. It asserts by
+                // reading the source of Gacela::resetCache() rather than by
+                // executing it, so it covers none of that method's lines and a
+                // coverage-driven run never selects it for a mutant of them.
+                // Scoped to this one call by regex rather than to the method,
+                // because the resets around it are pinned by tests that do run.
+                '.*PackageContribution::resetCache\\(\\);.*',
+            ],
         },
         IfNegation: {
             ignore: [

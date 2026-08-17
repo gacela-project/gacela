@@ -48,13 +48,19 @@ final class PublicApiSurface
      * analysers already treat "cannot tell" as "no finding".
      *
      * Both guards are needed and neither is redundant. What arrives here is a
-     * name a host resolved or a path this scanner turned into one, never a proven
-     * class-string, so existence is asked first -- `interface_exists()` beside
-     * `class_exists()` because an interface is not a class to either function,
-     * and an interface is exactly the kind of thing a module publishes. The
-     * `catch` then covers the rest: autoloading runs arbitrary project code, and
-     * `Throwable` rather than `ReflectionException` because what it throws is the
-     * project's business.
+     * name a host resolved, or a file path the console scanner turned into one,
+     * never a proven class-string -- so existence is asked first.
+     * `interface_exists()` beside `class_exists()` because an interface is not a
+     * class to either function, and an interface is exactly the kind of thing a
+     * module publishes; enums answer to `class_exists()` already. A **trait** is
+     * deliberately left out: nothing can name one across a boundary, so an export
+     * there would be a promise no rule keeps.
+     *
+     * The `catch` then covers the rest, and is not made redundant by the guard
+     * above it: `class_exists()` autoloads, autoloading runs arbitrary project
+     * code, and a rule that died on somebody's include would fail the run instead
+     * of reporting a boundary. `Throwable` rather than `ReflectionException`,
+     * because what that code throws is its own business.
      */
     public static function isDeclaredOn(string $class): bool
     {

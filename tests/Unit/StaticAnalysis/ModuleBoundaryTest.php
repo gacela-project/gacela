@@ -7,6 +7,8 @@ namespace GacelaTest\Unit\StaticAnalysis;
 use Gacela\StaticAnalysis\ModuleBoundary;
 use Gacela\StaticAnalysis\PublicApiSurface;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingValueObject;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedBehaviour;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedContract;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedStatus;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\UnpublishedInvoiceDraft;
@@ -32,6 +34,26 @@ final class ModuleBoundaryTest extends TestCase
     public function test_an_enum_carrying_the_attribute_is_public(): void
     {
         self::assertTrue($this->fixtureBoundary()->isPublicApi(PublishedStatus::class));
+    }
+
+    /**
+     * An interface is not a class to `class_exists()`, so the surface asks twice
+     * -- and an interface is exactly the kind of thing a module publishes.
+     */
+    public function test_an_interface_carrying_the_attribute_is_public(): void
+    {
+        self::assertTrue($this->fixtureBoundary()->isPublicApi(PublishedContract::class));
+    }
+
+    /**
+     * `TARGET_CLASS` permits a trait and nothing reads it there. Nothing can
+     * name a trait across a boundary -- it is `use`d into a class rather than
+     * instantiated, named statically or called on -- so publishing one would be
+     * a promise no rule keeps. A decision, pinned, rather than an oversight.
+     */
+    public function test_a_trait_carrying_the_attribute_is_not_public(): void
+    {
+        self::assertFalse($this->fixtureBoundary()->isPublicApi(PublishedBehaviour::class));
     }
 
     public function test_a_class_without_the_attribute_is_not_public(): void

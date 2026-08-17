@@ -40,8 +40,10 @@ use Attribute;
  * A marker, with no arguments: narrowing an export to named consumers is a
  * separate feature, and the rules already take consumer-side allow-lists.
  *
- * `TARGET_CLASS` covers interfaces, enums and traits as well -- PHP has no
- * finer-grained target for "a classlike".
+ * `TARGET_CLASS` is the closest PHP has to "a classlike", so it permits traits
+ * too. Nothing reads it there. A trait is `use`d into a class rather than
+ * instantiated, named statically or called on, so no cross-module rule ever asks
+ * about one -- and an export nothing enforces would read as a promise.
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class PublicApi

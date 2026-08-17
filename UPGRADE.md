@@ -333,7 +333,7 @@ A target that exists and *can* match is still left alone whether or not this dep
 
 Two additions come with it, neither of which can break anything: `debug:events` lists your own events beside the framework's with a `source` field in `--json`, and `setEventDispatcher()` now also accepts a PSR-14 dispatcher. If you already wrote an adapter around your bus to satisfy Gacela's interface, keep it — it answers `hasListeners()` for itself, which the built-in wrapper cannot.
 
-### 6. A pillar's constructor sees the whole configuration
+### 7. A pillar's constructor sees the whole configuration
 
 The class resolver builds your Facade, Factory, Config and Provider from a container of its own. That container was seeded with `addBinding()` and `when()` and nothing else, so everything else in `gacela.php` — `loadDefinitions()`, `extendService()`, `afterResolving()`, the id-keyed verbs, tags, handler registries, plugin stacks — reached every container *except* the one that builds the four classes a module is made of. It is now configured exactly like the application container.
 

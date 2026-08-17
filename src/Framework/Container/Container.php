@@ -115,10 +115,12 @@ final class Container implements ContainerInterface
      * The container the four pillars -- Facade, Factory, Config, Provider --
      * are constructed from, configured exactly like {@see withConfig()}.
      *
-     * It used to be built from bindings and contextual bindings alone, so a
-     * pillar constructor was the one place `loadDefinitions()`, `addAlias()`
-     * and `extendService()` did not reach, and the container a project meets
-     * first disagreed with `Gacela::container()` about the same id.
+     * It used to be built from bindings and contextual bindings alone. A pillar
+     * constructor was then the one place `loadDefinitions()` could not fill --
+     * the container a project meets first disagreeing with `Gacela::container()`
+     * about the same id -- and the id-keyed registrations (aliases, factories,
+     * protected and lazy services, tags, handler registries, plugin stacks and
+     * the `extendService()` decorations) were absent from it altogether.
      *
      * Silent, where `withConfig()` announces. `BindingRegisteredEvent` describes
      * *the configuration*, which is walked once however many containers apply

@@ -31,12 +31,11 @@ services:
             modulePathSegments: 1
             sharedNamespaces:
                 - GacelaTest\Feature\ReferenceApp\Invoicing\Shared
-            # The two declared shapes are this application's public contracts:
-            # Billing hands its invoices to Reporting, which reads them. Reading
-            # a value object is not collaborating with the module that owns it.
-            ignoreReceivers:
-                - GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceRecord
-                - GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain\CustomerProfile
+            # No ignoreReceivers. Billing hands its invoices to Reporting, which
+            # reads them -- and what sanctions that crossing is now the
+            # `#[PublicApi]` the two generated DTOs carry, written once, in the
+            # module that owns them, where a reader of that module can see it.
+            # It used to be these two lines, repeated in psalm-reference-app.xml.
     # The same `module-rules.json` that `debug:graph --check --rules` reads, so
     # a boundary holds in the editor and in CI or in neither.
     -

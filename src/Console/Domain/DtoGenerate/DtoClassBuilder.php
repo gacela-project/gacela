@@ -6,6 +6,7 @@ namespace Gacela\Console\Domain\DtoGenerate;
 
 use Gacela\Console\Domain\FileContent\PhpValue;
 
+use Gacela\Framework\Attribute\PublicApi;
 use Gacela\Framework\Dto\MissingDtoPropertyException;
 use Gacela\Framework\Dto\Schema\DtoType;
 
@@ -26,6 +27,11 @@ use function ucfirst;
  * Byte-deterministic for one schema: properties arrive sorted, so regenerating
  * an unchanged declaration produces an identical file and leaves version
  * control quiet.
+ *
+ * The output carries `#[PublicApi]`. A declared shape is data crossing a
+ * boundary by definition -- that is what it was declared for -- so the module
+ * that owns it would otherwise have to publish it by hand, once per analyser,
+ * for a file whose header says not to edit it.
  */
 final class DtoClassBuilder
 {
@@ -49,6 +55,7 @@ final class DtoClassBuilder
             $parts[] = '';
         }
 
+        $parts[] = 'use ' . PublicApi::class . ';';
         $parts[] = 'use ' . MissingDtoPropertyException::class . ';';
         $parts[] = '';
         $parts[] = '/**';
@@ -57,6 +64,10 @@ final class DtoClassBuilder
         $parts[] = ' * Declared with `declareDtoSchema()`; every declarer of this shape contributes';
         $parts[] = ' * to it, so the properties below may come from more than one package.';
         $parts[] = ' */';
+        // Below the docblock, never above it: an attribute in front of a doc
+        // comment leaves the comment attached to nothing, and the header saying
+        // not to edit the file is the first thing a reader needs.
+        $parts[] = '#[PublicApi]';
         $parts[] = 'final class ' . $shortName;
         $parts[] = '{';
         $parts[] = $this->constructor($properties);

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\Console\DtoGenerate;
 
 use Gacela\Console\Infrastructure\Command\DtoGenerateCommand;
+use Gacela\Framework\Attribute\PublicApi;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Dto\MissingDtoPropertyException;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Gacela;
+use Gacela\StaticAnalysis\PublicApiSurface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -321,6 +323,49 @@ final class DtoGenerateCommandTest extends TestCase
         self::assertStringContainsString("\$data['meta'] ?? ['a' => 1, 'b' => ['c' => 2]],", $generated);
         self::assertStringContainsString("\$data['empty'] ?? [],", $generated);
         self::assertStringNotContainsString('array (', $generated);
+    }
+
+    /**
+     * A declared shape is data crossing a boundary by definition, so the module
+     * that owns it should not have to publish it by hand -- once per analyser --
+     * in a file whose own header says not to edit it.
+     */
+    public function test_the_generated_class_declares_itself_public_api(): void
+    {
+        $this->generate();
+
+        $generated = (string)file_get_contents($this->orderFile());
+
+        self::assertStringContainsString('use ' . PublicApi::class . ';', $generated);
+        self::assertStringContainsString("#[PublicApi]\nfinal class Order", $generated);
+    }
+
+    /**
+     * Above the docblock, the attribute leaves the header attached to nothing --
+     * and the header is the line telling a reader not to edit the file.
+     */
+    public function test_the_attribute_sits_below_the_generated_docblock(): void
+    {
+        $this->generate();
+
+        $generated = (string)file_get_contents($this->orderFile());
+
+        self::assertStringContainsString(" */\n#[PublicApi]\n", $generated);
+    }
+
+    /**
+     * Read back through reflection rather than out of the source text: the
+     * cross-module rules ask the class, not the file, and a `#[PublicApi]` the
+     * generator wrote somewhere reflection cannot see it would be no export at
+     * all.
+     */
+    public function test_the_generated_class_is_published_where_the_rules_look(): void
+    {
+        $this->generate();
+
+        require_once $this->orderFile();
+
+        self::assertTrue(PublicApiSurface::isDeclaredOn($this->orderClass()));
     }
 
     /**

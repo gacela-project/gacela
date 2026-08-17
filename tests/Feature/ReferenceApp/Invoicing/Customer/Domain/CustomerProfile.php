@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain;
 
+use Gacela\Framework\Attribute\PublicApi;
 use Gacela\Framework\Dto\MissingDtoPropertyException;
 
 /**
@@ -12,6 +13,7 @@ use Gacela\Framework\Dto\MissingDtoPropertyException;
  * Declared with `declareDtoSchema()`; every declarer of this shape contributes
  * to it, so the properties below may come from more than one package.
  */
+#[PublicApi]
 final class CustomerProfile
 {
     private function __construct(

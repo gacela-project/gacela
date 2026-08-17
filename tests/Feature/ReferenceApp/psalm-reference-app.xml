@@ -27,10 +27,15 @@
 
     <plugins>
         <pluginClass class="Gacela\Psalm\Plugin">
+            <!--
+                No <ignoreReceiver>. Billing hands its invoices to Reporting,
+                which reads them, and what sanctions that crossing is now the
+                `#[PublicApi]` the two generated DTOs carry: one declaration, in
+                the module that owns the class, read by both analysers. It used
+                to be two entries here and the same two in the neon beside it.
+            -->
             <crossModule rootNamespace="GacelaTest\Feature\ReferenceApp\Invoicing" modulePathSegments="1">
                 <sharedNamespace>GacelaTest\Feature\ReferenceApp\Invoicing\Shared</sharedNamespace>
-                <ignoreReceiver>GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceRecord</ignoreReceiver>
-                <ignoreReceiver>GacelaTest\Feature\ReferenceApp\Invoicing\Customer\Domain\CustomerProfile</ignoreReceiver>
             </crossModule>
             <moduleRules
                 rootNamespace="GacelaTest\Feature\ReferenceApp\Invoicing"

@@ -1,0 +1,16 @@
+[
+    {
+        "modules": [
+            "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Alpha",
+            "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Beta"
+        ],
+        "reason": "reviewed: alpha and beta were one module and are being split"
+    },
+    {
+        "modules": [
+            "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Alpha",
+            "GacelaTest\\Integration\\Console\\Testing\\ModuleBoundaryFixture\\Gamma"
+        ],
+        "reason": "reviewed, and then the cycle it allows was broken"
+    }
+]

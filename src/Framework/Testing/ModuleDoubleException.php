@@ -22,4 +22,21 @@ final class ModuleDoubleException extends RuntimeException
             AbstractFacade::class,
         ));
     }
+
+    /**
+     * The double is registered under an id the application resolves by type, so
+     * a consumer receives it where it asked for the real class. An object of
+     * another type gets there and fails at the call site, naming neither the
+     * test that registered it nor the id it was registered under.
+     */
+    public static function notAnInstanceOf(string $id, object $double): self
+    {
+        return new self(sprintf(
+            'The double for "%s" is a %s, which is not an instance of it. '
+            . 'A double registered under a class or interface is handed to whoever asks for that type, '
+            . 'so it has to be one -- a stub of it, a subclass, or another implementation.',
+            $id,
+            $double::class,
+        ));
+    }
 }

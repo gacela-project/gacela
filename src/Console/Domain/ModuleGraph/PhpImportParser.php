@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\ModuleGraph;
 
+use function array_column;
 use function count;
 use function explode;
 use function is_array;
@@ -21,6 +22,8 @@ use function trim;
  * correct it. Everything after that is text handling, because the body of a use
  * statement is a comma-separated list with an optional `prefix{...}` group and
  * optional `as` aliases -- and nothing else.
+ *
+ * @psalm-type ImportedName = array{name: string, line: int}
  */
 final class PhpImportParser
 {
@@ -29,13 +32,33 @@ final class PhpImportParser
      */
     public function importsIn(string $phpSource): array
     {
+        return array_column($this->importsWithLinesIn($phpSource), 'name');
+    }
+
+    /**
+     * The same imports, each with the line its `use` statement opens on.
+     *
+     * Split from {@see importsIn()} for whoever has to point a reader at the
+     * import rather than merely count it: a boundary violation is a fact about
+     * one line of one file, and "somewhere in this module" is the difference
+     * between a finding somebody fixes and one they go looking for.
+     *
+     * Every name in a statement carries that statement's line, so the entries of
+     * a group spanning five lines all report the `use`. That is the line worth
+     * showing anyway, and pinning each entry to its own would mean tokenizing
+     * the group body a second time for a distinction no reader needs.
+     *
+     * @return list<ImportedName> in declaration order
+     */
+    public function importsWithLinesIn(string $phpSource): array
+    {
         $imports = [];
 
         foreach ($this->topLevelUseStatements($phpSource) as $statement) {
-            foreach ($this->namesIn($statement) as $name) {
+            foreach ($this->namesIn($statement['text']) as $name) {
                 // `use \App\Billing\Invoice;` is legal and means the same import;
                 // the leading separator is not part of the name modules match on.
-                $imports[] = ltrim($name, '\\');
+                $imports[] = ['name' => ltrim($name, '\\'), 'line' => $statement['line']];
             }
         }
 
@@ -43,12 +66,13 @@ final class PhpImportParser
     }
 
     /**
-     * The text between each top-level `use` and its `;`.
+     * The text between each top-level `use` and its `;`, and the line the `use`
+     * itself sits on.
      *
      * A grouped import's own braces are part of that text, so they are consumed
      * here rather than counted as a class body.
      *
-     * @return list<string>
+     * @return list<array{text: string, line: int}>
      */
     private function topLevelUseStatements(string $phpSource): array
     {
@@ -64,13 +88,14 @@ final class PhpImportParser
             } elseif ($token === '}') {
                 --$depth;
             } elseif ($depth === 0 && is_array($token) && $token[0] === T_USE) {
+                $line = $token[2];
                 $statement = '';
                 for (++$index; $index < $total && $tokens[$index] !== ';'; ++$index) {
                     $current = $tokens[$index];
                     $statement .= is_array($current) ? $current[1] : $current;
                 }
 
-                $statements[] = $statement;
+                $statements[] = ['text' => $statement, 'line' => $line];
             }
         }
 

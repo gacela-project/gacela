@@ -43,6 +43,14 @@ parameters:
             identifier: trait.unused
             path: src/Framework/DeclaredTypeResolverAwareTrait.php
             count: 1
+        # The module boundary assertions, for the same reason: a project writes
+        # `use ModuleAssertions;` in its own test case. GacelaTestCase cannot use
+        # it -- that class is in src/Framework, and the graph these assertions
+        # read is built by src/Console, which Framework must not depend on.
+        -
+            identifier: trait.unused
+            path: src/Console/Testing/ModuleAssertions.php
+            count: 1
         # Building a MethodReflection is unavoidable for a methodsClassReflectionExtension,
         # and PHPStan covers no way of doing it under its BC promise -- neither implementing
         # ExtendedMethodReflection nor constructing its own implementation of it. The class

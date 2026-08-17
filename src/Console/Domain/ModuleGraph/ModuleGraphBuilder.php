@@ -15,6 +15,9 @@ use function file_get_contents;
 use function is_string;
 use function sort;
 
+/**
+ * @psalm-type ImportEvidence = array{file: string, line: int, import: string}
+ */
 final class ModuleGraphBuilder
 {
     public function __construct(
@@ -45,6 +48,47 @@ final class ModuleGraphBuilder
         }
 
         return $graph;
+    }
+
+    /**
+     * Where one edge of the graph was written: every import in the module that
+     * points into `$dependencyNamespace`, with the file and the line declaring
+     * it.
+     *
+     * The graph answers whether a dependency exists; a reader who has just been
+     * told it does needs the line to go and look at. Both answers come from the
+     * same parse and the same namespace matching, so evidence cannot name an
+     * edge the graph does not report, nor go missing for one it does.
+     *
+     * @return list<ImportEvidence> in the order the module's files are walked,
+     *                              and within a file in declaration order
+     */
+    public function importsPointingInto(AppModule $module, string $dependencyNamespace): array
+    {
+        $ownName = $module->fullModuleName();
+        if ($dependencyNamespace === $ownName) {
+            return [];
+        }
+
+        $moduleDir = $this->moduleDirectory($module);
+        if ($moduleDir === null) {
+            return [];
+        }
+
+        $owner = [$dependencyNamespace => true];
+        $evidence = [];
+
+        foreach ($this->phpSourcesIn($moduleDir) as $file => $source) {
+            foreach ($this->importParser->importsWithLinesIn($source) as $import) {
+                if ($this->owningModulesOf($import['name'], $owner) === []) {
+                    continue;
+                }
+
+                $evidence[] = ['file' => $file, 'line' => $import['line'], 'import' => $import['name']];
+            }
+        }
+
+        return $evidence;
     }
 
     /**
@@ -124,13 +168,13 @@ final class ModuleGraphBuilder
     }
 
     /**
-     * The contents of every php file under a directory.
+     * The contents of every php file under a directory, keyed by its path.
      *
      * Separated so the method above is about imports rather than about
      * traversal: which files are read is one question, what is read out of them
      * is another.
      *
-     * @return iterable<string>
+     * @return iterable<string, string>
      */
     private function phpSourcesIn(string $directory): iterable
     {
@@ -148,9 +192,10 @@ final class ModuleGraphBuilder
                 continue;
             }
 
-            $contents = file_get_contents($fileInfo->getPathname());
+            $path = $fileInfo->getPathname();
+            $contents = file_get_contents($path);
             if (is_string($contents)) {
-                yield $contents;
+                yield $path => $contents;
             }
         }
     }

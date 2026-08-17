@@ -117,8 +117,28 @@
         UnwrapFinally: {
             ignore: ["Gacela\\Framework\\Cache\\FileCache::commitBatch"],
         },
+        // A trait's method is flattened into the class that uses it, so a test
+        // case calling `self::assertModuleDependsOnlyOn()` reaches it whether it
+        // is declared protected or private. Only a consumer *outside* the using
+        // class could tell the two apart, and there is no such caller to write:
+        // these are the trait's public surface for a project's own test case.
+        ProtectedVisibility: {
+            ignore: [
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertModuleDependsOnlyOn",
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertNoModuleCycles",
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertModuleRulesHold",
+            ],
+        },
         MethodCallRemoval: {
             ignore: [
+                // The guard is followed immediately by swapModuleFactory/Config/
+                // Provider, which perform the identical class_exists +
+                // is_subclass_of check and throw the identical
+                // ModuleDoubleException. So removing it changes which line
+                // raises, never whether one does. It is here to narrow the key
+                // to class-string<AbstractFacade> for the analysers, which is
+                // the one thing the swap's own guard cannot do for its caller.
+                "Gacela\\Framework\\Testing\\GacelaTestCase::swapModulePillarDouble",
                 // Registering the preload autoloader only changes anything in a
                 // process that has no other one -- which a test suite, running
                 // under composer's, never is. What it guards is asserted by
@@ -206,15 +226,36 @@
         // WritableDirectory::probe() / containerTempDir(): mkdir-failure paths only
         // reachable through filesystem races (TOCTOU) or an unwritable system temp dir.
         Throw_: {
-            ignore: ["Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir"],
+            ignore: [
+                "Gacela\\Framework\\Testing\\ContainerFixture::containerTempDir",
+                // Swallowing this throw only defers it: the pillar swap on the
+                // next line builds and throws the same exception for the same
+                // key. See the MethodCallRemoval entry above.
+                "Gacela\\Framework\\Testing\\GacelaTestCase::assertNamesAFacade",
+            ],
         },
         PregQuote: {
             ignore: ["Gacela\\Framework\\Cache\\FileCache::normalizeDirectory"],
         },
         // Random tmp-file suffix shape and the per-class attribute memo key are
         // internal formats with no observable behavior of their own.
+        // The module-boundary failure messages. What each one *says* is
+        // asserted -- the edge, the file and line behind it, the rule's reason,
+        // the modules the scan found, the sentence telling the reader what to do
+        // -- and every finding line has exactly one definition, shared by the
+        // findings list and the report, so a mutant that mangles it is caught by
+        // those assertions. What is exempt here is the layout around them: the
+        // newline between a finding and its evidence, the order two whole
+        // sentences appear in, and the "  - " that indents a list. Pinning those
+        // is a golden master over whitespace.
         Concat: {
             ignore: [
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertModuleDependsOnlyOn",
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertNoModuleCycles",
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertModuleRulesHold",
+                "Gacela\\Console\\Testing\\ModuleAssertions::gacelaUnknownModuleReport",
+                "Gacela\\Console\\Testing\\ModuleAssertions::gacelaBulletList",
+                "Gacela\\Framework\\Testing\\ModuleDoubleException::notAnInstanceOf",
                 // keyFor() is the internal `operation:subject` key and nothing
                 // reads it back. It used to be written out in both start() and
                 // stop(), where mutating one copy desynchronised the two and
@@ -229,6 +270,12 @@
         },
         ConcatOperandRemoval: {
             ignore: [
+                // See the Concat note above: the separator between a finding and
+                // the imports listed under it, and the indent in front of a
+                // listed item. Every operand that carries a value is asserted.
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertModuleDependsOnlyOn",
+                "Gacela\\Console\\Testing\\ModuleAssertions::assertNoModuleCycles",
+                "Gacela\\Console\\Testing\\ModuleAssertions::gacelaBulletList",
                 // Same as Concat above: one definition cannot disagree with
                 // itself, so dropping an operand still keys start and stop
                 // identically.
@@ -330,6 +377,11 @@
             ignore: [
                 "Gacela\\Framework\\Plugins\\LazyHandlerRegistry::get",
                 "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::from",
+                // The map only puts "  - " in front of each item. Which items
+                // are listed is asserted -- the allowed modules, the modules the
+                // scan found -- and the indent is not: pinning it would be a
+                // golden master over two spaces and a dash.
+                "Gacela\\Console\\Testing\\ModuleAssertions::gacelaBulletList",
             ],
         },
         // affectedModules() keys its accumulator by module name to deduplicate;
@@ -515,7 +567,16 @@
             ],
         },
         TrueValue: {
-            ignore: ["Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateStatement"],
+            ignore: [
+                "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateStatement",
+                // The one-entry map is a *set*: owningModulesOf() reads it with
+                // isset(), which answers the same for `false` as for `true`.
+                // Only the key is ever looked at. Same shape as the `$seen[...]`
+                // and `$provided[...]` bookkeeping ignored by regex above; it is
+                // built as a map rather than a list so that the evidence and the
+                // graph share one matching rule instead of two.
+                "Gacela\\Console\\Domain\\ModuleGraph\\ModuleGraphBuilder::importsPointingInto",
+            ],
         },
         // PHP 8.4 reports a return type with the casing the source wrote, so
         // `: SELF` arrives as 'SELF' there and as the resolved class on 8.5 --
@@ -529,6 +590,11 @@
         LogicalOr: {
             ignore: [
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isCachedDelegation",
+                // Same redundancy as the MethodCallRemoval entry above: whatever
+                // this guard decides, the pillar swap right after it applies the
+                // identical condition and throws the identical exception, so no
+                // input can tell || from && at this call site.
+                "Gacela\\Framework\\Testing\\GacelaTestCase::assertNamesAFacade",
             ],
         },
         // warmAttributeCache() breaks out of the prefix scan after the first

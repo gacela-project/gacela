@@ -8,6 +8,9 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function str_replace;
+
 final class ModuleGraphBuilderTest extends TestCase
 {
     private const NS = 'GacelaTest\Unit\Console\Domain\ModuleGraph\Fixture';
@@ -100,6 +103,96 @@ final class ModuleGraphBuilderTest extends TestCase
             [self::NS . '\Alpha', self::NS . '\Zebra'],
             $graph[self::NS . '\Grouped'],
         );
+    }
+
+    /**
+     * The graph says an edge exists; this says where it was written. Both read
+     * the same imports through the same parser, so a reported dependency always
+     * has evidence and the evidence always names a reported dependency.
+     */
+    public function test_the_imports_behind_an_edge_name_the_file_and_the_line(): void
+    {
+        $evidence = $this->withNormalisedPaths(
+            (new ModuleGraphBuilder())->importsPointingInto($this->module('Hub'), self::NS . '\Zebra'),
+        );
+
+        self::assertSame(
+            [[
+                'file' => $this->fixtureFile('Hub'),
+                'line' => 9,
+                'import' => self::NS . '\Zebra\Facade',
+            ]],
+            $evidence,
+        );
+    }
+
+    /**
+     * The whole statement is the evidence for every module it reaches, so both
+     * entries of a group point at the `use` rather than at their own entry.
+     */
+    public function test_a_grouped_import_is_evidence_for_each_module_it_reaches(): void
+    {
+        $builder = new ModuleGraphBuilder();
+        $groupedFile = $this->fixtureFile('Grouped');
+
+        self::assertSame(
+            [['file' => $groupedFile, 'line' => 8, 'import' => self::NS . '\Alpha\Facade']],
+            $this->withNormalisedPaths($builder->importsPointingInto($this->module('Grouped'), self::NS . '\Alpha')),
+        );
+
+        self::assertSame(
+            [['file' => $groupedFile, 'line' => 8, 'import' => self::NS . '\Zebra\Facade']],
+            $this->withNormalisedPaths($builder->importsPointingInto($this->module('Grouped'), self::NS . '\Zebra')),
+        );
+    }
+
+    /**
+     * `Fixture\Alpha` is a plain-string prefix of the `Fixture\AlphaExtra`
+     * import Hub declares. Evidence for a dependency the graph does not report
+     * would send a reader to a line that is not the problem.
+     */
+    public function test_a_module_whose_name_prefixes_an_import_has_no_evidence(): void
+    {
+        self::assertSame(
+            [],
+            (new ModuleGraphBuilder())->importsPointingInto($this->module('Hub'), self::NS . '\Alpha'),
+        );
+    }
+
+    public function test_a_module_with_no_import_into_the_dependency_has_no_evidence(): void
+    {
+        self::assertSame(
+            [],
+            (new ModuleGraphBuilder())->importsPointingInto($this->module('Alpha'), self::NS . '\Zebra'),
+        );
+    }
+
+    /**
+     * The evidence carries the path the traversal produced, which starts from
+     * the one the autoloader recorded -- and on Windows that is not necessarily
+     * written with the separator `__DIR__` uses. Both sides are normalised so
+     * the assertion is about the file rather than about how it is spelled.
+     *
+     * @param list<array{file: string, line: int, import: string}> $evidence
+     *
+     * @return list<array{file: string, line: int, import: string}>
+     */
+    private function withNormalisedPaths(array $evidence): array
+    {
+        return array_map(
+            static fn (array $entry): array => [
+                ...$entry,
+                'file' => str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $entry['file']),
+            ],
+            $evidence,
+        );
+    }
+
+    private function fixtureFile(string $module): string
+    {
+        return str_replace(['\\', '/'], DIRECTORY_SEPARATOR, __DIR__)
+            . DIRECTORY_SEPARATOR . 'Fixture' . DIRECTORY_SEPARATOR
+            . $module . DIRECTORY_SEPARATOR . 'Facade.php';
     }
 
     private function module(string $name): AppModule

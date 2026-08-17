@@ -86,6 +86,17 @@ public function createInvoiceSender(): InvoiceSender
 
 Use `create*()` when construction has decisions in it, `make()` when it does not. A Facade reaches its own Factory with `$this->getFactory()`, which is a real typed method — no attribute required.
 
+It is also the *only* pillar accessor a Facade has for free. `gacela.facadeOnlyDelegates` accepts three more delegation roots, and each needs the trait that declares it:
+
+| Root | What a Facade needs to have it |
+|---|---|
+| `getFactory()` | nothing — `AbstractFacade` declares it |
+| `getConfig()` | `use ConfigResolverAwareTrait` |
+| `getResolvedType('Kind')` | `use DeclaredTypeResolverAwareTrait` |
+| `getProvider()` | `use ServiceResolverAwareTrait` + `#[ServiceMap(method: 'getProvider', className: BlogProvider::class)]` |
+
+Writing one without its trait is `Call to undefined method …Facade::getConfig()` at runtime, and that `Error` names no alternative — so the rule's own tip lists this table too.
+
 ## Get an external / infrastructure service
 
 Declare it in the module's Provider with `#[Provides]`:

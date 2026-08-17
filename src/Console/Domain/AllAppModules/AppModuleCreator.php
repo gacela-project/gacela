@@ -8,6 +8,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use ReflectionClass;
 use Throwable;
 
@@ -27,13 +28,22 @@ final class AppModuleCreator
      */
     public function fromClass(string $facadeClass): AppModule
     {
+        $factory = $this->resolvePillar($this->factoryResolver, $facadeClass);
+        $config = $this->resolvePillar($this->configResolver, $facadeClass);
+        $provider = $this->resolvePillar($this->providerResolver, $facadeClass);
+
         return new AppModule(
             $this->fullModuleName($facadeClass),
             $this->moduleName($facadeClass),
             $facadeClass,
-            $this->findFactory($facadeClass),
-            $this->findConfig($facadeClass),
-            $this->findProvider($facadeClass),
+            $this->classNameOf($factory),
+            $this->classNameOf($config),
+            $this->classNameOf($provider),
+            $this->failuresOf([
+                ResolvableTypes::FACTORY => $factory,
+                ResolvableTypes::CONFIG => $config,
+                ResolvableTypes::PROVIDER => $provider,
+            ]),
         );
     }
 
@@ -63,50 +73,28 @@ final class AppModuleCreator
     }
 
     /**
-     * @param class-string $facadeClass
+     * The concrete class name behind a facade for the given resolver, or why
+     * there is none: a `PillarResolutionFailure` when resolution threw, and
+     * plain null when the module simply has no such pillar (nothing resolved,
+     * or an anonymous default class stood in for one).
      *
-     * @return ?class-string
-     */
-    private function findFactory(string $facadeClass): ?string
-    {
-        return $this->resolveClassName($this->factoryResolver, $facadeClass);
-    }
-
-    /**
-     * @param class-string $facadeClass
-     *
-     * @return ?class-string
-     */
-    private function findConfig(string $facadeClass): ?string
-    {
-        return $this->resolveClassName($this->configResolver, $facadeClass);
-    }
-
-    /**
-     * @param class-string $facadeClass
-     *
-     * @return ?class-string
-     */
-    private function findProvider(string $facadeClass): ?string
-    {
-        return $this->resolveClassName($this->providerResolver, $facadeClass);
-    }
-
-    /**
-     * Resolve the concrete class name behind a facade for the given resolver,
-     * or null when the module has none (resolution fails, resolves to null,
-     * or falls back to an anonymous default class).
+     * The two used to be one answer. A `DependencyNotFoundException` out of the
+     * pillar's own constructor was indistinguishable from a class that is not
+     * there, which left `doctor` guessing at a cause with nothing to guess from
+     * (#884, #890).
      *
      * @param class-string $facadeClass
      *
-     * @return ?class-string
+     * @return class-string|PillarResolutionFailure|null
      */
-    private function resolveClassName(AbstractClassResolver $resolver, string $facadeClass): ?string
-    {
+    private function resolvePillar(
+        AbstractClassResolver $resolver,
+        string $facadeClass,
+    ): string|PillarResolutionFailure|null {
         try {
             $resolved = $resolver->resolve($facadeClass);
-        } catch (Throwable) {
-            return null;
+        } catch (Throwable $throwable) {
+            return PillarResolutionFailure::from($throwable);
         }
 
         if ($resolved === null || (new ReflectionClass($resolved))->isAnonymous()) {
@@ -114,5 +102,33 @@ final class AppModuleCreator
         }
 
         return $resolved::class;
+    }
+
+    /**
+     * @param class-string|PillarResolutionFailure|null $pillar
+     *
+     * @return ?class-string
+     */
+    private function classNameOf(string|PillarResolutionFailure|null $pillar): ?string
+    {
+        return $pillar instanceof PillarResolutionFailure ? null : $pillar;
+    }
+
+    /**
+     * @param array<string, class-string|PillarResolutionFailure|null> $pillars
+     *
+     * @return array<string, PillarResolutionFailure>
+     */
+    private function failuresOf(array $pillars): array
+    {
+        $failures = [];
+
+        foreach ($pillars as $kind => $pillar) {
+            if ($pillar instanceof PillarResolutionFailure) {
+                $failures[$kind] = $pillar;
+            }
+        }
+
+        return $failures;
     }
 }

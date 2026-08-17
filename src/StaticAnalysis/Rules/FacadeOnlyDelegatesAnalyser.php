@@ -99,12 +99,23 @@ final class FacadeOnlyDelegatesAnalyser implements MethodAnalyserInterface
         return [
             new Violation(
                 sprintf(
-                    'Facade method %s::%s() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.',
+                    'Facade method %s::%s() must only delegate to getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.',
                     $class->name(),
                     $method->name->toString(),
                 ),
                 'gacela.facadeOnlyDelegates',
-                'Move the logic into the Factory and have this method call it.',
+                // Written as `$this->getFactory()/getConfig()/...` until #890,
+                // which reads as four methods the reader already has.
+                // `AbstractFacade` declares one, so acting on the advice for
+                // any of the other three ended in `Call to undefined method
+                // ...Facade::getConfig()` -- an Error that names no
+                // alternative either. Naming the trait behind each is the
+                // difference between a report a reader can act on and one that
+                // sends them somewhere there is nothing to find.
+                'Move the logic into the Factory and have this method call it. '
+                . 'Only `AbstractFacade::getFactory()` is on the base class; the others come from a trait: '
+                . '`ConfigResolverAwareTrait::getConfig()`, `DeclaredTypeResolverAwareTrait::getResolvedType()`, '
+                . 'and `ServiceResolverAwareTrait` + #[ServiceMap] for getProvider().',
             ),
         ];
     }

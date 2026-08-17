@@ -80,6 +80,8 @@ An invoicing SaaS under `tests/Feature/ReferenceApp/`, wired with every feature 
 - **A stale class-name cache entry heals itself.** Rename a Factory, Config or Provider and deploy without clearing the cache dir, and resolution died on a `TypeError`; the persisted hit is now validated and re-found when stale, at no warm-path cost
 - The "no modules found" hint said discovery goes by filename suffix; it goes by inheritance from `AbstractFacade`, and the hint now says so
 - The suffix-mismatch doctor check named `SuffixTypesBuilder::addFacade`, which `gacela.php` cannot call; it names `GacelaConfig::addSuffixTypeFacade()`, and a test fails when any remediation names a method that does not exist
+- **`doctor`'s unresolved-pillar check no longer blames autoloading for every failure.** `AppModuleCreator` discarded whatever resolution threw, so a `DependencyNotFoundException` out of the pillar's own constructor was reported as "the file is there and nothing can load it — check the `namespace` declaration", with the namespace, the psr-4 prefix and the class all fine. The thrown class and message are now on the detail line, and the namespace advice is offered only when the class genuinely does not exist
+- **`gacela.facadeOnlyDelegates` no longer recommends methods `AbstractFacade` does not have.** It read "must only delegate to `$this->getFactory()/getConfig()/getProvider()/getResolvedType()`", and three of those four end in `Call to undefined method` on a plain Facade. The tip now names the one root the base class declares and the trait behind each of the others, and the same test that guards the doctor remediations now walks the analyser messages too
 
 ### Changed
 

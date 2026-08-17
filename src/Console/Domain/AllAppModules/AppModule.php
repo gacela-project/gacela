@@ -11,6 +11,7 @@ final class AppModule
      * @param ?class-string $factoryClass
      * @param ?class-string $configClass
      * @param ?class-string $providerClass
+     * @param array<string, PillarResolutionFailure> $resolutionFailures kind => what was thrown resolving it
      */
     public function __construct(
         private readonly string $fullModuleName,
@@ -19,6 +20,7 @@ final class AppModule
         private readonly ?string $factoryClass = null,
         private readonly ?string $configClass = null,
         private readonly ?string $providerClass = null,
+        private readonly array $resolutionFailures = [],
     ) {
     }
 
@@ -62,5 +64,15 @@ final class AppModule
     public function providerClass(): ?string
     {
         return $this->providerClass;
+    }
+
+    /**
+     * What was thrown while resolving this kind, or null when nothing was: a
+     * kind that resolved, and a kind the module simply does not have, both
+     * answer null.
+     */
+    public function resolutionFailure(string $kind): ?PillarResolutionFailure
+    {
+        return $this->resolutionFailures[$kind] ?? null;
     }
 }

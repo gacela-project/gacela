@@ -8,32 +8,44 @@ use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Console\Domain\AllAppModules\PillarResolutionFailure;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 use ReflectionClass;
+use Throwable;
 
 use function array_unique;
 use function array_values;
 use function basename;
+use function class_exists;
 use function dirname;
 use function is_file;
+use function preg_replace;
 use function sprintf;
+use function trim;
 
 /**
  * Reports a pillar file that is on disk and resolved to nothing.
  *
- * A module whose `BlogFactory.php` cannot be loaded -- a namespace that
- * disagrees with the psr-4 prefix, most often -- is still a module: the Facade
+ * A module whose `BlogFactory.php` did not resolve is still a module: the Facade
  * resolves, discovery keeps it, and the Factory simply comes back `null`. So
  * `list:modules` prints a blank cell, `debug:module` says `(not found)`, and
  * the reader is told they have no Factory while looking at the file they
  * wrote.
  *
+ * Two different things end there, and this check used to name only one of them.
+ * A namespace disagreeing with the psr-4 prefix is the first; the second is the
+ * pillar's own constructor, where an unbound interface throws
+ * `DependencyNotFoundException` from a class that loads perfectly. Reporting
+ * both as "nothing can load it -- check the `namespace` declaration" sent
+ * readers of the second to the one place already known to be fine (#884, #890),
+ * so what was thrown is named on the line and the namespace advice waits until
+ * the class really is not there.
+ *
  * Nothing else reports it. `FilenameMismatchCheck` scans the same directory
  * but compares the declared class name against the filename, and those agree
- * here -- the namespace is what is wrong. The undiscovered-facades check
- * answers the same question one level up, for the Facade that would have made
- * the whole module vanish.
+ * in both cases. The undiscovered-facades check answers the same question one
+ * level up, for the Facade that would have made the whole module vanish.
  *
  * @psalm-import-type SuffixTypes from SuffixTypesBuilder
  */
@@ -67,28 +79,42 @@ final class UnresolvedPillarFileCheck implements HealthCheck
 
     public function run(): CheckResult
     {
-        $unresolved = [];
+        $details = [];
+        $everyOneExplained = true;
 
         foreach ($this->modules as $module) {
-            foreach ($this->unresolvedFilesOf($module) as $detail) {
-                $unresolved[] = $detail;
+            foreach ($this->unresolvedFilesOf($module) as $unresolved) {
+                $details[] = $unresolved['detail'];
+                $everyOneExplained = $everyOneExplained && $unresolved['explained'];
             }
         }
 
-        if ($unresolved === []) {
+        if ($details === []) {
             return CheckResult::ok($this->name(), 'every pillar file on disk resolved');
         }
 
-        return CheckResult::error(
-            $this->name(),
-            $unresolved,
-            'the file is there and nothing can load it — check the `namespace` declaration '
-            . 'matches the psr-4 prefix for its directory, then `composer dump-autoload`',
-        );
+        return CheckResult::error($this->name(), $details, $this->remediationFor($everyOneExplained));
     }
 
     /**
-     * @return list<string>
+     * One remediation is printed for the whole finding, so it has to be the one
+     * still worth following. Naming the failure is right only when every line
+     * has one *and* every class loads; anything else leaves a file that really
+     * might not be loadable, and for that the namespace tip is what helps.
+     */
+    private function remediationFor(bool $everyOneExplained): string
+    {
+        if ($everyOneExplained) {
+            return 'the class loads, so the `namespace` and the psr-4 prefix are not the problem '
+                . '— fix the failure named on each line';
+        }
+
+        return 'the file is there and nothing can load it — check the `namespace` declaration '
+            . 'matches the psr-4 prefix for its directory, then `composer dump-autoload`';
+    }
+
+    /**
+     * @return list<array{detail: string, explained: bool}>
      */
     private function unresolvedFilesOf(AppModule $module): array
     {
@@ -113,14 +139,62 @@ final class UnresolvedPillarFileCheck implements HealthCheck
                 continue;
             }
 
+            $failure = $module->resolutionFailure($kind);
+
             foreach ($this->candidateFilesFor($module, $directory, $kind) as $file) {
-                if (is_file($file)) {
-                    $unresolved[] = sprintf('%s — %s is on disk and no %s resolved', $module->fullModuleName(), basename($file), $kind);
+                if (!is_file($file)) {
+                    continue;
                 }
+
+                $unresolved[] = [
+                    'detail' => sprintf(
+                        '%s — %s is on disk and no %s resolved%s',
+                        $module->fullModuleName(),
+                        basename($file),
+                        $kind,
+                        $this->reasonFor($failure),
+                    ),
+                    'explained' => $failure instanceof PillarResolutionFailure
+                        && $this->classLoads($module, $file),
+                ];
             }
         }
 
         return $unresolved;
+    }
+
+    /**
+     * The thrown class and message, folded onto one line: a detail is one line
+     * of the report, and `DependencyNotFoundException` spans five and ends in a
+     * URL. The words are what the reader needs, not the newlines between them.
+     */
+    private function reasonFor(?PillarResolutionFailure $failure): string
+    {
+        if (!$failure instanceof PillarResolutionFailure) {
+            return '';
+        }
+
+        return sprintf(': %s: %s', $failure->exceptionClass, trim((string)preg_replace('/\s+/', ' ', $failure->message)));
+    }
+
+    /**
+     * Whether the class the file should declare is there, which is the only
+     * thing that separates a namespace that disagrees with its directory from a
+     * class that loads perfectly and then fails to build.
+     */
+    private function classLoads(AppModule $module, string $file): bool
+    {
+        $className = $module->fullModuleName() . '\\' . basename($file, '.php');
+
+        try {
+            return class_exists($className);
+        } catch (Throwable) {
+            // Asking is asking PHP to load it, and a file it could not compile
+            // the first time throws again here. The reason is already on the
+            // detail line; all this decides is which remediation to print, and
+            // for a file PHP cannot load the namespace tip is the right one.
+            return false;
+        }
     }
 
     /**

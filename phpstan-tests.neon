@@ -74,3 +74,10 @@ parameters:
         -
             identifier: classConstant.internalClass
             path: %currentWorkingDirectory%/tests/Unit/Framework/ClassResolver/GlobalInstance/AnonymousGlobalTest.php
+        # EventDispatchingCapabilities is @internal: an application injects the
+        # dispatcher instead of mixing the trait in. The trait's own test is the
+        # one place that has to mix it in, because the two methods are private
+        # and a `use` is the only way to reach them.
+        -
+            identifier: traitUse.internalTrait
+            path: %currentWorkingDirectory%/tests/Unit/Framework/Event/Dispatcher/EventDispatchingCapabilitiesTest.php

@@ -90,7 +90,21 @@ final class Properties
     /** @var ?SpecificListenersMap */
     public ?array $specificListeners = null;
 
+    /**
+     * What was last *derived* from this setup -- a memo, thrown away whenever
+     * the listeners change.
+     */
     public ?EventDispatcherInterface $eventDispatcher = null;
+
+    /**
+     * What the application handed over through `setEventDispatcher()`.
+     *
+     * Kept apart from the memo above. Storing the handover in that one slot is
+     * how it used to be lost -- a merge bringing listeners overwrote it -- and,
+     * now that the dispatcher is rebuilt from the setup, is how the listeners
+     * would come back composed with themselves and fire twice.
+     */
+    public ?EventDispatcherInterface $suppliedEventDispatcher = null;
 
     /** @var ?ServicesToExtendMap */
     public ?array $servicesToExtend = null;

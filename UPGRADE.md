@@ -218,7 +218,7 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ## 2.3 → 2.4
 
-Three changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `#[Cacheable]`, if you set a custom `key:` template; and the two opt-in cross-module rules, if you have them enabled.
+Four changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; and the two opt-in cross-module rules, if you have them enabled.
 
 ### 1. A specific listener matches by inheritance
 
@@ -228,7 +228,22 @@ Nothing to do if every target you registered is a concrete event class — that 
 
 The upside is that this is now the cheap way to observe a family. `registerSpecificListener(AbstractGacelaClassResolverEvent::class, …)` covers all four resolver events and leaves every other dispatch site allocating nothing, where the generic-listener-plus-`instanceof` pattern the docs used to teach allocates every event in the framework to throw most of them away.
 
-### 2. A custom cache key is scoped to its class and method
+### 2. A supplied dispatcher composes with your listeners instead of replacing them
+
+Only if you call `setEventDispatcher()`. Nothing to change for the majority of that group, and for one shape this is the fix rather than the change.
+
+Before, a supplied dispatcher and a registered listener could not coexist, and which one you lost depended on where you wrote them:
+
+- **Registered in `gacela.php`, dispatcher supplied in the closure** — your dispatcher was thrown away. The merge built a `ConfigurableEventDispatcher` to hold the listeners and installed it over the top, and since that class is `final` yours could never be the one kept. Your bus received the two events dispatched before `gacela.php` was read and then nothing. There is nothing to do here: this was a bug, and it is fixed
+- **Both in the same closure** — your listeners were the ones lost. The dispatcher was written into the slot the built one is memoized in, so the listeners were never reached. **This is the behaviour change**: those listeners now run
+
+Both now compose. The configured listeners run first, in registration order, and then the event is offered to your dispatcher — which receives it only if its own `hasListeners()` says yes, so declining an event class still means you are not told about it. With no listeners registered anywhere, your dispatcher *is* the dispatcher and nothing is composed.
+
+So the one thing to look for is a listener registered in the same closure as a `setEventDispatcher()` call, which has been silently inert and starts running. If you registered it expecting your dispatcher to handle it instead, delete the registration; if it was dead code you had forgotten, delete it for that reason. `vendor/bin/gacela debug:events` lists what is registered and now says when a custom dispatcher is installed beside it.
+
+`disableEventListeners()` is unaffected: a supplied dispatcher still takes precedence over it, and with the switch off the configured listeners do not run at all.
+
+### 3. A custom cache key is scoped to its class and method
 
 A `key:` template used to be the whole stored key. Two classes writing the same template — `key: 'user:{0}'` in two facades — therefore shared one entry, and the second to ask was served the first one's data. It also put those entries out of reach of `clearMethodCacheFor()`, which deletes by a `Class::method::` prefix the template never carried.
 
@@ -239,7 +254,7 @@ The stored key is now `Class::method::` followed by the interpolated template. T
 
 `clearMethodCacheFor()` now reaches custom-keyed entries like any other, so the "invalidate through the storage backend directly" workaround the docs used to describe is no longer needed.
 
-### 3. The cross-module rules report less than before
+### 4. The cross-module rules report less than before
 
 Only if `CrossModuleViaFacadeRule` / `CrossModuleMethodCallRule` (PHPStan) or `<crossModule>` (Psalm) is enabled. Nothing to do, and nothing new fails — but a rule that reports *less* is still a behaviour change, and it is worth knowing which findings went away rather than wondering.
 

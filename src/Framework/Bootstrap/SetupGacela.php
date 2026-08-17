@@ -553,9 +553,16 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    /**
+     * Never set means the default, which is on. A `SetupGacela` built by hand
+     * rather than from a `GacelaConfig` skips `SetupInitializer`, so the flag
+     * stays null -- and reading that as "disabled" would silence the listeners
+     * merged onto it from `gacela-{APP_ENV}.php`, the one arrangement in which
+     * nothing sets it.
+     */
     public function canCreateEventDispatcher(): bool
     {
-        return $this->properties->areEventListenersEnabled === true
+        return ($this->properties->areEventListenersEnabled ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED)
             && $this->hasEventListeners();
     }
 
@@ -594,16 +601,40 @@ final class SetupGacela extends AbstractSetupGacela
         return $this->changeTracker->isChanged($name);
     }
 
+    /**
+     * Hand Gacela the dispatcher that *delivers* its events.
+     *
+     * It does not replace the listeners this setup registers: those say what
+     * must run, this says where the events go, and both are requests the
+     * application made. With any listener registered, the two are composed --
+     * see {@see \Gacela\Framework\Event\Dispatcher\CompositeEventDispatcher}.
+     *
+     * Takes precedence over `disableEventListeners()`: that switch governs the
+     * dispatcher Gacela would *build*, and this is one it does not build.
+     */
     public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
     {
-        $this->properties->eventDispatcher = $eventDispatcher;
+        if ($eventDispatcher === $this->properties->eventDispatcher) {
+            // Handing back the dispatcher Gacela derived for this very setup is
+            // not a handover. Recording it would compose it with the listeners
+            // it already owns, and every one of them would fire twice.
+            return $this;
+        }
 
-        // The provider memoizes whatever the resolver last returned, and the
-        // resolver reads this property -- so replacing the dispatcher without
-        // saying so leaves every later dispatch going to the old one.
-        EventDispatcherProvider::refresh();
+        $this->properties->suppliedEventDispatcher = $eventDispatcher;
+        $this->invalidateEventDispatcher();
 
         return $this;
+    }
+
+    /**
+     * The dispatcher the application handed over, if it did.
+     *
+     * @internal Used by SetupMerger and by the diagnostics that report it
+     */
+    public function getSuppliedEventDispatcher(): ?EventDispatcherInterface
+    {
+        return $this->properties->suppliedEventDispatcher;
     }
 
     /**
@@ -792,6 +823,7 @@ final class SetupGacela extends AbstractSetupGacela
     public function setGenericListeners(?array $listeners): self
     {
         $this->properties->genericListeners = $listeners ?? self::DEFAULT_GENERIC_LISTENERS;
+        $this->invalidateEventDispatcher();
 
         return $this;
     }
@@ -1048,8 +1080,46 @@ final class SetupGacela extends AbstractSetupGacela
     public function setSpecificListeners(?array $listeners): self
     {
         $this->properties->specificListeners = $listeners ?? self::DEFAULT_SPECIFIC_LISTENERS;
+        $this->invalidateEventDispatcher();
 
         return $this;
+    }
+
+    /**
+     * @internal Used by SetupMerger - do not call directly
+     *
+     * @param list<callable> $listeners
+     */
+    public function mergeGenericListeners(array $listeners): void
+    {
+        $this->propertyMerger->mergeGenericListeners($listeners);
+    }
+
+    /**
+     * @internal Used by SetupMerger - do not call directly
+     *
+     * @param SpecificListenersMap $listeners
+     */
+    public function mergeSpecificListeners(array $listeners): void
+    {
+        $this->propertyMerger->mergeSpecificListeners($listeners);
+    }
+
+    /**
+     * Throw away the dispatcher derived from this setup, so the next read
+     * builds one from what the setup holds now.
+     *
+     * The provider memoizes whatever the resolver last returned and the
+     * resolver reads this setup, so the memo one level up goes with it:
+     * `Gacela::bootstrap()` dispatches its first event before `gacela.php` has
+     * been merged in, and leaving that memo alone is how the merged listeners
+     * used to never fire (#866).
+     */
+    private function invalidateEventDispatcher(): void
+    {
+        $this->properties->eventDispatcher = null;
+
+        EventDispatcherProvider::refresh();
     }
 
     private function hasEventListeners(): bool

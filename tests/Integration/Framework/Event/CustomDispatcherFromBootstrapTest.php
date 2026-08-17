@@ -6,6 +6,9 @@ namespace GacelaTest\Integration\Framework\Event;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Config\Config;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
 use Gacela\Framework\Gacela;
@@ -76,6 +79,57 @@ final class CustomDispatcherFromBootstrapTest extends TestCase
         });
 
         self::assertSame($spy, EventDispatcherProvider::get());
+    }
+
+    /**
+     * A dispatcher says what *delivers* the events; a listener says what must
+     * *run*. Both were asked for in the same closure, so both happen -- the
+     * dispatcher used to win outright, because it was written into the very
+     * slot the built one is memoized in and the listeners were never reached.
+     */
+    public function test_a_supplied_dispatcher_composes_with_the_listeners_registered_beside_it(): void
+    {
+        $spy = $this->spy();
+        $calls = 0;
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use ($spy, &$calls): void {
+            $config->setEventDispatcher($spy);
+            $config->registerGenericListener(static function () use (&$calls): void {
+                ++$calls;
+            });
+        });
+
+        (new ConsoleFacade())->getFactory();
+
+        self::assertGreaterThan(0, $calls, 'the listener registered beside the dispatcher never ran');
+        self::assertGreaterThan(0, $spy->asked, 'the supplied dispatcher was never consulted');
+    }
+
+    /**
+     * Handing back the dispatcher Gacela derived for this setup is not a
+     * handover: composing it with the listeners it already owns would deliver
+     * every one of them twice.
+     */
+    public function test_handing_back_the_derived_dispatcher_does_not_duplicate_its_listeners(): void
+    {
+        $calls = 0;
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$calls): void {
+            $config->registerSpecificListener(
+                GacelaBootstrapFinishedEvent::class,
+                static function () use (&$calls): void {
+                    ++$calls;
+                },
+            );
+        });
+
+        $setup = Config::getInstance()->getSetupGacela();
+        self::assertInstanceOf(SetupGacela::class, $setup);
+        $setup->setEventDispatcher($setup->getEventDispatcher());
+
+        EventDispatcherProvider::get()->dispatch(new GacelaBootstrapFinishedEvent(1.0));
+
+        self::assertSame(2, $calls, 'once at bootstrap and once here -- any more is a listener registered twice');
     }
 
     private function bootstrapWith(callable $setup): void

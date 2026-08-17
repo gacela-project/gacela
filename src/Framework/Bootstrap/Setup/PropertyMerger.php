@@ -32,6 +32,7 @@ use function in_array;
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
+ * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
 final class PropertyMerger
 {
@@ -302,6 +303,37 @@ final class PropertyMerger
     {
         $current = $this->setup->getLazyServices();
         $this->setup->setLazyServices(array_merge($current, $list));
+    }
+
+    /**
+     * Appended, so the base setup's listeners keep running and keep running
+     * first -- the order they are registered in is the order they fire in.
+     *
+     * @param list<callable> $list
+     */
+    public function mergeGenericListeners(array $list): void
+    {
+        $current = $this->setup->getGenericListeners() ?? [];
+        $this->setup->setGenericListeners(array_merge($current, $list));
+    }
+
+    /**
+     * Per target, the way {@see mergeGenericListeners()} does for the whole
+     * list: two sources naming the same event class both get to listen to it.
+     *
+     * @param SpecificListenersMap $list
+     */
+    public function mergeSpecificListeners(array $list): void
+    {
+        $merged = $this->setup->getSpecificListeners() ?? [];
+
+        foreach ($list as $event => $listeners) {
+            foreach ($listeners as $listener) {
+                $merged[$event][] = $listener;
+            }
+        }
+
+        $this->setup->setSpecificListeners($merged);
     }
 
     /**

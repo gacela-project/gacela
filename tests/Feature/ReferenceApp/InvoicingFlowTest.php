@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace GacelaTest\Feature\ReferenceApp;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
+use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\BillingFacade;
@@ -228,6 +230,13 @@ final class InvoicingFlowTest extends TestCase
     /**
      * An application may hand Gacela the dispatcher instead of letting it build
      * one -- the way these events reach a project's own bus.
+     *
+     * This application's `gacela.php` registers a listener of its own, which is
+     * exactly the combination that used to throw the handover away: the merge
+     * built a `ConfigurableEventDispatcher` to hold the listener and installed
+     * it over the top, and a `final` class is one an application's dispatcher
+     * can never be. The bus received the two events dispatched before the merge
+     * and then nothing (#888).
      */
     public function test_the_application_can_hand_over_its_own_event_dispatcher(): void
     {
@@ -237,7 +246,37 @@ final class InvoicingFlowTest extends TestCase
             $config->setEventDispatcher($dispatcher);
         });
 
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+
         self::assertContains(GacelaBootstrapStartedEvent::class, $dispatcher->received());
+        // Dispatched after `gacela.php` has been merged in, so it only arrives
+        // if the handover survived the merge.
+        self::assertContains(GacelaBootstrapFinishedEvent::class, $dispatcher->received());
+        self::assertContains(ResolvedClassCreatedEvent::class, $dispatcher->received());
+    }
+
+    /**
+     * `setEventDispatcher()` says what delivers the events and
+     * `registerSpecificListener()` says what must run. Both were asked for, so
+     * both happen -- the listener in `gacela.php` runs *and* the application's
+     * bus is told.
+     */
+    public function test_a_supplied_dispatcher_composes_with_the_listeners_in_the_gacela_file(): void
+    {
+        $dispatcher = new RecordingEventDispatcher();
+
+        ReferenceApp::bootstrap(static function (GacelaConfig $config) use ($dispatcher): void {
+            $config->setEventDispatcher($dispatcher);
+        });
+
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+
+        self::assertNotSame([], ResolverActivityLog::entries(), 'the listener registered in gacela.php never fired');
+        // The same event the `gacela.php` listener is registered against, so
+        // one dispatch has to reach both -- which is the composition. Before
+        // it, the dispatcher built to hold that listener replaced the supplied
+        // one, and only one of the two ever heard about a resolver event.
+        self::assertContains(ResolvedClassCreatedEvent::class, $dispatcher->received());
     }
 
     /**

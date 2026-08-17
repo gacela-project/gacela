@@ -8,6 +8,7 @@ use Gacela\Console\Application\Debug\EventCatalog;
 use Gacela\Console\Application\Debug\EventInspection;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -138,6 +139,7 @@ final class DebugEventsCommand extends Command
                 'listeners' => $listeners,
                 'genericListeners' => $this->genericListenerCount(),
                 'listenersEnabled' => $listenersEnabled,
+                'customDispatcher' => $this->customDispatcherClass(),
             ],
             'events' => array_map(
                 static fn (EventInspection $inspection): array => [
@@ -263,6 +265,19 @@ final class DebugEventsCommand extends Command
             $output->writeln('<comment>disableEventListeners() is in effect, so none of these listeners runs.</comment>');
         }
 
+        $customDispatcher = $this->customDispatcherClass();
+
+        if ($customDispatcher !== null) {
+            // Without this the table is half the story: the listeners above are
+            // what the *configuration* registered, and a supplied dispatcher
+            // carries every event on to whatever the application does with it,
+            // which this command cannot see into.
+            $output->writeln(sprintf(
+                '<comment>setEventDispatcher(%s) is in effect, so every event above also reaches it.</comment>',
+                $this->shortNameOf($customDispatcher),
+            ));
+        }
+
         $output->writeln('');
     }
 
@@ -373,6 +388,32 @@ final class DebugEventsCommand extends Command
         }
 
         return count($setup->getGenericListeners() ?? []);
+    }
+
+    /**
+     * The dispatcher the application handed over, if it did.
+     *
+     * Reported because the listener table is only half of what happens to an
+     * event once one is installed: the configured listeners run, and then the
+     * event goes on to a bus this command knows nothing about.
+     *
+     * @return class-string|null
+     */
+    private function customDispatcherClass(): ?string
+    {
+        $setup = Config::getInstance()->getSetupGacela();
+
+        if (!$setup instanceof SetupGacela) {
+            return null;
+        }
+
+        $supplied = $setup->getSuppliedEventDispatcher();
+
+        if (!$supplied instanceof EventDispatcherInterface) {
+            return null;
+        }
+
+        return $supplied::class;
     }
 
     /**

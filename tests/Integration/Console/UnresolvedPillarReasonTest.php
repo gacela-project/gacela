@@ -118,9 +118,35 @@ final class UnresolvedPillarReasonTest extends TestCase
     }
 
     /**
+     * Two pillars of one module, each unable to build for its own reason. One
+     * failure per kind or the second is a second round trip -- and a reader who
+     * fixes the Factory only to be told nothing about the Provider is back
+     * where the misleading single message left them.
+     */
+    public function test_two_pillars_that_both_fail_each_keep_their_own_reason(): void
+    {
+        $namespace = $this->writeModule(withFailingProvider: true);
+
+        $module = $this->creator()->fromClass($namespace . '\\BlogFacade');
+
+        foreach (['Factory', 'Provider'] as $kind) {
+            $failure = $module->resolutionFailure($kind);
+            self::assertInstanceOf(PillarResolutionFailure::class, $failure, $kind . ' recorded no failure');
+            self::assertSame(DependencyNotFoundException::class, $failure->exceptionClass);
+        }
+
+        $details = (new UnresolvedPillarFileCheck([$module]))->run()->details;
+
+        self::assertCount(2, $details);
+        foreach ($details as $detail) {
+            self::assertStringContainsString(DependencyNotFoundException::class, $detail);
+        }
+    }
+
+    /**
      * @return non-empty-string the namespace the module was written into
      */
-    private function writeModule(): string
+    private function writeModule(bool $withFailingProvider = false): string
     {
         $namespace = self::NAMESPACE_PREFIX . bin2hex(random_bytes(4)) . '\\Blog';
 
@@ -160,6 +186,27 @@ final class UnresolvedPillarReasonTest extends TestCase
                 }
             }
             PHP);
+
+        if ($withFailingProvider) {
+            $this->writeFile('BlogProvider.php', <<<PHP
+                <?php
+
+                declare(strict_types=1);
+
+                namespace {$namespace};
+
+                final class BlogProvider extends \\Gacela\\Framework\\AbstractProvider
+                {
+                    public function __construct(private readonly BlogCollaborator \$collaborator)
+                    {
+                    }
+
+                    public function provideModuleDependencies(\\Gacela\\Framework\\Container\\Container \$container): void
+                    {
+                    }
+                }
+                PHP);
+        }
 
         return $namespace;
     }

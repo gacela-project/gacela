@@ -277,13 +277,17 @@ final class UnresolvedPillarFileCheckTest extends TestCase
      * detail is one line of the report, and a message pasted in raw takes the
      * indentation of the lines under it with it, so the words survive and the
      * newlines do not.
+     *
+     * Leading and trailing whitespace included: a message built from a heredoc
+     * ends in a newline, and folding without trimming turns that into a space
+     * hanging off the end of the line.
      */
     public function test_a_multi_line_failure_message_is_folded_onto_the_detail_line(): void
     {
         $this->writeFile('ConsoleConfig.php');
 
         $result = $this->check($this->consoleModuleFailing(
-            new RuntimeException("No concrete class was found that implements:\n\"Clock\"\n\nDid you forget?"),
+            new RuntimeException("\nNo concrete class was found that implements:\n\"Clock\"\n\nDid you forget?\n"),
         ))->run();
 
         self::assertSame(

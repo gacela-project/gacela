@@ -238,6 +238,14 @@ final class GacelaConfig
      * tenant is never consulted, because `app-prod--acme.php` would be a file
      * with a hole in it and no meaning.
      *
+     * The base pattern excludes the files it would otherwise read twice:
+     * `config/*.php` also matches `app-prod.php`, and a match named after
+     * another match plus one or more trailing `-<segment>` parts is that file's
+     * layer rather than part of the base. So a key only one environment sets is
+     * genuinely absent from the others, which is what makes "each layer refines
+     * the one before it" true rather than a description of the sort order.
+     * {@see \Gacela\Framework\Config\EnvironmentLayer}
+     *
      * A value may contain only letters, digits, `_`, `.` and `-`: it reaches a
      * glob pattern and a cache filename, so anything else is refused at
      * bootstrap rather than resolving somewhere unintended.

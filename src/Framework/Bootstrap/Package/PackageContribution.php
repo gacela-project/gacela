@@ -47,6 +47,28 @@ final class PackageContribution
     ) {
     }
 
+    /**
+     * Cleared by `Gacela::resetCache()`, rather than left to outlive it as a
+     * memo of something constant.
+     *
+     * It looks constant -- an *empty* setup assembled -- and it is not.
+     * `ResolvableTypes::syncFrom()` keeps the suffix-to-kind mapping in
+     * process-global state, so what an empty setup assembles to depends on what
+     * the last bootstrap declared. Memoized across two applications, a kind the
+     * first one added with `addResolvableType()` would be in the second's
+     * baseline, and a package declaring that same kind would be reported as
+     * having declared nothing.
+     *
+     * That is the fault #884 fixed one layer down, where a resolver memoized the
+     * merged `gacela.php` on an object outliving its bootstrap. Recomputing is
+     * one assembly of an empty setup, on a reporting path, and it is not worth
+     * being clever about.
+     */
+    public static function resetCache(): void
+    {
+        self::$baselineSuffixTypes = null;
+    }
+
     public static function of(SetupGacela $setup, GacelaConfigFileInterface $configFile): self
     {
         $items = [

@@ -7,6 +7,7 @@ namespace Gacela\Framework;
 use Closure;
 use Composer\InstalledVersions;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Bootstrap\Package\PackageContribution;
 use Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
@@ -214,6 +215,9 @@ final class Gacela
         // configuration that memo holds, and one surviving the other would have
         // `debug:container` describing a configuration that is gone.
         PackageDiscoveryRegistry::reset();
+        // Same reason, one level along: the baseline it memoizes looks
+        // constant and is not. See PackageContribution::resetCache().
+        PackageContribution::resetCache();
         PathFinder::resetCache();
         ClassValidator::resetCache();
         // Dropping the shared plan cache is cheap -- one null assignment -- and

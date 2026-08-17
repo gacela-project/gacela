@@ -1,0 +1,12 @@
+{
+    "name": "gacela-fixture/legacy-numbering",
+    "description": "A Gacela package the reference application installs and refuses. It would overwrite the invoice number format the application decides for itself, which is what `dontDiscover()` in `Invoicing/gacela.php` is there to stop -- the config below is never read.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

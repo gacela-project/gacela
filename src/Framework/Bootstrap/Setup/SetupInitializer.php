@@ -29,6 +29,7 @@ final class SetupInitializer
             ->setProjectNamespaces($dto->projectNamespaces)
             ->setConfigDimensions($dto->configDimensions)
             ->setAppModulePaths($dto->appModulePaths)
+            ->setDontDiscover($dto->dontDiscover)
             ->setConfigKeyValues($dto->configKeyValues)
             ->setConfigSchema($dto->configSchema)
             ->setDtoSchema($dto->dtoSchema)

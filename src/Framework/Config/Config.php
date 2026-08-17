@@ -395,6 +395,10 @@ final class Config implements ConfigInterface
             $this->configFactory = new ConfigFactory(
                 $this->getAppRootDir(),
                 $this->setup,
+                // A closure, so asking is what materializes it: an application
+                // with nothing to discover must not end up with a cache
+                // directory it never writes to.
+                fn (): string => $this->getCacheDir(),
             );
         }
 

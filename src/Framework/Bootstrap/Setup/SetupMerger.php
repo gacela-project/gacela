@@ -35,6 +35,10 @@ final class SetupMerger
         // `setProjectNamespaces()` -- was silently ignored and every command
         // walked the whole application root.
         $this->whenChanged($other, SetupGacela::appModulePaths, fn (): SetupGacela => $this->original->setAppModulePaths($other->getAppModulePaths()));
+        // Accumulated rather than replaced: a bootstrap closure and a
+        // `gacela.php` that each refuse a package are refusing both, and the
+        // one that ran second is not overruling the other.
+        $this->whenChanged($other, SetupGacela::dontDiscover, fn () => $this->original->mergeDontDiscover($other->getDontDiscover()));
         $this->whenChanged($other, SetupGacela::configDimensions, fn () => $this->original->mergeConfigDimensions($other->getConfigDimensions()));
         $this->whenChanged($other, SetupGacela::configKeyValues, fn () => $this->original->mergeConfigKeyValues($other->getConfigKeyValues()));
         $this->whenChanged($other, SetupGacela::configSchema, fn () => $this->original->mergeConfigSchema($other->getConfigSchema()));

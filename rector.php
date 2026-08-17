@@ -78,6 +78,8 @@ return static function (RectorConfig $rectorConfig): void {
             __DIR__ . '/src/Console/Infrastructure/Command/DebugContainerCommand.php',
             __DIR__ . '/src/Framework/Attribute/CacheableTrait.php',
             __DIR__ . '/src/Framework/Bootstrap/GacelaConfig.php',
+            __DIR__ . '/src/Framework/Bootstrap/Package/PackageConfigCache.php',
+            __DIR__ . '/src/Framework/Bootstrap/Package/PackageConfigFinder.php',
             __DIR__ . '/src/Framework/Container/Container.php',
             __DIR__ . '/src/Framework/Health/HealthCheckRegistry.php',
             __DIR__ . '/src/Framework/Testing/ContainerFixture.php',

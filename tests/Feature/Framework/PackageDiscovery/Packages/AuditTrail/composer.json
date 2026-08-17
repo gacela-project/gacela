@@ -1,0 +1,17 @@
+{
+    "name": "gacela-fixture/audit-trail",
+    "description": "A Gacela package. The `extra.gacela.config` key below is the whole of how it wires itself into a consuming application: nothing in that application names this package. The psr-4 map is what a real package ships; in this repository the classes are autoloaded by the root `GacelaTest\\` map, which is why the namespace follows the path.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "GacelaTest\\Feature\\Framework\\PackageDiscovery\\Packages\\AuditTrail\\": "src"
+        }
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

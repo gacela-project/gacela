@@ -60,6 +60,19 @@ final class PropertyMerger
     }
 
     /**
+     * Accumulated, and deduplicated: two sources refusing the same package are
+     * agreeing, not refusing it twice, and the list is read back by `doctor`
+     * and by `debug:container` where a repeated name reads as a mistake.
+     *
+     * @param list<string> $list
+     */
+    public function mergeDontDiscover(array $list): void
+    {
+        $current = $this->setup->getDontDiscover();
+        $this->setup->setDontDiscover(array_values(array_unique(array_merge($current, $list))));
+    }
+
+    /**
      * Declaration order is the order of the chain, so a later source appends
      * dimensions rather than reordering the ones already declared.
      *

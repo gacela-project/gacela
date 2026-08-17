@@ -78,6 +78,23 @@ return static function (GacelaConfig $config): void {
     // `config/app-prod.php`, and an unset APP_REGION ends the chain there.
     $config->addConfigDimension('APP_REGION');
 
+    // Two packages are installed against this application (see
+    // `vendor/composer/installed.json`), and each of them declares a Gacela
+    // config that runs during `Gacela::bootstrap()`. This is the one line that
+    // decides which of them may.
+    //
+    // `gacela-fixture/invoice-audit` is kept: it adds a delivery channel and a
+    // reaction to `InvoiceIssuedEvent`, neither of which is written anywhere in
+    // this application -- and both of which `debug:container` and `debug:events`
+    // will attribute to it.
+    //
+    // `gacela-fixture/legacy-numbering` is refused: it would replace the invoice
+    // number format `BillingProvider` decides, and this application has an
+    // opinion about how its own invoices are numbered. Refusing it means its
+    // file is never opened, which is also the answer to "what runs at boot" for
+    // a package this application has not read.
+    $config->dontDiscover(['gacela-fixture/legacy-numbering']);
+
     // ------------------------------------------------------------------
     // What the configuration must contain
     // ------------------------------------------------------------------

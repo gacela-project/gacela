@@ -39,6 +39,7 @@ final class GacelaConfigTransfer
      * @param ?ExternalServicesMap $externalServices
      * @param ?list<string> $projectNamespaces
      * @param ?list<string> $appModulePaths
+     * @param ?list<string> $dontDiscover
      * @param ?ConfigKeyValues $configKeyValues
      * @param ?list<callable> $genericListeners
      * @param ?SpecificListenersMap $specificListeners
@@ -71,6 +72,7 @@ final class GacelaConfigTransfer
         /** @var ?list<string> */
         public readonly ?array $configDimensions,
         public readonly ?array $appModulePaths,
+        public readonly ?array $dontDiscover,
         public readonly ?array $configKeyValues,
         public readonly ?array $genericListeners,
         public readonly ?array $specificListeners,

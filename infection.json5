@@ -489,7 +489,6 @@
                 // one prefix twice) and restores the list shape the return type
                 // declares. Every consumer foreaches the result, so the key shape is
                 // not observable.
-                "Gacela\\Console\\Application\\Doctor\\Check\\PackageManifestCheck::installedPackages",
                 "Gacela\\Console\\Domain\\PackageManifest\\NamespacePackageMap::from",
                 "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::undeclaredImportsOf",
                 "Gacela\\Console\\Domain\\PackageManifest\\PackageManifestChecker::autoloadedFilesOf",
@@ -659,11 +658,6 @@
         // return as behaviour. These two are allocation guards, not behaviour.
         ReturnRemoval: {
             ignore: [
-                // Same shape one level up: with no installed.json the guard
-                // returns null, and falling through reads an offset off null,
-                // which is null, which fails the is_array() below and returns
-                // null anyway. The guard is what keeps a php warning out of it.
-                "Gacela\\Console\\Application\\Doctor\\Check\\PackageManifestCheck::installedPackages",
                 // The early return for a non-object `autoload` is a guard, not a branch:
                 // falling through leaves the accumulator empty and returns the same [].
                 "Gacela\\Console\\Domain\\PackageManifest\\ComposerPackage::prefixesOf",

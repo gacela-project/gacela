@@ -69,6 +69,9 @@ final class Properties
     /** @var ?list<string> */
     public ?array $appModulePaths = null;
 
+    /** @var ?list<string> */
+    public ?array $dontDiscover = null;
+
     /** @var ?ConfigKeyValues */
     public ?array $configKeyValues = null;
 

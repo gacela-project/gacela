@@ -387,7 +387,12 @@ final class InvoicingToolingTest extends TestCase
         // command reports on the same terms as the framework's -- the report
         // would otherwise contradict the very use it exists to support.
         self::assertStringContainsString('5 with listeners', $display);
-        self::assertStringContainsString('1 listener via InvoiceIssuedEvent', $display);
+        // Two: the one `gacela.php` registers to reach Notification, and the one
+        // the installed `gacela-fixture/invoice-audit` package registers. A
+        // listener that arrived with a package is a listener like any other
+        // here, which is the point -- "what is listening" must not have a
+        // blind spot for code nothing in the application names.
+        self::assertStringContainsString('2 listeners via InvoiceIssuedEvent', $display);
         self::assertStringContainsString('1 declared by this project', $display);
     }
 

@@ -6,14 +6,13 @@ namespace Gacela\Console\Application\Doctor\Check;
 
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
-use Gacela\Console\Domain\FileContent\JsonFile;
 use Gacela\Console\Domain\PackageManifest\ComposerPackageFinder;
 use Gacela\Console\Domain\PackageManifest\NamespacePackageMap;
 use Gacela\Console\Domain\PackageManifest\PackageManifestChecker;
 use Gacela\Console\Domain\PackageManifest\UndeclaredImport;
+use Gacela\Framework\Bootstrap\Package\InstalledPackagesReader;
 
 use function count;
-use function is_array;
 use function sprintf;
 
 /**
@@ -47,7 +46,7 @@ final class PackageManifestCheck implements HealthCheck
             return CheckResult::ok($this->name(), 'no named composer package to check');
         }
 
-        $installed = $this->installedPackages();
+        $installed = (new InstalledPackagesReader($this->appRootDir))->read();
 
         // Without installed.json an import cannot be attributed to a package,
         // and guessing would name the wrong manifest to fix.
@@ -79,23 +78,4 @@ final class PackageManifestCheck implements HealthCheck
         );
     }
 
-    /**
-     * @return list<mixed>|null
-     */
-    private function installedPackages(): ?array
-    {
-        $path = $this->appRootDir . DIRECTORY_SEPARATOR . 'vendor'
-            . DIRECTORY_SEPARATOR . 'composer' . DIRECTORY_SEPARATOR . 'installed.json';
-
-        $decoded = JsonFile::decode($path);
-
-        if ($decoded === null) {
-            return null;
-        }
-
-        /** @var mixed $packages */
-        $packages = $decoded['packages'] ?? $decoded;
-
-        return is_array($packages) ? array_values($packages) : null;
-    }
 }

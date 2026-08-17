@@ -31,6 +31,28 @@ Beside them, `Shared/` is a shared kernel rather than a module: a clock the host
 supplies, a retry policy, the invokables that extend the configuration, and the
 plugins that run at bootstrap. Both analyser configurations name it as such.
 
+### The two installed packages
+
+[`Packages/`](../tests/Feature/ReferenceApp/Packages) holds two Composer
+packages, declared in
+[`Invoicing/vendor/composer/installed.json`](../tests/Feature/ReferenceApp/Invoicing/vendor/composer/installed.json)
+— hand-written, like the `composer.json` beside the application, because nothing
+here is actually installed.
+
+`gacela-fixture/invoice-audit` is **kept**. It adds a delivery channel to the
+stack `Notification` publishes and a reaction to the `InvoiceIssuedEvent` that
+`Billing` announces, and `gacela.php` names it nowhere: `InvoicingFlowTest` sees
+`audit:` receipts beside the `email:` ones, and `debug:events` reports *two*
+listeners on `InvoiceIssuedEvent` — a listener that arrived with a package is a
+listener like any other, which is the whole point of the report.
+
+`gacela-fixture/legacy-numbering` is **refused**, with the one line that decides
+it: `dontDiscover(['gacela-fixture/legacy-numbering'])`. It would replace the
+invoice number format `BillingProvider` decides, so `ACME-INV-01001` in the flow
+test is the assertion that its file was never opened. A
+[discovered config runs arbitrary code at bootstrap](packages.md#read-the-security-note-first),
+and this is what saying no to one looks like.
+
 Repositories are in-memory arrays. There is no HTTP and no database: those are
 the host's, and the point here is the wiring.
 

@@ -218,7 +218,7 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ## 2.3 → 2.4
 
-Seven changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; the two opt-in cross-module rules, if you have them enabled; `addAppConfig()` with a wildcard, if a file in that directory is named after another one with a `-suffix`; `doctor`, if you run it with `--strict` and register a listener against something that is not an event type; and the container the four pillars are built from, which now applies the whole of `gacela.php`.
+Eight changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; the two opt-in cross-module rules, if you have them enabled; `addAppConfig()` with a wildcard, if a file in that directory is named after another one with a `-suffix`; `doctor`, if you run it with `--strict` and register a listener against something that is not an event type; the container the four pillars are built from, which now applies the whole of `gacela.php`; and package discovery, which is new and on by default.
 
 ### 1. A specific listener matches by inheritance
 
@@ -346,6 +346,28 @@ Mostly this only turns failures into successes: a pillar constructor asking for 
 `BindingRegisteredEvent` is unchanged: the pillar container applies the same declarations silently, because the event describes the configuration and the configuration is still walked once. Counts, `assertBindingRegistered()` and `debug:events` see exactly what they saw before.
 
 **One thing can turn a green build red.** `debug:modules --check` used to read the bindings of `Gacela::container()`; it now reads the container that does the building. Where something reaches the application container and not the configuration — a plugin calling `bind()` at runtime is the plain case — a pillar depending on it was reported as fine and is now reported as a fault. That report is correct: the class resolver cannot build that pillar. Move the registration into `gacela.php`, where the class resolver can see it.
+
+### 8. An installed package can now configure your application
+
+New, and on by default. A Composer package that declares `extra.gacela.config` in its `composer.json` has that file merged into your configuration during `Gacela::bootstrap()` — before your own `gacela.php`, so you still have the last word, but it runs. See [shipping a Gacela package](docs/packages.md).
+
+Nothing in your project changes today: no package declares the key yet, and an application whose root was never `composer install`ed discovers nothing at all. What changes is what `composer require` can do from here on, so it is worth deciding rather than finding out.
+
+If you would rather nothing at all were read from `vendor/`, say so once:
+
+```php
+// gacela.php
+$config->dontDiscover(['*']);
+```
+
+That is checked before `vendor/composer/installed.json` is opened, so it costs nothing and reads nothing. Refusing one package by name is the same call with the package name in it.
+
+Three reports change shape whether or not you install such a package:
+
+- `doctor` runs one more check, `discovered packages` — twenty-two now, not twenty-one. It passes on a project with nothing installed
+- `debug:container --stats` grows a `Discovered packages:` section, and `--json` a `packages` key beside `stats` and `bindings`. The section is silent when no package declares a config
+- `debug:events` lists one more event, `PackageConfigMergedEvent`
+
 
 ---
 

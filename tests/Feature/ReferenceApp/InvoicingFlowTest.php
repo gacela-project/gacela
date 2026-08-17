@@ -49,6 +49,16 @@ final class InvoicingFlowTest extends TestCase
         // some other application on this machine left in the system temp dir.
         $this->cacheDir = ReferenceApp::createTempDirectory('flow-cache');
         putenv('GACELA_CACHE_DIR=' . $this->cacheDir);
+
+        // Here as well as in tearDown, and not only for symmetry: the trail is
+        // process-global, every test in this class issues an invoice, and each
+        // one numbers its first invoice `01001` because the numbering starts
+        // from the same place on a fresh bootstrap. So anything left behind is
+        // indistinguishable from what this test produced itself, and a tearDown
+        // that did not run -- an error before it, or a test added elsewhere that
+        // writes here -- becomes a count this test asserts. Resetting on the way
+        // in owes nothing to whatever ran before.
+        AuditTrail::reset();
     }
 
     protected function tearDown(): void

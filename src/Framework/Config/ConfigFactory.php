@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Closure;
+use Gacela\Framework\Bootstrap\Package\InstalledPackagesReader;
 use Gacela\Framework\Bootstrap\Package\PackageDiscovery;
 use Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry;
 use Gacela\Framework\Bootstrap\SetupGacela;
@@ -181,6 +182,23 @@ final class ConfigFactory
      */
     private function discoverPackages(FileIoInterface $fileIo, ?SetupGacela $projectSetup): array
     {
+        // One `is_file()` before anything at all is built, because for most
+        // applications the answer is "nothing to discover" and it should cost
+        // about that much. There is no manifest under a directory Composer never
+        // installed into -- a fixture used as an application root, a checkout
+        // with no `vendor/` of its own.
+        //
+        // Measured, not assumed: without this, `BootstrapBench` came to +12.24%
+        // warm on CI against a +/-10% gate, and every bit of it was spent finding
+        // out there was nothing to read. An application that does have a manifest
+        // still pays for the cached declaration list, which is the honest price
+        // of the feature.
+        if (!$fileIo->existsFile((new InstalledPackagesReader($this->appRootDir))->path())) {
+            PackageDiscoveryRegistry::reset();
+
+            return [];
+        }
+
         $fromBootstrap = $this->setup instanceof SetupGacela ? $this->setup->getDontDiscover() : [];
 
         $discovery = new PackageDiscovery(

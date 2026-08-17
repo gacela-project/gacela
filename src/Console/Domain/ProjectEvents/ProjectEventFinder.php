@@ -8,7 +8,6 @@ use Gacela\Framework\Event\GacelaEventInterface;
 use OuterIterator;
 use SplFileInfo;
 
-use function array_keys;
 use function file_get_contents;
 use function is_a;
 use function preg_match;
@@ -94,18 +93,19 @@ final class ProjectEventFinder
             $class = $this->eventClassIn($fileInfo);
 
             if ($class !== null) {
-                $classes[$class] = true;
+                // Keyed by the class name so a file reached twice -- two
+                // configured paths overlapping -- is one entry.
+                $classes[$class] = $class;
             }
         }
 
-        $found = array_keys($classes);
-
         // Sorted so two runs of one project agree, whatever order the
-        // filesystem hands the directories over in.
-        sort($found);
+        // filesystem hands the directories over in; `sort()` drops the keys,
+        // which is what makes this a list.
+        sort($classes);
 
-        /** @var list<class-string> $found */
-        return $found;
+        /** @var list<class-string> $classes */
+        return $classes;
     }
 
     /**

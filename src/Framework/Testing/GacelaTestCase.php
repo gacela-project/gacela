@@ -21,7 +21,6 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
 use function array_filter;
-use function array_keys;
 use function array_map;
 use function array_values;
 use function class_exists;
@@ -535,9 +534,11 @@ abstract class GacelaTestCase extends TestCase
         $classes = [];
 
         foreach ($this->recordedGacelaEvents as $event) {
-            $classes[$event::class] = true;
+            // Keyed by the name and holding it: the key is what makes the list
+            // distinct, the value is what gets printed.
+            $classes[$event::class] = $event::class;
         }
 
-        return $classes === [] ? 'nothing' : implode(', ', array_keys($classes));
+        return $classes === [] ? 'nothing' : implode(', ', $classes);
     }
 }

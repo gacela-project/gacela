@@ -206,6 +206,24 @@ final class EventListenerTargetCheckTest extends TestCase
 
         self::assertSame(CheckStatus::Ok, $result->status);
     }
+
+    /**
+     * The catalog is what the scan found, not the whole world: an event of the
+     * project's that lives outside the scanned paths is missing from it. Being
+     * an event type is enough on its own, so that listener is not reported --
+     * the check would otherwise turn a gap in `appModulePaths` into a warning
+     * about code that is perfectly correct.
+     */
+    public function test_an_event_type_the_catalog_does_not_know_is_not_reported(): void
+    {
+        $result = (new EventListenerTargetCheck(
+            [ProjectEvent::class],
+            knownEventClasses: [GacelaBootstrapStartedEvent::class],
+        ))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['1 listener target(s) name a known event type'], $result->details);
+    }
 }
 
 /**

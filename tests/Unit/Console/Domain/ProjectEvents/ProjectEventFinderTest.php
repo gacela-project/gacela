@@ -25,6 +25,44 @@ final class ProjectEventFinderTest extends TestCase
 {
     private const string FIXTURE_NAMESPACE = 'GacelaTest\\Unit\\Console\\Domain\\ProjectEvents\\Fixture';
 
+    /** The prefix of every directory this test builds, and of nothing else. */
+    private const string TEMPORARY_PREFIX = 'gacela-project-events-';
+
+    private string $temporaryRoot = '';
+
+    protected function setUp(): void
+    {
+        $this->temporaryRoot = sys_get_temp_dir() . '/' . self::TEMPORARY_PREFIX . bin2hex(random_bytes(4));
+    }
+
+    protected function tearDown(): void
+    {
+        $root = $this->temporaryRoot;
+
+        // Removing a tree, so the root it walks is asserted to be the one this
+        // test built and nothing above it, before anything is unlinked.
+        self::assertNotSame('', $root);
+        self::assertStringStartsWith(sys_get_temp_dir() . '/' . self::TEMPORARY_PREFIX, $root);
+
+        $this->temporaryRoot = '';
+
+        if (!is_dir($root)) {
+            return;
+        }
+
+        $entries = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
+
+        /** @var SplFileInfo $entry */
+        foreach ($entries as $entry) {
+            $entry->isDir() ? rmdir($entry->getPathname()) : unlink($entry->getPathname());
+        }
+
+        rmdir($root);
+    }
+
     public function test_it_finds_the_events_under_the_scanned_path(): void
     {
         $found = (new ProjectEventFinder($this->fixtureIterator()))->find();
@@ -119,9 +157,94 @@ final class ProjectEventFinderTest extends TestCase
         self::assertSame([], $found);
     }
 
+    /**
+     * The documented limit, pinned so it stays a decision rather than becoming
+     * a surprise: an event that neither names the interface nor ends in `Event`
+     * is not found. Its parent is -- and registering against the parent is what
+     * covers the family anyway.
+     */
+    public function test_an_event_that_says_so_nowhere_in_its_own_file_is_not_found(): void
+    {
+        $found = (new ProjectEventFinder($this->fixtureIterator()))->find();
+
+        self::assertNotContains(self::FIXTURE_NAMESPACE . '\\Nested\\QuietOne', $found);
+        self::assertContains(ProjectBaseEvent::class, $found);
+    }
+
+    /**
+     * Never `vendor/`. A dependency's events are not the project's, and loading
+     * every candidate class in an installed package to find that out is exactly
+     * the cost this finder is shaped to avoid.
+     *
+     * Built here rather than committed: `vendor/` is in this repository's
+     * `.gitignore`, so a fixture directory by that name would not survive a
+     * clone.
+     */
+    public function test_nothing_under_a_vendor_directory_is_scanned(): void
+    {
+        $this->writeEventFileIn($this->temporaryRoot . '/vendor/acme/events/src');
+
+        $found = (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find();
+
+        self::assertSame([], $found);
+    }
+
+    /**
+     * The counterpart, so the test above proves the `vendor/` rule rather than
+     * a temporary directory the finder cannot read at all: the same file, one
+     * directory to the side, is found.
+     */
+    public function test_the_same_file_outside_vendor_is_found(): void
+    {
+        $this->writeEventFileIn($this->temporaryRoot . '/src');
+
+        $found = (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find();
+
+        self::assertSame([SomethingHappenedEvent::class], $found);
+    }
+
+    /**
+     * The directory is `vendor`, not any name starting with it. A project with
+     * a `Vendored/` or `vendors/` module of its own keeps its events: matching
+     * the bare word would take those away, and matching `/vendor` without the
+     * trailing separator is the same mistake spelled differently.
+     */
+    public function test_a_directory_whose_name_merely_starts_with_vendor_is_scanned(): void
+    {
+        $this->writeEventFileIn($this->temporaryRoot . '/vendored/src');
+
+        $found = (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find();
+
+        self::assertSame([SomethingHappenedEvent::class], $found);
+    }
+
     public function test_scanning_nothing_finds_nothing(): void
     {
         self::assertSame([], (new ProjectEventFinder(new AppendIterator()))->find());
+    }
+
+    /**
+     * A file the finder accepts by every rule it has: the right filename, and a
+     * namespace declaration that makes the class it derives an event this
+     * process can already load -- the one in the fixture directory.
+     *
+     * It is never included, only read: the finder derives a name from the path
+     * and the `namespace` line, and asks `is_a()` about it. So the only thing
+     * the two tests below differ in is where the file sits.
+     */
+    private function writeEventFileIn(string $directory): void
+    {
+        mkdir($directory, 0o777, true);
+
+        file_put_contents($directory . '/SomethingHappenedEvent.php', <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture;
+
+            // Body deliberately absent: this file is read, never loaded.
+            PHP);
     }
 
     /**

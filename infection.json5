@@ -289,6 +289,12 @@
         // to min(); shifting its origin by a constant changes no component.
         DecrementInteger: {
             ignore: [
+                // EventSource::order() exists to sort the framework's events
+                // before the project's. Only the *relation* between the two
+                // numbers is behaviour: 0/1, -1/1 and 0/2 order every listing
+                // identically, so no assertion on the output can tell them
+                // apart, and one that could would be asserting the constants.
+                "Gacela\\Console\\Application\\Debug\\EventSource::order",
                 // See the IncrementInteger note: an arbitrary but fixed slice
                 // of a digest.
                 "Gacela\\Framework\\Config\\MergedConfigCache::dimensionSuffix",
@@ -307,6 +313,9 @@
         // the digest, which pins the implementation rather than the behaviour.
         IncrementInteger: {
             ignore: [
+                // Same as the DecrementInteger entry: what orders a listing is
+                // framework < project, not the two integers that express it.
+                "Gacela\\Console\\Application\\Debug\\EventSource::order",
                 "Gacela\\Framework\\ClassResolver\\Cache\\AbstractPhpFileCache::absoluteFilename",
                 // Same arbitrary-slice reasoning as absoluteFilename above: the
                 // dimension suffix takes 12 hex characters out of a sha1 to
@@ -595,6 +604,18 @@
         },
         LogicalOr: {
             ignore: [
+                // The chain of guards that decides whether a scanned entry is
+                // worth opening -- unreadable path, not a file, not `.php`,
+                // hidden, vendored. Turning any `||` into `&&` lets an entry
+                // one guard would have refused reach the next, and the next
+                // refuses it for its own reason: a directory has no `.php`
+                // extension, a dotfile yields an empty class name, an
+                // unreadable path fails `file_get_contents()`. Every mutant
+                // therefore returns null exactly where the original does, and
+                // the only input that could tell them apart -- a directory
+                // named `Something.php` -- makes the mutant emit a warning
+                // rather than a different answer.
+                "Gacela\\Console\\Domain\\ProjectEvents\\ProjectEventFinder::eventClassIn",
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isCachedDelegation",
                 // Same redundancy as the MethodCallRemoval entry above: whatever
                 // this guard decides, the pillar swap right after it applies the

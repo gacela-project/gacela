@@ -249,6 +249,10 @@ final class GacelaTestCaseTest extends GacelaTestCase
         );
 
         self::assertStringContainsString(Module\GreetedEvent::class, $message);
+        // And what did arrive, which is usually where the answer is: a listener
+        // wired to the wrong class, or a flow that stopped earlier than the
+        // test assumed.
+        self::assertStringContainsString(GacelaBootstrapFinishedEvent::class, $message);
         self::assertStringNotContainsString('No Gacela events were recorded', $message);
     }
 

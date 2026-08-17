@@ -46,7 +46,9 @@ final class ConfigLoader
      * Exposed so `doctor` can compare the merged-config cache against its
      * sources without re-deriving the patterns — a second copy of this logic
      * would drift, and the check would then be answering about different files
-     * than the ones actually loaded.
+     * than the ones actually loaded. Both go through {@see filesOf()}, so the
+     * environment layers the base pattern matched are excluded from this list
+     * exactly when they are excluded from the merge.
      *
      * @return list<string>
      */
@@ -55,10 +57,8 @@ final class ConfigLoader
         $files = [];
 
         foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
-            foreach ($this->patternsOf($configItem) as $pattern) {
-                foreach ($this->pathFinder->matchingPattern($pattern) as $absolutePath) {
-                    $files[] = $absolutePath;
-                }
+            foreach ($this->filesOf($configItem) as $absolutePath) {
+                $files[] = $absolutePath;
             }
 
             // Unlike the patterns, the local path is not globbed, so it is only
@@ -70,6 +70,32 @@ final class ConfigLoader
         }
 
         return array_values(array_unique($files));
+    }
+
+    /**
+     * The files the base patterns matched and the base layer does not read.
+     *
+     * `doctor` reports these, and it has to: the rule is about filenames rather
+     * than about intent, so a project whose `config/app-extra.php` is not an
+     * environment file at all would otherwise have it silently stop loading.
+     * Naming every exclusion is what makes the trade a reported non-load instead
+     * of a second silent one.
+     *
+     * @see EnvironmentLayer for the rule and why the declared alphabet cannot answer it
+     *
+     * @return list<EnvironmentLayer>
+     */
+    public function excludedEnvironmentLayers(): array
+    {
+        $layers = [];
+
+        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
+            foreach (EnvironmentLayer::within($this->basePatternMatches($configItem)) as $path => $layer) {
+                $layers[$path] = $layer;
+            }
+        }
+
+        return array_values($layers);
     }
 
     /**
@@ -106,6 +132,12 @@ final class ConfigLoader
      * and a typo in it costs nothing at bootstrap -- the values are simply not
      * there, and the first thing to read one fails somewhere else entirely.
      *
+     * Asked of the base *files* rather than of the glob, so it answers about
+     * what the base layer reads after the environment layers are excluded. It
+     * cannot start reporting a pattern that used to match: an excluded file is
+     * always a layer of a shorter one that was matched too, so at least one file
+     * survives whenever the glob found anything at all.
+     *
      * @return list<string>
      */
     public function patternsMatchingNothing(): array
@@ -115,7 +147,7 @@ final class ConfigLoader
         foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
             $pattern = $this->pathNormalizer->normalizePathPattern($configItem);
 
-            if ($pattern !== '' && $this->pathFinder->matchingPattern($pattern) === []) {
+            if ($pattern !== '' && $this->baseLayerFiles($configItem) === []) {
                 $unmatched[] = $pattern;
             }
         }
@@ -124,14 +156,53 @@ final class ConfigLoader
     }
 
     /**
+     * Every file one config item contributes, in the order they are merged.
+     *
+     * The single answer to "which files" -- `loadAll()`, `sourceFiles()` and the
+     * `doctor` checks behind them all read it, so the base layer's exclusion of
+     * the environment files cannot apply to one of them and not another.
+     *
      * @return list<string>
      */
-    private function patternsOf(GacelaConfigItem $configItem): array
+    private function filesOf(GacelaConfigItem $configItem): array
     {
-        return [
+        $files = $this->baseLayerFiles($configItem);
+
+        foreach ($this->pathNormalizer->normalizePathPatternsWithSuffixes($configItem) as $pattern) {
+            foreach ($this->pathFinder->matchingPattern($pattern) as $absolutePath) {
+                $files[] = $absolutePath;
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * What the base pattern matched, less the environment layers among it.
+     *
+     * @return list<string>
+     */
+    private function baseLayerFiles(GacelaConfigItem $configItem): array
+    {
+        // Globbed once and handed to the rule: this runs on the bootstrap path,
+        // where the pattern is the one thing every config item has.
+        $matches = $this->basePatternMatches($configItem);
+        $layers = EnvironmentLayer::within($matches);
+
+        return array_values(array_filter(
+            $matches,
+            static fn (string $absolutePath): bool => !isset($layers[$absolutePath]),
+        ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function basePatternMatches(GacelaConfigItem $configItem): array
+    {
+        return array_values($this->pathFinder->matchingPattern(
             $this->pathNormalizer->normalizePathPattern($configItem),
-            ...$this->pathNormalizer->normalizePathPatternsWithSuffixes($configItem),
-        ];
+        ));
     }
 
     /**
@@ -141,10 +212,8 @@ final class ConfigLoader
     {
         $mergedConfigs = [];
 
-        foreach ($this->patternsOf($configItem) as $pattern) {
-            foreach ($this->pathFinder->matchingPattern($pattern) as $absolutePath) {
-                $mergedConfigs[] = $this->readConfigWithCache($absolutePath, $configItem);
-            }
+        foreach ($this->filesOf($configItem) as $absolutePath) {
+            $mergedConfigs[] = $this->readConfigWithCache($absolutePath, $configItem);
         }
 
         return array_merge(...$mergedConfigs);

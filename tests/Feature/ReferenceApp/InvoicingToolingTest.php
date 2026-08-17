@@ -115,6 +115,36 @@ final class InvoicingToolingTest extends TestCase
     }
 
     /**
+     * `config/*.php` matches the two environment files beside `config/app.php`,
+     * and the base layer excludes them by name. The rule reads filenames and a
+     * filename carries no intent, so every exclusion is named here: a project
+     * whose `config/app-extra.php` is not an environment file at all finds out
+     * from this check rather than from a value that stopped arriving (#889).
+     *
+     * A pass, not a warning -- this is what a correct project looks like, and
+     * `test_doctor_has_nothing_to_report` above runs `--strict`.
+     */
+    public function test_doctor_names_the_config_files_excluded_from_the_base_layer(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DoctorCommand(), []);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
+        self::assertStringContainsString('config environment layers', $display);
+
+        // The separator between `config` and the filename is the platform's, so
+        // the assertion starts at the filename.
+        self::assertStringContainsString(
+            'app-prod.php matches a base config path but is excluded from it: ',
+            $display,
+        );
+        self::assertStringContainsString('read only when APP_ENV=prod' . PHP_EOL, $display);
+        self::assertStringContainsString('read only when APP_ENV=prod and APP_REGION=eu', $display);
+    }
+
+    /**
      * The boundaries this application declared, checked against the graph it
      * actually has -- and the file is the same one both analysers read.
      */

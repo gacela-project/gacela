@@ -233,6 +233,193 @@ final class ConfigLoaderTest extends TestCase
     }
 
     /**
+     * `config/*.php` is globbed literally, so the base pattern also matches the
+     * environment files the framework itself names -- and it matched them
+     * *before* the environment chain was applied on top. A key only
+     * `app-prod.php` sets had nothing in the base layer to overwrite it, so a
+     * developer read the production value with nothing said (#889).
+     *
+     * Asserted on a key the base file does not mention, so the answer cannot
+     * come out right by the order `glob()` happened to return the two files in.
+     */
+    public function test_the_base_pattern_skips_an_environment_layer_of_a_file_it_matched(): void
+    {
+        $base = $this->pathTo('app.php');
+        $layer = $this->pathTo('app-prod.php');
+
+        $loader = $this->loaderReading([
+            $base => ['billing.currency' => 'EUR'],
+            $layer => ['payment.endpoint' => 'live'],
+        ], patternMatches: [$base, $layer]);
+
+        self::assertSame(['billing.currency' => 'EUR'], $loader->loadAll());
+        self::assertSame([$base], $loader->sourceFiles());
+    }
+
+    /**
+     * The middle link of the chain may not exist -- a project with `app.php` and
+     * `app-prod-eu.php` and no `app-prod.php` -- so one strip is not enough to
+     * recognise the layer.
+     */
+    public function test_a_layer_is_recognised_across_a_missing_middle_link(): void
+    {
+        $base = $this->pathTo('app.php');
+        $layer = $this->pathTo('app-prod-eu.php');
+
+        $loader = $this->loaderReading([
+            $base => ['billing.currency' => 'EUR'],
+            $layer => ['billing.vat_rate_bp' => 1900],
+        ], patternMatches: [$base, $layer]);
+
+        self::assertSame(['billing.currency' => 'EUR'], $loader->loadAll());
+    }
+
+    /**
+     * The rule is about a file that is a layer *of another file the same pattern
+     * matched*. With no `app.php` beside it, `app-prod.php` is the only thing
+     * the pattern found and is the base layer itself -- dropping it would turn a
+     * silent wrong value into a silent missing one.
+     */
+    public function test_a_suffixed_file_with_no_base_beside_it_is_the_base_layer(): void
+    {
+        $only = $this->pathTo('app-prod.php');
+
+        $loader = $this->loaderReading([
+            $only => ['payment.endpoint' => 'live'],
+        ], patternMatches: [$only]);
+
+        self::assertSame(['payment.endpoint' => 'live'], $loader->loadAll());
+        self::assertSame([$only], $loader->sourceFiles());
+    }
+
+    /**
+     * Nothing to strip, so nothing to exclude: the local override conventionally
+     * sits in the same directory as the base file and matches the same pattern.
+     */
+    public function test_a_file_whose_name_carries_no_suffix_is_never_a_layer(): void
+    {
+        $base = $this->pathTo('app.php');
+        $other = $this->pathTo('queue.php');
+
+        $loader = $this->loaderReading([
+            $base => ['billing.currency' => 'EUR'],
+            $other => ['queue.workers' => 4],
+        ], patternMatches: [$base, $other]);
+
+        self::assertSame(
+            ['billing.currency' => 'EUR', 'queue.workers' => 4],
+            $loader->loadAll(),
+        );
+    }
+
+    /**
+     * The suffix goes before the *first* dot, which is where
+     * {@see \Gacela\Framework\Config\PathNormalizer\WithSuffixAbsolutePathStrategy}
+     * puts it, so a multi-part filename is stripped the same way it is built.
+     */
+    public function test_a_layer_of_a_multi_part_filename_is_stripped_before_the_first_dot(): void
+    {
+        $base = $this->pathTo('default.app.php');
+        $layer = $this->pathTo('default-prod.app.php');
+
+        $loader = $this->loaderReading([
+            $base => ['billing.currency' => 'EUR'],
+            $layer => ['payment.endpoint' => 'live'],
+        ], patternMatches: [$base, $layer]);
+
+        self::assertSame(['billing.currency' => 'EUR'], $loader->loadAll());
+    }
+
+    /**
+     * `doctor` reports these, and it reads them from the loader rather than
+     * re-globbing, so the files it names are the ones the base layer really
+     * skipped.
+     */
+    public function test_the_excluded_environment_layers_are_reported_with_their_base_and_suffix(): void
+    {
+        $base = $this->pathTo('app.php');
+        $layer = $this->pathTo('app-prod.php');
+
+        $loader = $this->loaderReading([], patternMatches: [$base, $layer]);
+
+        $excluded = $loader->excludedEnvironmentLayers();
+
+        self::assertCount(1, $excluded);
+        self::assertSame($layer, $excluded[0]->path);
+        self::assertSame($base, $excluded[0]->basePath);
+        self::assertSame('prod', $excluded[0]->suffix);
+    }
+
+    public function test_nothing_is_reported_as_excluded_when_the_base_pattern_matched_one_file(): void
+    {
+        $loader = $this->loaderReading([], patternMatches: [$this->pathTo('app.php')]);
+
+        self::assertSame([], $loader->excludedEnvironmentLayers());
+    }
+
+    /**
+     * A base pattern that matched a base file and its environment layers still
+     * matched something, so it is not one of the paths that load nothing.
+     */
+    public function test_a_base_pattern_matching_only_a_file_and_its_layers_is_not_reported(): void
+    {
+        $base = $this->pathTo('app.php');
+        $layer = $this->pathTo('app-prod.php');
+
+        $loader = $this->loaderReading([], patternMatches: [$base, $layer]);
+
+        self::assertSame([], $loader->patternsMatchingNothing());
+    }
+
+    /**
+     * @param array<string,array<string,mixed>> $valuesByPath
+     * @param list<string> $patternMatches
+     */
+    private function loaderReading(array $valuesByPath, array $patternMatches): ConfigLoader
+    {
+        $reader = new class($valuesByPath) implements ConfigReaderInterface {
+            /**
+             * @param array<string,array<string,mixed>> $valuesByPath
+             */
+            public function __construct(
+                private readonly array $valuesByPath,
+            ) {
+            }
+
+            public function read(string $absolutePath): array
+            {
+                return $this->valuesByPath[$absolutePath] ?? [];
+            }
+        };
+
+        $normalizer = $this->createStub(PathNormalizerInterface::class);
+        $normalizer->method('normalizePathPattern')->willReturn('pattern');
+        $normalizer->method('normalizePathPatternWithEnvironment')->willReturn('pattern-env');
+        $normalizer->method('normalizePathPatternsWithSuffixes')->willReturn(['pattern-env']);
+        $normalizer->method('normalizePathLocal')->willReturn($this->pathTo('local.php'));
+
+        $pathFinder = $this->createStub(PathFinderInterface::class);
+        $pathFinder->method('matchingPattern')->willReturnMap([
+            ['pattern', $patternMatches],
+            ['pattern-env', []],
+        ]);
+
+        $gacelaConfigFile = new GacelaConfigFile();
+        $gacelaConfigFile->setConfigItems([new GacelaConfigItem('', '', $reader)]);
+
+        return new ConfigLoader($gacelaConfigFile, $pathFinder, $normalizer);
+    }
+
+    /**
+     * Built with the platform separator: the exclusion has to find the filename
+     * inside an absolute path on Windows too, where every PR is also run.
+     */
+    private function pathTo(string $name): string
+    {
+        return $this->tempDir . DIRECTORY_SEPARATOR . $name;
+    }
+
+    /**
      * @param list<string> $patternMatches
      * @param list<string> $envPatternMatches
      */

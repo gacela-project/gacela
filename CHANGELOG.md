@@ -106,7 +106,7 @@ An invoicing SaaS under `tests/Feature/ReferenceApp/`, wired with every feature 
 - **duplicate provided id** reports one id declared twice on the same Provider: the last method wins, every one before it is dead, and all of them read as live
 - **cacheable storage** reports `#[Cacheable]` on the default backend, which dies with the process, so under PHP-FPM an hour's TTL is recomputed every request
 - More inert declarations: an `extendService()` id no Provider `set()`s, a listener target no dispatched event can be, an `addAppConfig()` path matching no file, a tagged id nothing can answer, listeners registered under `disableEventListeners()`, an unwritable cache directory, a namespace a package's `composer.json` never mentions, and stale editor metadata
-- Print only the checks that found something with `doctor --only-problems`. Twenty checks is a lot of "✓" to read to find the one "⚠", and `--strict -q` fails a build without saying what failed
+- Print only the checks that found something with `doctor --only-problems`. Twenty-one checks is a lot of "✓" to read to find the one "⚠", and `--strict -q` fails a build without saying what failed
 
 #### Static analysis
 

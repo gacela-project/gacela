@@ -34,11 +34,17 @@ final class PaymentBuilder extends AbstractFactory
     ) {
     }
 
-    public function capture(string $invoiceNumber, int $amountCents, string $method): PaymentReceipt
+    /**
+     * @param string $method '' to settle the way this deployment's configuration
+     *                       says to -- `payment.default_method`, which only
+     *                       `config/app-prod.php` sets, so outside production the
+     *                       schema's declared default answers instead
+     */
+    public function capture(string $invoiceNumber, int $amountCents, string $method = ''): PaymentReceipt
     {
         return $this->getPaymentProcessor()->capture(
             $this->getGateway(),
-            $this->getMethodHandler($method),
+            $this->getMethodHandler($method === '' ? $this->getConfig()->defaultMethod() : $method),
             $this->createAttemptId(),
             $invoiceNumber,
             $amountCents,

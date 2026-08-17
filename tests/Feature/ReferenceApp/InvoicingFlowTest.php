@@ -280,10 +280,9 @@ final class InvoicingFlowTest extends TestCase
     }
 
     /**
-     * Every value the second environment reads is a value the first one already
-     * had, so a key can only be refined and never introduced -- which is what
-     * keeps `config/*.php`, a pattern that also matches the environment files,
-     * from letting a production value reach a developer.
+     * `config/*.php` matches the environment files beside `app.php` as well, so
+     * the base layer has to exclude them by name -- otherwise every environment
+     * file is read on every run, before the chain that selects one is applied.
      */
     public function test_the_development_environment_reads_the_base_configuration(): void
     {
@@ -292,6 +291,48 @@ final class InvoicingFlowTest extends TestCase
         self::assertSame('sandbox.acme-pay.test', (new PaymentApi())->gatewayEndpoint());
         self::assertSame('EUR', (new BillingFacade())->currency());
         self::assertSame(['email'], (new NotificationFacade())->channelNames());
+    }
+
+    /**
+     * `payment.default_method` is set in `config/app-prod.php` and in no other
+     * layer, so outside production there is nothing to read it from and the
+     * schema's declared default -- `card` -- answers instead.
+     *
+     * This is the shape #889 was about: a key with no base value has nothing to
+     * overwrite it, so the production value survived the merge and a developer
+     * settled by SEPA. Asserted on the receipt rather than on the configuration,
+     * and on a key the base layer does not mention, so it cannot come out right
+     * by the order `glob()` happened to return the three files in.
+     */
+    public function test_a_key_only_production_sets_does_not_reach_the_development_environment(): void
+    {
+        ReferenceApp::bootstrap();
+
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+        $invoice = (new BillingFacade())->issueInvoice('acme-nl', 10_000);
+
+        $receipt = (new PaymentApi())->pay($invoice->getNumber(), $invoice->getGrossCents());
+
+        self::assertSame('card', $receipt->method);
+    }
+
+    /**
+     * The other half: in production the key is there, and it is the layer that
+     * carries it -- not the base file, which never mentions it.
+     */
+    public function test_a_key_only_production_sets_is_read_in_production(): void
+    {
+        putenv('APP_ENV=prod');
+        putenv('APP_REGION=eu');
+
+        ReferenceApp::bootstrap();
+
+        (new CustomerFacade())->registerCustomer('acme-nl', 'Acme BV', 'NL');
+        $invoice = (new BillingFacade())->issueInvoice('acme-nl', 10_000);
+
+        $receipt = (new PaymentApi())->pay($invoice->getNumber(), $invoice->getGrossCents());
+
+        self::assertSame('sepa', $receipt->method);
     }
 
     /**

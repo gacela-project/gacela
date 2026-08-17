@@ -14,6 +14,8 @@ use GacelaTest\Integration\Framework\ClassResolver\PillarContainer\Greeting\Faca
 use GacelaTest\Integration\Framework\ClassResolver\PillarContainer\Greeting\FriendlyGreeter;
 use GacelaTest\Integration\Framework\ClassResolver\PillarContainer\Greeting\GreeterInterface;
 use GacelaTest\Integration\Framework\ClassResolver\PillarContainer\Greeting\GrumpyGreeter;
+use GacelaTest\Integration\Framework\ClassResolver\PillarContainer\Greeting\PoliteGreeter;
+use GacelaTest\Integration\Framework\ClassResolver\PillarContainer\Greeting\SecondGreeterInterface;
 use PHPUnit\Framework\TestCase;
 
 use function array_count_values;
@@ -124,11 +126,19 @@ final class PillarContainerConfigTest extends TestCase
         self::assertInstanceOf(GrumpyGreeter::class, $container->get('greeter.extended'));
     }
 
-    public function test_building_the_pillar_container_announces_no_second_registration(): void
+    /**
+     * `BindingRegisteredEvent` belongs to the configuration, which is walked
+     * once however many containers apply it -- so the application container
+     * announces the walk and the pillar container stays silent. Asserted at both
+     * moments, because "once in total" alone is also true of announcing from the
+     * wrong container.
+     */
+    public function test_the_configuration_is_announced_once_by_the_application_container(): void
     {
         $registered = [];
 
         $this->bootstrapWith(static function (GacelaConfig $config) use (&$registered): void {
+            $config->addBinding(SecondGreeterInterface::class, PoliteGreeter::class);
             $config->loadDefinitions([GreeterInterface::class => ['singleton' => FriendlyGreeter::class]]);
             $config->registerSpecificListener(
                 BindingRegisteredEvent::class,
@@ -138,15 +148,17 @@ final class PillarContainerConfigTest extends TestCase
             );
         });
 
+        // Bootstrap builds the application container, which is where the walk
+        // is announced -- before any pillar has been resolved.
+        $atBootstrap = array_count_values($registered);
+        self::assertSame(1, $atBootstrap[SecondGreeterInterface::class] ?? 0, 'the binding was not announced at bootstrap');
+        self::assertSame(1, $atBootstrap[GreeterInterface::class] ?? 0, 'the definition was not announced at bootstrap');
+
         (new Facade())->greet();
 
-        $counts = array_count_values($registered);
-
-        self::assertSame(
-            1,
-            $counts[GreeterInterface::class] ?? 0,
-            'applying the configuration to the pillar container announced it a second time',
-        );
+        $afterPillar = array_count_values($registered);
+        self::assertSame(1, $afterPillar[SecondGreeterInterface::class] ?? 0, 'the pillar container announced the binding again');
+        self::assertSame(1, $afterPillar[GreeterInterface::class] ?? 0, 'the pillar container announced the definition again');
     }
 
     /**

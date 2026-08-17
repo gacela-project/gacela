@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "98dc8f50b1aa39b782798580ac4b3a16",
+    "content-hash": "60d0899af196f10a618b7806b72145b2",
     "packages": [
         {
             "name": "gacela-project/container",
-            "version": "2.0.2",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gacela-project/container.git",
-                "reference": "e9ac0b6b5c6b0eb8724e04b8e9cbc829f43c6707"
+                "reference": "faa1e00cafca1e2d02938adaf204fc38abfbe64a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gacela-project/container/zipball/e9ac0b6b5c6b0eb8724e04b8e9cbc829f43c6707",
-                "reference": "e9ac0b6b5c6b0eb8724e04b8e9cbc829f43c6707",
+                "url": "https://api.github.com/repos/gacela-project/container/zipball/faa1e00cafca1e2d02938adaf204fc38abfbe64a",
+                "reference": "faa1e00cafca1e2d02938adaf204fc38abfbe64a",
                 "shasum": ""
             },
             "require": {
@@ -72,7 +72,7 @@
             ],
             "support": {
                 "issues": "https://github.com/gacela-project/container/issues",
-                "source": "https://github.com/gacela-project/container/tree/2.0.2"
+                "source": "https://github.com/gacela-project/container/tree/2.1.0"
             },
             "funding": [
                 {
@@ -80,7 +80,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-08-06T08:42:24+00:00"
+            "time": "2026-08-17T17:53:52+00:00"
         },
         {
             "name": "psr/container",

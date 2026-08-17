@@ -262,6 +262,11 @@ final class GacelaConfig
     /**
      * Bind a key class or interface name to be resolved by Gacela automatically.
      *
+     * Bound *by type*, which is what autowiring matches a constructor parameter
+     * against -- so this and {@see loadDefinitions()} are the two verbs that can
+     * fill one, wherever it appears: a nested dependency, a module's services,
+     * or the constructor of a Facade, Factory, Config or Provider.
+     *
      * @param class-string $key
      * @param class-string|object|callable $value
      */
@@ -716,6 +721,14 @@ final class GacelaConfig
      * a new instance every time they are resolved from the container.
      *
      * The `$id` is usually a class name or interface.
+     *
+     * Registered *by id*, and read back with `get($id)` -- from a Provider, or
+     * through `getProvidedDependency()`. Autowiring resolves a constructor
+     * parameter *by type* against the bindings and never consults this
+     * registry, in any container, so a parameter that has to be filled needs
+     * {@see addBinding()} or {@see loadDefinitions()} instead. What it does
+     * reach is every container the configuration builds, the one that
+     * constructs the four pillars included.
      */
     public function addFactory(string $id, Closure $factory): self
     {
@@ -728,6 +741,11 @@ final class GacelaConfig
      * Register a protected service that cannot be extended.
      * Protected services are stored as closures and won't be invoked by the container,
      * making them useful for storing callable configurations.
+     *
+     * Reachable by id from every container the configuration builds, the one
+     * that constructs the four pillars included. Never injectable: what comes
+     * back is the closure itself, which is the whole point, and autowiring has
+     * no type to match it against -- see {@see addFactory()}.
      */
     public function addProtected(string $id, Closure $service): self
     {
@@ -739,6 +757,12 @@ final class GacelaConfig
     /**
      * Create an alias for a service.
      * This allows you to reference the same service with different names.
+     *
+     * Declared on every container the configuration builds, the one that
+     * constructs the four pillars included, so `get($alias)` answers the same
+     * everywhere. An alias is a second *id*, not a second type: autowiring
+     * matches a constructor parameter by type against the bindings and does not
+     * look here -- see {@see addFactory()}.
      */
     public function addAlias(string $alias, string $id): self
     {
@@ -757,6 +781,12 @@ final class GacelaConfig
      *     return new ExpensiveService($c->get(Dependency::class));
      * });
      * ```
+     *
+     * Registered on every container the configuration builds, the one that
+     * constructs the four pillars included, and read back with `get($id)`. Like
+     * {@see addFactory()} it is an id rather than a type, so a constructor
+     * parameter is not filled from here -- and deferring construction is the
+     * point, which resolving it to autowire something would defeat.
      *
      * @param string $id The service identifier
      * @param Closure $factory The factory closure that creates the service when needed
@@ -784,10 +814,12 @@ final class GacelaConfig
      * $config->loadDefinitions(__DIR__ . '/services.json');
      * ```
      *
-     * Applies app-wide, reaching every module's container, which is how
-     * {@see addBinding()} already behaves. A module that wants definitions of
-     * its own calls `Container::load()` in its Provider, keeping them local to
-     * that module's container.
+     * Applies app-wide, reaching every module's container *and* the container
+     * that constructs the four pillars, which is how {@see addBinding()} already
+     * behaves -- so an interface a Facade, Factory, Config or Provider asks for
+     * in its constructor can be declared here. A module that wants definitions
+     * of its own calls `Container::load()` in its Provider, keeping them local
+     * to that module's container.
      *
      * Every entry ends up calling the registration method it stands for, so a
      * definition behaves exactly like the imperative call it replaces. Sources

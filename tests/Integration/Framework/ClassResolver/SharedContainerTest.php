@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\ClassResolver;
 
-use Gacela\Container\Container;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
@@ -12,6 +11,7 @@ use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Framework\ModuleWithExternalDependencies\Supplier\Facade;
 use PHPUnit\Framework\TestCase;

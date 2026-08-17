@@ -9,6 +9,7 @@ The rest still work. They are listed at the bottom with the situations where the
 | reach another module | from an entry point: `ServiceResolverAwareTrait` + `#[ServiceMap]` + `$this->getFacade()`. From a Factory: `#[Provides]` + `getProvidedDependency()` |
 | get a collaborator inside my own module | a `create*()` method on the Factory, or `make()` when autowiring pays |
 | get an external / infrastructure service | `#[Provides]` in the Provider, or `addBinding()` for an interface |
+| fill a **pillar's own constructor** | `addBinding()`, `when()->needs()->give()` or `loadDefinitions()` in `gacela.php` — see [into a pillar's constructor](#into-a-pillars-constructor) |
 | collect several implementations | `addPluginStack()` when they share an interface, `tag()` when the set is unkeyed and untyped, `addHandlerRegistry()` when you look one up by key |
 | read a config value | the typed getters on your `Config` |
 
@@ -126,6 +127,31 @@ For "this interface means that implementation" across the whole app, use `addBin
 ```php
 $config->addBinding(PaymentGateway::class, StripeGateway::class);
 ```
+
+### Into a pillar's constructor
+
+A Facade, Factory, Config or Provider may declare its own constructor, and the class resolver builds it through a container configured from the same `gacela.php` as everything else:
+
+```php
+final class NotificationFactory extends AbstractFactory
+{
+    public function __construct(
+        private readonly RetryPolicyInterface $retryPolicy,
+    ) {
+    }
+}
+```
+
+```php
+// any of these fills it
+$config->addBinding(RetryPolicyInterface::class, SingleAttemptPolicy::class);
+$config->loadDefinitions([RetryPolicyInterface::class => ['singleton' => SingleAttemptPolicy::class]]);
+$config->when(PaymentBuilder::class)->needs(RetryPolicyInterface::class)->give(ThreeAttemptPolicy::class);
+```
+
+A pillar constructor is autowired like any other, so the [resolution order](container-configuration.md#resolution-order) applies unchanged — which also means the id-keyed verbs (`addFactory()`, `addProtected()`, `addAlias()`, `addLazy()`) do not fill one. They register a name to look up, not a type to match; ask for those with `getProvidedDependency()` or `$container->get($id)`.
+
+`vendor/bin/gacela debug:modules --check` walks every pillar constructor and exits non-zero on a parameter the resolver's container cannot satisfy.
 
 ### What a miss looks like
 

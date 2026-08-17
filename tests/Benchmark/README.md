@@ -21,6 +21,25 @@ Both sides of the comparison must run **the same group**. The baseline stores on
 
 Rule of thumb: if the subject's average time is below ~0.2μs, it belongs in `informational` and is tagged `micro` — at that scale timer quantization alone moves the mode by ~10%, which would false-fail the gate on unrelated PRs. Subjects in the 0.2–1μs range can stay gated when their `rstdev` holds below ~3% (e.g. the warm-resolve benches).
 
+## Retries: why the informational benches loosen the threshold
+
+`phpbench.json` sets `"runner.retry_threshold": 5` — phpbench re-runs an iteration set whenever its `rstdev` exceeds that, and **the retry is unbounded**: `SubjectMetadata::setRetryLimit()` exists in phpbench 1.7 but nothing ever calls it, so there is no cap and no config key for one. On a quiet machine that is invisible. On a loaded CI runner it is not.
+
+Measured here, same bench, same commit, one machine, varying only the threshold:
+
+| `--retry-threshold` | `ScopedCacheBench` |
+|---|---|
+| 0.5 | 256 s |
+| 5 (the global default) | 34 s |
+| 10 | 6.3 s |
+| 20 | 6.5 s |
+
+A 38× spread produced by nothing but the retry threshold. That is what made the CI guard's baseline step take 11–12 minutes and get killed by the job timeout while the gate step beside it passed in 15 seconds — a red check that was never a regression.
+
+So every `informational` class carries `#[RetryThreshold(20)]`. The gate group keeps the global 5, because a ±10% assertion is only meaningful when the reading under it is stable. The informational numbers are **reported and never asserted**, so buying a tighter `rstdev` for them with unbounded retries is cost without benefit — and the `rstdev` column is printed beside every number, so a reader can still see when one is noisy.
+
+20 rather than 10: both sit past the knee of the curve above, and CI runners are noisier than the machine those numbers came from.
+
 **`rstdev` is not sufficient on its own.** It measures spread *within* one run, but the gate compares two runs made at different moments. An I/O-bound subject can hold `rstdev` under 2% and still drift well past 10% run-to-run. Before gating a subject that touches the disk, network, or clock, run it twice against itself:
 
 ```bash

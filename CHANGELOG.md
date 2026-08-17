@@ -71,6 +71,10 @@ An invoicing SaaS under `tests/Feature/ReferenceApp/`, wired with every feature 
 - The `event listeners` doctor check no longer warns about an interface or abstract target, since those now fire
 - Every CI job declares `timeout-minutes` (10/20/45), so a stalled runner is a red check to re-run instead of a six-hour block. A test fails the build if a new job forgets one
 
+### Internal
+
+- Every `informational` benchmark carries `#[RetryThreshold(20)]`. `phpbench.json` sets a suite-wide threshold of 5 and a phpbench retry is **unbounded** — `setRetryLimit()` exists and nothing calls it — so a group whose numbers are reported and never asserted was paying open-ended CI time to stabilise a reading nothing reads. Measured on `ScopedCacheBench`, one machine, one commit: 34s at threshold 5 against 6.3s at 10. That is what made the performance guard's baseline step run 11–12 minutes and get killed by the job timeout while the gate step beside it passed in 15 seconds — a red check that was never a regression. The `gate` group keeps the strict 5, and a test fails if either side drifts
+
 ## [2.3.0](https://github.com/gacela-project/gacela/compare/2.2.0...2.3.0) - 2026-08-15
 
 ### Added

@@ -32,9 +32,12 @@ final class FacadeOnlyDelegatesRuleTest extends RuleTestCase
     public function test_reports_all_bad_patterns(): void
     {
         $prefix = 'Facade method ' . \GacelaTest\Unit\PHPStan\Rules\Fixture\FacadeDelegate\BadFacade::class . '::';
-        $suffix = '() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.';
+        $suffix = '() must only delegate to getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.';
 
-        $tip = 'Move the logic into the Factory and have this method call it.';
+        $tip = 'Move the logic into the Factory and have this method call it. '
+            . 'Only `AbstractFacade::getFactory()` is on the base class; the others come from a trait: '
+            . '`ConfigResolverAwareTrait::getConfig()`, `DeclaredTypeResolverAwareTrait::getResolvedType()`, '
+            . 'and `ServiceResolverAwareTrait` + #[ServiceMap] for getProvider().';
 
         $this->analyse(
             [__DIR__ . '/Fixture/FacadeDelegate/BadFacade.php'],
@@ -73,10 +76,13 @@ final class FacadeOnlyDelegatesRuleTest extends RuleTestCase
             ],
             [[
                 'Facade method ' . TraitUsingFacade::class
-                . '::fromTheTrait() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType();'
+                . '::fromTheTrait() must only delegate to getFactory()/getConfig()/getProvider()/getResolvedType();'
                 . ' no inline logic allowed.',
                 9,
-                'Move the logic into the Factory and have this method call it.',
+                'Move the logic into the Factory and have this method call it. '
+                . 'Only `AbstractFacade::getFactory()` is on the base class; the others come from a trait: '
+                . '`ConfigResolverAwareTrait::getConfig()`, `DeclaredTypeResolverAwareTrait::getResolvedType()`, '
+                . 'and `ServiceResolverAwareTrait` + #[ServiceMap] for getProvider().',
             ]],
         );
     }

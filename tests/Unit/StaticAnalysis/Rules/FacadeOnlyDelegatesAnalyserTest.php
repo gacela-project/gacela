@@ -11,6 +11,7 @@ use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
 use PHPUnit\Framework\TestCase;
 
+use function method_exists;
 use function sprintf;
 
 final class FacadeOnlyDelegatesAnalyserTest extends TestCase
@@ -47,10 +48,46 @@ final class FacadeOnlyDelegatesAnalyserTest extends TestCase
 
         self::assertCount(1, $violations);
         self::assertSame(
-            'Facade method App\Checkout\CheckoutFacade::doThing() must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.',
+            'Facade method App\Checkout\CheckoutFacade::doThing() must only delegate to getFactory()/getConfig()/getProvider()/getResolvedType(); no inline logic allowed.',
             $violations[0]->message,
         );
         self::assertSame('gacela.facadeOnlyDelegates', $violations[0]->identifier);
+    }
+
+    /**
+     * The message used to write the four roots as `$this->getFactory()`,
+     * `$this->getConfig()` and so on, which reads as four methods the reader
+     * already has. `AbstractFacade` declares one of them. Following the advice
+     * for any of the other three ends in `Call to undefined method
+     * ...Facade::getConfig()`, and that Error names no alternative either.
+     *
+     * So the tip has to say which root is free and what the rest cost.
+     */
+    public function test_the_tip_names_the_only_root_the_base_class_gives_and_the_trait_behind_each_other(): void
+    {
+        $violations = $this->analyse('return 1 + 1;');
+
+        self::assertSame(
+            'Move the logic into the Factory and have this method call it. '
+            . 'Only `AbstractFacade::getFactory()` is on the base class; the others come from a trait: '
+            . '`ConfigResolverAwareTrait::getConfig()`, `DeclaredTypeResolverAwareTrait::getResolvedType()`, '
+            . 'and `ServiceResolverAwareTrait` + #[ServiceMap] for getProvider().',
+            $violations[0]->tip,
+        );
+    }
+
+    /**
+     * The claim the tip makes about the base class, asked of the base class.
+     * Both halves matter: a `getConfig()` added to `AbstractFacade` later would
+     * make the tip send readers to a trait they no longer need.
+     */
+    public function test_the_base_class_supplies_the_root_the_tip_says_it_does(): void
+    {
+        self::assertTrue(method_exists(AbstractFacade::class, 'getFactory'));
+
+        self::assertFalse(method_exists(AbstractFacade::class, 'getConfig'));
+        self::assertFalse(method_exists(AbstractFacade::class, 'getProvider'));
+        self::assertFalse(method_exists(AbstractFacade::class, 'getResolvedType'));
     }
 
     /**

@@ -40,7 +40,7 @@ final class FacadeOnlyDelegatesTest extends PhpStanFixtureTestCase
     public function test_the_finding_names_the_accessors_that_would_be_allowed(): void
     {
         self::assertStringContainsString(
-            'must only delegate to $this->getFactory()/getConfig()/getProvider()/getResolvedType()',
+            'must only delegate to getFactory()/getConfig()/getProvider()/getResolvedType()',
             $this->analyseFixture(),
         );
     }

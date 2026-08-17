@@ -9,6 +9,14 @@ use Gacela\Framework\Attribute\CacheableTrait;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 
 /**
+ * One pillar accessor lives here, {@see getFactory()}, and it is the only one a
+ * Facade has for free. `gacela.facadeOnlyDelegates` accepts three more roots,
+ * and each arrives with the trait that declares it: `ConfigResolverAwareTrait`
+ * for `getConfig()`, `DeclaredTypeResolverAwareTrait` for `getResolvedType()`,
+ * `ServiceResolverAwareTrait` plus a `#[ServiceMap]` accessor for
+ * `getProvider()`. Writing one without its trait is `Call to undefined method`
+ * at runtime, so the rule's tip names them too.
+ *
  * @template TFactory of AbstractFactory = AbstractFactory
  */
 abstract class AbstractFacade

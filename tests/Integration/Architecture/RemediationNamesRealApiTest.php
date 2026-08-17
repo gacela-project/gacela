@@ -19,7 +19,7 @@ use function preg_match_all;
 use function sprintf;
 
 /**
- * A doctor finding is only worth printing if its remediation can be followed.
+ * A finding is only worth printing if its remediation can be followed.
  *
  * The suffix-mismatch check told the reader to "add the missing suffix via
  * `SuffixTypesBuilder::addFacade` in gacela.php". `SuffixTypesBuilder` is a
@@ -28,9 +28,15 @@ use function sprintf;
  * job is `addSuffixTypeFacade()`. So the one line printed to get somebody
  * unstuck named an API they could not call from the place it named.
  *
- * Advice drifts the way any prose beside code drifts, and nothing else reads
- * it. This walks the API references in the checks' own string literals and
- * asks the only question that matters about each: does it exist.
+ * `gacela.facadeOnlyDelegates` was the same defect in the other output the
+ * framework prints (#890): it told a reader to delegate to
+ * `$this->getConfig()`, which `AbstractFacade` does not declare. Both are
+ * advice, both drift the way any prose beside code drifts, and nothing else
+ * reads either -- so the static-analysis rules are walked here alongside the
+ * doctor checks.
+ *
+ * This walks the API references in those classes' own string literals and asks
+ * the only question that matters about each: does it exist.
  */
 final class RemediationNamesRealApiTest extends TestCase
 {
@@ -69,12 +75,18 @@ final class RemediationNamesRealApiTest extends TestCase
     #[DataProvider('apiReferenceProvider')]
     public function test_an_api_named_in_a_check_message_exists(string $file, string $class, string $method): void
     {
-        self::assertTrue(class_exists($class) || interface_exists($class), sprintf(
-            '%s names `%s::%s()`, and no such class is declared under src/.',
-            $file,
-            $class,
-            $method,
-        ));
+        // A trait as well as a class: what supplies a Facade's `getConfig()` is
+        // `ConfigResolverAwareTrait`, and naming the trait is the whole point of
+        // the reference -- class_exists() alone would reject the correct advice.
+        self::assertTrue(
+            class_exists($class) || interface_exists($class) || trait_exists($class),
+            sprintf(
+                '%s names `%s::%s()`, and no such class, interface or trait is declared under src/.',
+                $file,
+                $class,
+                $method,
+            ),
+        );
 
         self::assertTrue(method_exists($class, $method), sprintf(
             "%s tells the reader to call `%s::%s()`, which does not exist.\n"
@@ -91,13 +103,25 @@ final class RemediationNamesRealApiTest extends TestCase
     }
 
     /**
+     * Every class in this repository whose job includes telling a reader what to
+     * do: the doctor checks, and the static-analysis rules whose violations
+     * carry a tip.
+     *
      * @return list<string>
      */
     private static function checkFiles(): array
     {
-        $found = glob(dirname(__DIR__, 3) . '/src/Console/Application/Doctor/Check/*.php');
+        $root = dirname(__DIR__, 3);
+        $files = [];
 
-        return is_array($found) ? $found : [];
+        foreach (['/src/Console/Application/Doctor/Check/*.php', '/src/StaticAnalysis/Rules/*.php'] as $pattern) {
+            $found = glob($root . $pattern);
+            if (is_array($found)) {
+                $files = [...$files, ...$found];
+            }
+        }
+
+        return $files;
     }
 
     /**

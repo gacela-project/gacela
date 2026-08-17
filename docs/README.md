@@ -12,7 +12,7 @@
 - [Module health checks](module-health-checks.md) — report module operational status
 - [Profiling](profiling.md) — instrument code with the in-memory `Profiler` and read it back with `profile:report`
 - [Events](events.md) — listen to Gacela internals: dispatch model, event catalog, cookbook
-- [Testing](testing.md) — `GacelaTestCase`: bootstrap isolation, config overrides, container assertions
+- [Testing](testing.md) — `GacelaTestCase`: bootstrap isolation, module slices with doubles, container and boundary assertions
 - [Caching](caching.md) — overview of Gacela's three caching layers and when to reach for each
 - [Cacheable methods](cacheable-methods.md) — cache facade method results with `#[Cacheable]`
 - [FileCache and ScopedCache](file-cache.md) — cache arbitrary application data with atomic writes and cascading invalidation

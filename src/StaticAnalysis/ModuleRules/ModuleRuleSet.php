@@ -25,9 +25,11 @@ use const JSON_THROW_ON_ERROR;
  * and nothing more -- lived in prose, where the tooling cannot see it and a
  * violation is one more import in a diff. This is that agreement, machine-read.
  *
- * The same file feeds `debug:graph --check`, which sees whole modules, and the
- * PHPStan/Psalm rules, which see one class at a time. Two readers, one decision:
- * a rule that held in CI and not in the editor would be a rule nobody trusts.
+ * The same file feeds `debug:graph --check`, which sees whole modules, the
+ * PHPStan/Psalm rules, which see one class at a time, and
+ * {@see \Gacela\Console\Testing\ModuleAssertions}, which reads it from a test
+ * method. One decision, however you happen to be looking: a rule that held in
+ * CI and not in the editor would be a rule nobody trusts.
  */
 final class ModuleRuleSet
 {

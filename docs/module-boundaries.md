@@ -1,6 +1,6 @@
 # Module Boundaries
 
-Module A may only reach module B through B's Facade. This page collects everything that enforces that claim and the agreements built on top of it: two opt-in analyser rules, a dependency-cycle gate on `debug:graph`, a declared rules file both readers share, and a CI review for graph changes.
+Module A may only reach module B through B's Facade. This page collects everything that enforces that claim and the agreements built on top of it: two opt-in analyser rules, a dependency-cycle gate on `debug:graph`, a declared rules file the analysers, the command and the test suite all share, and a CI review for graph changes.
 
 The rules run under PHPStan and Psalm alike; [Static analysis](static-analysis.md) covers installing the analysers, the always-on pillar rules, and suppression.
 
@@ -214,7 +214,7 @@ services:
 </pluginClass>
 ```
 
-One file, two readers, on purpose: a boundary that holds in CI and not in the editor is a boundary nobody trusts.
+One file, several readers, on purpose: a boundary that holds in CI and not in the editor is a boundary nobody trusts. A [test method reads it too](#enforcing-the-same-file-from-a-test-method).
 
 The rules are **self-invalidating**, like the cycle allow list. A `from`, `allow` or `deny` naming a namespace that matches no module fails the check — a rule about a module nobody has any more still reads as a boundary being watched. A `deny` that never fires is not an error; that is the rule doing its job.
 
@@ -240,6 +240,18 @@ Neither analyser can. They are handed one class at a time and asked whether *thi
     "unknownRuleNamespaces": []
 }
 ```
+
+## Enforcing the same file from a test method
+
+The rules file has a third reader. `Gacela\Console\Testing\ModuleAssertions` puts the same graph, cycle detector, allow list and rule checker behind three PHPUnit assertions, so a boundary decision can live next to the module's own tests rather than only in CI configuration:
+
+```php
+self::assertModuleDependsOnlyOn(InvoiceFacade::class, [BillingFacade::class, CustomerFacade::class]);
+self::assertNoModuleCycles(__DIR__ . '/allowed-cycles.json');
+self::assertModuleRulesHold(__DIR__ . '/module-rules.json');
+```
+
+Failures name the offending edge and the `use` statement that writes it, as `file:line`. See [Testing](testing.md#module-boundaries-in-a-test-method).
 
 ## Reviewing graph changes in CI
 

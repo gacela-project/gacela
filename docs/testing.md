@@ -79,6 +79,53 @@ Gacela::bootstrap($dir, static function (GacelaConfig $config): void {
 
 `GacelaTestCase` and both framework bridges call it on every boot for exactly this reason. It is opt-in rather than automatic because a process that re-bootstraps with the *same* wiring pays to resolve everything again.
 
+## Testing one module: `bootstrapModule()`
+
+The everyday test of a modular application is one module with its neighbours replaced. That is one call:
+
+```php
+$this->bootstrapModule(__DIR__, InvoiceFacade::class, doubles: [
+    BillingFacade::class => $this->createStub(BillingFacade::class),
+    PaymentGatewayInterface::class => new FakeGateway(),
+]);
+
+$invoice = (new InvoiceFacade())->issue('acme-nl', 10_000);
+```
+
+Two things happen.
+
+**Discovery is narrowed** to the directory the Facade lives in — the slice. `doctor`, `list:modules`, `debug:graph` and the [boundary assertions](#module-boundaries-in-a-test-method) then answer about that module instead of about the whole application. The narrowing is applied after `gacela.php` has been read, so an application that declares its own `setAppModulePaths()` does not silently un-narrow it.
+
+**Each double is applied through the seam that fits it**, so the test does not have to know which of three a given dependency arrives on:
+
+| The double is | It becomes |
+|---|---|
+| an `AbstractFactory` / `AbstractConfig` / `AbstractProvider` instance | that pillar of the module its key's **Facade** names — the `swapModule*()` calls below |
+| any other object, keyed by a class or interface | a container binding, a lazy service, and a resolved-class override — the last is the path a neighbour Facade reached through `getProvidedDependency()` or `#[ServiceMap]` travels |
+| a `Closure` or a class-string, keyed by a class or interface | a container binding and a lazy service |
+| anything, keyed by a **container id** | a replacement for that id wherever it is registered, including in the module's own Provider — which nothing written at application level can otherwise reach |
+
+The third argument is a `GacelaConfig` closure, composed with the narrowing rather than replacing it, for a slice that still has to configure the application it is a slice of:
+
+```php
+$this->bootstrapModule(__DIR__, InvoiceFacade::class,
+    doubles: [BillingFacade::class => $billing],
+    configFn: static fn (GacelaConfig $config) => $config->addExternalService('clock', $frozenClock),
+);
+```
+
+Like `bootstrapGacela()`, it bootstraps once per test, and `tearDown()` drops everything it registered.
+
+### A neighbour has to leave its Facade open
+
+A consumer that type-hints a **`final`** Facade cannot be handed a stand-in for it by anyone — not PHPUnit, not a hand-written subclass. A module meant to be replaceable from its neighbours' tests declares its Facade non-`final`; where that is not an option, replace the neighbour's **Factory** instead, which needs nothing from the class it replaces.
+
+### What it checks, and what it cannot
+
+A double registered under a class or interface it is **not an instance of** is refused with a `ModuleDoubleException`, because it would otherwise reach a consumer that type-hints the real one and fail there instead. Naming a module by anything but its Facade is refused for the same reason `swapModuleFactory()` refuses it.
+
+What is **not** checked is whether the module actually depends on what is being doubled. Reflection can see a module's `#[Provides]` ids and return types, its `#[ServiceMap]` accessors and its pillar constructors — and that misses a plugin-stack interface named only as a call argument, an app-wide binding autowired into a nested constructor, and anything a Provider registers from inside a method body. On the [reference application](reference-app.md) those are four of nine legitimate doubles, so such a check would refuse real tests rather than catch typos.
+
 ## Replacing another module
 
 Testing module A in isolation means replacing module B. A container binding only works when B's Facade arrives through a Provider, and a consumer that writes `new BlogFacade()` leaves nothing to bind — so the seam is the **Factory** every Facade resolves:
@@ -118,6 +165,48 @@ $this->swapModuleFactory(BlogFacade::class, new class() extends BlogFactory {   
 Naming a class that is not a Facade — the Factory itself, or a typo — throws a `ModuleDoubleException` rather than registering a double nothing would ever read.
 
 This replaces reaching into `AnonymousGlobal::overrideExistingResolvedClass()`, which needed the resolver's key format and left the Facade's memoised Factory in place.
+
+## Module boundaries in a test method
+
+A boundary decision that lives only in CI configuration is one a module's own tests cannot state. `Gacela\Console\Testing\ModuleAssertions` is a standalone trait, so it goes into whatever base test class a project already has:
+
+```php
+use Gacela\Console\Testing\ModuleAssertions;
+
+final class InvoiceBoundaryTest extends TestCase
+{
+    use ModuleAssertions;
+
+    public function test_invoice_reaches_billing_and_customer_and_nothing_else(): void
+    {
+        Gacela::bootstrap(__DIR__);
+
+        self::assertModuleDependsOnlyOn(InvoiceFacade::class, [BillingFacade::class, CustomerFacade::class]);
+        self::assertNoModuleCycles(__DIR__ . '/allowed-cycles.json');
+        self::assertModuleRulesHold(__DIR__ . '/module-rules.json');
+    }
+}
+```
+
+- `assertModuleDependsOnlyOn()` takes the module — any class inside it, its Facade by convention, or its namespace — and the modules it may reach. An allowance may name a namespace covering several modules. Naming a module the running configuration does not scan **fails**, listing the modules it did find, rather than passing on an empty dependency list.
+- `assertNoModuleCycles()` reads the same allowed-cycles file `debug:graph --check --allowed-cycles` reads, and is as self-invalidating: an allowance whose cycle has since been broken fails too.
+- `assertModuleRulesHold()` reads the same [`module-rules.json`](module-boundaries.md) the CLI and the PHPStan/Psalm rules read. One file, enforced from wherever you happen to be looking.
+
+Every failure names the offending edge **and the `use` statement behind it**, as `file:line`:
+
+```
+"App\Invoice" may depend only on:
+  - App\Customer
+
+✗ App\Invoice -> App\Billing
+    /app/src/Invoice/Domain/InvoiceIssuer.php:12  use App\Billing\BillingFacade;
+```
+
+The line is where the `use` statement opens, so every name of a grouped import reports the same one. A dependency that arrives without an import — a fully qualified name written inline, a class-string in configuration — has no evidence to show, because the graph does not see it either: nothing is reported that the check did not find.
+
+The application must be bootstrapped, since these read the modules the running configuration declares. That is also what makes `bootstrapModule()`'s narrowing meaningful here: inside a slice, these assertions answer about one module.
+
+**These live in the `Gacela\Console` namespace, not on `GacelaTestCase`.** The module graph is built by scanning source files, which is console work, and `Gacela\Framework` references `Gacela\Console` in no file. A framework that sells module boundaries must not invert its own to ship a test helper — so `bootstrapModule()`, which needs only framework primitives, stayed on `GacelaTestCase`, and this came here. A test class writes `use ModuleAssertions;` and has both.
 
 ## Scaffolding a testable module
 

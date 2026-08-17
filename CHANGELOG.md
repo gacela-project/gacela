@@ -45,6 +45,22 @@ Lists every event the framework can dispatch, which of them your project listens
 - **Paths skipped** — an `appModulePaths` entry that is not a directory is reported as `Not scanned, not a directory: …`, and by a new `module paths` doctor check so `--strict` can fail on it
 - **The filter** — `doctor` names it and how many modules it matched, including none, which used to end in `All checks passed`
 
+#### Module test slices
+
+`GacelaTestCase::bootstrapModule($appRoot, InvoiceFacade::class, doubles: [...])` bootstraps one module with its neighbours replaced — the everyday test of a modular application, which needed a bootstrap plus three override APIs and the question of which one applies to which kind of dependency.
+
+- Narrows module discovery to that module's directory, so `doctor`, `list:modules` and `debug:graph` answer about one module
+- Routes each double by what it is: a pillar instance to `swapModule*()`, a class or interface to a binding, a lazy service and a resolved-class override, a container id to a service extension — the only reach a bootstrap has into a module's own Provider
+- Refuses a double that is not an instance of the class it is registered under; a Facade left `final` cannot be doubled by anyone, so replace that module's Factory instead
+
+#### Module boundaries in PHPUnit
+
+`Gacela\Console\Testing\ModuleAssertions` is a standalone trait with `assertModuleDependsOnlyOn()`, `assertNoModuleCycles()` and `assertModuleRulesHold()`.
+
+- Reads the graph, allowed-cycles file and `module-rules.json` that `debug:graph --check` reads, so a boundary holds in the test and in CI or in neither
+- Every failure names the offending edge and the `use` statement behind it, as `file:line`
+- In the `Gacela\Console` namespace because the graph is built by scanning source files, and `Gacela\Framework` must not depend on `Gacela\Console`
+
 #### Reference application
 
 An invoicing SaaS under `tests/Feature/ReferenceApp/`, wired with every feature at once and run on every pull request. Five modules, a three-layer harness — behaviour, every shipped command, and a guard that fails when a new `GacelaConfig` method, attribute or command is not used by it — and both analysers over the application with the opt-in architecture rules turned on. See [docs/reference-app.md](docs/reference-app.md).

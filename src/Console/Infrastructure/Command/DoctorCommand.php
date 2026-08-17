@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\Debug\EventCatalog;
-use Gacela\Console\Application\Debug\PackageDiscoveryReport;
 use Gacela\Console\Application\Doctor\Check\CacheableStorageCheck;
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
@@ -321,7 +320,11 @@ final class DoctorCommand extends Command
             // namespace filter left behind would report every scoped run as
             // stale.
             new PackageManifestCheck($config->getAppRootDir()),
-            new DiscoveredPackagesCheck($this->packageDiscoveryReport()),
+            // One capture, taken through the facade `debug:container` uses, so
+            // the verdict here and the description there cannot disagree about
+            // the same boot -- and there is one place that reads the opt-out
+            // list off the concrete setup instead of two.
+            new DiscoveredPackagesCheck($this->getFacade()->getPackageDiscoveryReport()),
             new IdeMetadataStalenessCheck(
                 $config->getAppRootDir(),
                 fn (): IdeMetadataResult => $this->getFacade()->generateIdeMetadata(dryRun: true),
@@ -333,20 +336,6 @@ final class DoctorCommand extends Command
         }
 
         return $checks;
-    }
-
-    /**
-     * The opt-out list comes off the concrete setup, for the same reason the
-     * listener map below does.
-     */
-    private function packageDiscoveryReport(): PackageDiscoveryReport
-    {
-        $setup = Config::getInstance()->getSetupGacela();
-
-        return PackageDiscoveryReport::capture(
-            Config::getInstance()->getAppRootDir(),
-            $setup instanceof SetupGacela ? $setup->getDontDiscover() : [],
-        );
     }
 
     /**

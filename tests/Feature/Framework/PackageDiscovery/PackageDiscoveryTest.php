@@ -107,6 +107,100 @@ final class PackageDiscoveryTest extends TestCase
     }
 
     /**
+     * The refusal applies to the package it names and stops there: the packages
+     * installed after it are read exactly as if the entry were not written.
+     */
+    public function test_refusing_the_first_installed_package_leaves_the_rest_discovered(): void
+    {
+        $this->installed->install(['AuditTrail', 'LegacyNumbering']);
+
+        $this->bootstrap(static function (GacelaConfig $config): void {
+            $config->dontDiscover(['gacela-fixture/audit-trail']);
+        });
+
+        self::assertSame(['gacela-fixture/legacy-numbering'], $this->discoveredNames());
+        self::assertSame('roman', Config::getInstance()->get('legacy.numbering'));
+        self::assertNull(Config::getInstance()->get('audit.enabled', null));
+    }
+
+    /**
+     * Two packages declaring the same thing: the later-installed one wins, and
+     * the project is still merged after both.
+     *
+     * Worth pinning because it is also the warning in `docs/packages.md` --
+     * installed order is Composer's, decided by the dependency graph and by when
+     * things were added to `composer.json`, and no application controls it. A
+     * package that needs to win must not rely on this.
+     */
+    public function test_between_two_packages_the_later_installed_one_wins(): void
+    {
+        $this->installed->install(['AuditTrail', 'AuditOverride']);
+
+        $this->bootstrap();
+
+        self::assertSame(
+            ['gacela-fixture/audit-trail', 'gacela-fixture/audit-override'],
+            $this->discoveredNames(),
+        );
+        self::assertFalse(Config::getInstance()->getBool('audit.enabled'));
+        self::assertSame(
+            'the later-installed package decided',
+            Gacela::getRequired(AuditSinkInterface::class)->label(),
+        );
+    }
+
+    public function test_installing_the_same_two_packages_the_other_way_round_reverses_the_answer(): void
+    {
+        $this->installed->install(['AuditOverride', 'AuditTrail']);
+
+        $this->bootstrap();
+
+        self::assertSame(
+            ['gacela-fixture/audit-override', 'gacela-fixture/audit-trail'],
+            $this->discoveredNames(),
+        );
+        self::assertTrue(Config::getInstance()->getBool('audit.enabled'));
+        self::assertSame(
+            'file (the package default)',
+            Gacela::getRequired(AuditSinkInterface::class)->label(),
+        );
+    }
+
+    /**
+     * The registry describes the boot that just discovered, not every boot the
+     * process has seen -- so a second application, with other packages installed
+     * against it, replaces the answer instead of appending to it. What `doctor`
+     * and `debug:container` read afterwards is one application's packages.
+     *
+     * Two roots rather than two bootstraps of one, because the merged
+     * configuration is memoized per root and a second bootstrap of the same one
+     * discovers nothing. And neither of them clears the in-memory caches, so the
+     * clearing under test is the one discovery does for itself: nothing may be
+     * left to a caller that a production bootstrap does not have to make.
+     */
+    public function test_discovering_for_another_application_replaces_the_answer(): void
+    {
+        $this->installed->install(['MissingConfig', 'AuditTrail']);
+        Gacela::bootstrap($this->installed->appRoot, static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+        });
+
+        $other = new InstalledPackages();
+
+        try {
+            $other->install(['LegacyNumbering']);
+            Gacela::bootstrap($other->appRoot, static function (GacelaConfig $config): void {
+                $config->setFileCache(false);
+            });
+
+            self::assertSame(['gacela-fixture/legacy-numbering'], $this->discoveredNames());
+            self::assertSame([], $this->refusalReasons());
+        } finally {
+            $other->remove();
+        }
+    }
+
+    /**
      * The harder half: `gacela.php` is read *after* the packages are merged, so
      * an opt-out written there is only in time because the file is read for the
      * opt-out before any package's code runs.

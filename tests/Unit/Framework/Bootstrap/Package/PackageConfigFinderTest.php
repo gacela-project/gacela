@@ -119,6 +119,58 @@ final class PackageConfigFinderTest extends TestCase
     }
 
     /**
+     * A windows drive is a root of its own, and the separators a manifest was
+     * written with are folded to the local ones.
+     *
+     * Asserted on every platform rather than only on the windows matrix: what
+     * the drive letter does to the resolution is decided by this class, not by
+     * the filesystem it happens to be running on.
+     */
+    public function test_a_windows_drive_install_path_is_a_root_of_its_own(): void
+    {
+        $this->writeInstalled([
+            ['name' => 'acme/audit', 'install-path' => 'C:\\packages\\audit', 'extra' => ['gacela' => ['config' => 'config/gacela.php']]],
+        ]);
+
+        self::assertSame(
+            $this->path('C:', 'packages', 'audit', 'config', 'gacela.php'),
+            $this->find()[0]->configFile,
+        );
+    }
+
+    /**
+     * A declaration climbing above the drive keeps the drive, the way one
+     * climbing above a unix root keeps the root: what is left is a path
+     * pointing outside the package, which is what the package declared and what
+     * `doctor` has to be able to quote back.
+     */
+    public function test_a_declaration_that_climbs_above_a_windows_drive_keeps_the_drive(): void
+    {
+        $this->writeInstalled([
+            ['name' => 'acme/audit', 'install-path' => 'C:\\packages\\audit', 'extra' => ['gacela' => ['config' => '../../../../gacela.php']]],
+        ]);
+
+        self::assertSame($this->path('C:', '..', '..', 'gacela.php'), $this->find()[0]->configFile);
+    }
+
+    /**
+     * Only a *leading* drive letter is a root. A directory called `c:` further
+     * along is a directory, and taking the path for an absolute one would drop
+     * the whole vendor directory in front of it.
+     */
+    public function test_a_drive_letter_inside_a_relative_install_path_is_not_a_root(): void
+    {
+        $this->writeInstalled([
+            ['name' => 'acme/audit', 'install-path' => 'sub/c:/pkg', 'extra' => ['gacela' => ['config' => 'config/gacela.php']]],
+        ]);
+
+        self::assertSame(
+            $this->path($this->appRoot, 'vendor', 'composer', 'sub', 'c:', 'pkg', 'config', 'gacela.php'),
+            $this->find()[0]->configFile,
+        );
+    }
+
+    /**
      * Composer 1 recorded no install path, and a package installed where its
      * name says it is needs none.
      */

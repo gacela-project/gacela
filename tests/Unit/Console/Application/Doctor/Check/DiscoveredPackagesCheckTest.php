@@ -19,6 +19,8 @@ final class DiscoveredPackagesCheckTest extends TestCase
 {
     private const string MISSING = '/no/such/place/config/gacela.php';
 
+    private const string ALSO_MISSING = '/no/such/other/place/config/gacela.php';
+
     public function test_it_is_named_after_what_it_reports_on(): void
     {
         self::assertSame('discovered packages', $this->check($this->report())->name());
@@ -81,6 +83,48 @@ final class DiscoveredPackagesCheckTest extends TestCase
     }
 
     /**
+     * Every broken declaration, not the first one: a package author who
+     * mistyped one path has usually mistyped the other, and a check that
+     * reported one of two would send them round the loop twice.
+     */
+    public function test_every_broken_declaration_is_reported_and_not_just_the_first(): void
+    {
+        $missing = $this->declaration('acme/audit', self::MISSING);
+        $notCallable = $this->declaration('acme/legacy');
+
+        $result = $this->check($this->report(
+            declarations: [$missing, $notCallable],
+            refused: [RefusedPackage::missingFile($missing), RefusedPackage::notCallable($notCallable)],
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame([
+            'acme/audit declares ' . self::MISSING . ', which file not found',
+            'acme/legacy declares ' . __FILE__ . ', which does not return a callable',
+        ], $result->details);
+    }
+
+    /**
+     * A package whose config was merged is described as merged, whatever the
+     * disk says by the time this runs. The `is_file()` question below is only
+     * asked about declarations discovery never opened -- asking it about one it
+     * did would report a package that ran as a package this project refused,
+     * which is the opposite of what happened.
+     */
+    public function test_a_merged_package_is_never_reported_as_one_the_project_refused(): void
+    {
+        $declaration = $this->declaration('acme/audit', self::MISSING);
+
+        $result = $this->check($this->report(
+            declarations: [$declaration],
+            discovered: [$this->discovered($declaration)],
+        ))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['1 of 1 declared package config(s) merged'], $result->details);
+    }
+
+    /**
      * The refusal is the project getting what it asked for. Reporting it would
      * teach people to ignore this check.
      */
@@ -114,6 +158,67 @@ final class DiscoveredPackagesCheckTest extends TestCase
 
         self::assertSame(CheckStatus::Warn, $result->status);
         self::assertStringContainsString('not read: this project opted out of it', implode("\n", $result->details));
+    }
+
+    /**
+     * Two opt-outs are two answers, and the second one is not the first one's
+     * business: whoever removes either entry meets that package's broken
+     * declaration then.
+     */
+    public function test_every_opted_out_package_with_a_missing_config_is_named(): void
+    {
+        $first = $this->declaration('acme/legacy', self::MISSING);
+        $second = $this->declaration('acme/older', self::ALSO_MISSING);
+
+        $result = $this->check($this->report(
+            declarations: [$first, $second],
+            refused: [RefusedPackage::optedOut($first), RefusedPackage::optedOut($second)],
+            optedOut: ['acme/legacy', 'acme/older'],
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame([
+            'acme/legacy declares ' . self::MISSING . ', which file not found (not read: this project opted out of it)',
+            'acme/older declares ' . self::ALSO_MISSING . ', which file not found (not read: this project opted out of it)',
+        ], $result->details);
+    }
+
+    /**
+     * `'*'` is the one entry that names no package, so it is passed over --
+     * passed over, not treated as the end of the list. An application that
+     * refuses everything and still carries a stale name has both, and the stale
+     * name is the one worth telling it about.
+     */
+    public function test_the_wildcard_does_not_stop_the_entries_after_it_being_judged(): void
+    {
+        $result = $this->check($this->report(
+            discoveryDisabled: true,
+            declarations: [$this->declaration('acme/audit')],
+            optedOut: ['*', 'acme/never-installed'],
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(
+            ['dontDiscover() names acme/never-installed, which declares no `extra.gacela.config` — the entry refuses nothing'],
+            $result->details,
+        );
+    }
+
+    public function test_an_opt_out_that_arrived_too_late_does_not_hide_the_next_one(): void
+    {
+        $declaration = $this->declaration('acme/audit');
+
+        $result = $this->check($this->report(
+            declarations: [$declaration],
+            discovered: [$this->discovered($declaration)],
+            optedOut: ['acme/audit', 'acme/never-installed'],
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame([
+            'dontDiscover() names acme/audit and its config was merged anyway — an environment file is read after the packages, so the opt-out arrived too late',
+            'dontDiscover() names acme/never-installed, which declares no `extra.gacela.config` — the entry refuses nothing',
+        ], $result->details);
     }
 
     public function test_dont_discover_everything_reads_nothing_and_says_so(): void

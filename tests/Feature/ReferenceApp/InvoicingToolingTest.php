@@ -354,13 +354,18 @@ final class InvoicingToolingTest extends TestCase
 
         $tester = $this->execute(new DebugContainerCommand(), ['--stats' => true, '--json' => true]);
 
-        /** @var array{packages: array{installedJson: bool, discoveryDisabled: bool, declared: list<string>, discovered: list<array{name: string, position: int}>, refused: list<array{name: string, reason: string}>}} $report */
+        /** @var array{packages: array{installedJson: bool, discoveryDisabled: bool, declared: list<string>, optedOut: list<string>, discovered: list<array{name: string, position: int}>, refused: list<array{name: string, reason: string}>}} $report */
         $report = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
         $packages = $report['packages'];
 
         self::assertTrue($packages['installedJson']);
         self::assertFalse($packages['discoveryDisabled']);
         self::assertSame(['gacela-fixture/invoice-audit', 'gacela-fixture/legacy-numbering'], $packages['declared']);
+        // The one line of this application's `gacela.php` that decided the two
+        // lists below, read back off the merged setup: an opt-out written there
+        // has to survive being merged into the bootstrap's own setup, and until
+        // it did, `doctor` judged every project as having refused nothing.
+        self::assertSame(['gacela-fixture/legacy-numbering'], $packages['optedOut']);
         self::assertSame('gacela-fixture/invoice-audit', $packages['discovered'][0]['name']);
         self::assertSame(1, $packages['discovered'][0]['position']);
         self::assertSame('gacela-fixture/legacy-numbering', $packages['refused'][0]['name']);

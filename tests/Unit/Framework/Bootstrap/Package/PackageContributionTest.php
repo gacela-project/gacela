@@ -72,6 +72,36 @@ final class PackageContributionTest extends TestCase
     }
 
     /**
+     * A kind a package declared, with every suffix it declared for it -- and
+     * not the four kinds every assembled configuration carries, which no
+     * package added.
+     */
+    public function test_a_resolvable_kind_is_named_with_every_suffix_the_package_added(): void
+    {
+        $contribution = $this->contributionOf(static function (GacelaConfig $config): void {
+            $config->addResolvableType('Beacon', null, ['Beacon', 'Signal']);
+        });
+
+        self::assertSame([
+            'resolvable kinds' => ['Beacon => Beacon', 'Beacon => Signal'],
+        ], $contribution->items());
+    }
+
+    /**
+     * PHP turns a numeric-string array key into an integer, so a map declared
+     * `array<string, ...>` can hand this an integer key anyway -- and a label is
+     * a string whatever the key turned out to be.
+     */
+    public function test_a_key_php_turned_into_an_integer_is_still_reported_as_a_label(): void
+    {
+        $contribution = $this->contributionOf(static function (GacelaConfig $config): void {
+            $config->addAppConfigKeyValue('42', 'answered');
+        });
+
+        self::assertSame(['config keys' => ['42']], $contribution->items());
+    }
+
+    /**
      * A plugin is a class-string or a closure, and a closure has no name.
      */
     public function test_a_closure_plugin_is_labelled_rather_than_named(): void

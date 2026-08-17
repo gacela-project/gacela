@@ -42,6 +42,26 @@ final class PropertyMergerTest extends TestCase
         );
     }
 
+    /**
+     * Accumulated, deduplicated, and still a list.
+     *
+     * Two sources refusing the same package are agreeing rather than refusing it
+     * twice, and what comes out is read back by `doctor` and `debug:container`:
+     * a repeated name reads there as a mistake, and the holes `array_unique()`
+     * leaves in the keys are not the list the callers are handed.
+     */
+    public function test_merge_dont_discover_accumulates_without_repeating_a_name(): void
+    {
+        $setup = SetupGacela::fromGacelaConfig(
+            (new GacelaConfig())->dontDiscover(['acme/legacy', 'acme/older']),
+        );
+
+        $merger = new PropertyMerger($setup);
+        $merger->mergeDontDiscover(['acme/legacy', 'acme/newer']);
+
+        self::assertSame(['acme/legacy', 'acme/older', 'acme/newer'], $setup->getDontDiscover());
+    }
+
     public function test_merge_gacela_configs_to_extend_keeps_existing_when_empty_list_passed(): void
     {
         $setup = SetupGacela::fromGacelaConfig(

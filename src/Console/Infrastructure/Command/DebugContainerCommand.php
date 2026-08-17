@@ -121,6 +121,13 @@ final class DebugContainerCommand extends Command
             'installedJson' => $report->hasInstalledJson,
             'discoveryDisabled' => $report->discoveryDisabled,
             'declared' => $report->declaredNames(),
+            // The input, next to the outcomes: `dontDiscover()` is what decided
+            // which of the declared configs below ran, and it is the one part of
+            // that decision the human-readable section cannot show -- an entry
+            // naming a package nobody installed refuses nothing, so it appears
+            // in neither `discovered` nor `refused`. `doctor` judges those; this
+            // document is what an operator reads them out of.
+            'optedOut' => $report->optedOut,
             'discovered' => array_map(
                 static fn (DiscoveredPackage $package): array => [
                     'name' => $package->name,

@@ -158,9 +158,10 @@ final class PackageConfigFinder
             $path = substr($path, 2);
         }
 
+        // Not trimmed off the path: the loop below drops every empty segment,
+        // which is what a leading -- or doubled -- separator becomes.
         if (str_starts_with($path, DIRECTORY_SEPARATOR)) {
             $prefix .= DIRECTORY_SEPARATOR;
-            $path = ltrim($path, DIRECTORY_SEPARATOR);
         }
 
         $segments = [];

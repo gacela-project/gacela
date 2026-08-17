@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.4.0](https://github.com/gacela-project/gacela/compare/2.3.0...2.4.0) - 2026-08-17
+
 ### Added
 
 #### Your application's own events

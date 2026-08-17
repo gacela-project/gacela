@@ -31,6 +31,7 @@ use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameValidCandidate
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Profiler\Profiler;
+use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceRecord;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\CustomerFacade;
 use GacelaTest\Feature\ReferenceApp\Support\ReferenceApp;
 use GacelaTest\Feature\Util\DirectoryUtil;
@@ -273,6 +274,12 @@ final class InvoicingToolingTest extends TestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
         self::assertStringContainsString('Module: Billing', $display);
         self::assertStringContainsString('BillingFactory', $display);
+
+        // What Billing lets Reporting read. The two analyser configs no longer
+        // carry an entry for it, so this section is where a reader finds the
+        // surface that used to be spelled out in phpstan-reference-app.neon.
+        self::assertStringContainsString('Public API', $display);
+        self::assertStringContainsString(InvoiceRecord::class, $display);
     }
 
     public function test_debug_container_reports_the_application_bindings(): void

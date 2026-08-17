@@ -9,6 +9,7 @@ use Gacela\StaticAnalysis\Rules\DeclaredModuleDependencyAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;
@@ -16,6 +17,9 @@ use function sprintf;
 final class DeclaredModuleDependencyAnalyserTest extends TestCase
 {
     private const ROOT = 'App\Modules';
+
+    /** Real classes, because `#[PublicApi]` is read by reflection. */
+    private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
 
     public function test_a_dependency_a_rule_denies_is_reported_with_its_reason(): void
     {
@@ -198,6 +202,46 @@ final class DeclaredModuleDependencyAnalyserTest extends TestCase
 
         self::assertCount(1, $violations);
         self::assertStringContainsString('payment reads shipping only', $violations[0]->message);
+    }
+
+    /**
+     * The one place `#[PublicApi]` deliberately does nothing.
+     *
+     * The two cross-module rules ask whether a class may be touched without
+     * going through the Facade, which is what publishing it answers. This rule
+     * asks whether two modules may be coupled at all, and the answer to that is
+     * in the rules file. Exempting here would also split the editor from
+     * `debug:graph --check`, which enforces the same file over module-to-module
+     * edges built from imports and cannot see an attribute at all.
+     */
+    public function test_a_published_class_in_a_forbidden_module_is_still_reported(): void
+    {
+        $rules = ModuleRuleSet::fromDecodedJson(['rules' => [
+            [
+                'from' => self::FIXTURE_ROOT . '\Checkout',
+                'deny' => [self::FIXTURE_ROOT . '\Billing'],
+                'reason' => 'checkout must not reach billing',
+            ],
+        ]]);
+
+        $analyser = new DeclaredModuleDependencyAnalyser(self::FIXTURE_ROOT, $rules);
+
+        $violations = $analyser->analyse(
+            ParseSource::classIn($this->sourceWith('new ' . PublishedInvoice::class . '();')),
+            new FakeAnalysedClass(self::FIXTURE_ROOT . '\Checkout\CheckoutFactory'),
+        );
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('checkout must not reach billing', $violations[0]->message);
+    }
+
+    /**
+     * The convention half of the same decision: a class in a module's published
+     * sub-namespace is still an edge into that module.
+     */
+    public function test_a_class_in_a_published_sub_namespace_of_a_forbidden_module_is_still_reported(): void
+    {
+        self::assertCount(1, $this->analyse('new App\Modules\Admin\Shared\AdminSummary();'));
     }
 
     /**

@@ -7,6 +7,7 @@ namespace Gacela\StaticAnalysis\Rules;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\ModuleBoundary;
+use Gacela\StaticAnalysis\PublicApiSurface;
 use Gacela\StaticAnalysis\ResolvedName;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
@@ -36,17 +37,27 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
     private readonly ModuleBoundary $boundary;
 
     /**
-     * @param list<string> $sharedNamespaces namespaces exempt from the boundary
-     *                                       check (shared kernels): references
-     *                                       into them are always allowed, and
-     *                                       classes inside them are not checked
+     * @param list<string> $sharedNamespaces  namespaces exempt from the boundary
+     *                                        check (shared kernels): references
+     *                                        into them are always allowed, and
+     *                                        classes inside them are not checked
+     * @param list<string> $publicApiSegments sub-namespace names a module
+     *                                        publishes; an empty list leaves
+     *                                        `#[PublicApi]` as the only way to
+     *                                        export a class
      */
     public function __construct(
         string $rootNamespace,
         int $modulePathSegments = 1,
         array $sharedNamespaces = [],
+        array $publicApiSegments = PublicApiSurface::DEFAULT_SEGMENTS,
     ) {
-        $this->boundary = new ModuleBoundary($rootNamespace, $modulePathSegments, $sharedNamespaces);
+        $this->boundary = new ModuleBoundary(
+            $rootNamespace,
+            $modulePathSegments,
+            $sharedNamespaces,
+            $publicApiSegments,
+        );
     }
 
     /**
@@ -74,6 +85,12 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
             }
 
             if (str_ends_with(ShortName::of($referenced), 'Facade')) {
+                continue;
+            }
+
+            // The owning module published it, so naming it is not a crossing to
+            // justify -- that is what publishing a class means.
+            if ($this->boundary->isPublicApi($referenced)) {
                 continue;
             }
 

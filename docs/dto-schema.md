@@ -74,6 +74,7 @@ A shape under a namespace no `autoload` prefix covers is reported and the comman
 ## Rules worth knowing
 
 - **The output is derived. Do not edit it.** Regenerating an unchanged declaration produces a byte-identical file, so a repeat run leaves version control quiet.
+- **The generated class carries `#[PublicApi]`.** A declared shape is data crossing a boundary by definition, so the [cross-module rules](module-boundaries.md#what-a-module-exports) let another module read it without going through the owning module's Facade — without anybody having to say so once per analyser, in a file whose header says not to edit it.
 - **Declaration order never matters.** Shapes and properties are emitted sorted, so two config sources produce the same class whichever loads first.
 - **Required and defaulted are exclusive.** A default is what makes an absent value legitimate; requiring it as well is two answers to one question, and is refused.
 - **`toArray()` carries every property that has a value**, and omits the ones that do not — so `fromArray($order->toArray())` round-trips to an equal instance. A declared default *is* a value: `currency` appears as `'EUR'` in the array even though nobody set it, while `couponCode` — optional and undefaulted — is absent. Worth knowing where the array becomes JSON, because the consumer cannot tell a `currency` somebody chose from one nobody did.

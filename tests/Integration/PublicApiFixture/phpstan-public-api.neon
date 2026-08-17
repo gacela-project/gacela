@@ -1,0 +1,29 @@
+# Both halves of the cross-module check, with nothing said about the public API.
+#
+# That is the point of this config: `publicApiSegments` is left out, so the
+# default list applies and `Billing\Shared\` is published without a project
+# having to write anything. Its twin `phpstan-public-api-off.neon` turns the
+# convention off over the same fixture.
+#
+# Driven by GacelaTest\Integration\PHPStan\PublicApiTest.
+services:
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Integration\PublicApiFixture
+            modulePathSegments: 1
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Integration\PublicApiFixture
+            modulePathSegments: 1
+
+parameters:
+    level: max
+    paths:
+        - .
+    excludePaths:
+        - phpstan-public-api.neon
+        - phpstan-public-api-off.neon

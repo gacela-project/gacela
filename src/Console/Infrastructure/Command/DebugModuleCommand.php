@@ -8,6 +8,7 @@ use Gacela\Console\Application\Debug\DependencyTreeInspector;
 use Gacela\Console\Application\Debug\DependencyTreeRenderer;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Console\Domain\PublicApi\ModulePublicApiScanner;
 use Gacela\Framework\Attribute\ProvidesScanner;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
@@ -88,6 +89,7 @@ final class DebugModuleCommand extends Command
                 'config' => $module->configClass(),
                 'provider' => $module->providerClass(),
                 'provides' => $this->providedIds($module),
+                'publicApi' => $this->publicApi($module),
                 'bindings' => $bindings,
                 'contextualBindings' => $contextualBindings,
                 'dependencyTree' => $this->getFacade()->getContainerDependencyTree($module->facadeClass()),
@@ -109,6 +111,7 @@ final class DebugModuleCommand extends Command
         if (!$treeOnly) {
             $this->renderResolvedClasses($output, $module);
             $this->renderProvides($output, $module);
+            $this->renderPublicApi($output, $module);
             $this->renderBindings($output);
         }
 
@@ -170,6 +173,41 @@ final class DebugModuleCommand extends Command
         sort($ids);
 
         return $ids;
+    }
+
+    /**
+     * The classes this module lets other modules touch without going through
+     * its Facade -- the ones carrying `#[PublicApi]`, and the ones sitting in a
+     * sub-namespace it publishes by convention.
+     *
+     * The surface is declared where each class lives, which is the right place
+     * to write it and the wrong place to read it from: answering "what does
+     * Billing export" used to mean opening every file in Billing. The same
+     * boundary the analysers use decides, so this section and what PHPStan and
+     * Psalm let through cannot disagree.
+     */
+    private function renderPublicApi(OutputInterface $output, AppModule $module): void
+    {
+        $output->writeln('  <fg=cyan>Public API</> (#[PublicApi] + namespace convention):');
+
+        $published = $this->publicApi($module);
+        if ($published === []) {
+            $output->writeln('    (none)');
+
+            return;
+        }
+
+        foreach ($published as $class) {
+            $output->writeln(sprintf('    %s', $class));
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function publicApi(AppModule $module): array
+    {
+        return (new ModulePublicApiScanner())->scan($module);
     }
 
     /**

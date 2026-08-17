@@ -13,7 +13,10 @@ use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\CheckoutModul
 use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\CheckoutModuleFactory;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\CheckoutModuleProvider;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\PaymentGatewayInterface;
+use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\PublishedOrder;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\StripeGateway;
+use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\Transfer\OrderSummary;
+use GacelaTest\Feature\Console\DebugModule\Fixtures\CheckoutModule\TransferQueue\PendingOrders;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\GadgetModule\GadgetModuleFacade;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\ImperativeModule\ImperativeModuleProvider;
 use GacelaTest\Feature\Console\DebugModule\Fixtures\WiredModule\WiredCollaborator;
@@ -195,6 +198,9 @@ final class DebugModuleCommandTest extends TestCase
             'provider' => null,
             // WiredModule has no Provider at all, so there is nothing to declare.
             'provides' => [],
+            // Nor does it publish anything: a Facade is the sanctioned crossing
+            // rather than an export.
+            'publicApi' => [],
             'bindings' => [PaymentGatewayInterface::class => StripeGateway::class],
             'contextualBindings' => [],
             'dependencyTree' => [WiredCollaborator::class],
@@ -274,6 +280,57 @@ final class DebugModuleCommandTest extends TestCase
             [CheckoutModuleProvider::GATEWAY, CheckoutModuleProvider::RETRIES],
             $decoded[0]['provides'],
         );
+    }
+
+    /**
+     * A module's surface is declared class by class -- an attribute here, a
+     * `Transfer\` namespace there -- which is the right place to write it and
+     * the wrong place to read it from. Answering "what does Checkout export"
+     * used to mean opening every file in it.
+     */
+    public function test_lists_what_the_module_exports(): void
+    {
+        $display = $this->debugModule(['module' => 'CheckoutModule'])->getDisplay();
+
+        self::assertStringContainsString('Public API (#[PublicApi] + namespace convention):', $display);
+        self::assertStringContainsString(PublishedOrder::class, $display);
+        self::assertStringContainsString(OrderSummary::class, $display);
+    }
+
+    /**
+     * `TransferQueue` merely starts with the published segment `Transfer`. On a
+     * prefix match the section would advertise a module's internals as exported.
+     */
+    public function test_a_namespace_that_merely_starts_with_a_published_segment_is_not_listed(): void
+    {
+        self::assertStringNotContainsString(
+            PendingOrders::class,
+            $this->debugModule(['module' => 'CheckoutModule'])->getDisplay(),
+        );
+    }
+
+    /**
+     * The four pillars are not an export: reaching a module through its Facade
+     * is the sanctioned crossing, not something the module has to publish.
+     */
+    public function test_a_module_that_publishes_nothing_says_so(): void
+    {
+        $display = $this->debugModule(['module' => 'GadgetModule'])->getDisplay();
+
+        self::assertMatchesRegularExpression(
+            '/Public API \(#\[PublicApi\] \+ namespace convention\):\s*\R\s*\(none\)/u',
+            $display,
+        );
+    }
+
+    public function test_json_carries_the_public_api_too(): void
+    {
+        $display = $this->debugModule(['module' => 'CheckoutModule', '--json' => true])->getDisplay();
+
+        /** @var list<array<string, mixed>> $decoded */
+        $decoded = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame([PublishedOrder::class, OrderSummary::class], $decoded[0]['publicApi']);
     }
 
     public function test_tree_option_limits_output_to_the_dependency_tree(): void

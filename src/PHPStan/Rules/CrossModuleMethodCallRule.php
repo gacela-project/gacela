@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\PHPStan\Rules;
 
+use Gacela\StaticAnalysis\PublicApiSurface;
 use Gacela\StaticAnalysis\Rules\CrossModuleMethodCallAnalyser;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -21,22 +22,28 @@ final class CrossModuleMethodCallRule implements Rule
     private readonly CrossModuleMethodCallAnalyser $analyser;
 
     /**
-     * @param list<string> $sharedNamespaces namespaces exempt from the boundary
-     *                                       check (shared kernels)
-     * @param list<string> $ignoreReceivers  classes and interfaces a call may land
-     *                                       on whatever module they belong to
+     * @param list<string> $sharedNamespaces  namespaces exempt from the boundary
+     *                                        check (shared kernels)
+     * @param list<string> $ignoreReceivers   classes and interfaces a call may land
+     *                                        on whatever module they belong to
+     * @param list<string> $publicApiSegments sub-namespace names a module publishes;
+     *                                        an empty list turns the convention off,
+     *                                        leaving `#[PublicApi]` as the only way
+     *                                        to export a class
      */
     public function __construct(
         string $rootNamespace,
         int $modulePathSegments = 1,
         array $sharedNamespaces = [],
         array $ignoreReceivers = [],
+        array $publicApiSegments = PublicApiSurface::DEFAULT_SEGMENTS,
     ) {
         $this->analyser = new CrossModuleMethodCallAnalyser(
             $rootNamespace,
             $modulePathSegments,
             $sharedNamespaces,
             $ignoreReceivers,
+            $publicApiSegments,
         );
     }
 

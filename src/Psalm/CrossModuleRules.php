@@ -35,6 +35,7 @@ final class CrossModuleRules implements AfterClassLikeAnalysisInterface
                 $settings->rootNamespace,
                 $settings->modulePathSegments,
                 $settings->sharedNamespaces,
+                $settings->publicApiSegments,
             )
             : null;
     }

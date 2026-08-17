@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+    The same fixture and the same expectations as `phpstan-public-api.neon`,
+    through the other analyser. `#[PublicApi]` is read by plain reflection in the
+    shared analyser rather than through each host's own attribute API, and this
+    pair is what says the two hosts really do answer alike.
+
+    No `<publicApiSegment>` is written, so the default list applies: the same
+    default the neon beside it gets, from the same constant.
+
+    Driven by GacelaTest\Integration\Psalm\PublicApiTest.
+-->
+<psalm errorLevel="1" resolveFromConfigFile="true" findUnusedBaselineEntry="false" findUnusedCode="false">
+    <projectFiles>
+        <directory name="."/>
+    </projectFiles>
+
+    <plugins>
+        <pluginClass class="Gacela\Psalm\Plugin">
+            <crossModule rootNamespace="GacelaTest\Integration\PublicApiFixture" modulePathSegments="1"/>
+        </pluginClass>
+    </plugins>
+
+    <issueHandlers>
+        <MissingOverrideAttribute errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

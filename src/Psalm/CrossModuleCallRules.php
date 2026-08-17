@@ -39,6 +39,7 @@ final class CrossModuleCallRules implements AfterExpressionAnalysisInterface
                 $settings->modulePathSegments,
                 $settings->sharedNamespaces,
                 $settings->ignoreReceivers,
+                $settings->publicApiSegments,
             )
             : null;
     }

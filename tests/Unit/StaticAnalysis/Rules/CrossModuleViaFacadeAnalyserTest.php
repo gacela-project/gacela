@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
+use Gacela\StaticAnalysis\PublicApiSurface;
 use Gacela\StaticAnalysis\Rules\CrossModuleViaFacadeAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\UnpublishedInvoiceDraft;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;
@@ -15,6 +18,9 @@ use function sprintf;
 final class CrossModuleViaFacadeAnalyserTest extends TestCase
 {
     private const ROOT = 'App\Modules';
+
+    /** Real classes, because the attribute half is read by reflection. */
+    private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
 
     public function test_reaching_into_another_module_is_reported(): void
     {
@@ -183,8 +189,74 @@ final class CrossModuleViaFacadeAnalyserTest extends TestCase
         );
     }
 
+    public function test_naming_a_class_in_a_published_sub_namespace_is_allowed(): void
+    {
+        self::assertSame([], $this->analyse('new App\Modules\Billing\Shared\Invoice();'));
+    }
+
+    /**
+     * Whole segments, never prefixes: `Event` publishing every module's
+     * `EventHandler\` would export its internals on a naming coincidence.
+     */
+    public function test_naming_a_namespace_that_merely_starts_with_a_published_one_is_reported(): void
+    {
+        self::assertCount(1, $this->analyse('new App\Modules\Billing\EventHandler\Invoices();'));
+    }
+
+    public function test_the_published_sub_namespaces_are_configurable(): void
+    {
+        self::assertSame(
+            [],
+            $this->analyse('new App\Modules\Billing\Contract\Invoice();', publicApiSegments: ['Contract']),
+        );
+    }
+
+    /**
+     * An explicitly empty list turns the convention off, leaving only the
+     * attribute -- the way a project that dislikes conventions opts out.
+     */
+    public function test_an_empty_segment_list_turns_the_convention_off(): void
+    {
+        self::assertCount(
+            1,
+            $this->analyse('new App\Modules\Billing\Shared\Invoice();', publicApiSegments: []),
+        );
+    }
+
+    /**
+     * The module said so at the source, so writing its name is not a crossing to
+     * justify. The class is a real one, because the attribute is read by
+     * reflection rather than off the parsed node.
+     */
+    public function test_naming_a_class_the_owning_module_published_is_allowed(): void
+    {
+        $analyser = new CrossModuleViaFacadeAnalyser(self::FIXTURE_ROOT, 1, [], []);
+        $node = ParseSource::classIn($this->sourceWith('new ' . PublishedInvoice::class . '();'));
+
+        self::assertSame(
+            [],
+            $analyser->analyse($node, new FakeAnalysedClass(self::FIXTURE_ROOT . '\Checkout\CheckoutFactory')),
+        );
+    }
+
+    /**
+     * The precondition for the test above: the fixture module is one the caller
+     * is not in, so a green assertion up there is the attribute doing it.
+     */
+    public function test_naming_an_unpublished_fixture_class_is_reported(): void
+    {
+        $analyser = new CrossModuleViaFacadeAnalyser(self::FIXTURE_ROOT, 1, [], []);
+        $node = ParseSource::classIn($this->sourceWith('new ' . UnpublishedInvoiceDraft::class . '();'));
+
+        self::assertCount(
+            1,
+            $analyser->analyse($node, new FakeAnalysedClass(self::FIXTURE_ROOT . '\Checkout\CheckoutFactory')),
+        );
+    }
+
     /**
      * @param list<string> $sharedNamespaces
+     * @param list<string> $publicApiSegments
      *
      * @return list<Violation>
      */
@@ -192,8 +264,9 @@ final class CrossModuleViaFacadeAnalyserTest extends TestCase
         string $body,
         string $className = 'App\Modules\Checkout\CheckoutFactory',
         array $sharedNamespaces = [],
+        array $publicApiSegments = PublicApiSurface::DEFAULT_SEGMENTS,
     ): array {
-        $analyser = new CrossModuleViaFacadeAnalyser(self::ROOT, 1, $sharedNamespaces);
+        $analyser = new CrossModuleViaFacadeAnalyser(self::ROOT, 1, $sharedNamespaces, $publicApiSegments);
 
         return $analyser->analyse(
             ParseSource::classIn($this->sourceWith($body)),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Psalm;
 
+use Gacela\StaticAnalysis\PublicApiSurface;
 use Psalm\Exception\ConfigException;
 use SimpleXMLElement;
 
@@ -89,6 +90,32 @@ final class PluginXml
     public static function ignoreReceivers(SimpleXMLElement $element): array
     {
         return self::childValues($element, 'ignoreReceiver');
+    }
+
+    /**
+     * The sub-namespace names a module publishes, defaulted when the project
+     * writes none -- the same default `CrossModuleMethodCallRule` carries on the
+     * PHPStan side, from the same constant, so the two hosts cannot drift.
+     *
+     * Whether an element was *written* decides, not what it says -- which is what
+     * makes "not configured" and "configured with nothing" different answers: a
+     * lone `<publicApiSegment/>` turns the convention off and leaves
+     * `#[PublicApi]` as the only way to export a class. Reading the values first
+     * would collapse the two, since {@see childValues()} drops the empty one, and
+     * opting out would have no spelling at all.
+     *
+     * {@see element()} is what tells them apart, for the same reason it does
+     * there: an absent child reads as an empty element rather than as null.
+     *
+     * @return list<string>
+     */
+    public static function publicApiSegments(SimpleXMLElement $element): array
+    {
+        if (!self::element($element->publicApiSegment) instanceof SimpleXMLElement) {
+            return PublicApiSurface::DEFAULT_SEGMENTS;
+        }
+
+        return self::childValues($element, 'publicApiSegment');
     }
 
     /**

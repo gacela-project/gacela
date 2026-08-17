@@ -65,6 +65,15 @@ services:
     # receiver of a method call by type, which is how a boundary is crossed once
     # dependencies go through Providers and constructors: the class is named once,
     # in a type-hint, and never at the call site.
+    #
+    # Both rules leave a module's own public API alone. A class carrying
+    # #[PublicApi] may be reached from anywhere, and so may one sitting under a
+    # sub-namespace the module publishes -- publicApiSegments, defaulting to
+    # Shared, Transfer, Dto and Event. Those are segment *names* matched whole
+    # under each module, not namespace prefixes: `Event` publishes
+    # App\Modules\Billing\Event\ and leaves App\Modules\Billing\EventHandler\
+    # alone. Writing an explicit empty list turns the convention off and leaves
+    # #[PublicApi] as the only way to export a class.
     # -
     #     class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
     #     tags: [phpstan.rules.rule]
@@ -73,6 +82,11 @@ services:
     #         modulePathSegments: 1
     #         sharedNamespaces:
     #             - App\Modules\Shared
+    #         publicApiSegments:
+    #             - Shared
+    #             - Transfer
+    #             - Dto
+    #             - Event
     # -
     #     class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
     #     tags: [phpstan.rules.rule]
@@ -85,9 +99,15 @@ services:
     #         # the value objects a project treats as public contracts. Naming an
     #         # interface or a base class covers what implements or extends it.
     #         # Throwable receivers are exempt already: a caught exception is read,
-    #         # not collaborated with.
+    #         # not collaborated with. For a class the project owns, prefer
+    #         # #[PublicApi] on the class itself over an entry here.
     #         ignoreReceivers:
     #             - App\Modules\Shared\GlobalEnvironmentInterface
+    #         publicApiSegments:
+    #             - Shared
+    #             - Transfer
+    #             - Dto
+    #             - Event
 
     # Opt-in: pillar accessors still resolved from a `@method` docblock, which
     # 3.0 removes in favour of #[ServiceMap]. Not on by default because what it

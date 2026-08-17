@@ -4,6 +4,18 @@
 
 ### Added
 
+#### A module can declare its public API
+
+A module's surface is wider than its Facade — DTOs, enums, value objects, events — and until now the only way to say so was an ignore list in `phpstan.neon`, repeated in `psalm.xml`, outside the module that owns the class.
+
+- `#[PublicApi]` on a class, interface or enum: the two opt-in cross-module rules stop reporting it. Not inherited, so publishing a base class does not publish everything that extends it
+- A namespace convention beside it — `publicApiSegments` (PHPStan) / `<publicApiSegment>` (Psalm), defaulting to `Shared`, `Transfer`, `Dto` and `Event` — so `App\Billing\Shared\Invoice` is exported with no annotation at all. Segment names matched whole at any depth, never as prefixes: `Event` leaves `EventHandler\` alone. An explicit empty list turns the convention off
+- Read by plain reflection in the shared analyser rather than through each host's attribute API, so PHPStan and Psalm agree by construction
+- `dto:generate` marks what it writes: a declared shape is data crossing a boundary by definition
+- `debug:module <name>` prints a `Public API` section, and `--json` a `publicApi` key, so the surface is readable without opening files
+- `DeclaredModuleDependencyRule` is deliberately *not* exempted. Publishing a class says it may be touched without the Facade, not that two modules may be coupled — and `debug:graph --check` enforces the same rules file without ever seeing an attribute
+- The reference application dropped all four of its `ignoreReceivers` / `<ignoreReceiver>` entries as a result. See [what a module exports](docs/module-boundaries.md#what-a-module-exports)
+
 #### `migrate:service-map`
 
 Writes the `#[ServiceMap]` attribute for every pillar accessor still resolved from a `@method` docblock — the resolution 3.0 removes — across the whole project in one run.

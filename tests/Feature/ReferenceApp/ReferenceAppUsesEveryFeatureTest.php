@@ -9,6 +9,7 @@ use Gacela\Framework\Attribute\Cacheable;
 use Gacela\Framework\Attribute\CacheableTrait;
 use Gacela\Framework\Attribute\Inject;
 use Gacela\Framework\Attribute\Provides;
+use Gacela\Framework\Attribute\PublicApi;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ConfigResolverAwareTrait;
 use Gacela\Framework\DeclaredTypeResolverAwareTrait;
@@ -109,7 +110,9 @@ final class ReferenceAppUsesEveryFeatureTest extends TestCase
         $source = $this->scannedSource();
         $missing = [];
 
-        foreach ([Cacheable::class, Inject::class, Provides::class, ServiceMap::class] as $attribute) {
+        $attributes = [Cacheable::class, Inject::class, Provides::class, PublicApi::class, ServiceMap::class];
+
+        foreach ($attributes as $attribute) {
             $shortName = $this->shortNameOf($attribute);
 
             if (!str_contains($source, '#[' . $shortName)) {

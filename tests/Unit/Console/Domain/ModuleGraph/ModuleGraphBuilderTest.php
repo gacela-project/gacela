@@ -8,6 +8,9 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\ModuleGraph\ModuleGraphBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function str_replace;
+
 final class ModuleGraphBuilderTest extends TestCase
 {
     private const NS = 'GacelaTest\Unit\Console\Domain\ModuleGraph\Fixture';
@@ -109,8 +112,9 @@ final class ModuleGraphBuilderTest extends TestCase
      */
     public function test_the_imports_behind_an_edge_name_the_file_and_the_line(): void
     {
-        $evidence = (new ModuleGraphBuilder())
-            ->importsPointingInto($this->module('Hub'), self::NS . '\Zebra');
+        $evidence = $this->withNormalisedPaths(
+            (new ModuleGraphBuilder())->importsPointingInto($this->module('Hub'), self::NS . '\Zebra'),
+        );
 
         self::assertSame(
             [[
@@ -133,12 +137,12 @@ final class ModuleGraphBuilderTest extends TestCase
 
         self::assertSame(
             [['file' => $groupedFile, 'line' => 8, 'import' => self::NS . '\Alpha\Facade']],
-            $builder->importsPointingInto($this->module('Grouped'), self::NS . '\Alpha'),
+            $this->withNormalisedPaths($builder->importsPointingInto($this->module('Grouped'), self::NS . '\Alpha')),
         );
 
         self::assertSame(
             [['file' => $groupedFile, 'line' => 8, 'import' => self::NS . '\Zebra\Facade']],
-            $builder->importsPointingInto($this->module('Grouped'), self::NS . '\Zebra'),
+            $this->withNormalisedPaths($builder->importsPointingInto($this->module('Grouped'), self::NS . '\Zebra')),
         );
     }
 
@@ -163,9 +167,31 @@ final class ModuleGraphBuilderTest extends TestCase
         );
     }
 
+    /**
+     * The evidence carries the path the traversal produced, which starts from
+     * the one the autoloader recorded -- and on Windows that is not necessarily
+     * written with the separator `__DIR__` uses. Both sides are normalised so
+     * the assertion is about the file rather than about how it is spelled.
+     *
+     * @param list<array{file: string, line: int, import: string}> $evidence
+     *
+     * @return list<array{file: string, line: int, import: string}>
+     */
+    private function withNormalisedPaths(array $evidence): array
+    {
+        return array_map(
+            static fn (array $entry): array => [
+                ...$entry,
+                'file' => str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $entry['file']),
+            ],
+            $evidence,
+        );
+    }
+
     private function fixtureFile(string $module): string
     {
-        return __DIR__ . DIRECTORY_SEPARATOR . 'Fixture' . DIRECTORY_SEPARATOR
+        return str_replace(['\\', '/'], DIRECTORY_SEPARATOR, __DIR__)
+            . DIRECTORY_SEPARATOR . 'Fixture' . DIRECTORY_SEPARATOR
             . $module . DIRECTORY_SEPARATOR . 'Facade.php';
     }
 

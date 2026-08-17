@@ -218,7 +218,7 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ## 2.3 → 2.4
 
-Four changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; and the two opt-in cross-module rules, if you have them enabled.
+Five changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `setEventDispatcher()`, if you supply your own dispatcher; `#[Cacheable]`, if you set a custom `key:` template; the two opt-in cross-module rules, if you have them enabled; and `addAppConfig()` with a wildcard, if a file in that directory is named after another one with a `-suffix`.
 
 ### 1. A specific listener matches by inheritance
 
@@ -280,6 +280,39 @@ Going the other way, entries in `ignoreReceivers` / `<ignoreReceiver>` naming a 
 One thing this does *not* touch: `DeclaredModuleDependencyRule` and `debug:graph --check` ignore `#[PublicApi]` entirely. A dependency your rules file forbids is still forbidden, whatever the class at the end of it is annotated with.
 
 If you construct `Gacela\StaticAnalysis\ModuleBoundary` directly — unusual; the rules are the public surface — it takes a fourth constructor argument, the list of published segments. Pass `[]` for the previous behaviour.
+
+### 5. A wildcard config path no longer reads your environment files into the base layer
+
+Only if you pass a wildcard to `addAppConfig()` — `config/*.php`, which is what `bin/gacela init` scaffolds.
+
+That pattern was globbed literally, so it matched the environment files Gacela names itself:
+
+```
+config/app.php
+config/app-prod.php        # matched by config/*.php too
+config/app-prod-eu.php     # and this one
+```
+
+All three were read into the **base** layer, on every run, before the `APP_ENV`-and-dimensions chain that selects one was applied on top. It came out right by accident of `glob()` ordering — `-` sorts before `.`, so `app.php` was merged last and won — but only for a key the base file also set. A key that existed **only** in an environment file had nothing to overwrite it, so a developer read the production value with nothing said.
+
+The base layer now excludes any match named after another match plus one or more trailing `-<segment>` parts: `app-prod-eu.php` → `app-prod` → `app`, which is a file the same pattern matched, so it is a layer of `app.php` rather than part of the base. Anchored on another matched file, so a directory holding only `config/app-prod.php` still loads it — the exclusion can never empty a base layer.
+
+**Two things to look for:**
+
+- **A key you only ever set in an environment file.** It is no longer readable outside that environment. That is the fix, and it is the whole point — but if some code path outside production was quietly relying on the value, it now gets "key not found". Give the key a base value, or a `default()` in `declareConfigSchema()`
+- **A file that is not an environment layer at all.** `config/app-extra.php` beside `config/app.php` matches the naming scheme whatever it was written for, so it is excluded too and read only when the chain resolves to `extra`. The rule is about names; it cannot know intent
+
+`vendor/bin/gacela doctor` reports the second one. Its **config environment layers** check names every file excluded this way, the base file it is taken to refine, and the values that put it in play:
+
+```
+✓ config environment layers
+    /app/config/app-prod.php matches a base config path but is excluded from it:
+    an environment layer of /app/config/app.php, read only when APP_ENV=prod
+```
+
+If a file in that list is not an environment layer, rename it so it is not named after another one, or give it its own `addAppConfig()` path. The check is a pass, not a warning: for every project that uses `APP_ENV` or a dimension, this is what correct looks like.
+
+**Run `cache:clear` after deploying this** if you have `enableFileCache()` on. The merged-config cache is a file of *values*, invalidated by the mtimes of the files that produced them — and upgrading Gacela touches none of those, so a warm cache goes on serving the old merge and this change appears not to have happened.
 
 ---
 

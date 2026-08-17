@@ -27,6 +27,27 @@ final class CheckResultTest extends TestCase
         self::assertSame(['single detail'], $result->details);
     }
 
+    /**
+     * Not every finding is a problem: a check that reports which files a rule of
+     * the framework's applies to has to name them and say what to do if one is
+     * there by coincidence, without failing `doctor --strict`.
+     */
+    public function test_ok_preserves_several_details_and_a_remediation(): void
+    {
+        $result = CheckResult::ok('title', ['a', 'b'], 'rename it');
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+        self::assertSame(['a', 'b'], $result->details);
+        self::assertSame('rename it', $result->remediation);
+    }
+
+    public function test_ok_has_empty_details_when_an_empty_list_is_passed(): void
+    {
+        $result = CheckResult::ok('title', []);
+
+        self::assertSame([], $result->details);
+    }
+
     public function test_warn_preserves_details_and_remediation(): void
     {
         $result = CheckResult::warn('title', ['a', 'b'], 'fix it');

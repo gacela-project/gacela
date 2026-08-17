@@ -7,6 +7,7 @@ namespace Gacela\Console\Infrastructure\Command;
 use Gacela\Console\Application\Doctor\Check\CacheableStorageCheck;
 use Gacela\Console\Application\Doctor\Check\CacheStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\CacheWritabilityCheck;
+use Gacela\Console\Application\Doctor\Check\ConfigEnvironmentLayerCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSchemaCheck;
 use Gacela\Console\Application\Doctor\Check\ConfigSourceCheck;
 use Gacela\Console\Application\Doctor\Check\DuplicateProvidedIdCheck;
@@ -285,6 +286,13 @@ final class DoctorCommand extends Command
             new ConfigSourceCheck(
                 $configLoader->patternsMatchingNothing(),
                 count($configLoader->declaredPatterns()),
+            ),
+            // Beside the check above because both are about what a declared
+            // config path resolved to: that one reports a path loading nothing,
+            // this one the files it matched and the base layer does not read.
+            new ConfigEnvironmentLayerCheck(
+                $configLoader->excludedEnvironmentLayers(),
+                $config->getSetupGacela()->getConfigDimensions(),
             ),
             new ConfigSchemaCheck($config->configSchema(), $config->getAllValues()),
             new StubHealthCheck($stubsDir, StubHealthCheck::readPublished($stubsDir, $declaredKinds), $declaredKinds),

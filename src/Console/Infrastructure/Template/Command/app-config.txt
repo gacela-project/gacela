@@ -7,6 +7,12 @@ declare(strict_types=1);
  * matching it is merged, and `config/local.php` is merged last, so a key set
  * there wins over this one.
  *
+ * One exception, and it is the useful one: a file named after another one plus
+ * `-<suffix>` is that file's environment layer, not part of the base. Add
+ * `config/app-prod.php` beside this file and it is read only when `APP_ENV=prod`,
+ * even though the pattern above matches it too -- so a key only production sets
+ * belongs there and nowhere else. `doctor` names every file it treats that way.
+ *
  * Read it back with `Config::getInstance()->get('key')`, or declare a shape for
  * it with `declareConfigSchema()` and have `doctor` check it.
  */

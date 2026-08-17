@@ -15,7 +15,11 @@ use GacelaTest\Feature\ReferenceApp\Invoicing\Payment\Domain\PaymentReceipt;
  */
 final class PaymentApi extends AbstractFacade
 {
-    public function pay(string $invoiceNumber, int $amountCents, string $method): PaymentReceipt
+    /**
+     * @param string $method the payment method, or '' for the one this
+     *                       deployment's configuration settles on
+     */
+    public function pay(string $invoiceNumber, int $amountCents, string $method = ''): PaymentReceipt
     {
         return $this->getFactory()->capture($invoiceNumber, $amountCents, $method);
     }

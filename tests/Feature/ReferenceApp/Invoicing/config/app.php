@@ -9,11 +9,16 @@ declare(strict_types=1);
  * read back -- `Config::get('billing.currency')` looks up one key, and a
  * nested array would only be reachable as a whole.
  *
- * Every key the application reads is named here, even where the value is the
- * uninteresting one. An environment layer then only ever *refines* a key this
- * file already established, which is what keeps `config/*.php` -- a pattern
- * that also matches the environment files themselves -- from letting a
- * production-only key reach a developer's machine.
+ * Only the keys that mean something in every environment. A key one deployment
+ * sets and the others have no answer for belongs in that deployment's layer and
+ * nowhere else -- `payment.default_method` is set in `app-prod.php` alone, and
+ * outside production it is simply not there.
+ *
+ * `addAppConfig('config/*.php')` matches the two environment files beside this
+ * one as well, and the loader excludes them from this layer by name: a file
+ * whose basename is this one's plus `-<suffix>` is read only when the
+ * environment-and-dimensions chain resolves to that suffix. `doctor` names
+ * every file it excludes that way.
  */
 return [
     'billing.currency' => 'EUR',

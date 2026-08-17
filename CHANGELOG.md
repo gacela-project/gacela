@@ -83,6 +83,15 @@ Lists every event the framework can dispatch, which of them your project listens
 
 An invoicing SaaS under `tests/Feature/ReferenceApp/`, wired with every feature at once and run on every pull request. Five modules, a three-layer harness — behaviour, every shipped command, and a guard that fails when a new `GacelaConfig` method, attribute or command is not used by it — and both analysers over the application with the opt-in architecture rules turned on. See [docs/reference-app.md](docs/reference-app.md).
 
+#### Package discovery
+
+A Composer package can contribute to a Gacela application by being installed. It declares its own config file in `composer.json` — `extra.gacela.config`, returning the same `callable(GacelaConfig)` a project's `gacela.php` returns — and everything it declares is merged before the project's own, so the project always has the last word. Until now a package's listeners, plugin members, `#[Provides]` providers, suffix types, DTO schemas and doctor checks had to be pasted into every consuming project by hand and kept in sync by hand. See [shipping a Gacela package](docs/packages.md).
+
+- `vendor/composer/installed.json` is read once and the resolved list is cached; only packages declaring the key are considered, and `vendor/` is never scanned for config files
+- `dontDiscover(['vendor/pkg'])` opts a package out and `dontDiscover(['*'])` turns discovery off; opt-outs accumulate across the bootstrap closure and `gacela.php`
+- A `PackageConfigMergedEvent` per package makes the merge order observable, `debug:container` attributes what each package put in the container, and a `discovered packages` doctor check reports a declared config file that is missing or does not return a callable
+- A broken declaration never stops the boot — it is reported, not thrown
+
 ### Fixed
 
 - **The four pillars are built from the whole of `gacela.php`, not from `addBinding()` alone.** The container the class resolver constructs a Facade, Factory, Config or Provider from was seeded with bindings and contextual bindings and nothing else, so `loadDefinitions()`, `addAlias()`, `addFactory()`, `addProtected()`, `addLazy()`, tags, handler registries, plugin stacks, `extendService()` and `afterResolving()` reached every container except the one a project meets first: an interface declared in a definitions file resolved happily from `Gacela::container()` and threw `DependencyNotFoundException` the moment a Factory asked for it in its constructor. Both containers are now configured through one code path, in one order. The pillar container applies the configuration silently — `BindingRegisteredEvent` describes the configuration, which is walked once however many containers apply it, so listener counts and `assertBindingRegistered()` are unchanged

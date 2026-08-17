@@ -312,6 +312,8 @@ The base layer now excludes any match named after another match plus one or more
 
 If a file in that list is not an environment layer, rename it so it is not named after another one, or give it its own `addAppConfig()` path. The check is a pass, not a warning: for every project that uses `APP_ENV` or a dimension, this is what correct looks like.
 
+**Run `cache:clear` after deploying this** if you have `enableFileCache()` on. The merged-config cache is a file of *values*, invalidated by the mtimes of the files that produced them — and upgrading Gacela touches none of those, so a warm cache goes on serving the old merge and this change appears not to have happened.
+
 ---
 
 ## 2.2 → 2.3

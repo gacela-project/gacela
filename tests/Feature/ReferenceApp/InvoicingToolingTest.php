@@ -33,6 +33,7 @@ use Gacela\Framework\Gacela;
 use Gacela\Framework\Profiler\Profiler;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Billing\Domain\InvoiceRecord;
 use GacelaTest\Feature\ReferenceApp\Invoicing\Customer\CustomerFacade;
+use GacelaTest\Feature\ReferenceApp\Support\RecordingEventDispatcher;
 use GacelaTest\Feature\ReferenceApp\Support\ReferenceApp;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -319,11 +320,6 @@ final class InvoicingToolingTest extends TestCase
         self::assertStringContainsString('Unresolvable: 0', $display);
     }
 
-    /**
-     * The catalogue, not the listener count: listeners declared in `gacela.php`
-     * are not visible to this command -- the merger registers them on the
-     * dispatcher without recording them on the setup it reads.
-     */
     public function test_debug_events_produces_its_catalogue(): void
     {
         ReferenceApp::bootstrap();
@@ -334,6 +330,68 @@ final class InvoicingToolingTest extends TestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
         self::assertStringContainsString('Gacela events', $display);
         self::assertStringContainsString('Summary:', $display);
+    }
+
+    /**
+     * The one listener this application registers is registered in `gacela.php`,
+     * and the command that answers "what is listening" used to answer "nothing"
+     * about it: the merger put it on the dispatcher without recording it on the
+     * setup both this command and `doctor` read (#887).
+     *
+     * Asserted through the output rather than the setup, because the output is
+     * what somebody debugging a dead listener actually reads.
+     */
+    public function test_debug_events_reports_the_listener_registered_in_the_gacela_file(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DebugEventsCommand(), ['--listened' => true]);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
+        self::assertStringNotContainsString('Nothing listens to any Gacela event.', $display);
+        // One registration against the abstract parent, so all four resolver
+        // events are covered by it and the target is named on each row.
+        self::assertStringContainsString('1 listener via AbstractGacelaClassResolverEvent', $display);
+        self::assertStringContainsString('4 with listeners', $display);
+    }
+
+    /**
+     * The other half of #887: `doctor`'s event-listener check reported "no
+     * specific listeners registered" for an application whose `gacela.php`
+     * registers one -- and could therefore never judge its target either.
+     */
+    public function test_doctor_reports_the_listener_registered_in_the_gacela_file(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DoctorCommand(), ['--json' => true]);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
+        self::assertStringContainsString('1 listener target(s) name a known event type', $display);
+        self::assertStringNotContainsString('no specific listeners registered', $display);
+    }
+
+    /**
+     * A dispatcher the application supplies is not in the listener table and
+     * cannot be -- so the command says it is there rather than leaving a reader
+     * to conclude from the table that these four listeners are everything.
+     */
+    public function test_debug_events_says_when_a_custom_dispatcher_is_installed(): void
+    {
+        ReferenceApp::bootstrap(static function (GacelaConfig $config): void {
+            $config->setEventDispatcher(new RecordingEventDispatcher());
+        });
+
+        $tester = $this->execute(new DebugEventsCommand(), []);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
+        self::assertStringContainsString(
+            'setEventDispatcher(RecordingEventDispatcher) is in effect, so every event above also reaches it.',
+            $display,
+        );
     }
 
     public function test_profile_report_produces_its_document(): void

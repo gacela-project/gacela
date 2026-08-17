@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+    The namespace convention explicitly turned off, matching
+    `phpstan-public-api-off.neon`.
+
+    A lone empty `<publicApiSegment/>` is how that is written: the elements are
+    counted rather than their values, so "not configured" (the default applies)
+    and "configured with nothing" (only `#[PublicApi]` publishes) stay different
+    answers. Filtering on the values instead would leave opting out unwritable.
+
+    Driven by GacelaTest\Integration\Psalm\PublicApiConventionOffTest.
+-->
+<psalm errorLevel="1" resolveFromConfigFile="true" findUnusedBaselineEntry="false" findUnusedCode="false">
+    <projectFiles>
+        <directory name="."/>
+    </projectFiles>
+
+    <plugins>
+        <pluginClass class="Gacela\Psalm\Plugin">
+            <crossModule rootNamespace="GacelaTest\Integration\PublicApiFixture" modulePathSegments="1">
+                <publicApiSegment/>
+            </crossModule>
+        </pluginClass>
+    </plugins>
+
+    <issueHandlers>
+        <MissingOverrideAttribute errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

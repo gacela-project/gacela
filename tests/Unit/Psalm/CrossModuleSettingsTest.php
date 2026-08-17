@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Psalm;
 
 use Gacela\Psalm\CrossModuleSettings;
+use Gacela\StaticAnalysis\PublicApiSurface;
 use PHPUnit\Framework\TestCase;
 use Psalm\Exception\ConfigException;
 use SimpleXMLElement;
@@ -197,6 +198,70 @@ final class CrossModuleSettingsTest extends TestCase
         $this->expectExceptionMessage('got: two');
 
         $this->settings('<crossModule rootNamespace="App\Modules" modulePathSegments="two"/>');
+    }
+
+    /**
+     * Written nowhere, a project gets the convention for free -- and gets the
+     * same one PHPStan gives it, because both read the one constant.
+     */
+    public function test_no_public_api_segments_written_gets_the_default(): void
+    {
+        $settings = $this->settings('<crossModule rootNamespace="App\Modules"/>');
+
+        self::assertSame(PublicApiSurface::DEFAULT_SEGMENTS, $settings->publicApiSegments);
+    }
+
+    public function test_it_reads_every_public_api_segment(): void
+    {
+        $settings = $this->settings(
+            '<crossModule rootNamespace="App\Modules">'
+            . '<publicApiSegment>Contract</publicApiSegment>'
+            . '<publicApiSegment>Message</publicApiSegment>'
+            . '</crossModule>',
+        );
+
+        self::assertSame(['Contract', 'Message'], $settings->publicApiSegments);
+    }
+
+    /**
+     * The one thing the default makes hard to write. The *elements* are counted
+     * rather than their values, so a lone empty one is "configured with nothing"
+     * rather than "not configured" -- without that, opting out of the convention
+     * could not be expressed in xml at all.
+     */
+    public function test_an_empty_public_api_segment_turns_the_convention_off(): void
+    {
+        $settings = $this->settings(
+            '<crossModule rootNamespace="App\Modules"><publicApiSegment/></crossModule>',
+        );
+
+        self::assertSame([], $settings->publicApiSegments);
+    }
+
+    /**
+     * Configuring one list must not silently replace the other's default.
+     */
+    public function test_public_api_segments_and_shared_namespaces_are_read_apart(): void
+    {
+        $settings = $this->settings(
+            '<crossModule rootNamespace="App\Modules">'
+            . '<sharedNamespace>App\Modules\Shared</sharedNamespace>'
+            . '</crossModule>',
+        );
+
+        self::assertSame(['App\Modules\Shared'], $settings->sharedNamespaces);
+        self::assertSame(PublicApiSurface::DEFAULT_SEGMENTS, $settings->publicApiSegments);
+    }
+
+    public function test_it_trims_a_public_api_segment(): void
+    {
+        $settings = $this->settings(
+            '<crossModule rootNamespace="App\Modules">'
+            . "<publicApiSegment>\n    Transfer\n</publicApiSegment>"
+            . '</crossModule>',
+        );
+
+        self::assertSame(['Transfer'], $settings->publicApiSegments);
     }
 
     private function settings(string $crossModuleXml): CrossModuleSettings

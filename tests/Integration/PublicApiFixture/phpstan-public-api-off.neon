@@ -1,0 +1,31 @@
+# The same fixture with the namespace convention explicitly turned off.
+#
+# An empty `publicApiSegments` leaves `#[PublicApi]` as the only way to export a
+# class, for a project that would rather annotate than agree to a convention.
+# `Billing\Shared\InvoiceSummary` goes back to being reported here, and
+# `Billing\PublishedInvoice` does not: that difference is the test.
+#
+# Driven by GacelaTest\Integration\PHPStan\PublicApiConventionOffTest.
+services:
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleViaFacadeRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Integration\PublicApiFixture
+            modulePathSegments: 1
+            publicApiSegments: []
+    -
+        class: Gacela\PHPStan\Rules\CrossModuleMethodCallRule
+        tags: [phpstan.rules.rule]
+        arguments:
+            rootNamespace: GacelaTest\Integration\PublicApiFixture
+            modulePathSegments: 1
+            publicApiSegments: []
+
+parameters:
+    level: max
+    paths:
+        - .
+    excludePaths:
+        - phpstan-public-api.neon
+        - phpstan-public-api-off.neon

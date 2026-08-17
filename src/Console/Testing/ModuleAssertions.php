@@ -14,10 +14,8 @@ use JsonException;
 use PHPUnit\Framework\Assert;
 use ReflectionClass;
 
-use function array_filter;
 use function array_keys;
 use function array_map;
-use function array_values;
 use function class_exists;
 use function count;
 use function file_get_contents;
@@ -85,16 +83,24 @@ trait ModuleAssertions
 
         $allowed = array_map(self::gacelaNamespaceOf(...), $allowedModules);
 
-        $forbidden = array_values(array_filter(
-            $graph[$namespace],
-            static fn (string $dependency): bool => !NamespaceMatch::anyCovers($allowed, $dependency),
-        ));
-
-        Assert::assertSame(
-            [],
-            array_map(static fn (string $dependency): string => $namespace . ' -> ' . $dependency, $forbidden),
-            self::gacelaForbiddenDependencyReport($modules, $namespace, $forbidden, $allowed),
+        $findings = [];
+        $report = sprintf(
+            "\"%s\" may depend only on:\n%s\n",
+            $namespace,
+            $allowed === [] ? '  (nothing)' : self::gacelaBulletList($allowed),
         );
+
+        foreach ($graph[$namespace] as $dependency) {
+            if (NamespaceMatch::anyCovers($allowed, $dependency)) {
+                continue;
+            }
+
+            $finding = $namespace . ' -> ' . $dependency;
+            $findings[] = $finding;
+            $report .= "\n✗ " . $finding . "\n" . self::gacelaImportsBehind($modules, $namespace, $dependency);
+        }
+
+        Assert::assertSame([], $findings, $report);
     }
 
     /**
@@ -115,15 +121,25 @@ trait ModuleAssertions
         $result = self::gacelaCycleAllowList($allowedCyclesFile)->check($cycles);
 
         $findings = [];
+        $report = sprintf(
+            "%d undeclared module dependency cycle(s), %d allowance(s) that no longer apply.\n",
+            count($result->undeclaredCycles),
+            count($result->staleAllowances),
+        );
+
         foreach ($result->undeclaredCycles as $cycle) {
-            $findings[] = 'Dependency cycle: ' . implode(' -> ', $cycle);
+            $finding = 'Dependency cycle: ' . implode(' -> ', $cycle);
+            $findings[] = $finding;
+            $report .= "\n✗ " . $finding . "\n" . self::gacelaImportsWithin($modules, $graph, $cycle);
         }
 
         foreach ($result->staleAllowances as $cycle) {
-            $findings[] = 'Allowed cycle no longer exists: ' . implode(' -> ', $cycle);
+            $finding = 'Allowed cycle no longer exists: ' . implode(' -> ', $cycle);
+            $findings[] = $finding;
+            $report .= "\n✗ " . $finding . ". Remove it from the allow list.\n";
         }
 
-        Assert::assertSame([], $findings, self::gacelaCycleReport($modules, $graph, $result->undeclaredCycles, $result->staleAllowances));
+        Assert::assertSame([], $findings, $report);
     }
 
     /**
@@ -142,15 +158,26 @@ trait ModuleAssertions
         $result = self::gacelaConsole()->checkModuleRules($graph, ModuleRuleSet::fromFile($rulesFile));
 
         $findings = [];
+        $report = sprintf(
+            "%d forbidden dependency(ies), %d rule(s) governing nothing.\n",
+            count($result->violations),
+            count($result->unknownNamespaces),
+        );
+
         foreach ($result->violations as $violation) {
-            $findings[] = sprintf('Forbidden dependency: %s -> %s', $violation->from, $violation->to);
+            $finding = sprintf('Forbidden dependency: %s -> %s', $violation->from, $violation->to);
+            $findings[] = $finding;
+            $report .= sprintf("\n✗ %s (%s)\n", $finding, $violation->reason)
+                . self::gacelaImportsBehind($modules, $violation->from, $violation->to);
         }
 
         foreach ($result->unknownNamespaces as $namespace) {
-            $findings[] = sprintf('Module rule governs nothing: %s', $namespace);
+            $finding = sprintf('Module rule governs nothing: %s', $namespace);
+            $findings[] = $finding;
+            $report .= sprintf("\n✗ %s matches no module. Remove the rule, or fix the namespace.\n", $finding);
         }
 
-        Assert::assertSame([], $findings, self::gacelaRuleReport($modules, $result->violations, $result->unknownNamespaces));
+        Assert::assertSame([], $findings, $report);
     }
 
     /**
@@ -203,88 +230,26 @@ trait ModuleAssertions
     }
 
     /**
-     * @param list<AppModule> $modules
-     * @param list<string>    $forbidden
-     * @param list<string>    $allowed
-     */
-    private static function gacelaForbiddenDependencyReport(array $modules, string $namespace, array $forbidden, array $allowed): string
-    {
-        $report = sprintf(
-            "\"%s\" may depend only on:\n%s\n",
-            $namespace,
-            $allowed === [] ? '  (nothing)' : self::gacelaBulletList($allowed),
-        );
-
-        foreach ($forbidden as $dependency) {
-            $report .= sprintf("\n✗ %s -> %s\n", $namespace, $dependency);
-            $report .= self::gacelaImportsBehind($modules, $namespace, $dependency);
-        }
-
-        return $report;
-    }
-
-    /**
+     * The imports that write the edges *inside* one cycle -- every module of it
+     * reaching every other one, which is what a cycle is.
+     *
      * @param list<AppModule>             $modules
      * @param array<string, list<string>> $graph
-     * @param list<list<string>>          $undeclared
-     * @param list<list<string>>          $stale
+     * @param list<string>                $cycle
      */
-    private static function gacelaCycleReport(array $modules, array $graph, array $undeclared, array $stale): string
+    private static function gacelaImportsWithin(array $modules, array $graph, array $cycle): string
     {
-        $report = sprintf(
-            "%d undeclared module dependency cycle(s), %d allowance(s) that no longer apply.\n",
-            count($undeclared),
-            count($stale),
-        );
+        $lines = '';
 
-        foreach ($undeclared as $cycle) {
-            $report .= sprintf("\n✗ Dependency cycle: %s\n", implode(' -> ', $cycle));
-
-            foreach ($cycle as $from) {
-                foreach ($graph[$from] ?? [] as $to) {
-                    if (in_array($to, $cycle, true)) {
-                        $report .= self::gacelaImportsBehind($modules, $from, $to);
-                    }
+        foreach ($cycle as $from) {
+            foreach ($graph[$from] ?? [] as $to) {
+                if (in_array($to, $cycle, true)) {
+                    $lines .= self::gacelaImportsBehind($modules, $from, $to);
                 }
             }
         }
 
-        foreach ($stale as $cycle) {
-            $report .= sprintf(
-                "\n✗ Allowed cycle no longer exists: %s. Remove it from the allow list.\n",
-                implode(' -> ', $cycle),
-            );
-        }
-
-        return $report;
-    }
-
-    /**
-     * @param list<AppModule>           $modules
-     * @param list<ModuleRuleViolation> $violations
-     * @param list<string>              $unknownNamespaces
-     */
-    private static function gacelaRuleReport(array $modules, array $violations, array $unknownNamespaces): string
-    {
-        $report = sprintf(
-            "%d forbidden dependency(ies), %d rule(s) governing nothing.\n",
-            count($violations),
-            count($unknownNamespaces),
-        );
-
-        foreach ($violations as $violation) {
-            $report .= sprintf("\n✗ Forbidden dependency: %s -> %s (%s)\n", $violation->from, $violation->to, $violation->reason);
-            $report .= self::gacelaImportsBehind($modules, $violation->from, $violation->to);
-        }
-
-        foreach ($unknownNamespaces as $namespace) {
-            $report .= sprintf(
-                "\n✗ Module rule governs nothing: %s matches no module. Remove the rule, or fix the namespace.\n",
-                $namespace,
-            );
-        }
-
-        return $report;
+        return $lines;
     }
 
     /**

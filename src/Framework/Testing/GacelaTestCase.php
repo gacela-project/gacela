@@ -301,13 +301,10 @@ abstract class GacelaTestCase extends TestCase
      */
     private function assertDoubleIsUsableAs(string $id, mixed $double): void
     {
-        if (self::isPillarDouble($double)) {
-            $this->assertNamesAFacade($id);
-
-            return;
-        }
-
-        if (!is_object($double) || $double instanceof Closure) {
+        // A pillar double is checked where it is applied: the swap derives the
+        // module from the Facade and refuses anything else, with this same
+        // exception, so a second check here would only move the throw earlier.
+        if (self::isPillarDouble($double) || !is_object($double) || $double instanceof Closure) {
             return;
         }
 
@@ -317,11 +314,30 @@ abstract class GacelaTestCase extends TestCase
     }
 
     /**
+     * The three pillar swaps, behind the one guard they share.
+     *
      * A pillar double is registered under the key its module's own class would
      * have taken, and the resolver derives that key from the Facade. Anything
      * else names no module, so the double would be registered where nothing
-     * ever reads it.
+     * ever reads it -- which is what the guard refuses, and what narrows the
+     * key to the type the swaps are declared for.
      *
+     * @param AbstractConfig|AbstractFactory|AbstractProvider $double
+     */
+    private function swapModulePillarDouble(string $id, object $double): void
+    {
+        $this->assertNamesAFacade($id);
+
+        if ($double instanceof AbstractFactory) {
+            $this->swapModuleFactory($id, $double);
+        } elseif ($double instanceof AbstractConfig) {
+            $this->swapModuleConfig($id, $double);
+        } else {
+            $this->swapModuleProvider($id, $double);
+        }
+    }
+
+    /**
      * @phpstan-assert class-string<AbstractFacade<AbstractFactory>> $className
      *
      * @psalm-assert class-string<AbstractFacade<AbstractFactory>> $className
@@ -409,37 +425,31 @@ abstract class GacelaTestCase extends TestCase
      * resets the resolver's global instances, so an override registered before
      * one is an override that never happened.
      *
+     * Nothing is re-reset afterwards. The bootstrap this runs behind has just
+     * cleared the Facade and Factory memos, and the pillar swaps clear them
+     * again themselves -- a third clear here would be a call no test could tell
+     * from its absence.
+     *
      * @param array<string, object|Closure|class-string> $doubles
      */
     private function applyResolvedClassDoubles(array $doubles): void
     {
         foreach ($doubles as $id => $double) {
-            // The guard runs again on each pillar branch -- it already ran
-            // before the bootstrap -- so that the key is *known* to name a
-            // Facade at the call the swaps are typed for.
-            if ($double instanceof AbstractFactory) {
-                $this->assertNamesAFacade($id);
-                $this->swapModuleFactory($id, $double);
-            } elseif ($double instanceof AbstractConfig) {
-                $this->assertNamesAFacade($id);
-                $this->swapModuleConfig($id, $double);
-            } elseif ($double instanceof AbstractProvider) {
-                $this->assertNamesAFacade($id);
-                $this->swapModuleProvider($id, $double);
-            } elseif (is_object($double) && !$double instanceof Closure
-                && (class_exists($id) || interface_exists($id))
-            ) {
+            if (self::isPillarDouble($double)) {
+                /** @var AbstractConfig|AbstractFactory|AbstractProvider $double */
+                $this->swapModulePillarDouble($id, $double);
+            } elseif (is_object($double) && !$double instanceof Closure) {
                 // The path a neighbour Facade travels: the Locator consults the
                 // resolver's global instances before the container, which is how
                 // `getProvidedDependency()` and `#[ServiceMap]` both reach one.
+                //
+                // Registered whatever the key is. A key that names no class
+                // takes a slot nothing ever looks up -- the Locator is only ever
+                // asked for a class -- so testing for one would be a branch with
+                // the same outcome on both sides.
                 Gacela::overrideExistingResolvedClass($id, $double);
             }
         }
-
-        // A Facade resolved earlier in this process holds its Factory in a
-        // static, and a Factory holds the container built from its Provider.
-        AbstractFacade::resetCache();
-        AbstractFactory::resetCache();
     }
 
     private static function isPillarDouble(mixed $double): bool

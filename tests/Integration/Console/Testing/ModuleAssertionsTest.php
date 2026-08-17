@@ -36,6 +36,8 @@ final class ModuleAssertionsTest extends TestCase
 
     private const GAMMA = 'GacelaTest\Integration\Console\Testing\ModuleBoundaryFixture\Gamma';
 
+    private const DELTA = 'GacelaTest\Integration\Console\Testing\ModuleBoundaryFixture\Delta';
+
     protected function setUp(): void
     {
         Gacela::bootstrap(self::FIXTURE_DIR, static function (GacelaConfig $config): void {
@@ -68,12 +70,51 @@ final class ModuleAssertionsTest extends TestCase
             static fn () => self::assertModuleDependsOnlyOn(AlphaFacade::class, [GammaFacade::class]),
         );
 
-        self::assertStringContainsString(self::ALPHA . ' -> ' . self::BETA, $failure);
+        self::assertStringContainsString('"' . self::ALPHA . '" may depend only on', $failure);
+        self::assertStringContainsString('✗ ' . self::ALPHA . ' -> ' . self::BETA, $failure);
         // The separator the path is written with is the platform's; the file
         // and the line are what the message has to carry.
         self::assertStringContainsString('ModuleBoundaryFixture', $failure);
-        self::assertStringContainsString('AlphaFacade.php:8', $failure);
         self::assertStringContainsString(BetaFacade::class, $failure);
+    }
+
+    /**
+     * One edge written in two files. A reader told only about the first fixes
+     * one import and finds the check still red, so every import behind the edge
+     * has to be listed -- not the first one, and not a count.
+     */
+    public function test_every_file_behind_one_edge_is_named(): void
+    {
+        $failure = $this->failureOf(
+            static fn () => self::assertModuleDependsOnlyOn(AlphaFacade::class, [GammaFacade::class]),
+        );
+
+        self::assertStringContainsString('AlphaFacade.php:8', $failure);
+        self::assertStringContainsString('AlphaReporter.php:7', $failure);
+    }
+
+    /**
+     * A module may be named with the leading separator a `::class` constant
+     * never carries but a hand-written namespace string often does.
+     */
+    public function test_a_leading_namespace_separator_names_the_same_module(): void
+    {
+        self::assertModuleDependsOnlyOn('\\' . self::ALPHA, ['\\' . self::BETA, '\\' . self::GAMMA]);
+    }
+
+    /**
+     * A module allowed to depend on nothing at all says so, rather than
+     * printing an empty list under a heading.
+     */
+    public function test_an_empty_allowance_list_is_reported_as_nothing(): void
+    {
+        $failure = $this->failureOf(
+            static fn () => self::assertModuleDependsOnlyOn(AlphaFacade::class, []),
+        );
+
+        self::assertStringContainsString("may depend only on:\n  (nothing)", $failure);
+        self::assertStringContainsString(self::ALPHA . ' -> ' . self::BETA, $failure);
+        self::assertStringContainsString(self::ALPHA . ' -> ' . self::GAMMA, $failure);
     }
 
     /**
@@ -114,6 +155,9 @@ final class ModuleAssertionsTest extends TestCase
         );
 
         self::assertStringContainsString('App\Nope', $failure);
+        // The half that says what to do about it.
+        self::assertStringContainsString('Name a module by its Facade class or by its namespace', $failure);
+        self::assertStringContainsString('The scan found:', $failure);
         self::assertStringContainsString(self::ALPHA, $failure);
         self::assertStringContainsString(self::GAMMA, $failure);
     }
@@ -122,7 +166,11 @@ final class ModuleAssertionsTest extends TestCase
     {
         $failure = $this->failureOf(static fn () => self::assertNoModuleCycles());
 
-        self::assertStringContainsString(self::ALPHA . ' -> ' . self::BETA, $failure);
+        self::assertStringContainsString('1 undeclared module dependency cycle(s)', $failure);
+        self::assertStringContainsString('✗ Dependency cycle: ' . self::ALPHA . ' -> ' . self::BETA, $failure);
+        // Both directions: a cycle is made of every edge inside it, and a
+        // reader shown one of them fixes half a problem.
+        self::assertStringContainsString('AlphaFacade.php:8', $failure);
         self::assertStringContainsString('BetaFacade.php:8', $failure);
     }
 
@@ -141,8 +189,13 @@ final class ModuleAssertionsTest extends TestCase
             fn () => self::assertNoModuleCycles($this->fixtureFile('allowed-cycles-stale.json')),
         );
 
-        self::assertStringContainsString('no longer exists', $failure);
-        self::assertStringContainsString(self::GAMMA, $failure);
+        self::assertStringContainsString('1 allowance(s) that no longer apply', $failure);
+        self::assertStringContainsString(
+            '✗ Allowed cycle no longer exists: ' . self::ALPHA . ' -> ' . self::GAMMA,
+            $failure,
+        );
+        // The half that says what to do about it.
+        self::assertStringContainsString('Remove it from the allow list', $failure);
     }
 
     public function test_declared_rules_the_graph_respects_hold(): void
@@ -156,7 +209,11 @@ final class ModuleAssertionsTest extends TestCase
             fn () => self::assertModuleRulesHold($this->fixtureFile('module-rules-violated.json')),
         );
 
-        self::assertStringContainsString(self::ALPHA . ' -> ' . self::BETA, $failure);
+        self::assertStringContainsString('1 forbidden dependency(ies)', $failure);
+        self::assertStringContainsString(
+            '✗ Forbidden dependency: ' . self::ALPHA . ' -> ' . self::BETA,
+            $failure,
+        );
         self::assertStringContainsString('alpha owns the decision', $failure);
         self::assertStringContainsString('AlphaFacade.php:8', $failure);
     }
@@ -167,8 +224,8 @@ final class ModuleAssertionsTest extends TestCase
             fn () => self::assertModuleRulesHold($this->fixtureFile('module-rules-governing-nothing.json')),
         );
 
-        self::assertStringContainsString('governs nothing', $failure);
-        self::assertStringContainsString('Delta', $failure);
+        self::assertStringContainsString('1 rule(s) governing nothing', $failure);
+        self::assertStringContainsString('✗ Module rule governs nothing: ' . self::DELTA, $failure);
     }
 
     /**

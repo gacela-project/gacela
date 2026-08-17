@@ -9,6 +9,7 @@ use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Ordering\Domain\Quote;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingFacade;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\CurrencyInterface;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Tax\TaxRateInterface;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shipping\ShippingFacade;
 
@@ -21,12 +22,21 @@ final class OrderingFactory extends AbstractFactory
 {
     use ServiceResolverAwareTrait;
 
+    /**
+     * A constructor argument, which the class resolver fills from the
+     * bindings and from nothing else.
+     */
+    public function __construct(
+        private readonly CurrencyInterface $currency,
+    ) {
+    }
+
     public function createQuote(): Quote
     {
         /** @var ShippingFacade $shipping */
         $shipping = $this->getShippingFacade();
 
-        return new Quote($this->getPricingFacade(), $shipping, $this->getTaxRate());
+        return new Quote($this->getPricingFacade(), $shipping, $this->getTaxRate(), $this->currency);
     }
 
     private function getPricingFacade(): PricingFacade

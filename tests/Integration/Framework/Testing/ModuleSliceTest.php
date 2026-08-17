@@ -18,6 +18,9 @@ use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\Domain\P
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingConfig;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingFacade;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingProvider;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\CurrencyInterface;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\EuroCurrency;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\PoundCurrency;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Tax\TaxRateInterface;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Tax\ZeroTaxRate;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shipping\ShippingFacade;
@@ -38,9 +41,37 @@ final class ModuleSliceTest extends GacelaTestCase
 
     public function test_the_module_answers_with_its_real_neighbours_when_nothing_is_doubled(): void
     {
-        $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class);
+        $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [CurrencyInterface::class => new EuroCurrency()]);
 
-        self::assertSame('price:1000 shipping:500 tax:2100', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:1000 shipping:500 tax:2100 currency:EUR', (new OrderingFacade())->quote('widget'));
+    }
+
+    /**
+     * A pillar's *constructor* argument, which is the one seam the container's
+     * lazy registry cannot fill: the class resolver builds a pillar from the
+     * bindings and from nothing else. `gacela.php` binds no currency, so the
+     * module cannot be built at all unless the double becomes one.
+     */
+    public function test_a_double_becomes_the_binding_a_pillar_constructor_is_built_from(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new PoundCurrency(),
+        ]);
+
+        self::assertSame('price:1000 shipping:500 tax:2100 currency:GBP', (new OrderingFacade())->quote('widget'));
+    }
+
+    /**
+     * The other half of the same guard: naming a class that exists but is not a
+     * Facade has to fail as loudly as naming one that does not exist at all.
+     */
+    public function test_slicing_a_module_named_by_a_class_that_is_not_a_facade_fails_loudly(): void
+    {
+        $this->expectException(ModuleDoubleException::class);
+        $this->expectExceptionMessage(OrderingFactory::class);
+
+        /** @psalm-suppress ArgumentTypeCoercion the wrong pillar is exactly the mistake under test */
+        $this->bootstrapModule(self::FIXTURE_DIR, OrderingFactory::class, doubles: [CurrencyInterface::class => new EuroCurrency()]);
     }
 
     /**
@@ -50,7 +81,7 @@ final class ModuleSliceTest extends GacelaTestCase
      */
     public function test_the_slice_narrows_module_discovery_to_the_module_under_test(): void
     {
-        $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class);
+        $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [CurrencyInterface::class => new EuroCurrency()]);
 
         self::assertSame(
             [dirname((string)(new ReflectionClass(OrderingFacade::class))->getFileName())],
@@ -68,10 +99,11 @@ final class ModuleSliceTest extends GacelaTestCase
         $pricing->method('priceOf')->willReturn(7);
 
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             PricingFacade::class => $pricing,
         ]);
 
-        self::assertSame('price:7 shipping:500 tax:2100', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:7 shipping:500 tax:2100 currency:EUR', (new OrderingFacade())->quote('widget'));
     }
 
     /**
@@ -85,10 +117,11 @@ final class ModuleSliceTest extends GacelaTestCase
         $shipping->method('costOf')->willReturn(42);
 
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             ShippingFacade::class => $shipping,
         ]);
 
-        self::assertSame('price:1000 shipping:42 tax:2100', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:1000 shipping:42 tax:2100 currency:EUR', (new OrderingFacade())->quote('widget'));
     }
 
     /**
@@ -98,6 +131,7 @@ final class ModuleSliceTest extends GacelaTestCase
     public function test_an_interface_double_becomes_a_container_binding(): void
     {
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             TaxRateInterface::class => new class() implements TaxRateInterface {
                 public function basisPoints(): int
                 {
@@ -106,7 +140,7 @@ final class ModuleSliceTest extends GacelaTestCase
             },
         ]);
 
-        self::assertSame('price:1000 shipping:500 tax:0', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:1000 shipping:500 tax:0 currency:EUR', (new OrderingFacade())->quote('widget'));
         $this->assertBindingRegistered(TaxRateInterface::class);
     }
 
@@ -118,6 +152,7 @@ final class ModuleSliceTest extends GacelaTestCase
     public function test_a_container_id_double_replaces_what_the_provider_registers(): void
     {
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             OrderingProvider::TAX_RATE => new class() implements TaxRateInterface {
                 public function basisPoints(): int
                 {
@@ -126,7 +161,7 @@ final class ModuleSliceTest extends GacelaTestCase
             },
         ]);
 
-        self::assertSame('price:1000 shipping:500 tax:1', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:1000 shipping:500 tax:1 currency:EUR', (new OrderingFacade())->quote('widget'));
     }
 
     /**
@@ -136,19 +171,21 @@ final class ModuleSliceTest extends GacelaTestCase
     public function test_a_class_string_double_becomes_a_container_binding(): void
     {
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             TaxRateInterface::class => ZeroTaxRate::class,
         ]);
 
-        self::assertSame('price:1000 shipping:500 tax:0', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:1000 shipping:500 tax:0 currency:EUR', (new OrderingFacade())->quote('widget'));
     }
 
     public function test_a_callable_double_becomes_a_container_binding(): void
     {
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             TaxRateInterface::class => static fn (): TaxRateInterface => new ZeroTaxRate(),
         ]);
 
-        self::assertSame('price:1000 shipping:500 tax:0', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:1000 shipping:500 tax:0 currency:EUR', (new OrderingFacade())->quote('widget'));
     }
 
     /**
@@ -159,6 +196,7 @@ final class ModuleSliceTest extends GacelaTestCase
     public function test_a_factory_double_replaces_the_neighbours_factory(): void
     {
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             PricingFacade::class => new class() extends AbstractFactory {
                 public function createPriceList(): PriceList
                 {
@@ -167,12 +205,13 @@ final class ModuleSliceTest extends GacelaTestCase
             },
         ]);
 
-        self::assertSame('price:3 shipping:500 tax:2100', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:3 shipping:500 tax:2100 currency:EUR', (new OrderingFacade())->quote('widget'));
     }
 
     public function test_a_config_double_replaces_the_neighbours_config(): void
     {
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             PricingFacade::class => new class() extends PricingConfig {
                 public function currency(): string
                 {
@@ -187,6 +226,7 @@ final class ModuleSliceTest extends GacelaTestCase
     public function test_a_provider_double_replaces_the_neighbours_provider(): void
     {
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             PricingFacade::class => new class() extends PricingProvider {
                 public function provideModuleDependencies(Container $container): void
                 {
@@ -208,6 +248,7 @@ final class ModuleSliceTest extends GacelaTestCase
         $pricing->method('priceOf')->willReturn(7);
 
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             PricingFacade::class => $pricing,
         ]);
 
@@ -226,12 +267,13 @@ final class ModuleSliceTest extends GacelaTestCase
         $this->bootstrapModule(
             self::FIXTURE_DIR,
             OrderingFacade::class,
+            doubles: [CurrencyInterface::class => new EuroCurrency()],
             configFn: static function (GacelaConfig $config): void {
                 $config->addLazy(TaxRateInterface::class, static fn (): TaxRateInterface => new ZeroTaxRate());
             },
         );
 
-        self::assertSame('price:1000 shipping:500 tax:0', (new OrderingFacade())->quote('widget'));
+        self::assertSame('price:1000 shipping:500 tax:0 currency:EUR', (new OrderingFacade())->quote('widget'));
         self::assertCount(1, Config::getInstance()->getSetupGacela()->getAppModulePaths());
     }
 
@@ -246,6 +288,7 @@ final class ModuleSliceTest extends GacelaTestCase
         $this->expectExceptionMessage(OrderingFactory::class);
 
         $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+            CurrencyInterface::class => new EuroCurrency(),
             OrderingFactory::class => new class() extends AbstractFactory {},
         ]);
     }
@@ -258,12 +301,24 @@ final class ModuleSliceTest extends GacelaTestCase
      */
     public function test_a_double_that_is_not_an_instance_of_the_class_it_replaces_fails_loudly(): void
     {
-        $this->expectException(ModuleDoubleException::class);
-        $this->expectExceptionMessage(PricingFacade::class);
+        try {
+            $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
+                CurrencyInterface::class => new EuroCurrency(),
+                PricingFacade::class => new ZeroTaxRate(),
+            ]);
+        } catch (ModuleDoubleException $moduleDoubleException) {
+            $message = $moduleDoubleException->getMessage();
 
-        $this->bootstrapModule(self::FIXTURE_DIR, OrderingFacade::class, doubles: [
-            PricingFacade::class => new ZeroTaxRate(),
-        ]);
+            // What was asked for, what arrived, and what to do about it.
+            self::assertStringContainsString(PricingFacade::class, $message);
+            self::assertStringContainsString(ZeroTaxRate::class, $message);
+            self::assertStringContainsString('a stub of it, a subclass, or another implementation', $message);
+            self::assertStringContainsString('handed to whoever asks for that type', $message);
+
+            return;
+        }
+
+        self::fail('A double that is not an instance of its key was accepted.');
     }
 
     /**

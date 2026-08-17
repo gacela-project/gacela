@@ -45,10 +45,10 @@ final class OrphanedDocblockTest extends TestCase
     private const SCANNED_DIRECTORIES = [
         'src',
         'tests',
-        'symfony-bridge/src',
-        'laravel-bridge/src',
-        'symfony-bridge/tests',
-        'laravel-bridge/tests',
+        'bridges/symfony-bridge/src',
+        'bridges/laravel-bridge/src',
+        'bridges/symfony-bridge/tests',
+        'bridges/laravel-bridge/tests',
     ];
 
     public function test_no_docblock_describes_another_docblock(): void

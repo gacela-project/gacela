@@ -23,8 +23,8 @@
 
 ## Host frameworks
 
-- [Symfony bundle](../symfony-bridge/README.md) — bootstrap Gacela from the kernel, reach Symfony services, `bin/console gacela:*`
-- [Laravel provider](../laravel-bridge/README.md) — bootstrap Gacela when the app boots, reach Laravel services, `artisan gacela:*`
+- [Symfony bundle](../bridges/symfony-bridge/README.md) — bootstrap Gacela from the kernel, reach Symfony services, `bin/console gacela:*`
+- [Laravel provider](../bridges/laravel-bridge/README.md) — bootstrap Gacela when the app boots, reach Laravel services, `artisan gacela:*`
 
 ## RFCs
 

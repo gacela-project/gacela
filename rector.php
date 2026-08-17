@@ -25,10 +25,10 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
         __DIR__ . '/src',
         __DIR__ . '/tests',
-        __DIR__ . '/symfony-bridge/src',
-        __DIR__ . '/symfony-bridge/tests',
-        __DIR__ . '/laravel-bridge/src',
-        __DIR__ . '/laravel-bridge/tests',
+        __DIR__ . '/bridges/symfony-bridge/src',
+        __DIR__ . '/bridges/symfony-bridge/tests',
+        __DIR__ . '/bridges/laravel-bridge/src',
+        __DIR__ . '/bridges/laravel-bridge/tests',
     ]);
 
     $rectorConfig->skip([
@@ -45,12 +45,12 @@ return static function (RectorConfig $rectorConfig): void {
         // Spelled out per name rather than `gacela-*.php`: the env-specific
         // `gacela-dev.php` and `gacela-prod.php` fixtures are real files that
         // have to keep being checked.
-        __DIR__ . '/symfony-bridge/tests/**/gacela-class-names*.php',
-        __DIR__ . '/symfony-bridge/tests/**/gacela-custom-services*.php',
-        __DIR__ . '/symfony-bridge/tests/**/gacela-merged-config*.php',
-        __DIR__ . '/laravel-bridge/tests/**/gacela-class-names*.php',
-        __DIR__ . '/laravel-bridge/tests/**/gacela-custom-services*.php',
-        __DIR__ . '/laravel-bridge/tests/**/gacela-merged-config*.php',
+        __DIR__ . '/bridges/symfony-bridge/tests/**/gacela-class-names*.php',
+        __DIR__ . '/bridges/symfony-bridge/tests/**/gacela-custom-services*.php',
+        __DIR__ . '/bridges/symfony-bridge/tests/**/gacela-merged-config*.php',
+        __DIR__ . '/bridges/laravel-bridge/tests/**/gacela-class-names*.php',
+        __DIR__ . '/bridges/laravel-bridge/tests/**/gacela-custom-services*.php',
+        __DIR__ . '/bridges/laravel-bridge/tests/**/gacela-merged-config*.php',
         __DIR__ . '/tests/Unit/PHPStan/Rules/Fixture',
         // assert() inside an anonymous class extending a non-TestCase parent
         // must not be rewritten to $this->assertSame().
@@ -103,7 +103,7 @@ return static function (RectorConfig $rectorConfig): void {
         // listener does the same to its fixtures.
         ReadOnlyPropertyRector::class => [
             __DIR__ . '/tests',
-            __DIR__ . '/laravel-bridge/tests/Fixtures',
+            __DIR__ . '/bridges/laravel-bridge/tests/Fixtures',
         ],
         // `#[Before]`-attributed setup methods are invoked reflectively by PHPUnit;
         // rector sees them as unused. Removing them silently drops test isolation.
@@ -111,7 +111,7 @@ return static function (RectorConfig $rectorConfig): void {
             __DIR__ . '/tests/Unit/Framework/Testing/ContainerFixtureTest.php',
             // A private #[Inject] setter that exists to be *refused*: no code
             // path may call it, which is exactly what rector notices.
-            __DIR__ . '/laravel-bridge/tests/Fixtures/PrivateSetterConsumer.php',
+            __DIR__ . '/bridges/laravel-bridge/tests/Fixtures/PrivateSetterConsumer.php',
             // A private #[Provides] method that exists to be *reported*: the
             // scanner reads public methods only, so nothing may call it -- and
             // deleting it deletes the fault UnusableProvidesCheck is asserted

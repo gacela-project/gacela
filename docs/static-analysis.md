@@ -250,6 +250,16 @@ Deliberately narrow, since it runs inside your build: only classes using `Servic
 
 The two opt-in cross-module rules, the dependency-cycle gate on `debug:graph`, the declared module rules file, and the CI graph review have their own page: [Module boundaries](module-boundaries.md). Enable the rules there once the analyser setup above is in place.
 
+Both cross-module rules leave a module's own public API alone: a class carrying `#[PublicApi]`, or one under a sub-namespace the module publishes by convention. The convention is configured on both rules and defaults to `Shared`, `Transfer`, `Dto`, `Event`:
+
+| | PHPStan | Psalm |
+|---|---|---|
+| Configured with | `publicApiSegments:` (a list) | `<publicApiSegment>` (one element each) |
+| Left out | the default list applies | the default list applies |
+| Turned off | an explicit `publicApiSegments: []` | a single empty `<publicApiSegment/>` |
+
+The values are namespace **segment names** matched whole under each module, not namespace prefixes — `Event` publishes `App\Billing\Event\` and leaves `App\Billing\EventHandler\` alone. See [what a module exports](module-boundaries.md#what-a-module-exports) for the attribute, the convention, and why the declared-dependency rule is deliberately not exempted by either.
+
 ## One place the two analysers differ
 
 A facade whose public method comes from a **trait** is judged by PHPStan and not by Psalm:

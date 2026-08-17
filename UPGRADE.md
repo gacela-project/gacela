@@ -218,7 +218,7 @@ No signature to change — `skippedCount` is a third constructor argument defaul
 
 ## 2.3 → 2.4
 
-Two changes: `#[Cacheable]`, if you set a custom `key:` template, and `registerSpecificListener()`, if you ever pointed one at a parent class or an interface.
+Three changes: `registerSpecificListener()`, if you ever pointed one at a parent class or an interface; `#[Cacheable]`, if you set a custom `key:` template; and the two opt-in cross-module rules, if you have them enabled.
 
 ### 1. A specific listener matches by inheritance
 
@@ -238,6 +238,33 @@ The stored key is now `Class::method::` followed by the interpolated template. T
 - **A template can no longer share one entry across classes.** If two facades deliberately cached the same value under the same template, each now caches its own. That was a coincidence of spelling rather than a feature; if sharing is what you want, cache in the one place that owns the value and call it from both
 
 `clearMethodCacheFor()` now reaches custom-keyed entries like any other, so the "invalidate through the storage backend directly" workaround the docs used to describe is no longer needed.
+
+### 3. The cross-module rules report less than before
+
+Only if `CrossModuleViaFacadeRule` / `CrossModuleMethodCallRule` (PHPStan) or `<crossModule>` (Psalm) is enabled. Nothing to do, and nothing new fails — but a rule that reports *less* is still a behaviour change, and it is worth knowing which findings went away rather than wondering.
+
+Both rules now leave a module's public API alone: a class carrying the new `#[PublicApi]`, and — this is the part that changes an existing setup — a class under a sub-namespace the module publishes by convention. The convention defaults to the segment names `Shared`, `Transfer`, `Dto` and `Event`, matched whole at any depth under each module. So `App\Billing\Shared\Invoice`, `App\Billing\Transfer\Order` and `App\Billing\Domain\Dto\Money` stop being reported, and `App\Billing\EventHandler\Projection` does not — a prefix is not a segment.
+
+If your modules use one of those names for something that is *not* public, turn the convention off and export class by class instead:
+
+```neon
+# phpstan.neon — on both rules
+arguments:
+    publicApiSegments: []
+```
+
+```xml
+<!-- psalm.xml, inside <crossModule> -->
+<publicApiSegment/>
+```
+
+An empty `<publicApiSegment/>` rather than no element at all: leaving it out means "use the default", which is what makes the default arrive without anybody writing it.
+
+Going the other way, entries in `ignoreReceivers` / `<ignoreReceiver>` naming a class **you own** are now better written as `#[PublicApi]` on the class — one declaration, in the module that owns it, read by both analysers. The lists stay, and remain the right answer for third-party types you cannot annotate.
+
+One thing this does *not* touch: `DeclaredModuleDependencyRule` and `debug:graph --check` ignore `#[PublicApi]` entirely. A dependency your rules file forbids is still forbidden, whatever the class at the end of it is annotated with.
+
+If you construct `Gacela\StaticAnalysis\ModuleBoundary` directly — unusual; the rules are the public surface — it takes a fourth constructor argument, the list of published segments. Pass `[]` for the previous behaviour.
 
 ---
 

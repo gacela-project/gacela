@@ -128,6 +128,20 @@ final class ArchitectureRulesTest extends PsalmFixtureTestCase
     }
 
     /**
+     * The invokable `extendGacelaConfig()` takes has no parent and no interface,
+     * and `*Config` is its natural name. Extending `AbstractConfig` would turn
+     * it into a second Config candidate for its module.
+     */
+    public function test_a_config_extender_is_not_told_to_extend_the_config_pillar(): void
+    {
+        $errors = $this->analyseFixture();
+        $this->skipIfPsalmCannotRun($errors);
+
+        self::assertStringContainsString('GacelaSuffixExtends', $errors, 'precondition: the rule ran at all');
+        self::assertSame('', $this->errorsIn('ExtenderConfig.php'));
+    }
+
+    /**
      * The key decides what the entry is filed under, so one with no `{N}`
      * placeholder is the same string for every call and the first caller's
      * result is served to the rest. Nothing fails; the wrong row is served.
@@ -152,7 +166,7 @@ final class ArchitectureRulesTest extends PsalmFixtureTestCase
         $this->skipIfPsalmCannotRun($this->analyseFixture());
 
         self::assertStringContainsString(
-            'Extend Gacela\Framework\AbstractFacade, or rename it so it does not end in Facade.',
+            'Rename it so it does not end in Facade. Extend Gacela\Framework\AbstractFacade only if it is its module\'s Facade.',
             $this->errorsIn('BadFacade.php'),
         );
     }

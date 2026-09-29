@@ -133,6 +133,14 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/Fixture/SuffixConfig/UserConfig.php'], []);
     }
 
+    public function test_ignores_a_config_extender_named_config(): void
+    {
+        $this->suffix = 'Config';
+        $this->expectedParent = AbstractConfig::class;
+
+        $this->analyse([__DIR__ . '/Fixture/SuffixConfig/ExtenderConfig.php'], []);
+    }
+
     protected function getRule(): Rule
     {
         return new SuffixExtendsRule($this->suffix, $this->expectedParent);
@@ -141,7 +149,8 @@ final class SuffixExtendsRuleTest extends RuleTestCase
     private function expectedTip(): string
     {
         return sprintf(
-            'Extend %s, or rename it so it does not end in %s.',
+            "Rename it so it does not end in %s. Extend %s only if it is its module's %s.",
+            $this->suffix,
             $this->expectedParent,
             $this->suffix,
         );

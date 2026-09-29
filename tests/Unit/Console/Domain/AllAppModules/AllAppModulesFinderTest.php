@@ -8,6 +8,7 @@ use ArrayIterator;
 use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
+use Gacela\Console\Domain\AllAppModules\FacadeAncestry;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
@@ -471,6 +472,7 @@ final class AllAppModulesFinderTest extends TestCase
         $finder = new AllAppModulesFinder(
             $this->iteratorFor($this->fileInfoFor($path, 'ExtendsNonFacadeParent.php')),
             $this->createAppModuleCreator(),
+            FacadeAncestry::fromRegisteredAutoloaders(),
         );
 
         self::assertSame([], $finder->findAllAppModules(''));

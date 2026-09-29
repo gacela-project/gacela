@@ -396,6 +396,9 @@
                 // occur. Same line, same reason, in both bridges.
                 "Gacela\\LaravelBridge\\GacelaCommands::names",
                 "Gacela\\SymfonyBridge\\GacelaCommands::names",
+                // The file passed is_file() one line earlier, so file_get_contents()
+                // returns a string; the cast only narrows string|false for the parse.
+                "Gacela\\Console\\Domain\\AllAppModules\\FacadeAncestry::declaredParent",
             ],
         },
         // Truncating the collected list to one entry is only visible when a

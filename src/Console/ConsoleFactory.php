@@ -13,6 +13,7 @@ use Gacela\Console\Application\IdeMeta\IdeMetadataScanner;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\AllAppModules\ExcludedDirectories;
+use Gacela\Console\Domain\AllAppModules\FacadeAncestry;
 use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeFinder;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParserInterface;
@@ -175,6 +176,7 @@ final class ConsoleFactory extends AbstractFactory
         return new AllAppModulesFinder(
             $this->createModuleScanIterator(),
             $this->createAppModuleCreator(),
+            FacadeAncestry::fromRegisteredAutoloaders(),
         );
     }
 

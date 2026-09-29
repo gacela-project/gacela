@@ -13,17 +13,14 @@ use function sprintf;
 
 final class AllAppModulesFinder
 {
-    private readonly FacadeAncestry $facadeAncestry;
-
     /**
      * @param OuterIterator<array-key, SplFileInfo> $fileIterator
      */
     public function __construct(
         private readonly OuterIterator $fileIterator,
         private readonly AppModuleCreator $appModuleCreator,
-        ?FacadeAncestry $facadeAncestry = null,
+        private readonly FacadeAncestry $facadeAncestry = new FacadeAncestry(),
     ) {
-        $this->facadeAncestry = $facadeAncestry ?? FacadeAncestry::fromRegisteredAutoloaders();
     }
 
     /**

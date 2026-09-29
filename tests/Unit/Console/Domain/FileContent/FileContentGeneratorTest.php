@@ -84,6 +84,78 @@ final class FileContentGeneratorTest extends TestCase
         $generator->targetPath(new CommandArguments('Namespace', 'Dir'), FilenameSanitizer::FACADE, false, '');
     }
 
+    public function test_it_writes_under_the_project_root_and_reports_the_path_relative_to_it(): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with('/project/Dir');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with('/project/Dir/DirFacade.php', 'template-result');
+
+        $generator = new FileContentGenerator(
+            $fileContentIo,
+            new StubLocator('', ['Facade' => 'template-result'], StubFiles::basic()),
+            '/project',
+        );
+
+        $actualPath = $generator->generate(new CommandArguments('Namespace', 'Dir'), FilenameSanitizer::FACADE);
+
+        self::assertSame('Dir/DirFacade.php', $actualPath);
+    }
+
+    #[DataProvider('absoluteDirectories')]
+    public function test_an_absolute_psr4_directory_is_written_where_it_points(string $directory): void
+    {
+        $fileContentIo = $this->createMock(FileContentIoInterface::class);
+        $fileContentIo->expects(self::once())
+            ->method('mkdir')
+            ->with($directory . '/Hello');
+
+        $fileContentIo->expects(self::once())
+            ->method('filePutContents')
+            ->with($directory . '/Hello/HelloFacade.php', 'template-result');
+
+        $generator = new FileContentGenerator(
+            $fileContentIo,
+            new StubLocator('', ['Facade' => 'template-result'], StubFiles::basic()),
+            '/project',
+        );
+
+        $generator->generate(new CommandArguments('Namespace', $directory . '/Hello'), FilenameSanitizer::FACADE);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function absoluteDirectories(): iterable
+    {
+        yield 'unix' => ['/tmp/app/src'];
+        yield 'windows backslash' => ['C:\app\src'];
+        yield 'windows forward slash' => ['c:/app/src'];
+        yield 'windows root without drive' => ['\app\src'];
+    }
+
+    public function test_it_checks_for_existing_files_under_the_project_root(): void
+    {
+        $fileContentIo = $this->createStub(FileContentIoInterface::class);
+        $fileContentIo->method('existsFile')->willReturnCallback(
+            static fn (string $path): bool => $path === '/project/Dir/DirFacade.php',
+        );
+
+        $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [], StubFiles::basic()), '/project');
+        $arguments = new CommandArguments('Namespace', 'Dir');
+        $files = [[FilenameSanitizer::FACADE, ''], [FilenameSanitizer::FACTORY, '']];
+
+        self::assertSame(['Dir/DirFacade.php'], $generator->existingTargets($arguments, $files, false));
+        self::assertSame(
+            [['path' => 'Dir/DirFacade.php', 'exists' => true], ['path' => 'Dir/DirFactory.php', 'exists' => false]],
+            $generator->plannedTargets($arguments, $files, false),
+        );
+    }
+
     public function test_facade_maker_template(): void
     {
         $fileContentIo = $this->createMock(FileContentIoInterface::class);

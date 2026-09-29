@@ -11,6 +11,10 @@ use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
+use Gacela\Framework\ClassResolver\Config\ConfigResolver;
+use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
+use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Container\BindingRegisteredEvent;
@@ -171,6 +175,7 @@ abstract class GacelaTestCase extends TestCase
 
         $this->narrowModulePathsTo($moduleDir);
         $this->applyResolvedClassDoubles($doubles);
+        $this->scopeDoublesToPillarsOf($facadeClass, $doubles);
     }
 
     /**
@@ -483,6 +488,50 @@ abstract class GacelaTestCase extends TestCase
                 // asked for a class -- so testing for one would be a branch with
                 // the same outcome on both sides.
                 Gacela::overrideExistingResolvedClass($id, $double);
+            }
+        }
+    }
+
+    /**
+     * Answer a class or interface double where a pillar constructor asks for it.
+     *
+     * The application-level registrations are not enough: `gacela.php` merges
+     * onto the bootstrap closure, so whatever it binds or registers lazily for
+     * the same type wins there. A contextual binding is read before either, and
+     * scoping it to the pillars of the module under test leaves every other
+     * class that asks for the type with what the application declares.
+     *
+     * Written on the container the pillars are built from, after the bootstrap
+     * that would otherwise discard it. A pillar the module does not have is
+     * skipped: the resolver finds no class for it, and there is no constructor
+     * to fill.
+     *
+     * @param class-string                                $facadeClass
+     * @param array<string, object|Closure|class-string> $doubles
+     */
+    private function scopeDoublesToPillarsOf(string $facadeClass, array $doubles): void
+    {
+        $pillars = [
+            (new FactoryResolver())->findClassNameFor($facadeClass),
+            (new ConfigResolver())->findClassNameFor($facadeClass),
+            (new ProviderResolver())->findClassNameFor($facadeClass),
+        ];
+
+        $container = AbstractClassResolver::pillarContainer();
+
+        foreach ($doubles as $id => $double) {
+            if (self::isPillarDouble($double)) {
+                continue;
+            }
+
+            if (!class_exists($id) && !interface_exists($id)) {
+                continue;
+            }
+
+            foreach ($pillars as $pillar) {
+                if ($pillar !== null) {
+                    $container->when($pillar)->needs($id)->give($double);
+                }
             }
         }
     }

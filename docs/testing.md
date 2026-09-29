@@ -104,8 +104,8 @@ Two things happen.
 | The double is | It becomes |
 |---|---|
 | an `AbstractFactory` / `AbstractConfig` / `AbstractProvider` instance | that pillar of the module its key's **Facade** names — the `swapModule*()` calls below |
-| any other object, keyed by a class or interface | a container binding, a lazy service, and a resolved-class override — the last is the path a neighbour Facade reached through `getProvidedDependency()` or `#[ServiceMap]` travels |
-| a `Closure` or a class-string, keyed by a class or interface | a container binding and a lazy service |
+| any other object, keyed by a class or interface | a container binding, a lazy service, a binding scoped to the module's pillars, and a resolved-class override — the last is the path a neighbour Facade reached through `getProvidedDependency()` or `#[ServiceMap]` travels |
+| a `Closure` or a class-string, keyed by a class or interface | a container binding, a lazy service, and a binding scoped to the module's pillars |
 | anything, keyed by a **container id** | a replacement for that id wherever it is registered, including in the module's own Provider — which nothing written at application level can otherwise reach |
 
 The third argument is a `GacelaConfig` closure, composed with the narrowing rather than replacing it, for a slice that still has to configure the application it is a slice of:
@@ -116,6 +116,8 @@ $this->bootstrapModule(__DIR__, InvoiceFacade::class,
     configFn: static fn (GacelaConfig $config) => $config->addExternalService('clock', $frozenClock),
 );
 ```
+
+The binding scoped to the module's pillars is what wins over a class the application's `gacela.php` binds for the same type: a Factory, Config or Provider constructor asking for it gets the double, and every class outside the module keeps what `gacela.php` declares.
 
 Like `bootstrapGacela()`, it bootstraps once per test, and `tearDown()` drops everything it registered.
 

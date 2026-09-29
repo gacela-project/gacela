@@ -19,6 +19,7 @@ final class AllAppModulesFinder
     public function __construct(
         private readonly OuterIterator $fileIterator,
         private readonly AppModuleCreator $appModuleCreator,
+        private readonly FacadeAncestry $facadeAncestry = new FacadeAncestry(),
     ) {
     }
 
@@ -96,6 +97,10 @@ final class AllAppModulesFinder
             if (!str_contains($fullyQualifiedClassName, $filterNamespace)) {
                 return null;
             }
+        }
+
+        if ($this->facadeAncestry->rulesOut($fullyQualifiedClassName)) {
+            return null;
         }
 
         if (!class_exists($fullyQualifiedClassName)) {

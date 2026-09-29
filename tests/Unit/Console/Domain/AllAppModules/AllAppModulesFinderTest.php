@@ -8,12 +8,15 @@ use ArrayIterator;
 use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
+use Gacela\Console\Domain\AllAppModules\FacadeAncestry;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use GacelaTest\Unit\Console\Domain\AllAppModules\Fixtures\NotLoaded\ExtendsNonFacadeParent;
 use GacelaTest\Unit\Console\Domain\AllAppModules\Fixtures\NotLoaded\ExtendsNothing;
+use GacelaTest\Unit\Console\Domain\AllAppModules\Fixtures\NotLoaded\NonFacadeParent;
 use IteratorIterator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -452,6 +455,30 @@ final class AllAppModulesFinderTest extends TestCase
 
         // Last, because it loads the class: without it a deleted fixture would
         // be "not loaded" both times and this would pass for nothing.
+        self::assertTrue(class_exists($className), 'the fixture is gone, so nothing above was observed');
+    }
+
+    public function test_a_class_whose_parent_chain_never_reaches_abstract_facade_is_never_loaded(): void
+    {
+        $className = ExtendsNonFacadeParent::class;
+        $parentName = NonFacadeParent::class;
+        $path = __DIR__ . '/Fixtures/NotLoaded/ExtendsNonFacadeParent.php';
+
+        self::assertFalse(
+            class_exists($className, false) || class_exists($parentName, false),
+            'something already loaded the fixtures, so this test cannot see the difference',
+        );
+
+        $finder = new AllAppModulesFinder(
+            $this->iteratorFor($this->fileInfoFor($path, 'ExtendsNonFacadeParent.php')),
+            $this->createAppModuleCreator(),
+            FacadeAncestry::fromRegisteredAutoloaders(),
+        );
+
+        self::assertSame([], $finder->findAllAppModules(''));
+        self::assertFalse(class_exists($className, false), 'discovery loaded the class');
+        self::assertFalse(class_exists($parentName, false), 'discovery loaded the parent');
+
         self::assertTrue(class_exists($className), 'the fixture is gone, so nothing above was observed');
     }
 

@@ -10,6 +10,10 @@
 - Symfony bridge: `#[Inject]` on a Symfony-managed service no longer fails the container build under `GacelaBundle`. The bundle now registers the `gacela.container` service the compiler pass routes to, so only a setup without the bundle registers it by hand (#908)
 - **`migrate:service-map` inserts its `ServiceMap` import in sorted position.** It appended the import after the last `use`, so a file with an import sorting after it failed `ordered_imports` right after the migration and needed a formatter pass. The import now goes where `ordered_imports` puts it, among the class imports and above any function or const import, including when the block has aliased or group imports. An existing import spelled in another case now counts, instead of gaining a duplicate that PHP rejects ([#912](https://github.com/gacela-project/gacela/issues/912))
 
+### Changed
+
+- Module discovery (`list:modules`, `debug:modules`, `doctor`, `cache:warm`) no longer loads every class it scans. It reads each candidate's `extends` chain from source, locating parent files through Composer's `ClassLoader::findFile()`, and skips the load when the chain ends without reaching `AbstractFacade`. Anything the source cannot prove falls back to loading the class as before, and so does a project without a Composer autoloader. On this repository's `src` and `tests` the classes loaded drop from 1018 to 370, with the same 143 modules found
+
 ## [2.4.0](https://github.com/gacela-project/gacela/compare/2.3.0...2.4.0) - 2026-08-17
 
 ### Added

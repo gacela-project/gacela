@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Module discovery (`list:modules`, `debug:modules`, `doctor`, `cache:warm`) no longer loads every class it scans. It reads each candidate's `extends` chain from source, locating parent files through Composer's `ClassLoader::findFile()`, and skips the load when the chain ends without reaching `AbstractFacade`. Anything the source cannot prove falls back to loading the class as before, and so does a project without a Composer autoloader. On this repository's `src` and `tests` the classes loaded drop from 1018 to 370, with the same 143 modules found
+
 ## [2.4.0](https://github.com/gacela-project/gacela/compare/2.3.0...2.4.0) - 2026-08-17
 
 ### Added

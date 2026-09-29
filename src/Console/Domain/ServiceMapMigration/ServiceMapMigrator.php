@@ -11,23 +11,18 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
+use PhpParser\Node\UseItem;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use Throwable;
 
-use function array_filter;
-use function array_values;
-use function count;
 use function explode;
 use function implode;
-use function preg_replace;
 use function sprintf;
 use function str_replace;
 use function strcasecmp;
-use function substr;
-use function trim;
 
 /**
  * Writes the `#[ServiceMap]` attribute that {@see ServiceMapMissingAnalyser}
@@ -115,7 +110,7 @@ final class ServiceMapMigrator
 
         $lines = explode("\n", $phpCode);
         $imports = $this->importStatements($ast);
-        $importInsertion = $this->alreadyImported($imports) ? [] : $this->importInsertion($ast, $imports, $phpCode);
+        $importInsertion = $this->alreadyImported($imports) ? [] : $this->importInsertion($ast, $imports);
 
         return new MigrationResult(
             $path,
@@ -184,18 +179,24 @@ final class ServiceMapMigrator
      *
      * @return array<int, list<string>> one-based line => lines to put above it
      */
-    private function importInsertion(array $ast, array $imports, string $phpCode): array
+    private function importInsertion(array $ast, array $imports): array
     {
-        $classImports = array_values(array_filter($imports, $this->importsClasses(...)));
+        $lastClassImport = null;
 
-        foreach ($classImports as $import) {
-            if (strcasecmp($this->sortKey($import, $phpCode), self::IMPORT_SORT_KEY) > 0) {
+        foreach ($imports as $import) {
+            if (!$this->importsClasses($import)) {
+                continue;
+            }
+
+            if (strcasecmp($this->sortKey($import), self::IMPORT_SORT_KEY) > 0) {
                 return [$this->firstLine($import) => [self::IMPORT]];
             }
+
+            $lastClassImport = $import;
         }
 
-        if ($classImports !== []) {
-            return [$classImports[count($classImports) - 1]->getEndLine() + 1 => [self::IMPORT]];
+        if ($lastClassImport !== null) {
+            return [$lastClassImport->getEndLine() + 1 => [self::IMPORT]];
         }
 
         if ($imports !== []) {
@@ -226,19 +227,27 @@ final class ServiceMapMigrator
     }
 
     /**
-     * The key php-cs-fixer's `ordered_imports` sorts by: the imported text,
-     * alias and group braces included, with separators read as spaces.
+     * The key php-cs-fixer's `ordered_imports` sorts by, the imported name and
+     * its alias with separators read as spaces. The fixer's key runs on past
+     * the first item of a group, which can never change how it compares with
+     * the one import this adds.
      */
-    private function sortKey(Use_|GroupUse $import, string $phpCode): string
+    private function sortKey(Use_|GroupUse $import): string
     {
-        $text = substr(
-            $phpCode,
-            $import->getStartFilePos(),
-            $import->getEndFilePos() - $import->getStartFilePos() + 1,
-        );
-        $text = (string)preg_replace(['/^use\s+/i', '/\s*;$/', '%/\*.*?\*/%s'], '', $text);
+        $item = $import->uses[0];
+        $key = $this->importedName($import, $item);
+        if ($item->alias !== null) {
+            $key .= ' as ' . $item->alias->toString();
+        }
 
-        return str_replace(['\\', '{'], [' ', ''], trim($text));
+        return str_replace('\\', ' ', $key);
+    }
+
+    private function importedName(Use_|GroupUse $import, UseItem $item): string
+    {
+        $prefix = $import instanceof GroupUse ? $import->prefix->toString() . '\\' : '';
+
+        return $prefix . $item->name->toString();
     }
 
     /**
@@ -253,18 +262,17 @@ final class ServiceMapMigrator
 
     /**
      * Imported under another alias, `#[ServiceMap]` would still not resolve,
-     * so only an import that binds the short name counts.
+     * so only an import that binds the short name counts. Class names are
+     * case-insensitive, and a second import of the same name is a fatal error.
      *
      * @param list<Use_|GroupUse> $imports
      */
     private function alreadyImported(array $imports): bool
     {
         foreach ($imports as $import) {
-            $prefix = $import instanceof GroupUse ? $import->prefix->toString() . '\\' : '';
-
             foreach ($import->uses as $item) {
-                if ($prefix . $item->name->toString() === ServiceMap::class
-                    && $item->getAlias()->toString() === 'ServiceMap'
+                if (strcasecmp($this->importedName($import, $item), ServiceMap::class) === 0
+                    && strcasecmp($item->getAlias()->toString(), 'ServiceMap') === 0
                 ) {
                     return true;
                 }

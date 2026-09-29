@@ -366,6 +366,179 @@ final class ServiceMapMigratorTest extends TestCase
         $this->assertImportsOrdered($result->migratedCode);
     }
 
+    public function test_a_group_of_classes_sorts_as_a_class_import(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use Zed\{Alpha, Beta};
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "namespace App\\Wallet;\n\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\nuse Zed\\{Alpha, Beta};\n\n/**",
+            $result->migratedCode,
+        );
+        $this->assertImportsOrdered($result->migratedCode);
+    }
+
+    /**
+     * A group holding a function is not a class import, so the class import
+     * gets its own block above it.
+     */
+    public function test_a_group_holding_a_function_does_not_sort_as_a_class_import(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use Zed\{function helper, Thing};
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "namespace App\\Wallet;\n\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n\nuse Zed\\{function helper, Thing};\n\n/**",
+            $result->migratedCode,
+        );
+    }
+
+    /**
+     * A function import ahead of the class imports is passed over, not taken
+     * as the end of them.
+     */
+    public function test_a_function_import_before_the_class_imports_is_passed_over(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use function sprintf;
+            use App\Shared\Clock;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "use function sprintf;\nuse App\\Shared\\Clock;\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n\n/**",
+            $result->migratedCode,
+        );
+    }
+
+    public function test_a_file_without_a_namespace_gets_the_import_above_its_function_imports(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            use function sprintf;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringStartsWith(
+            "<?php\n\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n\nuse function sprintf;\n\n/**",
+            $result->migratedCode,
+        );
+    }
+
+    /**
+     * A comment above an import belongs to it, so the import goes above both.
+     */
+    public function test_the_import_goes_above_the_comment_of_the_import_it_precedes(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use App\Shared\Clock;
+            // the console entry point
+            use Symfony\Component\Console\Command\Command;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand extends Command
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "use App\\Shared\\Clock;\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n// the console entry point\nuse Symfony",
+            $result->migratedCode,
+        );
+    }
+
+    public function test_the_import_goes_below_a_multi_line_group(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use App\Shared\{
+                Clock,
+                Money,
+            };
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "    Money,\n};\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n\n/**",
+            $result->migratedCode,
+        );
+        $this->assertImportsOrdered($result->migratedCode);
+    }
+
+    /**
+     * Class names are case-insensitive, and a second import of the same name
+     * would be a fatal error.
+     */
+    public function test_a_service_map_imported_in_another_case_is_not_imported_again(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use gacela\framework\serviceresolver\servicemap;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertTrue($result->hasChanges());
+        self::assertSame(0, substr_count($result->migratedCode, 'use Gacela\Framework\ServiceResolver\ServiceMap;'));
+    }
+
     public function test_a_service_map_imported_in_a_group_is_not_imported_again(): void
     {
         $result = $this->migrator->migrate('Wallet.php', <<<'PHP'

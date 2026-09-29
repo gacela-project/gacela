@@ -21,19 +21,19 @@ use function sprintf;
 
 final class MakeModuleCommandTest extends TestCase
 {
-    private const CACHE_DIR = '.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'TestModule';
+    private const CACHE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'TestModule';
 
     public static function tearDownAfterClass(): void
     {
         DirectoryUtil::removeDir(self::CACHE_DIR);
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ServiceModule');
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ProvidesModule');
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalModule');
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalTemplateModule');
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalRunModule');
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'PreviewModule');
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ExistingModule');
-        DirectoryUtil::removeDir('.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ReplaceModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ServiceModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ProvidesModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalTemplateModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'MinimalRunModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'PreviewModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ExistingModule');
+        DirectoryUtil::removeDir(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'ReplaceModule');
     }
 
     protected function setUp(): void
@@ -85,10 +85,10 @@ OUT;
 
         self::assertSame($expectedOutput, trim($output->fetch()));
 
-        self::assertFileExists(sprintf('./data/TestModule/%sFacade.php', $fileName));
-        self::assertFileExists(sprintf('./data/TestModule/%sFactory.php', $fileName));
-        self::assertFileExists(sprintf('./data/TestModule/%sConfig.php', $fileName));
-        self::assertFileExists(sprintf('./data/TestModule/%sProvider.php', $fileName));
+        self::assertFileExists(sprintf('%s/data/TestModule/%sFacade.php', __DIR__, $fileName));
+        self::assertFileExists(sprintf('%s/data/TestModule/%sFactory.php', __DIR__, $fileName));
+        self::assertFileExists(sprintf('%s/data/TestModule/%sConfig.php', __DIR__, $fileName));
+        self::assertFileExists(sprintf('%s/data/TestModule/%sProvider.php', __DIR__, $fileName));
     }
 
     public static function createModulesProvider(): iterable
@@ -108,7 +108,7 @@ OUT;
         $exitCode = $tester->execute(['path' => 'Psr4CodeGeneratorData/DryRunModule', '--dry-run' => true]);
 
         self::assertSame(Command::SUCCESS, $exitCode);
-        self::assertDirectoryDoesNotExist(getcwd() . '/data/DryRunModule');
+        self::assertDirectoryDoesNotExist(__DIR__ . '/data/DryRunModule');
     }
 
     public function test_a_dry_run_names_every_file_and_says_it_wrote_none(): void
@@ -198,7 +198,7 @@ OUT;
         self::assertSame(Command::FAILURE, $exitCode);
         self::assertStringContainsString('--with-tests only applies to the service template', $tester->getDisplay());
         self::assertStringContainsString('--template=service', $tester->getDisplay());
-        self::assertDirectoryDoesNotExist(getcwd() . '/data/NotGenerated');
+        self::assertDirectoryDoesNotExist(__DIR__ . '/data/NotGenerated');
     }
 
     /**
@@ -230,7 +230,7 @@ OUT;
         self::assertStringContainsString("Module 'ServiceModule' created successfully", $display);
 
         // Paths are built at runtime: the files only exist after the command ran.
-        $moduleDir = getcwd() . '/data/ServiceModule';
+        $moduleDir = __DIR__ . '/data/ServiceModule';
         $files = [
             $moduleDir . '/ServiceModuleFacade.php',
             $moduleDir . '/ServiceModuleFactory.php',
@@ -273,7 +273,7 @@ OUT;
         $bootstrap->setAutoExit(false);
         $bootstrap->run($input, $output);
 
-        $providerFile = getcwd() . '/data/ProvidesModule/ProvidesModuleProvider.php';
+        $providerFile = __DIR__ . '/data/ProvidesModule/ProvidesModuleProvider.php';
         self::assertFileExists($providerFile);
 
         $contents = (string)file_get_contents($providerFile);
@@ -316,7 +316,7 @@ OUT;
 
         self::assertSame($expectedOutput, trim($output->fetch()));
 
-        $moduleDir = getcwd() . '/data/MinimalModule';
+        $moduleDir = __DIR__ . '/data/MinimalModule';
         self::assertFileExists($moduleDir . '/MinimalModuleFacade.php');
         self::assertFileExists($moduleDir . '/MinimalModuleFactory.php');
 
@@ -337,7 +337,7 @@ OUT;
 
         self::assertSame(0, $exitCode);
 
-        $moduleDir = getcwd() . '/data/MinimalTemplateModule';
+        $moduleDir = __DIR__ . '/data/MinimalTemplateModule';
         self::assertFileExists($moduleDir . '/MinimalTemplateModuleFacade.php');
         self::assertFileExists($moduleDir . '/MinimalTemplateModuleFactory.php');
         self::assertFileDoesNotExist($moduleDir . '/MinimalTemplateModuleConfig.php');
@@ -353,7 +353,7 @@ OUT;
         $bootstrap->setAutoExit(false);
         $bootstrap->run($input, $output);
 
-        $moduleDir = getcwd() . '/data/MinimalRunModule';
+        $moduleDir = __DIR__ . '/data/MinimalRunModule';
         $facadeFile = $moduleDir . '/MinimalRunModuleFacade.php';
         $factoryFile = $moduleDir . '/MinimalRunModuleFactory.php';
 

@@ -31,7 +31,7 @@ final class MakeRefusesToOverwriteTest extends TestCase
 {
     private const MODULE_ARG = 'Psr4CodeGeneratorData/OverwriteModule';
 
-    private const MODULE_DIR = '.' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'OverwriteModule';
+    private const MODULE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'OverwriteModule';
 
     private const FACADE = self::MODULE_DIR . DIRECTORY_SEPARATOR . 'OverwriteModuleFacade.php';
 

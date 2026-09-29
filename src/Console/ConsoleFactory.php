@@ -118,6 +118,7 @@ final class ConsoleFactory extends AbstractFactory
                 StubFiles::basic($declaredKinds),
                 $declaredKinds,
             ),
+            Config::getInstance()->getAppRootDir(),
         );
     }
 
@@ -137,6 +138,7 @@ final class ConsoleFactory extends AbstractFactory
                 ],
                 StubFiles::basic(),
             ),
+            Config::getInstance()->getAppRootDir(),
         );
     }
 
@@ -145,6 +147,7 @@ final class ConsoleFactory extends AbstractFactory
         return new FileContentGenerator(
             $this->createFileContentIo(),
             new StubLocator($this->stubsDir(), $this->getServiceTemplateByFilenameMap(), StubFiles::service()),
+            Config::getInstance()->getAppRootDir(),
         );
     }
 

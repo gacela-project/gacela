@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Gacela\SymfonyBridge\DependencyInjection;
 
 use Gacela\Console\Infrastructure\Command\InitCommand;
+use Gacela\Framework\Container\Container;
+use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\GacelaBootstrapper;
 use Gacela\SymfonyBridge\GacelaCacheWarmer;
 use Gacela\SymfonyBridge\GacelaCommands;
@@ -18,8 +20,9 @@ use Symfony\Component\DependencyInjection\ServiceLocator;
 use function sprintf;
 
 /**
- * Turns `gacela.yaml` into the two services the bundle needs: the one that
- * boots Gacela, and the one that warms its caches.
+ * Turns `gacela.yaml` into the services the bundle needs: the one that boots
+ * Gacela, the one that warms its caches, and Gacela's container, which
+ * `#[Inject]` arguments resolve through.
  *
  * @psalm-type GacelaBundleConfig = array{
  *     enabled: bool,
@@ -38,6 +41,8 @@ final class GacelaExtension extends Extension
 
     public const CACHE_WARMER_ID = 'gacela.cache_warmer';
 
+    public const CONTAINER_ID = 'gacela.container';
+
     /**
      * @param array<array-key, mixed> $configs
      */
@@ -52,6 +57,7 @@ final class GacelaExtension extends Extension
 
         $this->registerBootstrapper($container, $config);
         $this->registerCacheWarmer($container);
+        $this->registerGacelaContainer($container);
 
         if ($config['register_commands']) {
             $this->registerCommands($container, $config);
@@ -98,6 +104,19 @@ final class GacelaExtension extends Extension
         $definition->addTag('kernel.cache_warmer');
 
         $container->setDefinition(self::CACHE_WARMER_ID, $definition);
+    }
+
+    /**
+     * A factory rather than an instance: Gacela is bootstrapped in the bundle's
+     * boot(), after compilation, so the container can only be fetched once a
+     * service asks for it.
+     */
+    private function registerGacelaContainer(ContainerBuilder $container): void
+    {
+        $definition = new Definition(Container::class);
+        $definition->setFactory([Gacela::class, 'container']);
+
+        $container->setDefinition(self::CONTAINER_ID, $definition);
     }
 
     /**

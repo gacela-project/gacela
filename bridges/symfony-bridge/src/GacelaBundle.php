@@ -28,7 +28,7 @@ final class GacelaBundle extends Bundle
     {
         parent::build($container);
 
-        $container->addCompilerPass(new GacelaInjectCompilerPass());
+        $container->addCompilerPass(new GacelaInjectCompilerPass(GacelaExtension::CONTAINER_ID));
     }
 
     /**

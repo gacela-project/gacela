@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Symfony bridge: `#[Inject]` on a Symfony-managed service no longer fails the container build under `GacelaBundle`. The bundle now registers the `gacela.container` service the compiler pass routes to, so only a setup without the bundle registers it by hand (#908)
+
 ## [2.4.0](https://github.com/gacela-project/gacela/compare/2.3.0...2.4.0) - 2026-08-17
 
 ### Added

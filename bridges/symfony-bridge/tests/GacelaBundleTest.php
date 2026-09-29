@@ -10,6 +10,7 @@ use Gacela\SymfonyBridge\DependencyInjection\GacelaExtension;
 use Gacela\SymfonyBridge\GacelaBundle;
 use Gacela\SymfonyBridge\GacelaInjectCompilerPass;
 use GacelaTest\SymfonyBridge\Fixtures\CountingService;
+use GacelaTest\SymfonyBridge\Fixtures\InjectedCountingConsumer;
 use GacelaTest\SymfonyBridge\Fixtures\TestKernel;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -133,6 +134,26 @@ final class GacelaBundleTest extends SymfonyBridgeTestCase
         $classes = array_map(static fn (object $pass): string => $pass::class, $passes);
 
         self::assertContains(GacelaInjectCompilerPass::class, $classes);
+    }
+
+    /**
+     * The pass rewrites `#[Inject]` to a `gacela.container` service, so the
+     * bundle has to register that id too (#908). A test of the pass alone
+     * builds its own container and cannot see the id missing.
+     */
+    public function test_inject_on_a_symfony_service_resolves_through_gacela(): void
+    {
+        $kernel = new TestKernel(
+            ['external_services' => [CountingService::class => 'app.counting']],
+            ['app.counting' => CountingService::class],
+            argumentlessServices: ['app.consumer' => InjectedCountingConsumer::class],
+        );
+        $kernel->boot();
+
+        $consumer = $kernel->getContainer()->get('app.consumer');
+
+        self::assertInstanceOf(InjectedCountingConsumer::class, $consumer);
+        self::assertSame(CountingService::FROM_SYMFONY, $consumer->counting->name());
     }
 
     public function test_disabling_the_bundle_registers_nothing(): void

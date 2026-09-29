@@ -24,8 +24,10 @@ use function sprintf;
  * with Gacela's {@see Inject} attribute resolve through Gacela's container
  * instead of Symfony's autowire.
  *
- * The consumer must register a Symfony service (default id `gacela.container`)
- * exposing a `get(string $className): object` method. Conflicts — Symfony
+ * The rewritten arguments resolve through a Symfony service (default id
+ * `gacela.container`) exposing a `get(string $className): object` method.
+ * {@see GacelaBundle} registers it; without the bundle, the consumer must.
+ * Conflicts — Symfony
  * already claiming a slot that `#[Inject]` wants — fail the build.
  */
 final class GacelaInjectCompilerPass implements CompilerPassInterface

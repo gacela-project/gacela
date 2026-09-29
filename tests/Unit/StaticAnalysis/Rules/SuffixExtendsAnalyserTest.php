@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
+use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFacade;
 use Gacela\StaticAnalysis\Rules\SuffixExtendsAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
+use PhpParser\Node\Stmt\ClassLike;
 use PHPUnit\Framework\TestCase;
 
 final class SuffixExtendsAnalyserTest extends TestCase
@@ -103,9 +105,61 @@ final class SuffixExtendsAnalyserTest extends TestCase
     public function test_the_violation_carries_the_correction(): void
     {
         self::assertSame(
-            'Extend Gacela\Framework\AbstractFacade, or rename it so it does not end in Facade.',
+            'Rename it so it does not end in Facade. Extend Gacela\Framework\AbstractFacade only if it is its module\'s Facade.',
             $this->analyse('App\Checkout\CheckoutFacade')[0]->tip,
         );
+    }
+
+    /**
+     * The invokable `extendGacelaConfig()` takes has no parent and no interface,
+     * and `*Config` is its natural name. Both host tree shapes are checked,
+     * since the parameter type is a name each resolves differently.
+     */
+    public function test_a_config_extender_is_not_told_to_extend_the_config_pillar(): void
+    {
+        $source = <<<'PHP'
+            <?php
+            namespace App;
+            use Gacela\Framework\Bootstrap\GacelaConfig;
+            final class RouterGacelaConfig
+            {
+                public function __construct(private string $prefix) {}
+                public function __invoke(GacelaConfig $config): void {}
+            }
+            PHP;
+
+        self::assertSame([], $this->analyseConfig(ParseSource::classInAsPhpStanResolves($source)));
+        self::assertSame([], $this->analyseConfig(ParseSource::classInWithNameAttributes($source)));
+    }
+
+    public function test_an_invokable_taking_something_else_is_still_reported(): void
+    {
+        $node = ParseSource::classInAsPhpStanResolves(<<<'PHP'
+            <?php
+            namespace App;
+            final class RouterGacelaConfig
+            {
+                public function __invoke(Settings $config): void {}
+            }
+            PHP);
+
+        self::assertCount(1, $this->analyseConfig($node));
+    }
+
+    public function test_an_extender_shape_with_more_methods_is_still_reported(): void
+    {
+        $node = ParseSource::classInAsPhpStanResolves(<<<'PHP'
+            <?php
+            namespace App;
+            use Gacela\Framework\Bootstrap\GacelaConfig;
+            final class RouterGacelaConfig
+            {
+                public function __invoke(GacelaConfig $config): void {}
+                public function get(string $key): mixed { return null; }
+            }
+            PHP);
+
+        self::assertCount(1, $this->analyseConfig($node));
     }
 
     /**
@@ -131,5 +185,15 @@ final class SuffixExtendsAnalyserTest extends TestCase
         $analyser = new SuffixExtendsAnalyser('Facade', AbstractFacade::class);
 
         return $analyser->analyse($node, new FakeAnalysedClass($className, $parents));
+    }
+
+    /**
+     * @return list<Violation>
+     */
+    private function analyseConfig(ClassLike $node): array
+    {
+        $analyser = new SuffixExtendsAnalyser('Config', AbstractConfig::class);
+
+        return $analyser->analyse($node, new FakeAnalysedClass('App\RouterGacelaConfig'));
     }
 }

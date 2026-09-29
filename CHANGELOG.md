@@ -5,6 +5,9 @@
 ### Fixed
 
 - `make:module --minimal` no longer writes a Factory whose `@extends` names a Config the template does not create, so PHPStan reports nothing on a freshly scaffolded minimal module
+- `gacela.suffixExtends` no longer reports a config extender: a class whose only method besides a constructor is `__invoke(GacelaConfig $config)`, the shape `extendGacelaConfig()` takes, even when it is named `*Config`
+- The `gacela.suffixExtends` tip leads with the rename and says to extend the pillar base only for the module's real pillar. Extending it on any other class made a second candidate that resolution picked up by name
+- Symfony bridge: `#[Inject]` on a Symfony-managed service no longer fails the container build under `GacelaBundle`. The bundle now registers the `gacela.container` service the compiler pass routes to, so only a setup without the bundle registers it by hand (#908)
 
 ## [2.4.0](https://github.com/gacela-project/gacela/compare/2.3.0...2.4.0) - 2026-08-17
 

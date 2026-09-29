@@ -6,6 +6,7 @@ namespace Gacela\Console\Domain\FileContent;
 
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 
+use function preg_match;
 use function sprintf;
 
 final class FileContentGenerator implements FileContentGeneratorInterface
@@ -13,6 +14,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
     public function __construct(
         private readonly FileContentIoInterface $fileContentIo,
         private readonly StubLocator $stubs,
+        private readonly string $rootDir = '',
     ) {
     }
 
@@ -45,7 +47,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
         foreach ($files as [$filename, $subDirectory]) {
             $path = $this->targetPath($commandArguments, $filename, $withShortName, $subDirectory);
 
-            if ($this->fileContentIo->existsFile($path)) {
+            if ($this->fileContentIo->existsFile($this->onDisk($path))) {
                 $existing[] = $path;
             }
         }
@@ -60,7 +62,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
         foreach ($files as [$filename, $subDirectory]) {
             $path = $this->targetPath($commandArguments, $filename, $withShortName, $subDirectory);
 
-            $planned[] = ['path' => $path, 'exists' => $this->fileContentIo->existsFile($path)];
+            $planned[] = ['path' => $path, 'exists' => $this->fileContentIo->existsFile($this->onDisk($path))];
         }
 
         return $planned;
@@ -78,7 +80,7 @@ final class FileContentGenerator implements FileContentGeneratorInterface
             $targetDirectory .= '/' . $subDirectory;
         }
 
-        $this->fileContentIo->mkdir($targetDirectory);
+        $this->fileContentIo->mkdir($this->onDisk($targetDirectory));
 
         $moduleName = $withShortName ? '' : $commandArguments->basename();
         $className = $moduleName . $filename;
@@ -89,8 +91,21 @@ final class FileContentGenerator implements FileContentGeneratorInterface
 
         $fileContent = str_replace($search, $replace, $this->stubs->templateFor($filename));
 
-        $this->fileContentIo->filePutContents($path, $fileContent);
+        $this->fileContentIo->filePutContents($this->onDisk($path), $fileContent);
 
         return $path;
+    }
+
+    /**
+     * A relative psr-4 directory is relative to the project root, which
+     * bin/gacela bootstraps from even when it runs in a subdirectory.
+     */
+    private function onDisk(string $path): string
+    {
+        if ($this->rootDir === '' || preg_match('~^(?:[a-zA-Z]:[\\\\/]|[\\\\/])~', $path) === 1) {
+            return $path;
+        }
+
+        return $this->rootDir . '/' . $path;
     }
 }

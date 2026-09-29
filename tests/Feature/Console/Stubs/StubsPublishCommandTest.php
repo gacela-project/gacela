@@ -29,7 +29,7 @@ use function unlink;
 
 final class StubsPublishCommandTest extends TestCase
 {
-    private const GENERATED_DIR = __DIR__ . '/../../../../data/StubbedModule';
+    private const GENERATED_DIR = __DIR__ . '/data/StubbedModule';
 
     private string $appRoot = '';
 
@@ -151,9 +151,9 @@ final class StubsPublishCommandTest extends TestCase
 
     /**
      * Generation happens where the scaffolder puts files -- relative to the
-     * working directory, into the `data/` psr-4 target this repository maps --
-     * so this half bootstraps the repository itself and points it at a stubs
-     * directory of its own.
+     * project root, into the `data/` psr-4 target this directory maps -- so this
+     * half bootstraps this directory and points it at a stubs directory of its
+     * own.
      */
     public function test_a_published_stub_is_what_make_module_generates_from(): void
     {
@@ -251,8 +251,8 @@ final class StubsPublishCommandTest extends TestCase
     }
 
     /**
-     * The repository is its own scaffolding target: `data/` is a psr-4 path
-     * here, and the generator writes relative to the working directory.
+     * This directory is its own scaffolding target: `data/` is a psr-4 path
+     * here, and the generator writes relative to the project root.
      */
     private function bootstrapRepositoryWithStubsDir(): void
     {

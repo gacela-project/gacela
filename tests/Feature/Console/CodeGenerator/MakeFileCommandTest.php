@@ -18,7 +18,7 @@ use function sprintf;
 
 final class MakeFileCommandTest extends TestCase
 {
-    private const CACHE_DIR = '.' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'TestModule';
+    private const CACHE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'TestModule';
 
     public static function tearDownAfterClass(): void
     {
@@ -61,7 +61,7 @@ final class MakeFileCommandTest extends TestCase
         $bootstrap->run($input, $output);
 
         self::assertSame(sprintf("> Path 'src/TestModule/%s.php' created successfully", $fileName), trim($output->fetch()));
-        self::assertFileExists(sprintf('./src/TestModule/%s.php', $fileName));
+        self::assertFileExists(sprintf('%s/src/TestModule/%s.php', __DIR__, $fileName));
     }
 
     /**
@@ -85,8 +85,8 @@ final class MakeFileCommandTest extends TestCase
         self::assertSame(Command::SUCCESS, $exitCode, $display);
         self::assertStringContainsString("Would create 'src/DryRunFileModule/DryRunFileModuleFacade.php'", $display);
         self::assertStringContainsString('Dry run: nothing was written (1 file).', $display);
-        self::assertFileDoesNotExist('./src/DryRunFileModule/DryRunFileModuleFacade.php');
-        self::assertDirectoryDoesNotExist('./src/DryRunFileModule');
+        self::assertFileDoesNotExist(__DIR__ . '/src/DryRunFileModule/DryRunFileModuleFacade.php');
+        self::assertDirectoryDoesNotExist(__DIR__ . '/src/DryRunFileModule');
     }
 
     /**
@@ -111,8 +111,8 @@ final class MakeFileCommandTest extends TestCase
         self::assertStringContainsString('is not a valid PHP name', $display);
 
         // Refused before writing: a half-generated module is worse than none.
-        self::assertFileDoesNotExist('./src/user-profile/user-profileFacade.php');
-        self::assertDirectoryDoesNotExist('./src/user-profile');
+        self::assertFileDoesNotExist(__DIR__ . '/src/user-profile/user-profileFacade.php');
+        self::assertDirectoryDoesNotExist(__DIR__ . '/src/user-profile');
     }
 
     public static function createFilesProvider(): iterable

@@ -33,10 +33,9 @@ final class MakeFileDeclaredKindTest extends TestCase
 {
     /**
      * `Psr4CodeGeneratorData\ => data/` in this directory's composer.json, and
-     * the generator writes relative to the working directory, so the module
-     * lands in the repository's own `data/`.
+     * the generator writes relative to the project root the test bootstraps.
      */
-    private const GENERATED_DIR = __DIR__ . '/../../../../data/DeclaredKindModule';
+    private const GENERATED_DIR = __DIR__ . '/data/DeclaredKindModule';
 
     private const MODULE_PATH = 'Psr4CodeGeneratorData/DeclaredKindModule';
 

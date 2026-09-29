@@ -12,6 +12,7 @@
 - `dto:generate` names the project root it read when no shape is declared. `bin/gacela` bootstraps the nearest directory holding `vendor/autoload.php`, so run inside a nested application it read an ancestor's `gacela.php` and "No shape declared" pointed at the wrong file ([#903](https://github.com/gacela-project/gacela/issues/903))
 - `doctor` reports an `extendService()` id that `addLazy()` or `addFactory()` also registers and a module Provider `set()`s. That module got the Provider's value unextended, with no message. `docs/container-configuration.md` now has a "Which registration wins" table, and the `addBinding()`, `addLazy()` and `extendService()` docblocks point to it ([#902](https://github.com/gacela-project/gacela/issues/902))
 - `bootstrapModule()` doubles now win over what `gacela.php` registers for the same class or interface in a Factory, Config or Provider constructor. The application file merges onto the bootstrap closure, so its binding or lazy service beat the double and the module was built with the real dependency. The double is now also bound to the pillars of the module under test, and other classes keep the application's registration
+- `make:module` and `make:file` write under the project root `bin/gacela` bootstraps from, and print paths relative to it. Run from a subdirectory, they wrote the module under the current directory, where `list:modules` did not find it, and checked for existing files there too ([#926](https://github.com/gacela-project/gacela/issues/926))
 
 ### Changed
 

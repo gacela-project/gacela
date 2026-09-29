@@ -12,6 +12,7 @@ use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Testing\GacelaTestCase;
 use Gacela\Framework\Testing\ModuleDoubleException;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Billing\BillingFacade;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Billing\BillingProvider;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Ordering\OrderingFacade;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Ordering\OrderingFactory;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Ordering\OrderingProvider;
@@ -21,6 +22,7 @@ use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingF
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingProvider;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Clock\ClockInterface;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Clock\FrozenClock;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Clock\Timezone;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\CurrencyInterface;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\EuroCurrency;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\PoundCurrency;
@@ -106,6 +108,48 @@ final class ModuleSliceTest extends GacelaTestCase
         ]);
 
         self::assertSame('frozen', (new BillingFacade())->providerDay());
+    }
+
+    public function test_a_double_keyed_by_a_concrete_class_beats_what_gacela_php_registers(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            Timezone::class => new Timezone('UTC'),
+        ]);
+
+        self::assertSame('UTC', (new BillingFacade())->timezone());
+    }
+
+    public function test_a_pillar_double_does_not_stop_the_doubles_after_it(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            PricingFacade::class => new PricingConfig(),
+            ClockInterface::class => new FrozenClock(),
+        ]);
+
+        self::assertSame('frozen', (new BillingFacade())->factoryDay());
+    }
+
+    public function test_a_container_id_double_does_not_stop_the_doubles_after_it(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            BillingProvider::CLOCK => new FrozenClock(),
+            ClockInterface::class => new FrozenClock(),
+        ]);
+
+        self::assertSame('frozen', (new BillingFacade())->factoryDay());
+    }
+
+    /**
+     * A container id names a registered service, not a constructor parameter:
+     * a `$`-prefixed key extends that id and leaves `$clock` arguments alone.
+     */
+    public function test_a_container_id_double_is_not_scoped_to_pillar_parameters(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            '$clock' => new FrozenClock(),
+        ]);
+
+        self::assertSame('system', (new BillingFacade())->factoryDay());
     }
 
     /**

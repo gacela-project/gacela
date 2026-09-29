@@ -16,6 +16,11 @@ final class BillingFacade extends AbstractFacade
         return $this->getFactory()->clock()->today();
     }
 
+    public function timezone(): string
+    {
+        return $this->getFactory()->timezone()->name();
+    }
+
     public function configDay(): string
     {
         return $this->getFactory()->configClock()->today();

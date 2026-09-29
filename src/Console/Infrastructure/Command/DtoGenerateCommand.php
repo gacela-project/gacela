@@ -6,6 +6,7 @@ namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\DtoGenerate\DtoGenerateResult;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -42,7 +43,13 @@ final class DtoGenerateCommand extends Command
         $result = $this->getFacade()->generateDtoClasses($dryRun);
 
         if ($result->total() === 0) {
-            $output->writeln('<comment>No shape declared. Use $config->declareDtoSchema(...) in gacela.php.</comment>');
+            // Named, because bin/gacela bootstraps the nearest directory holding
+            // vendor/autoload.php: run from inside a nested application, the
+            // gacela.php read is an ancestor's, not the one beside you.
+            $output->writeln(sprintf(
+                '<comment>No shape declared in the project at %s. Use $config->declareDtoSchema(...) in its gacela.php.</comment>',
+                Config::getInstance()->getAppRootDir(),
+            ));
 
             return Command::SUCCESS;
         }

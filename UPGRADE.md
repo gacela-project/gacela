@@ -64,6 +64,44 @@ Two of the three emit a runtime notice. `DocBlockResolverAwareTrait` cannot — 
 grep -rn "DocBlockResolverAwareTrait" src/
 ```
 
+#### If you are coming from before 1.11: pillars take a type parameter
+
+This is not a 2.0 change. `AbstractFacade`, `AbstractFactory` and `AbstractProvider` have been generic since 1.11, so a project jumping from an older 1.x meets it on the way to 1.21:
+
+```php
+/** @template TFactory of AbstractFactory = AbstractFactory */
+abstract class AbstractFacade
+
+/** @template TConfig of AbstractConfig = AbstractConfig */
+abstract class AbstractFactory
+
+/** @template TConfig of AbstractConfig = AbstractConfig */
+abstract class AbstractProvider
+```
+
+The defaults do not make the parameter optional for a strict analyser. Without it, `getFactory()` and `getConfig()` return the base class, and every call through them to your own methods fails. Psalm at `errorLevel="1"` reports all three:
+
+```
+ERROR: MissingTemplateParam - src/MyModule/MyModuleFacade.php
+ERROR: MixedReturnStatement - src/MyModule/MyModuleFacade.php
+ERROR: UndefinedMethod      - Method Gacela\Framework\AbstractFactory::createGreeter does not exist
+```
+
+PHPStan accepts the missing parameter because of the default, but from level 2 it still reports the follow-on call: `Call to an undefined method Gacela\Framework\AbstractFactory::createGreeter()`. Neither message names the docblock, so declare the parameter on each pillar:
+
+```php
+/** @extends AbstractFacade<MyModuleFactory> */
+final class MyModuleFacade extends AbstractFacade
+
+/** @extends AbstractFactory<MyModuleConfig> */
+final class MyModuleFactory extends AbstractFactory
+
+/** @extends AbstractProvider<MyModuleConfig> */
+final class MyModuleProvider extends AbstractProvider
+```
+
+`AbstractConfig` is not generic and needs nothing. `make:module` already writes the Facade and Factory lines.
+
 ---
 
 ### 1. PHP 8.3
@@ -419,9 +457,12 @@ Not blocking this upgrade, but the notices start now.
 
 **Resolving a pillar from a `@method` docblock, or by scanning the caller's `use` statements**, raises `E_USER_DEPRECATED`. Declare it with `#[ServiceMap(method: ..., className: ...)]` — the attribute is checked first, so adding it silences the notice. Each notice names the class it resolved, spelled `\Fully\Qualified\Name::class`, so the line it suggests pastes into any namespace unchanged.
 
-The generic form counts too. `@extends AbstractFacade<MyFactory>` names the factory by its short name, which is resolved through the file's `use` statements — the second deprecated strategy. Typing a pillar generically is still worth doing for the analysers; it is not a substitute for the attribute.
+Both strategies apply only to `@method` accessors on classes using `ServiceResolverAwareTrait`. The generic form `@extends AbstractFacade<MyFactory>` is not one of them: `AbstractFacade::getFactory()` finds the factory by naming convention and never reads the docblock, so a pillar typed with `@extends` alone raises no notice and has nothing to migrate. The two annotations serve different tools:
 
-**Neither analyser finds these on its own.** PHPStan reads `@method` and `@extends` natively, so a class carrying either is a class it considers correct — with or without the attribute. A green analysis run says nothing about whether you are ready for 3.0.
+- `@extends AbstractFacade<MyFactory>` is for the analysers. Strict Psalm requires it, and the runtime ignores it. Keep it after you add the attribute.
+- `#[ServiceMap]` is for the resolver. It replaces the `@method` docblock fallback that 3.0 removes.
+
+**Neither analyser finds these on its own.** PHPStan reads `@method` natively, so a class carrying it is a class it considers correct, with or without the attribute. A green analysis run says nothing about whether you are ready for 3.0.
 
 Gacela ships a rule that does, off by default because what it reports is not wrong on 2.x — turning it on is the decision to start this migration:
 
@@ -440,7 +481,7 @@ services:
 </pluginClass>
 ```
 
-Each finding names the attribute to paste. It covers `@method` accessors on classes using `ServiceResolverAwareTrait` — not the `@extends` generic form below, which `FactoryResolver` resolves by naming convention rather than from the docblock. See [Static analysis](docs/static-analysis.md#finding-what-30-removes).
+Each finding names the attribute to paste. It covers `@method` accessors on classes using `ServiceResolverAwareTrait`, the only accessors 3.0 changes. See [Static analysis](docs/static-analysis.md#finding-what-30-removes).
 
 The notice fires on a **cold resolve only**, because the answer is memoized per caller-and-method. To surface every occurrence:
 

@@ -6,19 +6,23 @@ namespace Gacela\Console\Domain\ServiceMapMigration;
 
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\StaticAnalysis\Rules\ServiceMapMissingAnalyser;
+use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
+use PhpParser\Node\UseItem;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use Throwable;
 
-use function count;
 use function explode;
 use function implode;
 use function sprintf;
+use function str_replace;
+use function strcasecmp;
 
 /**
  * Writes the `#[ServiceMap]` attribute that {@see ServiceMapMissingAnalyser}
@@ -43,6 +47,8 @@ use function sprintf;
 final class ServiceMapMigrator
 {
     private const IMPORT = 'use ' . ServiceMap::class . ';';
+
+    private const IMPORT_SORT_KEY = 'Gacela Framework ServiceResolver ServiceMap';
 
     public function __construct(
         private readonly Parser $parser,
@@ -103,12 +109,13 @@ final class ServiceMapMigrator
         }
 
         $lines = explode("\n", $phpCode);
-        $importLine = $this->alreadyImported($ast) ? null : $this->importLine($ast);
+        $imports = $this->importStatements($ast);
+        $importInsertion = $this->alreadyImported($imports) ? [] : $this->importInsertion($ast, $imports);
 
         return new MigrationResult(
             $path,
             $phpCode,
-            $this->rebuild($lines, $insertions, $importLine),
+            $this->rebuild($lines, $insertions, $importInsertion),
             $declared,
         );
     }
@@ -116,68 +123,157 @@ final class ServiceMapMigrator
     /**
      * @param list<string> $lines
      * @param array<int, list<string>> $insertions one-based line => lines to put above it
+     * @param array<int, list<string>> $importInsertion one-based line => lines to put above it
      */
-    private function rebuild(array $lines, array $insertions, ?int $importLine): string
+    private function rebuild(array $lines, array $insertions, array $importInsertion): string
     {
         $rebuilt = [];
 
         foreach ($lines as $index => $line) {
             $lineNumber = $index + 1;
 
+            foreach ($importInsertion[$lineNumber] ?? [] as $import) {
+                $rebuilt[] = $import;
+            }
+
             foreach ($insertions[$lineNumber] ?? [] as $attribute) {
                 $rebuilt[] = $attribute;
             }
 
             $rebuilt[] = $line;
-
-            if ($lineNumber === $importLine) {
-                $rebuilt[] = self::IMPORT;
-            }
         }
 
         return implode("\n", $rebuilt);
     }
 
     /**
-     * The line to put the import after: the last `use` of the file, or the
-     * `namespace` when it imports nothing yet.
+     * The import-block statements of the first namespace, or of the file when
+     * it declares none.
      *
-     * Placed after rather than sorted in, because sorting is the formatter's
-     * job and this repository runs one. Guessing at alphabetical order would
-     * only be right until a file disagreed with the guess.
+     * @param array<array-key, Node> $ast
      *
-     * @param array<array-key, \PhpParser\Node> $ast
+     * @return list<Use_|GroupUse>
      */
-    private function importLine(array $ast): ?int
+    private function importStatements(array $ast): array
     {
-        /** @var list<Use_> $uses */
-        $uses = $this->nodeFinder->findInstanceOf($ast, Use_::class);
-        if ($uses !== []) {
-            $last = $uses[count($uses) - 1];
+        $namespace = $this->nodeFinder->findFirstInstanceOf($ast, Namespace_::class);
+        $statements = $namespace instanceof Namespace_ ? $namespace->stmts : $ast;
 
-            return $last->getEndLine();
+        $imports = [];
+        foreach ($statements as $statement) {
+            if ($statement instanceof Use_ || $statement instanceof GroupUse) {
+                $imports[] = $statement;
+            }
         }
 
-        /** @var list<Namespace_> $namespaces */
-        $namespaces = $this->nodeFinder->findInstanceOf($ast, Namespace_::class);
-        if ($namespaces !== []) {
-            return $namespaces[0]->getStartLine();
-        }
-
-        return null;
+        return $imports;
     }
 
     /**
-     * @param array<array-key, \PhpParser\Node> $ast
+     * Where the import goes so an `ordered_imports` formatter has nothing left
+     * to move: among the class imports in alphabetical order, and above any
+     * function or const import, since classes come first.
+     *
+     * @param array<array-key, Node> $ast
+     * @param list<Use_|GroupUse> $imports
+     *
+     * @return array<int, list<string>> one-based line => lines to put above it
      */
-    private function alreadyImported(array $ast): bool
+    private function importInsertion(array $ast, array $imports): array
     {
-        /** @var list<Use_> $uses */
-        $uses = $this->nodeFinder->findInstanceOf($ast, Use_::class);
+        $lastClassImport = null;
 
-        foreach ($uses as $use) {
-            foreach ($use->uses as $useUse) {
-                if ($useUse->name->toString() === ServiceMap::class) {
+        foreach ($imports as $import) {
+            if (!$this->importsClasses($import)) {
+                continue;
+            }
+
+            if (strcasecmp($this->sortKey($import), self::IMPORT_SORT_KEY) > 0) {
+                return [$this->firstLine($import) => [self::IMPORT]];
+            }
+
+            $lastClassImport = $import;
+        }
+
+        if ($lastClassImport !== null) {
+            return [$lastClassImport->getEndLine() + 1 => [self::IMPORT]];
+        }
+
+        if ($imports !== []) {
+            return [$this->firstLine($imports[0]) => [self::IMPORT, '']];
+        }
+
+        $namespace = $this->nodeFinder->findFirstInstanceOf($ast, Namespace_::class);
+        if ($namespace instanceof Namespace_) {
+            return [$namespace->getStartLine() + 1 => ['', self::IMPORT]];
+        }
+
+        return [];
+    }
+
+    private function importsClasses(Use_|GroupUse $import): bool
+    {
+        if ($import instanceof Use_) {
+            return $import->type === Use_::TYPE_NORMAL;
+        }
+
+        foreach ($import->uses as $item) {
+            if ($item->type !== Use_::TYPE_NORMAL) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * The key php-cs-fixer's `ordered_imports` sorts by, the imported name and
+     * its alias with separators read as spaces. The fixer's key runs on past
+     * the first item of a group, which can never change how it compares with
+     * the one import this adds.
+     */
+    private function sortKey(Use_|GroupUse $import): string
+    {
+        $item = $import->uses[0];
+        $key = $this->importedName($import, $item);
+        if ($item->alias !== null) {
+            $key .= ' as ' . $item->alias->toString();
+        }
+
+        return str_replace('\\', ' ', $key);
+    }
+
+    private function importedName(Use_|GroupUse $import, UseItem $item): string
+    {
+        $prefix = $import instanceof GroupUse ? $import->prefix->toString() . '\\' : '';
+
+        return $prefix . $item->name->toString();
+    }
+
+    /**
+     * A comment above an import belongs to it, so the insert goes above both.
+     */
+    private function firstLine(Use_|GroupUse $import): int
+    {
+        $comments = $import->getComments();
+
+        return $comments === [] ? $import->getStartLine() : $comments[0]->getStartLine();
+    }
+
+    /**
+     * Imported under another alias, `#[ServiceMap]` would still not resolve,
+     * so only an import that binds the short name counts. Class names are
+     * case-insensitive, and a second import of the same name is a fatal error.
+     *
+     * @param list<Use_|GroupUse> $imports
+     */
+    private function alreadyImported(array $imports): bool
+    {
+        foreach ($imports as $import) {
+            foreach ($import->uses as $item) {
+                if (strcasecmp($this->importedName($import, $item), ServiceMap::class) === 0
+                    && strcasecmp($item->getAlias()->toString(), 'ServiceMap') === 0
+                ) {
                     return true;
                 }
             }

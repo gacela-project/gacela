@@ -88,10 +88,12 @@ Every finding carries the correction as well as the complaint — PHPStan render
 
 ```
 Class App\Checkout\CheckoutFacade should extend Gacela\Framework\AbstractFacade
-    💡 Extend Gacela\Framework\AbstractFacade, or rename it so it does not end in Facade.
+    💡 Rename it so it does not end in Facade. Extend Gacela\Framework\AbstractFacade only if it is its module's Facade.
 ```
 
-The pillar rules apply to **classes**. An interface, trait or enum named after a pillar is left alone: none of them can extend a class, so there would be no way to act on the report.
+Renaming comes first because extending the base is only right for the module's real pillar. On any other class it makes a second candidate that resolution picks up by name.
+
+The pillar rules apply to **classes**. An interface, trait or enum named after a pillar is left alone: none of them can extend a class, so there would be no way to act on the report. Neither is a class that already extends something else, nor a config extender: a class whose only method besides a constructor is `__invoke(GacelaConfig $config)`, the shape `extendGacelaConfig()` takes.
 
 Suppressing one rule:
 

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+
+- `make:module --minimal` no longer writes a Factory whose `@extends` names a Config the template does not create, so PHPStan reports nothing on a freshly scaffolded minimal module
+- `gacela.suffixExtends` no longer reports a config extender: a class whose only method besides a constructor is `__invoke(GacelaConfig $config)`, the shape `extendGacelaConfig()` takes, even when it is named `*Config`
+- The `gacela.suffixExtends` tip leads with the rename and says to extend the pillar base only for the module's real pillar. Extending it on any other class made a second candidate that resolution picked up by name
+- Symfony bridge: `#[Inject]` on a Symfony-managed service no longer fails the container build under `GacelaBundle`. The bundle now registers the `gacela.container` service the compiler pass routes to, so only a setup without the bundle registers it by hand (#908)
+- **`migrate:service-map` inserts its `ServiceMap` import in sorted position.** It appended the import after the last `use`, so a file with an import sorting after it failed `ordered_imports` right after the migration and needed a formatter pass. The import now goes where `ordered_imports` puts it, among the class imports and above any function or const import, including when the block has aliased or group imports. An existing import spelled in another case now counts, instead of gaining a duplicate that PHP rejects ([#912](https://github.com/gacela-project/gacela/issues/912))
+
 ### Changed
 
 - Module discovery (`list:modules`, `debug:modules`, `doctor`, `cache:warm`) no longer loads every class it scans. It reads each candidate's `extends` chain from source, locating parent files through Composer's `ClassLoader::findFile()`, and skips the load when the chain ends without reaching `AbstractFacade`. Anything the source cannot prove falls back to loading the class as before, and so does a project without a Composer autoloader. On this repository's `src` and `tests` the classes loaded drop from 1018 to 370, with the same 143 modules found

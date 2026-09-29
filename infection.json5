@@ -509,6 +509,9 @@
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\Framework\\Exception\\ErrorSuggestionHelper::findSimilar",
                 "Gacela\\Console\\ConsoleFactory::resolveScanPath",
+                // A sort key equal to ServiceMap's is ServiceMap imported under its own
+                // name, which alreadyImported() returns on before this is reached.
+                "Gacela\\Console\\Domain\\ServiceMapMigration\\ServiceMapMigrator::importInsertion",
             ],
         },
         GreaterThanNegotiation: {

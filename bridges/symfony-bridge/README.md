@@ -94,7 +94,7 @@ Symfony autowires constructor parameters through its own container, and Gacela's
 
 `GacelaInjectCompilerPass` walks every service definition at compile time, looks at each constructor parameter for `#[Inject]`, and rewrites the argument so Symfony resolves that slot through Gacela's container instead. If both containers claim the same parameter, the build fails naming the service and parameter.
 
-The bundle registers the pass for you. To use it without the bundle:
+The bundle registers the pass for you, and the `gacela.container` service the rewritten arguments resolve through. To use the pass without the bundle, register both yourself:
 
 ```php
 use Gacela\SymfonyBridge\GacelaInjectCompilerPass;
@@ -102,8 +102,6 @@ use Gacela\SymfonyBridge\GacelaInjectCompilerPass;
 $container->addCompilerPass(new GacelaInjectCompilerPass());
 $container->set('gacela.container', Gacela::container());
 ```
-
-The Gacela container must be registered as a Symfony service named `gacela.container` so the rewritten arguments can resolve through it at runtime.
 
 ## Status
 

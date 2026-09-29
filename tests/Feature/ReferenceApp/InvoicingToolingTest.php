@@ -207,7 +207,11 @@ final class InvoicingToolingTest extends TestCase
 
         $tester = $this->execute(new DtoGenerateCommand(), ['--check' => true]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $tester->getDisplay());
+        self::assertSame(
+            Command::SUCCESS,
+            $tester->getStatusCode(),
+            $tester->getDisplay() . "\nRegenerate with: php tests/Feature/ReferenceApp/regenerate-shapes.php",
+        );
         self::assertStringContainsString('2 class(es) already up to date', $tester->getDisplay());
     }
 

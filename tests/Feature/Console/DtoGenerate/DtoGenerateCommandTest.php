@@ -289,7 +289,28 @@ final class DtoGenerateCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertStringContainsString(
-            'No shape declared. Use $config->declareDtoSchema(...) in gacela.php.',
+            'Use $config->declareDtoSchema(...) in its gacela.php.',
+            $tester->getDisplay(),
+        );
+    }
+
+    /**
+     * bin/gacela bootstraps the nearest directory holding vendor/autoload.php,
+     * so from inside a nested application the answer is about an ancestor. The
+     * message names the root it read, or it reads as a verdict on the wrong file.
+     */
+    public function test_a_project_declaring_no_shape_is_named_by_its_root(): void
+    {
+        Gacela::bootstrap($this->projectDir, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+        });
+
+        $tester = new CommandTester(new DtoGenerateCommand());
+        $tester->execute([]);
+
+        self::assertStringContainsString(
+            'No shape declared in the project at ' . $this->projectDir . '.',
             $tester->getDisplay(),
         );
     }

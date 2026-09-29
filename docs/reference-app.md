@@ -150,6 +150,24 @@ PHPStan, and the file's own header says not to edit it — so the only place tha
 can be answered is the analyser configuration, scoped to the two files it is
 true of.
 
+## Regenerating the two shapes
+
+`InvoiceRecord` and `CustomerProfile` are committed, and the tooling test fails
+when `dto:generate --check` finds them behind `gacela.php`. After a change to
+their declaration, or to the generator itself, rewrite them from the repository
+root and commit the result:
+
+```bash
+php tests/Feature/ReferenceApp/regenerate-shapes.php
+```
+
+`bin/gacela dto:generate` cannot do it. Run from the application's directory it
+bootstraps the nearest directory holding `vendor/autoload.php`, which is the
+repository root, and the application's `gacela.php` needs the `clock` external
+service that only its host supplies. The script bootstraps through
+`ReferenceApp::bootstrap()`, the same host the tests use, and accepts the
+command's `--dry-run` and `--check`.
+
 ## See also
 
 - [Getting started](getting-started.md) — the same ideas, one module at a time

@@ -270,11 +270,13 @@ final class GacelaConfig
      * fill one, wherever it appears: a nested dependency, a module's services,
      * or the constructor of a Facade, Factory, Config or Provider.
      *
+     * The key may also be any container id, such as `'app.clock'`. Autowiring
+     * never matches one, so it is read back with `get($id)`, like {@see addLazy()}.
+     *
      * Loses to `gacela.php`, to {@see addLazy()} on the same id, and to a module
      * Provider inside that module: see "Which registration wins" in
      * docs/container-configuration.md.
      *
-     * @param class-string $key
      * @param class-string|object|callable $value
      */
     public function addBinding(string $key, string|object|callable $value): self
@@ -299,7 +301,6 @@ final class GacelaConfig
      * conditional binding in `gacela.php` still replaces an unconditional one in
      * the closure, exactly as a plain {@see addBinding()} there would.
      *
-     * @param class-string $key
      * @param class-string|object|callable $value
      */
     public function addBindingIf(string $key, string|object|callable $value): self
@@ -666,7 +667,19 @@ final class GacelaConfig
      * Wrap a service wherever it is registered, a module Provider included,
      * unless the application also registers the id: then only the application's
      * service is extended. See "Which registration wins" in
-     * docs/container-configuration.md.
+     * docs/container-configuration.md, and {@see extendProviderService()} to
+     * wrap it in one module only.
+     *
+     * ```php
+     * $config->extendService(
+     *     'app.mailer',
+     *     static fn (Mailer $mailer, Container $container): Mailer => new LoggingMailer($mailer),
+     * );
+     * ```
+     *
+     * The closure receives the current service and the container, and may
+     * return a replacement or mutate in place, the same contract as
+     * `Container::extend()`.
      */
     public function extendService(string $id, Closure $service): self
     {

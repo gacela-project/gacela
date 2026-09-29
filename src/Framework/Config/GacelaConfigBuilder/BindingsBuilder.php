@@ -15,7 +15,6 @@ final class BindingsBuilder
     private array $mapping = [];
 
     /**
-     * @param class-string $key
      * @param callable|object|class-string $value
      */
     public function bind(string $key, callable|object|string $value): self
@@ -28,7 +27,6 @@ final class BindingsBuilder
     /**
      * Bind a value only when the key is not already bound (register-unless-overridden).
      *
-     * @param class-string $key
      * @param callable|object|class-string $value
      */
     public function bindIf(string $key, callable|object|string $value): self

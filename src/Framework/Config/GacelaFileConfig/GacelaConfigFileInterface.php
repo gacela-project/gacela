@@ -7,7 +7,7 @@ namespace Gacela\Framework\Config\GacelaFileConfig;
 use Gacela\Framework\Config\GacelaConfigBuilder\SuffixTypesBuilder;
 
 /**
- * @psalm-type BindingsMap = array<class-string, class-string|callable|object>
+ * @psalm-type BindingsMap = array<string, class-string|callable|object>
  *
  * @psalm-import-type SuffixTypes from SuffixTypesBuilder
  */

@@ -27,7 +27,9 @@ final class PluginXml
      * Null when the element was not written, which is a check staying off.
      *
      * Reading an absent child yields an *empty* element rather than null, so the
-     * count is what says whether one was written. `instanceof` alone is true
+     * count is what says whether one was written. It counts the matching sibling
+     * elements, not the children, so `<crossModule rootNamespace="App"/>` counts
+     * one and is configured. `instanceof` alone is true
      * either way, and would turn "not configured" into "configured with
      * nothing", which throws.
      */

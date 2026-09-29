@@ -78,7 +78,7 @@ final class Container implements ContainerInterface
     private array $afterResolvingHooks = [];
 
     /**
-     * @param ContainerBindingsMap $bindings
+     * @param BindingsMap $bindings
      * @param array<string, list<Closure>> $instancesToExtend
      * @param CompiledPlans $compiledPlans
      * @param PlanCache|null $planCache defaults to the process-wide cache every
@@ -90,8 +90,10 @@ final class Container implements ContainerInterface
         array $compiledPlans = [],
         ?PlanCache $planCache = null,
     ) {
+        // Upstream types this map by class-string, yet its bind() takes any id.
+        /** @psalm-suppress ArgumentTypeCoercion */
         $this->inner = (new GacelaContainer(
-            $bindings,
+            $bindings, // @phpstan-ignore argument.type
             $instancesToExtend,
             $compiledPlans,
             $planCache ?? SharedPlanCache::getInstance(),

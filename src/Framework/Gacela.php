@@ -195,6 +195,11 @@ final class Gacela
      *
      * Exposed publicly so test fixtures (see {@see Testing\ContainerFixture})
      * can share this exact sequence instead of duplicating the list.
+     *
+     * It clears caches; it does not un-bootstrap. `$appRootDir` and
+     * `$mainContainer` survive on purpose: bootstrap() sets the root before it
+     * calls this, and Config::getInstance() already reports "not bootstrapped"
+     * afterwards. StaticStateCoverageTest records both decisions.
      */
     public static function resetCache(): void
     {

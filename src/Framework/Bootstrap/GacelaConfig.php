@@ -273,6 +273,10 @@ final class GacelaConfig
      * The key may also be any container id, such as `'app.clock'`. Autowiring
      * never matches one, so it is read back with `get($id)`, like {@see addLazy()}.
      *
+     * Loses to `gacela.php`, to {@see addLazy()} on the same id, and to a module
+     * Provider inside that module: see "Which registration wins" in
+     * docs/container-configuration.md.
+     *
      * @param class-string|object|callable $value
      */
     public function addBinding(string $key, string|object|callable $value): self
@@ -660,8 +664,11 @@ final class GacelaConfig
     }
 
     /**
-     * Wrap a service wherever it is registered. See {@see extendProviderService()}
-     * to wrap it in one module only.
+     * Wrap a service wherever it is registered, a module Provider included,
+     * unless the application also registers the id: then only the application's
+     * service is extended. See "Which registration wins" in
+     * docs/container-configuration.md, and {@see extendProviderService()} to
+     * wrap it in one module only.
      *
      * ```php
      * $config->extendService(
@@ -841,6 +848,11 @@ final class GacelaConfig
      * {@see addFactory()} it is an id rather than a type, so a constructor
      * parameter is not filled from here -- and deferring construction is the
      * point, which resolving it to autowire something would defeat.
+     *
+     * Loses to `gacela.php` and to a module Provider inside that module, and
+     * with {@see extendService()} on the same id that module gets the Provider's
+     * value unextended: see "Which registration wins" in
+     * docs/container-configuration.md.
      *
      * @param string $id The service identifier
      * @param Closure $factory The factory closure that creates the service when needed

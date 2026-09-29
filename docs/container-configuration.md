@@ -92,6 +92,21 @@ Three things do hand back one instance:
 
 This is the opt-in caching described under [class attributes](#class-attributes-singleton-factory-and-lazy): reach for `#[Singleton]` when a service must be shared, rather than assuming a binding shares it. It matters most for a service that builds something internally on first use — a connection, a warmed lookup table — which is rebuilt with the object every time.
 
+## Which registration wins
+
+When two registrations name the same id, this is what the container answers with. "Closure" is the `Gacela::bootstrap()` closure; `gacela.php` merges onto it.
+
+| Registrations on one id | What you get |
+|---|---|
+| `addBinding()` in the closure and in `gacela.php` | the `gacela.php` one |
+| `addLazy()` or `addFactory()` in the closure and in `gacela.php` | the `gacela.php` one |
+| `addLazy()` or `addFactory()`, and `addBinding()` | the `addLazy()` or `addFactory()` one, whichever source declared each |
+| `addBinding()`, `addLazy()`, `addFactory()` or a post-bootstrap `Container::set()`, and a module Provider that `set()`s the id | the Provider's value inside that module; the application container keeps its own |
+| `extendService()`, and a module Provider that `set()`s the id | the Provider's value, extended |
+| `extendService()` and `addLazy()` (or `addFactory()`, or `addBinding()`), and a module Provider that `set()`s the id | inside that module, the Provider's value **unextended**; the extension applies to the application-level service only |
+
+A module owns its own wiring: the Provider registers on the module container after the application's services, and `extendService()` is the only application-level verb that reaches into it. That reach stops when the application container also provides the id, which is the last row. `doctor` reports that case for `addLazy()` and `addFactory()` under **service extensions**; drop one of the two registrations.
+
 ## Conditional Bindings
 
 Register a binding only when the key is not already bound — a default that the application (or an earlier binding) can override. Useful for plugins that want to ship a sensible default without clobbering a host application's choice.

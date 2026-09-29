@@ -31,6 +31,10 @@ use function sprintf;
  * `provides()`: the extension queue drains only through `set()`, so an id
  * registered via `bind()`/`singleton()` is a real registration whose
  * extension still never applies -- exactly what this check exists to say.
+ *
+ * An id both registered at application level and `set()` by a Provider is
+ * the other silent miss: a module scope skips extensions on ids the
+ * application container provides, so the Provider's value is never extended.
  */
 final class ServiceExtensionTargetCheck implements HealthCheck
 {
@@ -60,10 +64,25 @@ final class ServiceExtensionTargetCheck implements HealthCheck
         }
 
         $warnings = [];
-        $provided = array_flip($this->appContainerServiceIds);
+        $appLevel = array_flip($this->appContainerServiceIds);
+        $provided = $appLevel;
+        $extended = array_flip($this->extensionIds);
 
         foreach ($this->modules as $module) {
-            foreach ($this->providedIds($module, $warnings) as $id) {
+            $providerClass = $module->providerClass();
+            if ($providerClass === null) {
+                continue;
+            }
+
+            foreach ($this->registeredBy($providerClass, $warnings) as $id) {
+                if (isset($extended[$id], $appLevel[$id])) {
+                    $warnings[] = sprintf(
+                        "'%s' is extended and registered at application level, so %s's own registration is never extended -- that module gets the unextended service",
+                        $id,
+                        $providerClass,
+                    );
+                }
+
                 $provided[$id] = true;
             }
         }
@@ -100,7 +119,7 @@ final class ServiceExtensionTargetCheck implements HealthCheck
             return CheckResult::warn(
                 $this->name(),
                 $warnings,
-                'check the id for a typo; an extension only applies once some Provider set()s that id -- bind() and singleton() do not drain it',
+                "check the id for a typo; an extension only applies once some Provider set()s that id -- bind() and singleton() do not drain it; an id registered at application level is extended there only, so drop that registration or the Provider's",
             );
         }
 
@@ -111,26 +130,9 @@ final class ServiceExtensionTargetCheck implements HealthCheck
     }
 
     /**
-     * What one module's Provider stores, read off a throwaway scope. A
-     * Provider that cannot run outside its deployment is reported instead of
-     * crashing the diagnosis of every other one.
-     *
-     * @param list<string> $warnings
-     *
-     * @return list<string>
-     */
-    private function providedIds(AppModule $module, array &$warnings): array
-    {
-        $providerClass = $module->providerClass();
-        if ($providerClass === null) {
-            return [];
-        }
-
-        return $this->registeredBy($providerClass, $warnings);
-    }
-
-    /**
-     * What one Provider stores, read off a throwaway scope.
+     * What one Provider stores, read off a throwaway scope. A Provider that
+     * cannot run outside its deployment is reported instead of crashing the
+     * diagnosis of every other one.
      *
      * Named directly by `extendProviderService()`, so the miss is sharper than
      * the app-wide one: not "nobody set this" but "the Provider you named does

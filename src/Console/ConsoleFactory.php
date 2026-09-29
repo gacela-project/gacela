@@ -120,6 +120,25 @@ final class ConsoleFactory extends AbstractFactory
         );
     }
 
+    /**
+     * The `minimal` template writes no Config, so its Factory cannot name one
+     * in `@extends` without pointing PHPStan at a class that does not exist.
+     */
+    public function createMinimalFileContentGenerator(): FileContentGeneratorInterface
+    {
+        return new FileContentGenerator(
+            $this->createFileContentIo(),
+            new StubLocator(
+                $this->stubsDir(),
+                [
+                    FilenameSanitizer::FACADE => $this->getTemplateByFilenameMap()[FilenameSanitizer::FACADE] ?? '',
+                    FilenameSanitizer::FACTORY => $this->getConfig()->getMinimalFactoryMakerTemplate(),
+                ],
+                StubFiles::basic(),
+            ),
+        );
+    }
+
     public function createServiceFileContentGenerator(): FileContentGeneratorInterface
     {
         return new FileContentGenerator(

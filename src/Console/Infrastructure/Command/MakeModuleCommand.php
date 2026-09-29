@@ -128,9 +128,11 @@ final class MakeModuleCommand extends Command
         }
 
         foreach ($files as [$filename, $subDirectory]) {
-            $fullPath = $isService
-                ? $this->getFacade()->generateServiceFileContent($commandArguments, $filename, $shortName, $subDirectory)
-                : $this->getFacade()->generateFileContent($commandArguments, $filename, $shortName);
+            $fullPath = match ($template) {
+                'service' => $this->getFacade()->generateServiceFileContent($commandArguments, $filename, $shortName, $subDirectory),
+                'minimal' => $this->getFacade()->generateMinimalFileContent($commandArguments, $filename, $shortName),
+                default => $this->getFacade()->generateFileContent($commandArguments, $filename, $shortName),
+            };
 
             $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
         }

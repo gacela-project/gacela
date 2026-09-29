@@ -39,6 +39,11 @@ final class ConsoleConfig extends AbstractConfig
         return $this->getCommandTemplateContent('provider-maker.txt');
     }
 
+    public function getMinimalFactoryMakerTemplate(): string
+    {
+        return $this->getCommandTemplateContent('minimal/factory-maker.txt');
+    }
+
     public function getServiceFacadeMakerTemplate(): string
     {
         return $this->getCommandTemplateContent('service/facade-maker.txt');

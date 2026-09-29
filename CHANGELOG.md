@@ -8,6 +8,7 @@
 - `gacela.suffixExtends` no longer reports a config extender: a class whose only method besides a constructor is `__invoke(GacelaConfig $config)`, the shape `extendGacelaConfig()` takes, even when it is named `*Config`
 - The `gacela.suffixExtends` tip leads with the rename and says to extend the pillar base only for the module's real pillar. Extending it on any other class made a second candidate that resolution picked up by name
 - Symfony bridge: `#[Inject]` on a Symfony-managed service no longer fails the container build under `GacelaBundle`. The bundle now registers the `gacela.container` service the compiler pass routes to, so only a setup without the bundle registers it by hand (#908)
+- **`migrate:service-map` inserts its `ServiceMap` import in sorted position.** It appended the import after the last `use`, so a file with an import sorting after it failed `ordered_imports` right after the migration and needed a formatter pass. The import now goes where `ordered_imports` puts it, among the class imports and above any function or const import, including when the block has aliased or group imports. An existing import spelled in another case now counts, instead of gaining a duplicate that PHP rejects ([#912](https://github.com/gacela-project/gacela/issues/912))
 
 ## [2.4.0](https://github.com/gacela-project/gacela/compare/2.3.0...2.4.0) - 2026-08-17
 

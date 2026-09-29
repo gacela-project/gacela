@@ -70,6 +70,22 @@ abstract class AbstractClassResolver
         return self::$container ??= Container::forPillars(Config::getInstance());
     }
 
+    /**
+     * The class this resolver would build for the caller, without building it.
+     *
+     * @internal
+     *
+     * @param object|class-string $caller
+     *
+     * @return class-string|null
+     */
+    public function findClassNameFor(object|string $caller): ?string
+    {
+        $className = $this->findClassName(ClassInfo::from($caller, $this->getResolvableType()));
+
+        return $className === null ? null : ltrim($className, '\\');
+    }
+
     abstract protected function getResolvableType(): string;
 
     /**

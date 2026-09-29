@@ -11,6 +11,7 @@ use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\ClassResolver\ResolvedClassCreatedEvent;
 use Gacela\Framework\Testing\GacelaTestCase;
 use Gacela\Framework\Testing\ModuleDoubleException;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Billing\BillingFacade;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Ordering\OrderingFacade;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Ordering\OrderingFactory;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Ordering\OrderingProvider;
@@ -18,12 +19,15 @@ use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\Domain\P
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingConfig;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingFacade;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Pricing\PricingProvider;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Clock\ClockInterface;
+use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Clock\FrozenClock;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\CurrencyInterface;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\EuroCurrency;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Money\PoundCurrency;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Tax\TaxRateInterface;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shared\Tax\ZeroTaxRate;
 use GacelaTest\Integration\Framework\Testing\ModuleSliceFixture\Shipping\ShippingFacade;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionClass;
 
 use function array_map;
@@ -59,6 +63,67 @@ final class ModuleSliceTest extends GacelaTestCase
         ]);
 
         self::assertSame('price:1000 shipping:500 tax:2100 currency:GBP', (new OrderingFacade())->quote('widget'));
+    }
+
+    /**
+     * `gacela.php` merges onto the bootstrap closure, so what it registers for
+     * an interface beats a binding or a lazy service written there. A binding
+     * scoped to the pillars of the module under test does not lose.
+     */
+    #[DataProvider('providerClockDoubles')]
+    public function test_a_double_beats_what_gacela_php_registers_for_a_factory_constructor(object|string $double): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            ClockInterface::class => $double,
+        ]);
+
+        self::assertSame('frozen', (new BillingFacade())->factoryDay());
+    }
+
+    /**
+     * @return iterable<string, array{object|string}>
+     */
+    public static function providerClockDoubles(): iterable
+    {
+        yield 'an instance' => [new FrozenClock()];
+        yield 'a class name' => [FrozenClock::class];
+        yield 'a closure' => [static fn (): ClockInterface => new FrozenClock()];
+    }
+
+    public function test_a_double_beats_what_gacela_php_registers_for_a_config_constructor(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            ClockInterface::class => new FrozenClock(),
+        ]);
+
+        self::assertSame('frozen', (new BillingFacade())->configDay());
+    }
+
+    public function test_a_double_beats_what_gacela_php_registers_for_a_provider_constructor(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            ClockInterface::class => new FrozenClock(),
+        ]);
+
+        self::assertSame('frozen', (new BillingFacade())->providerDay());
+    }
+
+    /**
+     * Every double is scoped to every pillar of the module, and a pillar takes
+     * only what its constructor asks for.
+     */
+    public function test_a_double_no_pillar_constructor_asks_for_leaves_the_pillars_alone(): void
+    {
+        $this->bootstrapModule(self::FIXTURE_DIR, BillingFacade::class, doubles: [
+            CurrencyInterface::class => new PoundCurrency(),
+        ]);
+
+        $billing = new BillingFacade();
+
+        self::assertSame(
+            ['system', 'system', 'system'],
+            [$billing->factoryDay(), $billing->configDay(), $billing->providerDay()],
+        );
     }
 
     /**

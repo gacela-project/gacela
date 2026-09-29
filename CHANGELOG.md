@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- `make:module --minimal` no longer writes a Factory whose `@extends` names a Config the template does not create, so PHPStan reports nothing on a freshly scaffolded minimal module
+
 ## [2.4.0](https://github.com/gacela-project/gacela/compare/2.3.0...2.4.0) - 2026-08-17
 
 ### Added

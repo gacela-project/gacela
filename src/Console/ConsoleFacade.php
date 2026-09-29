@@ -90,6 +90,16 @@ final class ConsoleFacade extends AbstractFacade
             ->plannedTargets($commandArguments, $files, $withShortName);
     }
 
+    public function generateMinimalFileContent(
+        CommandArguments $commandArguments,
+        string $filename,
+        bool $withShortName = false,
+    ): string {
+        return $this->getFactory()
+            ->createMinimalFileContentGenerator()
+            ->generate($commandArguments, $filename, $withShortName);
+    }
+
     /**
      * Generate a file from the `service` template set.
      *

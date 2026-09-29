@@ -6,8 +6,11 @@ namespace GacelaTest\Unit\Console\Domain\ServiceMapMigration;
 
 use Gacela\Console\Domain\ServiceMapMigration\ServiceMapMigrator;
 use Gacela\StaticAnalysis\Rules\ServiceMapMissingAnalyser;
+use PhpCsFixer\Fixer\Import\OrderedImportsFixer;
+use PhpCsFixer\Tokenizer\Tokens;
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
+use SplFileInfo;
 
 final class ServiceMapMigratorTest extends TestCase
 {
@@ -55,8 +58,8 @@ final class ServiceMapMigratorTest extends TestCase
 
             namespace App\Wallet;
 
-            use Gacela\Framework\ServiceResolverAwareTrait;
             use Gacela\Framework\ServiceResolver\ServiceMap;
+            use Gacela\Framework\ServiceResolverAwareTrait;
 
             /**
              * @method WalletFacade getFacade()
@@ -67,6 +70,7 @@ final class ServiceMapMigratorTest extends TestCase
                 use ServiceResolverAwareTrait;
             }
             PHP, $result->migratedCode);
+        $this->assertImportsOrdered($result->migratedCode);
     }
 
     /**
@@ -211,6 +215,205 @@ final class ServiceMapMigratorTest extends TestCase
         self::assertSame(1, substr_count($result->migratedCode, 'use Gacela\Framework\ServiceResolver\ServiceMap;'));
     }
 
+    /**
+     * An append would leave the import below ones that sort after it, and the
+     * file would fail `ordered_imports` right after being migrated.
+     */
+    public function test_the_import_is_inserted_in_sorted_position(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace App\Wallet;
+
+            use App\Shared\Clock;
+            use Gacela\Framework\ServiceResolverAwareTrait;
+            use Symfony\Component\Console\Command\Command;
+
+            use function sprintf;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand extends Command
+            {
+                use ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertSame(<<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace App\Wallet;
+
+            use App\Shared\Clock;
+            use Gacela\Framework\ServiceResolver\ServiceMap;
+            use Gacela\Framework\ServiceResolverAwareTrait;
+            use Symfony\Component\Console\Command\Command;
+
+            use function sprintf;
+
+            /** @method WalletFacade getFacade() */
+            #[ServiceMap(method: 'getFacade', className: WalletFacade::class)]
+            final class WalletCommand extends Command
+            {
+                use ServiceResolverAwareTrait;
+            }
+            PHP, $result->migratedCode);
+        $this->assertImportsOrdered($result->migratedCode);
+    }
+
+    public function test_the_import_goes_last_when_every_class_import_sorts_before_it(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use App\Shared\Clock;
+            use Gacela\Framework\ServiceResolver\Resolver;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "use Gacela\\Framework\\ServiceResolver\\Resolver;\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n\n/**",
+            $result->migratedCode,
+        );
+        $this->assertImportsOrdered($result->migratedCode);
+    }
+
+    /**
+     * Classes come before functions and consts, so a file that imports only
+     * those gets its class import as a group of its own above them.
+     */
+    public function test_the_import_goes_above_function_imports_when_there_are_no_class_imports(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use function sprintf;
+            use const E_ALL;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "namespace App\\Wallet;\n\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n\nuse function sprintf;\nuse const E_ALL;\n",
+            $result->migratedCode,
+        );
+        $this->assertImportsOrdered($result->migratedCode);
+    }
+
+    public function test_the_import_gets_its_own_block_when_the_file_imports_nothing(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use \Gacela\Framework\ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "namespace App\\Wallet;\n\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\n\n/** @method",
+            $result->migratedCode,
+        );
+    }
+
+    /**
+     * The formatter sorts aliased and group imports by their full text, alias
+     * and braces included, so they are compared the same way here.
+     */
+    public function test_aliased_and_group_imports_keep_their_order(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use App\Shared\Clock as Zulu;
+            use Gacela\Framework\{Config\Config, ServiceResolverAwareTrait};
+            use Psr\Log\LoggerInterface as Alpha;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "use Gacela\\Framework\\{Config\\Config, ServiceResolverAwareTrait};\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap;\nuse Psr\\Log\\LoggerInterface as Alpha;\n",
+            $result->migratedCode,
+        );
+        $this->assertImportsOrdered($result->migratedCode);
+    }
+
+    public function test_a_service_map_imported_in_a_group_is_not_imported_again(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use Gacela\Framework\{ServiceResolver\ServiceMap, ServiceResolverAwareTrait};
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertTrue($result->hasChanges());
+        self::assertSame(1, substr_count($result->migratedCode, 'ServiceResolver\ServiceMap'));
+    }
+
+    /**
+     * Under another alias the attribute's short name would not resolve, so
+     * the plain import is still added.
+     */
+    public function test_a_service_map_imported_under_another_alias_is_imported_by_its_name(): void
+    {
+        $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
+            <?php
+
+            namespace App\Wallet;
+
+            use Gacela\Framework\ServiceResolver\ServiceMap as Map;
+            use Gacela\Framework\ServiceResolverAwareTrait;
+
+            /** @method WalletFacade getFacade() */
+            final class WalletCommand
+            {
+                use ServiceResolverAwareTrait;
+            }
+            PHP);
+
+        self::assertStringContainsString(
+            "use Gacela\\Framework\\ServiceResolver\\ServiceMap;\nuse Gacela\\Framework\\ServiceResolver\\ServiceMap as Map;\n",
+            $result->migratedCode,
+        );
+        $this->assertImportsOrdered($result->migratedCode);
+    }
+
     public function test_an_already_imported_service_map_is_not_imported_again(): void
     {
         $result = $this->migrator->migrate('Wallet.php', <<<'PHP'
@@ -326,5 +529,16 @@ final class ServiceMapMigratorTest extends TestCase
 
         self::assertFalse($result->hasChanges());
         self::assertSame($original, $result->migratedCode);
+    }
+
+    private function assertImportsOrdered(string $phpCode): void
+    {
+        $fixer = new OrderedImportsFixer();
+        $fixer->configure(['imports_order' => ['class', 'function', 'const']]);
+
+        $tokens = Tokens::fromCode($phpCode);
+        $fixer->fix(new SplFileInfo(__FILE__), $tokens);
+
+        self::assertSame($tokens->generateCode(), $phpCode, 'ordered_imports would reorder the migrated file');
     }
 }

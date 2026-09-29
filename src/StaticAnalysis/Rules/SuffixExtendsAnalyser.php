@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Gacela\StaticAnalysis\Rules;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
+use Gacela\StaticAnalysis\ResolvedName;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
 
+use function array_filter;
+use function array_values;
+use function count;
 use function sprintf;
 use function str_ends_with;
 
@@ -68,17 +74,48 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
             return [];
         }
 
+        if ($this->isConfigExtender($classNode)) {
+            return [];
+        }
+
+        // Extending the base is the fix only for the module's real pillar: on
+        // any other class it makes a second candidate that resolution picks up
+        // by name and fails on with nothing pointing at the cause.
         return [
             new Violation(
                 sprintf('Class %s should extend %s', $className, $this->expectedParent),
                 'gacela.suffixExtends',
                 sprintf(
-                    'Extend %s, or rename it so it does not end in %s.',
+                    "Rename it so it does not end in %s. Extend %s only if it is its module's %s.",
+                    $this->suffix,
                     $this->expectedParent,
                     $this->suffix,
                 ),
             ),
         ];
+    }
+
+    /**
+     * The invokable `extendGacelaConfig()` takes: no parent, no interface, one
+     * `__invoke(GacelaConfig)`, and `*Config` is its natural name. The container
+     * builds it, so a constructor may sit beside the `__invoke`.
+     */
+    private function isConfigExtender(Class_ $classNode): bool
+    {
+        $methods = array_values(array_filter(
+            $classNode->getMethods(),
+            static fn (ClassMethod $method): bool => $method->name->toLowerString() !== '__construct',
+        ));
+
+        if (count($methods) !== 1 || $methods[0]->name->toLowerString() !== '__invoke') {
+            return false;
+        }
+
+        $params = $methods[0]->params;
+
+        return count($params) === 1
+            && $params[0]->type instanceof Name
+            && ResolvedName::of($params[0]->type) === GacelaConfig::class;
     }
 
     /**

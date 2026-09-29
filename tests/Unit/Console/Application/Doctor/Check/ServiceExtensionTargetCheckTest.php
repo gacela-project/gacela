@@ -134,6 +134,21 @@ final class ServiceExtensionTargetCheckTest extends TestCase
         self::assertStringContainsString('some.id', $result->details[0]);
     }
 
+    /**
+     * The providerless module comes first on purpose: skipping it must not
+     * abandon the modules after it.
+     */
+    public function test_a_module_without_a_provider_does_not_end_the_walk(): void
+    {
+        $check = new ServiceExtensionTargetCheck(
+            [$this->module(null), $this->module(SetProvider::class)],
+            [SetProvider::ID],
+            [],
+        );
+
+        self::assertSame(CheckStatus::Ok, $check->run()->status);
+    }
+
     public function test_a_provider_slot_holding_a_non_provider_class_is_skipped(): void
     {
         $check = new ServiceExtensionTargetCheck(

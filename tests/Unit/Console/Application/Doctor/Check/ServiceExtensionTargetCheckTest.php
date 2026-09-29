@@ -56,6 +56,48 @@ final class ServiceExtensionTargetCheckTest extends TestCase
     }
 
     /**
+     * The module scope skips an extension on any id the application container
+     * already provides, so the module keeps its Provider's unextended value.
+     */
+    public function test_an_extended_id_registered_by_the_app_and_a_provider_warns_naming_both(): void
+    {
+        $check = new ServiceExtensionTargetCheck(
+            [$this->module(SetProvider::class)],
+            [SetProvider::ID],
+            [SetProvider::ID],
+        );
+
+        $result = $check->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertCount(1, $result->details);
+        self::assertStringContainsString(SetProvider::ID, $result->details[0]);
+        self::assertStringContainsString(SetProvider::class, $result->details[0]);
+    }
+
+    public function test_an_extended_id_two_providers_set_and_the_app_does_not_is_ok(): void
+    {
+        $check = new ServiceExtensionTargetCheck(
+            [$this->module(SetProvider::class), $this->module(SetProvider::class)],
+            [SetProvider::ID],
+            [],
+        );
+
+        self::assertSame(CheckStatus::Ok, $check->run()->status);
+    }
+
+    public function test_an_id_the_app_and_a_provider_both_register_without_an_extension_is_ok(): void
+    {
+        $check = new ServiceExtensionTargetCheck(
+            [$this->module(SetProvider::class)],
+            ['app.id'],
+            ['app.id', SetProvider::ID],
+        );
+
+        self::assertSame(CheckStatus::Ok, $check->run()->status);
+    }
+
+    /**
      * The queue only drains through `set()`. A singleton() registration is
      * real, but an extension on its id still silently never applies -- the
      * check must warn, which it does by reading `getRegisteredServices()`

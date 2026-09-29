@@ -270,6 +270,10 @@ final class GacelaConfig
      * fill one, wherever it appears: a nested dependency, a module's services,
      * or the constructor of a Facade, Factory, Config or Provider.
      *
+     * Loses to `gacela.php`, to {@see addLazy()} on the same id, and to a module
+     * Provider inside that module: see "Which registration wins" in
+     * docs/container-configuration.md.
+     *
      * @param class-string $key
      * @param class-string|object|callable $value
      */
@@ -658,6 +662,12 @@ final class GacelaConfig
         return $this;
     }
 
+    /**
+     * Wrap a service wherever it is registered, a module Provider included,
+     * unless the application also registers the id: then only the application's
+     * service is extended. See "Which registration wins" in
+     * docs/container-configuration.md.
+     */
     public function extendService(string $id, Closure $service): self
     {
         $this->servicesToExtend[$id] ??= [];
@@ -825,6 +835,11 @@ final class GacelaConfig
      * {@see addFactory()} it is an id rather than a type, so a constructor
      * parameter is not filled from here -- and deferring construction is the
      * point, which resolving it to autowire something would defeat.
+     *
+     * Loses to `gacela.php` and to a module Provider inside that module, and
+     * with {@see extendService()} on the same id that module gets the Provider's
+     * value unextended: see "Which registration wins" in
+     * docs/container-configuration.md.
      *
      * @param string $id The service identifier
      * @param Closure $factory The factory closure that creates the service when needed

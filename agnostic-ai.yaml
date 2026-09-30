@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Chemaclass/agnostic-ai/v0.75.0/docs/schemas/config.schema.json
+version: 1
+
+targets:
+  - claude
+  - codex
+
+# Set to error to fail sync when a target cannot represent a spec.
+on-unsupported: warn
+
+gitignore:
+  enabled: true
+
+outputs:
+  codex:
+    # Mirrors the Claude permissions in settings/permissions-claude.yaml. prefix_rule has no globs, so ./vendor/bin/* is listed per binary.
+    exec-policies-file: ./.agnostic-ai/codex.exec-policies.yaml

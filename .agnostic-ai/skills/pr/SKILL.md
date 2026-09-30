@@ -2,7 +2,8 @@
 description: Push branch and create a PR with concise description and labels
 argument-hint: "[issue-number]"
 disable-model-invocation: true
-allowed-tools: "Read, Edit, Bash(git *), Bash(gh *)"
+x-claude:
+  allowed-tools: "Read, Edit, Bash(git *), Bash(gh *)"
 ---
 
 # Create Pull Request

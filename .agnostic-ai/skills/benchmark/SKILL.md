@@ -2,7 +2,8 @@
 description: Run performance benchmarks, create baselines, and compare results
 argument-hint: "[run|baseline|compare|filter]"
 disable-model-invocation: true
-allowed-tools: "Read, Bash(composer *), Bash(./vendor/bin/phpbench *)"
+x-claude:
+  allowed-tools: "Read, Bash(composer *), Bash(./vendor/bin/phpbench *)"
 ---
 
 # Benchmark Runner

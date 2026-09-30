@@ -1,0 +1,6 @@
+command: .claude/hooks/compact-context.sh
+description: Runs `compact-context.sh` on SessionStart for compact.
+event: SessionStart
+matcher: compact
+name: sessionstart-compact-compact-context
+targets: [claude, codex]

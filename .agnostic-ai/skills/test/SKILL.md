@@ -2,7 +2,8 @@
 description: Run tests with smart filtering by scope, class, or file path
 argument-hint: "[scope-or-filter]"
 disable-model-invocation: true
-allowed-tools: "Bash(composer *), Bash(./vendor/bin/phpunit *)"
+x-claude:
+  allowed-tools: "Bash(composer *), Bash(./vendor/bin/phpunit *)"
 ---
 
 # Quick Test Runner

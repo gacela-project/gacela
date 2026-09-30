@@ -1,9 +1,9 @@
 ---
 name: tdd-coach
 description: Guides test-driven development with red-green-refactor discipline. Use when implementing features or fixes with TDD.
-model: sonnet
+model: {claude: sonnet}
 maxTurns: 25
-allowed_tools:
+tools:
   - Read
   - Edit
   - Write

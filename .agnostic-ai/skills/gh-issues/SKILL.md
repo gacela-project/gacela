@@ -2,7 +2,8 @@
 description: Walk over all open GitHub issues that are unassigned or assigned to the current user, and process each one via the /gh-issue skill, sequentially.
 argument-hint: "[--limit N] [--label foo] [--dry-run]"
 disable-model-invocation: true
-allowed-tools: "Read, Bash(gh *), Bash(git *), Bash(composer *), Skill(gh-issue), Skill(pr)"
+x-claude:
+  allowed-tools: "Read, Bash(gh *), Bash(git *), Bash(composer *), Skill(gh-issue), Skill(pr)"
 ---
 
 # GitHub Issues Watcher
@@ -83,7 +84,7 @@ For each issue in the queue:
    - commit with `Related to #<num>` (conventional: `feat:`, `fix:`, `ref:`, `docs:`, `chore:`, `test:`)
    - PR opened via `/pr #<num>`
 
-3. After `/gh-issue` returns, do a **refactor pass** over every file the issue touched — dedupe new code, drop dead branches/unused params, fix naming drift vs. surrounding module conventions, honor `.claude/rules/php.md`, remove speculative abstractions. Apply fixes, re-run `composer test`, and push them to the PR branch as a separate `ref(...)` commit with `Related to #<num>`. If nothing needs changing, note that in the PR body instead of skipping silently.
+3. After `/gh-issue` returns, do a **refactor pass** over every file the issue touched — dedupe new code, drop dead branches/unused params, fix naming drift vs. surrounding module conventions, honor `.agnostic-ai/rules/php.md`, remove speculative abstractions. Apply fixes, re-run `composer test`, and push them to the PR branch as a separate `ref(...)` commit with `Related to #<num>`. If nothing needs changing, note that in the PR body instead of skipping silently.
 
 4. After `/gh-issue` returns, wait for CI green on the PR:
    ```bash

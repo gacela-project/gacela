@@ -1,8 +1,9 @@
 ---
 name: clean-code-reviewer
 description: Reviews code for quality, SOLID violations, and project standards. Use when reviewing PRs, staged changes, or specific files.
-model: sonnet
-allowed_tools:
+model: {claude: sonnet}
+readonly: true
+tools:
   - Read
   - Glob
   - Grep

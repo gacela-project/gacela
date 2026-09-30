@@ -2,7 +2,8 @@
 description: Auto-fix, lint, test, and commit changes with a conventional commit message
 argument-hint: "[optional commit message]"
 disable-model-invocation: true
-allowed-tools: "Read, Edit, Bash(composer *), Bash(./vendor/bin/*), Bash(git *)"
+x-claude:
+  allowed-tools: "Read, Edit, Bash(composer *), Bash(./vendor/bin/*), Bash(git *)"
 ---
 
 # Commit

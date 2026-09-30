@@ -1,0 +1,7 @@
+command: .claude/hooks/format-php.sh
+description: Runs `format-php.sh` on PostToolUse for Edit|Write.
+event: PostToolUse
+matcher: Edit|Write
+name: posttooluse-edit-write-format-php
+targets: [claude, codex]
+timeout: 30

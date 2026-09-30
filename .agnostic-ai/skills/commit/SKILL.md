@@ -1,5 +1,5 @@
 ---
-description: Auto-fix, lint, test, and commit changes with a conventional commit message
+description: Auto-fix, verify, and commit changes with a conventional commit message
 argument-hint: "[optional commit message]"
 disable-model-invocation: true
 x-claude:
@@ -10,55 +10,36 @@ x-claude:
 
 ## Context
 
+::target claude
 !`git diff --stat`
 !`git diff --cached --stat`
 !`git status --short`
+::end
+::target codex
+Run `git diff --stat`, `git diff --cached --stat`, and `git status --short` first. `$ARGUMENTS` below means the text passed after the skill name.
+::end
 
 ## Instructions
 
-### Phase 1: Auto-fix
-
-1. Run rector + cs-fixer on changed files:
+1. **Auto-fix**:
    ```bash
    composer fix
    ```
+   Review what the fixers changed. Rector can delete or privatize fixture methods that are dead on purpose; revert those and skip the file in `rector.php`.
 
-2. If fixer modified files, review the changes and stage them.
+2. **Stage** the changed files by name. Never `git add -A`.
 
-### Phase 2: Quality gates
+3. **CHANGELOG check**: a `feat:` or `fix:` change must update `## Unreleased` in `CHANGELOG.md` in this commit. If it is missing, add it now.
 
-Run each step in order. Stop and fix issues before continuing.
+4. **Message** in conventional commit format:
+   - Use `$ARGUMENTS` when provided; otherwise derive it from the staged diff.
+   - Prefixes: `feat:`, `fix:`, `ref:`, `chore:`, `docs:`, `test:`. Add `(<scope>)` for a single module.
+   - Never mention Claude, AI, or LLM.
 
-3. **Static analysis**:
-   ```bash
-   composer quality
-   ```
-
-4. **Unit + integration + feature tests**:
-   ```bash
-   composer phpunit
-   ```
-
-If any step fails, fix the issue and re-run from that step. Do NOT proceed to commit with failures.
-
-> Note: The pre-commit hook runs `composer quality` + `composer phpunit`. These gates catch issues early to avoid a slow hook failure.
-
-### Phase 3: Commit
-
-5. **Stage files** — add specific changed files by name (never `git add -A`).
-
-6. **Draft commit message** using conventional commit format:
-   - If `$ARGUMENTS` is provided, use it as the commit message
-   - Otherwise, analyze the staged diff and generate one
-   - Prefixes: `feat:`, `fix:`, `ref:`, `chore:`, `docs:`, `test:`
-   - Add `(<scope>)` when changes are scoped to a single module
-   - **NEVER mention AI/Claude in the message**
-
-7. **Commit**:
+5. **Commit**:
    ```bash
    git commit -m "<message>"
    ```
+   The pre-commit hook runs `composer quality` and `composer phpunit`, so do not run them again first. If the hook fails, fix the cause, restage, and commit again. Never pass `--no-verify`. Without the hook (it is installed by `composer install`), run `composer test` before committing.
 
-8. **CHANGELOG check** — if the commit prefix is `feat:` or `fix:`, verify that `CHANGELOG.md` has been updated under `## Unreleased`. If not, warn the user before committing.
-
-9. Report: commit hash, message, and files included.
+6. **Report**: commit hash, message, and files included.

@@ -1,5 +1,5 @@
 ---
-description: Fetch a GitHub issue, create a branch, implement with TDD, and open a PR
+description: Take one GitHub issue end to end. Fetch it, branch, implement with TDD, and open a PR that closes it. Use when asked to work on, fix, or implement a specific issue by number or URL.
 argument-hint: "[issue-number]"
 ---
 
@@ -7,83 +7,69 @@ argument-hint: "[issue-number]"
 
 ## Context
 
-!`gh issue view ${ARGUMENTS#\#} --json title,body,labels,assignees,state 2>/dev/null || echo "Provide an issue number"`
+::target claude
+!`gh issue view ${ARGUMENTS#\#} --json title,body,labels,assignees,state,comments 2>/dev/null || echo "Provide an issue number"`
+::end
+::target codex
+Run `gh issue view <number> --json title,body,labels,assignees,state,comments` first, with the issue number passed after the skill name.
+::end
 
-## Instructions
+## Phase 1: Setup
 
-### Phase 1: Setup
+1. **Parse the issue number** (strip a leading `#`). Read the body and every comment: later comments often change the scope.
 
-1. **Parse the issue number** from `$ARGUMENTS` (strip `#` if present)
+2. **Check the claims.** Verify on current `main` that the problem still exists before acting on the issue's findings. If it is already fixed, say so on the issue and stop.
 
-2. **Assign yourself if unassigned**:
+3. **Assign yourself** if unassigned:
    ```bash
    gh issue edit <number> --add-assignee @me
    ```
 
-3. **Create a branch** from `main` based on the issue type:
-
-   Determine the branch prefix from labels:
-   - `bug` → `fix/`
-   - `enhancement` → `feat/`
-   - `documentation` → `docs/`
-   - No label → `feat/` (default)
-
-   Branch name format: `<prefix><issue-number>-<slug>`
-
+4. **Branch** from fresh `main`. Prefix by label: `bug` → `fix/`, `enhancement` → `feat/`, `documentation` → `docs/`, `refactoring` → `ref/`, otherwise `feat/`. Name: `<prefix><number>-<slug>`.
    ```bash
    git checkout main && git pull
    git checkout -b <branch-name>
    ```
 
-### Phase 2: Plan
+## Phase 2: Plan
 
-4. **Enter Plan Mode** to design the implementation:
-   - Explore the codebase to understand affected areas
-   - Identify files that need changes
-   - Consider the module architecture (Gacela facades, module boundaries)
-   - Plan the TDD approach (what tests to write first)
+5. Plan before coding:
+   - The acceptance scenario the issue asks for, and what is out of scope.
+   - Affected files, respecting module boundaries (Facades only across modules).
+   - The TDD order: which failing test comes first.
+   Stay in the issue's scope. File a follow-up issue for unrelated problems you find.
 
-5. **Create implementation plan** with:
-   - Summary of what the issue requires
-   - List of files to create/modify
-   - Test strategy (unit, integration)
-   - Step-by-step implementation order
+## Phase 3: Implement
 
-### Phase 3: Implement
+6. TDD: failing test first, minimal code to pass, then refactor with tests green.
 
-6. **After plan approval**, implement following TDD:
-   - Write failing tests first
-   - Implement minimum code to pass
-   - Refactor while keeping tests green
+7. Update `docs/` pages that state the old behavior, flag lists, or exit codes.
 
-7. **Run full test suite**:
+8. Run the full gate and fix every failure:
    ```bash
    composer test
    ```
-   Fix ALL errors before proceeding.
 
-### Phase 4: Ship
+## Phase 4: Ship
 
-8. **Update CHANGELOG.md** — add entry under `## Unreleased`
+9. Add the `## Unreleased` entry in `CHANGELOG.md` for user-facing changes, in the same commit.
 
-9. **Commit changes**:
-   ```bash
-   git add <specific-files>
-   git commit -m "<type>(<scope>): <description>
+10. Commit:
+    ```bash
+    git add <specific-files>
+    git commit -m "<type>(<scope>): <description>
 
-   Related to #<issue-number>"
-   ```
+    Related to #<number>"
+    ```
 
-10. **Create PR** using `/pr #<issue-number>`
+11. Open the PR with the `pr` skill and `#<number>`, so the body says `Closes #<number>`.
 
 ## Checklist
-- [ ] Issue fetched and understood
-- [ ] Self-assigned
-- [ ] Branch created from main
-- [ ] Plan created and approved
-- [ ] Tests written first (TDD)
-- [ ] Implementation complete
+
+- [ ] Issue and every comment read; claims verified on `main`
+- [ ] Self-assigned, branch from fresh `main`
+- [ ] Tests written first
+- [ ] Docs swept for the old behavior
 - [ ] `composer test` passes
-- [ ] Changelog updated
-- [ ] Commit with issue reference
-- [ ] PR created via `/pr`
+- [ ] Changelog updated in the same commit
+- [ ] PR opened and closes the issue

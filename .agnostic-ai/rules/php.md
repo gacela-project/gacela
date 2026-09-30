@@ -7,23 +7,17 @@ globs: src/**/*.php,tests/**/*.php
 
 ## Code Style
 
-- PSR-12 enforced by php-cs-fixer + rector (auto-formats via PostToolUse hook, no manual run needed)
-- PHPStan strict rules, Psalm level 1
-- Prefer `final` classes unless inheritance is explicitly needed
-- Use `readonly` properties where possible (PHP 8.1+)
+- PSR-12, enforced by php-cs-fixer and rector. Edited PHP files are formatted by a PostToolUse hook, so no manual run is needed.
+- PHPStan strict rules, Psalm level 1. `phpstan.neon`, `psalm.xml`, and `rector.php` are stricter than plain PSR.
+- Classes use StudlyCase. Pillars use their suffix: `*Facade`, `*Factory`, `*Provider`, `*Config`.
+- `final` classes unless inheritance is needed. `readonly` properties where possible.
+- Typed constructor parameters and explicit return types everywhere.
+- Add a `use` import in the same edit as the code that uses it: the formatter hook strips unused imports.
 
 ## Testing
 
-- Test method names use snake_case: `test_it_does_something()`
-- PHPUnit 10.5+ with `--testsuite=unit,integration,feature`
-- Unit tests mirror `src/` structure under `tests/Unit/`
-- Integration tests in `tests/Integration/`
-- Feature tests in `tests/Feature/`
-
-## Quality Gates
-
-```bash
-composer quality     # normalize + cs-fixer + rector (dry-run) + psalm + phpstan (src and tests) + module cycles
-composer fix         # normalize + cs-fixer + rector (auto-fix)
-composer infection   # Mutation testing (requires Xdebug)
-```
+- PHPUnit 12. Files end in `Test.php`; methods are snake_case: `test_it_resolves_facade_from_factory()`.
+- `tests/Unit/` mirrors `src/`. Cross-module flows go in `tests/Integration/`, end-to-end in `tests/Feature/`.
+- Tests must pass in any order. Never depend on state another test left behind, and clean up only what the test created.
+- CI runs on Windows too: build expected paths with `DIRECTORY_SEPARATOR`.
+- Test behavior, not characters. Do not chase mutation score on output or rendering code with golden-master tests.

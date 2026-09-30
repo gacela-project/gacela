@@ -1,5 +1,5 @@
 ---
-description: Push branch and create a PR with concise description and labels
+description: Push the branch and open a PR with a concise description and one label
 argument-hint: "[issue-number]"
 disable-model-invocation: true
 x-claude:
@@ -10,53 +10,51 @@ x-claude:
 
 ## Context
 
+::target claude
 !`git branch --show-current`
 !`git log main..HEAD --oneline`
 !`git diff main..HEAD --stat`
+::end
+::target codex
+Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff main..HEAD --stat` first. `$ARGUMENTS` below means the text passed after the skill name.
+::end
 
 ## Instructions
 
-1. **Check CHANGELOG.md** — if it wasn't updated for these changes, update it now and commit:
-   ```bash
-   git add CHANGELOG.md && git commit -m "chore: update changelog"
-   ```
+1. **CHANGELOG check**: if the branch has user-facing changes and `CHANGELOG.md` is untouched, add the entry under `## Unreleased` and commit it before pushing.
 
-2. **Push branch**:
+2. **Local gate**: `composer test` must be green. Never push a red branch.
+
+3. **Push**:
    ```bash
    git push -u origin HEAD
    ```
 
-3. **Generate PR title**:
-   - If `$ARGUMENTS` contains an issue number, fetch the issue title:
-     ```bash
-     gh issue view <number> --json title -q '.title'
-     ```
-   - PR title format: `<type>(<scope>): <short description>` (conventional commit style, under 70 chars)
-   - Derive the type from the branch prefix (`feat/` → feat, `fix/` → fix, `docs/` → docs)
+4. **Title**: `<type>(<scope>): <short description>`, under 70 characters. Take the type from the branch prefix (`feat/` → feat, `fix/` → fix, `ref/` → ref, `docs/` → docs). If `$ARGUMENTS` holds an issue number, start from its title:
+   ```bash
+   gh issue view <number> --json title -q '.title'
+   ```
 
-4. **Read `.github/PULL_REQUEST_TEMPLATE.md`** and use its **exact section headers** (including emojis) for the PR body. Do NOT hardcode headers — always read the template file first.
+5. **Body**: read `.github/PULL_REQUEST_TEMPLATE.md` first and use its exact section headers, emojis included. Never hardcode them.
+   - Say *what* changed and *why*, not how.
+   - Add `Closes #<number>` so the merge closes the issue.
+   - Keep it under 15 lines. No session links, tool footers, or attribution trailers.
 
-5. **Create PR** using the headers from the template:
+6. **Create**:
    ```bash
    gh pr create --title "<title>" --assignee @me --label "<label>" --body "$(cat <<'EOF'
-   <paste exact headers from .github/PULL_REQUEST_TEMPLATE.md>
+   <sections from .github/PULL_REQUEST_TEMPLATE.md>
 
    Closes #<issue-number>
    EOF
    )"
    ```
+   Pick the one most relevant label:
+   - `bug`: `fix/` branch
+   - `enhancement`: `feat/` branch
+   - `refactoring`: `ref/` branch, no behavior change
+   - `documentation`: `docs/` branch
+   - `pure testing`: only test changes
+   - `dependencies`: dependency updates
 
-   **Labels:** Pick the single most relevant from:
-   - `bug` — branch starts with `fix/`
-   - `enhancement` — branch starts with `feat/`
-   - `documentation` — branch starts with `docs/`
-   - `refactoring` — code restructuring with no behavior change
-   - `pure testing` — only test changes
-   - `dependencies` — dependency updates
-
-   **Body guidelines:**
-   - Focus on *what* and *why*, not implementation details
-   - Use `Closes #<number>` so merging auto-closes the issue
-   - Keep the entire body under 15 lines
-
-6. **Report the PR URL** to the user.
+7. **Report** the PR URL.

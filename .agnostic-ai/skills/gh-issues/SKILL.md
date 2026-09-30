@@ -1,5 +1,5 @@
 ---
-description: Walk over all open GitHub issues that are unassigned or assigned to the current user, and process each one via the /gh-issue skill, sequentially.
+description: Walk over all open GitHub issues that are unassigned or assigned to the current user, and process each one with the gh-issue skill, one after another.
 argument-hint: "[--limit N] [--label foo] [--dry-run]"
 disable-model-invocation: true
 x-claude:
@@ -10,15 +10,15 @@ x-claude:
 
 ## Purpose
 
-Process every open GitHub issue that is **unassigned** or **assigned to the current user (`@me`)**, one after another, by delegating each to the `/gh-issue` skill. Stop on first hard failure so it can be inspected.
+Process every open GitHub issue that is **unassigned** or **assigned to the current user (`@me`)**, one after another, by handing each to the `gh-issue` skill. Stop on the first hard failure so it can be inspected.
 
 ## Args
 
-- `--limit N` — process at most N issues this run (default: all).
-- `--label foo` — only issues carrying label `foo`.
-- `--dry-run` — list issues that would be processed; do not invoke `/gh-issue`.
+- `--limit N`: process at most N issues this run (default: all).
+- `--label foo`: only issues carrying label `foo`.
+- `--dry-run`: list the issues that would be processed; change nothing.
 
-Strip leading `#` if user passes `#123` style.
+Strip a leading `#` from issue numbers.
 
 ## Phase 1: Discover
 
@@ -26,29 +26,21 @@ Fetch open issues that are unassigned **or** assigned to `@me`, oldest first. Gi
 
 ```bash
 # Unassigned
-gh issue list \
-  --state open \
-  --search "no:assignee" \
-  --json number,title,labels,assignees,createdAt \
-  --limit 200
+gh issue list --state open --search "no:assignee" \
+  --json number,title,labels,assignees,createdAt --limit 200
 
 # Assigned to me
-gh issue list \
-  --state open \
-  --assignee "@me" \
-  --json number,title,labels,assignees,createdAt \
-  --limit 200
+gh issue list --state open --assignee "@me" \
+  --json number,title,labels,assignees,createdAt --limit 200
 ```
 
 Merge:
 - Deduplicate by `number`.
-- Keep only issues whose `assignees` array is empty **or** contains the current user (`gh api user -q .login`).
-- Drop issues assigned to anyone else (defensive).
-- Apply `--label` filter if given.
-- Apply `--limit` if given.
+- Keep only issues whose `assignees` is empty or holds the current user (`gh api user -q .login`). Drop anyone else's.
+- Apply `--label`, then `--limit`.
 - Sort ascending by `createdAt` (FIFO).
 
-Print the queue: `#<num> <title> [assignee]` per line, where `[assignee]` is `unassigned` or `@me`. If empty, exit cleanly.
+Print the queue, one `#<num> <title> [unassigned|@me]` per line. If it is empty, exit cleanly.
 
 ## Phase 2: Worktree Sanity
 
@@ -56,81 +48,71 @@ Before touching any issue:
 
 ```bash
 git status --porcelain
+```
+
+Abort if the worktree is dirty. Never auto-stash. Another session may be writing to this repo, so also check `git reflog -5` for commits you did not make; abort if there are any. Then:
+
+```bash
 git fetch origin main
 git checkout main && git reset --hard origin/main
 ```
-
-Abort if worktree dirty. Never auto-stash.
 
 ## Phase 3: Process Loop
 
 For each issue in the queue:
 
-1. Re-check assignment state (someone else may have grabbed it):
+1. **Re-check assignment**, since someone may have taken it:
    ```bash
    gh issue view <num> --json assignees -q '.assignees[].login'
-   me=$(gh api user -q .login)
    ```
-   - Empty output → unassigned, proceed.
-   - Only `$me` listed → already mine, proceed (skip self-assign step).
-   - Any other login present → skip this issue.
+   Empty or only you: proceed. Any other login: skip the issue.
 
-2. Invoke the `/gh-issue` skill with the issue number. That skill owns:
-   - self-assign via `gh issue edit <num> --add-assignee @me` (no-op if already assigned)
-   - branch from fresh `main`, prefix from labels: `bug` → `fix/`, `enhancement` → `feat/`, `documentation` → `docs/`, `refactoring` → `ref/`, else `feat/`
-   - TDD implementation (unit → integration → feature per module architecture)
-   - `composer test` green locally (quality + phpunit)
-   - changelog entry under `## Unreleased`
-   - commit with `Related to #<num>` (conventional: `feat:`, `fix:`, `ref:`, `docs:`, `chore:`, `test:`)
-   - PR opened via `/pr #<num>`
+2. **Run the `gh-issue` skill** with the issue number. It owns self-assignment, the branch, the TDD implementation, `composer test`, the changelog entry, the `Related to #<num>` commit, and the PR.
 
-3. After `/gh-issue` returns, do a **refactor pass** over every file the issue touched — dedupe new code, drop dead branches/unused params, fix naming drift vs. surrounding module conventions, honor `.agnostic-ai/rules/php.md`, remove speculative abstractions. Apply fixes, re-run `composer test`, and push them to the PR branch as a separate `ref(...)` commit with `Related to #<num>`. If nothing needs changing, note that in the PR body instead of skipping silently.
+3. **Refactor pass** over every file the issue touched. Remove duplication, dead branches, and unused parameters. Fix naming drift from the surrounding module. Follow `.agnostic-ai/rules/php.md`. Drop speculative abstractions. Re-run `composer test` and push the result as a separate `ref(<scope>): ...` commit with `Related to #<num>`. If nothing needs changing, say so in the PR body.
 
-4. After `/gh-issue` returns, wait for CI green on the PR:
+4. **Wait for CI**:
    ```bash
    gh pr checks --watch
    ```
-   Fix red checks on the branch before moving on.
+   Every check must be green before merging; Scrutinizer is the only one allowed to fail. Fix red checks on the branch.
 
-5. Merge when allowed:
+5. **Merge**:
    ```bash
    gh pr merge --auto --squash --admin
    ```
+   A `BLOCKED` or `REVIEW_REQUIRED` state needs `--admin`. Full infection runs only on the push to `main`, so watch that run too.
 
-6. Sync `main` for next iteration:
+6. **Sync `main`** for the next issue:
    ```bash
    git checkout main && git fetch origin main && git reset --hard origin/main
    ```
 
-7. Continue with next issue.
-
 ## Stop Conditions
 
-Halt the loop and surface the failure when:
+Halt the loop and report the failure when:
 
-- `/gh-issue` errors out or leaves the worktree dirty.
+- The `gh-issue` skill errors out or leaves the worktree dirty.
 - `composer test` fails after implementation.
 - CI stays red after one fix attempt.
-- Merge is blocked by branch protection beyond `--admin` bypass.
-- `--limit` reached.
-- Queue empty.
+- The merge is blocked beyond what `--admin` bypasses.
+- `--limit` is reached, or the queue is empty.
 
-Do **not** retry blindly. Report which issue failed and why.
+Do not retry blindly. Report which issue failed and why.
 
 ## Dry Run
 
-With `--dry-run`, only execute Phase 1 and print the queue. No assignment, no branching, no commits.
+With `--dry-run`, run Phase 1 only and print the queue. No assignment, no branches, no commits.
 
 ## Preconditions
 
-- `gh` authenticated, can read issues, open and merge PRs.
-- Worktree clean.
-- `main` exists and tracks `origin/main`.
-- `/gh-issue` and `/pr` skills available in this session.
+- `gh` is authenticated and can read issues and open and merge PRs.
+- The worktree is clean, and `main` tracks `origin/main`.
+- The `gh-issue` and `pr` skills are available.
 
 ## Notes
 
-- The pre-commit hook (`tools/git-hooks/pre-commit.sh`) runs `composer quality` + `composer phpunit` on every commit — it is the local gate. During implementation run focused tests (`./vendor/bin/phpunit --filter=ClassName`); let the hook run the full suite at commit time.
-- Treat GitHub CI as the full quality gate.
-- Never split bundled changes into multiple PRs unless the issue explicitly demands it.
-- Never mention Claude/AI/LLM in commits or PRs.
+- The pre-commit hook (`tools/git-hooks/pre-commit.sh`) runs `composer quality` and `composer phpunit` on every commit. During implementation, run focused tests (`./vendor/bin/phpunit --filter=ClassName`) and let the hook run the full suite.
+- PRs run CI on Windows too. When a change touches paths, check the Windows job before merging.
+- Keep one issue per PR unless the issue asks otherwise.
+- Never mention Claude, AI, or LLM in commits or PRs.

@@ -8,6 +8,10 @@ x-claude:
 
 # Quick Test Runner
 
+::target codex
+`$ARGUMENTS` below means the text passed after the skill name.
+::end
+
 1. If `$ARGUMENTS` is empty or `all`:
    ```bash
    composer test
@@ -32,4 +36,4 @@ x-claude:
    ./vendor/bin/phpunit "$ARGUMENTS"
    ```
 
-5. Report results clearly with pass/fail count.
+5. Report the pass and fail counts. The suite runs in random order: when a test fails only sometimes, re-run with `--random-order-seed=<seed>` (PHPUnit prints the seed) before blaming the change.

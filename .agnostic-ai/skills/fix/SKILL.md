@@ -1,32 +1,38 @@
 ---
-description: Auto-fix all code quality issues with rector, cs-fixer, and phpstan
+description: Auto-fix code style with composer fix, then check what static analysis and tests still report
 argument-hint: "[file-path]"
 disable-model-invocation: true
 x-claude:
   allowed-tools: "Read, Edit, Bash(composer *), Bash(./vendor/bin/*)"
 ---
 
-# Fix All Code Quality Issues
+# Fix Code Quality Issues
+
+::target codex
+`$ARGUMENTS` below means the text passed after the skill name.
+::end
 
 ## Instructions
 
-1. Run rector + cs-fixer:
+1. Auto-fix. For the whole project (normalize, rector, cs-fixer):
    ```bash
    composer fix
    ```
-   Or for a specific file:
+   For one file:
    ```bash
    ./vendor/bin/php-cs-fixer fix "$ARGUMENTS"
    ```
+   Rector can delete or privatize fixture methods that are dead on purpose. Revert those and skip the file in `rector.php`.
 
-2. Run static analysis to check for remaining issues:
+2. Check what the fixers cannot fix:
    ```bash
-   composer phpstan
+   composer quality
    ```
+   Fix the remaining Psalm, PHPStan, and module-cycle findings by hand.
 
-3. Run tests to verify nothing broke:
+3. Verify nothing broke:
    ```bash
    composer phpunit
    ```
 
-4. Summarize what was fixed and any remaining issues.
+4. Summarize what was fixed and what remains.

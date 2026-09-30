@@ -3,15 +3,20 @@ description: Run performance benchmarks, create baselines, and compare results
 argument-hint: "[run|baseline|compare|filter]"
 disable-model-invocation: true
 x-claude:
-  allowed-tools: "Read, Bash(composer *), Bash(./vendor/bin/phpbench *)"
+  allowed-tools: "Read, Bash(composer *), Bash(./vendor/bin/phpbench *), Bash(git *)"
 ---
 
 # Benchmark Runner
 
 ## Context
 
+::target claude
 !`git branch --show-current`
 !`git log --oneline -1`
+::end
+::target codex
+Run `git branch --show-current` and `git log --oneline -1` first. `$ARGUMENTS` below means the text passed after the skill name.
+::end
 
 ## Instructions
 
@@ -20,24 +25,28 @@ x-claude:
    composer phpbench
    ```
 
-2. If `$ARGUMENTS` is `baseline`:
+2. If `$ARGUMENTS` is `baseline`, tag the current code as the baseline:
    ```bash
    composer phpbench-base
    ```
-   Report that future `/benchmark compare` will diff against this snapshot.
+   Report the commit the baseline was taken on. Future `compare` runs diff against it.
 
 3. If `$ARGUMENTS` is `compare`:
    ```bash
    composer phpbench-ref
    ```
-   Highlight any regressions (>5% slower) and improvements (>5% faster).
+   Highlight regressions (over 5% slower) and improvements (over 5% faster).
 
 4. If `$ARGUMENTS` looks like a class or method filter:
    ```bash
    ./vendor/bin/phpbench run --filter="$ARGUMENTS" --report=aggregate --ansi
    ```
 
-5. Report results focusing on:
-   - Mean execution time and memory usage
-   - Regressions vs improvements (when comparing)
-   - Which benchmark classes were affected
+5. Report:
+   - Mean time and memory per affected benchmark class.
+   - Regressions and improvements when comparing, with the baseline commit.
+
+## Reading results
+
+- Sub-microsecond subjects move on noise. Re-run an anomalous reading before calling it a regression.
+- A local A/B on a warm machine can fake a win. Interleave runs, or run the same code on both sides first to see the harness bias.

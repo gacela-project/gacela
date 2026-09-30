@@ -4,6 +4,10 @@ argument-hint: "[optional commit message]"
 disable-model-invocation: true
 x-claude:
   allowed-tools: "Read, Edit, Bash(composer *), Bash(./vendor/bin/*), Bash(git *)"
+x-codex:
+  interface:
+    display_name: "Commit"
+    short_description: "Auto-fix, check the changelog, and commit with a conventional message"
 ---
 
 # Commit

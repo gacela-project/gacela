@@ -1,6 +1,10 @@
 ---
 description: Take one GitHub issue end to end. Fetch it, branch, implement with TDD, and open a PR that closes it. Use when asked to work on, fix, or implement a specific issue by number or URL.
 argument-hint: "[issue-number]"
+x-codex:
+  interface:
+    display_name: "GitHub issue"
+    short_description: "Take one issue end to end: branch, TDD, PR. Args: issue number"
 ---
 
 # GitHub Issue Workflow

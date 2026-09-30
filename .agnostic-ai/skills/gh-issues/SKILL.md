@@ -4,6 +4,10 @@ argument-hint: "[--limit N] [--label foo] [--dry-run]"
 disable-model-invocation: true
 x-claude:
   allowed-tools: "Read, Bash(gh *), Bash(git *), Bash(composer *), Skill(gh-issue), Skill(pr)"
+x-codex:
+  interface:
+    display_name: "GitHub issues"
+    short_description: "Process every open issue that is unassigned or yours. Args: --limit, --label, --dry-run"
 ---
 
 # GitHub Issues Watcher

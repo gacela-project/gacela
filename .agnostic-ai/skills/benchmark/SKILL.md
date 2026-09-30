@@ -4,6 +4,10 @@ argument-hint: "[run|baseline|compare|filter]"
 disable-model-invocation: true
 x-claude:
   allowed-tools: "Read, Bash(composer *), Bash(./vendor/bin/phpbench *), Bash(git *)"
+x-codex:
+  interface:
+    display_name: "Benchmark"
+    short_description: "Run, baseline, or compare PHPBench results. Args: run, baseline, compare, or a filter"
 ---
 
 # Benchmark Runner

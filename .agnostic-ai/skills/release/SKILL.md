@@ -2,6 +2,12 @@
 description: Create a new versioned Gacela release via release.sh
 argument-hint: "[version]"
 disable-model-invocation: true
+x-claude:
+  allowed-tools: "Read, Bash(git *), Bash(gh *), Bash(awk *), Bash(./release.sh *)"
+x-codex:
+  interface:
+    display_name: "Release"
+    short_description: "Cut a release with release.sh. Args: X.Y.Z"
 ---
 
 # Release

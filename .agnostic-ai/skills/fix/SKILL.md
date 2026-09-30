@@ -4,6 +4,10 @@ argument-hint: "[file-path]"
 disable-model-invocation: true
 x-claude:
   allowed-tools: "Read, Edit, Bash(composer *), Bash(./vendor/bin/*)"
+x-codex:
+  interface:
+    display_name: "Fix"
+    short_description: "Run composer fix, then report what static analysis still finds"
 ---
 
 # Fix Code Quality Issues

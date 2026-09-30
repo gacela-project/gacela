@@ -3,6 +3,7 @@ name: clean-code-reviewer
 description: Reviews code for quality, SOLID violations, and Gacela conventions. Use when reviewing PRs, staged changes, or specific files.
 model: {claude: sonnet}
 readonly: true
+effort: high
 tools:
   - Read
   - Glob

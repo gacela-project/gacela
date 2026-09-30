@@ -4,6 +4,10 @@ argument-hint: "[issue-number]"
 disable-model-invocation: true
 x-claude:
   allowed-tools: "Read, Edit, Bash(git *), Bash(gh *)"
+x-codex:
+  interface:
+    display_name: "Pull request"
+    short_description: "Push the branch and open a PR from the template. Args: issue number"
 ---
 
 # Create Pull Request

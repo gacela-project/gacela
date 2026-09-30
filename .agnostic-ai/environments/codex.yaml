@@ -1,0 +1,11 @@
+name: gacela
+targets: [codex]
+setup: composer install
+dev-commands:
+  - name: Test
+    command: [composer, test]
+  - name: Quality
+    command: [composer, quality]
+  - name: Fix
+    command: [composer, fix]
+    icon: tool

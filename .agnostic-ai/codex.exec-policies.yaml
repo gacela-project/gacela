@@ -1,3 +1,12 @@
+- pattern: ["git", "push", "--force"]
+  decision: forbidden
+  justification: Never rewrite pushed history.
+- pattern: ["git", "push", "--force-with-lease"]
+  decision: forbidden
+  justification: Never rewrite pushed history.
+- pattern: ["git", "push", "-f"]
+  decision: forbidden
+  justification: Never rewrite pushed history.
 - pattern: ["composer"]
   decision: allow
 - pattern: ["./bin/gacela"]

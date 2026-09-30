@@ -8,7 +8,12 @@ permissions:
         - Bash(timeout *)
         - Bash(ls *)
         - Bash(wc *)
+    ask:
+        - Edit(.github/**)
+        - Edit(composer.lock)
     deny:
+        - Bash(git push --force*)
+        - Bash(git push -f*)
         - Bash(rm -rf:*)
         - Bash(rm -fr:*)
         - Bash(sudo:*)

@@ -12,6 +12,12 @@ gitignore:
   enabled: true
 
 outputs:
+  claude:
+    settings:
+      attribution:
+        commit: ""
+        pr: ""
+        sessionUrl: false
   codex:
     # Mirrors the Claude permissions in settings/permissions-claude.yaml. prefix_rule has no globs, so ./vendor/bin/* is listed per binary.
     exec-policies-file: ./.agnostic-ai/codex.exec-policies.yaml

@@ -63,6 +63,7 @@ gacela-doctor-strict-*/
 /.claude/settings.local.json
 /.claude/skills/
 /.codex/agents/
+/.codex/environments/
 /.codex/hooks.json
 /.codex/hooks/
 /.codex/rules/

@@ -11,6 +11,8 @@ use Gacela\Framework\Config\MergedConfigCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+use function dirname;
 use function file_put_contents;
 use function getenv;
 use function is_file;
@@ -19,6 +21,8 @@ use function putenv;
 use function rmdir;
 use function sprintf;
 use function sys_get_temp_dir;
+use function time;
+use function touch;
 use function uniqid;
 use function unlink;
 use function var_export;
@@ -151,6 +155,32 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         $this->bootstrapApp();
 
         self::assertSame('second-value', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * `stat()` gives whole seconds, and a directory on ext4 or NTFS keeps its
+     * size when a file is added, so a stamp taken in the second of a change
+     * cannot see a second change in that same second.
+     */
+    public function test_a_source_touched_this_second_is_not_cached_yet(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        file_put_contents($file, "<?php return ['src' => 'now'];");
+        $this->createdFiles[] = $file;
+
+        $this->bootstrapApp();
+
+        self::assertSame('now', Config::getInstance()->get('src'));
+        self::assertFileDoesNotExist(Config::getInstance()->mergedConfigCacheFilename());
+    }
+
+    public function test_a_settled_source_is_cached(): void
+    {
+        $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php', 'settled');
+
+        $this->bootstrapApp();
+
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
     }
 
     public function test_a_file_added_to_a_globbed_directory_is_read_on_the_next_bootstrap(): void
@@ -335,10 +365,19 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         file_put_contents($filename, sprintf('<?php return %s;', var_export($data, true)));
     }
 
+    /**
+     * Backdated, each write later than the one before: a source touched in the
+     * current second is not cached yet (see the same-second test), and these
+     * tests are about what a cached stamp catches.
+     */
     private function writeAppConfig(string $file, string $value): void
     {
         file_put_contents($file, sprintf("<?php return ['src' => %s];", var_export($value, true)));
         $this->createdFiles[] = $file;
+
+        $at = time() - 100 + 10 * count($this->createdFiles);
+        touch($file, $at);
+        touch(dirname($file), $at);
     }
 
     private function bootstrapApp(): void

@@ -54,6 +54,26 @@ final class ConfigSourceStamps
         return true;
     }
 
+    /**
+     * Whether a stamp could still miss a change. `stat()` gives whole seconds,
+     * and on most filesystems a directory keeps its size when a file is added,
+     * so a change in the same second as the stamp leaves it equal. A path
+     * touched in the current second is that case; the way git treats a
+     * "racily clean" index entry, the answer is not to trust the stamp yet.
+     *
+     * @param array<string,string> $stamps
+     */
+    public static function couldMissAChange(array $stamps, int $now): bool
+    {
+        foreach ($stamps as $stamp) {
+            if ($stamp !== '' && (int) $stamp >= $now) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static function stampOf(string $path): string
     {
         $stat = @stat($path);

@@ -93,8 +93,13 @@ final class ConfigLoader
             $declared = [
                 $this->pathNormalizer->normalizePathPattern($configItem),
                 ...$this->pathNormalizer->normalizePathPatternsWithSuffixes($configItem),
-                $this->pathNormalizer->normalizePathLocal($configItem),
             ];
+
+            // An undeclared local path normalizes to the app root itself, whose
+            // directory is the root's parent: nothing to watch.
+            if ($configItem->pathLocal() !== '') {
+                $declared[] = $this->pathNormalizer->normalizePathLocal($configItem);
+            }
 
             foreach ($declared as $pattern) {
                 if ($pattern !== '') {

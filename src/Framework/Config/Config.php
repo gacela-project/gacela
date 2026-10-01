@@ -24,6 +24,7 @@ use function is_bool;
 use function is_float;
 use function is_int;
 use function is_string;
+use function time;
 
 final class Config implements ConfigInterface
 {
@@ -494,11 +495,13 @@ final class Config implements ConfigInterface
 
         // Auto-warm on a miss, or when a source changed, so later bootstraps
         // skip re-globbing config files; best-effort, and an empty merged
-        // config is not worth caching.
+        // config is not worth caching. Not while a source was touched this
+        // second: its stamp could not tell a further change in the same second.
         $loader = $this->getFactory()->createConfigLoader();
         $merged = $loader->loadAll();
-        if ($merged !== []) {
-            $cache->write($merged, $signature, ConfigSourceStamps::of($loader->watchedPaths()));
+        $sources = ConfigSourceStamps::of($loader->watchedPaths());
+        if ($merged !== [] && !ConfigSourceStamps::couldMissAChange($sources, time())) {
+            $cache->write($merged, $signature, $sources);
         }
 
         return $merged;

@@ -21,6 +21,8 @@ use function is_file;
 use function mkdir;
 use function putenv;
 use function sprintf;
+use function time;
+use function touch;
 use function var_export;
 
 /**
@@ -77,6 +79,10 @@ final class ReadOnlyAppRootTest extends TestCase
         $appRoot = $this->createReadOnlyDirOrSkip('ro-prewarmed', static function (string $dir): void {
             mkdir($dir . '/config', 0o755, true);
             file_put_contents($dir . '/config/config.php', '<?php return ["ro_key" => "from_files"];');
+            // Settled, so the bootstrap below caches it: a source touched in the
+            // current second is not cached yet.
+            touch($dir . '/config/config.php', time() - 60);
+            touch($dir . '/config', time() - 60);
 
             $cacheDir = $dir . '/.gacela/cache';
             mkdir($cacheDir, 0o755, true);

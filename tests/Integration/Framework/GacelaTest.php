@@ -57,9 +57,10 @@ final class GacelaTest extends TestCase
 
         $gacelaProxy = new ReflectionClass(Gacela::class);
         $mainContainerProp = $gacelaProxy->getProperty('mainContainer');
-        $mainContainerProp->setValue($gacelaProxy, value: new Container());
+        $container = new Container();
+        $mainContainerProp->setValue($gacelaProxy, value: $container);
 
-        self::assertInstanceOf(Container::class, Gacela::container());
+        self::assertSame($container, Gacela::container());
     }
 
     public function test_add_global_with_empty_context_resolves_caller_file_as_context(): void

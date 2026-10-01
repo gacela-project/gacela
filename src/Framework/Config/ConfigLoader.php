@@ -102,8 +102,19 @@ final class ConfigLoader
             }
 
             foreach ($declared as $pattern) {
-                if ($pattern !== '') {
-                    $paths[] = $this->nearestLiteralDirectory($pattern);
+                if ($pattern === '') {
+                    continue;
+                }
+
+                $paths[] = $this->nearestLiteralDirectory($pattern);
+
+                // A wildcard in the directory part: a file added inside one of
+                // the directories it matches changes that directory, not the
+                // literal one above it.
+                if (strpbrk(dirname($pattern), '*?[{') !== false) {
+                    foreach ($this->pathFinder->matchingPattern(dirname($pattern)) as $directory) {
+                        $paths[] = $directory;
+                    }
                 }
             }
         }

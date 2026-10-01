@@ -43,6 +43,9 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     /** @var list<string> */
     private array $createdFiles = [];
 
+    /** @var list<string> */
+    private array $createdDirs = [];
+
     protected function setUp(): void
     {
         $this->cacheDir = __DIR__ . DIRECTORY_SEPARATOR . '.gacela-cache-' . uniqid('', true);
@@ -149,6 +152,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
         $this->writeAppConfig($file, 'first');
         $this->bootstrapApp();
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
         self::assertSame('first', Config::getInstance()->get('src'));
 
         $this->writeAppConfig($file, 'second-value');
@@ -187,6 +191,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     {
         $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php', 'first');
         $this->bootstrapApp();
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
 
         // Sorted after app.php, so it is merged last and wins.
         $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'zz.php', 'added');
@@ -195,10 +200,48 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertSame('added', Config::getInstance()->get('src'));
     }
 
+    public function test_a_file_added_under_a_wildcard_directory_is_read_on_the_next_bootstrap(): void
+    {
+        $config = $this->appDir . DIRECTORY_SEPARATOR . 'config';
+        mkdir($config . DIRECTORY_SEPARATOR . 'a');
+        mkdir($config . DIRECTORY_SEPARATOR . 'b');
+        $this->createdDirs = [$config . DIRECTORY_SEPARATOR . 'a', $config . DIRECTORY_SEPARATOR . 'b'];
+        $this->writeAppConfig($config . DIRECTORY_SEPARATOR . 'a' . DIRECTORY_SEPARATOR . 'app.php', 'a');
+        touch($config . DIRECTORY_SEPARATOR . 'b', time() - 100);
+        touch($config, time() - 100);
+        $this->bootstrapWith('config/*/app.php');
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
+        self::assertSame('a', Config::getInstance()->get('src'));
+
+        // Inside a directory that already existed: `config` itself is untouched.
+        $this->writeAppConfig($config . DIRECTORY_SEPARATOR . 'b' . DIRECTORY_SEPARATOR . 'app.php', 'b');
+        $this->bootstrapWith('config/*/app.php');
+
+        self::assertSame('b', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * A deploy step, so rather than leave the application cold it waits until
+     * the stamp can tell a later change apart.
+     */
+    public function test_cache_warm_waits_out_a_source_touched_this_second(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        file_put_contents($file, "<?php return ['src' => 'now'];");
+        $this->createdFiles[] = $file;
+        $this->bootstrapApp();
+
+        $filename = Config::getInstance()->writeMergedConfigCache();
+
+        self::assertFileExists($filename);
+        self::assertSame(['src' => 'now'], Config::getInstance()->mergedConfigCache()->load());
+    }
+
     public function test_a_local_override_created_later_is_read_on_the_next_bootstrap(): void
     {
         $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php', 'first');
         $this->bootstrapApp();
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
 
         $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'local.php', 'local');
         $this->bootstrapApp();
@@ -382,11 +425,16 @@ final class MergedConfigCacheIntegrationTest extends TestCase
 
     private function bootstrapApp(): void
     {
+        $this->bootstrapWith('config/*.php', 'config/local.php');
+    }
+
+    private function bootstrapWith(string $path, string $pathLocal = ''): void
+    {
         $cacheDir = $this->cacheDir;
-        Gacela::bootstrap($this->appDir, static function (GacelaConfig $config) use ($cacheDir): void {
+        Gacela::bootstrap($this->appDir, static function (GacelaConfig $config) use ($cacheDir, $path, $pathLocal): void {
             $config->setFileCache(true, $cacheDir);
             $config->resetInMemoryCache();
-            $config->addAppConfig('config/*.php', 'config/local.php');
+            $config->addAppConfig($path, $pathLocal);
         });
     }
 
@@ -394,6 +442,10 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     {
         foreach ($this->createdFiles as $file) {
             @unlink($file);
+        }
+
+        foreach ($this->createdDirs as $dir) {
+            @rmdir($dir);
         }
 
         @rmdir($this->appDir . DIRECTORY_SEPARATOR . 'config');

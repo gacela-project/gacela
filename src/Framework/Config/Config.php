@@ -19,12 +19,17 @@ use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use function array_key_exists;
 use function array_keys;
 use function count;
+use function fmod;
+use function function_exists;
 use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
 use function is_string;
+use function microtime;
+use function str_ends_with;
 use function time;
+use function usleep;
 
 final class Config implements ConfigInterface
 {
@@ -333,7 +338,16 @@ final class Config implements ConfigInterface
     {
         $cache = $this->createMergedConfigCache();
         $loader = $this->getFactory()->createConfigLoader();
-        $cache->write($loader->loadAll(), $loader->declarationSignature(), ConfigSourceStamps::of($loader->watchedPaths()));
+        [$values, $sources] = $this->loadWithSourceStamps($loader);
+
+        // A deploy step, so it waits out a source touched this second rather
+        // than leave the application without a warm cache.
+        while (ConfigSourceStamps::couldMissAChange($sources, time())) {
+            usleep(1_001_000 - (int) (fmod(microtime(true), 1.0) * 1_000_000.0));
+            [$values, $sources] = $this->loadWithSourceStamps($loader);
+        }
+
+        $cache->write($values, $loader->declarationSignature(), $sources);
 
         return $cache->filename();
     }
@@ -497,14 +511,41 @@ final class Config implements ConfigInterface
         // skip re-globbing config files; best-effort, and an empty merged
         // config is not worth caching. Not while a source was touched this
         // second: its stamp could not tell a further change in the same second.
-        $loader = $this->getFactory()->createConfigLoader();
-        $merged = $loader->loadAll();
-        $sources = ConfigSourceStamps::of($loader->watchedPaths());
+        [$merged, $sources] = $this->loadWithSourceStamps($this->getFactory()->createConfigLoader());
         if ($merged !== [] && !ConfigSourceStamps::couldMissAChange($sources, time())) {
             $cache->write($merged, $signature, $sources);
         }
 
         return $merged;
+    }
+
+    /**
+     * The merged values, and stamps of what they were read from.
+     *
+     * Stamped before reading, so a file written between the two is newer than
+     * its stamp and rebuilds the cache next time, rather than old values being
+     * stored under new stamps. For the same reason nothing remembered may
+     * answer for the files: the glob memo is dropped, and OPcache, which with
+     * `validate_timestamps` can serve a config file compiled before the edit
+     * for `revalidate_freq` seconds, is told to recompile them. Only a miss
+     * pays for this.
+     *
+     * @return array{0: array<string,mixed>, 1: array<string,string>}
+     */
+    private function loadWithSourceStamps(ConfigLoader $loader): array
+    {
+        PathFinder::resetCache();
+        $sources = ConfigSourceStamps::of($loader->watchedPaths());
+
+        if (function_exists('opcache_invalidate')) {
+            foreach (array_keys($sources) as $path) {
+                if (str_ends_with($path, '.php')) {
+                    @opcache_invalidate($path, true);
+                }
+            }
+        }
+
+        return [$loader->loadAll(), $sources];
     }
 
     private function createMergedConfigCache(): MergedConfigCache

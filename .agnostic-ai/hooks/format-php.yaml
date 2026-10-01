@@ -1,0 +1,7 @@
+command: .claude/hooks/format-php.sh
+description: Formats each PHP file the agent edits with php-cs-fixer.
+event: PostToolUse
+matcher: Edit|Write
+name: format-php
+targets: [claude, codex]
+timeout: 30

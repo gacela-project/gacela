@@ -1,0 +1,47 @@
+- pattern: ["git", "push", "--force"]
+  decision: forbidden
+  justification: Never rewrite pushed history.
+- pattern: ["git", "push", "--force-with-lease"]
+  decision: forbidden
+  justification: Never rewrite pushed history.
+- pattern: ["git", "push", "-f"]
+  decision: forbidden
+  justification: Never rewrite pushed history.
+- pattern: ["composer"]
+  decision: allow
+- pattern: ["./bin/gacela"]
+  decision: allow
+- pattern: ["./vendor/bin/phpunit"]
+  decision: allow
+- pattern: ["./vendor/bin/phpstan"]
+  decision: allow
+- pattern: ["./vendor/bin/psalm"]
+  decision: allow
+- pattern: ["./vendor/bin/php-cs-fixer"]
+  decision: allow
+- pattern: ["./vendor/bin/infection"]
+  decision: allow
+- pattern: ["./vendor/bin/phpbench"]
+  decision: allow
+- pattern: ["git"]
+  decision: allow
+- pattern: ["gh"]
+  decision: allow
+- pattern: ["timeout"]
+  decision: allow
+- pattern: ["ls"]
+  decision: allow
+- pattern: ["wc"]
+  decision: allow
+- pattern: ["rm", "-rf"]
+  decision: forbidden
+- pattern: ["rm", "-fr"]
+  decision: forbidden
+- pattern: ["sudo"]
+  decision: forbidden
+- pattern: ["shutdown"]
+  decision: forbidden
+- pattern: ["reboot"]
+  decision: forbidden
+- pattern: ["mkfs"]
+  decision: forbidden

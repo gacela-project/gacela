@@ -1,0 +1,20 @@
+permissions:
+    allow:
+        - Bash(composer *)
+        - Bash(./vendor/bin/*)
+        - Bash(./bin/gacela *)
+        - Bash(git *)
+        - Bash(gh *)
+        - Bash(timeout *)
+        - Bash(ls *)
+        - Bash(wc *)
+    deny:
+        - Bash(git push --force:*)
+        - Bash(git push --force-with-lease:*)
+        - Bash(git push -f:*)
+        - Bash(rm -rf:*)
+        - Bash(rm -fr:*)
+        - Bash(sudo:*)
+        - Bash(shutdown:*)
+        - Bash(reboot:*)
+        - Bash(mkfs:*)

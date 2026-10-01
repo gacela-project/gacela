@@ -60,3 +60,12 @@ if (!$isWindows) {
 }
 
 echo "Done\n";
+
+// CLAUDE.md, AGENTS.md, .claude/ and .codex/ are generated from .agnostic-ai/ and gitignored.
+if (!$isWindows && is_file($cwd . DIRECTORY_SEPARATOR . 'agnostic-ai.yaml')) {
+    exec('command -v agnostic-ai', $output, $missing);
+    if ($missing === 0) {
+        echo "Generating agent config with agnostic-ai...\n";
+        passthru('agnostic-ai sync -q');
+    }
+}

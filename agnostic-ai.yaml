@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Chemaclass/agnostic-ai/v0.76.0/docs/schemas/config.schema.json
+version: 1
+requires: ">=0.76.0"
+
+targets:
+  - claude
+  - codex
+
+# Set to error to fail sync when a target cannot represent a spec.
+on-unsupported: warn
+
+gitignore:
+  enabled: true
+
+coverage:
+  accept:
+    - target: codex
+      kind: agents
+      field: tools
+      reason: The tools list is Claude Code's allowlist. Codex has no per-agent allowlist.
+    - target: codex
+      kind: agents
+      field: sandbox_mode
+      reason: readonly keeps the reviewer read-only on Claude Code. Codex agents keep the session sandbox (openai/codex#39299).
+    - target: codex
+      kind: skills
+      field: argument-hint
+      reason: Codex shows the arguments in x-codex.interface.short_description instead.
+
+outputs:
+  claude:
+    settings:
+      attribution:
+        commit: ""
+        pr: ""
+        sessionUrl: false
+  codex:
+    # Mirrors the Claude permissions in settings/permissions.yaml. prefix_rule has no globs, so ./vendor/bin/* is listed per binary.
+    exec-policies-file: ./.agnostic-ai/codex.exec-policies.yaml

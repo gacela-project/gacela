@@ -47,3 +47,32 @@ gacela-doctor-strict-*/
 # The reference application ships a hand-written `vendor/composer/installed.json`:
 # it is what package discovery reads, and the demonstration needs one on disk.
 !tests/Feature/ReferenceApp/Invoicing/vendor/
+
+# >>> agnostic-ai (managed) >>>
+# Generated paths. Edit specs, not this block. Run `agnostic-ai sync` to refresh.
+# Not committed: a fresh clone or `git worktree` lacks these until `agnostic-ai sync` runs (e.g. a post-checkout hook).
+/.agents/skills/
+/.agnostic-ai/.sync-state
+/.agnostic-ai/local/
+/.agnostic-ai/packs/
+/.claude/.agnostic-ai-permissions.json
+/.claude/agent-memory-local/
+/.claude/agents/
+/.claude/hooks/
+/.claude/rules/
+/.claude/scheduled_tasks.lock
+/.claude/settings.json
+/.claude/settings.local.json
+/.claude/skills/
+/.claude/worktrees/
+/.codex/agents/
+/.codex/environments/
+/.codex/hooks.json
+/.codex/hooks/
+/.codex/rules/
+/AGENTS.md
+/CLAUDE.md
+/agnostic-ai.local.yaml
+/src/AGENTS.md
+/tests/AGENTS.md
+# <<< agnostic-ai (managed) <<<

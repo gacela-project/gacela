@@ -39,6 +39,15 @@ $resolved = $this->recordedGacelaEventsOf(ServiceResolvedEvent::class); // one t
 
 `assertEventDispatched()` and `recordedGacelaEventsOf()` answer about [your own events](events.md#your-own-events) as readily as about the framework's — one dispatcher, one recording — so a test of a module that announces something needs no listener of its own. Both match by inheritance, the way `registerSpecificListener()` does, so naming a base class or `GacelaEventInterface::class` asks about the whole family. To assert on a payload, read the events: `recordedGacelaEventsOf()` returns them typed and in dispatch order.
 
+To test an assertion of your own, `failureMessageOf()` runs it and returns the message it failed with:
+
+```php
+$message = self::failureMessageOf(fn () => $this->assertInvoicePaid($invoice));
+self::assertStringContainsString('INV-1', $message);
+```
+
+It catches `PHPUnit\Exception`, PHPUnit's public exception interface. Its `AssertionFailedError` is `@internal`, so static analysis rejects a test that catches it, and catching `RuntimeException` instead also swallows your own exceptions. Those pass through here, and so does `markTestSkipped()` or `markTestIncomplete()`. An assertion that passes fails the test.
+
 If you only need the reset helpers inside an existing test hierarchy, use the [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait directly — `GacelaTestCase` builds on it.
 
 ### What else the trait gives you

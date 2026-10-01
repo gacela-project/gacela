@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\Testing;
 
+use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
@@ -14,9 +15,11 @@ use Gacela\Framework\Gacela;
 use Gacela\Framework\Testing\GacelaTestCase;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
-use Throwable;
+use PHPUnit\Exception as PHPUnitException;
+use RuntimeException;
 
 use function count;
+use function sprintf;
 
 final class GacelaTestCaseTest extends GacelaTestCase
 {
@@ -35,7 +38,7 @@ final class GacelaTestCaseTest extends GacelaTestCase
             $config->resetInMemoryCache();
         });
 
-        $message = $this->messageFromFailedAssertion(
+        $message = self::failureMessageOf(
             fn (): mixed => $this->assertServiceResolved(StringValueInterface::class),
         );
 
@@ -50,7 +53,7 @@ final class GacelaTestCaseTest extends GacelaTestCase
             $config->resetInMemoryCache();
         });
 
-        $message = $this->messageFromFailedAssertion(
+        $message = self::failureMessageOf(
             fn (): mixed => $this->assertBindingRegistered(StringValueInterface::class),
         );
 
@@ -65,7 +68,7 @@ final class GacelaTestCaseTest extends GacelaTestCase
     {
         $this->bootstrapGacela(__DIR__);
 
-        $message = $this->messageFromFailedAssertion(
+        $message = self::failureMessageOf(
             fn (): mixed => $this->assertServiceResolved('never-resolved-id'),
         );
 
@@ -153,16 +156,9 @@ final class GacelaTestCaseTest extends GacelaTestCase
     {
         $this->bootstrapGacela(__DIR__);
 
-        $failed = false;
+        $message = self::failureMessageOf(fn () => $this->assertServiceResolved('unknown-service'));
 
-        try {
-            $this->assertServiceResolved('unknown-service');
-        } catch (Throwable $throwable) {
-            $failed = true;
-            self::assertStringContainsString('unknown-service', $throwable->getMessage());
-        }
-
-        self::assertTrue($failed, 'assertServiceResolved() should have failed');
+        self::assertStringContainsString('unknown-service', $message);
     }
 
     public function test_assert_binding_registered_passes_for_a_registered_binding(): void
@@ -180,16 +176,9 @@ final class GacelaTestCaseTest extends GacelaTestCase
     {
         $this->bootstrapGacela(__DIR__);
 
-        $failed = false;
+        $message = self::failureMessageOf(fn () => $this->assertBindingRegistered('unknown-binding'));
 
-        try {
-            $this->assertBindingRegistered('unknown-binding');
-        } catch (Throwable $throwable) {
-            $failed = true;
-            self::assertStringContainsString('unknown-binding', $throwable->getMessage());
-        }
-
-        self::assertTrue($failed, 'assertBindingRegistered() should have failed');
+        self::assertStringContainsString('unknown-binding', $message);
     }
 
     public function test_custom_config_closure_runs_after_the_recorder_is_registered(): void
@@ -244,7 +233,7 @@ final class GacelaTestCaseTest extends GacelaTestCase
     {
         $this->bootstrapGacela(__DIR__);
 
-        $message = $this->messageFromFailedAssertion(
+        $message = self::failureMessageOf(
             fn (): mixed => $this->assertEventDispatched(Module\GreetedEvent::class),
         );
 
@@ -267,7 +256,7 @@ final class GacelaTestCaseTest extends GacelaTestCase
             $config->resetInMemoryCache();
         });
 
-        $message = $this->messageFromFailedAssertion(
+        $message = self::failureMessageOf(
             fn (): mixed => $this->assertEventDispatched(GacelaBootstrapFinishedEvent::class),
         );
 
@@ -287,22 +276,58 @@ final class GacelaTestCaseTest extends GacelaTestCase
         self::assertSame('Grace', $greeted[0]->name());
     }
 
+    public function test_failure_message_of_returns_what_the_failed_assertion_said(): void
+    {
+        $message = self::failureMessageOf(static fn () => self::assertTrue(false, 'Invoice INV-1 is not paid'));
+
+        self::assertStringStartsWith('Invoice INV-1 is not paid', $message);
+    }
+
+    public function test_failure_message_of_fails_when_the_assertion_passes(): void
+    {
+        $message = self::failureMessageOf(
+            static fn (): string => self::failureMessageOf(static fn () => self::assertTrue(true)),
+        );
+
+        self::assertSame('The assertion was expected to fail, and passed.', $message);
+    }
+
+    public function test_failure_message_of_hands_a_skip_back_to_phpunit(): void
+    {
+        self::assertSame('skipped inside', $this->rethrownMessageOf(static fn () => self::markTestSkipped('skipped inside')));
+    }
+
+    public function test_failure_message_of_hands_an_incomplete_back_to_phpunit(): void
+    {
+        self::assertSame('incomplete inside', $this->rethrownMessageOf(static fn () => self::markTestIncomplete('incomplete inside')));
+    }
+
+    public function test_failure_message_of_lets_a_project_exception_through(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('not an assertion');
+
+        self::failureMessageOf(static function (): never {
+            throw new RuntimeException('not an assertion');
+        });
+    }
+
     /**
-     * The message a failing assertion produced.
+     * The message of what failureMessageOf() threw rather than returned.
      *
-     * `Throwable` rather than PHPUnit's own failure type, which is `@internal`
-     * and which static analysis refuses to see caught. `fail()` sits outside
-     * the try so that an assertion which unexpectedly passes is reported
-     * rather than caught by this same handler.
+     * Caught here, because an expected skip or incomplete is recorded by
+     * PHPUnit as skipped or incomplete, never as passed.
+     *
+     * @param Closure():mixed $assertion
      */
-    private function messageFromFailedAssertion(callable $assertion): string
+    private function rethrownMessageOf(Closure $assertion): string
     {
         try {
-            $assertion();
-        } catch (Throwable $throwable) {
-            return $throwable->getMessage();
+            $returned = self::failureMessageOf($assertion);
+        } catch (PHPUnitException $phpUnitException) {
+            return $phpUnitException->getMessage();
         }
 
-        self::fail('Expected the assertion to fail, but it passed');
+        self::fail(sprintf('failureMessageOf() returned "%s" instead of rethrowing.', $returned));
     }
 }

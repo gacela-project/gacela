@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `GacelaTestCase::failureMessageOf()` runs an assertion expected to fail and returns its message, for testing assertions of your own. It catches `PHPUnit\Exception`, so a project exception is not mistaken for a failure, and PHPUnit's `@internal` `AssertionFailedError` stays out of the test ([#904](https://github.com/gacela-project/gacela/issues/904))
+
 ### Fixed
 
 - `make:module --minimal` no longer writes a Factory whose `@extends` names a Config the template does not create, so PHPStan reports nothing on a freshly scaffolded minimal module

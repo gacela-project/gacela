@@ -19,11 +19,14 @@ use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use function array_key_exists;
 use function array_keys;
 use function count;
+use function function_exists;
 use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
 use function is_string;
+use function str_ends_with;
+use function time;
 
 final class Config implements ConfigInterface
 {
@@ -324,14 +327,18 @@ final class Config implements ConfigInterface
 
     /**
      * @internal persist the merged file-based config values to disk so future
-     *           bootstraps skip globbing and parsing configuration files
+     *           bootstraps skip globbing and parsing configuration files. The
+     *           file is trusted, like any deploy artifact, until the next
+     *           `cache:warm` or `cache:clear`; a cache written on a miss
+     *           instead checks its sources on every hit
      *
      * @throws ConfigException
      */
     public function writeMergedConfigCache(): string
     {
         $cache = $this->createMergedConfigCache();
-        $cache->write($this->loadAllConfigValues());
+        $loader = $this->getFactory()->createConfigLoader();
+        $cache->writeTrusted($loader->loadAll());
 
         return $cache->filename();
     }
@@ -484,19 +491,66 @@ final class Config implements ConfigInterface
         }
 
         $cache = $this->createMergedConfigCache();
+        $signature = fn (): string => ConfigLoader::declarationSignatureOf($this->getFactory()->createGacelaFileConfig()->getConfigItems());
 
-        if ($cache->exists()) {
-            return $cache->load();
+        $cached = $cache->exists() ? $cache->loadIfCurrent($signature) : null;
+        if ($cached !== null) {
+            return $cached;
         }
 
-        // Auto-warm on miss so later bootstraps skip re-globbing config files;
-        // best-effort, and an empty merged config is not worth caching.
-        $merged = $this->loadAllConfigValues();
-        if ($merged !== []) {
-            $cache->write($merged);
+        // Auto-warm on a miss, or when a source changed, so later bootstraps
+        // skip re-globbing config files; best-effort, and an empty merged
+        // config is not worth caching. Not while a source was touched this
+        // second: its stamp could not tell a further change in the same second.
+        [$merged, $sources] = $this->loadWithSourceStamps($this->getFactory()->createConfigLoader());
+        if ($merged !== [] && !ConfigSourceStamps::couldMissAChange($sources, time())) {
+            $cache->writeVerified($merged, $signature(), $sources);
         }
 
         return $merged;
+    }
+
+    /**
+     * The merged values, and stamps of what they were read from.
+     *
+     * Stamped before reading, so a file written between the two is newer than
+     * its stamp and rebuilds the cache next time, rather than old values being
+     * stored under new stamps. For the same reason nothing remembered may
+     * answer for the files: the glob memo is dropped, and OPcache, which with
+     * `validate_timestamps` can serve a config file compiled before the edit
+     * for `revalidate_freq` seconds, is told to recompile them. Only a miss
+     * pays for this.
+     *
+     * @return array{0: array<string,mixed>, 1: array<string,string>}
+     */
+    private function loadWithSourceStamps(ConfigLoader $loader): array
+    {
+        PathFinder::resetCache();
+        $sources = ConfigSourceStamps::of($loader->watchedPaths());
+        $this->recompileOnNextInclude(array_keys($sources));
+
+        return [$loader->loadAll(), $sources];
+    }
+
+    /**
+     * Untested here on purpose: OPcache is off in the CLI the suite runs in,
+     * so `opcache_invalidate()` has nothing to drop there.
+     *
+     * @infection-ignore-all
+     *
+     * @param list<string> $paths
+     */
+    private function recompileOnNextInclude(array $paths): void
+    {
+        if (!function_exists('opcache_invalidate')) {
+            return;
+        }
+
+        foreach ($paths as $path) {
+            if (str_ends_with($path, '.php')) {
+                @opcache_invalidate($path, true);
+            }
+        }
     }
 
     private function createMergedConfigCache(): MergedConfigCache

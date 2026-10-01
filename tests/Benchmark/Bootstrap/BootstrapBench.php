@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Benchmark\Bootstrap;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use PhpBench\Attributes\AfterClassMethods;
 use PhpBench\Attributes\BeforeClassMethods;
@@ -37,7 +38,22 @@ final class BootstrapBench
         }
     }
 
+    /**
+     * The deployed state: `cache:warm` wrote the merged config cache, and a hit
+     * reads it without looking at the config files.
+     */
     public function warmMergedConfigCache(): void
+    {
+        self::removeCacheFiles();
+        $this->bootstrapWarm();
+        Config::getInstance()->writeMergedConfigCache();
+    }
+
+    /**
+     * No `cache:warm`: the first bootstrap wrote the cache, so every hit checks
+     * the config files have not changed since.
+     */
+    public function autoWarmMergedConfigCache(): void
     {
         self::removeCacheFiles();
         $this->bootstrapWarm();
@@ -60,6 +76,12 @@ final class BootstrapBench
 
     #[BeforeMethods('warmMergedConfigCache')]
     public function bench_bootstrap_warm(): void
+    {
+        $this->bootstrapWarm();
+    }
+
+    #[BeforeMethods('autoWarmMergedConfigCache')]
+    public function bench_bootstrap_auto_warmed(): void
     {
         $this->bootstrapWarm();
     }

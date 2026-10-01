@@ -21,6 +21,8 @@ use function is_file;
 use function mkdir;
 use function putenv;
 use function sprintf;
+use function time;
+use function touch;
 use function var_export;
 
 /**
@@ -77,14 +79,25 @@ final class ReadOnlyAppRootTest extends TestCase
         $appRoot = $this->createReadOnlyDirOrSkip('ro-prewarmed', static function (string $dir): void {
             mkdir($dir . '/config', 0o755, true);
             file_put_contents($dir . '/config/config.php', '<?php return ["ro_key" => "from_files"];');
+            // Settled, so the bootstrap below caches it: a source touched in the
+            // current second is not cached yet.
+            touch($dir . '/config/config.php', time() - 60);
+            touch($dir . '/config', time() - 60);
 
             $cacheDir = $dir . '/.gacela/cache';
             mkdir($cacheDir, 0o755, true);
-            file_put_contents(
-                // Filenames are scoped per app root (#465).
-                (new MergedConfigCache($cacheDir, '', $dir))->filename(),
-                sprintf('<?php return %s;', var_export(['ro_key' => 'from_prewarmed_cache'], true)),
-            );
+
+            // Warmed the way a deploy warms it, so the file carries the stamps of
+            // its sources; then its values are swapped, to prove they are what
+            // the read-only bootstrap serves.
+            Gacela::bootstrap($dir, self::fileCacheConfigFn());
+            // Filenames are scoped per app root (#465).
+            $filename = (new MergedConfigCache($cacheDir, '', $dir))->filename();
+            /** @var array{values: array<string,mixed>} $warmed */
+            $warmed = require $filename;
+            $warmed['values'] = ['ro_key' => 'from_prewarmed_cache'];
+            file_put_contents($filename, sprintf('<?php return %s;', var_export($warmed, true)));
+
             chmod($cacheDir, 0o555);
         });
 

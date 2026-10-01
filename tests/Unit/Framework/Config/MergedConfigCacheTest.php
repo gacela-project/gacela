@@ -5,15 +5,21 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Config;
 
 use Gacela\Framework\Cache\WritableDirectory;
+use Gacela\Framework\Config\ConfigSourceStamps;
 use Gacela\Framework\Config\MergedConfigCache;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
 use function rmdir;
+use function sprintf;
+use function str_replace;
 use function strlen;
 use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
+use function var_export;
 
 final class MergedConfigCacheTest extends TestCase
 {
@@ -34,11 +40,83 @@ final class MergedConfigCacheTest extends TestCase
         $this->removeCacheDirIfExists();
     }
 
+    public function test_a_trusted_file_is_served_without_a_look_at_any_source(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeTrusted(['key' => 'value']);
+
+        self::assertSame(['key' => 'value'], $cache->loadIfCurrent(static fn (): string => 'declared'));
+    }
+
+    public function test_a_verified_file_is_served_while_its_sources_are_unchanged(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeVerified(['key' => 'value'], 'declared', ConfigSourceStamps::of([__FILE__]));
+
+        self::assertSame(['key' => 'value'], $cache->loadIfCurrent(static fn (): string => 'declared'));
+    }
+
+    public function test_a_verified_file_is_not_served_once_a_source_changed(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeVerified(['key' => 'value'], 'declared', [__FILE__ => 'a stamp it never had']);
+
+        self::assertNull($cache->loadIfCurrent(static fn (): string => 'declared'));
+    }
+
+    public function test_a_verified_file_for_other_declarations_is_not_served(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeVerified(['key' => 'value'], 'declared', ConfigSourceStamps::of([__FILE__]));
+
+        self::assertNull($cache->loadIfCurrent(static fn (): string => 'declared differently'));
+    }
+
+    /**
+     * A deploy artifact: the code that declares the config paths ships with the
+     * `cache:warm` that wrote it, so the signature is not even computed.
+     */
+    public function test_a_trusted_file_does_not_ask_for_the_declarations(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeTrusted(['key' => 'value']);
+
+        self::assertSame(['key' => 'value'], $cache->loadIfCurrent(static fn (): string => self::fail('asked for the declarations')));
+    }
+
+    /**
+     * Written on a miss but not in the shape this version writes: nothing says
+     * what it answers for, so it is rebuilt rather than trusted.
+     *
+     * @param array<string,mixed> $content
+     */
+    #[DataProvider('filesThatAreNeverCurrent')]
+    public function test_a_file_of_another_shape_is_never_current(array $content): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeTrusted([]);
+        file_put_contents($cache->filename(), sprintf('<?php return %s;', var_export($content, true)));
+
+        self::assertNull($cache->loadIfCurrent(static fn (): string => 'declared'));
+    }
+
+    /**
+     * @return iterable<string, array{array<string,mixed>}>
+     */
+    public static function filesThatAreNeverCurrent(): iterable
+    {
+        $header = "\0gacela-merged-config-sources";
+
+        yield 'a header that is not a string' => [[$header => ['declared'], 'values' => ['key' => 'value']]];
+        yield 'values that are not an array' => [[$header => "declared\n", 'values' => 'value']];
+        yield 'no values' => [[$header => "declared\n"]];
+    }
+
     public function test_write_is_best_effort_when_the_cache_directory_cannot_be_created(): void
     {
         $cache = new MergedConfigCache($this->uncreatableDir());
 
-        $cache->write(['key' => 'value']);
+        $cache->writeTrusted(['key' => 'value']);
 
         self::assertFalse($cache->exists());
     }
@@ -47,7 +125,7 @@ final class MergedConfigCacheTest extends TestCase
     {
         $cache = new MergedConfigCache($this->createReadOnlyDirOrSkip('merged-config-readonly'));
 
-        $cache->write(['key' => 'value']);
+        $cache->writeTrusted(['key' => 'value']);
 
         self::assertFalse($cache->exists());
     }
@@ -63,7 +141,7 @@ final class MergedConfigCacheTest extends TestCase
     {
         $cache = new MergedConfigCache($this->cacheDir);
 
-        $cache->write(['key' => 'value']);
+        $cache->writeTrusted(['key' => 'value']);
 
         self::assertTrue($cache->exists());
     }
@@ -71,7 +149,7 @@ final class MergedConfigCacheTest extends TestCase
     public function test_load_returns_written_data(): void
     {
         $cache = new MergedConfigCache($this->cacheDir);
-        $cache->write(['key' => 'value', 'nested' => ['a' => 1]]);
+        $cache->writeTrusted(['key' => 'value', 'nested' => ['a' => 1]]);
 
         self::assertSame(['key' => 'value', 'nested' => ['a' => 1]], $cache->load());
     }
@@ -79,9 +157,9 @@ final class MergedConfigCacheTest extends TestCase
     public function test_write_overwrites_previous_content(): void
     {
         $cache = new MergedConfigCache($this->cacheDir);
-        $cache->write(['old' => 'data']);
+        $cache->writeTrusted(['old' => 'data']);
 
-        $cache->write(['new' => 'data']);
+        $cache->writeTrusted(['new' => 'data']);
 
         self::assertSame(['new' => 'data'], $cache->load());
     }
@@ -89,7 +167,7 @@ final class MergedConfigCacheTest extends TestCase
     public function test_clear_removes_the_cache_file(): void
     {
         $cache = new MergedConfigCache($this->cacheDir);
-        $cache->write(['key' => 'value']);
+        $cache->writeTrusted(['key' => 'value']);
 
         $cache->clear();
 
@@ -110,7 +188,7 @@ final class MergedConfigCacheTest extends TestCase
         $cache = new MergedConfigCache($this->cacheDir);
 
         self::assertStringEndsWith(
-            MergedConfigCache::FILENAME_PREFIX . MergedConfigCache::FILENAME_EXTENSION,
+            MergedConfigCache::FILENAME_PREFIX . '-v2' . MergedConfigCache::FILENAME_EXTENSION,
             $cache->filename(),
         );
     }
@@ -120,7 +198,7 @@ final class MergedConfigCacheTest extends TestCase
         $cache = new MergedConfigCache($this->cacheDir, 'prod');
 
         self::assertStringEndsWith(
-            MergedConfigCache::FILENAME_PREFIX . '-prod' . MergedConfigCache::FILENAME_EXTENSION,
+            MergedConfigCache::FILENAME_PREFIX . '-v2-prod' . MergedConfigCache::FILENAME_EXTENSION,
             $cache->filename(),
         );
     }
@@ -132,6 +210,7 @@ final class MergedConfigCacheTest extends TestCase
         self::assertSame(
             $this->cacheDir . DIRECTORY_SEPARATOR
                 . MergedConfigCache::FILENAME_PREFIX
+                . '-v2'
                 . '-' . substr(sha1('/app/root'), 0, 12)
                 . '-prod'
                 . MergedConfigCache::FILENAME_EXTENSION,
@@ -201,8 +280,8 @@ final class MergedConfigCacheTest extends TestCase
     {
         $eu = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
         $us = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['us']);
-        $eu->write(['k' => 'eu']);
-        $us->write(['k' => 'us']);
+        $eu->writeTrusted(['k' => 'eu']);
+        $us->writeTrusted(['k' => 'us']);
 
         $eu->clear();
 
@@ -217,8 +296,8 @@ final class MergedConfigCacheTest extends TestCase
     {
         $mine = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
         $theirs = new MergedConfigCache($this->cacheDir, 'prod', '/other/root', ['eu']);
-        $mine->write(['k' => 'mine']);
-        $theirs->write(['k' => 'theirs']);
+        $mine->writeTrusted(['k' => 'mine']);
+        $theirs->writeTrusted(['k' => 'theirs']);
 
         $mine->clear();
 
@@ -233,7 +312,7 @@ final class MergedConfigCacheTest extends TestCase
     public function test_clearing_an_unscoped_cache_reaps_no_siblings(): void
     {
         $scoped = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
-        $scoped->write(['k' => 'v']);
+        $scoped->writeTrusted(['k' => 'v']);
 
         (new MergedConfigCache($this->cacheDir, 'prod'))->clear();
 
@@ -248,7 +327,7 @@ final class MergedConfigCacheTest extends TestCase
     public function test_clearing_leaves_a_non_cache_neighbour_alone(): void
     {
         $cache = new MergedConfigCache($this->cacheDir, 'prod', '/app/root', ['eu']);
-        $cache->write(['k' => 'v']);
+        $cache->writeTrusted(['k' => 'v']);
 
         $stem = substr($cache->filename(), 0, -strlen(MergedConfigCache::FILENAME_EXTENSION));
         $neighbour = $stem . '-notes.txt';
@@ -265,8 +344,8 @@ final class MergedConfigCacheTest extends TestCase
         $prod = new MergedConfigCache($this->cacheDir, 'prod');
         $dev = new MergedConfigCache($this->cacheDir, 'dev');
 
-        $prod->write(['app' => 'prod']);
-        $dev->write(['app' => 'dev']);
+        $prod->writeTrusted(['app' => 'prod']);
+        $dev->writeTrusted(['app' => 'dev']);
 
         self::assertSame(['app' => 'prod'], $prod->load());
         self::assertSame(['app' => 'dev'], $dev->load());
@@ -277,8 +356,8 @@ final class MergedConfigCacheTest extends TestCase
         $appA = new MergedConfigCache($this->cacheDir, '', '/srv/app-a');
         $appB = new MergedConfigCache($this->cacheDir, '', '/srv/app-b');
 
-        $appA->write(['app' => 'a']);
-        $appB->write(['app' => 'b']);
+        $appA->writeTrusted(['app' => 'a']);
+        $appB->writeTrusted(['app' => 'b']);
 
         self::assertNotSame($appA->filename(), $appB->filename());
         self::assertSame(['app' => 'a'], $appA->load());
@@ -293,14 +372,22 @@ final class MergedConfigCacheTest extends TestCase
         self::assertSame($first->filename(), $second->filename());
     }
 
-    public function test_filename_keeps_legacy_name_without_app_root(): void
+    /**
+     * A file written before sources were recorded is never read, so nothing
+     * would ever replace it: clearing is the one way it goes.
+     */
+    public function test_clear_removes_a_file_written_before_sources_were_recorded(): void
     {
-        $cache = new MergedConfigCache($this->cacheDir);
+        $cache = new MergedConfigCache($this->cacheDir, 'prod', '/srv/app');
+        $cache->writeTrusted(['current' => true]);
 
-        self::assertStringEndsWith(
-            MergedConfigCache::FILENAME_PREFIX . MergedConfigCache::FILENAME_EXTENSION,
-            $cache->filename(),
-        );
+        $earlier = str_replace('gacela-merged-config-v2-', 'gacela-merged-config-', $cache->filename());
+        file_put_contents($earlier, "<?php return ['stale' => true];");
+
+        $cache->clear();
+
+        self::assertFileDoesNotExist($earlier);
+        self::assertFileDoesNotExist($cache->filename());
     }
 
     public function test_app_scoped_filename_keeps_env_suffix(): void
@@ -314,10 +401,10 @@ final class MergedConfigCacheTest extends TestCase
     public function test_clear_also_removes_a_legacy_unscoped_cache_file(): void
     {
         $legacy = new MergedConfigCache($this->cacheDir);
-        $legacy->write(['stale' => 'legacy']);
+        $legacy->writeTrusted(['stale' => 'legacy']);
 
         $scoped = new MergedConfigCache($this->cacheDir, '', '/srv/app-a');
-        $scoped->write(['fresh' => 'scoped']);
+        $scoped->writeTrusted(['fresh' => 'scoped']);
 
         $scoped->clear();
 
@@ -329,7 +416,7 @@ final class MergedConfigCacheTest extends TestCase
     {
         $cache = new MergedConfigCache($this->cacheDir);
 
-        $cache->write(['key' => 'value']);
+        $cache->writeTrusted(['key' => 'value']);
 
         self::assertDirectoryExists($this->cacheDir);
     }

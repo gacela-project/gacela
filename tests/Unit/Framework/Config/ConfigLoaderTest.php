@@ -12,6 +12,7 @@ use Gacela\Framework\Config\PathFinderInterface;
 use Gacela\Framework\Config\PathNormalizerInterface;
 use PHPUnit\Framework\TestCase;
 
+use function array_unique;
 use function is_string;
 
 final class ConfigLoaderTest extends TestCase
@@ -369,6 +370,38 @@ final class ConfigLoaderTest extends TestCase
         $loader = $this->loaderReading([], patternMatches: [$base, $layer]);
 
         self::assertSame([], $loader->patternsMatchingNothing());
+    }
+
+    public function test_the_declaration_signature_is_stable(): void
+    {
+        self::assertSame(
+            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+        );
+    }
+
+    /**
+     * Each part on its own changes what is read, so each on its own changes the
+     * signature, and a cache written for the old declarations is rebuilt.
+     */
+    public function test_the_declaration_signature_tells_each_part_apart(): void
+    {
+        $reader = new class() implements ConfigReaderInterface {
+            public function read(string $absolutePath): array
+            {
+                return [];
+            }
+        };
+
+        $signatures = [
+            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('conf/*.php', 'config/local.php')]),
+            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'conf/local.php')]),
+            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php', $reader)]),
+            ConfigLoader::declarationSignatureOf([]),
+        ];
+
+        self::assertCount(5, array_unique($signatures));
     }
 
     /**

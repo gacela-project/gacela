@@ -61,7 +61,7 @@ final class CacheWarmCommandTest extends TestCase
             Config::getInstance()->getAppRootDir(),
         );
 
-        $this->membershipCacheFile = new MembershipCache(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir())->path();
+        $this->membershipCacheFile = MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces())->path();
 
         $this->removeGeneratedCaches();
 

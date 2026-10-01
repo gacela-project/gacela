@@ -9,6 +9,9 @@ use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 
 use function array_map;
 use function is_file;
+use function serialize;
+use function sha1;
+use function substr;
 
 /**
  * The `#[Plugin]` members `cache:warm --attributes` found, so a warmed
@@ -18,15 +21,42 @@ final class MembershipCache
 {
     public const FILENAME = 'gacela-membership.php';
 
+    /**
+     * @param string $fingerprint see {@see fingerprintOf()}: two entrypoints of one
+     *                            application that scan different paths or namespaces
+     *                            each read and write their own file
+     */
     public function __construct(
         private readonly string $cacheDir,
         private readonly string $appRootDir,
+        private readonly string $fingerprint = '',
     ) {
+    }
+
+    /**
+     * The file for one scan: the members found under these module paths and
+     * namespaces.
+     *
+     * @param list<string> $appModulePaths
+     * @param list<string> $projectNamespaces
+     */
+    public static function forScan(string $cacheDir, string $appRootDir, array $appModulePaths, array $projectNamespaces): self
+    {
+        return new self($cacheDir, $appRootDir, self::fingerprintOf($appModulePaths, $projectNamespaces));
+    }
+
+    /**
+     * @param list<string> $appModulePaths
+     * @param list<string> $projectNamespaces
+     */
+    public static function fingerprintOf(array $appModulePaths, array $projectNamespaces): string
+    {
+        return substr(sha1(serialize([$appModulePaths, $projectNamespaces])), 0, 12);
     }
 
     public function path(): string
     {
-        return AbstractPhpFileCache::absoluteFilename($this->cacheDir, self::FILENAME, $this->appRootDir);
+        return AbstractPhpFileCache::absoluteFilename($this->cacheDir, self::FILENAME, $this->appRootDir, $this->fingerprint);
     }
 
     public function isWarm(): bool

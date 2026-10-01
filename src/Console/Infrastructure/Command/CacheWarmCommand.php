@@ -138,7 +138,7 @@ final class CacheWarmCommand extends Command
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
         $plugins = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces())->plugins();
-        $cache = new MembershipCache($config->getCacheDir(), $config->getAppRootDir());
+        $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
 
         if (!$cache->write($plugins)) {
             $formatter->writePluginMembershipWarning($cache->path());

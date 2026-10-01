@@ -633,9 +633,13 @@ final class Container implements ContainerInterface
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
-        $cache = new MembershipCache($config->getCacheDir(), $config->getAppRootDir());
-        $members = $cache->read();
+        $fileCacheEnabled = (new GacelaFileCache($config))->isEnabled();
+        $cache = self::membershipCache($config);
 
+        // Read only with file caching on, as the class-name cache is: with it
+        // off, as in development, a new or renamed `#[Plugin]` class is seen
+        // on the next request without clearing anything.
+        $members = $fileCacheEnabled ? $cache->read() : null;
         if ($members !== null) {
             return $members;
         }
@@ -648,11 +652,32 @@ final class Container implements ContainerInterface
 
         // The way the class-name cache fills itself: with file caching on, only
         // the first process after a deploy pays for the scan.
-        if ((new GacelaFileCache($config))->isEnabled()) {
+        if ($fileCacheEnabled) {
             $cache->write($members);
         }
 
         return $members;
+    }
+
+    private static function membershipScope(): string
+    {
+        $config = Config::getInstance();
+
+        return $config->getAppRootDir() . "\0" . self::membershipFingerprint($config);
+    }
+
+    private static function membershipCache(Config $config): MembershipCache
+    {
+        $setup = $config->getSetupGacela();
+
+        return MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
+    }
+
+    private static function membershipFingerprint(Config $config): string
+    {
+        $setup = $config->getSetupGacela();
+
+        return MembershipCache::fingerprintOf($setup->getAppModulePaths(), $setup->getProjectNamespaces());
     }
 
     /**
@@ -731,7 +756,7 @@ final class Container implements ContainerInterface
                 $contract,
                 static fn (): LazyPluginStack => new LazyPluginStack(
                     $contract,
-                    PluginMembership::withMembers($contract, $plugins, self::pluginMembers(...)),
+                    PluginMembership::withMembers($contract, $plugins, self::membershipScope(), self::pluginMembers(...)),
                     $container,
                 ),
             );

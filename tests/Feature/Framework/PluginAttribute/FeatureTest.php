@@ -9,6 +9,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\PluginMember;
+use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Aliased;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Bundle;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Central;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\CheckoutFacade;
@@ -36,20 +37,20 @@ final class FeatureTest extends TestCase
     {
         $this->bootstrap([Central::class]);
 
-        self::assertSame(['central', 'loyalty', 'bundle', 'coupon'], (new CheckoutFacade())->discountNames());
+        self::assertSame(['central', 'loyalty', 'aliased', 'bundle', 'coupon'], (new CheckoutFacade())->discountNames());
     }
 
     public function test_a_stack_declared_empty_is_filled_by_attributes_alone(): void
     {
         $this->bootstrap([]);
 
-        self::assertSame(['loyalty', 'bundle', 'central', 'coupon'], (new CheckoutFacade())->discountNames());
+        self::assertSame(['loyalty', 'aliased', 'bundle', 'central', 'coupon'], (new CheckoutFacade())->discountNames());
     }
 
     public function test_a_warmed_cache_is_read_instead_of_scanning(): void
     {
-        $this->bootstrap([Central::class]);
-        $cache = new MembershipCache(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir());
+        $this->bootstrap([Central::class], fileCache: true);
+        $cache = MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces());
         $cache->write([new PluginMember(Discount::class, Coupon::class, 0)]);
 
         try {
@@ -59,16 +60,33 @@ final class FeatureTest extends TestCase
         }
     }
 
+    /**
+     * With file caching off, as in development, a new or renamed `#[Plugin]`
+     * class is seen on the next request, whatever an earlier `cache:warm` left.
+     */
+    public function test_with_file_caching_off_a_cache_file_is_not_read(): void
+    {
+        $this->bootstrap([Central::class]);
+        $cache = MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces());
+        $cache->write([new PluginMember(Discount::class, Coupon::class, 0)]);
+
+        try {
+            self::assertSame(['central', 'loyalty', 'aliased', 'bundle', 'coupon'], (new CheckoutFacade())->discountNames());
+        } finally {
+            unlink($cache->path());
+        }
+    }
+
     public function test_with_file_caching_on_the_first_scan_is_stored(): void
     {
         $this->bootstrap([Central::class], fileCache: true);
-        $cache = new MembershipCache(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir());
+        $cache = MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces());
 
         try {
             self::assertFileDoesNotExist($cache->path());
             (new CheckoutFacade())->discountNames();
             self::assertSame(
-                [Loyalty::class, Bundle::class, Central::class, Coupon::class],
+                [Loyalty::class, Aliased::class, Bundle::class, Central::class, Coupon::class],
                 array_map(static fn (PluginMember $member): string => $member->plugin, $cache->read() ?? []),
             );
         } finally {
@@ -83,7 +101,7 @@ final class FeatureTest extends TestCase
         $this->bootstrap([Central::class]);
         (new CheckoutFacade())->discountNames();
 
-        self::assertFileDoesNotExist(new MembershipCache(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir())->path());
+        self::assertFileDoesNotExist(MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces())->path());
     }
 
     /**

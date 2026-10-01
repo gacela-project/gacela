@@ -29,7 +29,7 @@ use const DIRECTORY_SEPARATOR;
 /**
  * Finds the `#[Plugin]` classes of the application by walking its module paths.
  *
- * A file is loaded only when its source mentions `Plugin(` and declares a class
+ * A file is loaded only when its source mentions `Plugin` and declares a class
  * inside `projectNamespaces`: a loose match costs one class load, never a wrong
  * member, because membership is read from the attribute itself.
  *
@@ -101,12 +101,16 @@ final class MembershipScanner
     {
         $source = (string) file_get_contents($file->getPathname());
 
-        if (!str_contains($source, '#[') || preg_match('/\bPlugin\s*\(/', $source) !== 1) {
+        // Loose on purpose: an aliased import (`use ...\\Plugin as Joins;`) still
+        // mentions the name, and reflection decides membership from the
+        // attribute itself.
+        if (!str_contains($source, '#[') || !str_contains($source, 'Plugin')) {
             return null;
         }
 
+        // The class keyword may follow its attributes on the same line.
         if (preg_match('/^\s*namespace\s+([\w\\\\]+)\s*;/m', $source, $namespace) !== 1
-            || preg_match('/^\s*(?:(?:final|abstract|readonly)\s+)*class\s+(\w+)/m', $source, $class) !== 1
+            || preg_match('/^\s*(?:#\[.*?\]\s*)*(?:(?:final|abstract|readonly)\s+)*class\s+(\w+)/m', $source, $class) !== 1
         ) {
             return null;
         }

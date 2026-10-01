@@ -12,6 +12,7 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
@@ -102,6 +103,33 @@ final class CacheClearCommandTest extends TestCase
         self::assertStringContainsString('Cleared cache file', $command->getDisplay());
         self::assertStringContainsString('Cache cleared successfully!', $command->getDisplay());
         self::assertFileDoesNotExist($this->customServicesCacheFile);
+    }
+
+    /**
+     * One file per scan of module paths and namespaces, so `cache:clear` has to
+     * find every one of them, not only the scan this process would make.
+     */
+    public function test_cache_clear_removes_the_plugin_membership_cache_of_every_scan(): void
+    {
+        $config = Config::getInstance();
+        $files = [
+            MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), ['src'], ['App'])->path(),
+            MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), ['src/Billing'], ['App'])->path(),
+        ];
+
+        foreach ($files as $file) {
+            if (!is_dir(dirname($file))) {
+                mkdir(dirname($file), 0777, true);
+            }
+
+            file_put_contents($file, "<?php return ['plugins' => []];");
+        }
+
+        (new CommandTester(new CacheClearCommand()))->execute([]);
+
+        foreach ($files as $file) {
+            self::assertFileDoesNotExist($file);
+        }
     }
 
     public function test_cache_clear_reports_when_no_cache_is_present(): void

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\Doctor\Check;
 
+use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Framework\Plugins\Membership\PluginMember;
+use Throwable;
 
 use function array_key_exists;
 use function count;
@@ -25,11 +27,11 @@ final class PluginMembershipCheck implements HealthCheck
 
     /**
      * @param array<string, list<string>> $pluginStacks
-     * @param list<PluginMember> $members
+     * @param Closure(): list<PluginMember> $scan run by the check, so a class that cannot be read fails it, not the whole `doctor`
      */
     public function __construct(
         private readonly array $pluginStacks,
-        private readonly array $members,
+        private readonly Closure $scan,
         private readonly bool $cacheIsWarm,
         private readonly ?string $appEnv,
     ) {
@@ -42,12 +44,22 @@ final class PluginMembershipCheck implements HealthCheck
 
     public function run(): CheckResult
     {
-        if ($this->members === []) {
+        try {
+            $members = ($this->scan)();
+        } catch (Throwable $throwable) {
+            return CheckResult::error(
+                $this->name(),
+                [sprintf('the #[Plugin] scan failed: %s', $throwable->getMessage())],
+                'a #[Plugin] class must load and declare its contract: `#[Plugin(Contract::class)]`',
+            );
+        }
+
+        if ($members === []) {
             return CheckResult::ok($this->name(), 'no #[Plugin] classes');
         }
 
         $problems = [];
-        foreach ($this->members as $member) {
+        foreach ($members as $member) {
             $problem = $this->problemWith($member);
             if ($problem !== null) {
                 $problems[] = $problem;
@@ -66,14 +78,14 @@ final class PluginMembershipCheck implements HealthCheck
         if (!$this->cacheIsWarm && $this->isProduction()) {
             return CheckResult::warn(
                 $this->name(),
-                [sprintf('%d #[Plugin] class(es) are found by scanning the module paths on the first use of a stack', count($this->members))],
+                [sprintf('%d #[Plugin] class(es) are found by scanning the module paths on the first use of a stack', count($members))],
                 'run `bin/gacela cache:warm --attributes` when deploying',
             );
         }
 
         return CheckResult::ok($this->name(), sprintf(
             '%d #[Plugin] class(es) join declared stacks, %s',
-            count($this->members),
+            count($members),
             $this->cacheIsWarm ? 'read from the warmed cache' : 'found by scanning on first use',
         ));
     }

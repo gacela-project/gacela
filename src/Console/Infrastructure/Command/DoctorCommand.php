@@ -37,6 +37,7 @@ use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
 use Gacela\Framework\Attribute\CacheableConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
@@ -288,12 +289,19 @@ final class DoctorCommand extends Command
             new PluginStackCheck($config->getSetupGacela()->getPluginStacks()),
             new PluginMembershipCheck(
                 $config->getSetupGacela()->getPluginStacks(),
-                MembershipScanner::forPaths(
+                static fn (): array => MembershipScanner::forPaths(
                     $config->getSetupGacela()->getAppModulePaths(),
                     $config->getAppRootDir(),
                     $config->getSetupGacela()->getProjectNamespaces(),
                 )->plugins(),
-                (new MembershipCache($config->getCacheDir(), $config->getAppRootDir()))->isWarm(),
+                // The runtime reads the file only with file caching on.
+                (new GacelaFileCache($config))->isEnabled()
+                    && MembershipCache::forScan(
+                        $config->getCacheDir(),
+                        $config->getAppRootDir(),
+                        $config->getSetupGacela()->getAppModulePaths(),
+                        $config->getSetupGacela()->getProjectNamespaces(),
+                    )->isWarm(),
                 getenv('APP_ENV') ?: null,
             ),
             new HandlerRegistryCheck($config->getSetupGacela()->getHandlerRegistries()),

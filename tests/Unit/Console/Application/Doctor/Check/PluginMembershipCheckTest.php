@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Console\Application\Doctor\Check;
 
+use ArgumentCountError;
 use ArrayObject;
 use Countable;
 use Gacela\Console\Application\Doctor\Check\PluginMembershipCheck;
@@ -16,7 +17,7 @@ final class PluginMembershipCheckTest extends TestCase
 {
     public function test_no_attribute_members_is_ok(): void
     {
-        $result = (new PluginMembershipCheck([], [], cacheIsWarm: false, appEnv: 'prod'))->run();
+        $result = (new PluginMembershipCheck([], static fn (): array => [], cacheIsWarm: false, appEnv: 'prod'))->run();
 
         self::assertSame(CheckStatus::Ok, $result->status);
         self::assertSame(['no #[Plugin] classes'], $result->details);
@@ -31,7 +32,7 @@ final class PluginMembershipCheckTest extends TestCase
     {
         $result = (new PluginMembershipCheck(
             [],
-            [new PluginMember(Countable::class, ArrayObject::class, 0)],
+            static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
             cacheIsWarm: true,
             appEnv: null,
         ))->run();
@@ -47,7 +48,7 @@ final class PluginMembershipCheckTest extends TestCase
     {
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
-            [new PluginMember(Countable::class, stdClass::class, 0)],
+            static fn (): array => [new PluginMember(Countable::class, stdClass::class, 0)],
             cacheIsWarm: true,
             appEnv: null,
         ))->run();
@@ -63,7 +64,7 @@ final class PluginMembershipCheckTest extends TestCase
     {
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
-            [new PluginMember(Countable::class, ArrayObject::class, 0)],
+            static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
             cacheIsWarm: false,
             appEnv: 'prod',
         ))->run();
@@ -76,7 +77,7 @@ final class PluginMembershipCheckTest extends TestCase
     {
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
-            [new PluginMember(Countable::class, ArrayObject::class, 0)],
+            static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
             cacheIsWarm: false,
             appEnv: 'dev',
         ))->run();
@@ -89,7 +90,7 @@ final class PluginMembershipCheckTest extends TestCase
     {
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
-            [new PluginMember(Countable::class, ArrayObject::class, 0)],
+            static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
             cacheIsWarm: false,
             appEnv: null,
         ))->run();
@@ -101,12 +102,30 @@ final class PluginMembershipCheckTest extends TestCase
     {
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
-            [new PluginMember(Countable::class, ArrayObject::class, 0)],
+            static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
             cacheIsWarm: true,
             appEnv: 'prod',
         ))->run();
 
         self::assertSame(CheckStatus::Ok, $result->status);
         self::assertSame(['1 #[Plugin] class(es) join declared stacks, read from the warmed cache'], $result->details);
+    }
+
+    /**
+     * `#[Plugin]` with no contract throws from `newInstance()`, and a class whose
+     * parent is gone throws from `class_exists()`: the misconfiguration this
+     * check is for, so it is reported here instead of ending the run.
+     */
+    public function test_a_scan_that_throws_is_reported(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): array => throw new ArgumentCountError('Too few arguments to Plugin::__construct()'),
+            cacheIsWarm: false,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['the #[Plugin] scan failed: Too few arguments to Plugin::__construct()'], $result->details);
     }
 }

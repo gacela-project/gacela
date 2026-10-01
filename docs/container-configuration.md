@@ -105,6 +105,8 @@ When two registrations name the same id, this is what the container answers with
 | `extendService()`, and a module Provider that `set()`s the id | the Provider's value, extended |
 | `extendService()` and `addLazy()` (or `addFactory()`, or `addBinding()`), and a module Provider that `set()`s the id | inside that module, the Provider's value **unextended**; the extension applies to the application-level service only |
 
+Within one container the rule is the same for every source: a registered service beats a binding. `addLazy()` and `addFactory()` register the value itself, while `addBinding()` only says which class to build for a type, and the container looks for a registered value before it builds anything. Two registrations of the same kind replace each other, and `gacela.php` comes last.
+
 A module owns its own wiring: the Provider registers on the module container after the application's services, and `extendService()` is the only application-level verb that reaches into it. That reach stops when the application container also provides the id, which is the last row. `doctor` reports that case for `addLazy()` and `addFactory()` under **service extensions**; drop one of the two registrations.
 
 ## Conditional Bindings

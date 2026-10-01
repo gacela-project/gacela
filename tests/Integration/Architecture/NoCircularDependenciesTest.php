@@ -117,6 +117,9 @@ final class NoCircularDependenciesTest extends TestCase
         //     each resolver returns the matching base class;
         //   - the #[Provides] attribute scanner, which reads provider objects that
         //     the framework root defines.
+        //   - the #[Plugin] membership scanner, which reads the attribute from
+        //     Attribute and is asked by the Container. Its classes take plain
+        //     values, so they stay out of the class cycle above.
         //
         // Cutting the class cycle above shrinks this but does not remove it: a
         // namespace pair is cyclic as soon as any one class on each side points at
@@ -149,6 +152,7 @@ final class NoCircularDependenciesTest extends TestCase
             . ' | Gacela\Framework\Event\ClassResolver'
             . ' | Gacela\Framework\Event\ClassResolver\ClassNameFinder'
             . ' | Gacela\Framework\Health'
+            . ' | Gacela\Framework\Plugins\Membership'
             . ' | Gacela\Framework\ServiceResolver',
 
         // The console module's own shape: ConsoleProvider registers the commands,

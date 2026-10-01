@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
 
 use function array_filter;
 use function array_map;
@@ -24,6 +25,7 @@ final class CacheManager
     private const CACHE_FILENAMES = [
         ClassNamePhpCache::FILENAME,
         CustomServicesPhpCache::FILENAME,
+        MembershipCache::FILENAME,
     ];
 
     public function clearCache(): void
@@ -106,7 +108,7 @@ final class CacheManager
 
         // Every spelling: the app-scoped name `put()` writes, the unscoped one
         // written before the caches were scoped, and every bootstrap
-        // fingerprint of the class-name cache (#681) -- `cache:clear` that
+        // fingerprint of the class-name and plugin membership caches (#681) -- `cache:clear` that
         // left one entrypoint's file behind would leave the stale answers it
         // holds reachable.
         return array_merge(
@@ -118,20 +120,21 @@ final class CacheManager
                 static fn (string $filename): string => $cacheDir . DIRECTORY_SEPARATOR . $filename,
                 self::CACHE_FILENAMES,
             ),
-            $this->fingerprintedClassNameFiles($cacheDir, $appRoot),
+            $this->fingerprintedFiles($cacheDir, ClassNamePhpCache::FILENAME, $appRoot),
+            $this->fingerprintedFiles($cacheDir, MembershipCache::FILENAME, $appRoot),
         );
     }
 
     /**
      * @return list<string>
      */
-    private function fingerprintedClassNameFiles(string $cacheDir, string $appRoot): array
+    private function fingerprintedFiles(string $cacheDir, string $filename, string $appRoot): array
     {
         if ($appRoot === '') {
             return [];
         }
 
-        $appScoped = AbstractPhpFileCache::absoluteFilename($cacheDir, ClassNamePhpCache::FILENAME, $appRoot);
+        $appScoped = AbstractPhpFileCache::absoluteFilename($cacheDir, $filename, $appRoot);
 
         // The app-scoped name minus `.php`, plus one fingerprint segment.
         return glob(substr($appScoped, 0, -4) . '-*.php') ?: [];

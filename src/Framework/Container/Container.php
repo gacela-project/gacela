@@ -15,6 +15,7 @@ use Gacela\Container\DependencyNode;
 use Gacela\Container\PlanCache;
 use Gacela\Container\ValidationReport;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\Container\BindingRegisteredEvent;
@@ -22,6 +23,10 @@ use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 use Gacela\Framework\Plugins\LazyPluginStack;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
+use Gacela\Framework\Plugins\Membership\MembershipScanner;
+use Gacela\Framework\Plugins\Membership\PluginMember;
+use Gacela\Framework\Plugins\Membership\PluginMembership;
 use Throwable;
 
 use function array_keys;
@@ -619,6 +624,58 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * The `#[Plugin]` members: from the cache file when there is one, otherwise
+     * by scanning the module paths.
+     *
+     * @return list<PluginMember>
+     */
+    private static function pluginMembers(): array
+    {
+        $config = Config::getInstance();
+        $setup = $config->getSetupGacela();
+        $fileCacheEnabled = (new GacelaFileCache($config))->isEnabled();
+        $cache = self::membershipCache($config);
+
+        // Read only with file caching on, as the class-name cache is: with it
+        // off, as in development, a new or renamed `#[Plugin]` class is seen
+        // on the next request without clearing anything.
+        $members = $fileCacheEnabled ? $cache->read() : null;
+        if ($members !== null) {
+            return $members;
+        }
+
+        $members = MembershipScanner::forPaths(
+            $setup->getAppModulePaths(),
+            $config->getAppRootDir(),
+            $setup->getProjectNamespaces(),
+        )->plugins();
+
+        // The way the class-name cache fills itself: with file caching on, only
+        // the first process after a deploy pays for the scan.
+        if ($fileCacheEnabled) {
+            $cache->write($members);
+        }
+
+        return $members;
+    }
+
+    /**
+     * The cache file's path names what the members answer for: the application
+     * root and a fingerprint of its module paths and namespaces.
+     */
+    private static function membershipScope(): string
+    {
+        return self::membershipCache(Config::getInstance())->path();
+    }
+
+    private static function membershipCache(Config $config): MembershipCache
+    {
+        $setup = $config->getSetupGacela();
+
+        return MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
+    }
+
+    /**
      * Wrap an inner container this class did not build -- the scope returned by
      * {@see createScope()}, which arrives already made.
      */
@@ -692,7 +749,11 @@ final class Container implements ContainerInterface
         foreach ($containerConfig->getPluginStacks() as $contract => $plugins) {
             $container->set(
                 $contract,
-                static fn (): LazyPluginStack => new LazyPluginStack($contract, $plugins, $container),
+                static fn (): LazyPluginStack => new LazyPluginStack(
+                    $contract,
+                    PluginMembership::withMembers($contract, $plugins, self::membershipScope(), self::pluginMembers(...)),
+                    $container,
+                ),
             );
         }
 

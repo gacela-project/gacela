@@ -659,11 +659,13 @@ final class Container implements ContainerInterface
         return $members;
     }
 
+    /**
+     * The cache file's path names what the members answer for: the application
+     * root and a fingerprint of its module paths and namespaces.
+     */
     private static function membershipScope(): string
     {
-        $config = Config::getInstance();
-
-        return $config->getAppRootDir() . "\0" . self::membershipFingerprint($config);
+        return self::membershipCache(Config::getInstance())->path();
     }
 
     private static function membershipCache(Config $config): MembershipCache
@@ -671,13 +673,6 @@ final class Container implements ContainerInterface
         $setup = $config->getSetupGacela();
 
         return MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
-    }
-
-    private static function membershipFingerprint(Config $config): string
-    {
-        $setup = $config->getSetupGacela();
-
-        return MembershipCache::fingerprintOf($setup->getAppModulePaths(), $setup->getProjectNamespaces());
     }
 
     /**

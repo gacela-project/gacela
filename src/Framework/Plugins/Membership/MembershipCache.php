@@ -11,7 +11,6 @@ use function array_map;
 use function is_file;
 use function serialize;
 use function sha1;
-use function substr;
 
 /**
  * The `#[Plugin]` members `cache:warm --attributes` found, so a warmed
@@ -43,15 +42,6 @@ final class MembershipCache
     public static function forScan(string $cacheDir, string $appRootDir, array $appModulePaths, array $projectNamespaces): self
     {
         return new self($cacheDir, $appRootDir, self::fingerprintOf($appModulePaths, $projectNamespaces));
-    }
-
-    /**
-     * @param list<string> $appModulePaths
-     * @param list<string> $projectNamespaces
-     */
-    public static function fingerprintOf(array $appModulePaths, array $projectNamespaces): string
-    {
-        return substr(sha1(serialize([$appModulePaths, $projectNamespaces])), 0, 12);
     }
 
     public function path(): string
@@ -91,5 +81,14 @@ final class MembershipCache
         return FileCache::writeAtomically($this->path(), [
             'plugins' => array_map(static fn (PluginMember $member): array => $member->toRow(), $plugins),
         ]);
+    }
+
+    /**
+     * @param list<string> $appModulePaths
+     * @param list<string> $projectNamespaces
+     */
+    private static function fingerprintOf(array $appModulePaths, array $projectNamespaces): string
+    {
+        return sha1(serialize([$appModulePaths, $projectNamespaces]));
     }
 }

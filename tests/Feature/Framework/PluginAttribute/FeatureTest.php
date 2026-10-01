@@ -51,10 +51,10 @@ final class FeatureTest extends TestCase
     {
         $this->bootstrap([Central::class], fileCache: true);
         $cache = MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces());
-        $cache->write([new PluginMember(Discount::class, Coupon::class, 0)]);
+        $cache->write([new PluginMember(Discount::class, Coupon::class, 0), new PluginMember(Discount::class, Bundle::class, 0)]);
 
         try {
-            self::assertSame(['central', 'coupon'], (new CheckoutFacade())->discountNames());
+            self::assertSame(['central', 'coupon', 'bundle'], (new CheckoutFacade())->discountNames());
         } finally {
             unlink($cache->path());
         }

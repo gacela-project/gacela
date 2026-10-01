@@ -70,8 +70,7 @@ final class PluginMembershipCheck implements HealthCheck
             return CheckResult::error(
                 $this->name(),
                 $problems,
-                'declare the stack in gacela.php, empty if the attributes fill it: '
-                . '`$config->addPluginStack(Contract::class, [])`',
+                'declare the stack in gacela.php, empty if the attributes fill it: `$config->addPluginStack(Contract::class, [])`',
             );
         }
 

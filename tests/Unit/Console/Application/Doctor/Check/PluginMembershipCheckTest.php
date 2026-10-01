@@ -70,6 +70,7 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame(['1 #[Plugin] class(es) are found by scanning the module paths on the first use of a stack'], $result->details);
         self::assertSame('run `bin/gacela cache:warm --attributes` when deploying', $result->remediation);
     }
 

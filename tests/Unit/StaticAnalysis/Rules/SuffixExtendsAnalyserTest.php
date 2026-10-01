@@ -6,6 +6,8 @@ namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractFactory;
+use Gacela\Framework\AbstractProvider;
 use Gacela\StaticAnalysis\Rules\SuffixExtendsAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
@@ -163,6 +165,39 @@ final class SuffixExtendsAnalyserTest extends TestCase
     }
 
     /**
+     * The resolver finds a Factory, Config or Provider by name: `{Module}{Suffix}`
+     * or the bare suffix, beside the module's Facade. Any other `*Factory` is a
+     * factory, and extending the pillar base would not make it one.
+     */
+    public function test_a_resolved_pillar_suffix_off_the_module_name_is_not_checked(): void
+    {
+        self::assertSame([], $this->analyseAs('Factory', AbstractFactory::class, 'Phel\Compiler\Domain\Parser\ExpressionParserFactory'));
+        self::assertSame([], $this->analyseAs('Config', AbstractConfig::class, 'Phel\Config\PhelConfig'));
+        self::assertSame([], $this->analyseAs('Factory', AbstractFactory::class, 'Phel\Lang\TypeFactory'));
+    }
+
+    public function test_a_resolved_pillar_named_after_its_module_is_reported(): void
+    {
+        self::assertCount(1, $this->analyseAs('Factory', AbstractFactory::class, 'App\Billing\BillingFactory'));
+        self::assertCount(1, $this->analyseAs('Provider', AbstractProvider::class, 'App\Billing\BillingProvider'));
+    }
+
+    public function test_a_resolved_pillar_named_by_the_bare_suffix_is_reported(): void
+    {
+        self::assertCount(1, $this->analyseAs('Config', AbstractConfig::class, 'App\Billing\Config'));
+    }
+
+    /**
+     * A Facade is not resolved by name: it is whatever class the caller
+     * instantiates, and the module is read off its namespace. So every
+     * `*Facade` is still a candidate.
+     */
+    public function test_a_facade_is_checked_whatever_its_module_is_called(): void
+    {
+        self::assertCount(1, $this->analyse('App\Checkout\PaymentsFacade'));
+    }
+
+    /**
      * An anonymous class has no name to carry a suffix, and nothing a consumer
      * could rename if it were reported.
      */
@@ -190,10 +225,20 @@ final class SuffixExtendsAnalyserTest extends TestCase
     /**
      * @return list<Violation>
      */
+    private function analyseAs(string $suffix, string $expectedParent, string $className): array
+    {
+        $node = ParseSource::classIn('<?php final class Whatever {}');
+
+        return (new SuffixExtendsAnalyser($suffix, $expectedParent))->analyse($node, new FakeAnalysedClass($className));
+    }
+
+    /**
+     * @return list<Violation>
+     */
     private function analyseConfig(ClassLike $node): array
     {
         $analyser = new SuffixExtendsAnalyser('Config', AbstractConfig::class);
 
-        return $analyser->analyse($node, new FakeAnalysedClass('App\RouterGacelaConfig'));
+        return $analyser->analyse($node, new FakeAnalysedClass('App\Router\RouterConfig'));
     }
 }

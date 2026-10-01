@@ -64,10 +64,10 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->expectedParent = AbstractFactory::class;
 
         $this->analyse(
-            [__DIR__ . '/Fixture/SuffixFactory/InvalidFactory.php'],
+            [__DIR__ . '/Fixture/Invalid/InvalidFactory.php'],
             [
                 [
-                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixFactory\InvalidFactory should extend ' . AbstractFactory::class,
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\Invalid\InvalidFactory should extend ' . AbstractFactory::class,
                     7,
                     $this->expectedTip(),
                 ],
@@ -89,10 +89,10 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->expectedParent = AbstractProvider::class;
 
         $this->analyse(
-            [__DIR__ . '/Fixture/SuffixProvider/InvalidProvider.php'],
+            [__DIR__ . '/Fixture/Invalid/InvalidProvider.php'],
             [
                 [
-                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixProvider\InvalidProvider should extend ' . AbstractProvider::class,
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\Invalid\InvalidProvider should extend ' . AbstractProvider::class,
                     7,
                     $this->expectedTip(),
                 ],
@@ -114,10 +114,10 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->expectedParent = AbstractConfig::class;
 
         $this->analyse(
-            [__DIR__ . '/Fixture/SuffixConfig/InvalidConfig.php'],
+            [__DIR__ . '/Fixture/Invalid/InvalidConfig.php'],
             [
                 [
-                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixConfig\InvalidConfig should extend ' . AbstractConfig::class,
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\Invalid\InvalidConfig should extend ' . AbstractConfig::class,
                     7,
                     $this->expectedTip(),
                 ],

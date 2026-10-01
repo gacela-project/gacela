@@ -101,6 +101,21 @@ final class AgentsInstallCommandTest extends TestCase
         self::assertStringStartsWith('<!-- gacela:start -->', $this->agents());
     }
 
+    /**
+     * Markers left by hand out of order are not a block. The command adds its
+     * own, and the next run replaces only that one, never the text between a
+     * stray marker and its block.
+     */
+    public function test_stray_markers_never_make_it_rewrite_the_projects_text(): void
+    {
+        file_put_contents($this->agentsFile(), "<!-- gacela:end -->\nOur text.\n<!-- gacela:start -->\nMore of ours.\n");
+
+        $this->install();
+        $this->install();
+
+        self::assertStringStartsWith("<!-- gacela:end -->\nOur text.\n<!-- gacela:start -->\nMore of ours.\n\n<!-- gacela:start -->\n## Gacela", $this->agents());
+    }
+
     private function install(): CommandTester
     {
         $tester = new CommandTester(new AgentsInstallCommand($this->appRoot));

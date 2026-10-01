@@ -12,11 +12,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use function file_get_contents;
 use function file_put_contents;
 use function is_file;
+use function preg_match;
 use function preg_quote;
 use function preg_replace;
 use function rtrim;
 use function sprintf;
-use function str_contains;
 
 /**
  * Points the project's `AGENTS.md` at the guide Gacela ships for coding agents.
@@ -57,7 +57,13 @@ final class AgentsInstallCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $target = $this->appRootDir . DIRECTORY_SEPARATOR . self::FILENAME;
-        $current = is_file($target) ? (string) file_get_contents($target) : null;
+        $current = is_file($target) ? file_get_contents($target) : null;
+
+        // Read as empty, an unreadable file would be overwritten by the block.
+        if ($current === false) {
+            throw new RuntimeException(sprintf('File "%s" exists and could not be read', $target));
+        }
+
         $next = $this->withBlock($current);
 
         if ($next === $current) {
@@ -85,9 +91,12 @@ final class AgentsInstallCommand extends Command
             return self::BLOCK . "\n";
         }
 
-        if (str_contains($current, self::START) && str_contains($current, self::END)) {
-            $pattern = '/' . preg_quote(self::START, '/') . '.*?' . preg_quote(self::END, '/') . '/s';
+        // A start marker, then an end marker with no other start between: a
+        // stray marker left by hand never makes a match span the text after it.
+        $start = preg_quote(self::START, '/');
+        $pattern = '/' . $start . '(?:(?!' . $start . ').)*?' . preg_quote(self::END, '/') . '/s';
 
+        if (preg_match($pattern, $current) === 1) {
             return (string) preg_replace($pattern, self::BLOCK, $current, 1);
         }
 

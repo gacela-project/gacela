@@ -64,10 +64,10 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->expectedParent = AbstractFactory::class;
 
         $this->analyse(
-            [__DIR__ . '/Fixture/SuffixFactory/InvalidFactory.php'],
+            [__DIR__ . '/Fixture/Invalid/InvalidFactory.php'],
             [
                 [
-                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixFactory\InvalidFactory should extend ' . AbstractFactory::class,
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\Invalid\InvalidFactory should extend ' . AbstractFactory::class,
                     7,
                     $this->expectedTip(),
                 ],
@@ -80,7 +80,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->suffix = 'Factory';
         $this->expectedParent = AbstractFactory::class;
 
-        $this->analyse([__DIR__ . '/Fixture/SuffixFactory/UserFactory.php'], []);
+        $this->analyse([__DIR__ . '/Fixture/User/UserFactory.php'], []);
     }
 
     public function test_reports_bad_provider_suffix(): void
@@ -89,10 +89,10 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->expectedParent = AbstractProvider::class;
 
         $this->analyse(
-            [__DIR__ . '/Fixture/SuffixProvider/InvalidProvider.php'],
+            [__DIR__ . '/Fixture/Invalid/InvalidProvider.php'],
             [
                 [
-                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixProvider\InvalidProvider should extend ' . AbstractProvider::class,
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\Invalid\InvalidProvider should extend ' . AbstractProvider::class,
                     7,
                     $this->expectedTip(),
                 ],
@@ -105,7 +105,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->suffix = 'Provider';
         $this->expectedParent = AbstractProvider::class;
 
-        $this->analyse([__DIR__ . '/Fixture/SuffixProvider/UserProvider.php'], []);
+        $this->analyse([__DIR__ . '/Fixture/User/UserProvider.php'], []);
     }
 
     public function test_reports_bad_config_suffix(): void
@@ -114,10 +114,10 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->expectedParent = AbstractConfig::class;
 
         $this->analyse(
-            [__DIR__ . '/Fixture/SuffixConfig/InvalidConfig.php'],
+            [__DIR__ . '/Fixture/Invalid/InvalidConfig.php'],
             [
                 [
-                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixConfig\InvalidConfig should extend ' . AbstractConfig::class,
+                    'Class GacelaTest\Unit\PHPStan\Rules\Fixture\Invalid\InvalidConfig should extend ' . AbstractConfig::class,
                     7,
                     $this->expectedTip(),
                 ],
@@ -130,7 +130,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->suffix = 'Config';
         $this->expectedParent = AbstractConfig::class;
 
-        $this->analyse([__DIR__ . '/Fixture/SuffixConfig/UserConfig.php'], []);
+        $this->analyse([__DIR__ . '/Fixture/User/UserConfig.php'], []);
     }
 
     public function test_ignores_a_config_extender_named_config(): void
@@ -138,7 +138,7 @@ final class SuffixExtendsRuleTest extends RuleTestCase
         $this->suffix = 'Config';
         $this->expectedParent = AbstractConfig::class;
 
-        $this->analyse([__DIR__ . '/Fixture/SuffixConfig/ExtenderConfig.php'], []);
+        $this->analyse([__DIR__ . '/Fixture/Extender/ExtenderConfig.php'], []);
     }
 
     protected function getRule(): Rule

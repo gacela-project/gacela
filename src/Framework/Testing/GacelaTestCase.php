@@ -356,6 +356,10 @@ abstract class GacelaTestCase extends TestCase
      * which is the only kind that has more than one module to narrow away --
      * would overwrite a narrowing written in the closure, and the slice would
      * silently be the whole application.
+     *
+     * The setter stays off `SetupGacelaInterface` on purpose: that interface is
+     * the read side, and every setter lives on the final `SetupGacela` that
+     * bootstrap builds. One test helper is no reason to add the first mutator.
      */
     private function narrowModulePathsTo(string $moduleDir): void
     {

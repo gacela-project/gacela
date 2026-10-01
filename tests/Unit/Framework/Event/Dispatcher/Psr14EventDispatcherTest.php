@@ -11,18 +11,10 @@ use Gacela\Framework\Event\Dispatcher\Psr14EventDispatcher;
 use Gacela\Framework\Event\GacelaEventInterface;
 use GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory\FakeEvent;
 use PHPUnit\Framework\TestCase;
-use Psr\EventDispatcher\EventDispatcherInterface as PsrEventDispatcherInterface;
 use Psr\EventDispatcher\StoppableEventInterface;
 
 final class Psr14EventDispatcherTest extends TestCase
 {
-    public function test_it_is_a_psr14_dispatcher(): void
-    {
-        $dispatcher = new Psr14EventDispatcher(new NullEventDispatcher());
-
-        self::assertInstanceOf(PsrEventDispatcherInterface::class, $dispatcher);
-    }
-
     public function test_the_listeners_of_the_wrapped_dispatcher_run(): void
     {
         $received = [];

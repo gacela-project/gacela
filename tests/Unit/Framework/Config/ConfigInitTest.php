@@ -25,34 +25,6 @@ final class ConfigInitTest extends TestCase
         self::assertSame([], $configInit->loadAll());
     }
 
-    public function test_one_reader_linked_to_unsupported_type_is_ignored(): void
-    {
-        $pathFinder = $this->createStub(PathFinderInterface::class);
-        $pathFinder->method('matchingPattern')->willReturn(['path1']);
-
-        $configInit = new ConfigLoader(
-            new GacelaConfigFile(),
-            $pathFinder,
-            $this->createStub(PathNormalizerInterface::class),
-        );
-
-        self::assertSame([], $configInit->loadAll());
-    }
-
-    public function test_no_readers_returns_empty_array(): void
-    {
-        $pathFinder = $this->createStub(PathFinderInterface::class);
-        $pathFinder->method('matchingPattern')->willReturn(['path1']);
-
-        $configInit = new ConfigLoader(
-            new GacelaConfigFile(),
-            $pathFinder,
-            $this->createStub(PathNormalizerInterface::class),
-        );
-
-        self::assertSame([], $configInit->loadAll());
-    }
-
     public function test_read_single_config(): void
     {
         $reader = $this->createStub(ConfigReaderInterface::class);

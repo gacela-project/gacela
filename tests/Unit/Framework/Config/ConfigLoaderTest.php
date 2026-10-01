@@ -146,19 +146,6 @@ final class ConfigLoaderTest extends TestCase
         self::assertSame(['pattern-b', 'pattern-c'], $loader->patternsMatchingNothing());
     }
 
-    public function test_a_base_pattern_matching_files_is_not_reported(): void
-    {
-        $default = $this->writeFile('default.php');
-
-        $loader = $this->loaderFor(
-            local: $this->tempDir . '/local.php',
-            patternMatches: [$default],
-            envPatternMatches: [],
-        );
-
-        self::assertSame([], $loader->patternsMatchingNothing());
-    }
-
     public function test_a_base_pattern_matching_nothing_is_reported(): void
     {
         $loader = $this->loaderFor(

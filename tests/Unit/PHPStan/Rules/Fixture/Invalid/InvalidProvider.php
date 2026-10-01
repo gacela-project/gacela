@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GacelaTest\Unit\PHPStan\Rules\Fixture\SuffixProvider;
+namespace GacelaTest\Unit\PHPStan\Rules\Fixture\Invalid;
 
 final class InvalidProvider
 {

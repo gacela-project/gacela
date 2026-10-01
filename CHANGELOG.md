@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- `gacela.suffixExtends` reports a `*Factory`, `*Config`, `*Provider` or declared kind only where the resolver would pick it up: named `{Module}{Suffix}` or the bare suffix. A `NodeEmitterFactory` deep in a module's domain, or a `PhelConfig` in a namespace that is no module, was told to extend the pillar base, which would have made it a second candidate. Every `*Facade` is still checked ([#940](https://github.com/gacela-project/gacela/issues/940))
 - `make:module --minimal` no longer writes a Factory whose `@extends` names a Config the template does not create, so PHPStan reports nothing on a freshly scaffolded minimal module
 - `gacela.suffixExtends` no longer reports a config extender: a class whose only method besides a constructor is `__invoke(GacelaConfig $config)`, the shape `extendGacelaConfig()` takes, even when it is named `*Config`
 - The `gacela.suffixExtends` tip leads with the rename and says to extend the pillar base only for the module's real pillar. Extending it on any other class made a second candidate that resolution picked up by name

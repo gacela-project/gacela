@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\StaticAnalysis\Rules;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\ResolvedName;
@@ -17,8 +18,10 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 
 use function array_filter;
+use function array_pop;
 use function array_values;
 use function count;
+use function explode;
 use function sprintf;
 use function str_ends_with;
 
@@ -59,6 +62,10 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
             return [];
         }
 
+        if (!$this->couldBeResolvedAsThePillar($className)) {
+            return [];
+        }
+
         if ($class->extendsClass($this->expectedParent)) {
             return [];
         }
@@ -93,6 +100,26 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
                 ),
             ),
         ];
+    }
+
+    /**
+     * A Factory, Config or Provider is found by name, beside the module's
+     * Facade: `{Module}{Suffix}` or the bare suffix, `{Module}` being the last
+     * segment of the namespace. Any other class with the suffix is never picked
+     * up, so telling it to extend the pillar base is wrong advice. A Facade is
+     * whatever class the caller instantiates, so every `*Facade` is a candidate.
+     */
+    private function couldBeResolvedAsThePillar(string $className): bool
+    {
+        if ($this->suffix === ResolvableTypes::FACADE) {
+            return true;
+        }
+
+        $parts = explode('\\', $className);
+        $shortName = array_pop($parts);
+        $module = $parts === [] ? '' : $parts[count($parts) - 1];
+
+        return $shortName === $this->suffix || $shortName === $module . $this->suffix;
     }
 
     /**

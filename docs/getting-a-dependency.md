@@ -284,6 +284,19 @@ Calling `addPluginStack()` again for the same interface **appends**, seed first,
 
 Entries resolve through the container on first read and are kept, so iterating twice yields the same plugins however they are bound. A class that does not implement the interface fails on that first read, naming the class and the stack, rather than as a `TypeError` somewhere inside the consumer's loop.
 
+**Joining by attribute.** A class can join a declared stack without being named in `gacela.php`:
+
+```php
+use Gacela\Framework\Attribute\Plugin;
+
+#[Plugin(InvoiceDecorator::class, priority: 10)]
+final class AddQrCodeDecorator implements InvoiceDecorator {}
+```
+
+The declared members come first, in declaration order. Attribute members follow, highest `priority` first, then by class name, and a class already declared is not added twice. The stack itself is still declared, empty if the attributes fill it: `addPluginStack(InvoiceDecorator::class, [])`. Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`.
+
+The members are read when a declared stack is first resolved, once per process. `cache:warm --attributes` stores them so production reads one file. Without that file the module paths are scanned on first use: a few milliseconds for a handful of modules, more for a large tree. With [file caching](caching.md) on, the first scan is stored and later processes read it, so a new `#[Plugin]` class needs `cache:clear`, as a new module does. `doctor` reports scanning outside `APP_ENV=dev|local|test`. An application that declares no stack reads neither.
+
 **Which of the three.** A registry answers *the one implementation for this key*. A tag answers *all of these*, untyped, contributed from anywhere. A stack answers *all implementations of this interface*, in order, typed and checked. The contract is what separates a stack from a tag — without one, the answer is a tag.
 
 A stack is reached with `getPluginStack()` rather than `getProvidedDependency()` deliberately: the latter means *the thing registered under this id*, and both analysers type it as the class the id names, so routing a stack through it would make one id mean two things.

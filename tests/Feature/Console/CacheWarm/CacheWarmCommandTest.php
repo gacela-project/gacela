@@ -13,6 +13,7 @@ use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
@@ -38,6 +39,8 @@ final class CacheWarmCommandTest extends TestCase
 
     private string $customServicesCacheFile;
 
+    private string $membershipCacheFile;
+
     protected function setUp(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
@@ -57,6 +60,8 @@ final class CacheWarmCommandTest extends TestCase
             CustomServicesPhpCache::FILENAME,
             Config::getInstance()->getAppRootDir(),
         );
+
+        $this->membershipCacheFile = new MembershipCache(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir())->path();
 
         $this->removeGeneratedCaches();
 
@@ -212,6 +217,21 @@ final class CacheWarmCommandTest extends TestCase
             $withAttributes,
             '--attributes must pre-resolve additional doc-block services',
         );
+    }
+
+    public function test_cache_warm_with_attributes_stores_the_plugin_membership(): void
+    {
+        $this->command->execute(['--attributes' => true]);
+
+        self::assertFileExists($this->membershipCacheFile);
+        self::assertStringContainsString('Plugin membership cache:', $this->command->getDisplay());
+    }
+
+    public function test_cache_warm_without_attributes_leaves_the_plugin_membership_alone(): void
+    {
+        $this->command->execute([]);
+
+        self::assertFileDoesNotExist($this->membershipCacheFile);
     }
 
     public function test_cache_warm_with_all_options(): void
@@ -382,6 +402,10 @@ final class CacheWarmCommandTest extends TestCase
 
         if (file_exists($this->customServicesCacheFile)) {
             unlink($this->customServicesCacheFile);
+        }
+
+        if (file_exists($this->membershipCacheFile)) {
+            unlink($this->membershipCacheFile);
         }
     }
 }

@@ -31,6 +31,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Exception\ServiceNotFoundException;
 use Gacela\Framework\Health\HealthCheckRegistry;
+use Gacela\Framework\Plugins\Membership\PluginMembership;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use Gacela\Framework\ServiceResolver\ServiceResolverCache;
 
@@ -224,6 +225,7 @@ final class Gacela
         // constant and is not. See PackageContribution::resetCache().
         PackageContribution::resetCache();
         PathFinder::resetCache();
+        PluginMembership::resetCache();
         ClassValidator::resetCache();
         // Dropping the shared plan cache is cheap -- one null assignment -- and
         // hands back the memory it holds. Not to be confused with

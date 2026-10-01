@@ -232,7 +232,8 @@ return static function (GacelaConfig $config): void {
     // one instead of replacing it. See `Shared/Packaging/StrictTaxRules.php`.
     $config->addPluginStack(TaxCalculatorInterface::class, [StandardVatCalculator::class]);
 
-    // Email everywhere; production adds the webhook.
+    // Email everywhere; production adds the webhook. The archive channel joins
+    // by its #[Plugin] attribute, so it is not named here.
     $config->addPluginStack(NotificationChannelInterface::class, [EmailChannel::class]);
 
     // Keyed dispatch, not "every implementation of": paying by card is one

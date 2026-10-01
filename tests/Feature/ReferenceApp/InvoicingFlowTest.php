@@ -112,11 +112,13 @@ final class InvoicingFlowTest extends TestCase
         // `gacela-fixture/invoice-audit` package, which `gacela.php` never
         // mentions. Package configuration is merged before the project's own, so
         // what a package appends to a stack sits in front of what the project
-        // appends.
+        // appends. The archive comes last: it joined by its #[Plugin] attribute,
+        // and attribute members follow every declared one.
         self::assertSame(
             [
                 'audit:Acme BV:Invoice ACME-INV-01001',
                 'email:Acme BV:Invoice ACME-INV-01001',
+                'archive:Acme BV:Invoice ACME-INV-01001',
             ],
             (new NotificationFacade())->deliveries(),
         );
@@ -165,6 +167,7 @@ final class InvoicingFlowTest extends TestCase
                 'audit:Acme BV:Invoice ACME-INV-01001',
                 'email:Acme BV:Invoice ACME-INV-01001',
                 'webhook:Acme BV:X-Invoicing-Source,X-Invoicing-App',
+                'archive:Acme BV:Invoice ACME-INV-01001',
             ],
             (new NotificationFacade())->deliveries(),
         );
@@ -293,6 +296,7 @@ final class InvoicingFlowTest extends TestCase
             [
                 'audit:Acme BV:Invoice ACME-INV-01001',
                 'email:Acme BV:Invoice ACME-INV-01001',
+                'archive:Acme BV:Invoice ACME-INV-01001',
             ],
             (new NotificationFacade())->deliveries(),
         );
@@ -425,7 +429,7 @@ final class InvoicingFlowTest extends TestCase
 
         self::assertSame('sandbox.acme-pay.test', (new PaymentApi())->gatewayEndpoint());
         self::assertSame('EUR', (new BillingFacade())->currency());
-        self::assertSame(['audit', 'email'], (new NotificationFacade())->channelNames());
+        self::assertSame(['audit', 'email', 'archive'], (new NotificationFacade())->channelNames());
     }
 
     /**

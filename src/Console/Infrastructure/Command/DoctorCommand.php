@@ -20,6 +20,7 @@ use Gacela\Console\Application\Doctor\Check\IdeMetadataStalenessCheck;
 use Gacela\Console\Application\Doctor\Check\ModuleHealthCheck;
 use Gacela\Console\Application\Doctor\Check\ModulePathCheck;
 use Gacela\Console\Application\Doctor\Check\PackageManifestCheck;
+use Gacela\Console\Application\Doctor\Check\PluginMembershipCheck;
 use Gacela\Console\Application\Doctor\Check\PluginStackCheck;
 use Gacela\Console\Application\Doctor\Check\ServiceExtensionTargetCheck;
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
@@ -41,6 +42,8 @@ use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthCheckRegistry;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
+use Gacela\Framework\Plugins\Membership\MembershipScanner;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -51,6 +54,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function count;
+use function getenv;
 use function json_encode;
 use function sprintf;
 
@@ -282,6 +286,16 @@ final class DoctorCommand extends Command
             new UnresolvedPillarFileCheck($modules, $suffixTypes),
             new CacheableStorageCheck($modules, CacheableConfig::hasUserSuppliedStorage()),
             new PluginStackCheck($config->getSetupGacela()->getPluginStacks()),
+            new PluginMembershipCheck(
+                $config->getSetupGacela()->getPluginStacks(),
+                MembershipScanner::forPaths(
+                    $config->getSetupGacela()->getAppModulePaths(),
+                    $config->getAppRootDir(),
+                    $config->getSetupGacela()->getProjectNamespaces(),
+                )->plugins(),
+                (new MembershipCache($config->getCacheDir(), $config->getAppRootDir()))->isWarm(),
+                getenv('APP_ENV') ?: null,
+            ),
             new HandlerRegistryCheck($config->getSetupGacela()->getHandlerRegistries()),
             new DuplicateProvidedIdCheck($modules),
             new UnusableProvidesCheck($modules),

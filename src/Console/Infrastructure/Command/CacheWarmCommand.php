@@ -17,6 +17,8 @@ use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
+use Gacela\Framework\Plugins\Membership\MembershipScanner;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -46,7 +48,7 @@ final class CacheWarmCommand extends Command
             ->setDescription('Pre-resolve all module classes and warm the cache for production')
             ->setHelp($this->getHelpText())
             ->addOption('clear', 'c', InputOption::VALUE_NONE, 'Clear existing cache before warming')
-            ->addOption('attributes', 'a', InputOption::VALUE_NONE, 'Pre-scan and cache #[ServiceMap] attributes');
+            ->addOption('attributes', 'a', InputOption::VALUE_NONE, 'Pre-scan and cache #[ServiceMap] and #[Plugin] attributes');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -98,6 +100,10 @@ final class CacheWarmCommand extends Command
         );
 
         $this->displayCacheInfo($cacheManager, $formatter);
+        if ($warmAttributes) {
+            $this->warmPluginMembership($formatter);
+        }
+
         if ((new GacelaFileCache(Config::getInstance()))->isEnabled()) {
             $this->warmAndDisplayMergedConfigCache($formatter);
         }
@@ -125,6 +131,22 @@ final class CacheWarmCommand extends Command
         } finally {
             AbstractPhpFileCache::commitBatch();
         }
+    }
+
+    private function warmPluginMembership(CacheWarmOutputFormatter $formatter): void
+    {
+        $config = Config::getInstance();
+        $setup = $config->getSetupGacela();
+        $plugins = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces())->plugins();
+        $cache = new MembershipCache($config->getCacheDir(), $config->getAppRootDir());
+
+        if (!$cache->write($plugins)) {
+            $formatter->writePluginMembershipWarning($cache->path());
+
+            return;
+        }
+
+        $formatter->writePluginMembershipInfo($cache->path(), count($plugins));
     }
 
     private function warmAndDisplayMergedConfigCache(CacheWarmOutputFormatter $formatter): void
@@ -175,7 +197,8 @@ and populates the Gacela cache for optimal production performance.
   - Discovers all modules in your application
   - Resolves each module's Facade, Factory, Config, and Provider classes
   - Generates optimized cache files for class resolution
-  - Optionally pre-scans #[ServiceMap] attributes to avoid reflection overhead
+  - Optionally pre-scans #[ServiceMap] attributes to avoid reflection overhead,
+    and the #[Plugin] classes that join plugin stacks to avoid a scan at runtime
   - Reports statistics about the warming process
 
 <info>When to use:</info>
@@ -186,7 +209,7 @@ and populates the Gacela cache for optimal production performance.
 
 <info>Options:</info>
   --clear, -c        Clear existing cache before warming (recommended for fresh start)
-  --attributes, -a   Pre-scan and cache #[ServiceMap] attributes for improved performance
+  --attributes, -a   Pre-scan and cache #[ServiceMap] and #[Plugin] attributes for improved performance
 
 <info>Examples:</info>
   # Warm cache with existing data

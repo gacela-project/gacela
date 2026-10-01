@@ -266,6 +266,7 @@ final class DoctorCommandTest extends TestCase
             '✓ unresolved pillar files',
             '✓ cacheable storage',
             '✓ plugin stacks',
+            '✓ plugin attributes',
             '✓ handler registries',
             '✓ duplicate provided ids',
             '✓ unusable #[Provides]',
@@ -675,7 +676,7 @@ final class DoctorCommandTest extends TestCase
         $words = [
             10 => 'Ten', 11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen',
             15 => 'Fifteen', 16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen',
-            19 => 'Nineteen', 20 => 'Twenty', 21 => 'Twenty-one', 22 => 'Twenty-two',
+            19 => 'Nineteen', 20 => 'Twenty', 21 => 'Twenty-one', 22 => 'Twenty-two', 23 => 'Twenty-three',
         ];
         self::assertArrayHasKey($actual, $words, 'the doctor grew past the words this test knows');
 

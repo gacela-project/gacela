@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
 
 use function array_filter;
 use function array_map;
@@ -24,6 +25,7 @@ final class CacheManager
     private const CACHE_FILENAMES = [
         ClassNamePhpCache::FILENAME,
         CustomServicesPhpCache::FILENAME,
+        MembershipCache::FILENAME,
     ];
 
     public function clearCache(): void

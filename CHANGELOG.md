@@ -4,6 +4,7 @@
 
 ### Added
 
+- `#[Plugin(Contract::class, priority: 10)]` joins a class to a declared plugin stack without naming it in `gacela.php`. Attribute members follow the declared ones, by priority and then class name. They are read from the application's module paths inside `projectNamespaces` when a stack is first resolved. `cache:warm --attributes` stores them so production reads one file, and with file caching on the first scan is stored too. `doctor` reports a `#[Plugin]` whose stack is not declared, and, outside development, members scanned because the cache was not warmed ([#881](https://github.com/gacela-project/gacela/issues/881))
 - `GacelaTestCase::failureMessageOf()` runs an assertion expected to fail and returns its message, for testing assertions of your own. It catches PHPUnit's public `PHPUnit\Exception`, so a project exception, a skip or an incomplete is not mistaken for a failure, and PHPUnit's `@internal` `AssertionFailedError` stays out of the test ([#904](https://github.com/gacela-project/gacela/issues/904))
 
 ### Fixed
@@ -164,7 +165,7 @@ A Composer package can contribute to a Gacela application by being installed. It
 - **duplicate provided id** reports one id declared twice on the same Provider: the last method wins, every one before it is dead, and all of them read as live
 - **cacheable storage** reports `#[Cacheable]` on the default backend, which dies with the process, so under PHP-FPM an hour's TTL is recomputed every request
 - More inert declarations: an `extendService()` id no Provider `set()`s, a listener target no dispatched event can be, an `addAppConfig()` path matching no file, a tagged id nothing can answer, listeners registered under `disableEventListeners()`, an unwritable cache directory, a namespace a package's `composer.json` never mentions, and stale editor metadata
-- Print only the checks that found something with `doctor --only-problems`. Twenty-two checks is a lot of "✓" to read to find the one "⚠", and `--strict -q` fails a build without saying what failed
+- Print only the checks that found something with `doctor --only-problems`. Twenty-three checks is a lot of "✓" to read to find the one "⚠", and `--strict -q` fails a build without saying what failed
 
 #### Static analysis
 

@@ -8,6 +8,7 @@ use Gacela\Console\Infrastructure\Command\CommandCatalog;
 use Gacela\Framework\Attribute\Cacheable;
 use Gacela\Framework\Attribute\CacheableTrait;
 use Gacela\Framework\Attribute\Inject;
+use Gacela\Framework\Attribute\Plugin;
 use Gacela\Framework\Attribute\Provides;
 use Gacela\Framework\Attribute\PublicApi;
 use Gacela\Framework\Bootstrap\GacelaConfig;
@@ -110,7 +111,7 @@ final class ReferenceAppUsesEveryFeatureTest extends TestCase
         $source = $this->scannedSource();
         $missing = [];
 
-        $attributes = [Cacheable::class, Inject::class, Provides::class, PublicApi::class, ServiceMap::class];
+        $attributes = [Cacheable::class, Inject::class, Plugin::class, Provides::class, PublicApi::class, ServiceMap::class];
 
         foreach ($attributes as $attribute) {
             $shortName = $this->shortNameOf($attribute);

@@ -15,6 +15,7 @@ use Gacela\Container\DependencyNode;
 use Gacela\Container\PlanCache;
 use Gacela\Container\ValidationReport;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
+use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Event\Container\BindingRegisteredEvent;
@@ -22,6 +23,10 @@ use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 use Gacela\Framework\Plugins\LazyPluginStack;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
+use Gacela\Framework\Plugins\Membership\MembershipScanner;
+use Gacela\Framework\Plugins\Membership\PluginMember;
+use Gacela\Framework\Plugins\Membership\PluginMembership;
 use Throwable;
 
 use function array_keys;
@@ -619,6 +624,38 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * The `#[Plugin]` members: from the cache file when there is one, otherwise
+     * by scanning the module paths.
+     *
+     * @return list<PluginMember>
+     */
+    private static function pluginMembers(): array
+    {
+        $config = Config::getInstance();
+        $setup = $config->getSetupGacela();
+        $cache = new MembershipCache($config->getCacheDir(), $config->getAppRootDir());
+        $members = $cache->read();
+
+        if ($members !== null) {
+            return $members;
+        }
+
+        $members = MembershipScanner::forPaths(
+            $setup->getAppModulePaths(),
+            $config->getAppRootDir(),
+            $setup->getProjectNamespaces(),
+        )->plugins();
+
+        // The way the class-name cache fills itself: with file caching on, only
+        // the first process after a deploy pays for the scan.
+        if ((new GacelaFileCache($config))->isEnabled()) {
+            $cache->write($members);
+        }
+
+        return $members;
+    }
+
+    /**
      * Wrap an inner container this class did not build -- the scope returned by
      * {@see createScope()}, which arrives already made.
      */
@@ -692,7 +729,11 @@ final class Container implements ContainerInterface
         foreach ($containerConfig->getPluginStacks() as $contract => $plugins) {
             $container->set(
                 $contract,
-                static fn (): LazyPluginStack => new LazyPluginStack($contract, $plugins, $container),
+                static fn (): LazyPluginStack => new LazyPluginStack(
+                    $contract,
+                    PluginMembership::withMembers($contract, $plugins, self::pluginMembers(...)),
+                    $container,
+                ),
             );
         }
 

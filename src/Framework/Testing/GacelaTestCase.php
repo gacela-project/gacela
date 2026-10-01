@@ -22,6 +22,8 @@ use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
 use PHPUnit\Exception as PHPUnitException;
+use PHPUnit\Framework\IncompleteTest;
+use PHPUnit\Framework\SkippedTest;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -299,10 +301,11 @@ abstract class GacelaTestCase extends TestCase
      * self::assertStringContainsString('INV-1', $message);
      * ```
      *
-     * Catches `PHPUnit\Exception`, the one failure type PHPUnit publishes: its
+     * Catches `PHPUnit\Exception`, PHPUnit's public exception interface: its
      * `AssertionFailedError` is `@internal`, and a wider catch such as
      * `RuntimeException` would also swallow the project's own exceptions. Those
-     * pass through. An assertion that passes fails the test.
+     * pass through, and so does a skip or an incomplete. An assertion that
+     * passes fails the test.
      *
      * @param Closure():mixed $assertion
      */
@@ -311,6 +314,10 @@ abstract class GacelaTestCase extends TestCase
         try {
             $assertion();
         } catch (PHPUnitException $phpUnitException) {
+            if ($phpUnitException instanceof SkippedTest || $phpUnitException instanceof IncompleteTest) {
+                throw $phpUnitException;
+            }
+
             return $phpUnitException->getMessage();
         }
 

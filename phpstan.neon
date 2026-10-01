@@ -24,6 +24,13 @@ parameters:
         # (e.g. strrpos() returning a falsy 0) still shows up as an opt-out.
         disallowedShortTernary: false
     ignoreErrors:
+        # failureMessageOf() hands a skip or an incomplete back to PHPUnit instead
+        # of returning it as a failure message. PHPUnit marks both interfaces
+        # @internal; checking them here keeps that coupling in Gacela, in one
+        # place, rather than in every project that tests its own assertions.
+        -
+            identifier: instanceof.internalInterface
+            path: src/Framework/Testing/GacelaTestCase.php
         # SuffixExtendsRule asks that a class named *Facade/*Factory/*Config/*Provider
         # extends the matching pillar base class. That is the contract for a consumer's
         # *modules*; Gacela's own framework internals reuse those words for things that

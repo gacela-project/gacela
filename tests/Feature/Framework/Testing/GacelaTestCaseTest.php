@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\Testing;
 
+use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
@@ -14,9 +15,11 @@ use Gacela\Framework\Gacela;
 use Gacela\Framework\Testing\GacelaTestCase;
 use GacelaTest\Fixtures\StringValue;
 use GacelaTest\Fixtures\StringValueInterface;
+use PHPUnit\Exception as PHPUnitException;
 use RuntimeException;
 
 use function count;
+use function sprintf;
 
 final class GacelaTestCaseTest extends GacelaTestCase
 {
@@ -289,6 +292,16 @@ final class GacelaTestCaseTest extends GacelaTestCase
         self::assertSame('The assertion was expected to fail, and passed.', $message);
     }
 
+    public function test_failure_message_of_hands_a_skip_back_to_phpunit(): void
+    {
+        self::assertSame('skipped inside', $this->rethrownMessageOf(static fn () => self::markTestSkipped('skipped inside')));
+    }
+
+    public function test_failure_message_of_hands_an_incomplete_back_to_phpunit(): void
+    {
+        self::assertSame('incomplete inside', $this->rethrownMessageOf(static fn () => self::markTestIncomplete('incomplete inside')));
+    }
+
     public function test_failure_message_of_lets_a_project_exception_through(): void
     {
         $this->expectException(RuntimeException::class);
@@ -297,5 +310,24 @@ final class GacelaTestCaseTest extends GacelaTestCase
         self::failureMessageOf(static function (): never {
             throw new RuntimeException('not an assertion');
         });
+    }
+
+    /**
+     * The message of what failureMessageOf() threw rather than returned.
+     *
+     * Caught here, because an expected skip or incomplete is recorded by
+     * PHPUnit as skipped or incomplete, never as passed.
+     *
+     * @param Closure():mixed $assertion
+     */
+    private function rethrownMessageOf(Closure $assertion): string
+    {
+        try {
+            $returned = self::failureMessageOf($assertion);
+        } catch (PHPUnitException $phpUnitException) {
+            return $phpUnitException->getMessage();
+        }
+
+        self::fail(sprintf('failureMessageOf() returned "%s" instead of rethrowing.', $returned));
     }
 }

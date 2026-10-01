@@ -4,7 +4,7 @@
 
 ### Added
 
-- `GacelaTestCase::failureMessageOf()` runs an assertion expected to fail and returns its message, for testing assertions of your own. It catches `PHPUnit\Exception`, so a project exception is not mistaken for a failure, and PHPUnit's `@internal` `AssertionFailedError` stays out of the test ([#904](https://github.com/gacela-project/gacela/issues/904))
+- `GacelaTestCase::failureMessageOf()` runs an assertion expected to fail and returns its message, for testing assertions of your own. It catches PHPUnit's public `PHPUnit\Exception`, so a project exception, a skip or an incomplete is not mistaken for a failure, and PHPUnit's `@internal` `AssertionFailedError` stays out of the test ([#904](https://github.com/gacela-project/gacela/issues/904))
 
 ### Fixed
 

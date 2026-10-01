@@ -46,7 +46,7 @@ $message = self::failureMessageOf(fn () => $this->assertInvoicePaid($invoice));
 self::assertStringContainsString('INV-1', $message);
 ```
 
-It catches `PHPUnit\Exception`, the one failure type PHPUnit publishes. Its `AssertionFailedError` is `@internal`, so static analysis rejects a test that catches it, and catching `RuntimeException` instead also swallows your own exceptions. Those pass through here. An assertion that passes fails the test.
+It catches `PHPUnit\Exception`, PHPUnit's public exception interface. Its `AssertionFailedError` is `@internal`, so static analysis rejects a test that catches it, and catching `RuntimeException` instead also swallows your own exceptions. Those pass through here, and so does `markTestSkipped()` or `markTestIncomplete()`. An assertion that passes fails the test.
 
 If you only need the reset helpers inside an existing test hierarchy, use the [`ContainerFixture`](../src/Framework/Testing/ContainerFixture.php) trait directly — `GacelaTestCase` builds on it.
 

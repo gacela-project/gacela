@@ -20,7 +20,7 @@ x-codex:
 !`git diff main..HEAD --stat`
 ::end
 ::target codex
-Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff main..HEAD --stat` first. `$ARGUMENTS` below means the text passed after the skill name.
+Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff main..HEAD --stat` first.
 ::end
 
 ## Instructions
@@ -34,7 +34,7 @@ Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff m
    git push -u origin HEAD
    ```
 
-4. **Title**: `<type>(<scope>): <short description>`, under 70 characters. Take the type from the branch prefix (`feat/` → feat, `fix/` → fix, `ref/` → ref, `docs/` → docs). If `$ARGUMENTS` holds an issue number, start from its title:
+4. **Title**: `<type>(<scope>): <short description>`, under 70 characters. Take the type from the branch prefix (`feat/` → feat, `fix/` → fix, `ref/` → ref, `docs/` → docs). If the argument holds an issue number, start from its title:
    ```bash
    gh issue view <number> --json title -q '.title'
    ```

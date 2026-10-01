@@ -22,7 +22,7 @@ x-codex:
 !`git describe --tags --abbrev=0 2>/dev/null || echo "no tags"`
 ::end
 ::target codex
-Run `git branch --show-current`, `git status --porcelain`, and `git describe --tags --abbrev=0` first. `$ARGUMENTS` below means the text passed after the skill name.
+Run `git branch --show-current`, `git status --porcelain`, and `git describe --tags --abbrev=0` first.
 ::end
 
 ## Instructions
@@ -37,7 +37,7 @@ Run `git branch --show-current`, `git status --porcelain`, and `git describe --t
    ```
    Abort if empty.
 4. Pick the version:
-   - If `$ARGUMENTS` is `X.Y.Z`, validate the format.
+   - If the argument is `X.Y.Z`, validate the format.
    - Otherwise suggest a bump from the Unreleased content: breaking → major, `### Added` → minor, fixes only → patch. With no version, `release.sh` bumps the minor.
 
 ### Phase 2: Dry run

@@ -3,8 +3,6 @@ name: tdd-coach
 description: Guides test-driven development with red-green-refactor discipline. Use when implementing features or fixes with TDD.
 model: {claude: sonnet}
 effort: medium
-x-codex:
-  sandbox_mode: workspace-write
 x-claude:
   maxTurns: 25
 tools:

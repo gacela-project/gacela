@@ -55,13 +55,16 @@ gacela-doctor-strict-*/
 /.agnostic-ai/.sync-state
 /.agnostic-ai/local/
 /.agnostic-ai/packs/
+/.claude/.agnostic-ai-permissions.json
 /.claude/agent-memory-local/
 /.claude/agents/
 /.claude/hooks/
 /.claude/rules/
+/.claude/scheduled_tasks.lock
 /.claude/settings.json
 /.claude/settings.local.json
 /.claude/skills/
+/.claude/worktrees/
 /.codex/agents/
 /.codex/environments/
 /.codex/hooks.json
@@ -70,4 +73,6 @@ gacela-doctor-strict-*/
 /AGENTS.md
 /CLAUDE.md
 /agnostic-ai.local.yaml
+/src/AGENTS.md
+/tests/AGENTS.md
 # <<< agnostic-ai (managed) <<<

@@ -1,7 +1,0 @@
-name: protect-files
-description: Blocks Codex patches to .github/ and composer.lock until the user agrees. Claude Code asks through its permissions.
-target: codex
-event: PreToolUse
-matcher: Edit|Write
-command: .codex/hooks/protect-files.sh
-timeout: 10

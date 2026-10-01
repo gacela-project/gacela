@@ -1,0 +1,6 @@
+protected:
+  paths:
+    - .github/**
+    - composer.lock
+  decision: ask
+  reason: CI and the lock file change only on purpose. Ask the user first.

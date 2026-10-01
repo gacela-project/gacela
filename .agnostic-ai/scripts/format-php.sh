@@ -1,12 +1,7 @@
 #!/bin/bash
-# PostToolUse hook: auto-format PHP files after the agent edits them.
-# Claude Code sends tool_input.file_path; Codex sends an apply_patch body in tool_input.command.
-INPUT=$(cat)
-if [[ "$AGNOSTIC_AI_TARGET" == "codex" ]]; then
-    FILES=$(echo "$INPUT" | jq -r '.tool_input.command // empty' | sed -n -E 's/^\*\*\* (Add|Update) File: (.*)$/\2/p; s/^\*\*\* Move to: (.*)$/\1/p')
-else
-    FILES=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
-fi
+# PostToolUse hook: format the PHP files the agent edited. `agnostic-ai hook paths` reads both Claude and Codex payloads.
+command -v agnostic-ai >/dev/null 2>&1 || exit 0
+FILES=$(agnostic-ai hook paths) || exit 0
 
 cd "${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}" 2>/dev/null
 while IFS= read -r FILE; do

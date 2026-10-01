@@ -1,6 +1,4 @@
-name: gacela
 targets: [codex]
-setup: composer install
 dev-commands:
   - name: Test
     command: [composer, test]

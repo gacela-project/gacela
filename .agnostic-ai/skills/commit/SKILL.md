@@ -20,7 +20,7 @@ x-codex:
 !`git status --short`
 ::end
 ::target codex
-Run `git diff --stat`, `git diff --cached --stat`, and `git status --short` first. `$ARGUMENTS` below means the text passed after the skill name.
+Run `git diff --stat`, `git diff --cached --stat`, and `git status --short` first.
 ::end
 
 ## Instructions
@@ -36,7 +36,7 @@ Run `git diff --stat`, `git diff --cached --stat`, and `git status --short` firs
 3. **CHANGELOG check**: a `feat:` or `fix:` change must update `## Unreleased` in `CHANGELOG.md` in this commit. If it is missing, add it now.
 
 4. **Message** in conventional commit format:
-   - Use `$ARGUMENTS` when provided; otherwise derive it from the staged diff.
+   - Use the argument as the message when given; otherwise derive it from the staged diff.
    - Prefixes: `feat:`, `fix:`, `ref:`, `chore:`, `docs:`, `test:`. Add `(<scope>)` for a single module.
    - Never mention Claude, AI, or LLM.
 

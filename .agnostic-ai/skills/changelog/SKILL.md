@@ -18,14 +18,14 @@ x-codex:
 !`git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~20)..HEAD --oneline`
 ::end
 ::target codex
-Run `git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~20)..HEAD --oneline` first. `$ARGUMENTS` below means the text passed after the skill name.
+Run `git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~20)..HEAD --oneline` first.
 ::end
 
 ## Instructions
 
 1. Read `CHANGELOG.md` and match the entries already under `## Unreleased`.
 
-2. If `$ARGUMENTS` is provided, add it as an entry under the matching section.
+2. If an argument is given, add it as an entry under the matching section.
 
 3. If not, draft entries from the commits since the last tag. Skip what users never see: `chore:`, CI, tests, internal refactoring. Show the draft before writing.
 

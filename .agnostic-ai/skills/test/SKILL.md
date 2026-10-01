@@ -12,16 +12,12 @@ x-codex:
 
 # Quick Test Runner
 
-::target codex
-`$ARGUMENTS` below means the text passed after the skill name.
-::end
-
-1. If `$ARGUMENTS` is empty or `all`:
+1. If the argument is empty or `all`:
    ```bash
    composer test
    ```
 
-2. If `$ARGUMENTS` is a known scope:
+2. If the argument is a known scope:
    - `quality` → `composer quality`
    - `unit` → `composer test-unit`
    - `integration` → `composer test-integration`
@@ -30,14 +26,14 @@ x-codex:
    - `bench` → `composer phpbench`
    - `infection` → `composer infection`
 
-3. If `$ARGUMENTS` looks like a test class or method name:
+3. If the argument looks like a test class or method name:
    ```bash
-   ./vendor/bin/phpunit --filter "$ARGUMENTS"
+   ./vendor/bin/phpunit --filter "<argument>"
    ```
 
-4. If `$ARGUMENTS` looks like a file path:
+4. If the argument looks like a file path:
    ```bash
-   ./vendor/bin/phpunit "$ARGUMENTS"
+   ./vendor/bin/phpunit "<argument>"
    ```
 
 5. Report the pass and fail counts. The suite runs in random order: when a test fails only sometimes, re-run with `--random-order-seed=<seed>` (PHPUnit prints the seed) before blaming the change.

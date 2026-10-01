@@ -12,10 +12,6 @@ x-codex:
 
 # Fix Code Quality Issues
 
-::target codex
-`$ARGUMENTS` below means the text passed after the skill name.
-::end
-
 ## Instructions
 
 1. Auto-fix. For the whole project (normalize, rector, cs-fixer):
@@ -24,7 +20,7 @@ x-codex:
    ```
    For one file:
    ```bash
-   ./vendor/bin/php-cs-fixer fix "$ARGUMENTS"
+   ./vendor/bin/php-cs-fixer fix "<argument>"
    ```
    Rector can delete or privatize fixture methods that are dead on purpose. Revert those and skip the file in `rector.php`.
 

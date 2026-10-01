@@ -1,8 +1,8 @@
 ---
 description: PHP code style, quality rules, and testing conventions
 globs:
-  - src/**/*.php
-  - tests/**/*.php
+  - src/**
+  - tests/**
 ---
 
 # PHP Conventions

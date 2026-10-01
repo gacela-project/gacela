@@ -4,6 +4,7 @@
 /.agents/skills/
 /.agnostic-ai/local/
 /.agnostic-ai/packs/
+/.claude/.agnostic-ai-permissions.json
 /.claude/agent-memory-local/
 /.claude/agents/
 /.claude/hooks/
@@ -19,4 +20,6 @@
 /AGENTS.md
 /CLAUDE.md
 /agnostic-ai.local.yaml
+/src/AGENTS.md
+/tests/AGENTS.md
 # <<< agnostic-ai (managed) <<<

@@ -19,31 +19,31 @@ x-codex:
 !`git log --oneline -1`
 ::end
 ::target codex
-Run `git branch --show-current` and `git log --oneline -1` first. `$ARGUMENTS` below means the text passed after the skill name.
+Run `git branch --show-current` and `git log --oneline -1` first.
 ::end
 
 ## Instructions
 
-1. If `$ARGUMENTS` is empty or `run`:
+1. If the argument is empty or `run`:
    ```bash
    composer phpbench
    ```
 
-2. If `$ARGUMENTS` is `baseline`, tag the current code as the baseline:
+2. If the argument is `baseline`, tag the current code as the baseline:
    ```bash
    composer phpbench-base
    ```
    Report the commit the baseline was taken on. Future `compare` runs diff against it.
 
-3. If `$ARGUMENTS` is `compare`:
+3. If the argument is `compare`:
    ```bash
    composer phpbench-ref
    ```
    Highlight regressions (over 5% slower) and improvements (over 5% faster).
 
-4. If `$ARGUMENTS` looks like a class or method filter:
+4. If the argument looks like a class or method filter:
    ```bash
-   ./vendor/bin/phpbench run --filter="$ARGUMENTS" --report=aggregate --ansi
+   ./vendor/bin/phpbench run --filter="<argument>" --report=aggregate --ansi
    ```
 
 5. Report:

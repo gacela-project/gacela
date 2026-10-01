@@ -17,7 +17,7 @@ final class PluginMembershipCheckTest extends TestCase
 {
     public function test_no_attribute_members_is_ok(): void
     {
-        $result = (new PluginMembershipCheck([], static fn (): array => [], cacheIsWarm: false, appEnv: 'prod'))->run();
+        $result = (new PluginMembershipCheck([], static fn (): array => [], cached: null, appEnv: 'prod'))->run();
 
         self::assertSame(CheckStatus::Ok, $result->status);
         self::assertSame(['no #[Plugin] classes'], $result->details);
@@ -33,7 +33,7 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck(
             [],
             static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
-            cacheIsWarm: true,
+            cached: [new PluginMember(Countable::class, ArrayObject::class, 0)],
             appEnv: null,
         ))->run();
 
@@ -49,7 +49,7 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
             static fn (): array => [new PluginMember(Countable::class, stdClass::class, 0)],
-            cacheIsWarm: true,
+            cached: [new PluginMember(Countable::class, stdClass::class, 0)],
             appEnv: null,
         ))->run();
 
@@ -65,7 +65,7 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
             static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
-            cacheIsWarm: false,
+            cached: null,
             appEnv: 'prod',
         ))->run();
 
@@ -79,7 +79,7 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
             static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
-            cacheIsWarm: false,
+            cached: null,
             appEnv: 'dev',
         ))->run();
 
@@ -92,7 +92,7 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
             static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
-            cacheIsWarm: false,
+            cached: null,
             appEnv: null,
         ))->run();
 
@@ -104,7 +104,7 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck(
             [Countable::class => []],
             static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
-            cacheIsWarm: true,
+            cached: [new PluginMember(Countable::class, ArrayObject::class, 0)],
             appEnv: 'prod',
         ))->run();
 
@@ -122,11 +122,41 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck(
             [],
             static fn (): array => throw new ArgumentCountError('Too few arguments to Plugin::__construct()'),
-            cacheIsWarm: false,
+            cached: null,
             appEnv: null,
         ))->run();
 
         self::assertSame(CheckStatus::Error, $result->status);
         self::assertSame(['the #[Plugin] scan failed: Too few arguments to Plugin::__construct()'], $result->details);
+    }
+
+    /**
+     * The application reads the cache, not the code: a class removed since
+     * the warm is still listed, and the stack fails on its first use.
+     */
+    public function test_a_cached_class_that_no_longer_exists_is_an_error(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [Countable::class => []],
+            static fn (): array => [],
+            cached: [new PluginMember(Countable::class, 'App\\RemovedSinceTheWarm', 0)],
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['App\\RemovedSinceTheWarm — listed in the #[Plugin] cache, and no such class exists'], $result->details);
+    }
+
+    public function test_a_cache_that_differs_from_the_code_is_a_warning(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [Countable::class => []],
+            static fn (): array => [new PluginMember(Countable::class, ArrayObject::class, 0)],
+            cached: [],
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertSame('run `bin/gacela cache:warm --attributes`, or `cache:clear` to scan again', $result->remediation);
     }
 }

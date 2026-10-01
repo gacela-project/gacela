@@ -296,12 +296,13 @@ final class DoctorCommand extends Command
                 )->plugins(),
                 // The runtime reads the file only with file caching on.
                 (new GacelaFileCache($config))->isEnabled()
-                    && MembershipCache::forScan(
+                    ? MembershipCache::forScan(
                         $config->getCacheDir(),
                         $config->getAppRootDir(),
                         $config->getSetupGacela()->getAppModulePaths(),
                         $config->getSetupGacela()->getProjectNamespaces(),
-                    )->isWarm(),
+                    )->read()
+                    : null,
                 getenv('APP_ENV') ?: null,
             ),
             new HandlerRegistryCheck($config->getSetupGacela()->getHandlerRegistries()),

@@ -11,6 +11,8 @@ use Gacela\Framework\Plugins\Membership\PluginMember;
 use Throwable;
 
 use function array_key_exists;
+use function array_map;
+use function class_exists;
 use function count;
 use function in_array;
 use function is_a;
@@ -28,11 +30,12 @@ final class PluginMembershipCheck implements HealthCheck
     /**
      * @param array<string, list<string>> $pluginStacks
      * @param Closure(): list<PluginMember> $scan run by the check, so a class that cannot be read fails it, not the whole `doctor`
+     * @param list<PluginMember>|null $cached what the application reads instead of scanning; null when it scans
      */
     public function __construct(
         private readonly array $pluginStacks,
         private readonly Closure $scan,
-        private readonly bool $cacheIsWarm,
+        private readonly ?array $cached,
         private readonly ?string $appEnv,
     ) {
     }
@@ -54,10 +57,6 @@ final class PluginMembershipCheck implements HealthCheck
             );
         }
 
-        if ($members === []) {
-            return CheckResult::ok($this->name(), 'no #[Plugin] classes');
-        }
-
         $problems = [];
         foreach ($members as $member) {
             $problem = $this->problemWith($member);
@@ -66,15 +65,35 @@ final class PluginMembershipCheck implements HealthCheck
             }
         }
 
+        // What the application really reads, when it reads the cache: a class
+        // listed there and gone since fails the stack on its first use.
+        foreach ($this->cached ?? [] as $member) {
+            if (!class_exists($member->plugin)) {
+                $problems[] = sprintf('%s — listed in the #[Plugin] cache, and no such class exists', $member->plugin);
+            }
+        }
+
         if ($problems !== []) {
             return CheckResult::error(
                 $this->name(),
                 $problems,
-                'declare the stack in gacela.php, empty if the attributes fill it: `$config->addPluginStack(Contract::class, [])`',
+                'declare the stack in gacela.php, empty if the attributes fill it: `$config->addPluginStack(Contract::class, [])`; for a stale cache, run `bin/gacela cache:warm --attributes` or `cache:clear`',
             );
         }
 
-        if (!$this->cacheIsWarm && $this->isProduction()) {
+        if ($this->cached !== null && $this->rowsOf($this->cached) !== $this->rowsOf($members)) {
+            return CheckResult::warn(
+                $this->name(),
+                ['the #[Plugin] cache no longer matches the code, so a stack is missing a member or has one it should not'],
+                'run `bin/gacela cache:warm --attributes`, or `cache:clear` to scan again',
+            );
+        }
+
+        if ($members === []) {
+            return CheckResult::ok($this->name(), 'no #[Plugin] classes');
+        }
+
+        if ($this->cached === null && $this->isProduction()) {
             return CheckResult::warn(
                 $this->name(),
                 [sprintf('%d #[Plugin] class(es) are found by scanning the module paths on the first use of a stack', count($members))],
@@ -85,8 +104,18 @@ final class PluginMembershipCheck implements HealthCheck
         return CheckResult::ok($this->name(), sprintf(
             '%d #[Plugin] class(es) join declared stacks, %s',
             count($members),
-            $this->cacheIsWarm ? 'read from the warmed cache' : 'found by scanning on first use',
+            $this->cached !== null ? 'read from the warmed cache' : 'found by scanning on first use',
         ));
+    }
+
+    /**
+     * @param list<PluginMember> $members
+     *
+     * @return list<array{0: class-string, 1: class-string, 2: int}>
+     */
+    private function rowsOf(array $members): array
+    {
+        return array_map(static fn (PluginMember $member): array => $member->toRow(), $members);
     }
 
     private function problemWith(PluginMember $member): ?string

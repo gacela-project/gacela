@@ -39,9 +39,20 @@ abstract class AbstractClassResolver
      */
     public static function resetCache(): void
     {
-        self::$cachedInstances = [];
+        self::resetInstances();
         self::$classNameFinder = null;
         self::$container = null;
+    }
+
+    /**
+     * Drops the resolved pillar instances, while how to find and build them
+     * stays known.
+     *
+     * @internal see {@see \Gacela\Framework\Gacela::resetRequestState()}
+     */
+    public static function resetInstances(): void
+    {
+        self::$cachedInstances = [];
     }
 
     /**

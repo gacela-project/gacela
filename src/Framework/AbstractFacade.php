@@ -28,12 +28,23 @@ abstract class AbstractFacade
 
     public static function resetCache(): void
     {
-        self::$factories = [];
+        self::resetFactories();
 
         // Deliberately not clearMethodCache(): that clears whatever backend is
         // registered, and this path is reached by every Gacela::resetCache(),
         // including the one GacelaTestCase runs per test.
         CacheableConfig::clearFrameworkOwnedStorage();
+    }
+
+    /**
+     * Drops the Factory instances, and with them every `singleton()` they
+     * built, while what the class names resolved to stays known.
+     *
+     * @internal see {@see \Gacela\Framework\Gacela::resetRequestState()}
+     */
+    public static function resetFactories(): void
+    {
+        self::$factories = [];
     }
 
     /**

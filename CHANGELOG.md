@@ -4,6 +4,7 @@
 
 ### Added
 
+- `Gacela::resetRequestState()` drops what one request leaves behind in a long-running worker (FrankenPHP worker mode, Laravel Octane, RoadRunner): the Factories and their `singleton()`s, each module's container with what its Provider set, the resolved pillars and what `Gacela::get()` handed out. Resolved class names, reflection, the merged config and the containers `gacela.php` configured are kept, so the next request stays warm. See `docs/long-running-runtimes.md` ([#941](https://github.com/gacela-project/gacela/issues/941))
 - `#[Plugin(Contract::class, priority: 10)]` joins a class to a declared plugin stack without naming it in `gacela.php`. Attribute members follow the declared ones, by priority and then class name. They are read from the application's module paths inside `projectNamespaces` when a stack is first resolved. `cache:warm --attributes` stores them so production reads one file, and with file caching on the first scan is stored too. `doctor` reports a `#[Plugin]` whose stack is not declared, and, outside development, members scanned because the cache was not warmed ([#881](https://github.com/gacela-project/gacela/issues/881))
 - `GacelaTestCase::failureMessageOf()` runs an assertion expected to fail and returns its message, for testing assertions of your own. It catches PHPUnit's public `PHPUnit\Exception`, so a project exception, a skip or an incomplete is not mistaken for a failure, and PHPUnit's `@internal` `AssertionFailedError` stays out of the test ([#904](https://github.com/gacela-project/gacela/issues/904))
 

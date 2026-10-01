@@ -85,6 +85,39 @@ Resolution is charged per module you actually **touch**, not per module you have
 
 If a request in a large application feels slow, the module count is not the first place to look. `debug:module` shows what one module actually resolves, and the [profiler](profiling.md) attributes time to the operations that ran.
 
+## Gacela in a command-line tool
+
+Everything above assumes PHP-FPM: one long-lived pool, compiled code shared between requests. A command-line tool built on Gacela, a compiler or a code generator, starts a fresh PHP process for every command, and some of the advice changes.
+
+**Most of the bootstrap is compiling classes.** Measured on PHP 8.5 with OPcache off, which is the CLI default: a fresh `Gacela::bootstrap()` takes about 3.5 ms. About 3.4 ms of that is compiling the roughly fifty framework classes it loads, and the bootstrap logic itself takes about 0.1 ms. Enable OPcache for the CLI with a file cache, so the compiled code outlives the process:
+
+```ini
+; php.ini, or a file in PHP_INI_SCAN_DIR
+opcache.enable_cli=1
+opcache.file_cache=/home/you/.cache/your-tool/opcache
+```
+
+Set these in the ini, not by re-executing PHP with `-d` flags from your entry script. A re-exec starts a second interpreter. Measured on macOS for one Gacela-based tool, that cost about 40 ms per command, more than the file cache saved on a short one.
+
+**Preload does not help.** `opcache.preload` runs when a process starts, so a CLI pays it on every command instead of once per pool. Skip step 3.
+
+**Give the tool its own cache directory.** `enableFileCache('')` writes into the system temp directory. File names carry a hash of the application root, so two tools do not read each other's entries, but nothing ever cleans the directory. Pick a directory per tool and version, such as `~/.cache/your-tool/<version>`, or let users set `GACELA_CACHE_DIR`.
+
+**Let the cache warm itself, and do not run `cache:warm` for config users edit.** A merged config cache that `cache:warm` wrote is trusted until the next warm, like a deploy artifact. One written on a miss checks its sources on every hit, at about 1 µs per config file, so a user who edits the tool's config file sees the change on the next command. A CLI whose users own the config wants the second kind, so do not ship a warmed cache.
+
+**Build commands lazily.** A Symfony Console application builds every command it registers, and a constructor that resolves a module's Factory runs on `--version` too. Register factories instead, and reach Gacela inside `execute()`:
+
+```php
+use Symfony\Component\Console\CommandLoader\FactoryCommandLoader;
+
+$application->setCommandLoader(new FactoryCommandLoader([
+    'build' => static fn (): Command => new BuildCommand(),
+    'run' => static fn (): Command => new RunCommand(),
+]));
+```
+
+Only the command that runs is built, and only the modules it touches are resolved.
+
 ## Checklist
 
 | Step | Lever | Reference |

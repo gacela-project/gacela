@@ -13,6 +13,7 @@ use Gacela\Framework\Event\ClassResolver\ClassNameFinder\ClassNameValidCandidate
 use Gacela\Framework\Event\Container\BindingRegisteredEvent;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
+use GacelaTest\Integration\Framework\RequestState\Cart\Cart;
 use GacelaTest\Integration\Framework\RequestState\Cart\CartFacade;
 use GacelaTest\Integration\Framework\RequestState\Cart\Request;
 use PHPUnit\Framework\TestCase;
@@ -87,6 +88,23 @@ final class RequestStateResetTest extends TestCase
         $facade = Gacela::get(CartFacade::class);
         self::assertSame([], $facade->items());
         self::assertSame('bob', $facade->userName());
+    }
+
+    /**
+     * `Gacela::get()` keeps what it hands out; a stateful service fetched
+     * through it would otherwise come back to the next request as it was left.
+     */
+    public function test_a_service_from_gacela_get_starts_fresh(): void
+    {
+        /** @var Cart $cart */
+        $cart = Gacela::get(Cart::class);
+        $cart->add('book');
+
+        Gacela::resetRequestState();
+
+        /** @var Cart $next */
+        $next = Gacela::get(Cart::class);
+        self::assertSame([], $next->items());
     }
 
     /**

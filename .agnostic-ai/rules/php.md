@@ -22,4 +22,5 @@ globs:
 - `tests/Unit/` mirrors `src/`. Cross-module flows go in `tests/Integration/`, end-to-end in `tests/Feature/`.
 - Tests must pass in any order. Never depend on state another test left behind, and clean up only what the test created.
 - CI runs on Windows too: build expected paths with `DIRECTORY_SEPARATOR`.
+- Never write `--` inside an XML comment in a fixture. XML forbids it, and Psalm then reports `Missing psalm node` for the config, which names the wrong problem.
 - Test behavior, not characters. Do not chase mutation score on output or rendering code with golden-master tests.

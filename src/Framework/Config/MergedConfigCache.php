@@ -7,6 +7,8 @@ namespace Gacela\Framework\Config;
 use Gacela\Framework\Cache\FileCache;
 
 use function implode;
+use function is_array;
+use function is_string;
 use function sha1;
 use function strlen;
 use function substr;
@@ -16,6 +18,9 @@ final class MergedConfigCache
     public const FILENAME_PREFIX = 'gacela-merged-config';
 
     public const FILENAME_EXTENSION = '.php';
+
+    /** Marks a file that carries its sources; one without them is never current. */
+    private const FORMAT = 'gacela-merged-config-sources';
 
     /**
      * @param list<string> $dimensions the resolved values selecting this configuration, beyond the env
@@ -34,26 +39,53 @@ final class MergedConfigCache
     }
 
     /**
+     * The cached values, whatever they were read from. For reports and tools;
+     * the bootstrap asks {@see loadIfCurrent()}.
+     *
      * @return array<string,mixed>
      */
     public function load(): array
     {
-        /**
-         * @psalm-suppress UnresolvableInclude
-         *
-         * @var array<string,mixed> $data
-         */
-        $data = require $this->filename();
+        $data = $this->read();
 
-        return $data;
+        return $this->entryOf($data)['values'] ?? $data;
     }
 
     /**
-     * @param array<string,mixed> $data
+     * The cached values, only when nothing they were read from has changed.
+     *
+     * A file without source stamps, written before they existed, is never
+     * current: serving it is how an edited config file went unnoticed until
+     * someone ran `cache:clear`.
+     *
+     * @return array<string,mixed>|null
      */
-    public function write(array $data): void
+    public function loadIfCurrent(string $declarationSignature): ?array
     {
-        FileCache::writeAtomically($this->filename(), $data);
+        $entry = $this->entryOf($this->read());
+
+        if ($entry === null
+            || $entry['declared'] !== $declarationSignature
+            || !ConfigSourceStamps::areCurrent($entry['sources'])
+        ) {
+            return null;
+        }
+
+        return $entry['values'];
+    }
+
+    /**
+     * @param array<string,mixed> $values
+     * @param array<string,string> $sources what the values were read from, see {@see ConfigSourceStamps}
+     */
+    public function write(array $values, string $declarationSignature = '', array $sources = []): void
+    {
+        FileCache::writeAtomically($this->filename(), [
+            self::FORMAT => true,
+            'declared' => $declarationSignature,
+            'sources' => $sources,
+            'values' => $values,
+        ]);
     }
 
     public function clear(): void
@@ -90,6 +122,40 @@ final class MergedConfigCache
             : '';
 
         return $this->buildFilename($appSuffix);
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function read(): array
+    {
+        /**
+         * @psalm-suppress UnresolvableInclude
+         *
+         * @var array<string,mixed> $data
+         */
+        $data = require $this->filename();
+
+        return $data;
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     *
+     * @return array{declared: string, sources: array<string,string>, values: array<string,mixed>}|null
+     */
+    private function entryOf(array $data): ?array
+    {
+        if (!isset($data[self::FORMAT])
+            || !is_string($data['declared'] ?? null)
+            || !is_array($data['sources'] ?? null)
+            || !is_array($data['values'] ?? null)
+        ) {
+            return null;
+        }
+
+        /** @var array{declared: string, sources: array<string,string>, values: array<string,mixed>} $data */
+        return $data;
     }
 
     private function buildFilename(string $appSuffix): string

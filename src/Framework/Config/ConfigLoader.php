@@ -7,6 +7,11 @@ namespace Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
+use function dirname;
+use function implode;
+use function sha1;
+use function strpbrk;
+
 final class ConfigLoader
 {
     /** @var array<string,array<string,mixed>> */
@@ -70,6 +75,60 @@ final class ConfigLoader
         }
 
         return array_values(array_unique($files));
+    }
+
+    /**
+     * Everything whose change can change what `loadAll()` returns: each file it
+     * reads, and the nearest literal directory of each declared path, so a file
+     * added to or removed from a globbed directory, or a local override created
+     * later, counts as a change.
+     *
+     * @return list<string>
+     */
+    public function watchedPaths(): array
+    {
+        $paths = $this->sourceFiles();
+
+        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
+            $declared = [
+                $this->pathNormalizer->normalizePathPattern($configItem),
+                ...$this->pathNormalizer->normalizePathPatternsWithSuffixes($configItem),
+                $this->pathNormalizer->normalizePathLocal($configItem),
+            ];
+
+            foreach ($declared as $pattern) {
+                if ($pattern !== '') {
+                    $paths[] = $this->nearestLiteralDirectory($pattern);
+                }
+            }
+        }
+
+        return array_values(array_unique($paths));
+    }
+
+    /**
+     * The declared config paths, as one string: a change to what is declared
+     * is a change to the merged config even when every file is untouched.
+     */
+    public function declarationSignature(): string
+    {
+        return self::declarationSignatureOf($this->gacelaConfigFile->getConfigItems());
+    }
+
+    /**
+     * Static so a cache hit can ask it without building a loader.
+     *
+     * @param list<GacelaConfigItem> $configItems
+     */
+    public static function declarationSignatureOf(array $configItems): string
+    {
+        $declared = [];
+
+        foreach ($configItems as $configItem) {
+            $declared[] = $configItem->path() . "\0" . $configItem->pathLocal() . "\0" . $configItem->reader()::class;
+        }
+
+        return sha1(implode("\n", $declared));
     }
 
     /**
@@ -207,6 +266,17 @@ final class ConfigLoader
         return $this->pathFinder->matchingPattern(
             $this->pathNormalizer->normalizePathPattern($configItem),
         );
+    }
+
+    private function nearestLiteralDirectory(string $pattern): string
+    {
+        $directory = dirname($pattern);
+
+        while (strpbrk($directory, '*?[{') !== false && dirname($directory) !== $directory) {
+            $directory = dirname($directory);
+        }
+
+        return $directory;
     }
 
     /**

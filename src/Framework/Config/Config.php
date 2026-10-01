@@ -331,7 +331,8 @@ final class Config implements ConfigInterface
     public function writeMergedConfigCache(): string
     {
         $cache = $this->createMergedConfigCache();
-        $cache->write($this->loadAllConfigValues());
+        $loader = $this->getFactory()->createConfigLoader();
+        $cache->write($loader->loadAll(), $loader->declarationSignature(), ConfigSourceStamps::of($loader->watchedPaths()));
 
         return $cache->filename();
     }
@@ -484,16 +485,20 @@ final class Config implements ConfigInterface
         }
 
         $cache = $this->createMergedConfigCache();
+        $signature = ConfigLoader::declarationSignatureOf($this->getFactory()->createGacelaFileConfig()->getConfigItems());
 
-        if ($cache->exists()) {
-            return $cache->load();
+        $cached = $cache->exists() ? $cache->loadIfCurrent($signature) : null;
+        if ($cached !== null) {
+            return $cached;
         }
 
-        // Auto-warm on miss so later bootstraps skip re-globbing config files;
-        // best-effort, and an empty merged config is not worth caching.
-        $merged = $this->loadAllConfigValues();
+        // Auto-warm on a miss, or when a source changed, so later bootstraps
+        // skip re-globbing config files; best-effort, and an empty merged
+        // config is not worth caching.
+        $loader = $this->getFactory()->createConfigLoader();
+        $merged = $loader->loadAll();
         if ($merged !== []) {
-            $cache->write($merged);
+            $cache->write($merged, $signature, ConfigSourceStamps::of($loader->watchedPaths()));
         }
 
         return $merged;

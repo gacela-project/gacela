@@ -5,6 +5,7 @@
 ### Added
 
 - `#[Plugin(Contract::class, priority: 10)]` joins a class to a declared plugin stack without naming it in `gacela.php`. Attribute members follow the declared ones, by priority and then class name. They are read from the application's module paths inside `projectNamespaces` when a stack is first resolved. `cache:warm --attributes` stores them so production reads one file, and with file caching on the first scan is stored too. `doctor` reports a `#[Plugin]` whose stack is not declared, and, outside development, members scanned because the cache was not warmed ([#881](https://github.com/gacela-project/gacela/issues/881))
+- `agents:install` points the project's `AGENTS.md` at a guide for coding agents that ships in the package: the module rules, the way to get a dependency, and the commands that check the work. A pointer rather than a copy, so the guide always matches the installed version, and running it again rewrites only its own block. See `docs/coding-agents.md` ([#942](https://github.com/gacela-project/gacela/issues/942))
 - `GacelaTestCase::failureMessageOf()` runs an assertion expected to fail and returns its message, for testing assertions of your own. It catches PHPUnit's public `PHPUnit\Exception`, so a project exception, a skip or an incomplete is not mistaken for a failure, and PHPUnit's `@internal` `AssertionFailedError` stays out of the test ([#904](https://github.com/gacela-project/gacela/issues/904))
 
 ### Fixed

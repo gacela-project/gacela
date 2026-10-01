@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\SymfonyBridge\DependencyInjection;
 
-use Gacela\Console\Infrastructure\Command\InitCommand;
+use Gacela\Console\Infrastructure\Command\CommandCatalog;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\GacelaBootstrapper;
@@ -126,7 +126,7 @@ final class GacelaExtension extends Extension
     {
         foreach (GacelaCommands::names() as $class => $name) {
             $definition = new Definition($class);
-            if ($class === InitCommand::class) {
+            if (CommandCatalog::takesAppRootDir($class)) {
                 $definition->setArguments([$config['app_root_dir']]);
             }
 

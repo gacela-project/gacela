@@ -6,7 +6,7 @@ namespace Gacela\LaravelBridge;
 
 use Gacela\Console\Infrastructure\Command\CacheClearCommand;
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
-use Gacela\Console\Infrastructure\Command\InitCommand;
+use Gacela\Console\Infrastructure\Command\CommandCatalog;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\ServiceProvider;
 use Override;
@@ -106,7 +106,7 @@ final class GacelaServiceProvider extends ServiceProvider
         foreach ($names as $class => $name) {
             $prefixed = $prefix . $name;
             $this->app->singleton($class, static function () use ($class, $prefixed, $appRootDir): Command {
-                $command = $class === InitCommand::class ? new InitCommand($appRootDir) : new $class();
+                $command = CommandCatalog::instance($class, $appRootDir);
                 $command->setName($prefixed);
 
                 return $command;

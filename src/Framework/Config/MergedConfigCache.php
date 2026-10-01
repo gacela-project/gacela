@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Closure;
 use Gacela\Framework\Cache\FileCache;
 
+use function explode;
 use function implode;
 use function is_array;
 use function is_string;
@@ -19,8 +21,21 @@ final class MergedConfigCache
 
     public const FILENAME_EXTENSION = '.php';
 
-    /** Marks a file that carries its sources; one without them is never current. */
-    private const FORMAT = 'gacela-merged-config-sources';
+    /**
+     * The key of one string saying what the values answer for: the kind, the
+     * declaration signature and, for a verified file, the packed source stamps.
+     * One string rather than three entries, because where OPcache is off, as
+     * in most CLI runs, the file is compiled on every hit and a string literal
+     * compiles far faster than an array. A file without it was written before
+     * sources were recorded, and is never current.
+     */
+    private const HEADER = 'gacela-merged-config';
+
+    /** Written by `cache:warm`, a deploy step: served until the next warm or `cache:clear`. */
+    private const TRUSTED = 'trusted';
+
+    /** Written on a miss: served while what it was read from is unchanged. */
+    private const VERIFIED = 'verified';
 
     /**
      * @param list<string> $dimensions the resolved values selecting this configuration, beyond the env
@@ -52,21 +67,26 @@ final class MergedConfigCache
     }
 
     /**
-     * The cached values, only when nothing they were read from has changed.
+     * The cached values, when they still answer for this configuration. A
+     * trusted file always does. A verified one does while the declarations are
+     * the same and none of its sources changed; the signature is asked for
+     * only then, so a trusted hit costs no more than reading the file.
      *
-     * A file without source stamps, written before they existed, is never
-     * current: serving it is how an edited config file went unnoticed until
-     * someone ran `cache:clear`.
+     * @param Closure():string $declarationSignature
      *
      * @return array<string,mixed>|null
      */
-    public function loadIfCurrent(string $declarationSignature): ?array
+    public function loadIfCurrent(Closure $declarationSignature): ?array
     {
         $entry = $this->entryOf($this->read());
 
-        if ($entry === null
-            || $entry['declared'] !== $declarationSignature
-            || !ConfigSourceStamps::areCurrent($entry['sources'])
+        if ($entry === null) {
+            return null;
+        }
+
+        if ($entry['kind'] === self::VERIFIED
+            && ($entry['declared'] !== $declarationSignature()
+                || !ConfigSourceStamps::areCurrent(ConfigSourceStamps::unpack($entry['sources'])))
         ) {
             return null;
         }
@@ -75,17 +95,26 @@ final class MergedConfigCache
     }
 
     /**
+     * For `cache:warm`. A deploy artifact, so the bootstrap checks neither the
+     * declarations nor any source against it, and a hit costs what it did
+     * before sources were recorded.
+     *
      * @param array<string,mixed> $values
-     * @param array<string,string> $sources what the values were read from, see {@see ConfigSourceStamps}
      */
-    public function write(array $values, string $declarationSignature = '', array $sources = []): void
+    public function writeTrusted(array $values, string $declarationSignature): void
     {
-        FileCache::writeAtomically($this->filename(), [
-            self::FORMAT => true,
-            'declared' => $declarationSignature,
-            'sources' => $sources,
-            'values' => $values,
-        ]);
+        $this->write(self::TRUSTED, $declarationSignature, '', $values);
+    }
+
+    /**
+     * For a miss, so an edited, added or removed config file rebuilds it.
+     *
+     * @param array<string,mixed> $values
+     * @param array<string,string> $sources see {@see ConfigSourceStamps}
+     */
+    public function writeVerified(array $values, string $declarationSignature, array $sources): void
+    {
+        $this->write(self::VERIFIED, $declarationSignature, ConfigSourceStamps::pack($sources), $values);
     }
 
     public function clear(): void
@@ -140,22 +169,38 @@ final class MergedConfigCache
     }
 
     /**
+     * @param array<string,mixed> $values
+     */
+    private function write(string $kind, string $declarationSignature, string $sources, array $values): void
+    {
+        FileCache::writeAtomically($this->filename(), [
+            self::HEADER => $kind . "\n" . $declarationSignature . "\n" . $sources,
+            'values' => $values,
+        ]);
+    }
+
+    /**
      * @param array<string,mixed> $data
      *
-     * @return array{declared: string, sources: array<string,string>, values: array<string,mixed>}|null
+     * @return array{kind: string, declared: string, sources: string, values: array<string,mixed>}|null
      */
     private function entryOf(array $data): ?array
     {
-        if (!isset($data[self::FORMAT])
-            || !is_string($data['declared'] ?? null)
-            || !is_array($data['sources'] ?? null)
-            || !is_array($data['values'] ?? null)
-        ) {
+        $header = $data[self::HEADER] ?? null;
+        $values = $data['values'] ?? null;
+
+        if (!is_string($header) || !is_array($values)) {
             return null;
         }
 
-        /** @var array{declared: string, sources: array<string,string>, values: array<string,mixed>} $data */
-        return $data;
+        [$kind, $declared, $sources] = explode("\n", $header, 3) + ['', '', ''];
+
+        if ($kind !== self::TRUSTED && $kind !== self::VERIFIED) {
+            return null;
+        }
+
+        /** @var array<string,mixed> $values */
+        return ['kind' => $kind, 'declared' => $declared, 'sources' => $sources, 'values' => $values];
     }
 
     private function buildFilename(string $appSuffix): string

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use function clearstatcache;
+use function explode;
+use function implode;
 use function stat;
 
 /**
@@ -74,6 +76,41 @@ final class ConfigSourceStamps
         return false;
     }
 
+    /**
+     * One string rather than an array: the cache file is compiled on every
+     * request where OPcache is off, as in most CLI runs, and a string literal
+     * compiles in a fraction of the time an array of them does. Tab and
+     * newline separate, because `var_export()` writes both literally, while
+     * a NUL byte would become a concatenation to compile.
+     *
+     * @param array<string,string> $stamps
+     */
+    public static function pack(array $stamps): string
+    {
+        $lines = [];
+
+        foreach ($stamps as $path => $stamp) {
+            $lines[] = $path . "\t" . $stamp;
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    public static function unpack(string $packed): array
+    {
+        $stamps = [];
+
+        foreach (explode("\n", $packed) as $line) {
+            [$path, $stamp] = explode("\t", $line, 2) + [1 => ''];
+            $stamps[$path] = $stamp;
+        }
+
+        return $stamps;
+    }
+
     private static function stampOf(string $path): string
     {
         $stat = @stat($path);
@@ -82,6 +119,6 @@ final class ConfigSourceStamps
             return '';
         }
 
-        return $stat['mtime'] . ':' . $stat['size'] . ':' . $stat['ino'];
+        return implode(':', [$stat['mtime'], $stat['size'], $stat['ino']]);
     }
 }

@@ -19,17 +19,14 @@ use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use function array_key_exists;
 use function array_keys;
 use function count;
-use function fmod;
 use function function_exists;
 use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
 use function is_string;
-use function microtime;
 use function str_ends_with;
 use function time;
-use function usleep;
 
 final class Config implements ConfigInterface
 {
@@ -330,7 +327,10 @@ final class Config implements ConfigInterface
 
     /**
      * @internal persist the merged file-based config values to disk so future
-     *           bootstraps skip globbing and parsing configuration files
+     *           bootstraps skip globbing and parsing configuration files. The
+     *           file is trusted, like any deploy artifact, until the next
+     *           `cache:warm` or `cache:clear`; a cache written on a miss
+     *           instead checks its sources on every hit
      *
      * @throws ConfigException
      */
@@ -338,16 +338,7 @@ final class Config implements ConfigInterface
     {
         $cache = $this->createMergedConfigCache();
         $loader = $this->getFactory()->createConfigLoader();
-        [$values, $sources] = $this->loadWithSourceStamps($loader);
-
-        // A deploy step, so it waits out a source touched this second rather
-        // than leave the application without a warm cache.
-        while (ConfigSourceStamps::couldMissAChange($sources, time())) {
-            usleep(1_001_000 - (int) (fmod(microtime(true), 1.0) * 1_000_000.0));
-            [$values, $sources] = $this->loadWithSourceStamps($loader);
-        }
-
-        $cache->write($values, $loader->declarationSignature(), $sources);
+        $cache->writeTrusted($loader->loadAll(), $loader->declarationSignature());
 
         return $cache->filename();
     }
@@ -500,7 +491,7 @@ final class Config implements ConfigInterface
         }
 
         $cache = $this->createMergedConfigCache();
-        $signature = ConfigLoader::declarationSignatureOf($this->getFactory()->createGacelaFileConfig()->getConfigItems());
+        $signature = fn (): string => ConfigLoader::declarationSignatureOf($this->getFactory()->createGacelaFileConfig()->getConfigItems());
 
         $cached = $cache->exists() ? $cache->loadIfCurrent($signature) : null;
         if ($cached !== null) {
@@ -513,7 +504,7 @@ final class Config implements ConfigInterface
         // second: its stamp could not tell a further change in the same second.
         [$merged, $sources] = $this->loadWithSourceStamps($this->getFactory()->createConfigLoader());
         if ($merged !== [] && !ConfigSourceStamps::couldMissAChange($sources, time())) {
-            $cache->write($merged, $signature, $sources);
+            $cache->writeVerified($merged, $signature(), $sources);
         }
 
         return $merged;
@@ -536,16 +527,30 @@ final class Config implements ConfigInterface
     {
         PathFinder::resetCache();
         $sources = ConfigSourceStamps::of($loader->watchedPaths());
-
-        if (function_exists('opcache_invalidate')) {
-            foreach (array_keys($sources) as $path) {
-                if (str_ends_with($path, '.php')) {
-                    @opcache_invalidate($path, true);
-                }
-            }
-        }
+        $this->recompileOnNextInclude(array_keys($sources));
 
         return [$loader->loadAll(), $sources];
+    }
+
+    /**
+     * Untested here on purpose: OPcache is off in the CLI the suite runs in,
+     * so `opcache_invalidate()` has nothing to drop there.
+     *
+     * @infection-ignore-all
+     *
+     * @param list<string> $paths
+     */
+    private function recompileOnNextInclude(array $paths): void
+    {
+        if (!function_exists('opcache_invalidate')) {
+            return;
+        }
+
+        foreach ($paths as $path) {
+            if (str_ends_with($path, '.php')) {
+                @opcache_invalidate($path, true);
+            }
+        }
     }
 
     private function createMergedConfigCache(): MergedConfigCache

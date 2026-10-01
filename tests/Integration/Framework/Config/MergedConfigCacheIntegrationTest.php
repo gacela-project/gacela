@@ -7,6 +7,7 @@ namespace GacelaTest\Integration\Framework\Config;
 use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Config\ConfigLoader;
 use Gacela\Framework\Config\MergedConfigCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -29,9 +30,6 @@ use function var_export;
 
 final class MergedConfigCacheIntegrationTest extends TestCase
 {
-    /** The signature of an application that declares no config path. */
-    private const NOTHING_DECLARED = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
-
     private string $cacheDir;
 
     private string $fixtureDir;
@@ -221,30 +219,77 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     }
 
     /**
-     * A deploy step, so rather than leave the application cold it waits until
-     * the stamp can tell a later change apart.
+     * `cache:warm` is a deploy step, and its file a deploy artifact: like
+     * Laravel's `config:cache`, it is served without a look at its sources
+     * until the next warm or `cache:clear`. That is what keeps a hit as cheap
+     * as it was before sources were recorded.
      */
-    public function test_cache_warm_waits_out_a_source_touched_this_second(): void
+    public function test_a_warmed_cache_is_trusted_until_the_next_warm(): void
     {
         $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
-        file_put_contents($file, "<?php return ['src' => 'now'];");
-        $this->createdFiles[] = $file;
+        $this->writeAppConfig($file, 'deployed');
         $this->bootstrapApp();
+        Config::getInstance()->writeMergedConfigCache();
 
-        $filename = Config::getInstance()->writeMergedConfigCache();
+        $this->writeAppConfig($file, 'edited-after-deploy');
+        $this->bootstrapApp();
+        self::assertSame('deployed', Config::getInstance()->get('src'));
 
-        self::assertFileExists($filename);
-        self::assertSame(['src' => 'now'], Config::getInstance()->mergedConfigCache()->load());
+        Config::getInstance()->writeMergedConfigCache();
+        $this->bootstrapApp();
+        self::assertSame('edited-after-deploy', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * A worker that bootstraps again without `resetInMemoryCache()` keeps the
+     * glob results of the first bootstrap. A rebuild must not read through
+     * them, or it stores the old file list under fresh stamps.
+     */
+    public function test_a_rebuild_in_the_same_process_globs_afresh(): void
+    {
+        $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php', 'first');
+        $this->bootstrapWith('config/*.php', '', resetInMemoryCache: false);
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
+
+        $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'zz.php', 'added');
+        $this->bootstrapWith('config/*.php', '', resetInMemoryCache: false);
+
+        self::assertSame('added', Config::getInstance()->get('src'));
+    }
+
+    public function test_a_new_subdirectory_under_a_wildcard_is_read_on_the_next_bootstrap(): void
+    {
+        $config = $this->appDir . DIRECTORY_SEPARATOR . 'config';
+        mkdir($config . DIRECTORY_SEPARATOR . 'a');
+        $this->createdDirs = [$config . DIRECTORY_SEPARATOR . 'a'];
+        $this->writeAppConfig($config . DIRECTORY_SEPARATOR . 'a' . DIRECTORY_SEPARATOR . 'app.php', 'a');
+        touch($config, time() - 100);
+        $this->bootstrapWith('config/*/app.php');
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
+
+        mkdir($config . DIRECTORY_SEPARATOR . 'b');
+        $this->createdDirs[] = $config . DIRECTORY_SEPARATOR . 'b';
+        $this->writeAppConfig($config . DIRECTORY_SEPARATOR . 'b' . DIRECTORY_SEPARATOR . 'app.php', 'b');
+        touch($config, time() - 5);
+        $this->bootstrapWith('config/*/app.php');
+
+        self::assertSame('b', Config::getInstance()->get('src'));
     }
 
     public function test_a_local_override_created_later_is_read_on_the_next_bootstrap(): void
     {
+        // In a directory of its own, so only watching the override's directory
+        // can notice it: the base pattern's directory never changes.
         $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php', 'first');
-        $this->bootstrapApp();
+        $override = $this->appDir . DIRECTORY_SEPARATOR . 'override';
+        mkdir($override);
+        $this->createdDirs[] = $override;
+        touch($override, time() - 100);
+        $this->bootstrapWith('config/*.php', 'override/local.php');
         self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
 
-        $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'local.php', 'local');
-        $this->bootstrapApp();
+        $this->writeAppConfig($override . DIRECTORY_SEPARATOR . 'local.php', 'local');
+        $this->bootstrapWith('config/*.php', 'override/local.php');
 
         self::assertSame('local', Config::getInstance()->get('src'));
     }
@@ -393,7 +438,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
 
         // Filenames are scoped per app root (#465); every test here boots
         // __DIR__, which declares no config path, so there is no source to stamp.
-        (new MergedConfigCache($this->cacheDir, $env, __DIR__))->write($data, self::NOTHING_DECLARED);
+        (new MergedConfigCache($this->cacheDir, $env, __DIR__))->writeTrusted($data, ConfigLoader::declarationSignatureOf([]));
     }
 
     /**
@@ -428,12 +473,15 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         $this->bootstrapWith('config/*.php', 'config/local.php');
     }
 
-    private function bootstrapWith(string $path, string $pathLocal = ''): void
+    private function bootstrapWith(string $path, string $pathLocal = '', bool $resetInMemoryCache = true): void
     {
         $cacheDir = $this->cacheDir;
-        Gacela::bootstrap($this->appDir, static function (GacelaConfig $config) use ($cacheDir, $path, $pathLocal): void {
+        Gacela::bootstrap($this->appDir, static function (GacelaConfig $config) use ($cacheDir, $path, $pathLocal, $resetInMemoryCache): void {
             $config->setFileCache(true, $cacheDir);
-            $config->resetInMemoryCache();
+            if ($resetInMemoryCache) {
+                $config->resetInMemoryCache();
+            }
+
             $config->addAppConfig($path, $pathLocal);
         });
     }

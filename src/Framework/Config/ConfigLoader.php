@@ -7,8 +7,9 @@ namespace Gacela\Framework\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
+use function array_map;
 use function dirname;
-use function implode;
+use function serialize;
 use function sha1;
 use function strpbrk;
 
@@ -79,9 +80,14 @@ final class ConfigLoader
 
     /**
      * Everything whose change can change what `loadAll()` returns: each file it
-     * reads, and the nearest literal directory of each declared path, so a file
-     * added to or removed from a globbed directory, or a local override created
-     * later, counts as a change.
+     * reads, the directories each declared pattern globs (so a file added or
+     * removed counts), the nearest literal one above them (so a new
+     * subdirectory counts), and the local override's directory (so creating it
+     * later counts).
+     *
+     * The environment and dimension layers are not listed apart: they only
+     * change the file name, so the base pattern's directories already cover
+     * them. Duplicates are harmless, since stamps are keyed by path.
      *
      * @return list<string>
      */
@@ -90,41 +96,26 @@ final class ConfigLoader
         $paths = $this->sourceFiles();
 
         foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
-            $declared = [
-                $this->pathNormalizer->normalizePathPattern($configItem),
-                ...$this->pathNormalizer->normalizePathPatternsWithSuffixes($configItem),
-            ];
+            $pattern = $this->pathNormalizer->normalizePathPattern($configItem);
+            $paths[] = $this->nearestLiteralDirectory($pattern);
+
+            foreach ($this->pathFinder->matchingPattern(dirname($pattern)) as $directory) {
+                $paths[] = $directory;
+            }
 
             // An undeclared local path normalizes to the app root itself, whose
             // directory is the root's parent: nothing to watch.
             if ($configItem->pathLocal() !== '') {
-                $declared[] = $this->pathNormalizer->normalizePathLocal($configItem);
-            }
-
-            foreach ($declared as $pattern) {
-                if ($pattern === '') {
-                    continue;
-                }
-
-                $paths[] = $this->nearestLiteralDirectory($pattern);
-
-                // A wildcard in the directory part: a file added inside one of
-                // the directories it matches changes that directory, not the
-                // literal one above it.
-                if (strpbrk(dirname($pattern), '*?[{') !== false) {
-                    foreach ($this->pathFinder->matchingPattern(dirname($pattern)) as $directory) {
-                        $paths[] = $directory;
-                    }
-                }
+                $paths[] = dirname($this->pathNormalizer->normalizePathLocal($configItem));
             }
         }
 
-        return array_values(array_unique($paths));
+        return $paths;
     }
 
     /**
-     * The declared config paths, as one string: a change to what is declared
-     * is a change to the merged config even when every file is untouched.
+     * The declared config paths: a change to what is declared is a change to
+     * the merged config even when every file is untouched.
      */
     public function declarationSignature(): string
     {
@@ -138,13 +129,10 @@ final class ConfigLoader
      */
     public static function declarationSignatureOf(array $configItems): string
     {
-        $declared = [];
-
-        foreach ($configItems as $configItem) {
-            $declared[] = $configItem->path() . "\0" . $configItem->pathLocal() . "\0" . $configItem->reader()::class;
-        }
-
-        return sha1(implode("\n", $declared));
+        return sha1(serialize(array_map(
+            static fn (GacelaConfigItem $item): array => [$item->path(), $item->pathLocal(), $item->reader()::class],
+            $configItems,
+        )));
     }
 
     /**

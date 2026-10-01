@@ -59,7 +59,23 @@ final class ConfigInitBench
             $config->enableFileCache(self::CACHE_DIR);
         });
 
-        // First init persists the merged-config cache; measured revs load it.
+        // The deployed state: `cache:warm` wrote the merged config cache, and
+        // the measured revs read it without looking at the config files.
+        Config::getInstance()->writeMergedConfigCache();
+    }
+
+    public function setUpAutoWarmed(): void
+    {
+        self::removeCacheFiles();
+
+        Gacela::bootstrap(self::APP_ROOT, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->addAppConfig('config/*.php');
+            $config->enableFileCache(self::CACHE_DIR);
+        });
+
+        // No `cache:warm`: the first init writes the cache, so every measured
+        // rev checks the config files have not changed since.
         Config::getInstance()->init();
     }
 
@@ -71,6 +87,12 @@ final class ConfigInitBench
 
     #[BeforeMethods('setUpWarm')]
     public function bench_config_init_warm(): void
+    {
+        Config::getInstance()->init();
+    }
+
+    #[BeforeMethods('setUpAutoWarmed')]
+    public function bench_config_init_auto_warmed(): void
     {
         Config::getInstance()->init();
     }

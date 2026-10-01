@@ -51,14 +51,14 @@ final class SharedCacheDirIsolationTest extends TestCase
         $appA = new MergedConfigCache($this->sharedCacheDir, '', '/srv/app-a');
         $appB = new MergedConfigCache($this->sharedCacheDir, '', '/srv/app-b');
 
-        $appA->write(['database-dsn' => 'app-a-database']);
+        $appA->writeTrusted(['database-dsn' => 'app-a-database'], '');
 
         self::assertFalse(
             $appB->exists(),
             'app B must not find a cache just because app A wrote one to the shared directory',
         );
 
-        $appB->write(['database-dsn' => 'app-b-database']);
+        $appB->writeTrusted(['database-dsn' => 'app-b-database'], '');
 
         self::assertSame(['database-dsn' => 'app-a-database'], $appA->load());
         self::assertSame(['database-dsn' => 'app-b-database'], $appB->load());
@@ -74,9 +74,9 @@ final class SharedCacheDirIsolationTest extends TestCase
         $appBProd = new MergedConfigCache($this->sharedCacheDir, 'prod', '/srv/app-b');
         $appADev = new MergedConfigCache($this->sharedCacheDir, 'dev', '/srv/app-a');
 
-        $appAProd->write(['env' => 'a-prod']);
-        $appBProd->write(['env' => 'b-prod']);
-        $appADev->write(['env' => 'a-dev']);
+        $appAProd->writeTrusted(['env' => 'a-prod'], '');
+        $appBProd->writeTrusted(['env' => 'b-prod'], '');
+        $appADev->writeTrusted(['env' => 'a-dev'], '');
 
         self::assertSame(['env' => 'a-prod'], $appAProd->load());
         self::assertSame(['env' => 'b-prod'], $appBProd->load());
@@ -92,7 +92,7 @@ final class SharedCacheDirIsolationTest extends TestCase
     public function test_clear_also_removes_a_cache_written_before_filenames_were_app_scoped(): void
     {
         $legacy = new MergedConfigCache($this->sharedCacheDir);
-        $legacy->write(['from' => 'before the app suffix existed']);
+        $legacy->writeTrusted(['from' => 'before the app suffix existed'], '');
         self::assertTrue($legacy->exists());
 
         (new MergedConfigCache($this->sharedCacheDir, '', '/srv/app-a'))->clear();

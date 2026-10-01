@@ -338,7 +338,7 @@ final class Config implements ConfigInterface
     {
         $cache = $this->createMergedConfigCache();
         $loader = $this->getFactory()->createConfigLoader();
-        $cache->writeTrusted($loader->loadAll(), $loader->declarationSignature());
+        $cache->writeTrusted($loader->loadAll());
 
         return $cache->filename();
     }

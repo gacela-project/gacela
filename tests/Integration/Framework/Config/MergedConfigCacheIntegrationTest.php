@@ -7,7 +7,6 @@ namespace GacelaTest\Integration\Framework\Config;
 use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
-use Gacela\Framework\Config\ConfigLoader;
 use Gacela\Framework\Config\MergedConfigCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -21,6 +20,7 @@ use function mkdir;
 use function putenv;
 use function rmdir;
 use function sprintf;
+use function str_replace;
 use function sys_get_temp_dir;
 use function time;
 use function touch;
@@ -295,16 +295,17 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Written before the cache carried its sources, so nothing can say it is
-     * still right. Serving it is what kept an upgraded application on its
-     * stale config.
+     * Written by an earlier version, under the name it used: it may hold values
+     * from before an edit that version never noticed, so it is not read.
      */
-    public function test_a_cache_file_without_sources_is_rebuilt(): void
+    public function test_a_cache_file_from_an_earlier_version_is_not_read(): void
     {
         $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php', 'from-source');
         $this->bootstrapApp();
-        $filename = Config::getInstance()->mergedConfigCacheFilename();
-        file_put_contents($filename, sprintf('<?php return %s;', var_export(['src' => 'legacy'], true)));
+        $current = Config::getInstance()->mergedConfigCacheFilename();
+        $earlier = str_replace('gacela-merged-config-v2-', 'gacela-merged-config-', $current);
+        unlink($current);
+        file_put_contents($earlier, sprintf('<?php return %s;', var_export(['src' => 'from-an-earlier-version'], true)));
 
         $this->bootstrapApp();
 
@@ -438,7 +439,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
 
         // Filenames are scoped per app root (#465); every test here boots
         // __DIR__, which declares no config path, so there is no source to stamp.
-        (new MergedConfigCache($this->cacheDir, $env, __DIR__))->writeTrusted($data, ConfigLoader::declarationSignatureOf([]));
+        (new MergedConfigCache($this->cacheDir, $env, __DIR__))->writeTrusted($data);
     }
 
     /**

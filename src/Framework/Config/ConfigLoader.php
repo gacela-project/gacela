@@ -115,15 +115,8 @@ final class ConfigLoader
 
     /**
      * The declared config paths: a change to what is declared is a change to
-     * the merged config even when every file is untouched.
-     */
-    public function declarationSignature(): string
-    {
-        return self::declarationSignatureOf($this->gacelaConfigFile->getConfigItems());
-    }
-
-    /**
-     * Static so a cache hit can ask it without building a loader.
+     * the merged config even when every file is untouched. Static so a cache
+     * hit can ask it without building a loader.
      *
      * @param list<GacelaConfigItem> $configItems
      */

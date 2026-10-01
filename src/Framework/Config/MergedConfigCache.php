@@ -22,20 +22,21 @@ final class MergedConfigCache
     public const FILENAME_EXTENSION = '.php';
 
     /**
-     * The key of one string saying what the values answer for: the kind, the
-     * declaration signature and, for a verified file, the packed source stamps.
-     * One string rather than three entries, because where OPcache is off, as
-     * in most CLI runs, the file is compiled on every hit and a string literal
-     * compiles far faster than an array. A file without it was written before
-     * sources were recorded, and is never current.
+     * In the name of every file this version writes. A file without it was
+     * written before sources were recorded: it may hold values from before an
+     * edit, so it is never read, and `clear()` still removes it.
      */
-    private const HEADER = 'gacela-merged-config';
+    private const VERSION = '-v2';
 
-    /** Written by `cache:warm`, a deploy step: served until the next warm or `cache:clear`. */
-    private const TRUSTED = 'trusted';
-
-    /** Written on a miss: served while what it was read from is unchanged. */
-    private const VERIFIED = 'verified';
+    /**
+     * Present only in a file written on a miss, holding the declaration
+     * signature and the packed source stamps as one string, so the file
+     * compiles as the values plus one literal. A NUL byte keeps it from ever
+     * being a configuration key. A file without it was written by
+     * `cache:warm` and is exactly the values, so a deployed hit costs one
+     * `require`, as it did before sources were recorded.
+     */
+    private const HEADER = "\0gacela-merged-config-sources";
 
     /**
      * @param list<string> $dimensions the resolved values selecting this configuration, beyond the env
@@ -63,14 +64,25 @@ final class MergedConfigCache
     {
         $data = $this->read();
 
-        return $this->entryOf($data)['values'] ?? $data;
+        if (!isset($data[self::HEADER])) {
+            return $data;
+        }
+
+        $values = $data['values'] ?? null;
+
+        if (!is_array($values)) {
+            return [];
+        }
+
+        /** @var array<string,mixed> $values */
+        return $values;
     }
 
     /**
-     * The cached values, when they still answer for this configuration. A
-     * trusted file always does. A verified one does while the declarations are
-     * the same and none of its sources changed; the signature is asked for
-     * only then, so a trusted hit costs no more than reading the file.
+     * The cached values, when they still answer for this configuration. A file
+     * `cache:warm` wrote always does. One written on a miss does while the
+     * declarations are the same and none of its sources changed; the signature
+     * is asked for only then.
      *
      * @param Closure():string $declarationSignature
      *
@@ -78,32 +90,41 @@ final class MergedConfigCache
      */
     public function loadIfCurrent(Closure $declarationSignature): ?array
     {
-        $entry = $this->entryOf($this->read());
+        $data = $this->read();
+        $header = $data[self::HEADER] ?? null;
 
-        if ($entry === null) {
+        if ($header === null) {
+            return $data;
+        }
+
+        $values = $data['values'] ?? null;
+
+        if (!is_string($header) || !is_array($values)) {
             return null;
         }
 
-        if ($entry['kind'] === self::VERIFIED
-            && ($entry['declared'] !== $declarationSignature()
-                || !ConfigSourceStamps::areCurrent(ConfigSourceStamps::unpack($entry['sources'])))
+        [$declared, $sources] = explode("\n", $header, 2) + ['', ''];
+
+        if ($declared !== $declarationSignature()
+            || !ConfigSourceStamps::areCurrent(ConfigSourceStamps::unpack($sources))
         ) {
             return null;
         }
 
-        return $entry['values'];
+        /** @var array<string,mixed> $values */
+        return $values;
     }
 
     /**
-     * For `cache:warm`. A deploy artifact, so the bootstrap checks neither the
-     * declarations nor any source against it, and a hit costs what it did
-     * before sources were recorded.
+     * For `cache:warm`. A deploy artifact: the bootstrap checks neither the
+     * declarations nor any source against it until the next warm or
+     * `cache:clear`.
      *
      * @param array<string,mixed> $values
      */
-    public function writeTrusted(array $values, string $declarationSignature): void
+    public function writeTrusted(array $values): void
     {
-        $this->write(self::TRUSTED, $declarationSignature, '', $values);
+        FileCache::writeAtomically($this->filename(), $values);
     }
 
     /**
@@ -114,7 +135,10 @@ final class MergedConfigCache
      */
     public function writeVerified(array $values, string $declarationSignature, array $sources): void
     {
-        $this->write(self::VERIFIED, $declarationSignature, ConfigSourceStamps::pack($sources), $values);
+        FileCache::writeAtomically($this->filename(), [
+            self::HEADER => $declarationSignature . "\n" . ConfigSourceStamps::pack($sources),
+            'values' => $values,
+        ]);
     }
 
     public function clear(): void
@@ -131,10 +155,19 @@ final class MergedConfigCache
         }
 
         // Also drop a cache written before filenames were app-scoped, so
-        // clearing leaves no stale pre-#465 file behind in a shared dir.
-        $legacyFilename = $this->buildFilename('');
-        if ($legacyFilename !== $this->filename()) {
-            FileCache::delete($legacyFilename);
+        // clearing leaves no stale pre-#465 file behind in a shared dir, and
+        // every file written before sources were recorded.
+        foreach (['', self::VERSION] as $version) {
+            foreach ($this->appSuffix() === '' ? [''] : ['', $this->appSuffix()] as $appSuffix) {
+                $filename = $this->buildFilename($appSuffix, $version);
+                if ($filename !== $this->filename()) {
+                    FileCache::delete($filename);
+                }
+            }
+        }
+
+        foreach ($this->siblingTupleFilenames('') as $filename) {
+            FileCache::delete($filename);
         }
     }
 
@@ -146,11 +179,7 @@ final class MergedConfigCache
      */
     public function filename(): string
     {
-        $appSuffix = $this->appRootDir !== ''
-            ? '-' . substr(sha1($this->appRootDir), 0, 12)
-            : '';
-
-        return $this->buildFilename($appSuffix);
+        return $this->buildFilename($this->appSuffix(), self::VERSION);
     }
 
     /**
@@ -168,48 +197,19 @@ final class MergedConfigCache
         return $data;
     }
 
-    /**
-     * @param array<string,mixed> $values
-     */
-    private function write(string $kind, string $declarationSignature, string $sources, array $values): void
+    private function appSuffix(): string
     {
-        FileCache::writeAtomically($this->filename(), [
-            self::HEADER => $kind . "\n" . $declarationSignature . "\n" . $sources,
-            'values' => $values,
-        ]);
+        return $this->appRootDir !== '' ? '-' . substr(sha1($this->appRootDir), 0, 12) : '';
     }
 
-    /**
-     * @param array<string,mixed> $data
-     *
-     * @return array{kind: string, declared: string, sources: string, values: array<string,mixed>}|null
-     */
-    private function entryOf(array $data): ?array
-    {
-        $header = $data[self::HEADER] ?? null;
-        $values = $data['values'] ?? null;
-
-        if (!is_string($header) || !is_array($values)) {
-            return null;
-        }
-
-        [$kind, $declared, $sources] = explode("\n", $header, 3) + ['', '', ''];
-
-        if ($kind !== self::TRUSTED && $kind !== self::VERIFIED) {
-            return null;
-        }
-
-        /** @var array<string,mixed> $values */
-        return ['kind' => $kind, 'declared' => $declared, 'sources' => $sources, 'values' => $values];
-    }
-
-    private function buildFilename(string $appSuffix): string
+    private function buildFilename(string $appSuffix, string $version): string
     {
         $envSuffix = $this->env !== '' ? '-' . $this->env : '';
 
         return $this->cacheDir
             . DIRECTORY_SEPARATOR
             . self::FILENAME_PREFIX
+            . $version
             . $appSuffix
             . $envSuffix
             . $this->dimensionSuffix()
@@ -221,15 +221,13 @@ final class MergedConfigCache
      *
      * @return list<string>
      */
-    private function siblingTupleFilenames(): array
+    private function siblingTupleFilenames(string $version = self::VERSION): array
     {
         if ($this->appRootDir === '') {
             return [];
         }
 
-        $withoutExtension = substr($this->buildFilename(
-            '-' . substr(sha1($this->appRootDir), 0, 12),
-        ), 0, -strlen(self::FILENAME_EXTENSION));
+        $withoutExtension = substr($this->buildFilename($this->appSuffix(), $version), 0, -strlen(self::FILENAME_EXTENSION));
 
         // One dimension segment past the env, which is the only shape a tuple
         // filename takes.

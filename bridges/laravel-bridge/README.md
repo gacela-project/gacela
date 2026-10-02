@@ -23,7 +23,7 @@ That alone gives you five things:
 2. **Laravel services reachable from Gacela** — the ones you list, and only those.
 3. **Gacela's console commands in `artisan`**, under a `gacela:` prefix.
 4. **`artisan optimize` warms Gacela's caches too**, so a deploy has one optimize step instead of two. `optimize:clear` clears them again.
-5. **Octane-ready**: after each request Octane ends (`RequestTerminated`), the bridge calls `Gacela::resetRequestState()`, so the next request starts without the first one's services and keeps the warm caches. Nothing to configure, and no dependency on Octane.
+5. **Octane-ready**: when Octane receives a request and when it ends one (`RequestReceived`, `RequestTerminated`), the bridge calls `Gacela::resetRequestState()`, so the next request starts without the first one's services and keeps the warm caches. Nothing to configure, and no dependency on Octane.
 
 Plus `#[Inject]` on Laravel-resolved services, described at the bottom.
 

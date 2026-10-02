@@ -184,6 +184,44 @@ final class PackageConfigFinderTest extends TestCase
         );
     }
 
+    /**
+     * Composer writes one directory as a string, several as a list. The root
+     * namespace would read every class the package can reach, so it is left out.
+     */
+    public function test_the_psr4_directories_are_resolved_against_the_install_path(): void
+    {
+        $this->writeInstalled([[
+            'name' => 'acme/audit',
+            'install-path' => '../acme/audit',
+            'extra' => ['gacela' => ['config' => 'config/gacela.php']],
+            'autoload' => ['psr-4' => [
+                'Acme\\Audit\\' => 'src/',
+                'Acme\\Audit\\Extra\\' => ['lib', 'more'],
+                '' => 'fallback',
+            ]],
+        ]]);
+
+        self::assertSame(
+            [
+                'Acme\\Audit\\' => [$this->path($this->appRoot, 'vendor', 'acme', 'audit', 'src')],
+                'Acme\\Audit\\Extra\\' => [
+                    $this->path($this->appRoot, 'vendor', 'acme', 'audit', 'lib'),
+                    $this->path($this->appRoot, 'vendor', 'acme', 'audit', 'more'),
+                ],
+            ],
+            $this->find()[0]->sources,
+        );
+    }
+
+    public function test_a_package_without_psr4_has_no_sources(): void
+    {
+        $this->writeInstalled([
+            ['name' => 'acme/audit', 'install-path' => '../acme/audit', 'extra' => ['gacela' => ['config' => 'config/gacela.php']], 'autoload' => ['classmap' => ['src']]],
+        ]);
+
+        self::assertSame([], $this->find()[0]->sources);
+    }
+
     public function test_the_declared_path_is_kept_as_the_package_wrote_it(): void
     {
         $this->writeInstalled([

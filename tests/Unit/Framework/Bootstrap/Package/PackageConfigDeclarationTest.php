@@ -23,6 +23,7 @@ final class PackageConfigDeclarationTest extends TestCase
             'acme/audit',
             'config/gacela.php',
             '/app/vendor/acme/audit/config/gacela.php',
+            ['Acme\\Audit\\' => ['/app/vendor/acme/audit/src', '/app/vendor/acme/audit/lib']],
         );
 
         self::assertEquals($declaration, PackageConfigDeclaration::fromArray($declaration->toArray()));
@@ -34,6 +35,7 @@ final class PackageConfigDeclarationTest extends TestCase
             'name' => 'acme/audit',
             'declaredPath' => './config/gacela.php',
             'configFile' => '/app/vendor/acme/audit/config/gacela.php',
+            'sources' => [],
         ]);
 
         self::assertInstanceOf(PackageConfigDeclaration::class, $declaration);
@@ -43,15 +45,15 @@ final class PackageConfigDeclarationTest extends TestCase
     }
 
     /**
-     * One field at a time, because each of the three is checked for itself: a
-     * row carrying a usable name and a usable path is still not a declaration
-     * when the third field is not a string, and the answer must be null rather
-     * than a half-built declaration.
+     * One field at a time, because each is checked for itself: a row carrying
+     * a usable name and a usable path is still not a declaration when another
+     * field is unusable, and the answer must be null rather than a half-built
+     * declaration.
      *
      * @param array<array-key, mixed> $row
      */
     #[DataProvider('unusableRows')]
-    public function test_a_row_that_is_not_three_strings_is_not_a_declaration(array $row): void
+    public function test_a_row_that_is_not_three_strings_and_a_source_map_is_not_a_declaration(array $row): void
     {
         self::assertNull(PackageConfigDeclaration::fromArray($row));
     }
@@ -65,18 +67,41 @@ final class PackageConfigDeclarationTest extends TestCase
             'name' => 42,
             'declaredPath' => 'config/gacela.php',
             'configFile' => '/app/vendor/acme/audit/config/gacela.php',
+            'sources' => [],
         ]];
 
         yield 'the declared path is not a string' => [[
             'name' => 'acme/audit',
             'declaredPath' => ['config/gacela.php'],
             'configFile' => '/app/vendor/acme/audit/config/gacela.php',
+            'sources' => [],
         ]];
 
         yield 'the resolved file is not a string' => [[
             'name' => 'acme/audit',
             'declaredPath' => 'config/gacela.php',
             'configFile' => null,
+            'sources' => [],
+        ]];
+
+        yield 'cached before the sources were recorded' => [[
+            'name' => 'acme/audit',
+            'declaredPath' => 'config/gacela.php',
+            'configFile' => '/app/vendor/acme/audit/config/gacela.php',
+        ]];
+
+        yield 'a source namespace with no directory list' => [[
+            'name' => 'acme/audit',
+            'declaredPath' => 'config/gacela.php',
+            'configFile' => '/app/vendor/acme/audit/config/gacela.php',
+            'sources' => ['Acme\\Audit\\' => '/app/vendor/acme/audit/src'],
+        ]];
+
+        yield 'a source with no namespace' => [[
+            'name' => 'acme/audit',
+            'declaredPath' => 'config/gacela.php',
+            'configFile' => '/app/vendor/acme/audit/config/gacela.php',
+            'sources' => [['/app/vendor/acme/audit/src']],
         ]];
 
         yield 'nothing at all' => [[]];

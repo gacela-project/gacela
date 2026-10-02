@@ -12,6 +12,7 @@ use Gacela\Console\Application\CacheWarm\ModuleWarmer;
 use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\Config;
@@ -137,8 +138,8 @@ final class CacheWarmCommand extends Command
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
-        $members = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces())->members();
-        $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
+        $members = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources(), PackageDiscoveryRegistry::refusedDirectories())->members();
+        $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources(), PackageDiscoveryRegistry::refusedDirectories());
 
         if ($members->problems !== []) {
             $formatter->writeMembershipProblems($members->problems);

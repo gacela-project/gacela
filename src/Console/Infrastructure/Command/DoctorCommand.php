@@ -36,6 +36,7 @@ use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Console\Domain\IdeMeta\IdeMetadataResult;
 use Gacela\Framework\Attribute\CacheableConfig;
+use Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
@@ -294,6 +295,8 @@ final class DoctorCommand extends Command
                     $config->getSetupGacela()->getAppModulePaths(),
                     $config->getAppRootDir(),
                     $config->getSetupGacela()->getProjectNamespaces(),
+                    PackageDiscoveryRegistry::sources(),
+                    PackageDiscoveryRegistry::refusedDirectories(),
                 )->members(),
                 // The runtime reads the file only with file caching on.
                 (new GacelaFileCache($config))->isEnabled()
@@ -302,6 +305,8 @@ final class DoctorCommand extends Command
                         $config->getAppRootDir(),
                         $config->getSetupGacela()->getAppModulePaths(),
                         $config->getSetupGacela()->getProjectNamespaces(),
+                        PackageDiscoveryRegistry::sources(),
+                        PackageDiscoveryRegistry::refusedDirectories(),
                     )->read()
                     : null,
                 getenv('APP_ENV') ?: null,

@@ -343,7 +343,12 @@ final class PackageDiscoveryTest extends TestCase
         $cached = (array) require $cacheFile;
 
         self::assertSame(
-            [['name' => 'gacela-fixture/audit-trail', 'declaredPath' => 'config/gacela.php', 'configFile' => $this->auditTrailConfigFile()]],
+            [[
+                'name' => 'gacela-fixture/audit-trail',
+                'declaredPath' => 'config/gacela.php',
+                'configFile' => $this->auditTrailConfigFile(),
+                'sources' => ['GacelaTest\\Feature\\Framework\\PackageDiscovery\\Packages\\AuditTrail\\' => [__DIR__ . DIRECTORY_SEPARATOR . 'Packages' . DIRECTORY_SEPARATOR . 'AuditTrail' . DIRECTORY_SEPARATOR . 'src']],
+            ]],
             $cached['packages'],
         );
     }
@@ -409,6 +414,49 @@ final class PackageDiscoveryTest extends TestCase
         self::assertSame([], $this->discoveredNames());
         self::assertSame([], PackageDiscoveryRegistry::refused());
         self::assertFalse(PackageDiscoveryRegistry::isDisabled());
+    }
+
+    /**
+     * Neither the application nor the package's own `gacela.php` names the
+     * channel: its `#[Plugin]` is read from the package's psr-4 directory.
+     */
+    public function test_a_package_contributes_a_plugin_by_attribute_alone(): void
+    {
+        $this->installed->install(['AuditTrail', 'AuditArchive']);
+        $this->installed->writeGacelaPhp(<<<'PHP'
+            use Gacela\Framework\Bootstrap\GacelaConfig;
+
+            return static function (GacelaConfig $config): void {
+                $config->setProjectNamespaces(['GacelaTest\Feature\Framework\PackageDiscovery\App']);
+            };
+            PHP);
+
+        $this->bootstrap();
+        Gacela::getRequired(AuditingFacade::class)->announce('invoice issued');
+
+        self::assertSame(['booted', 'log: invoice issued', 'archive: invoice issued'], AuditRecorder::records());
+    }
+
+    /**
+     * Read inside the package's own namespace: `projectNamespaces` narrows the
+     * application, not what a package ships.
+     */
+    public function test_a_refused_package_contributes_no_attribute_member(): void
+    {
+        $this->installed->install(['AuditTrail', 'AuditArchive']);
+        $this->installed->writeGacelaPhp(<<<'PHP'
+            use Gacela\Framework\Bootstrap\GacelaConfig;
+
+            return static function (GacelaConfig $config): void {
+                $config->setProjectNamespaces(['GacelaTest\Feature\Framework\PackageDiscovery\App']);
+                $config->dontDiscover(['gacela-fixture/audit-archive']);
+            };
+            PHP);
+
+        $this->bootstrap();
+        Gacela::getRequired(AuditingFacade::class)->announce('invoice issued');
+
+        self::assertSame(['booted', 'log: invoice issued'], AuditRecorder::records());
     }
 
     private function bootstrap(?callable $extra = null): void

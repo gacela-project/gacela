@@ -86,6 +86,14 @@ format. In practice:
 | configuration values | `addAppConfigKeyValue()` |
 | health | `addHealthCheck()` |
 
+Or by attribute, with no line in the config file: a class in the package's
+`autoload.psr-4` directories can carry `#[Plugin]`, `#[Tag]` or
+`#[AsListener]`, and joins as an application class would. Only the package's
+own psr-4 namespaces are read, and only for a package that is discovered: a
+refused one contributes no attribute member either, even when it is installed
+from a path inside the application's module paths. The package still needs
+`extra.gacela.config`, even if the file it names configures nothing.
+
 Two things a package should not reach for:
 
 - **`addAppConfig()`** — a config path resolves against the *application* root,
@@ -208,6 +216,10 @@ Two things switch the cache off, both deliberately:
 - `dontDiscover(['*'])` — nothing is read, so there is nothing to cache.
 
 `cache:warm` and `cache:clear` treat the file like every other cache file.
+
+The cached list also records each package's psr-4 directories, which is where
+its `#[Plugin]`, `#[Tag]` and `#[AsListener]` classes are read. A list cached
+before Gacela recorded them is read from `installed.json` again, once.
 
 ## Checklist for a package author
 

@@ -76,6 +76,7 @@
         "psr-4": {
             "GacelaData\\": "data/",
             "GacelaTest\\": "tests/",
+            "GacelaTest\\Feature\\Framework\\PackageDiscovery\\Packages\\AuditArchive\\": "tests/Feature/Framework/PackageDiscovery/Packages/AuditArchive/src",
             "GacelaTest\\Feature\\Framework\\PackageDiscovery\\Packages\\AuditTrail\\": "tests/Feature/Framework/PackageDiscovery/Packages/AuditTrail/src",
             "GacelaTest\\Feature\\ReferenceApp\\Packages\\InvoiceAudit\\": "tests/Feature/ReferenceApp/Packages/invoice-audit/src",
             "GacelaTest\\LaravelBridge\\": "bridges/laravel-bridge/tests/",

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.6.0](https://github.com/gacela-project/gacela/compare/2.5.0...2.6.0) - 2026-10-02
+
 ### Added
 
 - Reading a plugin stack `gacela.php` never declared names the classes carrying `#[Plugin]` for it, which only join a declared stack, and gives the fix: `addPluginStack(Contract::class, [])`. They are read only after the stack is found missing ([#956](https://github.com/gacela-project/gacela/issues/956))

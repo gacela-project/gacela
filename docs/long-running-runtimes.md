@@ -35,6 +35,8 @@ while (frankenphp_handle_request($handler)) {
 
 The next request does not walk namespaces, read `gacela.php` or merge config again. It only builds again the services it uses, from plans already in memory.
 
+Every static property in Gacela is classified one way or the other. A test resolves real modules, calls the reset, and fails if it leaves one request static set or clears one process static, so a new static has to be placed on one side when it is written.
+
 ## What this asks of your code
 
 - **A singleton declared in `gacela.php` lives for the process**, as a shared service does in any container. Do not bind anything that holds request data there. Set it in the module's Provider, which runs again for every request that uses the module.

@@ -59,6 +59,16 @@ final class CacheWarmOutputFormatterTest extends TestCase
         );
     }
 
+    public function test_membership_problems_are_listed_one_per_line(): void
+    {
+        $this->formatter->writeMembershipProblems(['A::on() has no event', 'B::on() is abstract']);
+
+        self::assertSame(
+            $this->lines('Warning: the membership cache was not written:', '  A::on() has no event', '  B::on() is abstract', ''),
+            $this->output->fetch(),
+        );
+    }
+
     public function test_modules_found_reports_the_count(): void
     {
         $this->formatter->writeModulesFound(['a', 'b', 'c']);

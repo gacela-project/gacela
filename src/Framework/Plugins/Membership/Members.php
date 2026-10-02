@@ -23,11 +23,13 @@ final class Members
      * @param list<PluginMember> $plugins
      * @param list<TagMember> $tags
      * @param list<ListenerMember> $listeners
+     * @param list<string> $problems `#[AsListener]` methods that cannot be registered; a scan with any is not cached, so each process finds them again
      */
     public function __construct(
         public readonly array $plugins = [],
         public readonly array $tags = [],
         public readonly array $listeners = [],
+        public readonly array $problems = [],
     ) {
     }
 

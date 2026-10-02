@@ -11,6 +11,7 @@ use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\PluginMember;
 use Gacela\Framework\Plugins\Membership\TagMember;
+use ReflectionClass;
 use Throwable;
 
 use function array_key_exists;
@@ -18,6 +19,7 @@ use function array_map;
 use function class_exists;
 use function count;
 use function in_array;
+use function interface_exists;
 use function is_a;
 use function sprintf;
 
@@ -56,13 +58,20 @@ final class PluginMembershipCheck implements HealthCheck
             return CheckResult::error(
                 $this->name(),
                 [sprintf('the attribute membership scan failed: %s', $throwable->getMessage())],
-                'a #[Plugin] class must load and declare its contract, and an #[AsListener] method its event: `#[Plugin(Contract::class)]`, `#[AsListener(Event::class)]`',
+                'a #[Plugin] class must load and declare its contract: `#[Plugin(Contract::class)]`',
             );
         }
 
-        $problems = [];
+        $problems = $members->problems;
         foreach ($members->plugins as $member) {
             $problem = $this->problemWith($member);
+            if ($problem !== null) {
+                $problems[] = $problem;
+            }
+        }
+
+        foreach ($members->listeners as $member) {
+            $problem = $this->listenerProblemWith($member);
             if ($problem !== null) {
                 $problems[] = $problem;
             }
@@ -80,11 +89,11 @@ final class PluginMembershipCheck implements HealthCheck
             return CheckResult::error(
                 $this->name(),
                 $problems,
-                'declare the stack in gacela.php, empty if the attributes fill it: `$config->addPluginStack(Contract::class, [])`; for a stale cache, run `bin/gacela cache:warm --attributes` or `cache:clear`',
+                'declare the stack in gacela.php, empty if the attributes fill it: `$config->addPluginStack(Contract::class, [])`; put #[AsListener] on a concrete class and name an existing event; for a stale cache, run `bin/gacela cache:warm --attributes` or `cache:clear`',
             );
         }
 
-        if ($this->cached instanceof \Gacela\Framework\Plugins\Membership\Members && $this->cached->toRows() !== $members->toRows()) {
+        if ($this->cached instanceof Members && $this->cached->toRows() !== $members->toRows()) {
             return CheckResult::warn(
                 $this->name(),
                 ['the attribute membership cache no longer matches the code, so a stack, a tag or an event is missing a member or has one it should not'],
@@ -96,7 +105,7 @@ final class PluginMembershipCheck implements HealthCheck
             return CheckResult::ok($this->name(), 'no #[Plugin], #[Tag] or #[AsListener] declarations');
         }
 
-        if (!$this->cached instanceof \Gacela\Framework\Plugins\Membership\Members && $this->isProduction()) {
+        if (!$this->cached instanceof Members && $this->isProduction()) {
             return CheckResult::warn(
                 $this->name(),
                 [sprintf('%d #[Plugin], #[Tag] or #[AsListener] declaration(s) are found by scanning the module paths on the first use of a stack, tag or module event', $members->count())],
@@ -109,7 +118,7 @@ final class PluginMembershipCheck implements HealthCheck
             count($members->plugins),
             count($members->tags),
             count($members->listeners),
-            $this->cached instanceof \Gacela\Framework\Plugins\Membership\Members ? 'read from the warmed cache' : 'found by scanning on first use',
+            $this->cached instanceof Members ? 'read from the warmed cache' : 'found by scanning on first use',
         ));
     }
 
@@ -118,7 +127,7 @@ final class PluginMembershipCheck implements HealthCheck
      */
     private function cachedClasses(): array
     {
-        if (!$this->cached instanceof \Gacela\Framework\Plugins\Membership\Members) {
+        if (!$this->cached instanceof Members) {
             return [];
         }
 
@@ -137,6 +146,24 @@ final class PluginMembershipCheck implements HealthCheck
 
         if (!is_a($member->plugin, $member->contract, true)) {
             return sprintf('%s — #[Plugin] joins the "%s" stack and does not implement it', $member->plugin, $member->contract);
+        }
+
+        return null;
+    }
+
+    /**
+     * A misspelt event still compiles, as an attribute argument, and then
+     * matches nothing; a class the container cannot build fails each dispatch.
+     */
+    private function listenerProblemWith(ListenerMember $member): ?string
+    {
+        $listener = sprintf('%s::%s()', $member->class, $member->method);
+        if (!class_exists($member->event) && !interface_exists($member->event)) {
+            return sprintf('%s — #[AsListener] listens to "%s", and no such class or interface exists', $listener, $member->event);
+        }
+
+        if (!(new ReflectionClass($member->class))->isInstantiable()) {
+            return sprintf('%s — #[AsListener] is on a class the container cannot build', $listener);
         }
 
         return null;

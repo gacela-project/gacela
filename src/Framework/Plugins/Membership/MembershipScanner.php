@@ -7,7 +7,6 @@ namespace Gacela\Framework\Plugins\Membership;
 use Gacela\Framework\Attribute\AsListener;
 use Gacela\Framework\Attribute\Plugin;
 use Gacela\Framework\Attribute\Tag;
-use LogicException;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -76,6 +75,7 @@ final class MembershipScanner
         $plugins = [];
         $tags = [];
         $listeners = [];
+        $problems = [];
 
         foreach ($this->directories as $directory) {
             if (!is_dir($directory)) {
@@ -105,7 +105,16 @@ final class MembershipScanner
                     }
 
                     foreach ($method->getAttributes(AsListener::class) as $attribute) {
-                        $listeners[] = new ListenerMember($attribute->newInstance()->event ?? $this->eventOf($method), $className, $method->getName());
+                        $listener = $class->isAbstract()
+                            // Its subclasses are not found: a file that only extends it names no attribute.
+                            ? sprintf('%s::%s() has #[AsListener] on an abstract class, which cannot be built: move it to the concrete class', $className, $method->getName())
+                            : $this->listenerOf($method, $attribute->newInstance()->event);
+
+                        if ($listener instanceof ListenerMember) {
+                            $listeners[] = $listener;
+                        } else {
+                            $problems[] = $listener;
+                        }
                     }
                 }
             }
@@ -115,25 +124,31 @@ final class MembershipScanner
         usort($tags, TagMember::compare(...));
         usort($listeners, ListenerMember::compare(...));
 
-        return new Members($plugins, $tags, $listeners);
+        return new Members($plugins, $tags, $listeners, $problems);
     }
 
     /**
-     * @return class-string
+     * @param class-string|null $event
+     *
+     * @return ListenerMember|string the member, or what is wrong with it
      */
-    private function eventOf(ReflectionMethod $method): string
+    private function listenerOf(ReflectionMethod $method, ?string $event): ListenerMember|string
     {
-        $type = ($method->getParameters()[0] ?? null)?->getType();
-        if (!$type instanceof ReflectionNamedType || $type->isBuiltin()) {
-            throw new LogicException(sprintf(
-                '%s::%s() has #[AsListener] and no event: type its first parameter with the event class, or pass it: #[AsListener(Event::class)]',
-                $method->class,
-                $method->getName(),
-            ));
+        if ($event === null) {
+            $type = ($method->getParameters()[0] ?? null)?->getType();
+            if (!$type instanceof ReflectionNamedType || $type->isBuiltin()) {
+                return sprintf(
+                    '%s::%s() has #[AsListener] and no event: type its first parameter with the event class, or pass it: #[AsListener(Event::class)]',
+                    $method->class,
+                    $method->getName(),
+                );
+            }
+
+            /** @var class-string $event */
+            $event = $type->getName();
         }
 
-        /** @var class-string */
-        return $type->getName();
+        return new ListenerMember($event, $method->class, $method->getName());
     }
 
     /**

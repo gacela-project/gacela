@@ -6,10 +6,10 @@ namespace GacelaTest\Unit\Framework\Plugins\Membership;
 
 use Countable;
 use Gacela\Framework\Plugins\Membership\ListenerMember;
+use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\MembershipScanner;
 use Gacela\Framework\Plugins\Membership\PluginMember;
-use LogicException;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
@@ -149,14 +149,38 @@ final class MembershipScannerTest extends TestCase
         self::assertSame($billing->path(), MembershipCache::forScan('/cache', '/app', ['src/Billing'], ['App'])->path());
     }
 
-    public function test_a_listener_without_an_event_names_the_method(): void
+    /**
+     * Reported, not thrown: the plugin stacks and tags of the same scan must
+     * keep working.
+     */
+    public function test_a_listener_without_an_event_is_a_problem(): void
     {
         $this->write('Untyped.php', 'final class Untyped { #[\\Gacela\\Framework\\Attribute\\AsListener] public function on(object $event): void {} }');
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Untyped::on() has #[AsListener] and no event');
+        $members = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members();
 
-        MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members();
+        self::assertSame([], $members->listeners);
+        self::assertCount(1, $members->problems);
+        self::assertStringContainsString('Untyped::on() has #[AsListener] and no event', $members->problems[0]);
+    }
+
+    public function test_a_listener_on_an_abstract_class_is_a_problem(): void
+    {
+        $this->write('AbstractListener.php', 'abstract class AbstractListener { #[\\Gacela\\Framework\\Attribute\\AsListener] public function on(\\Countable $event): void {} }');
+
+        $members = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members();
+
+        self::assertSame([], $members->listeners);
+        self::assertCount(1, $members->problems);
+        self::assertStringContainsString('AbstractListener::on() has #[AsListener] on an abstract class', $members->problems[0]);
+    }
+
+    public function test_a_scan_with_problems_is_not_cached(): void
+    {
+        $cache = MembershipCache::forScan($this->root, $this->root, [], []);
+
+        self::assertFalse($cache->write(new Members(problems: ['broken'])));
+        self::assertFileDoesNotExist($cache->path());
     }
 
     /**

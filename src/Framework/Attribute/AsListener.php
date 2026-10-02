@@ -18,13 +18,14 @@ use Attribute;
  * }
  * ```
  *
- * Without `$event`, the type of the first parameter is the event. The class is
- * resolved with `Gacela::getRequired()` when the event is dispatched, so a
- * module double replaces it. It matches by inheritance, like a listener in
+ * Without `$event`, the type of the first parameter is the event. The class,
+ * which must be concrete, is resolved like `Gacela::getRequired()` when the
+ * event is dispatched. It matches by inheritance, like a listener in
  * `gacela.php`, and runs after those.
  *
- * For the application's own events: a Gacela event is dispatched during
- * bootstrap, before the members are read, so its listeners stay in `gacela.php`.
+ * It serves the dispatcher a module gets from
+ * `getProvidedDependency(EventDispatcherInterface::class)`. Gacela's own events
+ * keep to the listeners in `gacela.php`.
  * Found by scanning the application's module paths, so only classes inside
  * `projectNamespaces` are read. `cache:warm --attributes` stores the result.
  */

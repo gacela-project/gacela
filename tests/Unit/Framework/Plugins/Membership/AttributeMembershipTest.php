@@ -10,6 +10,7 @@ use Gacela\Framework\Plugins\Membership\AttributeMembership;
 use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\PluginMember;
 use Gacela\Framework\Plugins\Membership\TagMember;
+use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -97,5 +98,16 @@ final class AttributeMembershipTest extends TestCase
         ]));
 
         self::assertSame([], AttributeMembership::classesTagged('exporters', 'second app', static fn (): Members => new Members()));
+    }
+
+    public function test_a_listener_problem_fails_the_listeners_only(): void
+    {
+        $load = static fn (): Members => new Members([new PluginMember(Countable::class, ArrayObject::class, 0)], problems: ['App\\Listener::on() has #[AsListener] and no event']);
+
+        self::assertSame([ArrayObject::class], AttributeMembership::pluginsOf(Countable::class, [], 'app', $load));
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('App\\Listener::on() has #[AsListener] and no event');
+        AttributeMembership::listeners('app', $load);
     }
 }

@@ -140,6 +140,12 @@ final class CacheWarmCommand extends Command
         $members = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces())->members();
         $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
 
+        if ($members->problems !== []) {
+            $formatter->writeMembershipProblems($members->problems);
+
+            return;
+        }
+
         if (!$cache->write($members)) {
             $formatter->writePluginMembershipWarning($cache->path());
 

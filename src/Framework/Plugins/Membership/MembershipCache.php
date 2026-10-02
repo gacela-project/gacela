@@ -74,8 +74,16 @@ final class MembershipCache
         return Members::fromRows($content);
     }
 
+    /**
+     * Refuses a scan with problems: the file carries none, so reading it would
+     * drop the broken listener without a word.
+     */
     public function write(Members $members): bool
     {
+        if ($members->problems !== []) {
+            return false;
+        }
+
         return FileCache::writeAtomically($this->path(), $members->toRows());
     }
 

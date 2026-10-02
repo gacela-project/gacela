@@ -212,4 +212,55 @@ final class PluginMembershipCheckTest extends TestCase
         self::assertSame(CheckStatus::Error, $result->status);
         self::assertSame(['App\\Gone — listed in the attribute membership cache, and no such class exists'], $result->details);
     }
+
+    public function test_a_listener_of_an_event_that_does_not_exist_is_an_error(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members([], [], [new ListenerMember('App\\OrderPlacd', ArrayObject::class, 'count')]),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['ArrayObject::count() — #[AsListener] listens to "App\\OrderPlacd", and no such class or interface exists'], $result->details);
+    }
+
+    public function test_a_listener_on_a_class_that_cannot_be_built_is_an_error(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members([], [], [new ListenerMember(Countable::class, Countable::class, 'count')]),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['Countable::count() — #[AsListener] is on a class the container cannot build'], $result->details);
+    }
+
+    public function test_a_listener_on_an_interface_event_is_fine(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members([], [], [new ListenerMember(Countable::class, ArrayObject::class, 'count')]),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+    }
+
+    public function test_the_scan_problems_are_errors(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members(problems: ['App\\Listener::on() has #[AsListener] and no event']),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['App\\Listener::on() has #[AsListener] and no event'], $result->details);
+    }
 }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\Plugins\Membership;
 
 use Closure;
+use LogicException;
 
+use function implode;
 use function in_array;
 
 /**
@@ -27,6 +29,9 @@ final class AttributeMembership
 
     /** @var list<ListenerMember> */
     private static array $listeners = [];
+
+    /** @var list<string> */
+    private static array $listenerProblems = [];
 
     /** Which application, module paths and namespaces the memo answers for. */
     private static string $scope = '';
@@ -71,11 +76,19 @@ final class AttributeMembership
     /**
      * @param Closure(): Members $load called once per scope
      *
+     * @throws LogicException naming the `#[AsListener]` methods that cannot be registered
+     *
      * @return list<ListenerMember>
      */
     public static function listeners(string $scope, Closure $load): array
     {
         self::load($scope, $load);
+
+        // Thrown here, not by the scan: a bad listener must not break the
+        // plugin stacks and tags read from the same scan.
+        if (self::$listenerProblems !== []) {
+            throw new LogicException(implode("\n", self::$listenerProblems));
+        }
 
         return self::$listeners;
     }
@@ -85,6 +98,7 @@ final class AttributeMembership
         self::$pluginsByContract = null;
         self::$classesByTag = [];
         self::$listeners = [];
+        self::$listenerProblems = [];
         self::$scope = '';
     }
 
@@ -115,6 +129,7 @@ final class AttributeMembership
         self::$pluginsByContract = $byContract;
         self::$classesByTag = $byTag;
         self::$listeners = $members->listeners;
+        self::$listenerProblems = $members->problems;
         self::$scope = $scope;
     }
 }

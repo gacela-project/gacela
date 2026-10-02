@@ -114,6 +114,19 @@ final class CacheWarmOutputFormatter
         $this->output->writeln('');
     }
 
+    /**
+     * @param list<string> $problems
+     */
+    public function writeMembershipProblems(array $problems): void
+    {
+        $this->output->writeln('<fg=yellow>Warning: the membership cache was not written:</>');
+        foreach ($problems as $problem) {
+            $this->output->writeln('  ' . $problem);
+        }
+
+        $this->output->writeln('');
+    }
+
     public function writePluginMembershipWarning(string $cacheFile): void
     {
         $this->output->writeln(sprintf('<fg=yellow>Warning: could not write the membership cache to %s.</>', $cacheFile));

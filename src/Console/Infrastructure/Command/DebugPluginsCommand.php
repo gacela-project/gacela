@@ -37,7 +37,7 @@ final class DebugPluginsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $setup = Config::getInstance()->getSetupGacela();
-        $report = MembershipReport::of($setup->getPluginStacks(), $setup->getTags(), Container::attributeMembers());
+        $report = MembershipReport::of($setup->getPluginStacks(), $setup->getTags(), Container::attributeMembers(persist: false));
 
         if ($input->getOption('json') === true) {
             $output->writeln(json_encode($report, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));

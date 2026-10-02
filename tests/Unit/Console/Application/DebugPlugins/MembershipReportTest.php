@@ -67,4 +67,23 @@ final class MembershipReportTest extends TestCase
         self::assertSame([['event' => Countable::class, 'listener' => 'ArrayObject::count()']], $report['listeners']);
         self::assertSame(['App\\Broken::on() has #[AsListener] and no event'], $report['problems']);
     }
+
+    public function test_an_id_declared_twice_is_listed_once_as_it_is_held(): void
+    {
+        $report = MembershipReport::of(
+            [Countable::class => [ArrayObject::class, ArrayObject::class]],
+            ['exporters' => [stdClass::class, stdClass::class]],
+            new Members(),
+        );
+
+        self::assertCount(1, $report['stacks']);
+        self::assertCount(1, $report['tags']);
+    }
+
+    public function test_a_numeric_tag_name_stays_a_string(): void
+    {
+        $report = MembershipReport::of([], ['2024' => [stdClass::class]], new Members());
+
+        self::assertSame('2024', $report['tags'][0]['tag']);
+    }
 }

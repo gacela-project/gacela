@@ -666,8 +666,10 @@ final class Container implements ContainerInterface
      * when there is one, otherwise by scanning the module paths.
      *
      * @internal public for `debug:plugins`, which reports what the runtime reads
+     *
+     * @param bool $persist false for a reader that must not write, like a debug command
      */
-    public static function attributeMembers(): Members
+    public static function attributeMembers(bool $persist = true): Members
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
@@ -692,7 +694,7 @@ final class Container implements ContainerInterface
 
         // The way the class-name cache fills itself: with file caching on, only
         // the first process after a deploy pays for the scan.
-        if ($fileCacheEnabled) {
+        if ($fileCacheEnabled && $persist) {
             $cache->write($members);
         }
 

@@ -6,7 +6,9 @@ namespace GacelaTest\Feature\Console\DebugPlugins;
 
 use Gacela\Console\Infrastructure\Command\DebugPluginsCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Aliased;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Bundle;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Central;
@@ -18,7 +20,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 use function array_column;
 use function dirname;
+use function is_file;
 use function json_decode;
+use function unlink;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -68,6 +72,31 @@ final class DebugPluginsCommandTest extends TestCase
         self::assertStringContainsString('Tags', $display);
         self::assertStringContainsString('#[Plugin] priority', $display);
         self::assertStringNotContainsString('Listeners by #[AsListener]', $display);
+    }
+
+    /**
+     * A debug command reads; the first process of the application writes.
+     */
+    public function test_it_writes_no_cache_file(): void
+    {
+        Gacela::bootstrap(dirname(__DIR__, 2) . '/Framework/PluginAttribute', static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(true);
+            $config->setProjectNamespaces(['GacelaTest\Feature\Framework\PluginAttribute\Checkout']);
+            $config->addPluginStack(Discount::class, []);
+        });
+        $config = Config::getInstance();
+        $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $config->getSetupGacela()->getAppModulePaths(), $config->getSetupGacela()->getProjectNamespaces());
+
+        try {
+            (new CommandTester(new DebugPluginsCommand()))->execute([]);
+
+            self::assertFileDoesNotExist($cache->path());
+        } finally {
+            if (is_file($cache->path())) {
+                unlink($cache->path());
+            }
+        }
     }
 
     /**

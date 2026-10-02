@@ -662,10 +662,12 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * The `#[Plugin]`, `#[Tag]` and `#[AsListener]` members: from the cache file when there is one, otherwise
-     * by scanning the module paths.
+     * The `#[Plugin]`, `#[Tag]` and `#[AsListener]` members: from the cache file
+     * when there is one, otherwise by scanning the module paths.
+     *
+     * @internal public for `debug:plugins`, which reports what the runtime reads
      */
-    private static function attributeMembers(): Members
+    public static function attributeMembers(): Members
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
@@ -676,7 +678,7 @@ final class Container implements ContainerInterface
         // off, as in development, a new or renamed `#[Plugin]` class is seen
         // on the next request without clearing anything.
         $members = $fileCacheEnabled ? $cache->read() : null;
-        if ($members instanceof \Gacela\Framework\Plugins\Membership\Members) {
+        if ($members instanceof Members) {
             return $members;
         }
 

@@ -17,12 +17,13 @@ return [
 ];
 ```
 
-That alone gives you four things:
+That alone gives you five things:
 
 1. **Gacela bootstrapped when the application boots** — with `base_path()` as the application root, honouring `gacela.php`. Every boot bootstraps again, so an application rebooted inside one process (package tests do it constantly) runs on its own configuration rather than the previous boot's. Note that Octane boots each worker once and reuses it: a request-scoped Laravel service listed in `external_services` stays whatever the worker's first boot captured.
 2. **Laravel services reachable from Gacela** — the ones you list, and only those.
 3. **Gacela's console commands in `artisan`**, under a `gacela:` prefix.
 4. **`artisan optimize` warms Gacela's caches too**, so a deploy has one optimize step instead of two. `optimize:clear` clears them again.
+5. **Octane-ready**: after each request Octane ends (`RequestTerminated`), the bridge calls `Gacela::resetRequestState()`, so the next request starts without the first one's services and keeps the warm caches. Nothing to configure, and no dependency on Octane.
 
 Plus `#[Inject]` on Laravel-resolved services, described at the bottom.
 

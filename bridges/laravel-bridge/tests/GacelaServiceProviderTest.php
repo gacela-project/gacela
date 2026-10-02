@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\LaravelBridge;
 
+use ArrayObject;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\LaravelBridge\Configuration;
@@ -210,6 +211,25 @@ final class GacelaServiceProviderTest extends LaravelBridgeTestCase
 
         self::assertFalse($this->artisan($app)->has('gacela:make:module'));
         self::assertArrayNotHasKey('gacela', ServiceProvider::$optimizeCommands);
+    }
+
+    /**
+     * Octane serves the next request from the same application: the bridge
+     * drops what the first one built when Octane says it ended.
+     */
+    public function test_the_end_of_an_octane_request_drops_gacelas_request_state(): void
+    {
+        $app = new TestApplication();
+        $app->boot();
+
+        $first = Gacela::get(ArrayObject::class);
+        self::assertSame($first, Gacela::get(ArrayObject::class));
+
+        /** @var Dispatcher $events */
+        $events = $app->make('events');
+        $events->dispatch(GacelaServiceProvider::OCTANE_REQUEST_TERMINATED);
+
+        self::assertNotSame($first, Gacela::get(ArrayObject::class));
     }
 
     public function test_disabling_the_bridge_registers_nothing(): void

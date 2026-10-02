@@ -10,6 +10,7 @@ use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\GacelaBootstrapper;
 use Gacela\SymfonyBridge\GacelaCacheWarmer;
 use Gacela\SymfonyBridge\GacelaCommands;
+use Gacela\SymfonyBridge\GacelaRequestStateResetter;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -43,6 +44,8 @@ final class GacelaExtension extends Extension
 
     public const CONTAINER_ID = 'gacela.container';
 
+    public const REQUEST_STATE_RESETTER_ID = 'gacela.request_state_resetter';
+
     /**
      * @param array<array-key, mixed> $configs
      */
@@ -58,6 +61,7 @@ final class GacelaExtension extends Extension
         $this->registerBootstrapper($container, $config);
         $this->registerCacheWarmer($container);
         $this->registerGacelaContainer($container);
+        $this->registerRequestStateResetter($container);
 
         if ($config['register_commands']) {
             $this->registerCommands($container, $config);
@@ -117,6 +121,20 @@ final class GacelaExtension extends Extension
         $definition->setFactory([Gacela::class, 'container']);
 
         $container->setDefinition(self::CONTAINER_ID, $definition);
+    }
+
+    /**
+     * Tagged `kernel.reset`, which Symfony's services resetter calls between
+     * requests. Public, because the resetter skips a service nothing has built
+     * yet, so the bundle builds it on boot.
+     */
+    private function registerRequestStateResetter(ContainerBuilder $container): void
+    {
+        $definition = new Definition(GacelaRequestStateResetter::class);
+        $definition->addTag('kernel.reset', ['method' => 'reset']);
+        $definition->setPublic(true);
+
+        $container->setDefinition(self::REQUEST_STATE_RESETTER_ID, $definition);
     }
 
     /**

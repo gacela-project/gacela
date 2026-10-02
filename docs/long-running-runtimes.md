@@ -10,7 +10,9 @@ use Gacela\Framework\Gacela;
 Gacela::resetRequestState();
 ```
 
-Call it after each request, from the runtime's hook. With FrankenPHP's worker loop:
+The Symfony bundle and the Laravel bridge call it for you: the bundle from Symfony's `kernel.reset` (FrankenPHP worker mode, RoadRunner, Messenger workers), the bridge after each Octane `RequestTerminated`.
+
+Without a bridge, call it after each request from the runtime's hook. With FrankenPHP's worker loop:
 
 ```php
 Gacela::bootstrap(__DIR__);

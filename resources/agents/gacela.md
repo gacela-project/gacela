@@ -26,7 +26,7 @@ vendor/bin/gacela make:file App/Billing Config       # add a pillar later
 1. **Cross a module boundary only through its Facade.** Never `use` another module's Factory, domain class or repository. If you need something the Facade does not offer, add a Facade method in that module.
 2. **Facade methods delegate.** A Facade method calls `$this->getFactory()->create...()->...` and nothing more. Logic lives in the module's domain classes.
 3. **Build services in the Factory.** No `new` of a collaborator inside a domain class or a Facade.
-4. **Get another module's Facade in a Factory** through the Provider: declare it with `#[Provides]`, read it with `getProvidedDependency()`.
+4. **Get another module's Facade in a Factory** through the Provider: declare it with `#[Provides(CustomerFacade::class)]`, read it with `getProvidedDependency(CustomerFacade::class)`. The class name as the key is typed, so no `@var` above the call.
 5. **Get a pillar outside the pillars** (a Controller, a Command) with `ServiceResolverAwareTrait` and `#[ServiceMap]`, not with a `@method` docblock.
 6. **Read configuration in the module's Config**, through its typed getters (`getString()`, `getInt()`, ...). Expose intention-revealing methods; do not pass raw arrays around.
 7. **Register infrastructure in `gacela.php`**, not inside modules: `addBinding()` for an interface, `addPluginStack()` for several implementations of one interface, `addHandlerRegistry()` for lookup by key, `tag()` for an untyped group. A class can also join a declared plugin stack with `#[Plugin(Contract::class)]`, or a tag with `#[Tag('name')]`, and a public method can listen to a module event with `#[AsListener]`.
@@ -36,7 +36,7 @@ Which way to get a dependency, case by case: `docs/getting-a-dependency.md`.
 ```php
 final class BillingProvider extends AbstractProvider
 {
-    #[Provides(BillingFactory::CUSTOMER_FACADE)]
+    #[Provides(CustomerFacade::class)]
     public function customerFacade(): CustomerFacade
     {
         return new CustomerFacade();
@@ -45,11 +45,9 @@ final class BillingProvider extends AbstractProvider
 
 final class BillingFactory extends AbstractFactory
 {
-    public const CUSTOMER_FACADE = 'CUSTOMER_FACADE';
-
     public function createInvoiceIssuer(): InvoiceIssuer
     {
-        return new InvoiceIssuer($this->getProvidedDependency(self::CUSTOMER_FACADE));
+        return new InvoiceIssuer($this->getProvidedDependency(CustomerFacade::class));
     }
 }
 ```

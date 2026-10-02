@@ -20,6 +20,7 @@ use Gacela\Framework\Exception\PluginStackException;
 use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\Plugins\PluginStack;
 use LogicException;
+use Throwable;
 
 use function array_map;
 use function is_callable;
@@ -143,7 +144,7 @@ abstract class AbstractFactory
         $stack = $this->getContainer()->get($contract);
 
         if (!$stack instanceof PluginStack) {
-            throw PluginStackException::notDeclared($contract);
+            throw PluginStackException::notDeclared($contract, $this->attributePluginsOf($contract));
         }
 
         /** @var PluginStack<TPlugin> $stack */
@@ -180,6 +181,31 @@ abstract class AbstractFactory
     protected function make(string $className, array $params = []): object
     {
         return $this->getContainer()->make($className, $params);
+    }
+
+    /**
+     * Read only once the stack is known to be missing, so a declared stack never
+     * pays for it. A scan that fails here must not replace the message it was
+     * asked to improve.
+     *
+     * @return list<string>
+     */
+    private function attributePluginsOf(string $contract): array
+    {
+        try {
+            $plugins = Container::attributeMembers()->plugins;
+        } catch (Throwable) {
+            return [];
+        }
+
+        $classes = [];
+        foreach ($plugins as $member) {
+            if ($member->contract === $contract) {
+                $classes[] = $member->plugin;
+            }
+        }
+
+        return $classes;
     }
 
     private function getContainer(): Container

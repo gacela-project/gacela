@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Framework\PluginAttribute;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Exception\PluginStackException;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
@@ -21,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function is_file;
+use function sprintf;
 use function unlink;
 
 /**
@@ -103,6 +105,34 @@ final class FeatureTest extends TestCase
         (new CheckoutFacade())->discountNames();
 
         self::assertFileDoesNotExist(MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces())->path());
+    }
+
+    /**
+     * Attribute members only join a declared stack, so forgetting the
+     * declaration is the usual way to get here: the error names them.
+     */
+    public function test_an_undeclared_stack_names_the_classes_waiting_for_it(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+            $config->setProjectNamespaces([__NAMESPACE__ . '\Checkout']);
+        });
+
+        $this->expectException(PluginStackException::class);
+        $this->expectExceptionMessage(sprintf(
+            'No plugin stack is declared for "%s", and #[Plugin(%s::class)] only joins a declared one: %s, %s, %s, %s, %s. Declare the stack in gacela.php, empty if the attributes fill it: addPluginStack(%s::class, []).',
+            Discount::class,
+            Discount::class,
+            Loyalty::class,
+            Aliased::class,
+            Bundle::class,
+            Central::class,
+            Coupon::class,
+            Discount::class,
+        ));
+
+        (new CheckoutFacade())->discountNames();
     }
 
     /**

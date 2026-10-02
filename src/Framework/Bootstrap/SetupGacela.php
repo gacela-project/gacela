@@ -589,8 +589,18 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function canCreateEventDispatcher(): bool
     {
-        return ($this->properties->areEventListenersEnabled ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED)
-            && $this->hasEventListeners();
+        return $this->areEventListenersEnabled() && $this->hasEventListeners();
+    }
+
+    /**
+     * Whether `disableEventListeners()` was not called. With it on and nothing
+     * registered, the dispatcher still serves `#[AsListener]` methods.
+     *
+     * @internal
+     */
+    public function areEventListenersEnabled(): bool
+    {
+        return $this->properties->areEventListenersEnabled ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
     }
 
     /**

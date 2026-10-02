@@ -146,7 +146,7 @@ final class CacheWarmCommand extends Command
             return;
         }
 
-        $formatter->writePluginMembershipInfo($cache->path(), count($members->plugins), count($members->tags));
+        $formatter->writePluginMembershipInfo($cache->path(), count($members->plugins), count($members->tags), count($members->listeners));
     }
 
     private function warmAndDisplayMergedConfigCache(CacheWarmOutputFormatter $formatter): void

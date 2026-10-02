@@ -154,6 +154,28 @@ $config->registerSpecificListener(
 
 That line is the only place both modules are named, and `gacela.php` is the composition root — the one file allowed to know both sides. Resolve the facade through the locator rather than constructing it, so a test that replaces the module also replaces what the listener reaches.
 
+**Or on the method that reacts.** `#[AsListener]` registers a public method without a line in `gacela.php`:
+
+```php
+use App\Billing\Event\InvoiceIssued;
+use Gacela\Framework\Attribute\AsListener;
+
+final class NotificationFacade extends AbstractFacade
+{
+    #[AsListener]
+    public function onInvoiceIssued(InvoiceIssued $event): void
+    {
+        $this->getFactory()->createInvoiceMailer()->send($event);
+    }
+}
+```
+
+The first parameter's type is the event; `#[AsListener(InvoiceIssued::class)]` names it instead. The class is resolved with `Gacela::getRequired()` on each event, as in the closure above, so a module double replaces it. It matches by inheritance and runs after the listeners registered in `gacela.php`.
+
+It serves the events a module dispatches through `getProvidedDependency(EventDispatcherInterface::class)`. Gacela's own events, and anything dispatched through `Config::getEventDispatcher()`, keep to the listeners in `gacela.php`: the framework's dispatch sites never ask for the attribute listeners, so a resolution costs what it did. `disableEventListeners()` turns them off too.
+
+Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`. They are read on the first event a module asks about, once per process, from the same file and with the same caching rules as [`#[Plugin]`](getting-a-dependency.md#typed--every-implementation-of-one-interface). `debug:events` lists the listeners in `gacela.php` only.
+
 What this buys, and what it costs:
 
 - **The publisher names nobody.** `debug:graph --check --rules` draws no edge from Billing to Notification and the analysers' cross-module rules see nothing to complain about, because there is no import to see. A second reaction is another registration and no change to Billing.

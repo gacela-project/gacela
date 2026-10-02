@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\Provider\ProviderNotFoundException;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Container\Locator;
+use Gacela\Framework\Event\Dispatcher\ApplicationEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Event\Provider\ProviderRegisteredEvent;
 use Gacela\Framework\Exception\PluginStackException;
+use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\Plugins\PluginStack;
+use LogicException;
+
+use function array_map;
+use function is_callable;
+use function sprintf;
 
 /**
  * @template TConfig of AbstractConfig = AbstractConfig
@@ -246,8 +255,39 @@ abstract class AbstractFactory
 
         $scope->set(
             EventDispatcherInterface::class,
-            $scope->factory(static fn (): EventDispatcherInterface => EventDispatcherProvider::get()),
+            $scope->factory(fn (): EventDispatcherInterface => $this->withAttributeListeners(EventDispatcherProvider::get())),
         );
+    }
+
+    /**
+     * Unless `disableEventListeners()` turned listening off. The class is
+     * resolved on each event the way `Gacela::getRequired()` resolves it, from
+     * the same application container, so a module double replaces it and
+     * `Gacela::resetRequestState()` drops it.
+     */
+    private function withAttributeListeners(EventDispatcherInterface $dispatcher): EventDispatcherInterface
+    {
+        $appContainer = $this->appContainer();
+
+        $setup = Config::getInstance()->getSetupGacela();
+        if ($setup instanceof SetupGacela && !$setup->areEventListenersEnabled()) {
+            return $dispatcher;
+        }
+
+        return new ApplicationEventDispatcher($dispatcher, static fn (): array => array_map(
+            static fn (ListenerMember $member): array => [
+                $member->event,
+                static function (object $event) use ($member, $appContainer): void {
+                    $listener = [Locator::getRequiredSingleton($member->class, $appContainer), $member->method];
+                    if (!is_callable($listener)) {
+                        throw new LogicException(sprintf('%s::%s() is listed as an #[AsListener] and is no public method: after renaming one, run `bin/gacela cache:clear`', $member->class, $member->method));
+                    }
+
+                    $listener($event);
+                },
+            ],
+            Container::attributeListeners(),
+        ));
     }
 
     /**

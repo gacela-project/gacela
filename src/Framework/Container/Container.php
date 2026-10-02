@@ -24,6 +24,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 use Gacela\Framework\Plugins\LazyPluginStack;
 use Gacela\Framework\Plugins\Membership\AttributeMembership;
+use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\MembershipScanner;
@@ -648,7 +649,19 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * The `#[Plugin]` and `#[Tag]` members: from the cache file when there is one, otherwise
+     * The `#[AsListener]` members of the bootstrapped application.
+     *
+     * @internal read by the dispatcher on the first application event
+     *
+     * @return list<ListenerMember>
+     */
+    public static function attributeListeners(): array
+    {
+        return AttributeMembership::listeners(self::membershipScope(), self::attributeMembers(...));
+    }
+
+    /**
+     * The `#[Plugin]`, `#[Tag]` and `#[AsListener]` members: from the cache file when there is one, otherwise
      * by scanning the module paths.
      */
     private static function attributeMembers(): Members

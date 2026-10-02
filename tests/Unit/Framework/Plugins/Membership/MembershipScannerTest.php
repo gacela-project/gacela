@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Plugins\Membership;
 
 use Countable;
+use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\MembershipScanner;
 use Gacela\Framework\Plugins\Membership\PluginMember;
+use LogicException;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
@@ -147,6 +149,33 @@ final class MembershipScannerTest extends TestCase
         self::assertSame($billing->path(), MembershipCache::forScan('/cache', '/app', ['src/Billing'], ['App'])->path());
     }
 
+    public function test_a_listener_without_an_event_names_the_method(): void
+    {
+        $this->write('Untyped.php', 'final class Untyped { #[\\Gacela\\Framework\\Attribute\\AsListener] public function on(object $event): void {} }');
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Untyped::on() has #[AsListener] and no event');
+
+        MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members();
+    }
+
+    /**
+     * Read at the class that declares it, once, and not again for every
+     * class that inherits it.
+     */
+    public function test_an_inherited_listener_is_read_once(): void
+    {
+        $this->write('Base.php', 'class Base { #[\Gacela\Framework\Attribute\AsListener(\\' . Countable::class . '::class)] public function on(object $event): void {} }');
+        $this->write('Child.php', 'final class Child extends Base { #[\\Gacela\\Framework\\Attribute\\AsListener] public function onCountable(\\Countable $event): void {} }');
+
+        $listeners = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members()->listeners;
+
+        self::assertSame(
+            [[Countable::class, $this->namespace . '\\Base', 'on'], [Countable::class, $this->namespace . '\\Child', 'onCountable']],
+            array_map(static fn (ListenerMember $member): array => $member->toRow(), $listeners),
+        );
+    }
+
     /**
      * @param list<string> $paths
      * @param list<string>|null $namespaces
@@ -176,6 +205,15 @@ final class MembershipScannerTest extends TestCase
             $this->namespace,
             $sameLine ? $attribute . ' ' . $declaration : $attribute . "\n" . $declaration,
         ));
+        $this->files[] = $file;
+
+        require_once $file;
+    }
+
+    private function write(string $relativePath, string $declaration): void
+    {
+        $file = $this->root . DIRECTORY_SEPARATOR . $relativePath;
+        file_put_contents($file, sprintf("<?php\nnamespace %s;\n%s\n", $this->namespace, $declaration));
         $this->files[] = $file;
 
         require_once $file;

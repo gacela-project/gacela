@@ -9,10 +9,11 @@ use Closure;
 use function in_array;
 
 /**
- * The `#[Plugin]` and `#[Tag]` members, loaded once per process.
+ * The `#[Plugin]`, `#[Tag]` and `#[AsListener]` members, loaded once per process.
  *
- * Asked only when a declared stack is first resolved or a tag first read, so
- * an application that does neither never loads them.
+ * Asked only when a declared stack is first resolved, a tag first read or an
+ * application event first dispatched, so an application that does none of
+ * these never loads them.
  *
  * @internal
  */
@@ -23,6 +24,9 @@ final class AttributeMembership
 
     /** @var array<string, list<class-string>> */
     private static array $classesByTag = [];
+
+    /** @var list<ListenerMember> */
+    private static array $listeners = [];
 
     /** Which application, module paths and namespaces the memo answers for. */
     private static string $scope = '';
@@ -64,10 +68,23 @@ final class AttributeMembership
         return self::$classesByTag[$tag] ?? [];
     }
 
+    /**
+     * @param Closure(): Members $load called once per scope
+     *
+     * @return list<ListenerMember>
+     */
+    public static function listeners(string $scope, Closure $load): array
+    {
+        self::load($scope, $load);
+
+        return self::$listeners;
+    }
+
     public static function resetCache(): void
     {
         self::$pluginsByContract = null;
         self::$classesByTag = [];
+        self::$listeners = [];
         self::$scope = '';
     }
 
@@ -97,6 +114,7 @@ final class AttributeMembership
 
         self::$pluginsByContract = $byContract;
         self::$classesByTag = $byTag;
+        self::$listeners = $members->listeners;
         self::$scope = $scope;
     }
 }

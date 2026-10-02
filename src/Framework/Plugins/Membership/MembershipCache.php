@@ -12,8 +12,10 @@ use function serialize;
 use function sha1;
 
 /**
- * The `#[Plugin]` and `#[Tag]` members `cache:warm --attributes` found, so a warmed
+ * The `#[Plugin]`, `#[Tag]` and `#[AsListener]` members `cache:warm --attributes` found, so a warmed
  * application reads one file instead of walking its module paths.
+ *
+ * @psalm-import-type MembersRows from Members
  */
 final class MembershipCache
 {
@@ -65,7 +67,7 @@ final class MembershipCache
         /**
          * @psalm-suppress UnresolvableInclude
          *
-         * @var array{plugins: list<array{0: class-string, 1: class-string, 2: int}>, tags?: list<array{0: string, 1: class-string}>} $content
+         * @var MembersRows $content
          */
         $content = require $this->path();
 

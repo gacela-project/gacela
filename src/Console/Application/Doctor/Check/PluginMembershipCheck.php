@@ -7,6 +7,7 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
+use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\PluginMember;
 use Gacela\Framework\Plugins\Membership\TagMember;
@@ -23,7 +24,7 @@ use function sprintf;
 /**
  * The `#[Plugin]` classes: each must join a stack `gacela.php` declares, and
  * implement its contract. Outside development, scanning for them and for the
- * `#[Tag]` classes on first use is a cost `cache:warm --attributes` removes.
+ * `#[Tag]` and `#[AsListener]` members on first use is a cost `cache:warm --attributes` removes.
  */
 final class PluginMembershipCheck implements HealthCheck
 {
@@ -44,7 +45,7 @@ final class PluginMembershipCheck implements HealthCheck
 
     public function name(): string
     {
-        return 'plugin and tag attributes';
+        return 'plugin, tag and listener attributes';
     }
 
     public function run(): CheckResult
@@ -54,8 +55,8 @@ final class PluginMembershipCheck implements HealthCheck
         } catch (Throwable $throwable) {
             return CheckResult::error(
                 $this->name(),
-                [sprintf('the #[Plugin] and #[Tag] scan failed: %s', $throwable->getMessage())],
-                'a #[Plugin] class must load and declare its contract: `#[Plugin(Contract::class)]`',
+                [sprintf('the attribute membership scan failed: %s', $throwable->getMessage())],
+                'a #[Plugin] class must load and declare its contract, and an #[AsListener] method its event: `#[Plugin(Contract::class)]`, `#[AsListener(Event::class)]`',
             );
         }
 
@@ -71,7 +72,7 @@ final class PluginMembershipCheck implements HealthCheck
         // listed there and gone since fails the stack on its first use.
         foreach ($this->cachedClasses() as $class) {
             if (!class_exists($class)) {
-                $problems[] = sprintf('%s — listed in the #[Plugin] and #[Tag] cache, and no such class exists', $class);
+                $problems[] = sprintf('%s — listed in the attribute membership cache, and no such class exists', $class);
             }
         }
 
@@ -86,27 +87,28 @@ final class PluginMembershipCheck implements HealthCheck
         if ($this->cached instanceof \Gacela\Framework\Plugins\Membership\Members && $this->cached->toRows() !== $members->toRows()) {
             return CheckResult::warn(
                 $this->name(),
-                ['the #[Plugin] and #[Tag] cache no longer matches the code, so a stack or a tag is missing a member or has one it should not'],
+                ['the attribute membership cache no longer matches the code, so a stack, a tag or an event is missing a member or has one it should not'],
                 'run `bin/gacela cache:warm --attributes`, or `cache:clear` to scan again',
             );
         }
 
         if ($members->count() === 0) {
-            return CheckResult::ok($this->name(), 'no #[Plugin] or #[Tag] classes');
+            return CheckResult::ok($this->name(), 'no #[Plugin], #[Tag] or #[AsListener] declarations');
         }
 
         if (!$this->cached instanceof \Gacela\Framework\Plugins\Membership\Members && $this->isProduction()) {
             return CheckResult::warn(
                 $this->name(),
-                [sprintf('%d #[Plugin] or #[Tag] declaration(s) are found by scanning the module paths on the first use of a stack or tag', $members->count())],
+                [sprintf('%d #[Plugin], #[Tag] or #[AsListener] declaration(s) are found by scanning the module paths on the first use of a stack, tag or module event', $members->count())],
                 'run `bin/gacela cache:warm --attributes` when deploying',
             );
         }
 
         return CheckResult::ok($this->name(), sprintf(
-            '%d #[Plugin] and %d #[Tag] declaration(s), %s',
+            '%d #[Plugin], %d #[Tag] and %d #[AsListener] declaration(s), %s',
             count($members->plugins),
             count($members->tags),
+            count($members->listeners),
             $this->cached instanceof \Gacela\Framework\Plugins\Membership\Members ? 'read from the warmed cache' : 'found by scanning on first use',
         ));
     }
@@ -123,6 +125,7 @@ final class PluginMembershipCheck implements HealthCheck
         return [
             ...array_map(static fn (PluginMember $member): string => $member->plugin, $this->cached->plugins),
             ...array_map(static fn (TagMember $member): string => $member->class, $this->cached->tags),
+            ...array_map(static fn (ListenerMember $member): string => $member->class, $this->cached->listeners),
         ];
     }
 

@@ -7,6 +7,7 @@ namespace Gacela\Console\Infrastructure\Command;
 use Symfony\Component\Console\Command\Command;
 
 use function array_map;
+use function in_array;
 
 /**
  * Every command Gacela ships, listed once.
@@ -52,6 +53,13 @@ final class CommandCatalog
         DtoGenerateCommand::class,
         IdeMetaCommand::class,
         StubsPublishCommand::class,
+        AgentsInstallCommand::class,
+    ];
+
+    /** The commands that write into the project root, so are given it. */
+    private const TAKING_APP_ROOT_DIR = [
+        InitCommand::class,
+        AgentsInstallCommand::class,
     ];
 
     /**
@@ -65,9 +73,10 @@ final class CommandCatalog
     /**
      * One instance of each, with the one command that needs a value given it.
      *
-     * `InitCommand` is the only command taking a constructor argument, and that
-     * special case used to be written out in all three registries -- including
-     * the two that only wanted to read a name off it and passed `''`.
+     * `InitCommand` and `AgentsInstallCommand` write into the project root, so
+     * they are the commands taking a constructor argument. That special case
+     * used to be written out in all three registries -- including the two that
+     * only wanted to read a name off it and passed `''`.
      *
      * Constructing a command runs its `configure()`, which sets a name and
      * options and touches nothing else: no bootstrap, no filesystem. That is
@@ -79,10 +88,28 @@ final class CommandCatalog
     public static function instances(string $appRootDir): array
     {
         return array_map(
-            static fn (string $class): Command => $class === InitCommand::class
-                ? new InitCommand($appRootDir)
-                : new $class(),
+            static fn (string $class): Command => self::instance($class, $appRootDir),
             self::CLASSES,
         );
+    }
+
+    /**
+     * @param class-string<Command> $class
+     */
+    public static function instance(string $class, string $appRootDir): Command
+    {
+        return self::takesAppRootDir($class) ? new $class($appRootDir) : new $class();
+    }
+
+    /**
+     * Asked by the bridges too, which register commands their own way: a
+     * second list of these classes is how a new one got built without its
+     * argument.
+     *
+     * @param class-string<Command> $class
+     */
+    public static function takesAppRootDir(string $class): bool
+    {
+        return in_array($class, self::TAKING_APP_ROOT_DIR, true);
     }
 }

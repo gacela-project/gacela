@@ -3,6 +3,7 @@
 - [Getting started](getting-started.md) — install and build your first module
 - [Reference application](reference-app.md) — an invoicing SaaS inside this repository that uses every feature at once, and the three-layer harness that keeps it that way
 - [CLI commands](cli.md) — every `vendor/bin/gacela` command, what it is for
+- [Coding agents](coding-agents.md): point an AI coding agent at the module rules and the commands that check them
 - [Getting a dependency](getting-a-dependency.md) — one primary path per intent, and when the other paths are right
 - [Container configuration](container-configuration.md) — factories, aliases, contextual bindings
 - [Config schema](config-schema.md) — declare what the configuration must contain, and fail before a request does

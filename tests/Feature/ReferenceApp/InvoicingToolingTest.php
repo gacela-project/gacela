@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\ReferenceApp;
 
+use Gacela\Console\Infrastructure\Command\AgentsInstallCommand;
 use Gacela\Console\Infrastructure\Command\CacheClearCommand;
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Console\Infrastructure\Command\DebugConfigCommand;
@@ -41,6 +42,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function count;
+use function file_get_contents;
 use function file_put_contents;
 use function getcwd;
 use function is_dir;
@@ -563,8 +565,8 @@ final class InvoicingToolingTest extends TestCase
     }
 
     /**
-     * The four commands that write a project rather than read one, run once
-     * against a throwaway root -- which is how a project meets them.
+     * The commands that write a project rather than read one, run once against
+     * a throwaway root -- which is how a project meets them.
      */
     public function test_a_project_can_be_scaffolded_stubbed_and_described(): void
     {
@@ -579,6 +581,13 @@ final class InvoicingToolingTest extends TestCase
         self::assertSame(Command::SUCCESS, $init->getStatusCode(), $init->getDisplay());
         self::assertFileExists($appRoot . DIRECTORY_SEPARATOR . 'gacela.php');
         self::assertFileExists($appRoot . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php');
+
+        $agents = $this->execute(new AgentsInstallCommand($appRoot), []);
+        self::assertSame(Command::SUCCESS, $agents->getStatusCode(), $agents->getDisplay());
+        self::assertStringContainsString(
+            'vendor/gacela-project/gacela/resources/agents/gacela.md',
+            (string) file_get_contents($appRoot . DIRECTORY_SEPARATOR . 'AGENTS.md'),
+        );
 
         // No closure: the generated file is the configuration, which is how a
         // freshly scaffolded project is bootstrapped.

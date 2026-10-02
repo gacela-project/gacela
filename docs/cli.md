@@ -14,6 +14,7 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 | Command | What it does |
 |---|---|
 | `init` | Creates the `gacela.php` a project needs before anything else works, plus the `config/app.php` it declares. `--force` regenerates `gacela.php` and never touches your config |
+| `agents:install` | Points the project's `AGENTS.md` at the guide Gacela ships for coding agents, between markers it alone rewrites. See [coding agents](coding-agents.md) |
 | `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests` (service template only — refused on the others rather than ignored), `--short-name`, `--force` to replace files that already exist, `--dry-run` to see what it would write |
 | `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared. `--short-name`, `--force` to replace files that already exist, `--dry-run` to see what it would write |
 | `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force`, `--dry-run` |

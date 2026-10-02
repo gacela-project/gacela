@@ -53,6 +53,8 @@ final class ReferenceAppUsesEveryFeatureTest extends TestCase
         'disableEventListeners' => 'switches off the dispatcher, which would silence the listeners this application registers to demonstrate them; the two cannot both be shown in one app',
         'toTransfer' => 'marked @internal: the bootstrap hands the assembled configuration to the framework, and no application calls it',
         'defaultPhpConfig' => "a shorthand for addAppConfig('config/*.php', 'config/local.php'), which gacela.php writes out so the reader can see what it does",
+        'addConfigCacheWatch' => "this application's config is plain values in config/*.php, which the merged config cache already watches; a path to add exists only where code computes config values, such as a config class whose output is cached",
+        'enableVerifiedConfigCacheWarm' => 'for a tool whose users run cache:warm while they still edit config; this application is deployed, where a warmed cache is the trusted deploy artifact',
     ];
 
     /**

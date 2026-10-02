@@ -110,22 +110,28 @@ final class ConfigLoader
             }
         }
 
+        // Resolved the way a config path is, so both are relative to the root.
+        foreach ($this->gacelaConfigFile->getConfigCacheWatchPaths() as $watched) {
+            $paths[] = $this->pathNormalizer->normalizePathPattern(new GacelaConfigItem($watched));
+        }
+
         return $paths;
     }
 
     /**
-     * The declared config paths: a change to what is declared is a change to
-     * the merged config even when every file is untouched. Static so a cache
-     * hit can ask it without building a loader.
-     *
-     * @param list<GacelaConfigItem> $configItems
+     * The declared config paths and watched paths: a change to what is
+     * declared is a change to the merged config even when every file is
+     * untouched. Static so a cache hit can ask it without building a loader.
      */
-    public static function declarationSignatureOf(array $configItems): string
+    public static function declarationSignatureOf(GacelaConfigFileInterface $gacelaConfigFile): string
     {
-        return sha1(serialize(array_map(
-            static fn (GacelaConfigItem $item): array => [$item->path(), $item->pathLocal(), $item->reader()::class],
-            $configItems,
-        )));
+        return sha1(serialize([
+            array_map(
+                static fn (GacelaConfigItem $item): array => [$item->path(), $item->pathLocal(), $item->reader()::class],
+                $gacelaConfigFile->getConfigItems(),
+            ),
+            $gacelaConfigFile->getConfigCacheWatchPaths(),
+        ]));
     }
 
     /**

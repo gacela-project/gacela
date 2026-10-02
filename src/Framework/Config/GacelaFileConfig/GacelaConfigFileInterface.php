@@ -32,6 +32,20 @@ interface GacelaConfigFileInterface
     public function getSuffixTypes(): array;
 
     /**
+     * Paths besides the config files whose change rebuilds the merged config
+     * cache, relative to the application root.
+     *
+     * @return list<string>
+     */
+    public function getConfigCacheWatchPaths(): array;
+
+    /**
+     * Whether `cache:warm` writes a merged config cache that checks its sources
+     * on every hit, like one written on a miss, instead of a trusted one.
+     */
+    public function isWarmedConfigCacheVerified(): bool;
+
+    /**
      * Merge one GacelaConfigFile with another.
      */
     public function merge(self $other): self;

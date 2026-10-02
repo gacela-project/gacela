@@ -184,4 +184,26 @@ final class GacelaConfigFileTest extends TestCase
 
         self::assertSame(['FA', 'FB'], $merged->getSuffixTypes()['Facade']);
     }
+
+    public function test_merge_joins_the_config_cache_watch_paths(): void
+    {
+        $merged = (new GacelaConfigFile())->setConfigCacheWatchPaths(['src/A.php'])
+            ->merge((new GacelaConfigFile())->setConfigCacheWatchPaths(['src/B.php']));
+
+        self::assertSame(['src/A.php', 'src/B.php'], $merged->getConfigCacheWatchPaths());
+    }
+
+    /**
+     * Either side asking is enough: a trusted file would skip the sources the
+     * other side asked to be checked.
+     */
+    public function test_merge_keeps_a_verified_warm_either_side_asked_for(): void
+    {
+        $verified = (new GacelaConfigFile())->setWarmedConfigCacheVerified(true);
+        $trusted = new GacelaConfigFile();
+
+        self::assertTrue($verified->merge($trusted)->isWarmedConfigCacheVerified());
+        self::assertTrue($trusted->merge($verified)->isWarmedConfigCacheVerified());
+        self::assertFalse($trusted->merge(new GacelaConfigFile())->isWarmedConfigCacheVerified());
+    }
 }

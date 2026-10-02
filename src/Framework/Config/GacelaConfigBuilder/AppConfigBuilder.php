@@ -15,6 +15,11 @@ final class AppConfigBuilder
     /** @var list<GacelaConfigItem> */
     private array $configItems = [];
 
+    /** @var list<string> */
+    private array $cacheWatchPaths = [];
+
+    private bool $warmedCacheVerified = false;
+
     /**
      * @param string $path define the path where Gacela will read all the config files
      * @param string $pathLocal define the path where Gacela will read the local config file
@@ -35,6 +40,37 @@ final class AppConfigBuilder
     public function build(): array
     {
         return $this->configItems;
+    }
+
+    /**
+     * A file or directory, relative to the application root, whose change must
+     * rebuild the merged config cache although no config file changed.
+     */
+    public function watchForCache(string $path): self
+    {
+        $this->cacheWatchPaths[] = $path;
+
+        return $this;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function cacheWatchPaths(): array
+    {
+        return $this->cacheWatchPaths;
+    }
+
+    public function verifyWarmedCache(): self
+    {
+        $this->warmedCacheVerified = true;
+
+        return $this;
+    }
+
+    public function isWarmedCacheVerified(): bool
+    {
+        return $this->warmedCacheVerified;
     }
 
     /**

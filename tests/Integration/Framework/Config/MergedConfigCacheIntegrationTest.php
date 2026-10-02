@@ -241,6 +241,72 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     }
 
     /**
+     * The values can depend on code the cache does not read, such as a config
+     * class whose output is stored. Watching it rebuilds the cache when it
+     * changes, though no config file did.
+     */
+    public function test_a_watched_file_that_changes_rebuilds_the_cache(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $watched = $this->appDir . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+
+        $this->bootstrapWatching(['AppConfig.php']);
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
+        $this->replaceCachedValues($filename, ['src' => 'stale']);
+
+        $this->bootstrapWatching(['AppConfig.php']);
+        self::assertSame('stale', Config::getInstance()->get('src'), 'an untouched watched file keeps the cache');
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        $this->bootstrapWatching(['AppConfig.php']);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * A tool whose users run `cache:warm` while they still edit config asks
+     * the warm to be checked like a miss, so an edit is read without a clear.
+     */
+    public function test_a_verified_warm_reads_a_later_edit(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'warmed');
+        $this->bootstrapWatching([], verifiedWarm: true);
+        Config::getInstance()->writeMergedConfigCache();
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
+
+        $this->writeAppConfig($file, 'edited-after-warm');
+        $this->bootstrapWatching([], verifiedWarm: true);
+
+        self::assertSame('edited-after-warm', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * Stamps taken in the second of a change cannot see another change in it,
+     * so a verified warm then writes nothing, and removes what an earlier
+     * trusted warm left, rather than serve it unchecked.
+     */
+    public function test_a_verified_warm_of_a_source_touched_this_second_leaves_no_file(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'trusted');
+        $this->bootstrapApp();
+        Config::getInstance()->writeMergedConfigCache();
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
+
+        touch($file);
+        $this->bootstrapWatching([], verifiedWarm: true);
+        $filename = Config::getInstance()->writeMergedConfigCache();
+
+        self::assertFileDoesNotExist($filename);
+    }
+
+    /**
      * A worker that bootstraps again without `resetInMemoryCache()` keeps the
      * glob results of the first bootstrap. A rebuild must not read through
      * them, or it stores the old file list under fresh stamps.
@@ -472,6 +538,23 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     private function bootstrapApp(): void
     {
         $this->bootstrapWith('config/*.php', 'config/local.php');
+    }
+
+    /**
+     * @param list<string> $watched
+     */
+    private function bootstrapWatching(array $watched, bool $verifiedWarm = false): void
+    {
+        $cacheDir = $this->cacheDir;
+        Gacela::bootstrap($this->appDir, static function (GacelaConfig $config) use ($cacheDir, $watched, $verifiedWarm): void {
+            $config->setFileCache(true, $cacheDir);
+            $config->resetInMemoryCache();
+            $config->addAppConfig('config/*.php', 'config/local.php');
+            $config->addConfigCacheWatch(...$watched);
+            if ($verifiedWarm) {
+                $config->enableVerifiedConfigCacheWarm();
+            }
+        });
     }
 
     private function bootstrapWith(string $path, string $pathLocal = '', bool $resetInMemoryCache = true): void

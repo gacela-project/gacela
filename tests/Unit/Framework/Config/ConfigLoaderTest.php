@@ -362,8 +362,8 @@ final class ConfigLoaderTest extends TestCase
     public function test_the_declaration_signature_is_stable(): void
     {
         self::assertSame(
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
         );
     }
 
@@ -381,14 +381,26 @@ final class ConfigLoaderTest extends TestCase
         };
 
         $signatures = [
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('conf/*.php', 'config/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'conf/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php', $reader)]),
-            ConfigLoader::declarationSignatureOf([]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('conf/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'conf/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php', $reader)]),
+            $this->signatureOf([]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')], ['src/Config.php']),
         ];
 
-        self::assertCount(5, array_unique($signatures));
+        self::assertCount(6, array_unique($signatures));
+    }
+
+    /**
+     * @param list<GacelaConfigItem> $configItems
+     * @param list<string> $watchPaths
+     */
+    private function signatureOf(array $configItems, array $watchPaths = []): string
+    {
+        return ConfigLoader::declarationSignatureOf(
+            (new GacelaConfigFile())->setConfigItems($configItems)->setConfigCacheWatchPaths($watchPaths),
+        );
     }
 
     /**

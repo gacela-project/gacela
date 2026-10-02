@@ -17,6 +17,7 @@ use function implode;
 use function preg_match_all;
 use function sort;
 use function sprintf;
+use function substr_count;
 
 /**
  * The guide `agents:install` points a project's AGENTS.md at. An agent trusts
@@ -50,6 +51,14 @@ final class AgentGuideTest extends TestCase
 
         self::assertNotSame([], $run);
         self::assertSame([], array_values(array_diff($run, $this->shippedCommands())));
+    }
+
+    /**
+     * `docs/coding-agents.md` promises it fits beside a project's own rules.
+     */
+    public function test_the_guide_stays_under_150_lines(): void
+    {
+        self::assertLessThan(150, substr_count((string) file_get_contents(self::GUIDE), "\n"));
     }
 
     /**

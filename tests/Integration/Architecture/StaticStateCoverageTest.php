@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Architecture;
 
 use Gacela\Framework\Gacela;
+use GacelaTest\Integration\Architecture\StatefulFixture\Farewell\FarewellFacade;
 use GacelaTest\Integration\Architecture\StatefulFixture\Greeting\Infrastructure\GreetingCommand;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -14,13 +15,16 @@ use ReflectionProperty;
 use SplFileInfo;
 
 use function array_diff;
+use function array_filter;
 use function array_keys;
+use function array_values;
 use function class_exists;
 use function count;
 use function implode;
 use function interface_exists;
 use function ksort;
 use function realpath;
+use function sort;
 use function sprintf;
 use function str_ends_with;
 use function str_replace;
@@ -111,9 +115,78 @@ final class StaticStateCoverageTest extends TestCase
         'DeclaredModuleDependencyRules::$analyser' => "configuration: the module-rules check, read from the consumer's <moduleRules> element and holding the rule set parsed from the file it names",
     ];
 
+    /**
+     * Statics that hold one request's state in a long-running worker, each with
+     * what it holds. `Gacela::resetRequestState()` clears exactly these; every
+     * other static is process lifetime and survives it, which is what keeps the
+     * next request warm. See docs/long-running-runtimes.md.
+     *
+     * @var array<string,string>
+     */
+    private const array REQUEST_LIFETIME = [
+        'AbstractFacade::$factories' => "each Facade's Factory, and with it every singleton() the Factory built",
+        'AbstractFactory::$containers' => "each module's container, and what its Provider set() in it",
+        'AbstractFactory::$providerless' => 'which modules resolved without a Provider, the twin of the containers above',
+        'AbstractClassResolver::$cachedInstances' => 'the resolved Facades, Factories, Configs and Providers',
+        'Locator::$instance' => 'the locator, and every singleton Gacela::get() handed out',
+    ];
+
     protected function tearDown(): void
     {
         Gacela::resetCache();
+    }
+
+    /**
+     * Both directions: a request static the reset forgets carries one user's
+     * data into the next request, and a process static it clears makes every
+     * request pay a cold start.
+     */
+    public function test_reset_request_state_clears_exactly_the_request_lifetime_statics(): void
+    {
+        $properties = $this->discover();
+
+        $unknown = array_diff(array_keys(self::REQUEST_LIFETIME), array_keys($properties));
+        self::assertSame([], $unknown, sprintf('Declared request lifetime but no longer a static property: %s.', implode(', ', $unknown)));
+
+        $this->runWorkload();
+        // The request statics the command does not reach: a module without a
+        // Provider, and what Gacela::get() hands out.
+        (new FarewellFacade())->bye('Gacela');
+        Gacela::get(FarewellFacade::class);
+
+        $populated = [];
+        foreach ($properties as $key => $property) {
+            if (!$this->isAtDeclaredDefault($property)) {
+                $populated[$key] = true;
+            }
+        }
+
+        Gacela::resetRequestState();
+
+        $cleared = [];
+        foreach (array_keys($populated) as $key) {
+            if ($this->isAtDeclaredDefault($properties[$key])) {
+                $cleared[] = $key;
+            }
+        }
+
+        $requestPopulated = array_values(array_filter(
+            array_keys(self::REQUEST_LIFETIME),
+            static fn (string $key): bool => isset($populated[$key]),
+        ));
+        sort($cleared);
+        sort($requestPopulated);
+
+        $declared = array_keys(self::REQUEST_LIFETIME);
+        sort($declared);
+        self::assertSame($declared, $requestPopulated, 'The workload no longer reaches every request static, so a forgotten reset would pass.');
+        self::assertSame($requestPopulated, $cleared, sprintf(
+            'Gacela::resetRequestState() should clear exactly the REQUEST_LIFETIME statics.
+Cleared: %s
+Expected: %s',
+            implode(', ', $cleared),
+            implode(', ', $requestPopulated),
+        ));
     }
 
     public function test_every_static_is_cleared_by_reset_cache_or_declared_to_outlive_it(): void

@@ -29,24 +29,6 @@
     </plugins>
 
     <issueHandlers>
-        <!--
-            The suffix rule asks that a class named after a pillar extends the
-            matching base class. That is the contract for a consumer's *modules*.
-            Gacela's own framework internals reuse those words for things that
-            are not pillars: GacelaConfig is the bootstrap builder, ConfigFactory
-            builds config objects, EventDispatcherProvider is a static holder.
-
-            Scoped to src/Framework so the rule still applies to Gacela\Console,
-            which is a real Gacela module and does satisfy it. The same exemption,
-            for the same reason, is in phpstan.neon.
-        -->
-        <PluginIssue name="GacelaSuffixExtends">
-            <errorLevel type="suppress">
-                <directory name="src/Framework"/>
-                <!-- A *Laravel* service provider: the host's word, not a pillar. -->
-                <file name="bridges/laravel-bridge/src/GacelaServiceProvider.php"/>
-            </errorLevel>
-        </PluginIssue>
         <DeprecatedClass errorLevel="suppress" />
         <MoreSpecificReturnType errorLevel="suppress" />
         <LessSpecificReturnStatement errorLevel="suppress" />

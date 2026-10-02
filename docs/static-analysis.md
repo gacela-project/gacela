@@ -95,7 +95,7 @@ Renaming comes first because extending the base is only right for the module's r
 
 The pillar rules apply to **classes**. An interface, trait or enum named after a pillar is left alone: none of them can extend a class, so there would be no way to act on the report. Neither is a class that already extends something else, nor a config extender: a class whose only method besides a constructor is `__invoke(GacelaConfig $config)`, the shape `extendGacelaConfig()` takes.
 
-A Factory, Config or Provider, or a kind you declared, is only reported where the resolver would pick it up: named `{Module}{Suffix}` or just `{Suffix}`, with `{Module}` the last segment of its namespace. An `ExpressionParserFactory` in `App\Compiler\Domain\Parser` is a factory, not the `Parser` module's pillar, so it is left alone. A Facade has no such shape, since it is whatever class the caller instantiates, so every `*Facade` is checked.
+A Factory, Config or Provider, or a kind you declared, is only reported where the resolver would pick it up: named `{Module}{Suffix}` or just `{Suffix}`, with `{Module}` the last segment of its namespace, in a namespace that has a Facade (`{Module}Facade` or `Facade`, extending `AbstractFacade`) for resolution to start from. An `ExpressionParserFactory` in `App\Compiler\Domain\Parser` is a factory, not the `Parser` module's pillar, and a `LazySeqConfig` beside a `LazySeq` collection with no Facade is no module's Config, so both are left alone. A Facade has no such shape, since it is whatever class the caller instantiates, so every `*Facade` is checked.
 
 Suppressing one rule:
 

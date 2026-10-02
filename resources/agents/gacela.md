@@ -63,6 +63,8 @@ vendor/bin/gacela doctor --only-problems   # wiring, config, cache and module he
 vendor/bin/gacela debug:graph --check      # fails on a module dependency cycle
 vendor/bin/gacela list:modules --json      # every module and its pillars, machine-readable
 vendor/bin/gacela debug:module App/Billing # one module: resolved pillars, provided ids, public API
+vendor/bin/gacela debug:plugins            # plugin stacks, tags and #[AsListener] methods, with where each is declared
+vendor/bin/gacela debug:events --listened  # which events something listens to, #[AsListener] methods included
 ```
 
 Static analysis carries the rules. The project's `phpstan.neon` should include:
@@ -98,6 +100,52 @@ $this->bootstrapModule(__DIR__, BillingFacade::class, doubles: [
 
 See `docs/testing.md`.
 
+## Attributes
+
+Attributes register a class or method where it lives, with no line in `gacela.php`. They are found by scanning the module paths inside `projectNamespaces`, and `doctor` checks them.
+
+- `#[Plugin(Contract::class, priority: 10)]` on a class joins a plugin stack. The stack must still be declared in `gacela.php`, empty if the attributes fill it: `addPluginStack(Contract::class, [])`.
+- `#[Tag('name')]` on a class joins a tag. No declaration needed.
+- `#[AsListener]` on a public method of a concrete class listens to the event its first parameter types. It hears events a module dispatches through `getProvidedDependency(EventDispatcherInterface::class)`, not Gacela's own.
+- `#[Provides(Factory::ID)]` on a Provider method declares a provided dependency.
+- `#[ServiceMap(method: 'getFacade', className: BillingFacade::class)]` on a class using `ServiceResolverAwareTrait` types its pillar accessor.
+
+After adding one, check it with `vendor/bin/gacela debug:plugins` or `debug:events`.
+
+## Long-running workers
+
+Under FrankenPHP worker mode, Laravel Octane or RoadRunner, call `Gacela::resetRequestState()` after each request: it drops what the request built and keeps the warm caches. The Symfony bundle and the Laravel bridge call it for you. A service that holds request data belongs in a module's Provider, not as a singleton in `gacela.php`, which lives for the process. See `docs/long-running-runtimes.md`.
+
 ## Caches
 
 With the file cache on, a new module or a new `#[Plugin]`, `#[Tag]` or `#[AsListener]` needs `vendor/bin/gacela cache:clear`. If something you just added is not found, clear the cache before you debug.
+
+## All commands
+
+Run `vendor/bin/gacela <command> --help` for options.
+
+| Command | What it does |
+|---|---|
+| `agents:install` | Point the project's AGENTS.md at the Gacela guide for coding agents |
+| `cache:clear` | Clear all Gacela cache files |
+| `cache:warm` | Pre-resolve all module classes and warm the cache for production |
+| `debug:config` | Show the effective merged configuration |
+| `debug:container` | Display container debugging information (user bindings and plugins only) |
+| `debug:dependencies` | Show the constructor parameters of a class and their resolvability through the container |
+| `debug:events` | List every Gacela and project event, which have listeners, and which are on the hot path |
+| `debug:graph` | Show the module dependency graph (which module imports which) |
+| `debug:module` | Inspect a module: resolved gacela classes, container bindings, and dependency tree |
+| `debug:modules` | Show dependency resolvability of every Gacela module pillar (Facade, Factory, Config, Provider) |
+| `debug:plugins` | List plugin stack members, tags and #[AsListener] methods, with where each is declared |
+| `debug:provides` | Find which Provider declares an id with #[Provides] |
+| `doctor` | Run environmental & wiring health checks for the current Gacela setup |
+| `dto:generate` | Generate the immutable DTO classes declared with declareDtoSchema() |
+| `ide:meta` | Generate editor metadata for getProvidedDependency() from the #[Provides] attributes |
+| `init` | Create a gacela.php config file in the project root |
+| `list:modules` | Render all modules found |
+| `make:file` | Generate a Facade, Factory, Config, Provider |
+| `make:module` | Generate a basic module with an empty Facade, Factory, Config, Provider |
+| `migrate:service-map` | Declare every @method pillar accessor with #[ServiceMap], for 3.0 |
+| `profile:report` | Display performance profiling report |
+| `stubs:publish` | Copy the scaffolder's templates into the project, so make:module generates your house style |
+| `validate:config` | Validate Gacela configuration for errors and best practices |

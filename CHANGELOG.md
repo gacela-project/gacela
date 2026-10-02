@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
+
 ### Changed
 
 - The coding-agent guide (`resources/agents/gacela.md`) keys a provided Facade by its class name, `#[Provides(CustomerFacade::class)]` read with `getProvidedDependency(CustomerFacade::class)`, which is typed, so agents following it no longer add a `@var` above the call

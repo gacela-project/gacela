@@ -321,6 +321,29 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertSame('from-file', Config::getInstance()->get('src'));
     }
 
+    /**
+     * The code computing config values can live outside the application: a
+     * global Composer install, or a PHAR whose upgrade replaces it.
+     */
+    public function test_an_absolute_watch_path_outside_the_root_is_watched(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $watched = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-watched-' . uniqid('', true) . '.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+
+        $this->bootstrapWatching([$watched]);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        $this->bootstrapWatching([$watched]);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
     public function test_a_watched_file_created_later_rebuilds_the_cache(): void
     {
         $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';

@@ -9,10 +9,10 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 use function array_map;
 use function dirname;
-use function rtrim;
+use function preg_match;
 use function serialize;
 use function sha1;
-use function str_replace;
+use function str_contains;
 use function str_starts_with;
 use function strpbrk;
 
@@ -290,18 +290,30 @@ final class ConfigLoader
     }
 
     /**
-     * Relative to the root like a config path, glob included. An absolute path
-     * under the root, as `__DIR__ . '/src/...'` gives in `gacela.php`, is taken
-     * as it is: prefixing the root again would watch a path that never exists.
+     * A relative path is resolved against the root like a config path, glob
+     * included. An absolute one is taken as it is, wherever it is: the code
+     * that computes config values can live outside the application, in a
+     * global Composer install or inside a PHAR (`phar://...`), and its
+     * upgrade is the change to watch for.
      */
     private function watchPattern(string $watched): string
     {
-        $root = rtrim($this->pathNormalizer->normalizePathPattern(new GacelaConfigItem('')), '/');
-        if ($root !== '' && str_starts_with(str_replace('\\', '/', $watched), str_replace('\\', '/', $root) . '/')) {
+        if ($this->isAbsolute($watched)) {
             return $watched;
         }
 
         return $this->pathNormalizer->normalizePathPattern(new GacelaConfigItem($watched));
+    }
+
+    /**
+     * A unix root, a windows drive, a UNC share, or a stream wrapper.
+     */
+    private function isAbsolute(string $path): bool
+    {
+        return str_starts_with($path, '/')
+            || str_starts_with($path, '\\\\')
+            || preg_match('#^[A-Za-z]:[\\\\/]#', $path) === 1
+            || str_contains($path, '://');
     }
 
     private function nearestLiteralDirectory(string $pattern): string

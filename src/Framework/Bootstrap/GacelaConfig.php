@@ -179,7 +179,7 @@ final class GacelaConfig
      * A file, or a glob like `src/Config/*.php` that also counts files added
      * or removed. A directory only counts files added or removed directly in
      * it, not edits to them. Relative to the application root like
-     * `addAppConfig()`, or absolute under it. Checked by a cache written on a
+     * `addAppConfig()`, or absolute anywhere, `phar://` included. Checked by a cache written on a
      * miss, and by one `cache:warm` writes when
      * {@see enableVerifiedConfigCacheWarm()} is on.
      *

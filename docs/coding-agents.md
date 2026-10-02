@@ -24,7 +24,7 @@ This project is split into Gacela modules. Before changing PHP code, read `vendo
 
 ## What the guide covers
 
-[`resources/agents/gacela.md`](../resources/agents/gacela.md) is about a hundred lines, short enough to sit in an agent's context next to your own rules:
+[`resources/agents/gacela.md`](../resources/agents/gacela.md) is under 150 lines, short enough to sit in an agent's context next to your own rules:
 
 - the four pillars and how they are found by name;
 - the rules: cross a module only through its Facade, Facades delegate, Factories build, Providers supply other modules;

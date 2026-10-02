@@ -248,7 +248,7 @@ use Gacela\Framework\Attribute\Tag;
 final class PostcodeValidator implements Validator {}
 ```
 
-It reaches every module, as a `tag()` in `gacela.php` does. `tagged()` yields the ids tagged in code first; attribute members follow, by class name, and a class tagged both ways appears once. The tag needs no declaration. Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`. They are read on the first `tagged()`, `taggedByKey()` or `taggedKeys()` of any tag, once per process, from the same file and with the same caching rules as [`#[Plugin]`](#typed--every-implementation-of-one-interface) below. An application that reads no tag reads neither.
+It reaches every module, as a `tag()` in `gacela.php` does. `tagged()` yields the ids `gacela.php` tagged first, then the attribute members by class name, then what the module's own Provider tagged. A class tagged both ways appears once. The tag needs no declaration. Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`. They are read on the first `tagged()`, `taggedByKey()` or `taggedKeys()` of any tag, once per process, from the same file and with the same caching rules as [`#[Plugin]`](#typed--every-implementation-of-one-interface) below. An application that reads no tag reads neither.
 
 ### Keyed — the one implementation for this key
 

@@ -31,7 +31,7 @@ use const DIRECTORY_SEPARATOR;
  * Finds the `#[Plugin]` and `#[Tag]` classes of the application by walking its
  * module paths.
  *
- * A file is loaded only when its source mentions `Plugin` or `Tag` and declares a class
+ * A file is loaded only when its source names `Gacela\Framework\Attribute` and declares a class
  * inside `projectNamespaces`: a loose match costs one class load, never a wrong
  * member, because membership is read from the attribute itself.
  *
@@ -107,10 +107,10 @@ final class MembershipScanner
     {
         $source = (string) file_get_contents($file->getPathname());
 
-        // Loose on purpose: an aliased import (`use ...\\Plugin as Joins;`) still
-        // mentions the name, and reflection decides membership from the
-        // attribute itself.
-        if (!str_contains($source, '#[') || (!str_contains($source, 'Plugin') && !str_contains($source, 'Tag'))) {
+        // Loose on purpose: an aliased, grouped or qualified use of either
+        // attribute still names their namespace, and reflection decides
+        // membership from the attribute itself.
+        if (!str_contains($source, '#[') || !str_contains($source, 'Gacela\\Framework\\Attribute')) {
             return null;
         }
 

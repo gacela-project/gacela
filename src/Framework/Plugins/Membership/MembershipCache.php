@@ -65,7 +65,7 @@ final class MembershipCache
         /**
          * @psalm-suppress UnresolvableInclude
          *
-         * @var array{plugins: list<array{0: class-string, 1: class-string, 2: int}>, tags: list<array{0: string, 1: class-string}>} $content
+         * @var array{plugins: list<array{0: class-string, 1: class-string, 2: int}>, tags?: list<array{0: string, 1: class-string}>} $content
          */
         $content = require $this->path();
 

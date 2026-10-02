@@ -24,13 +24,14 @@ final class Members
     }
 
     /**
-     * @param array{plugins: list<array{0: class-string, 1: class-string, 2: int}>, tags: list<array{0: string, 1: class-string}>} $rows
+     * @param array{plugins: list<array{0: class-string, 1: class-string, 2: int}>, tags?: list<array{0: string, 1: class-string}>} $rows
      */
     public static function fromRows(array $rows): self
     {
         return new self(
             array_map(PluginMember::fromRow(...), $rows['plugins']),
-            array_map(TagMember::fromRow(...), $rows['tags']),
+            // A file warmed before `#[Tag]` existed has no tags.
+            array_map(TagMember::fromRow(...), $rows['tags'] ?? []),
         );
     }
 

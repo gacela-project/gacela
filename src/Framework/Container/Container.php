@@ -83,13 +83,18 @@ final class Container implements ContainerInterface
     private array $afterResolvingHooks = [];
 
     /**
-     * Only a container built from the Gacela configuration reads `#[Tag]`
-     * members: they belong to the application whose module paths were scanned.
+     * The container built from the Gacela configuration, which holds the
+     * `#[Tag]` members for itself and every scope taken from it. Null on any
+     * other container: the members belong to the application whose module
+     * paths were scanned.
+     *
+     * Held at the root, so a scope reading a tag inherits them before whatever
+     * its Provider tagged, whichever container read the tag first.
      */
-    private bool $readsAttributeTags = false;
+    private ?self $attributeTagsRoot = null;
 
     /**
-     * The tags whose `#[Tag]` members this container already holds.
+     * The tags whose `#[Tag]` members the root already holds.
      *
      * @var array<string, true>
      */
@@ -679,11 +684,18 @@ final class Container implements ContainerInterface
     /**
      * Added on the first read of a tag rather than when the container is built,
      * so an application that reads no tag never loads the members. They follow
-     * whatever was tagged in code by then; `tag()` skips an id already there.
+     * what `gacela.php` tagged; `tag()` skips an id already there.
      */
     private function joinAttributeTag(string $tag): void
     {
-        if (!$this->readsAttributeTags || isset($this->attributeTagsJoined[$tag])) {
+        $root = $this->attributeTagsRoot;
+        if ($root !== $this) {
+            $root?->joinAttributeTag($tag);
+
+            return;
+        }
+
+        if (isset($this->attributeTagsJoined[$tag])) {
             return;
         }
 
@@ -720,7 +732,7 @@ final class Container implements ContainerInterface
         $decorator = new self();
         $decorator->inner = $inner->withSelfReference($decorator);
         $decorator->afterResolvingHooks = $this->afterResolvingHooks;
-        $decorator->readsAttributeTags = $this->readsAttributeTags;
+        $decorator->attributeTagsRoot = $this->attributeTagsRoot;
 
         return $decorator;
     }
@@ -747,7 +759,7 @@ final class Container implements ContainerInterface
             $bindings,
             $containerConfig->getServicesToExtend(),
         );
-        $container->readsAttributeTags = true;
+        $container->attributeTagsRoot = $container;
 
         foreach (array_keys($bindings) as $id) {
             self::notifyBindingRegistered($id, $announce);

@@ -16,6 +16,7 @@ use GacelaTest\Feature\Framework\TagAttribute\Export\ExportFacade;
 use GacelaTest\Feature\Framework\TagAttribute\Export\Untagged;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
 use function is_file;
 use function iterator_to_array;
 use function unlink;
@@ -57,6 +58,38 @@ final class FeatureTest extends TestCase
         $this->bootstrap([]);
 
         self::assertSame(['json'], $this->namesOf(Gacela::container()->tagged('reports')));
+    }
+
+    /**
+     * A module's own `tag()` comes after the attribute members, whichever
+     * container read the tag first.
+     */
+    public function test_a_scope_tags_after_the_attribute_members_whoever_reads_first(): void
+    {
+        $this->bootstrap([Central::class]);
+        $expected = ['central', 'avro', 'csv', 'json', 'untagged'];
+
+        $readFirst = Gacela::container()->createScope();
+        $readFirst->tag(Untagged::class, 'exporters');
+        self::assertSame($expected, self::namesOf($readFirst->tagged('exporters')));
+
+        Gacela::container()->tagged('exporters');
+        $readAfterTheRoot = Gacela::container()->createScope();
+        $readAfterTheRoot->tag(Untagged::class, 'exporters');
+        self::assertSame($expected, self::namesOf($readAfterTheRoot->tagged('exporters')));
+    }
+
+    public function test_a_cache_warmed_before_tags_existed_reads_as_no_tags(): void
+    {
+        $this->bootstrap([Central::class], fileCache: true);
+        $cache = self::cache();
+        file_put_contents($cache->path(), "<?php return ['plugins' => []];");
+
+        try {
+            self::assertSame(['central'], (new ExportFacade())->exporterNames());
+        } finally {
+            unlink($cache->path());
+        }
     }
 
     public function test_a_warmed_cache_is_read_instead_of_scanning(): void

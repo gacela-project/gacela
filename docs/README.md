@@ -20,6 +20,7 @@
 - [FileCache and ScopedCache](file-cache.md) — cache arbitrary application data with atomic writes and cascading invalidation
 - [Opcache preload](opcache-preload.md) — production performance tuning
 - [Production performance](production-performance.md) — full checklist to run Gacela fast in production
+- [Long-running runtimes](long-running-runtimes.md): FrankenPHP worker mode, Octane, RoadRunner; what to reset between requests and what to keep
 - [Upgrading](../UPGRADE.md) — why to move to 2.0, and every breaking change with its replacement
 
 ## Host frameworks

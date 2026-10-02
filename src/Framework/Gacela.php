@@ -192,6 +192,28 @@ final class Gacela
     }
 
     /**
+     * Between two requests served by one long-running process (FrankenPHP
+     * worker mode, Laravel Octane, RoadRunner, Swoole), drop what a request
+     * can leave behind: the Factories and every `singleton()` they built, each
+     * module's container with what its Provider set, the resolved pillars and
+     * what `Gacela::get()` handed out.
+     *
+     * Everything derived from code and configuration is kept: resolved class
+     * names, reflection, the merged config and the containers `gacela.php`
+     * configured. So the next request does not walk namespaces or reread
+     * config, it only builds again the services it uses. A singleton declared
+     * in `gacela.php` lives for the process, as a shared service does in any
+     * container; bind anything request-bound in a Provider instead.
+     */
+    public static function resetRequestState(): void
+    {
+        AbstractFacade::resetFactories();
+        AbstractFactory::resetModuleContainers();
+        AbstractClassResolver::resetInstances();
+        Locator::resetInstance();
+    }
+
+    /**
      * Reset every singleton + in-memory cache registered by Gacela.
      *
      * Exposed publicly so test fixtures (see {@see Testing\ContainerFixture})

@@ -77,9 +77,20 @@ abstract class AbstractFactory
      */
     public static function resetCache(): void
     {
+        self::resetModuleContainers();
+        self::$appContainer = null;
+    }
+
+    /**
+     * Drops each module's container, and the services its Provider set there,
+     * while the application container `gacela.php` configured is kept.
+     *
+     * @internal see {@see \Gacela\Framework\Gacela::resetRequestState()}
+     */
+    public static function resetModuleContainers(): void
+    {
         self::$containers = [];
         self::$providerless = [];
-        self::$appContainer = null;
     }
 
     /**

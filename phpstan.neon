@@ -31,16 +31,6 @@ parameters:
         -
             identifier: instanceof.internalInterface
             path: src/Framework/Testing/GacelaTestCase.php
-        # SuffixExtendsRule asks that a class named *Facade/*Factory/*Config/*Provider
-        # extends the matching pillar base class. That is the contract for a consumer's
-        # *modules*; Gacela's own framework internals reuse those words for things that
-        # are not pillars -- GacelaConfig is the bootstrap builder, ConfigFactory builds
-        # config objects, EventDispatcherProvider is a static holder. Scoped to
-        # src/Framework so the rule still applies to Gacela\Console, which is a real
-        # Gacela module and does satisfy it.
-        -
-            identifier: gacela.suffixExtends
-            path: src/Framework/*
         # The accessor seam for a project-declared kind. The three older
         # aware-traits are each used by a pillar base class inside src/, so they
         # look used; this one is reached only from a consumer's own class, which

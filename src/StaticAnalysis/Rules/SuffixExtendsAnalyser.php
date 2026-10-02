@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\StaticAnalysis\Rules;
 
+use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
@@ -20,8 +21,11 @@ use PhpParser\Node\Stmt\ClassMethod;
 use function array_filter;
 use function array_pop;
 use function array_values;
+use function class_exists;
 use function count;
 use function explode;
+use function implode;
+use function is_subclass_of;
 use function sprintf;
 use function str_ends_with;
 
@@ -105,9 +109,10 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
     /**
      * A Factory, Config or Provider is found by name, beside the module's
      * Facade: `{Module}{Suffix}` or the bare suffix, `{Module}` being the last
-     * segment of the namespace. Any other class with the suffix is never picked
-     * up, so telling it to extend the pillar base is wrong advice. A Facade is
-     * whatever class the caller instantiates, so every `*Facade` is a candidate.
+     * segment of the namespace, in a namespace that has a Facade to start from.
+     * Any other class with the suffix is never picked up, so telling it to
+     * extend the pillar base is wrong advice. A Facade is whatever class the
+     * caller instantiates, so every `*Facade` is a candidate.
      */
     private function couldBeResolvedAsThePillar(string $className): bool
     {
@@ -119,7 +124,29 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
         $shortName = array_pop($parts);
         $module = $parts === [] ? '' : $parts[count($parts) - 1];
 
-        return $shortName === $this->suffix || $shortName === $module . $this->suffix;
+        if ($shortName !== $this->suffix && $shortName !== $module . $this->suffix) {
+            return false;
+        }
+
+        return $this->hasFacade(implode('\\', $parts), $module);
+    }
+
+    /**
+     * Resolution starts from a Facade, so a namespace without one is no module:
+     * a `LazySeqConfig` beside a `LazySeq` collection is never asked for.
+     * Read by plain reflection, as {@see \Gacela\StaticAnalysis\PublicApiSurface}
+     * reads attributes, so PHPStan and Psalm agree.
+     */
+    private function hasFacade(string $namespace, string $module): bool
+    {
+        foreach ([$module . ResolvableTypes::FACADE, ResolvableTypes::FACADE] as $shortName) {
+            $candidate = $namespace . '\\' . $shortName;
+            if (class_exists($candidate) && is_subclass_of($candidate, AbstractFacade::class)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

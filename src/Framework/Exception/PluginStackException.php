@@ -6,12 +6,28 @@ namespace Gacela\Framework\Exception;
 
 use RuntimeException;
 
+use function implode;
 use function sprintf;
 
 final class PluginStackException extends RuntimeException
 {
-    public static function notDeclared(string $contract): self
+    /**
+     * @param list<string> $attributeMembers classes carrying `#[Plugin($contract)]`, which only
+     *                                      join a declared stack: the usual reason to land here
+     */
+    public static function notDeclared(string $contract, array $attributeMembers = []): self
     {
+        if ($attributeMembers !== []) {
+            return new self(sprintf(
+                'No plugin stack is declared for "%s", and #[Plugin(%s::class)] only joins a declared one: %s. '
+                . 'Declare the stack in gacela.php, empty if the attributes fill it: addPluginStack(%s::class, []).',
+                $contract,
+                $contract,
+                implode(', ', $attributeMembers),
+                $contract,
+            ));
+        }
+
         return new self(sprintf(
             'No plugin stack is declared for "%s". Declare one in gacela.php with '
             . 'addPluginStack(%s::class, [...]).',

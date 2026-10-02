@@ -34,6 +34,8 @@ final class GacelaConfigFileAssembler
 
         return (new GacelaConfigFile())
             ->setConfigItems($configBuilder->build())
+            ->setConfigCacheWatchPaths($configBuilder->cacheWatchPaths())
+            ->setWarmedConfigCacheVerified($configBuilder->isWarmedCacheVerified())
             ->setBindings($bindingsBuilder->build())
             ->setSuffixTypes($suffixTypesBuilder->build());
     }

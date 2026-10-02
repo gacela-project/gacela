@@ -21,6 +21,11 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
     /** @var SuffixTypes */
     private array $suffixTypes = SuffixTypesBuilder::DEFAULT_SUFFIX_TYPES;
 
+    /** @var list<string> */
+    private array $configCacheWatchPaths = [];
+
+    private bool $warmedConfigCacheVerified = false;
+
     /**
      * @param list<GacelaConfigItem> $configItems
      */
@@ -78,10 +83,41 @@ final class GacelaConfigFile implements GacelaConfigFileInterface
         return $this->suffixTypes;
     }
 
+    /**
+     * @param list<string> $paths
+     */
+    public function setConfigCacheWatchPaths(array $paths): self
+    {
+        $this->configCacheWatchPaths = $paths;
+
+        return $this;
+    }
+
+    public function getConfigCacheWatchPaths(): array
+    {
+        return $this->configCacheWatchPaths;
+    }
+
+    public function setWarmedConfigCacheVerified(bool $verified): self
+    {
+        $this->warmedConfigCacheVerified = $verified;
+
+        return $this;
+    }
+
+    public function isWarmedConfigCacheVerified(): bool
+    {
+        return $this->warmedConfigCacheVerified;
+    }
+
     public function merge(GacelaConfigFileInterface $other): GacelaConfigFileInterface
     {
         $new = clone $this;
         $new->configItems = [...$this->configItems, ...$other->getConfigItems()];
+        $new->configCacheWatchPaths = [...$this->configCacheWatchPaths, ...$other->getConfigCacheWatchPaths()];
+        // Either side asking for it is enough: a trusted file would ignore the
+        // sources the other side asked to be checked.
+        $new->warmedConfigCacheVerified = $this->warmedConfigCacheVerified || $other->isWarmedConfigCacheVerified();
         $new->bindings = [...$this->bindings, ...$other->getBindings()];
         // Every kind either side declared, not the four that used to be the
         // only ones: a project-declared kind pushed in through setSuffixTypes()

@@ -9,8 +9,11 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 use function array_map;
 use function dirname;
+use function preg_match;
 use function serialize;
 use function sha1;
+use function str_contains;
+use function str_starts_with;
 use function strpbrk;
 
 final class ConfigLoader
@@ -110,22 +113,43 @@ final class ConfigLoader
             }
         }
 
+        foreach ($this->gacelaConfigFile->getConfigCacheWatchPaths() as $watched) {
+            $pattern = $this->watchPattern($watched);
+
+            // A plain path is its own stamp, empty while it is missing, so
+            // creating it counts. A glob adds the files it matches and the
+            // directory they are in, so a file that matches later counts too.
+            // Not the directory of a plain path: that is often the root, which
+            // anything writing a cache or a dotfile there would change.
+            if (strpbrk($pattern, '*?[{') === false) {
+                $paths[] = $pattern;
+                continue;
+            }
+
+            foreach ($this->pathFinder->matchingPattern($pattern) as $match) {
+                $paths[] = $match;
+            }
+
+            $paths[] = $this->nearestLiteralDirectory($pattern);
+        }
+
         return $paths;
     }
 
     /**
-     * The declared config paths: a change to what is declared is a change to
-     * the merged config even when every file is untouched. Static so a cache
-     * hit can ask it without building a loader.
-     *
-     * @param list<GacelaConfigItem> $configItems
+     * The declared config paths and watched paths: a change to what is
+     * declared is a change to the merged config even when every file is
+     * untouched. Static so a cache hit can ask it without building a loader.
      */
-    public static function declarationSignatureOf(array $configItems): string
+    public static function declarationSignatureOf(GacelaConfigFileInterface $gacelaConfigFile): string
     {
-        return sha1(serialize(array_map(
-            static fn (GacelaConfigItem $item): array => [$item->path(), $item->pathLocal(), $item->reader()::class],
-            $configItems,
-        )));
+        return sha1(serialize([
+            array_map(
+                static fn (GacelaConfigItem $item): array => [$item->path(), $item->pathLocal(), $item->reader()::class],
+                $gacelaConfigFile->getConfigItems(),
+            ),
+            $gacelaConfigFile->getConfigCacheWatchPaths(),
+        ]));
     }
 
     /**
@@ -263,6 +287,33 @@ final class ConfigLoader
         return $this->pathFinder->matchingPattern(
             $this->pathNormalizer->normalizePathPattern($configItem),
         );
+    }
+
+    /**
+     * A relative path is resolved against the root like a config path, glob
+     * included. An absolute one is taken as it is, wherever it is: the code
+     * that computes config values can live outside the application, in a
+     * global Composer install or inside a PHAR (`phar://...`), and its
+     * upgrade is the change to watch for.
+     */
+    private function watchPattern(string $watched): string
+    {
+        if ($this->isAbsolute($watched)) {
+            return $watched;
+        }
+
+        return $this->pathNormalizer->normalizePathPattern(new GacelaConfigItem($watched));
+    }
+
+    /**
+     * A unix root, a windows drive, a UNC share, or a stream wrapper.
+     */
+    private function isAbsolute(string $path): bool
+    {
+        return str_starts_with($path, '/')
+            || str_starts_with($path, '\\\\')
+            || preg_match('#^[A-Za-z]:[\\\\/]#', $path) === 1
+            || str_contains($path, '://');
     }
 
     private function nearestLiteralDirectory(string $pattern): string

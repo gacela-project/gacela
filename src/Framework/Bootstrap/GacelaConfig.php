@@ -172,6 +172,46 @@ final class GacelaConfig
     }
 
     /**
+     * Rebuild the merged config cache when these paths change, though no
+     * config file did: for values your own code computes, such as a config
+     * class whose output the cache stores.
+     *
+     * A file, or a glob like `src/Config/*.php` that also counts files added
+     * or removed. A directory only counts files added or removed directly in
+     * it, not edits to them. Relative to the application root like
+     * `addAppConfig()`, or absolute anywhere, `phar://` included. Checked by a cache written on a
+     * miss, and by one `cache:warm` writes when
+     * {@see enableVerifiedConfigCacheWarm()} is on.
+     *
+     * ```php
+     * $config->addConfigCacheWatch('src/Config/*.php');
+     * ```
+     */
+    public function addConfigCacheWatch(string ...$paths): self
+    {
+        foreach ($paths as $path) {
+            $this->appConfigBuilder->watchForCache($path);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Make `cache:warm` write a merged config cache that checks its sources on
+     * every hit, as one written on a miss does, instead of a trusted one.
+     *
+     * For a tool whose users run `cache:warm` while they still edit config:
+     * a trusted file would serve an edit stale until `cache:clear`. It costs a
+     * `stat` per source on each bootstrap.
+     */
+    public function enableVerifiedConfigCacheWarm(): self
+    {
+        $this->appConfigBuilder->verifyWarmedCache();
+
+        return $this;
+    }
+
+    /**
      * Declare a class kind this project resolves by suffix, beyond the four
      * pillars.
      *

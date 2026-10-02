@@ -59,6 +59,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `addAppConfigKeyValues()` | `add*` | conforms — plural variant, same path |
 | `addBinding()` | `add*` | conforms |
 | `addBindingIf()` | `add*` | conforms — conditional variant of `addBinding()` |
+| `addConfigCacheWatch()` | `add*` | conforms — a new intent nothing else serves: a path whose change rebuilds the merged config cache though no config file changed. `addAppConfig()` declares files to read, this one files that only invalidate |
 | `addConfigDimension()` | `add*` | conforms — a new intent nothing else serves: `APP_ENV` selects configuration and nothing else could, so a second selector had no way to exist. Ordered, and calling twice contributes twice, which is what makes `add*` the right prefix over `set*` |
 | `addExternalService()` | `add*` | conforms |
 | `addFactory()` | `add*` | conforms |
@@ -80,6 +81,7 @@ Every public method, its bucket, and its verdict. **This table is a gate**: `tes
 | `disableEventListeners()` | — | exception: `enable*`'s negative twin; the grammar deliberately has no `disable*` row because most toggles default off, and this one defaults on |
 | `dontDiscover()` | — | exception: refuses the configuration named packages declare in `composer.json`, and a refusal is not a setting. `setDontDiscover()` conforms and reads as configuring a list, which is the opposite of what the call is for — it is the security control over code an install would otherwise run at boot, and it is named after the `extra.laravel.dont-discover` key every reader already knows |
 | `enableFileCache()` | `enable*` | conforms — sugar over `setFileCache(true)` |
+| `enableVerifiedConfigCacheWarm()` | `enable*` | conforms — a toggle with no `set*` to shadow, off by default: `cache:warm` writes a merged config cache that checks its sources instead of a trusted one |
 | `extendGacelaConfig()` | `extend*` | exception in meaning: composes another configuration surface into this one rather than wrapping a registered service; predates the grammar |
 | `extendGacelaConfigs()` | `extend*` | same as `extendGacelaConfig()`, plural variant |
 | `extendProviderService()` | `extend*` | conforms — the choosing rule against `extendService()` is the one `tag()` and `Container::tag()` already use: everywhere versus there |

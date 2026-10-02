@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Config\Schema\ConfigSchema;
 use Gacela\Framework\Config\Schema\ConfigSchemaViolation;
 use Gacela\Framework\Event\Config\ConfigInitializedEvent;
@@ -330,7 +331,8 @@ final class Config implements ConfigInterface
      *           bootstraps skip globbing and parsing configuration files. The
      *           file is trusted, like any deploy artifact, until the next
      *           `cache:warm` or `cache:clear`; a cache written on a miss
-     *           instead checks its sources on every hit
+     *           instead checks its sources on every hit, and so does this one
+     *           with `enableVerifiedConfigCacheWarm()` on
      *
      * @throws ConfigException
      */
@@ -338,7 +340,23 @@ final class Config implements ConfigInterface
     {
         $cache = $this->createMergedConfigCache();
         $loader = $this->getFactory()->createConfigLoader();
-        $cache->writeTrusted($loader->loadAll());
+        $gacelaConfigFile = $this->getFactory()->createGacelaFileConfig();
+
+        if (!$gacelaConfigFile->isWarmedConfigCacheVerified()) {
+            $cache->writeTrusted($loader->loadAll());
+
+            return $cache->filename();
+        }
+
+        [$merged, $sources] = $this->loadWithSourceStamps($loader);
+        if (ConfigSourceStamps::couldMissAChange($sources, time())) {
+            // A file touched this second could change again unseen. Nothing is
+            // left, not even an older trusted file, so the next bootstrap writes
+            // it. This file only: the other regions' caches are still good.
+            FileCache::delete($cache->filename());
+        } else {
+            $cache->writeVerified($merged, ConfigLoader::declarationSignatureOf($gacelaConfigFile), $sources);
+        }
 
         return $cache->filename();
     }
@@ -491,7 +509,7 @@ final class Config implements ConfigInterface
         }
 
         $cache = $this->createMergedConfigCache();
-        $signature = fn (): string => ConfigLoader::declarationSignatureOf($this->getFactory()->createGacelaFileConfig()->getConfigItems());
+        $signature = fn (): string => ConfigLoader::declarationSignatureOf($this->getFactory()->createGacelaFileConfig());
 
         $cached = $cache->exists() ? $cache->loadIfCurrent($signature) : null;
         if ($cached !== null) {

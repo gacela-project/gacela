@@ -362,8 +362,8 @@ final class ConfigLoaderTest extends TestCase
     public function test_the_declaration_signature_is_stable(): void
     {
         self::assertSame(
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
         );
     }
 
@@ -381,14 +381,61 @@ final class ConfigLoaderTest extends TestCase
         };
 
         $signatures = [
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('conf/*.php', 'config/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'conf/local.php')]),
-            ConfigLoader::declarationSignatureOf([new GacelaConfigItem('config/*.php', 'config/local.php', $reader)]),
-            ConfigLoader::declarationSignatureOf([]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('conf/*.php', 'config/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'conf/local.php')]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php', $reader)]),
+            $this->signatureOf([]),
+            $this->signatureOf([new GacelaConfigItem('config/*.php', 'config/local.php')], ['src/Config.php']),
         ];
 
-        self::assertCount(5, array_unique($signatures));
+        self::assertCount(6, array_unique($signatures));
+    }
+
+    /**
+     * Code that computes config values can live outside the application: in a
+     * global Composer install or inside a PHAR. An absolute path, of any kind,
+     * is watched as it is; a relative one is resolved against the root, and a
+     * drive letter further in does not make it absolute.
+     */
+    public function test_an_absolute_watch_path_of_any_kind_is_taken_as_it_is(): void
+    {
+        $normalizer = $this->createStub(PathNormalizerInterface::class);
+        $normalizer->method('normalizePathPattern')->willReturnCallback(
+            static fn (GacelaConfigItem $item): string => '/root/' . $item->path(),
+        );
+        $loader = new ConfigLoader(
+            (new GacelaConfigFile())->setConfigCacheWatchPaths([
+                '/abs/A.php',
+                '\\\\server\\share\\B.php',
+                'C:\\app\\C.php',
+                'phar:///usr/local/bin/tool.phar/src/D.php',
+                'src/E.php',
+                'src/C:/F.php',
+            ]),
+            $this->createStub(PathFinderInterface::class),
+            $normalizer,
+        );
+
+        self::assertSame([
+            '/abs/A.php',
+            '\\\\server\\share\\B.php',
+            'C:\\app\\C.php',
+            'phar:///usr/local/bin/tool.phar/src/D.php',
+            '/root/src/E.php',
+            '/root/src/C:/F.php',
+        ], $loader->watchedPaths());
+    }
+
+    /**
+     * @param list<GacelaConfigItem> $configItems
+     * @param list<string> $watchPaths
+     */
+    private function signatureOf(array $configItems, array $watchPaths = []): string
+    {
+        return ConfigLoader::declarationSignatureOf(
+            (new GacelaConfigFile())->setConfigItems($configItems)->setConfigCacheWatchPaths($watchPaths),
+        );
     }
 
     /**

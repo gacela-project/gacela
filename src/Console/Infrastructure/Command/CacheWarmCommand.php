@@ -161,6 +161,8 @@ final class CacheWarmCommand extends Command
         $filename = Config::getInstance()->writeMergedConfigCache();
 
         if (!file_exists($filename)) {
+            $formatter->writeMergedConfigCacheSkipped();
+
             return;
         }
 

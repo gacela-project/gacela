@@ -241,6 +241,185 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     }
 
     /**
+     * The values can depend on code the cache does not read, such as a config
+     * class whose output is stored. Watching it rebuilds the cache when it
+     * changes, though no config file did.
+     */
+    public function test_a_watched_file_that_changes_rebuilds_the_cache(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $watched = $this->appDir . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+        touch($this->appDir, time() - 100);
+
+        $this->bootstrapWatching(['NotThere.php', 'AppConfig.php']);
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
+        $this->replaceCachedValues($filename, ['src' => 'stale']);
+
+        $this->bootstrapWatching(['NotThere.php', 'AppConfig.php']);
+        self::assertSame('stale', Config::getInstance()->get('src'), 'an untouched watched file keeps the cache');
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        $this->bootstrapWatching(['NotThere.php', 'AppConfig.php']);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * A directory's own stamp misses an edit to a file in it, so a glob names
+     * the files themselves.
+     */
+    public function test_a_watched_glob_catches_an_edit_to_a_file_it_matches(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $src = $this->appDir . DIRECTORY_SEPARATOR . 'src';
+        mkdir($src);
+        $this->createdDirs[] = $src;
+        $watched = $src . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+        touch($src, time() - 100);
+
+        $this->bootstrapWatching(['src/*.php']);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        touch($src, time() - 100);
+        $this->bootstrapWatching(['src/*.php']);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * `__DIR__ . '/AppConfig.php'` in gacela.php is already under the root:
+     * prefixing the root again would watch a path that never exists.
+     */
+    public function test_an_absolute_watch_path_under_the_root_is_taken_as_it_is(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $watched = $this->appDir . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+        touch($this->appDir, time() - 100);
+
+        $this->bootstrapWatching([$watched]);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        $this->bootstrapWatching([$watched]);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * The code computing config values can live outside the application: a
+     * global Composer install, or a PHAR whose upgrade replaces it.
+     */
+    public function test_an_absolute_watch_path_outside_the_root_is_watched(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $watched = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-watched-' . uniqid('', true) . '.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+
+        $this->bootstrapWatching([$watched]);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        $this->bootstrapWatching([$watched]);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    public function test_a_watched_file_created_later_rebuilds_the_cache(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        touch($this->appDir, time() - 100);
+
+        $this->bootstrapWatching(['AppConfig.php']);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        $watched = $this->appDir . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // new');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 50);
+        touch($this->appDir, time() - 50);
+        $this->bootstrapWatching(['AppConfig.php']);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * A tool whose users run `cache:warm` while they still edit config asks
+     * the warm to be checked like a miss, so an edit is read without a clear.
+     */
+    public function test_a_verified_warm_reads_a_later_edit(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'warmed');
+        $this->bootstrapWatching([], verifiedWarm: true);
+        Config::getInstance()->writeMergedConfigCache();
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
+
+        $this->writeAppConfig($file, 'edited-after-warm');
+        $this->bootstrapWatching([], verifiedWarm: true);
+
+        self::assertSame('edited-after-warm', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * The warm itself writes the checked file, from what is on disk now: the
+     * bootstrap before it had written one from the earlier value.
+     */
+    public function test_a_verified_warm_writes_the_current_values(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'before');
+        $this->bootstrapWatching([], verifiedWarm: true);
+        $this->writeAppConfig($file, 'after-the-edit');
+
+        $filename = Config::getInstance()->writeMergedConfigCache();
+
+        /** @var array{values: array<string, mixed>} $written */
+        $written = require $filename;
+        self::assertSame('after-the-edit', $written['values']['src']);
+    }
+
+    /**
+     * Stamps taken in the second of a change cannot see another change in it,
+     * so a verified warm then writes nothing, and removes what an earlier
+     * trusted warm left, rather than serve it unchecked.
+     */
+    public function test_a_verified_warm_of_a_source_touched_this_second_leaves_no_file(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'trusted');
+        $this->bootstrapApp();
+        Config::getInstance()->writeMergedConfigCache();
+        self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
+
+        touch($file);
+        $this->bootstrapWatching([], verifiedWarm: true);
+        $filename = Config::getInstance()->writeMergedConfigCache();
+
+        self::assertFileDoesNotExist($filename);
+    }
+
+    /**
      * A worker that bootstraps again without `resetInMemoryCache()` keeps the
      * glob results of the first bootstrap. A rebuild must not read through
      * them, or it stores the old file list under fresh stamps.
@@ -472,6 +651,23 @@ final class MergedConfigCacheIntegrationTest extends TestCase
     private function bootstrapApp(): void
     {
         $this->bootstrapWith('config/*.php', 'config/local.php');
+    }
+
+    /**
+     * @param list<string> $watched
+     */
+    private function bootstrapWatching(array $watched, bool $verifiedWarm = false): void
+    {
+        $cacheDir = $this->cacheDir;
+        Gacela::bootstrap($this->appDir, static function (GacelaConfig $config) use ($cacheDir, $watched, $verifiedWarm): void {
+            $config->setFileCache(true, $cacheDir);
+            $config->resetInMemoryCache();
+            $config->addAppConfig('config/*.php', 'config/local.php');
+            $config->addConfigCacheWatch(...$watched);
+            if ($verifiedWarm) {
+                $config->enableVerifiedConfigCacheWarm();
+            }
+        });
     }
 
     private function bootstrapWith(string $path, string $pathLocal = '', bool $resetInMemoryCache = true): void

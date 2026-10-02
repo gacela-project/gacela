@@ -5,6 +5,7 @@
 ### Added
 
 - Reading a plugin stack `gacela.php` never declared names the classes carrying `#[Plugin]` for it, which only join a declared stack, and gives the fix: `addPluginStack(Contract::class, [])`. They are read only after the stack is found missing ([#956](https://github.com/gacela-project/gacela/issues/956))
+- `GacelaConfig::addConfigCacheWatch(...$paths)` rebuilds the merged config cache when a watched file, or a file a watched glob matches, changes though no config file did, for values your code computes, such as a config class whose output is stored. `enableVerifiedConfigCacheWarm()` makes `cache:warm` write a cache that checks its sources on every hit, for a tool whose users warm while they still edit config. `cache:warm` now says when it wrote no merged config cache ([#958](https://github.com/gacela-project/gacela/issues/958))
 - Symfony bundle and Laravel bridge reset Gacela's request state between requests: the bundle through a `kernel.reset` service (FrankenPHP worker mode, RoadRunner, Messenger workers), the bridge after each Octane `RequestTerminated`. Both now require `gacela-project/gacela` `^2.5` ([#941](https://github.com/gacela-project/gacela/issues/941))
 - `debug:events` lists the `#[AsListener]` methods covering each project event, marked as such, in text and as `attributeListeners` in `--json`; `--listened` counts an event only they handle. Framework events are never matched, since their dispatch sites do not read them ([#955](https://github.com/gacela-project/gacela/issues/955))
 

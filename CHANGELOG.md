@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.6.1](https://github.com/gacela-project/gacela/compare/2.6.0...2.6.1) - 2026-10-02
+
 ### Fixed
 
 - Laravel bridge: Gacela's request state is also reset when Octane receives a request, not only when it ends one. Octane skips `RequestTerminated` when a request throws out of its gateway, which left that request's state to the next

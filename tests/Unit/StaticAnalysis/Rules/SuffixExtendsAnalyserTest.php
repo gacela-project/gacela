@@ -178,13 +178,24 @@ final class SuffixExtendsAnalyserTest extends TestCase
 
     public function test_a_resolved_pillar_named_after_its_module_is_reported(): void
     {
-        self::assertCount(1, $this->analyseAs('Factory', AbstractFactory::class, 'App\Billing\BillingFactory'));
-        self::assertCount(1, $this->analyseAs('Provider', AbstractProvider::class, 'App\Billing\BillingProvider'));
+        self::assertCount(1, $this->analyseAs('Factory', AbstractFactory::class, 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\Billing\BillingFactory'));
+        self::assertCount(1, $this->analyseAs('Provider', AbstractProvider::class, 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\Billing\BillingProvider'));
+    }
+
+    /**
+     * Resolution starts from a Facade, so a `*Config` named after a namespace
+     * with none is never asked for (phel's `LazySeq\\LazySeqConfig`). A class
+     * named like a Facade that does not extend the base does not count.
+     */
+    public function test_a_pillar_in_a_namespace_without_a_facade_is_not_checked(): void
+    {
+        self::assertSame([], $this->analyseAs('Config', AbstractConfig::class, 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\LazySeq\LazySeqConfig'));
+        self::assertSame([], $this->analyseAs('Factory', AbstractFactory::class, 'App\\Nowhere\\NowhereFactory'));
     }
 
     public function test_a_resolved_pillar_named_by_the_bare_suffix_is_reported(): void
     {
-        self::assertCount(1, $this->analyseAs('Config', AbstractConfig::class, 'App\Billing\Config'));
+        self::assertCount(1, $this->analyseAs('Config', AbstractConfig::class, 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\Billing\Config'));
     }
 
     /**
@@ -239,6 +250,6 @@ final class SuffixExtendsAnalyserTest extends TestCase
     {
         $analyser = new SuffixExtendsAnalyser('Config', AbstractConfig::class);
 
-        return $analyser->analyse($node, new FakeAnalysedClass('App\Router\RouterConfig'));
+        return $analyser->analyse($node, new FakeAnalysedClass('GacelaTest\Unit\StaticAnalysis\Rules\Fixture\Router\RouterConfig'));
     }
 }

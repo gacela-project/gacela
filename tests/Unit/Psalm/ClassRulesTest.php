@@ -84,9 +84,10 @@ final class ClassRulesTest extends TestCase
         foreach (['Facade', 'Factory', 'Provider', 'Config'] as $pillar) {
             self::assertSame(
                 ['gacela.suffixExtends'],
+                // A namespace with a Facade: only there is a pillar resolved.
                 $this->identifiersIn(
-                    '<?php final class Checkout' . $pillar . ' {}',
-                    className: 'App\Checkout\Checkout' . $pillar,
+                    '<?php final class Billing' . $pillar . ' {}',
+                    className: 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\Billing\Billing' . $pillar,
                 ),
                 $pillar . ' is a pillar and must be checked',
             );

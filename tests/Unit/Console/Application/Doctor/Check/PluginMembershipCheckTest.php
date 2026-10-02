@@ -9,6 +9,7 @@ use ArrayObject;
 use Countable;
 use Gacela\Console\Application\Doctor\Check\PluginMembershipCheck;
 use Gacela\Console\Application\Doctor\CheckStatus;
+use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\PluginMember;
 use Gacela\Framework\Plugins\Membership\TagMember;
@@ -22,7 +23,7 @@ final class PluginMembershipCheckTest extends TestCase
         $result = (new PluginMembershipCheck([], static fn (): Members => new Members(), cached: null, appEnv: 'prod'))->run();
 
         self::assertSame(CheckStatus::Ok, $result->status);
-        self::assertSame(['no #[Plugin] or #[Tag] classes'], $result->details);
+        self::assertSame(['no #[Plugin], #[Tag] or #[AsListener] declarations'], $result->details);
     }
 
     /**
@@ -72,7 +73,7 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Warn, $result->status);
-        self::assertSame(['1 #[Plugin] or #[Tag] declaration(s) are found by scanning the module paths on the first use of a stack or tag'], $result->details);
+        self::assertSame(['1 #[Plugin], #[Tag] or #[AsListener] declaration(s) are found by scanning the module paths on the first use of a stack, tag or module event'], $result->details);
         self::assertSame('run `bin/gacela cache:warm --attributes` when deploying', $result->remediation);
     }
 
@@ -86,7 +87,7 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Ok, $result->status);
-        self::assertSame(['1 #[Plugin] and 0 #[Tag] declaration(s), found by scanning on first use'], $result->details);
+        self::assertSame(['1 #[Plugin], 0 #[Tag] and 0 #[AsListener] declaration(s), found by scanning on first use'], $result->details);
     }
 
     public function test_an_unset_environment_is_not_taken_for_production(): void
@@ -111,7 +112,7 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Ok, $result->status);
-        self::assertSame(['1 #[Plugin] and 0 #[Tag] declaration(s), read from the warmed cache'], $result->details);
+        self::assertSame(['1 #[Plugin], 0 #[Tag] and 0 #[AsListener] declaration(s), read from the warmed cache'], $result->details);
     }
 
     /**
@@ -129,7 +130,7 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Error, $result->status);
-        self::assertSame(['the #[Plugin] and #[Tag] scan failed: Too few arguments to Plugin::__construct()'], $result->details);
+        self::assertSame(['the attribute membership scan failed: Too few arguments to Plugin::__construct()'], $result->details);
     }
 
     /**
@@ -146,7 +147,7 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Error, $result->status);
-        self::assertSame(['App\\RemovedSinceTheWarm — listed in the #[Plugin] and #[Tag] cache, and no such class exists'], $result->details);
+        self::assertSame(['App\\RemovedSinceTheWarm — listed in the attribute membership cache, and no such class exists'], $result->details);
     }
 
     public function test_a_cache_that_differs_from_the_code_is_a_warning(): void
@@ -172,7 +173,7 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Error, $result->status);
-        self::assertSame(['App\\RemovedSinceTheWarm — listed in the #[Plugin] and #[Tag] cache, and no such class exists'], $result->details);
+        self::assertSame(['App\\RemovedSinceTheWarm — listed in the attribute membership cache, and no such class exists'], $result->details);
     }
 
     public function test_a_tag_cache_that_differs_from_the_code_is_a_warning(): void
@@ -197,5 +198,69 @@ final class PluginMembershipCheckTest extends TestCase
         ))->run();
 
         self::assertSame(CheckStatus::Warn, $result->status);
+    }
+
+    public function test_a_cached_listener_class_that_no_longer_exists_is_an_error(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members(),
+            cached: new Members([], [], [new ListenerMember(ArrayObject::class, 'App\\Gone', 'on')]),
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['App\\Gone — listed in the attribute membership cache, and no such class exists'], $result->details);
+    }
+
+    public function test_a_listener_of_an_event_that_does_not_exist_is_an_error(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members([], [], [new ListenerMember('App\\OrderPlacd', ArrayObject::class, 'count')]),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['ArrayObject::count() — #[AsListener] listens to "App\\OrderPlacd", and no such class or interface exists'], $result->details);
+    }
+
+    public function test_a_listener_on_a_class_that_cannot_be_built_is_an_error(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members([], [], [new ListenerMember(Countable::class, Countable::class, 'count')]),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['Countable::count() — #[AsListener] is on a class the container cannot build'], $result->details);
+    }
+
+    public function test_a_listener_on_an_interface_event_is_fine(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members([], [], [new ListenerMember(Countable::class, ArrayObject::class, 'count')]),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Ok, $result->status);
+    }
+
+    public function test_the_scan_problems_are_errors(): void
+    {
+        $result = (new PluginMembershipCheck(
+            [],
+            static fn (): Members => new Members(problems: ['App\\Listener::on() has #[AsListener] and no event']),
+            cached: null,
+            appEnv: null,
+        ))->run();
+
+        self::assertSame(CheckStatus::Error, $result->status);
+        self::assertSame(['App\\Listener::on() has #[AsListener] and no event'], $result->details);
     }
 }

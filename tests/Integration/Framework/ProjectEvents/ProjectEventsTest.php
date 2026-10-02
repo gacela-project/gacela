@@ -8,8 +8,8 @@ use Closure;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Event\Dispatcher\ApplicationEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
-use Gacela\Framework\Event\Dispatcher\EventDispatcherProvider;
 use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use Gacela\Framework\Event\GacelaEventInterface;
 use Gacela\Framework\Gacela;
@@ -35,16 +35,6 @@ final class ProjectEventsTest extends TestCase
         Gacela::resetCache();
     }
 
-    public function test_a_factory_is_given_the_dispatcher_the_application_runs_with(): void
-    {
-        $this->bootstrap();
-
-        self::assertSame(
-            EventDispatcherProvider::get(),
-            (new OrderingFactory())->getEventDispatcher(),
-        );
-    }
-
     /**
      * The module's own container, which is what a Provider is handed and what
      * `getProvidedDependency()` reads. The application container deliberately
@@ -57,7 +47,8 @@ final class ProjectEventsTest extends TestCase
 
         $factory = new OrderingFactory();
 
-        self::assertSame(EventDispatcherProvider::get(), $factory->getEventDispatcher());
+        // The application's dispatcher, wrapped to add the `#[AsListener]` methods.
+        self::assertInstanceOf(ApplicationEventDispatcher::class, $factory->getEventDispatcher());
         self::assertFalse(
             Gacela::container()->provides(EventDispatcherInterface::class),
             'the application container should be about the application',

@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Gacela\Framework\Plugins\Membership;
 
 use Closure;
+use LogicException;
 
+use function implode;
 use function in_array;
 
 /**
- * The `#[Plugin]` and `#[Tag]` members, loaded once per process.
+ * The `#[Plugin]`, `#[Tag]` and `#[AsListener]` members, loaded once per process.
  *
- * Asked only when a declared stack is first resolved or a tag first read, so
- * an application that does neither never loads them.
+ * Asked only when a declared stack is first resolved, a tag first read or an
+ * application event first dispatched, so an application that does none of
+ * these never loads them.
  *
  * @internal
  */
@@ -23,6 +26,12 @@ final class AttributeMembership
 
     /** @var array<string, list<class-string>> */
     private static array $classesByTag = [];
+
+    /** @var list<ListenerMember> */
+    private static array $listeners = [];
+
+    /** @var list<string> */
+    private static array $listenerProblems = [];
 
     /** Which application, module paths and namespaces the memo answers for. */
     private static string $scope = '';
@@ -64,10 +73,32 @@ final class AttributeMembership
         return self::$classesByTag[$tag] ?? [];
     }
 
+    /**
+     * @param Closure(): Members $load called once per scope
+     *
+     * @throws LogicException naming the `#[AsListener]` methods that cannot be registered
+     *
+     * @return list<ListenerMember>
+     */
+    public static function listeners(string $scope, Closure $load): array
+    {
+        self::load($scope, $load);
+
+        // Thrown here, not by the scan: a bad listener must not break the
+        // plugin stacks and tags read from the same scan.
+        if (self::$listenerProblems !== []) {
+            throw new LogicException(implode("\n", self::$listenerProblems));
+        }
+
+        return self::$listeners;
+    }
+
     public static function resetCache(): void
     {
         self::$pluginsByContract = null;
         self::$classesByTag = [];
+        self::$listeners = [];
+        self::$listenerProblems = [];
         self::$scope = '';
     }
 
@@ -97,6 +128,8 @@ final class AttributeMembership
 
         self::$pluginsByContract = $byContract;
         self::$classesByTag = $byTag;
+        self::$listeners = $members->listeners;
+        self::$listenerProblems = $members->problems;
         self::$scope = $scope;
     }
 }

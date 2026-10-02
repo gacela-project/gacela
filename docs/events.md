@@ -154,6 +154,30 @@ $config->registerSpecificListener(
 
 That line is the only place both modules are named, and `gacela.php` is the composition root — the one file allowed to know both sides. Resolve the facade through the locator rather than constructing it, so a test that replaces the module also replaces what the listener reaches.
 
+**Or on the method that reacts.** `#[AsListener]` registers a public method without a line in `gacela.php`:
+
+```php
+use App\Billing\Event\InvoiceIssued;
+use Gacela\Framework\Attribute\AsListener;
+
+final class NotificationFacade extends AbstractFacade
+{
+    #[AsListener]
+    public function onInvoiceIssued(InvoiceIssued $event): void
+    {
+        $this->getFactory()->createInvoiceMailer()->send($event);
+    }
+}
+```
+
+The first parameter's type is the event; `#[AsListener(InvoiceIssued::class)]` names it instead. The class is resolved like `Gacela::getRequired()` on each event, as in the closure above, so a double of it in the application container replaces it. It matches by inheritance and runs after the listeners registered in `gacela.php`.
+
+It serves the events a module dispatches through `getProvidedDependency(EventDispatcherInterface::class)`. Gacela's own events, and anything dispatched through `Config::getEventDispatcher()`, keep to the listeners in `gacela.php`: the framework's dispatch sites never ask for the attribute listeners, so a resolution costs what it did. Nor does a dispatcher you bind under `EventDispatcherInterface::class` yourself: the bound one is handed out as it is. `disableEventListeners()` turns them off too.
+
+The method goes on a concrete class: a subclass that only extends an abstract one names no attribute, so it is not found. An abstract class, or a listener with no event, fails the first module event with the reason, and `doctor` reports it with a misspelt event and a class the container cannot build. Plugin stacks and tags read from the same scan keep working. In a `bootstrapModule()` test only the module under test is scanned, so a neighbour's `#[AsListener]` method, or a double of it, does not hear the event; bootstrap the application to test that.
+
+Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`. They are read on the first event a module asks about, once per process, from the same file and with the same caching rules as [`#[Plugin]`](getting-a-dependency.md#typed--every-implementation-of-one-interface). `debug:events` lists the listeners in `gacela.php` only.
+
 What this buys, and what it costs:
 
 - **The publisher names nobody.** `debug:graph --check --rules` draws no edge from Billing to Notification and the analysers' cross-module rules see nothing to complain about, because there is no import to see. A second reaction is another registration and no change to Billing.

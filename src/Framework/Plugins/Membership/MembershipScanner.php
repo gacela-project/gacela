@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Plugins\Membership;
 
+use Gacela\Framework\Attribute\AsListener;
 use Gacela\Framework\Attribute\Plugin;
 use Gacela\Framework\Attribute\Tag;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
 use SplFileInfo;
 
 use function class_exists;
@@ -19,6 +22,7 @@ use function is_dir;
 use function ltrim;
 use function preg_match;
 use function rtrim;
+use function sprintf;
 use function str_contains;
 use function str_ends_with;
 use function str_starts_with;
@@ -28,8 +32,8 @@ use function usort;
 use const DIRECTORY_SEPARATOR;
 
 /**
- * Finds the `#[Plugin]` and `#[Tag]` classes of the application by walking its
- * module paths.
+ * Finds the `#[Plugin]`, `#[Tag]` and `#[AsListener]` declarations of the
+ * application by walking its module paths.
  *
  * A file is loaded only when its source names `Gacela\Framework\Attribute` and declares a class
  * inside `projectNamespaces`: a loose match costs one class load, never a wrong
@@ -70,6 +74,8 @@ final class MembershipScanner
     {
         $plugins = [];
         $tags = [];
+        $listeners = [];
+        $problems = [];
 
         foreach ($this->directories as $directory) {
             if (!is_dir($directory)) {
@@ -91,13 +97,58 @@ final class MembershipScanner
                 foreach ($class->getAttributes(Tag::class) as $attribute) {
                     $tags[] = new TagMember($attribute->newInstance()->name, $className);
                 }
+
+                foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                    // An inherited listener is the declaring class's, read when that one is.
+                    if ($method->class !== $className) {
+                        continue;
+                    }
+
+                    foreach ($method->getAttributes(AsListener::class) as $attribute) {
+                        $listener = $class->isAbstract()
+                            // Its subclasses are not found: a file that only extends it names no attribute.
+                            ? sprintf('%s::%s() has #[AsListener] on an abstract class, which cannot be built: move it to the concrete class', $className, $method->getName())
+                            : $this->listenerOf($method, $attribute->newInstance()->event);
+
+                        if ($listener instanceof ListenerMember) {
+                            $listeners[] = $listener;
+                        } else {
+                            $problems[] = $listener;
+                        }
+                    }
+                }
             }
         }
 
         usort($plugins, PluginMember::compare(...));
         usort($tags, TagMember::compare(...));
+        usort($listeners, ListenerMember::compare(...));
 
-        return new Members($plugins, $tags);
+        return new Members($plugins, $tags, $listeners, $problems);
+    }
+
+    /**
+     * @param class-string|null $event
+     *
+     * @return ListenerMember|string the member, or what is wrong with it
+     */
+    private function listenerOf(ReflectionMethod $method, ?string $event): ListenerMember|string
+    {
+        if ($event === null) {
+            $type = ($method->getParameters()[0] ?? null)?->getType();
+            if (!$type instanceof ReflectionNamedType || $type->isBuiltin()) {
+                return sprintf(
+                    '%s::%s() has #[AsListener] and no event: type its first parameter with the event class, or pass it: #[AsListener(Event::class)]',
+                    $method->class,
+                    $method->getName(),
+                );
+            }
+
+            /** @var class-string $event */
+            $event = $type->getName();
+        }
+
+        return new ListenerMember($event, $method->class, $method->getName());
     }
 
     /**

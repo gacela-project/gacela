@@ -105,18 +105,32 @@ final class CacheWarmOutputFormatter
         $this->output->writeln('');
     }
 
-    public function writePluginMembershipInfo(string $cacheFile, int $pluginCount, int $tagCount): void
+    public function writePluginMembershipInfo(string $cacheFile, int $pluginCount, int $tagCount, int $listenerCount): void
     {
         $this->output->writeln(sprintf('<fg=cyan>Membership cache:</> %s', $cacheFile));
         $this->output->writeln(sprintf('<fg=cyan>#[Plugin] classes:</> %d', $pluginCount));
         $this->output->writeln(sprintf('<fg=cyan>#[Tag] classes:</> %d', $tagCount));
+        $this->output->writeln(sprintf('<fg=cyan>#[AsListener] methods:</> %d', $listenerCount));
+        $this->output->writeln('');
+    }
+
+    /**
+     * @param list<string> $problems
+     */
+    public function writeMembershipProblems(array $problems): void
+    {
+        $this->output->writeln('<fg=yellow>Warning: the membership cache was not written:</>');
+        foreach ($problems as $problem) {
+            $this->output->writeln('  ' . $problem);
+        }
+
         $this->output->writeln('');
     }
 
     public function writePluginMembershipWarning(string $cacheFile): void
     {
         $this->output->writeln(sprintf('<fg=yellow>Warning: could not write the membership cache to %s.</>', $cacheFile));
-        $this->output->writeln('<comment>Plugin stacks and tags will scan for #[Plugin] and #[Tag] classes on first use instead.</>');
+        $this->output->writeln('<comment>Plugin stacks, tags and module events will scan for their attributes on first use instead.</>');
         $this->output->writeln('');
     }
 

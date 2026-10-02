@@ -43,6 +43,7 @@ final class CommandCatalog
         DebugGraphCommand::class,
         DebugModuleCommand::class,
         DebugModulesCommand::class,
+        DebugPluginsCommand::class,
         DebugProvidesCommand::class,
         CacheWarmCommand::class,
         CacheClearCommand::class,

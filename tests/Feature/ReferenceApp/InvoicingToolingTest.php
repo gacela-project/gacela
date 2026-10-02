@@ -14,6 +14,7 @@ use Gacela\Console\Infrastructure\Command\DebugEventsCommand;
 use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
 use Gacela\Console\Infrastructure\Command\DebugModuleCommand;
 use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
+use Gacela\Console\Infrastructure\Command\DebugPluginsCommand;
 use Gacela\Console\Infrastructure\Command\DebugProvidesCommand;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
 use Gacela\Console\Infrastructure\Command\DtoGenerateCommand;
@@ -299,6 +300,22 @@ final class InvoicingToolingTest extends TestCase
         self::assertStringContainsString('BILLING_CUSTOMER_FACADE', $display);
         self::assertStringContainsString('NOTIFICATION_DELIVERY_LOG', $display);
         self::assertStringContainsString('PAYMENT_PROCESSOR', $display);
+    }
+
+    /**
+     * `ArchiveChannel` joins the notification stack by attribute alone, so
+     * nothing in `gacela.php` names it.
+     */
+    public function test_debug_plugins_shows_the_member_that_joins_by_attribute(): void
+    {
+        ReferenceApp::bootstrap();
+
+        $tester = $this->execute(new DebugPluginsCommand(), []);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $display);
+        self::assertStringContainsString('ArchiveChannel', $display);
+        self::assertStringContainsString('#[Plugin] priority', $display);
     }
 
     public function test_debug_module_describes_the_billing_module(): void

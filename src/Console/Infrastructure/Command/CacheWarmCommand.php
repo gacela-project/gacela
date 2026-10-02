@@ -137,16 +137,16 @@ final class CacheWarmCommand extends Command
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
-        $plugins = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces())->plugins();
+        $members = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces())->members();
         $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
 
-        if (!$cache->write($plugins)) {
+        if (!$cache->write($members)) {
             $formatter->writePluginMembershipWarning($cache->path());
 
             return;
         }
 
-        $formatter->writePluginMembershipInfo($cache->path(), count($plugins));
+        $formatter->writePluginMembershipInfo($cache->path(), count($members->plugins), count($members->tags));
     }
 
     private function warmAndDisplayMergedConfigCache(CacheWarmOutputFormatter $formatter): void

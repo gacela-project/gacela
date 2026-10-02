@@ -105,17 +105,18 @@ final class CacheWarmOutputFormatter
         $this->output->writeln('');
     }
 
-    public function writePluginMembershipInfo(string $cacheFile, int $pluginCount): void
+    public function writePluginMembershipInfo(string $cacheFile, int $pluginCount, int $tagCount): void
     {
-        $this->output->writeln(sprintf('<fg=cyan>Plugin membership cache:</> %s', $cacheFile));
+        $this->output->writeln(sprintf('<fg=cyan>Membership cache:</> %s', $cacheFile));
         $this->output->writeln(sprintf('<fg=cyan>#[Plugin] classes:</> %d', $pluginCount));
+        $this->output->writeln(sprintf('<fg=cyan>#[Tag] classes:</> %d', $tagCount));
         $this->output->writeln('');
     }
 
     public function writePluginMembershipWarning(string $cacheFile): void
     {
-        $this->output->writeln(sprintf('<fg=yellow>Warning: could not write the plugin membership cache to %s.</>', $cacheFile));
-        $this->output->writeln('<comment>Plugin stacks will scan for #[Plugin] classes on first use instead.</>');
+        $this->output->writeln(sprintf('<fg=yellow>Warning: could not write the membership cache to %s.</>', $cacheFile));
+        $this->output->writeln('<comment>Plugin stacks and tags will scan for #[Plugin] and #[Tag] classes on first use instead.</>');
         $this->output->writeln('');
     }
 

@@ -67,7 +67,7 @@ final class MembershipScannerTest extends TestCase
     {
         $this->declare('Plain.php', 'Plain');
 
-        $members = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->plugins();
+        $members = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members()->plugins;
 
         self::assertSame(0, $members[0]->priority);
         self::assertSame(Countable::class, $members[0]->contract);
@@ -77,7 +77,7 @@ final class MembershipScannerTest extends TestCase
     {
         $this->declare('Elsewhere.php', 'Elsewhere');
 
-        self::assertSame([], MembershipScanner::forPaths([$this->root], $this->root, ['App'])->plugins());
+        self::assertSame([], MembershipScanner::forPaths([$this->root], $this->root, ['App'])->members()->plugins);
     }
 
     /**
@@ -155,7 +155,7 @@ final class MembershipScannerTest extends TestCase
      */
     private function foundIn(array $paths, ?array $namespaces = null, ?string $root = null): array
     {
-        $members = MembershipScanner::forPaths($paths, $root ?? $this->root, $namespaces ?? [$this->namespace])->plugins();
+        $members = MembershipScanner::forPaths($paths, $root ?? $this->root, $namespaces ?? [$this->namespace])->members()->plugins;
 
         return array_map(fn (PluginMember $member): string => substr($member->plugin, strlen($this->namespace) + 1), $members);
     }

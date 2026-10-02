@@ -224,7 +224,7 @@ final class CacheWarmCommandTest extends TestCase
         $this->command->execute(['--attributes' => true]);
 
         self::assertFileExists($this->membershipCacheFile);
-        self::assertStringContainsString('Plugin membership cache:', $this->command->getDisplay());
+        self::assertStringContainsString('Membership cache:', $this->command->getDisplay());
     }
 
     public function test_cache_warm_without_attributes_leaves_the_plugin_membership_alone(): void

@@ -29,7 +29,7 @@ vendor/bin/gacela make:file App/Billing Config       # add a pillar later
 4. **Get another module's Facade in a Factory** through the Provider: declare it with `#[Provides]`, read it with `getProvidedDependency()`.
 5. **Get a pillar outside the pillars** (a Controller, a Command) with `ServiceResolverAwareTrait` and `#[ServiceMap]`, not with a `@method` docblock.
 6. **Read configuration in the module's Config**, through its typed getters (`getString()`, `getInt()`, ...). Expose intention-revealing methods; do not pass raw arrays around.
-7. **Register infrastructure in `gacela.php`**, not inside modules: `addBinding()` for an interface, `addPluginStack()` for several implementations of one interface, `addHandlerRegistry()` for lookup by key, `tag()` for an untyped group. A class can also join a declared plugin stack with `#[Plugin(Contract::class)]`.
+7. **Register infrastructure in `gacela.php`**, not inside modules: `addBinding()` for an interface, `addPluginStack()` for several implementations of one interface, `addHandlerRegistry()` for lookup by key, `tag()` for an untyped group. A class can also join a declared plugin stack with `#[Plugin(Contract::class)]`, or a tag with `#[Tag('name')]`.
 
 Which way to get a dependency, case by case: `docs/getting-a-dependency.md`.
 
@@ -100,4 +100,4 @@ See `docs/testing.md`.
 
 ## Caches
 
-With the file cache on, a new module or a new `#[Plugin]` class needs `vendor/bin/gacela cache:clear`. If something you just added is not found, clear the cache before you debug.
+With the file cache on, a new module or a new `#[Plugin]` or `#[Tag]` class needs `vendor/bin/gacela cache:clear`. If something you just added is not found, clear the cache before you debug.

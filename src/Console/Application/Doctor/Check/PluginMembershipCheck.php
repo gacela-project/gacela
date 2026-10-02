@@ -7,7 +7,9 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
+use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\PluginMember;
+use Gacela\Framework\Plugins\Membership\TagMember;
 use Throwable;
 
 use function array_key_exists;
@@ -20,8 +22,8 @@ use function sprintf;
 
 /**
  * The `#[Plugin]` classes: each must join a stack `gacela.php` declares, and
- * implement its contract. Outside development, scanning for them on first use
- * is a cost `cache:warm --attributes` removes.
+ * implement its contract. Outside development, scanning for them and for the
+ * `#[Tag]` classes on first use is a cost `cache:warm --attributes` removes.
  */
 final class PluginMembershipCheck implements HealthCheck
 {
@@ -29,20 +31,20 @@ final class PluginMembershipCheck implements HealthCheck
 
     /**
      * @param array<string, list<string>> $pluginStacks
-     * @param Closure(): list<PluginMember> $scan run by the check, so a class that cannot be read fails it, not the whole `doctor`
-     * @param list<PluginMember>|null $cached what the application reads instead of scanning; null when it scans
+     * @param Closure(): Members $scan run by the check, so a class that cannot be read fails it, not the whole `doctor`
+     * @param Members|null $cached what the application reads instead of scanning; null when it scans
      */
     public function __construct(
         private readonly array $pluginStacks,
         private readonly Closure $scan,
-        private readonly ?array $cached,
+        private readonly ?Members $cached,
         private readonly ?string $appEnv,
     ) {
     }
 
     public function name(): string
     {
-        return 'plugin attributes';
+        return 'plugin and tag attributes';
     }
 
     public function run(): CheckResult
@@ -52,13 +54,13 @@ final class PluginMembershipCheck implements HealthCheck
         } catch (Throwable $throwable) {
             return CheckResult::error(
                 $this->name(),
-                [sprintf('the #[Plugin] scan failed: %s', $throwable->getMessage())],
+                [sprintf('the #[Plugin] and #[Tag] scan failed: %s', $throwable->getMessage())],
                 'a #[Plugin] class must load and declare its contract: `#[Plugin(Contract::class)]`',
             );
         }
 
         $problems = [];
-        foreach ($members as $member) {
+        foreach ($members->plugins as $member) {
             $problem = $this->problemWith($member);
             if ($problem !== null) {
                 $problems[] = $problem;
@@ -67,9 +69,9 @@ final class PluginMembershipCheck implements HealthCheck
 
         // What the application really reads, when it reads the cache: a class
         // listed there and gone since fails the stack on its first use.
-        foreach ($this->cached ?? [] as $member) {
-            if (!class_exists($member->plugin)) {
-                $problems[] = sprintf('%s — listed in the #[Plugin] cache, and no such class exists', $member->plugin);
+        foreach ($this->cachedClasses() as $class) {
+            if (!class_exists($class)) {
+                $problems[] = sprintf('%s — listed in the #[Plugin] and #[Tag] cache, and no such class exists', $class);
             }
         }
 
@@ -81,41 +83,47 @@ final class PluginMembershipCheck implements HealthCheck
             );
         }
 
-        if ($this->cached !== null && $this->rowsOf($this->cached) !== $this->rowsOf($members)) {
+        if ($this->cached instanceof \Gacela\Framework\Plugins\Membership\Members && $this->cached->toRows() !== $members->toRows()) {
             return CheckResult::warn(
                 $this->name(),
-                ['the #[Plugin] cache no longer matches the code, so a stack is missing a member or has one it should not'],
+                ['the #[Plugin] and #[Tag] cache no longer matches the code, so a stack or a tag is missing a member or has one it should not'],
                 'run `bin/gacela cache:warm --attributes`, or `cache:clear` to scan again',
             );
         }
 
-        if ($members === []) {
-            return CheckResult::ok($this->name(), 'no #[Plugin] classes');
+        if ($members->count() === 0) {
+            return CheckResult::ok($this->name(), 'no #[Plugin] or #[Tag] classes');
         }
 
-        if ($this->cached === null && $this->isProduction()) {
+        if (!$this->cached instanceof \Gacela\Framework\Plugins\Membership\Members && $this->isProduction()) {
             return CheckResult::warn(
                 $this->name(),
-                [sprintf('%d #[Plugin] class(es) are found by scanning the module paths on the first use of a stack', count($members))],
+                [sprintf('%d #[Plugin] or #[Tag] declaration(s) are found by scanning the module paths on the first use of a stack or tag', $members->count())],
                 'run `bin/gacela cache:warm --attributes` when deploying',
             );
         }
 
         return CheckResult::ok($this->name(), sprintf(
-            '%d #[Plugin] class(es) join declared stacks, %s',
-            count($members),
-            $this->cached !== null ? 'read from the warmed cache' : 'found by scanning on first use',
+            '%d #[Plugin] and %d #[Tag] declaration(s), %s',
+            count($members->plugins),
+            count($members->tags),
+            $this->cached instanceof \Gacela\Framework\Plugins\Membership\Members ? 'read from the warmed cache' : 'found by scanning on first use',
         ));
     }
 
     /**
-     * @param list<PluginMember> $members
-     *
-     * @return list<array{0: class-string, 1: class-string, 2: int}>
+     * @return list<class-string>
      */
-    private function rowsOf(array $members): array
+    private function cachedClasses(): array
     {
-        return array_map(static fn (PluginMember $member): array => $member->toRow(), $members);
+        if (!$this->cached instanceof \Gacela\Framework\Plugins\Membership\Members) {
+            return [];
+        }
+
+        return [
+            ...array_map(static fn (PluginMember $member): string => $member->plugin, $this->cached->plugins),
+            ...array_map(static fn (TagMember $member): string => $member->class, $this->cached->tags),
+        ];
     }
 
     private function problemWith(PluginMember $member): ?string

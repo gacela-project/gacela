@@ -7,6 +7,7 @@ namespace GacelaTest\Feature\Framework\PluginAttribute;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\PluginMember;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Aliased;
@@ -51,7 +52,7 @@ final class FeatureTest extends TestCase
     {
         $this->bootstrap([Central::class], fileCache: true);
         $cache = MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces());
-        $cache->write([new PluginMember(Discount::class, Coupon::class, 0), new PluginMember(Discount::class, Bundle::class, 0)]);
+        $cache->write(new Members([new PluginMember(Discount::class, Coupon::class, 0), new PluginMember(Discount::class, Bundle::class, 0)]));
 
         try {
             self::assertSame(['central', 'coupon', 'bundle'], (new CheckoutFacade())->discountNames());
@@ -68,7 +69,7 @@ final class FeatureTest extends TestCase
     {
         $this->bootstrap([Central::class]);
         $cache = MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces());
-        $cache->write([new PluginMember(Discount::class, Coupon::class, 0)]);
+        $cache->write(new Members([new PluginMember(Discount::class, Coupon::class, 0)]));
 
         try {
             self::assertSame(['central', 'loyalty', 'aliased', 'bundle', 'coupon'], (new CheckoutFacade())->discountNames());
@@ -87,7 +88,7 @@ final class FeatureTest extends TestCase
             (new CheckoutFacade())->discountNames();
             self::assertSame(
                 [Loyalty::class, Aliased::class, Bundle::class, Central::class, Coupon::class],
-                array_map(static fn (PluginMember $member): string => $member->plugin, $cache->read() ?? []),
+                array_map(static fn (PluginMember $member): string => $member->plugin, $cache->read()?->plugins ?? []),
             );
         } finally {
             if (is_file($cache->path())) {

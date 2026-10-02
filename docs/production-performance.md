@@ -26,7 +26,7 @@ The path is resolved **relative to the app root**, and a leading `/` does not es
 Populate the on-disk caches ahead of the first request so no user pays the cold resolution cost:
 
 ```bash
-vendor/bin/gacela cache:warm      # add --attributes to pre-scan #[ServiceMap] and #[Plugin]
+vendor/bin/gacela cache:warm      # add --attributes to pre-scan #[ServiceMap], #[Plugin] and #[Tag]
 vendor/bin/gacela cache:clear     # drop the caches (run before re-warming)
 ```
 

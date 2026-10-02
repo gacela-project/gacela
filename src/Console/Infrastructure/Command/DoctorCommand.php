@@ -43,6 +43,7 @@ use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthCheckRegistry;
+use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\MembershipScanner;
 use Gacela\Framework\ServiceResolver\ServiceMap;
@@ -289,11 +290,11 @@ final class DoctorCommand extends Command
             new PluginStackCheck($config->getSetupGacela()->getPluginStacks()),
             new PluginMembershipCheck(
                 $config->getSetupGacela()->getPluginStacks(),
-                static fn (): array => MembershipScanner::forPaths(
+                static fn (): Members => MembershipScanner::forPaths(
                     $config->getSetupGacela()->getAppModulePaths(),
                     $config->getAppRootDir(),
                     $config->getSetupGacela()->getProjectNamespaces(),
-                )->plugins(),
+                )->members(),
                 // The runtime reads the file only with file caching on.
                 (new GacelaFileCache($config))->isEnabled()
                     ? MembershipCache::forScan(

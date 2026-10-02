@@ -239,6 +239,17 @@ public function provideModuleDependencies(Container $container): void
 
 That contribution stays in **that module's** container. Two modules tagging under the same label do not collide and do not see each other's additions; each sees the app-wide set plus its own. That is deliberate — module containers are separate, and a tag is not a back channel between modules.
 
+**Joining by attribute.** A class can join a tag without being named in `gacela.php`:
+
+```php
+use Gacela\Framework\Attribute\Tag;
+
+#[Tag('validators')]
+final class PostcodeValidator implements Validator {}
+```
+
+It reaches every module, as a `tag()` in `gacela.php` does. `tagged()` yields the ids `gacela.php` tagged first, then the attribute members by class name, then what the module's own Provider tagged. A class tagged both ways appears once. The tag needs no declaration. Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`. They are read on the first `tagged()`, `taggedByKey()` or `taggedKeys()` of any tag, once per process, from the same file and with the same caching rules as [`#[Plugin]`](#typed--every-implementation-of-one-interface) below. An application that reads no tag reads neither.
+
 ### Keyed — the one implementation for this key
 
 A command bus, a message dispatcher, anything that picks a handler by a business key. Use `addHandlerRegistry()`:

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Plugins\Membership;
 
 use Gacela\Framework\Attribute\Plugin;
+use Gacela\Framework\Attribute\Tag;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -27,9 +28,10 @@ use function usort;
 use const DIRECTORY_SEPARATOR;
 
 /**
- * Finds the `#[Plugin]` classes of the application by walking its module paths.
+ * Finds the `#[Plugin]` and `#[Tag]` classes of the application by walking its
+ * module paths.
  *
- * A file is loaded only when its source mentions `Plugin` and declares a class
+ * A file is loaded only when its source names `Gacela\Framework\Attribute` and declares a class
  * inside `projectNamespaces`: a loose match costs one class load, never a wrong
  * member, because membership is read from the attribute itself.
  *
@@ -64,12 +66,10 @@ final class MembershipScanner
         return new self($directories, $projectNamespaces);
     }
 
-    /**
-     * @return list<PluginMember>
-     */
-    public function plugins(): array
+    public function members(): Members
     {
-        $members = [];
+        $plugins = [];
+        $tags = [];
 
         foreach ($this->directories as $directory) {
             if (!is_dir($directory)) {
@@ -82,16 +82,22 @@ final class MembershipScanner
                     continue;
                 }
 
-                foreach ((new ReflectionClass($className))->getAttributes(Plugin::class) as $attribute) {
+                $class = new ReflectionClass($className);
+                foreach ($class->getAttributes(Plugin::class) as $attribute) {
                     $plugin = $attribute->newInstance();
-                    $members[] = new PluginMember($plugin->contract, $className, $plugin->priority);
+                    $plugins[] = new PluginMember($plugin->contract, $className, $plugin->priority);
+                }
+
+                foreach ($class->getAttributes(Tag::class) as $attribute) {
+                    $tags[] = new TagMember($attribute->newInstance()->name, $className);
                 }
             }
         }
 
-        usort($members, PluginMember::compare(...));
+        usort($plugins, PluginMember::compare(...));
+        usort($tags, TagMember::compare(...));
 
-        return $members;
+        return new Members($plugins, $tags);
     }
 
     /**
@@ -101,10 +107,10 @@ final class MembershipScanner
     {
         $source = (string) file_get_contents($file->getPathname());
 
-        // Loose on purpose: an aliased import (`use ...\\Plugin as Joins;`) still
-        // mentions the name, and reflection decides membership from the
-        // attribute itself.
-        if (!str_contains($source, '#[') || !str_contains($source, 'Plugin')) {
+        // Loose on purpose: an aliased, grouped or qualified use of either
+        // attribute still names their namespace, and reflection decides
+        // membership from the attribute itself.
+        if (!str_contains($source, '#[') || !str_contains($source, 'Gacela\\Framework\\Attribute')) {
             return null;
         }
 

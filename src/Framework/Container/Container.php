@@ -23,10 +23,10 @@ use Gacela\Framework\Event\Container\ServiceResolvedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
 use Gacela\Framework\Plugins\LazyPluginStack;
+use Gacela\Framework\Plugins\Membership\AttributeMembership;
+use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\MembershipScanner;
-use Gacela\Framework\Plugins\Membership\PluginMember;
-use Gacela\Framework\Plugins\Membership\PluginMembership;
 use Throwable;
 
 use function array_keys;
@@ -81,6 +81,24 @@ final class Container implements ContainerInterface
      * @var AfterResolvingMap
      */
     private array $afterResolvingHooks = [];
+
+    /**
+     * The container built from the Gacela configuration, which holds the
+     * `#[Tag]` members for itself and every scope taken from it. Null on any
+     * other container: the members belong to the application whose module
+     * paths were scanned.
+     *
+     * Held at the root, so a scope reading a tag inherits them before whatever
+     * its Provider tagged, whichever container read the tag first.
+     */
+    private ?self $attributeTagsRoot = null;
+
+    /**
+     * The tags whose `#[Tag]` members the root already holds.
+     *
+     * @var array<string, true>
+     */
+    private array $attributeTagsJoined = [];
 
     /**
      * @param BindingsMap $bindings
@@ -404,6 +422,8 @@ final class Container implements ContainerInterface
      */
     public function tagged(string $tag): iterable
     {
+        $this->joinAttributeTag($tag);
+
         return $this->inner->tagged($tag);
     }
 
@@ -414,6 +434,8 @@ final class Container implements ContainerInterface
      */
     public function taggedByKey(string $tag, string $key): mixed
     {
+        $this->joinAttributeTag($tag);
+
         return $this->inner->taggedByKey($tag, $key);
     }
 
@@ -425,6 +447,8 @@ final class Container implements ContainerInterface
      */
     public function taggedKeys(string $tag): array
     {
+        $this->joinAttributeTag($tag);
+
         return $this->inner->taggedKeys($tag);
     }
 
@@ -624,12 +648,10 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * The `#[Plugin]` members: from the cache file when there is one, otherwise
+     * The `#[Plugin]` and `#[Tag]` members: from the cache file when there is one, otherwise
      * by scanning the module paths.
-     *
-     * @return list<PluginMember>
      */
-    private static function pluginMembers(): array
+    private static function attributeMembers(): Members
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
@@ -640,7 +662,7 @@ final class Container implements ContainerInterface
         // off, as in development, a new or renamed `#[Plugin]` class is seen
         // on the next request without clearing anything.
         $members = $fileCacheEnabled ? $cache->read() : null;
-        if ($members !== null) {
+        if ($members instanceof \Gacela\Framework\Plugins\Membership\Members) {
             return $members;
         }
 
@@ -648,7 +670,7 @@ final class Container implements ContainerInterface
             $setup->getAppModulePaths(),
             $config->getAppRootDir(),
             $setup->getProjectNamespaces(),
-        )->plugins();
+        )->members();
 
         // The way the class-name cache fills itself: with file caching on, only
         // the first process after a deploy pays for the scan.
@@ -657,6 +679,32 @@ final class Container implements ContainerInterface
         }
 
         return $members;
+    }
+
+    /**
+     * Added on the first read of a tag rather than when the container is built,
+     * so an application that reads no tag never loads the members. They follow
+     * what `gacela.php` tagged; `tag()` skips an id already there.
+     */
+    private function joinAttributeTag(string $tag): void
+    {
+        $root = $this->attributeTagsRoot;
+        if ($root !== $this) {
+            $root?->joinAttributeTag($tag);
+
+            return;
+        }
+
+        if (isset($this->attributeTagsJoined[$tag])) {
+            return;
+        }
+
+        $classes = AttributeMembership::classesTagged($tag, self::membershipScope(), self::attributeMembers(...));
+        if ($classes !== []) {
+            $this->inner->tag($classes, $tag);
+        }
+
+        $this->attributeTagsJoined[$tag] = true;
     }
 
     /**
@@ -684,6 +732,7 @@ final class Container implements ContainerInterface
         $decorator = new self();
         $decorator->inner = $inner->withSelfReference($decorator);
         $decorator->afterResolvingHooks = $this->afterResolvingHooks;
+        $decorator->attributeTagsRoot = $this->attributeTagsRoot;
 
         return $decorator;
     }
@@ -710,6 +759,7 @@ final class Container implements ContainerInterface
             $bindings,
             $containerConfig->getServicesToExtend(),
         );
+        $container->attributeTagsRoot = $container;
 
         foreach (array_keys($bindings) as $id) {
             self::notifyBindingRegistered($id, $announce);
@@ -751,7 +801,7 @@ final class Container implements ContainerInterface
                 $contract,
                 static fn (): LazyPluginStack => new LazyPluginStack(
                     $contract,
-                    PluginMembership::withMembers($contract, $plugins, self::membershipScope(), self::pluginMembers(...)),
+                    AttributeMembership::pluginsOf($contract, $plugins, self::membershipScope(), self::attributeMembers(...)),
                     $container,
                 ),
             );

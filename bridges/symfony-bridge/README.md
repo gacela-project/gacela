@@ -17,12 +17,13 @@ return [
 ];
 ```
 
-That alone gives you four things:
+That alone gives you five things:
 
 1. **Gacela bootstrapped from the kernel** — with the project dir as the application root, honouring `gacela.php`. Every boot bootstraps again, so a kernel rebooted inside one process (functional tests do it constantly) runs on its own configuration rather than the previous boot's.
 2. **Symfony services reachable from Gacela** — the ones you list, and only those.
 3. **Gacela's console commands in `bin/console`**, under a `gacela:` prefix.
 4. **`cache:warmup` warms Gacela's caches too**, so a deploy has one warmup step instead of two.
+5. **Worker-ready**: a service tagged `kernel.reset` calls `Gacela::resetRequestState()` when Symfony resets its services between requests (FrankenPHP worker mode, RoadRunner, Messenger workers), so the next request starts without the first one's services and keeps the warm caches.
 
 Plus the `#[Inject]` compiler pass, described at the bottom.
 

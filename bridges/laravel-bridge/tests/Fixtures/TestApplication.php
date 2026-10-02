@@ -7,6 +7,8 @@ namespace GacelaTest\LaravelBridge\Fixtures;
 use Gacela\LaravelBridge\GacelaServiceProvider;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
+use Illuminate\Events\Dispatcher;
 
 use function bin2hex;
 use function dirname;
@@ -32,6 +34,8 @@ final class TestApplication extends Container
         $this->id = bin2hex(random_bytes(6));
 
         $this->instance('config', new Repository(['gacela' => $gacelaConfig]));
+        $this->instance('events', new Dispatcher($this));
+        $this->alias('events', DispatcherContract::class);
     }
 
     public function boot(): void

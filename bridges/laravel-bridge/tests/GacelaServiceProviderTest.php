@@ -232,6 +232,24 @@ final class GacelaServiceProviderTest extends LaravelBridgeTestCase
         self::assertNotSame($first, Gacela::get(ArrayObject::class));
     }
 
+    /**
+     * Octane skips `RequestTerminated` when a request throws out of its
+     * gateway, so the next request starts by dropping what that one left.
+     */
+    public function test_the_start_of_an_octane_request_drops_what_a_failed_one_left(): void
+    {
+        $app = new TestApplication();
+        $app->boot();
+
+        $first = Gacela::get(ArrayObject::class);
+
+        /** @var Dispatcher $events */
+        $events = $app->make('events');
+        $events->dispatch(GacelaServiceProvider::OCTANE_REQUEST_RECEIVED);
+
+        self::assertNotSame($first, Gacela::get(ArrayObject::class));
+    }
+
     public function test_disabling_the_bridge_registers_nothing(): void
     {
         $app = new TestApplication([

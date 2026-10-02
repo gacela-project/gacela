@@ -33,9 +33,11 @@ use Symfony\Component\Console\Command\Command;
 final class GacelaServiceProvider extends ServiceProvider
 {
     /**
-     * Octane's event after each request. Named rather than imported, so the
+     * Octane's events around each request. Named rather than imported, so the
      * bridge needs no dependency on Octane.
      */
+    public const OCTANE_REQUEST_RECEIVED = 'Laravel\\Octane\\Events\\RequestReceived';
+
     public const OCTANE_REQUEST_TERMINATED = 'Laravel\\Octane\\Events\\RequestTerminated';
 
     #[Override]
@@ -90,6 +92,10 @@ final class GacelaServiceProvider extends ServiceProvider
     /**
      * Octane keeps the application, and Gacela with it, between requests:
      * this drops what one request built and keeps the warm caches.
+     *
+     * At both ends: Octane skips `RequestTerminated` when a request throws out
+     * of its gateway, so the next request's `RequestReceived` drops what that
+     * one left. A second reset of nothing costs nothing.
      */
     private function resetRequestStateAfterEachOctaneRequest(): void
     {
@@ -98,9 +104,12 @@ final class GacelaServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->make(Dispatcher::class)->listen(self::OCTANE_REQUEST_TERMINATED, static function (): void {
-            Gacela::resetRequestState();
-        });
+        $this->app->make(Dispatcher::class)->listen(
+            [self::OCTANE_REQUEST_RECEIVED, self::OCTANE_REQUEST_TERMINATED],
+            static function (): void {
+                Gacela::resetRequestState();
+            },
+        );
     }
 
     /**

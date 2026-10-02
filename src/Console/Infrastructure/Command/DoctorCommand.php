@@ -296,6 +296,7 @@ final class DoctorCommand extends Command
                     $config->getAppRootDir(),
                     $config->getSetupGacela()->getProjectNamespaces(),
                     PackageDiscoveryRegistry::sources(),
+                    PackageDiscoveryRegistry::refusedDirectories(),
                 )->members(),
                 // The runtime reads the file only with file caching on.
                 (new GacelaFileCache($config))->isEnabled()
@@ -305,6 +306,7 @@ final class DoctorCommand extends Command
                         $config->getSetupGacela()->getAppModulePaths(),
                         $config->getSetupGacela()->getProjectNamespaces(),
                         PackageDiscoveryRegistry::sources(),
+                        PackageDiscoveryRegistry::refusedDirectories(),
                     )->read()
                     : null,
                 getenv('APP_ENV') ?: null,

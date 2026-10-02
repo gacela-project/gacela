@@ -90,7 +90,8 @@ Or by attribute, with no line in the config file: a class in the package's
 `autoload.psr-4` directories can carry `#[Plugin]`, `#[Tag]` or
 `#[AsListener]`, and joins as an application class would. Only the package's
 own psr-4 namespaces are read, and only for a package that is discovered: a
-refused one contributes no attribute member either. The package still needs
+refused one contributes no attribute member either, even when it is installed
+from a path inside the application's module paths. The package still needs
 `extra.gacela.config`, even if the file it names configures nothing.
 
 Two things a package should not reach for:

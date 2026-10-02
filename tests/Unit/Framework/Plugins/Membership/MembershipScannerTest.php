@@ -65,6 +65,19 @@ final class MembershipScannerTest extends TestCase
         self::assertSame(['SameLine'], $this->foundIn([$this->root]));
     }
 
+    /**
+     * A refused package installed from a path inside the module paths.
+     */
+    public function test_an_excluded_directory_is_not_read(): void
+    {
+        $this->declare('Kept.php', 'Kept');
+        $this->declare('packages' . DIRECTORY_SEPARATOR . 'refused' . DIRECTORY_SEPARATOR . 'Refused.php', 'Refused');
+
+        $members = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace], [], [$this->root . '/packages/refused/'])->members();
+
+        self::assertSame([$this->namespace . '\\Kept'], array_map(static fn (PluginMember $member): string => $member->plugin, $members->plugins));
+    }
+
     public function test_a_plugin_without_a_priority_has_priority_zero(): void
     {
         $this->declare('Plain.php', 'Plain');

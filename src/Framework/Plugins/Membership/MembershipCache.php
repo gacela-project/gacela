@@ -40,10 +40,11 @@ final class MembershipCache
      * @param list<string> $appModulePaths
      * @param list<string> $projectNamespaces
      * @param array<string, list<string>> $packageSources
+     * @param list<string> $excludedDirectories
      */
-    public static function forScan(string $cacheDir, string $appRootDir, array $appModulePaths, array $projectNamespaces, array $packageSources = []): self
+    public static function forScan(string $cacheDir, string $appRootDir, array $appModulePaths, array $projectNamespaces, array $packageSources = [], array $excludedDirectories = []): self
     {
-        return new self($cacheDir, $appRootDir, self::fingerprintOf($appModulePaths, $projectNamespaces, $packageSources));
+        return new self($cacheDir, $appRootDir, self::fingerprintOf($appModulePaths, $projectNamespaces, $packageSources, $excludedDirectories));
     }
 
     public function path(): string
@@ -92,9 +93,10 @@ final class MembershipCache
      * @param list<string> $appModulePaths
      * @param list<string> $projectNamespaces
      * @param array<string, list<string>> $packageSources
+     * @param list<string> $excludedDirectories
      */
-    private static function fingerprintOf(array $appModulePaths, array $projectNamespaces, array $packageSources): string
+    private static function fingerprintOf(array $appModulePaths, array $projectNamespaces, array $packageSources, array $excludedDirectories): string
     {
-        return sha1(serialize([$appModulePaths, $projectNamespaces, $packageSources]));
+        return sha1(serialize([$appModulePaths, $projectNamespaces, $packageSources, $excludedDirectories]));
     }
 }

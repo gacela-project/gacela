@@ -14,25 +14,31 @@ namespace Gacela\Framework\Bootstrap\Package;
  */
 final class RefusedPackage
 {
+    /**
+     * @param array<string, list<string>> $sources the package's psr-4 namespaces and
+     *                                             directories, kept out of the scan for
+     *                                             attribute members
+     */
     private function __construct(
         public readonly string $name,
         public readonly string $configFile,
         public readonly PackageRefusal $reason,
+        public readonly array $sources = [],
     ) {
     }
 
     public static function optedOut(PackageConfigDeclaration $declaration): self
     {
-        return new self($declaration->name, $declaration->configFile, PackageRefusal::OptedOut);
+        return new self($declaration->name, $declaration->configFile, PackageRefusal::OptedOut, $declaration->sources);
     }
 
     public static function missingFile(PackageConfigDeclaration $declaration): self
     {
-        return new self($declaration->name, $declaration->configFile, PackageRefusal::MissingFile);
+        return new self($declaration->name, $declaration->configFile, PackageRefusal::MissingFile, $declaration->sources);
     }
 
     public static function notCallable(PackageConfigDeclaration $declaration): self
     {
-        return new self($declaration->name, $declaration->configFile, PackageRefusal::NotCallable);
+        return new self($declaration->name, $declaration->configFile, PackageRefusal::NotCallable, $declaration->sources);
     }
 }

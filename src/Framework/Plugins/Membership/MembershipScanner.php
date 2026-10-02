@@ -26,6 +26,7 @@ use function rtrim;
 use function sprintf;
 use function str_contains;
 use function str_ends_with;
+use function str_replace;
 use function str_starts_with;
 use function strlen;
 use function usort;
@@ -53,11 +54,13 @@ final class MembershipScanner
      * @param array<string, list<string>> $packageSources each discovered package's psr-4
      *                                                    namespace and directories, read
      *                                                    inside that namespace only
+     * @param list<string> $excludedDirectories refused packages' directories, never read
      */
     public function __construct(
         private readonly array $directories,
         private readonly array $projectNamespaces,
         private readonly array $packageSources = [],
+        private readonly array $excludedDirectories = [],
     ) {
     }
 
@@ -65,15 +68,16 @@ final class MembershipScanner
      * @param list<string> $appModulePaths empty means the whole application root
      * @param list<string> $projectNamespaces
      * @param array<string, list<string>> $packageSources
+     * @param list<string> $excludedDirectories
      */
-    public static function forPaths(array $appModulePaths, string $rootDir, array $projectNamespaces, array $packageSources = []): self
+    public static function forPaths(array $appModulePaths, string $rootDir, array $projectNamespaces, array $packageSources = [], array $excludedDirectories = []): self
     {
         $directories = [];
         foreach ($appModulePaths === [] ? [''] : $appModulePaths as $path) {
             $directories[] = self::resolve($path, $rootDir);
         }
 
-        return new self($directories, $projectNamespaces, $packageSources);
+        return new self($directories, $projectNamespaces, $packageSources, $excludedDirectories);
     }
 
     public function members(): Members
@@ -234,11 +238,17 @@ final class MembershipScanner
      */
     private function phpFilesIn(string $directory): iterable
     {
+        $excluded = [];
+        foreach ($this->excludedDirectories as $excludedDirectory) {
+            $excluded[self::comparable($excludedDirectory)] = true;
+        }
+
         $files = new RecursiveIteratorIterator(new RecursiveCallbackFilterIterator(
             new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
             static fn (mixed $current, string $key, RecursiveDirectoryIterator $iterator): bool => $iterator->hasChildren()
                 ? !str_starts_with($iterator->getFilename(), '.')
                     && !in_array($iterator->getFilename(), self::EXCLUDED_DIRECTORIES, true)
+                    && !isset($excluded[self::comparable($iterator->getPathname())])
                 : str_ends_with($iterator->getFilename(), '.php'),
         ));
 
@@ -246,6 +256,15 @@ final class MembershipScanner
         foreach ($files as $file) {
             yield $file;
         }
+    }
+
+    /**
+     * One separator and no trailing one, so a directory Composer recorded
+     * matches the one the iterator walks into on either platform.
+     */
+    private static function comparable(string $directory): string
+    {
+        return rtrim(str_replace('\\', '/', $directory), '/');
     }
 
     private static function resolve(string $path, string $rootDir): string

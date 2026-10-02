@@ -94,6 +94,25 @@ final class PackageDiscoveryRegistry
     }
 
     /**
+     * The refused packages' psr-4 directories. A package installed from a path
+     * inside the module paths would otherwise be read by the application's own
+     * scan, and refusing it would not stop its attribute members.
+     *
+     * @return list<string>
+     */
+    public static function refusedDirectories(): array
+    {
+        $directories = [];
+        foreach (self::$refused as $package) {
+            foreach ($package->sources as $packageDirectories) {
+                $directories = [...$directories, ...$packageDirectories];
+            }
+        }
+
+        return $directories;
+    }
+
+    /**
      * @return list<RefusedPackage>
      */
     public static function refused(): array

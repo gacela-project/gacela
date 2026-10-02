@@ -138,8 +138,8 @@ final class CacheWarmCommand extends Command
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
-        $members = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources())->members();
-        $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources());
+        $members = MembershipScanner::forPaths($setup->getAppModulePaths(), $config->getAppRootDir(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources(), PackageDiscoveryRegistry::refusedDirectories())->members();
+        $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources(), PackageDiscoveryRegistry::refusedDirectories());
 
         if ($members->problems !== []) {
             $formatter->writeMembershipProblems($members->problems);

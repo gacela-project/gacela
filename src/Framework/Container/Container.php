@@ -685,6 +685,7 @@ final class Container implements ContainerInterface
             $config->getAppRootDir(),
             $setup->getProjectNamespaces(),
             PackageDiscoveryRegistry::sources(),
+            PackageDiscoveryRegistry::refusedDirectories(),
         )->members();
 
         // The way the class-name cache fills itself: with file caching on, only
@@ -735,7 +736,7 @@ final class Container implements ContainerInterface
     {
         $setup = $config->getSetupGacela();
 
-        return MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources());
+        return MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources(), PackageDiscoveryRegistry::refusedDirectories());
     }
 
     /**

@@ -7,7 +7,9 @@ namespace Gacela\LaravelBridge;
 use Gacela\Console\Infrastructure\Command\CacheClearCommand;
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Console\Infrastructure\Command\CommandCatalog;
+use Gacela\Framework\Gacela;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use Symfony\Component\Console\Command\Command;
@@ -30,6 +32,12 @@ use Symfony\Component\Console\Command\Command;
  */
 final class GacelaServiceProvider extends ServiceProvider
 {
+    /**
+     * Octane's event after each request. Named rather than imported, so the
+     * bridge needs no dependency on Octane.
+     */
+    public const OCTANE_REQUEST_TERMINATED = 'Laravel\\Octane\\Events\\RequestTerminated';
+
     #[Override]
     public function register(): void
     {
@@ -70,12 +78,29 @@ final class GacelaServiceProvider extends ServiceProvider
         ))->bootstrap();
 
         GacelaInjectListener::register($this->app);
+        $this->resetRequestStateAfterEachOctaneRequest();
 
         // Also gated on the console: names() constructs all fifteen commands
         // to read their names, a price no web request should pay.
         if ($config['register_commands'] && $this->app->runningInConsole()) {
             $this->registerGacelaCommands($config['command_prefix'], $appRootDir);
         }
+    }
+
+    /**
+     * Octane keeps the application, and Gacela with it, between requests:
+     * this drops what one request built and keeps the warm caches.
+     */
+    private function resetRequestStateAfterEachOctaneRequest(): void
+    {
+        // Laravel binds the dispatcher under this contract; a bare container may not.
+        if (!$this->app->bound(Dispatcher::class)) {
+            return;
+        }
+
+        $this->app->make(Dispatcher::class)->listen(self::OCTANE_REQUEST_TERMINATED, static function (): void {
+            Gacela::resetRequestState();
+        });
     }
 
     /**

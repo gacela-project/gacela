@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Symfony bundle and Laravel bridge reset Gacela's request state between requests: the bundle through a `kernel.reset` service (FrankenPHP worker mode, RoadRunner, Messenger workers), the bridge after each Octane `RequestTerminated`. Both now require `gacela-project/gacela` `^2.5` ([#941](https://github.com/gacela-project/gacela/issues/941))
+
 ## [2.5.0](https://github.com/gacela-project/gacela/compare/2.4.0...2.5.0) - 2026-10-02
 
 ### Added

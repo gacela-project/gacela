@@ -10,6 +10,8 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
+use Symfony\Component\HttpKernel\DependencyInjection\ResettableServicePass;
+use Symfony\Component\HttpKernel\DependencyInjection\ServicesResetter;
 
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -31,6 +33,7 @@ final class TestKernel extends Kernel
      * @param array<string, class-string> $extraServices   service id => class, registered public
      * @param string                     $serviceName      the name those services carry, so a second kernel's are distinguishable
      * @param array<string, class-string> $argumentlessServices service id => class, registered public with no arguments
+     * @param bool                       $resetsServices   register the services resetter FrameworkBundle registers, as a worker runtime uses it
      */
     public function __construct(
         private readonly array $gacelaConfig = [],
@@ -38,6 +41,7 @@ final class TestKernel extends Kernel
         string $environment = 'test',
         private readonly string $serviceName = CountingService::FROM_SYMFONY,
         private readonly array $argumentlessServices = [],
+        private readonly bool $resetsServices = false,
     ) {
         $this->id = bin2hex(random_bytes(6));
 
@@ -66,6 +70,11 @@ final class TestKernel extends Kernel
 
             foreach ($this->argumentlessServices as $id => $class) {
                 $container->setDefinition($id, (new Definition($class))->setPublic(true));
+            }
+
+            if ($this->resetsServices) {
+                $container->register('services_resetter', ServicesResetter::class)->setPublic(true);
+                $container->addCompilerPass(new ResettableServicePass());
             }
         });
     }

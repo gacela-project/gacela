@@ -47,5 +47,9 @@ final class GacelaBundle extends Bundle
         if ($bootstrapper instanceof GacelaBootstrapper) {
             $bootstrapper->bootstrap();
         }
+
+        // Built here so the services resetter reaches it: it resets only the
+        // services a request has already built, and nothing else builds this one.
+        $container->get(GacelaExtension::REQUEST_STATE_RESETTER_ID);
     }
 }

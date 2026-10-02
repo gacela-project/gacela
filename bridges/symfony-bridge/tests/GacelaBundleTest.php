@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\SymfonyBridge;
 
+use ArrayObject;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\SymfonyBridge\DependencyInjection\GacelaExtension;
@@ -13,6 +14,7 @@ use GacelaTest\SymfonyBridge\Fixtures\CountingService;
 use GacelaTest\SymfonyBridge\Fixtures\InjectedCountingConsumer;
 use GacelaTest\SymfonyBridge\Fixtures\TestKernel;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\DependencyInjection\ServicesResetterInterface;
 
 use function array_map;
 
@@ -154,6 +156,25 @@ final class GacelaBundleTest extends SymfonyBridgeTestCase
 
         self::assertInstanceOf(InjectedCountingConsumer::class, $consumer);
         self::assertSame(CountingService::FROM_SYMFONY, $consumer->counting->name());
+    }
+
+    /**
+     * What a worker runtime does between two requests: Symfony resets its
+     * services, and Gacela drops what the first request built.
+     */
+    public function test_resetting_the_kernel_services_drops_gacelas_request_state(): void
+    {
+        $kernel = new TestKernel(resetsServices: true);
+        $kernel->boot();
+
+        $first = Gacela::get(ArrayObject::class);
+        self::assertSame($first, Gacela::get(ArrayObject::class));
+
+        /** @var ServicesResetterInterface $resetter */
+        $resetter = $kernel->getContainer()->get('services_resetter');
+        $resetter->reset();
+
+        self::assertNotSame($first, Gacela::get(ArrayObject::class));
     }
 
     public function test_disabling_the_bundle_registers_nothing(): void

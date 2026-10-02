@@ -117,6 +117,9 @@ final class EventCatalog
      * @param int                 $genericListenerCount   registerGenericListener() callables
      * @param list<class-string>  $projectEventClasses    what the application declared, from
      *   {@see \Gacela\Console\Domain\ProjectEvents\ProjectEventFinder}
+     * @param list<array{0: class-string, 1: string}> $attributeListeners each `#[AsListener]` method's
+     *   event and its `Class::method()` name. Matched against the project's events only: a
+     *   module's dispatcher serves them, and the framework's dispatch sites never do
      *
      * @return list<EventInspection>
      */
@@ -125,6 +128,7 @@ final class EventCatalog
         array $specificListenerCounts,
         int $genericListenerCount,
         array $projectEventClasses = [],
+        array $attributeListeners = [],
     ): array {
         $inspections = [];
 
@@ -143,6 +147,7 @@ final class EventCatalog
                 EventSource::Project,
                 $specificListenerCounts,
                 $genericListenerCount,
+                $this->attributeListenersCovering($eventClass, $attributeListeners),
             );
         }
 
@@ -164,12 +169,14 @@ final class EventCatalog
     /**
      * @param class-string $eventClass
      * @param array<class-string, int> $specificListenerCounts
+     * @param list<string> $attributeListeners
      */
     private function inspectOne(
         string $eventClass,
         EventSource $source,
         array $specificListenerCounts,
         int $genericListenerCount,
+        array $attributeListeners = [],
     ): EventInspection {
         return new EventInspection(
             $eventClass,
@@ -179,7 +186,25 @@ final class EventCatalog
             $this->targetsCovering($eventClass, $specificListenerCounts),
             $genericListenerCount,
             $source,
+            $attributeListeners,
         );
+    }
+
+    /**
+     * @param list<array{0: class-string, 1: string}> $attributeListeners
+     *
+     * @return list<string>
+     */
+    private function attributeListenersCovering(string $eventClass, array $attributeListeners): array
+    {
+        $covering = [];
+        foreach ($attributeListeners as [$target, $listener]) {
+            if (is_a($eventClass, $target, true)) {
+                $covering[] = $listener;
+            }
+        }
+
+        return $covering;
     }
 
     /**

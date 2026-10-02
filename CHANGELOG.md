@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.5.0](https://github.com/gacela-project/gacela/compare/2.4.0...2.5.0) - 2026-10-02
+
 ### Added
 
 - `Gacela::resetRequestState()` clears one request's services in a long-running worker (FrankenPHP, Octane, RoadRunner) and keeps the warm caches. See `docs/long-running-runtimes.md` ([#941](https://github.com/gacela-project/gacela/issues/941))

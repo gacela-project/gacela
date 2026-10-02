@@ -255,16 +255,16 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         touch($watched, time() - 100);
         touch($this->appDir, time() - 100);
 
-        $this->bootstrapWatching(['AppConfig.php']);
+        $this->bootstrapWatching(['NotThere.php', 'AppConfig.php']);
         $filename = Config::getInstance()->mergedConfigCacheFilename();
         $this->replaceCachedValues($filename, ['src' => 'stale']);
 
-        $this->bootstrapWatching(['AppConfig.php']);
+        $this->bootstrapWatching(['NotThere.php', 'AppConfig.php']);
         self::assertSame('stale', Config::getInstance()->get('src'), 'an untouched watched file keeps the cache');
 
         file_put_contents($watched, '<?php // version two');
         touch($watched, time() - 50);
-        $this->bootstrapWatching(['AppConfig.php']);
+        $this->bootstrapWatching(['NotThere.php', 'AppConfig.php']);
 
         self::assertSame('from-file', Config::getInstance()->get('src'));
     }
@@ -379,6 +379,24 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         $this->bootstrapWatching([], verifiedWarm: true);
 
         self::assertSame('edited-after-warm', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * The warm itself writes the checked file, from what is on disk now: the
+     * bootstrap before it had written one from the earlier value.
+     */
+    public function test_a_verified_warm_writes_the_current_values(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'before');
+        $this->bootstrapWatching([], verifiedWarm: true);
+        $this->writeAppConfig($file, 'after-the-edit');
+
+        $filename = Config::getInstance()->writeMergedConfigCache();
+
+        /** @var array{values: array<string, mixed>} $written */
+        $written = require $filename;
+        self::assertSame('after-the-edit', $written['values']['src']);
     }
 
     /**

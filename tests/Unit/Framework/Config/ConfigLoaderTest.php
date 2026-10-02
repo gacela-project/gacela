@@ -393,6 +393,41 @@ final class ConfigLoaderTest extends TestCase
     }
 
     /**
+     * Code that computes config values can live outside the application: in a
+     * global Composer install or inside a PHAR. An absolute path, of any kind,
+     * is watched as it is; a relative one is resolved against the root, and a
+     * drive letter further in does not make it absolute.
+     */
+    public function test_an_absolute_watch_path_of_any_kind_is_taken_as_it_is(): void
+    {
+        $normalizer = $this->createStub(PathNormalizerInterface::class);
+        $normalizer->method('normalizePathPattern')->willReturnCallback(
+            static fn (GacelaConfigItem $item): string => '/root/' . $item->path(),
+        );
+        $loader = new ConfigLoader(
+            (new GacelaConfigFile())->setConfigCacheWatchPaths([
+                '/abs/A.php',
+                '\\\\server\\share\\B.php',
+                'C:\\app\\C.php',
+                'phar:///usr/local/bin/tool.phar/src/D.php',
+                'src/E.php',
+                'src/C:/F.php',
+            ]),
+            $this->createStub(PathFinderInterface::class),
+            $normalizer,
+        );
+
+        self::assertSame([
+            '/abs/A.php',
+            '\\\\server\\share\\B.php',
+            'C:\\app\\C.php',
+            'phar:///usr/local/bin/tool.phar/src/D.php',
+            '/root/src/E.php',
+            '/root/src/C:/F.php',
+        ], $loader->watchedPaths());
+    }
+
+    /**
      * @param list<GacelaConfigItem> $configItems
      * @param list<string> $watchPaths
      */

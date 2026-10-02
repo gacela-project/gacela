@@ -176,7 +176,7 @@ It serves the events a module dispatches through `getProvidedDependency(EventDis
 
 The method goes on a concrete class: a subclass that only extends an abstract one names no attribute, so it is not found. An abstract class, or a listener with no event, fails the first module event with the reason, and `doctor` reports it with a misspelt event and a class the container cannot build. Plugin stacks and tags read from the same scan keep working. In a `bootstrapModule()` test only the module under test and the discovered packages are scanned, so a neighbour module's `#[AsListener]` method, or a double of it, does not hear the event; bootstrap the application to test that.
 
-Only classes under the application's module paths and inside `projectNamespaces` are read, plus each [discovered package](packages.md)'s psr-4 directories inside that package's own namespaces; never `vendor/` at large. They are read on the first event a module asks about, once per process, from the same file and with the same caching rules as [`#[Plugin]`](getting-a-dependency.md#typed--every-implementation-of-one-interface). `debug:events` lists the listeners in `gacela.php` only.
+Only classes under the application's module paths and inside `projectNamespaces` are read, plus each [discovered package](packages.md)'s psr-4 directories inside that package's own namespaces; never `vendor/` at large. They are read on the first event a module asks about, once per process, from the same file and with the same caching rules as [`#[Plugin]`](getting-a-dependency.md#typed--every-implementation-of-one-interface). `debug:events` lists them beside the `gacela.php` listeners, marked `#[AsListener]`.
 
 What this buys, and what it costs:
 

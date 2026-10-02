@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Application\Debug;
 
 use function array_sum;
+use function count;
 use function strrpos;
 use function substr;
 
@@ -21,6 +22,7 @@ final class EventInspection
      * @param array<class-string, int> $matchedTargets    registered target => how many listeners it carries, for the targets that cover this event
      * @param int                   $genericListenerCount registerGenericListener() callables, which cover every event
      * @param EventSource           $source               who declared it: the framework, or the application
+     * @param list<string>          $attributeListeners   the `#[AsListener]` methods that cover it, as `Class::method()`
      */
     public function __construct(
         public readonly string $className,
@@ -30,6 +32,7 @@ final class EventInspection
         public readonly array $matchedTargets,
         public readonly int $genericListenerCount,
         public readonly EventSource $source,
+        public readonly array $attributeListeners = [],
     ) {
     }
 
@@ -47,7 +50,7 @@ final class EventInspection
 
     public function listenerCount(): int
     {
-        return $this->specificListenerCount() + $this->genericListenerCount;
+        return $this->specificListenerCount() + $this->genericListenerCount + count($this->attributeListeners);
     }
 
     /**

@@ -10,7 +10,9 @@ use Gacela\Console\Application\Debug\EventSource;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Container\Container;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Plugins\Membership\ListenerMember;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 use Gacela\Framework\ServiceResolverAwareTrait;
 use Symfony\Component\Console\Command\Command;
@@ -85,6 +87,7 @@ final class DebugEventsCommand extends Command
             $this->specificListenerCounts(),
             $this->genericListenerCount(),
             $this->getFacade()->findProjectEventClasses(),
+            $this->attributeListeners(),
         );
 
         $shown = $this->applyFilters($inspections, $filter, $listenedOnly);
@@ -167,6 +170,7 @@ final class DebugEventsCommand extends Command
                     'hotPath' => $inspection->isHotPath,
                     'listeners' => $inspection->listenerCount(),
                     'targets' => array_keys($inspection->matchedTargets),
+                    'attributeListeners' => $inspection->attributeListeners,
                 ],
                 $shown,
             ),
@@ -279,6 +283,10 @@ final class DebugEventsCommand extends Command
 
         foreach (array_keys($inspection->matchedTargets) as $target) {
             $note .= sprintf(' <fg=cyan>via %s</>', $this->shortNameOf($target));
+        }
+
+        foreach ($inspection->attributeListeners as $listener) {
+            $note .= sprintf(' <fg=cyan>via #[AsListener] %s</>', $this->shortNameOf($listener));
         }
 
         if ($inspection->genericListenerCount > 0) {
@@ -441,6 +449,20 @@ final class DebugEventsCommand extends Command
         return array_map(
             count(...),
             $setup->getSpecificListeners() ?? [],
+        );
+    }
+
+    /**
+     * Read the way the runtime reads them, without writing the cache: this is
+     * a report.
+     *
+     * @return list<array{0: class-string, 1: string}>
+     */
+    private function attributeListeners(): array
+    {
+        return array_map(
+            static fn (ListenerMember $member): array => [$member->event, sprintf('%s::%s()', $member->class, $member->method)],
+            Container::attributeMembers(persist: false)->listeners,
         );
     }
 

@@ -172,16 +172,19 @@ final class GacelaConfig
     }
 
     /**
-     * Rebuild the merged config cache when this file or directory changes,
-     * though no config file did: for values your own code computes, such as a
-     * config class whose output the cache stores.
+     * Rebuild the merged config cache when these paths change, though no
+     * config file did: for values your own code computes, such as a config
+     * class whose output the cache stores.
      *
-     * Relative to the application root, like `addAppConfig()`. Checked by a
-     * cache written on a miss, and by one `cache:warm` writes when
+     * A file, or a glob like `src/Config/*.php` that also counts files added
+     * or removed. A directory only counts files added or removed directly in
+     * it, not edits to them. Relative to the application root like
+     * `addAppConfig()`, or absolute under it. Checked by a cache written on a
+     * miss, and by one `cache:warm` writes when
      * {@see enableVerifiedConfigCacheWarm()} is on.
      *
      * ```php
-     * $config->addConfigCacheWatch('src/Config/AppConfig.php');
+     * $config->addConfigCacheWatch('src/Config/*.php');
      * ```
      */
     public function addConfigCacheWatch(string ...$paths): self

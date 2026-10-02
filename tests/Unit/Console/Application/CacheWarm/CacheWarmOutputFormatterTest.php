@@ -137,6 +137,16 @@ final class CacheWarmOutputFormatterTest extends TestCase
         );
     }
 
+    public function test_a_skipped_merged_config_cache_says_why_and_what_follows(): void
+    {
+        $this->formatter->writeMergedConfigCacheSkipped();
+
+        self::assertSame(
+            $this->lines('Merged config cache: not written, since a config source changed this second or the cache directory is not writable. The next bootstrap writes it.', ''),
+            $this->output->fetch(),
+        );
+    }
+
     public function test_merged_config_cache_info_shows_the_file_and_its_size(): void
     {
         $this->formatter->writeMergedConfigCacheInfo('/tmp/gacela/merged-config.php', '2.00 KB');

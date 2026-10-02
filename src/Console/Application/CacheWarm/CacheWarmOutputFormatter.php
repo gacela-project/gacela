@@ -98,6 +98,16 @@ final class CacheWarmOutputFormatter
         $this->output->writeln('');
     }
 
+    /**
+     * Silent before, so a script that edits config and warms in one go could
+     * not tell that the cache it asked for is not there yet.
+     */
+    public function writeMergedConfigCacheSkipped(): void
+    {
+        $this->output->writeln('<comment>Merged config cache: not written, since a config source changed this second or the cache directory is not writable. The next bootstrap writes it.</comment>');
+        $this->output->writeln('');
+    }
+
     public function writeMergedConfigCacheInfo(string $cacheFile, string $cacheSize): void
     {
         $this->output->writeln(sprintf('<fg=cyan>Merged config cache:</> %s', $cacheFile));

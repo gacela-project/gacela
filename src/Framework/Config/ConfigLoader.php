@@ -9,8 +9,11 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 use function array_map;
 use function dirname;
+use function rtrim;
 use function serialize;
 use function sha1;
+use function str_replace;
+use function str_starts_with;
 use function strpbrk;
 
 final class ConfigLoader
@@ -110,9 +113,24 @@ final class ConfigLoader
             }
         }
 
-        // Resolved the way a config path is, so both are relative to the root.
         foreach ($this->gacelaConfigFile->getConfigCacheWatchPaths() as $watched) {
-            $paths[] = $this->pathNormalizer->normalizePathPattern(new GacelaConfigItem($watched));
+            $pattern = $this->watchPattern($watched);
+
+            // A plain path is its own stamp, empty while it is missing, so
+            // creating it counts. A glob adds the files it matches and the
+            // directory they are in, so a file that matches later counts too.
+            // Not the directory of a plain path: that is often the root, which
+            // anything writing a cache or a dotfile there would change.
+            if (strpbrk($pattern, '*?[{') === false) {
+                $paths[] = $pattern;
+                continue;
+            }
+
+            foreach ($this->pathFinder->matchingPattern($pattern) as $match) {
+                $paths[] = $match;
+            }
+
+            $paths[] = $this->nearestLiteralDirectory($pattern);
         }
 
         return $paths;
@@ -269,6 +287,21 @@ final class ConfigLoader
         return $this->pathFinder->matchingPattern(
             $this->pathNormalizer->normalizePathPattern($configItem),
         );
+    }
+
+    /**
+     * Relative to the root like a config path, glob included. An absolute path
+     * under the root, as `__DIR__ . '/src/...'` gives in `gacela.php`, is taken
+     * as it is: prefixing the root again would watch a path that never exists.
+     */
+    private function watchPattern(string $watched): string
+    {
+        $root = rtrim($this->pathNormalizer->normalizePathPattern(new GacelaConfigItem('')), '/');
+        if ($root !== '' && str_starts_with(str_replace('\\', '/', $watched), str_replace('\\', '/', $root) . '/')) {
+            return $watched;
+        }
+
+        return $this->pathNormalizer->normalizePathPattern(new GacelaConfigItem($watched));
     }
 
     private function nearestLiteralDirectory(string $pattern): string

@@ -43,8 +43,9 @@ final class AppConfigBuilder
     }
 
     /**
-     * A file or directory, relative to the application root, whose change must
-     * rebuild the merged config cache although no config file changed.
+     * A path or glob, relative to the application root or absolute under it,
+     * whose change must rebuild the merged config cache although no config
+     * file changed.
      */
     public function watchForCache(string $path): self
     {

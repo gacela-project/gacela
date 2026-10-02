@@ -253,6 +253,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         file_put_contents($watched, '<?php // v1');
         $this->createdFiles[] = $watched;
         touch($watched, time() - 100);
+        touch($this->appDir, time() - 100);
 
         $this->bootstrapWatching(['AppConfig.php']);
         $filename = Config::getInstance()->mergedConfigCacheFilename();
@@ -263,6 +264,77 @@ final class MergedConfigCacheIntegrationTest extends TestCase
 
         file_put_contents($watched, '<?php // version two');
         touch($watched, time() - 50);
+        $this->bootstrapWatching(['AppConfig.php']);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * A directory's own stamp misses an edit to a file in it, so a glob names
+     * the files themselves.
+     */
+    public function test_a_watched_glob_catches_an_edit_to_a_file_it_matches(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $src = $this->appDir . DIRECTORY_SEPARATOR . 'src';
+        mkdir($src);
+        $this->createdDirs[] = $src;
+        $watched = $src . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+        touch($src, time() - 100);
+
+        $this->bootstrapWatching(['src/*.php']);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        touch($src, time() - 100);
+        $this->bootstrapWatching(['src/*.php']);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    /**
+     * `__DIR__ . '/AppConfig.php'` in gacela.php is already under the root:
+     * prefixing the root again would watch a path that never exists.
+     */
+    public function test_an_absolute_watch_path_under_the_root_is_taken_as_it_is(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        $watched = $this->appDir . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // v1');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 100);
+        touch($this->appDir, time() - 100);
+
+        $this->bootstrapWatching([$watched]);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        file_put_contents($watched, '<?php // version two');
+        touch($watched, time() - 50);
+        $this->bootstrapWatching([$watched]);
+
+        self::assertSame('from-file', Config::getInstance()->get('src'));
+    }
+
+    public function test_a_watched_file_created_later_rebuilds_the_cache(): void
+    {
+        $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        $this->writeAppConfig($file, 'from-file');
+        touch($this->appDir, time() - 100);
+
+        $this->bootstrapWatching(['AppConfig.php']);
+        $this->replaceCachedValues(Config::getInstance()->mergedConfigCacheFilename(), ['src' => 'stale']);
+
+        $watched = $this->appDir . DIRECTORY_SEPARATOR . 'AppConfig.php';
+        file_put_contents($watched, '<?php // new');
+        $this->createdFiles[] = $watched;
+        touch($watched, time() - 50);
+        touch($this->appDir, time() - 50);
         $this->bootstrapWatching(['AppConfig.php']);
 
         self::assertSame('from-file', Config::getInstance()->get('src'));

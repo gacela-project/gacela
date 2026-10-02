@@ -68,12 +68,13 @@ final class InstalledPackages
                 throw new RuntimeException(sprintf('No fixture package at "%s".', $manifest));
             }
 
-            /** @var array{name: string, extra: array<string, mixed>} $decoded */
+            /** @var array{name: string, extra: array<string, mixed>, autoload?: array<string, mixed>} $decoded */
             $decoded = (array) json_decode((string) file_get_contents($manifest), true);
 
             $packages[] = [
                 'name' => $decoded['name'],
                 'extra' => $decoded['extra'],
+                'autoload' => $decoded['autoload'] ?? [],
                 // Composer writes this relative to `vendor/composer`. Absolute is
                 // as valid, and it is what lets the packages stay committed while
                 // the root that installs them is a temp directory. The relative

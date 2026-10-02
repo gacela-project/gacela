@@ -15,6 +15,7 @@ use ReflectionMethod;
 use ReflectionNamedType;
 use SplFileInfo;
 
+use function array_keys;
 use function class_exists;
 use function file_get_contents;
 use function in_array;
@@ -49,25 +50,30 @@ final class MembershipScanner
     /**
      * @param list<string> $directories
      * @param list<string> $projectNamespaces
+     * @param array<string, list<string>> $packageSources each discovered package's psr-4
+     *                                                    namespace and directories, read
+     *                                                    inside that namespace only
      */
     public function __construct(
         private readonly array $directories,
         private readonly array $projectNamespaces,
+        private readonly array $packageSources = [],
     ) {
     }
 
     /**
      * @param list<string> $appModulePaths empty means the whole application root
      * @param list<string> $projectNamespaces
+     * @param array<string, list<string>> $packageSources
      */
-    public static function forPaths(array $appModulePaths, string $rootDir, array $projectNamespaces): self
+    public static function forPaths(array $appModulePaths, string $rootDir, array $projectNamespaces, array $packageSources = []): self
     {
         $directories = [];
         foreach ($appModulePaths === [] ? [''] : $appModulePaths as $path) {
             $directories[] = self::resolve($path, $rootDir);
         }
 
-        return new self($directories, $projectNamespaces);
+        return new self($directories, $projectNamespaces, $packageSources);
     }
 
     public function members(): Members
@@ -77,44 +83,33 @@ final class MembershipScanner
         $listeners = [];
         $problems = [];
 
-        foreach ($this->directories as $directory) {
-            if (!is_dir($directory)) {
-                continue;
+        foreach ($this->classes() as $className) {
+            $class = new ReflectionClass($className);
+            foreach ($class->getAttributes(Plugin::class) as $attribute) {
+                $plugin = $attribute->newInstance();
+                $plugins[] = new PluginMember($plugin->contract, $className, $plugin->priority);
             }
 
-            foreach ($this->phpFilesIn($directory) as $file) {
-                $className = $this->candidateClassIn($file);
-                if ($className === null) {
+            foreach ($class->getAttributes(Tag::class) as $attribute) {
+                $tags[] = new TagMember($attribute->newInstance()->name, $className);
+            }
+
+            foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                // An inherited listener is the declaring class's, read when that one is.
+                if ($method->class !== $className) {
                     continue;
                 }
 
-                $class = new ReflectionClass($className);
-                foreach ($class->getAttributes(Plugin::class) as $attribute) {
-                    $plugin = $attribute->newInstance();
-                    $plugins[] = new PluginMember($plugin->contract, $className, $plugin->priority);
-                }
+                foreach ($method->getAttributes(AsListener::class) as $attribute) {
+                    $listener = $class->isAbstract()
+                        // Its subclasses are not found: a file that only extends it names no attribute.
+                        ? sprintf('%s::%s() has #[AsListener] on an abstract class, which cannot be built: move it to the concrete class', $className, $method->getName())
+                        : $this->listenerOf($method, $attribute->newInstance()->event);
 
-                foreach ($class->getAttributes(Tag::class) as $attribute) {
-                    $tags[] = new TagMember($attribute->newInstance()->name, $className);
-                }
-
-                foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-                    // An inherited listener is the declaring class's, read when that one is.
-                    if ($method->class !== $className) {
-                        continue;
-                    }
-
-                    foreach ($method->getAttributes(AsListener::class) as $attribute) {
-                        $listener = $class->isAbstract()
-                            // Its subclasses are not found: a file that only extends it names no attribute.
-                            ? sprintf('%s::%s() has #[AsListener] on an abstract class, which cannot be built: move it to the concrete class', $className, $method->getName())
-                            : $this->listenerOf($method, $attribute->newInstance()->event);
-
-                        if ($listener instanceof ListenerMember) {
-                            $listeners[] = $listener;
-                        } else {
-                            $problems[] = $listener;
-                        }
+                    if ($listener instanceof ListenerMember) {
+                        $listeners[] = $listener;
+                    } else {
+                        $problems[] = $listener;
                     }
                 }
             }
@@ -125,6 +120,39 @@ final class MembershipScanner
         usort($listeners, ListenerMember::compare(...));
 
         return new Members($plugins, $tags, $listeners, $problems);
+    }
+
+    /**
+     * The application's module paths inside `projectNamespaces`, then each
+     * package's directories inside its own namespace. A package installed from
+     * a path inside the module paths is reached twice and read once.
+     *
+     * @return list<class-string>
+     */
+    private function classes(): array
+    {
+        $sources = [[$this->directories, $this->projectNamespaces]];
+        foreach ($this->packageSources as $namespace => $directories) {
+            $sources[] = [$directories, [$namespace]];
+        }
+
+        $classes = [];
+        foreach ($sources as [$directories, $namespaces]) {
+            foreach ($directories as $directory) {
+                if (!is_dir($directory)) {
+                    continue;
+                }
+
+                foreach ($this->phpFilesIn($directory) as $file) {
+                    $className = $this->candidateClassIn($file, $namespaces);
+                    if ($className !== null) {
+                        $classes[$className] = true;
+                    }
+                }
+            }
+        }
+
+        return array_keys($classes);
     }
 
     /**
@@ -152,9 +180,11 @@ final class MembershipScanner
     }
 
     /**
+     * @param list<string> $namespaces
+     *
      * @return class-string|null
      */
-    private function candidateClassIn(SplFileInfo $file): ?string
+    private function candidateClassIn(SplFileInfo $file, array $namespaces): ?string
     {
         $source = (string) file_get_contents($file->getPathname());
 
@@ -174,20 +204,23 @@ final class MembershipScanner
 
         $className = $namespace[1] . '\\' . $class[1];
 
-        if (!$this->isInsideProjectNamespaces($className) || !class_exists($className)) {
+        if (!$this->isInside($className, $namespaces) || !class_exists($className)) {
             return null;
         }
 
         return $className;
     }
 
-    private function isInsideProjectNamespaces(string $className): bool
+    /**
+     * @param list<string> $namespaces none means any
+     */
+    private function isInside(string $className, array $namespaces): bool
     {
-        if ($this->projectNamespaces === []) {
+        if ($namespaces === []) {
             return true;
         }
 
-        foreach ($this->projectNamespaces as $namespace) {
+        foreach ($namespaces as $namespace) {
             if (str_starts_with($className, rtrim($namespace, '\\') . '\\')) {
                 return true;
             }

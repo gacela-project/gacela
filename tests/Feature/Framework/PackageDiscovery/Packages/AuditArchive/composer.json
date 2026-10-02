@@ -1,0 +1,17 @@
+{
+    "name": "gacela-fixture/audit-archive",
+    "description": "A package that joins another package's plugin stack by attribute alone: its gacela.php is empty, and the application names neither.",
+    "require": {
+        "gacela-project/gacela": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "GacelaTest\\Feature\\Framework\\PackageDiscovery\\Packages\\AuditArchive\\": "src"
+        }
+    },
+    "extra": {
+        "gacela": {
+            "config": "config/gacela.php"
+        }
+    }
+}

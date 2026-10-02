@@ -99,7 +99,47 @@ final class PackageConfigFinder
             $name,
             $declaredPath,
             $this->resolve($package, $name, $vendorComposerDir, $declaredPath),
+            $this->sourcesOf($package, $name, $vendorComposerDir),
         );
+    }
+
+    /**
+     * Composer writes a psr-4 directory as one string or a list of them.
+     *
+     * @param array<array-key, mixed> $package
+     *
+     * @return array<string, list<string>>
+     */
+    private function sourcesOf(array $package, string $name, string $vendorComposerDir): array
+    {
+        /** @var mixed $autoload */
+        $autoload = $package['autoload'] ?? null;
+        /** @var mixed $psr4 */
+        $psr4 = is_array($autoload) ? ($autoload['psr-4'] ?? null) : null;
+        if (!is_array($psr4)) {
+            return [];
+        }
+
+        $sources = [];
+        /** @var mixed $directories */
+        foreach ($psr4 as $namespace => $directories) {
+            if (!is_string($namespace)) {
+                continue;
+            }
+
+            if ($namespace === '') {
+                continue;
+            }
+
+            /** @var mixed $directory */
+            foreach (is_array($directories) ? $directories : [$directories] as $directory) {
+                if (is_string($directory)) {
+                    $sources[$namespace][] = $this->resolve($package, $name, $vendorComposerDir, $directory);
+                }
+            }
+        }
+
+        return $sources;
     }
 
     /**

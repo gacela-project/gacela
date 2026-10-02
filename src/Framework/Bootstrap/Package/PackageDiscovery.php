@@ -137,6 +137,7 @@ final class PackageDiscovery
                 $declaration->configFile,
                 ++$position,
                 PackageContribution::of($packageSetup, $configFile),
+                $declaration->sources,
             ));
         }
 

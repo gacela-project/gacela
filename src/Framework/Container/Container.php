@@ -15,6 +15,7 @@ use Gacela\Container\DependencyNode;
 use Gacela\Container\PlanCache;
 use Gacela\Container\ValidationReport;
 use Gacela\Framework\Bootstrap\ContainerConfigurationInterface;
+use Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
@@ -683,6 +684,7 @@ final class Container implements ContainerInterface
             $setup->getAppModulePaths(),
             $config->getAppRootDir(),
             $setup->getProjectNamespaces(),
+            PackageDiscoveryRegistry::sources(),
         )->members();
 
         // The way the class-name cache fills itself: with file caching on, only
@@ -733,7 +735,7 @@ final class Container implements ContainerInterface
     {
         $setup = $config->getSetupGacela();
 
-        return MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces());
+        return MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $setup->getAppModulePaths(), $setup->getProjectNamespaces(), PackageDiscoveryRegistry::sources());
     }
 
     /**

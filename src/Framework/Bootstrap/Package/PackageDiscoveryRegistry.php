@@ -76,6 +76,24 @@ final class PackageDiscoveryRegistry
     }
 
     /**
+     * Where the discovered packages' attribute members are read: each psr-4
+     * namespace with its directories. A refused package contributes none.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function sources(): array
+    {
+        $sources = [];
+        foreach (self::$discovered as $package) {
+            foreach ($package->sources as $namespace => $directories) {
+                $sources[$namespace] = [...$sources[$namespace] ?? [], ...$directories];
+            }
+        }
+
+        return $sources;
+    }
+
+    /**
      * @return list<RefusedPackage>
      */
     public static function refused(): array

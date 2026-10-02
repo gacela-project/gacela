@@ -248,7 +248,7 @@ use Gacela\Framework\Attribute\Tag;
 final class PostcodeValidator implements Validator {}
 ```
 
-It reaches every module, as a `tag()` in `gacela.php` does. `tagged()` yields the ids `gacela.php` tagged first, then the attribute members by class name, then what the module's own Provider tagged. A class tagged both ways appears once. The tag needs no declaration. Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`. They are read on the first `tagged()`, `taggedByKey()` or `taggedKeys()` of any tag, once per process, from the same file and with the same caching rules as [`#[Plugin]`](#typed--every-implementation-of-one-interface) below. An application that reads no tag reads neither.
+It reaches every module, as a `tag()` in `gacela.php` does. `tagged()` yields the ids `gacela.php` tagged first, then the attribute members by class name, then what the module's own Provider tagged. A class tagged both ways appears once. The tag needs no declaration. Only classes under the application's module paths and inside `projectNamespaces` are read, plus each [discovered package](packages.md)'s psr-4 directories inside that package's own namespaces; never `vendor/` at large. They are read on the first `tagged()`, `taggedByKey()` or `taggedKeys()` of any tag, once per process, from the same file and with the same caching rules as [`#[Plugin]`](#typed--every-implementation-of-one-interface) below. An application that reads no tag reads neither.
 
 ### Keyed — the one implementation for this key
 
@@ -304,7 +304,7 @@ use Gacela\Framework\Attribute\Plugin;
 final class AddQrCodeDecorator implements InvoiceDecorator {}
 ```
 
-The declared members come first, in declaration order. Attribute members follow, highest `priority` first, then by class name, and a class already declared is not added twice. The stack itself is still declared, empty if the attributes fill it: `addPluginStack(InvoiceDecorator::class, [])`. Only classes under the application's module paths and inside `projectNamespaces` are read, never `vendor/`.
+The declared members come first, in declaration order. Attribute members follow, highest `priority` first, then by class name, and a class already declared is not added twice. The stack itself is still declared, empty if the attributes fill it: `addPluginStack(InvoiceDecorator::class, [])`. Only classes under the application's module paths and inside `projectNamespaces` are read, plus each [discovered package](packages.md)'s psr-4 directories inside that package's own namespaces; never `vendor/` at large.
 
 The members are read when a declared stack is first resolved, once per process. With [file caching](caching.md) on, they come from a file that `cache:warm --attributes` writes, or that the first scan writes when nobody warmed it; a new `#[Plugin]` class then needs `cache:clear`, as a new module does. With file caching off, as in development, the module paths are scanned on first use: a few milliseconds for a handful of modules, more for a large tree. One file is kept per set of module paths and namespaces, so entrypoints that scan differently never read each other's members. `doctor` reports scanning outside `APP_ENV=dev|local|test`. An application that declares no stack reads neither.
 

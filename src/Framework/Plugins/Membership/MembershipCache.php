@@ -35,14 +35,15 @@ final class MembershipCache
 
     /**
      * The file for one scan: the members found under these module paths and
-     * namespaces.
+     * namespaces, and in these packages.
      *
      * @param list<string> $appModulePaths
      * @param list<string> $projectNamespaces
+     * @param array<string, list<string>> $packageSources
      */
-    public static function forScan(string $cacheDir, string $appRootDir, array $appModulePaths, array $projectNamespaces): self
+    public static function forScan(string $cacheDir, string $appRootDir, array $appModulePaths, array $projectNamespaces, array $packageSources = []): self
     {
-        return new self($cacheDir, $appRootDir, self::fingerprintOf($appModulePaths, $projectNamespaces));
+        return new self($cacheDir, $appRootDir, self::fingerprintOf($appModulePaths, $projectNamespaces, $packageSources));
     }
 
     public function path(): string
@@ -90,9 +91,10 @@ final class MembershipCache
     /**
      * @param list<string> $appModulePaths
      * @param list<string> $projectNamespaces
+     * @param array<string, list<string>> $packageSources
      */
-    private static function fingerprintOf(array $appModulePaths, array $projectNamespaces): string
+    private static function fingerprintOf(array $appModulePaths, array $projectNamespaces, array $packageSources): string
     {
-        return sha1(serialize([$appModulePaths, $projectNamespaces]));
+        return sha1(serialize([$appModulePaths, $projectNamespaces, $packageSources]));
     }
 }

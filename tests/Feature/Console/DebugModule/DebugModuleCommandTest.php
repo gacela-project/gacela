@@ -174,6 +174,17 @@ final class DebugModuleCommandTest extends TestCase
         self::assertStringContainsString('No module matches "DoesNotExist".', $tester->getDisplay());
     }
 
+    public function test_unknown_module_with_json_reports_the_error_as_json(): void
+    {
+        $tester = $this->debugModule(['module' => 'DoesNotExist', '--json' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame(
+            ['error' => 'No module matches "DoesNotExist".'],
+            json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
     public function test_json_option_emits_the_whole_module_description(): void
     {
         $tester = $this->debugModule(

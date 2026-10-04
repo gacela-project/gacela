@@ -54,7 +54,10 @@ final class DebugModuleCommand extends Command
         $modules = $this->getFacade()->findAllAppModules($moduleName);
 
         if ($modules === []) {
-            $output->writeln(sprintf('<comment>No module matches "%s".</comment>', $moduleName));
+            $message = sprintf('No module matches "%s".', $moduleName);
+            $output->writeln($input->getOption('json') === true
+                ? json_encode(['error' => $message], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+                : sprintf('<comment>%s</comment>', $message));
 
             return Command::FAILURE;
         }

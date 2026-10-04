@@ -23,6 +23,9 @@ use function implode;
 use function sprintf;
 use function str_replace;
 use function strcasecmp;
+use function strrpos;
+use function substr;
+use function trim;
 
 /**
  * Writes the `#[ServiceMap]` attribute that {@see ServiceMapMissingAnalyser}
@@ -91,6 +94,13 @@ final class ServiceMapMigrator
                 continue;
             }
 
+            // Edits go in as whole lines above the class, so code in front of
+            // it on the same line -- a one-line file -- would end up below
+            // them, and above `<?php`. Such a file is left as it is.
+            if (!$this->startsItsLine($phpCode, $class->getStartFilePos())) {
+                return MigrationResult::unchanged($path, $phpCode);
+            }
+
             $line = $class->getStartLine();
 
             foreach ($accessors as $method => $type) {
@@ -111,6 +121,9 @@ final class ServiceMapMigrator
         $lines = explode("\n", $phpCode);
         $imports = $this->importStatements($ast);
         $importInsertion = $this->alreadyImported($imports) ? [] : $this->importInsertion($ast, $imports);
+        if ($importInsertion !== [] && !$this->importsStartTheirLines($phpCode, $ast, $imports)) {
+            return MigrationResult::unchanged($path, $phpCode);
+        }
 
         return new MigrationResult(
             $path,
@@ -253,6 +266,40 @@ final class ServiceMapMigrator
     /**
      * A comment above an import belongs to it, so the insert goes above both.
      */
+    private function startsItsLine(string $code, int $position): bool
+    {
+        $lineStart = strrpos(substr($code, 0, $position), "\n");
+        $prefix = substr($code, $lineStart === false ? 0 : $lineStart + 1, $position - ($lineStart === false ? 0 : $lineStart + 1));
+
+        return trim($prefix) === '';
+    }
+
+    /**
+     * The import goes in as a whole line beside the existing imports, or below
+     * the namespace line: each must stand on a line of its own.
+     *
+     * @param array<array-key, Node> $ast
+     * @param list<Use_|GroupUse> $imports
+     */
+    private function importsStartTheirLines(string $code, array $ast, array $imports): bool
+    {
+        foreach ($imports as $import) {
+            if (!$this->startsItsLine($code, $import->getStartFilePos())) {
+                return false;
+            }
+        }
+
+        $namespace = $this->nodeFinder->findFirstInstanceOf($ast, Namespace_::class);
+        if (!$namespace instanceof Namespace_) {
+            return true;
+        }
+
+        $first = $namespace->stmts[0] ?? null;
+
+        return $this->startsItsLine($code, $namespace->getStartFilePos())
+            && (!$first instanceof Node || $first->getStartLine() > $namespace->getStartLine());
+    }
+
     private function firstLine(Use_|GroupUse $import): int
     {
         $comments = $import->getComments();

@@ -74,6 +74,40 @@ final class ServiceMapMigratorTest extends TestCase
     }
 
     /**
+     * Edits go in as whole lines, and here every one would land above
+     * `<?php`: the file is left as it is rather than broken.
+     */
+    public function test_a_class_sharing_its_line_with_the_open_tag_is_left_alone(): void
+    {
+        $code = '<?php declare(strict_types=1); namespace App\Cmd; use Gacela\Framework\ServiceResolverAwareTrait; '
+            . '/** @method \App\Billing\BillingFacade getFacade() */ final class OneLine { use ServiceResolverAwareTrait; }';
+
+        $result = $this->migrator->migrate('OneLine.php', $code);
+
+        self::assertFalse($result->hasChanges());
+        self::assertSame($code, $result->migratedCode);
+    }
+
+    public function test_an_import_sharing_the_namespace_line_leaves_the_file_alone(): void
+    {
+        $code = <<<'PHP'
+            <?php
+
+            namespace App\Cmd; use Gacela\Framework\ServiceResolverAwareTrait;
+
+            /**
+             * @method \App\Billing\BillingFacade getFacade()
+             */
+            final class SharedLine
+            {
+                use ServiceResolverAwareTrait;
+            }
+            PHP;
+
+        self::assertFalse($this->migrator->migrate('SharedLine.php', $code)->hasChanges());
+    }
+
+    /**
      * Nothing else in the file may move. This rewrites code somebody else
      * wrote, and a migration that reformats to add one line is not one anybody
      * runs twice.

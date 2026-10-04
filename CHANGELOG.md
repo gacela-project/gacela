@@ -30,6 +30,7 @@
 - Static analysis: the `#[Cacheable]` key check reads a key passed by position, `#[Cacheable(60, 'user')]`, not only `key: 'user'`
 - `cached()` called without a method name from a helper caches the `#[Cacheable]` method that called the helper, as the static analysis rule already assumed; the helper's own name was used, and since it has no attribute the callback ran on every call
 - `make:file` checks every template before writing: a declared kind without a published stub left the files generated before it on disk and threw, and `--dry-run` promised the file. It now writes nothing, names the stub to publish and exits 1
+- `migrate:service-map` leaves a file alone when the class or its imports share a line with other code, such as a one-line file; it inserted the import and attribute above `<?php` and reported success
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

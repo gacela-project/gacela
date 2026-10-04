@@ -19,6 +19,8 @@ use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 
 use function array_key_exists;
 use function array_keys;
+use function array_map;
+use function array_replace;
 use function count;
 use function function_exists;
 use function is_array;
@@ -27,6 +29,7 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function str_ends_with;
+use function strval;
 use function time;
 
 final class Config implements ConfigInterface
@@ -288,11 +291,12 @@ final class Config implements ConfigInterface
 
         // Declared defaults come first: a key a source provides is that
         // source's, and a key nobody provides is the declaration's.
-        $this->config = [
-            ...$this->configSchema()->defaults(),
-            ...$this->loadMergedConfigValues(),
-            ...$this->setup->getConfigKeyValues(),
-        ];
+        // Replaced, not spread: a spread renumbers an int key such as '404'.
+        $this->config = array_replace(
+            $this->configSchema()->defaults(),
+            $this->loadMergedConfigValues(),
+            $this->setup->getConfigKeyValues(),
+        );
 
         $this->initialized = true;
 
@@ -469,7 +473,7 @@ final class Config implements ConfigInterface
      */
     private function keyNotFound(string $key): ConfigException
     {
-        return ConfigException::keyNotFound($key, self::class, array_keys($this->config));
+        return ConfigException::keyNotFound($key, self::class, array_map(strval(...), array_keys($this->config)));
     }
 
     /**

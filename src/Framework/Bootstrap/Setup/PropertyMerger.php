@@ -14,6 +14,7 @@ use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Dto\Schema\MalformedDtoSchemaException;
 
 use function array_merge;
+use function array_replace;
 use function array_unique;
 use function in_array;
 
@@ -98,7 +99,8 @@ final class PropertyMerger
     public function mergeConfigKeyValues(array $list): void
     {
         $current = $this->setup->getConfigKeyValues();
-        $this->setup->setConfigKeyValues(array_merge($current, $list));
+        // array_replace: array_merge renumbers an int key such as '404'.
+        $this->setup->setConfigKeyValues(array_replace($current, $list));
     }
 
     /**

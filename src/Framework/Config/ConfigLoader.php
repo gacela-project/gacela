@@ -9,6 +9,7 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 use function array_map;
 use function array_merge;
+use function array_replace;
 use function array_values;
 use function count;
 use function dirname;
@@ -65,7 +66,9 @@ final class ConfigLoader
             );
         }
 
-        return array_merge(...$allConfigs);
+        // array_replace, not array_merge: PHP stores a key such as '404' as an
+        // int, and array_merge would renumber it rather than let it override.
+        return array_replace([], ...$allConfigs);
     }
 
     /**

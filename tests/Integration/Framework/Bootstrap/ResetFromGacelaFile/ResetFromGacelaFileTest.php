@@ -6,7 +6,7 @@ namespace GacelaTest\Integration\Framework\Bootstrap\ResetFromGacelaFile;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
-use GacelaTest\Integration\Framework\Bootstrap\ResetFromGacelaFile\Vendor\Pay\PayFacade;
+use GacelaTest\Integration\Framework\Bootstrap\ResetFromGacelaFile\Library\Pay\PayFacade;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -20,7 +20,7 @@ final class ResetFromGacelaFileTest extends TestCase
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->setFileCache(false);
         });
-        self::assertSame('vendor', (new PayFacade())->who());
+        self::assertSame('library', (new PayFacade())->who());
 
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->setFileCache(false);

@@ -81,16 +81,26 @@ final class Gacela
         HealthCheckRegistry::reset();
 
         $setup = self::processConfigFnIntoSetup($configFn);
+        $resetFirst = $setup->shouldResetInMemoryCache();
 
-        if ($setup->shouldResetInMemoryCache()) {
+        if ($resetFirst) {
             self::resetCache();
         }
 
-        $config = Config::createWithSetup($setup);
-        $config->setAppRootDir($appRootDir);
+        $config = self::createConfig($setup, $appRootDir);
 
         if (self::shouldDispatch(GacelaBootstrapStartedEvent::class)) {
             self::dispatchEvent(new GacelaBootstrapStartedEvent($appRootDir));
+        }
+
+        // With a closure, `gacela.php` is merged into the setup only here, after
+        // the caches it may ask to reset were already in use: reset, then build
+        // again from the same closure. Memoized, so nothing is read twice
+        // unless the reset happens.
+        if (!$resetFirst && self::assemblesAReset($config)) {
+            self::resetCache();
+            HealthCheckRegistry::reset();
+            $config = self::createConfig(self::processConfigFnIntoSetup($configFn), $appRootDir);
         }
 
         // Batch the file-cache writes produced while resolving classes during
@@ -260,6 +270,21 @@ final class Gacela
         // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();
+    }
+
+    private static function createConfig(SetupGacelaInterface $setup, string $appRootDir): Config
+    {
+        $config = Config::createWithSetup($setup);
+        $config->setAppRootDir($appRootDir);
+
+        return $config;
+    }
+
+    private static function assemblesAReset(Config $config): bool
+    {
+        $config->getFactory()->createGacelaFileConfig();
+
+        return $config->getSetupGacela()->shouldResetInMemoryCache();
     }
 
     /**

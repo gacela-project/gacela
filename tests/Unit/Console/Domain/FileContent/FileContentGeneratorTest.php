@@ -22,7 +22,7 @@ final class FileContentGeneratorTest extends TestCase
 
         $this->expectExceptionMessage("Unknown template for 'unknown_template'?");
         $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             'unknown_template',
         );
     }
@@ -48,7 +48,7 @@ final class FileContentGeneratorTest extends TestCase
         );
 
         $actual = $generator->targetPath(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::FACADE,
             $shortName,
             $subDirectory,
@@ -81,7 +81,7 @@ final class FileContentGeneratorTest extends TestCase
 
         $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [], StubFiles::basic()));
 
-        $generator->targetPath(new CommandArguments('Namespace', 'Dir'), FilenameSanitizer::FACADE, false, '');
+        $generator->targetPath(new CommandArguments('Namespace\Dir', 'Dir'), FilenameSanitizer::FACADE, false, '');
     }
 
     public function test_it_writes_under_the_project_root_and_reports_the_path_relative_to_it(): void
@@ -101,7 +101,7 @@ final class FileContentGeneratorTest extends TestCase
             '/project',
         );
 
-        $actualPath = $generator->generate(new CommandArguments('Namespace', 'Dir'), FilenameSanitizer::FACADE);
+        $actualPath = $generator->generate(new CommandArguments('Namespace\Dir', 'Dir'), FilenameSanitizer::FACADE);
 
         self::assertSame('Dir/DirFacade.php', $actualPath);
     }
@@ -124,7 +124,7 @@ final class FileContentGeneratorTest extends TestCase
             '/project',
         );
 
-        $generator->generate(new CommandArguments('Namespace', $directory . '/Hello'), FilenameSanitizer::FACADE);
+        $generator->generate(new CommandArguments('Namespace\Hello', $directory . '/Hello'), FilenameSanitizer::FACADE);
     }
 
     /**
@@ -146,7 +146,7 @@ final class FileContentGeneratorTest extends TestCase
         );
 
         $generator = new FileContentGenerator($fileContentIo, new StubLocator('', [], StubFiles::basic()), '/project');
-        $arguments = new CommandArguments('Namespace', 'Dir');
+        $arguments = new CommandArguments('Namespace\Dir', 'Dir');
         $files = [[FilenameSanitizer::FACADE, ''], [FilenameSanitizer::FACTORY, '']];
 
         self::assertSame(['Dir/DirFacade.php'], $generator->existingTargets($arguments, $files, false));
@@ -172,7 +172,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::FACADE,
         );
 
@@ -195,7 +195,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::FACADE,
             withShortName: true,
         );
@@ -219,7 +219,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::FACTORY,
         );
 
@@ -242,7 +242,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::FACTORY,
             withShortName: true,
         );
@@ -266,7 +266,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::CONFIG,
         );
 
@@ -289,7 +289,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::CONFIG,
             withShortName: true,
         );
@@ -313,7 +313,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::PROVIDER,
         );
 
@@ -336,7 +336,7 @@ final class FileContentGeneratorTest extends TestCase
         ], StubFiles::basic()));
 
         $actualPath = $generator->generate(
-            new CommandArguments('Namespace', 'Dir'),
+            new CommandArguments('Namespace\Dir', 'Dir'),
             FilenameSanitizer::PROVIDER,
             withShortName: true,
         );

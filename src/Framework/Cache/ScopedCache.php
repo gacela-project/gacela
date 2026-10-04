@@ -298,10 +298,6 @@ final class ScopedCache
 
         /** @var mixed $parents */
         foreach ($payload as $child => $parents) {
-            if (!is_string($child)) {
-                continue;
-            }
-
             if (!is_array($parents)) {
                 continue;
             }
@@ -312,7 +308,9 @@ final class ScopedCache
                     continue;
                 }
 
-                $this->addEdge($child, $parent);
+                // PHP stores a numeric key such as '42' as an int: it was a
+                // string key when written.
+                $this->addEdge((string) $child, $parent);
             }
         }
     }

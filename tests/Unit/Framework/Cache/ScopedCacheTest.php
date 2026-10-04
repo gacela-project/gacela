@@ -135,6 +135,21 @@ final class ScopedCacheTest extends TestCase
         self::assertFalse($reopened->has('file:a.php'));
     }
 
+    /**
+     * PHP turns the string key '42' into an int when the graph is stored, and
+     * a reload that only accepted string keys dropped the edge.
+     */
+    public function test_a_numeric_child_key_keeps_its_edge_after_restart(): void
+    {
+        $this->cache->put('user', 'u');
+        $this->cache->put('42', 'derived from user');
+        $this->cache->dependsOn('42', 'user');
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame(['42'], $reopened->dependents('user'));
+    }
+
     public function test_dependency_survives_restart_with_leaf_invalidation(): void
     {
         // Acceptance case: `file:X` depending on `ns:Y` survives process
@@ -459,7 +474,7 @@ final class ScopedCacheTest extends TestCase
 
                 return [
                     'file:a' => ['ns:X'],
-                    123      => ['bad-int-key'],
+                    123      => ['numeric-child-parent'],
                     'file:b' => 'not-an-array',
                     'file:c' => ['ns:Y', 456],
                 ];
@@ -470,7 +485,8 @@ final class ScopedCacheTest extends TestCase
 
         self::assertSame(['file:a'], $reopened->dependents('ns:X'));
         self::assertSame(['file:c'], $reopened->dependents('ns:Y'));
-        self::assertSame([], $reopened->dependents('bad-int-key'));
+        // An int key is what PHP stores for the string key '123', so it is valid.
+        self::assertSame(['123'], $reopened->dependents('numeric-child-parent'));
         self::assertSame([], $reopened->dependents('file:b'));
     }
 }

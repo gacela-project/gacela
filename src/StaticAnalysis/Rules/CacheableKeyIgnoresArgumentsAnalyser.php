@@ -41,6 +41,9 @@ final class CacheableKeyIgnoresArgumentsAnalyser implements MethodAnalyserInterf
 {
     private const ATTRIBUTE = 'Cacheable';
 
+    /** `Cacheable::__construct(int $ttl, ?string $key)` */
+    private const KEY_POSITION = 1;
+
     /**
      * @return list<Violation>
      */
@@ -143,7 +146,7 @@ final class CacheableKeyIgnoresArgumentsAnalyser implements MethodAnalyserInterf
     }
 
     /**
-     * The literal `key:` of a `#[Cacheable]` on this method, or null when there
+     * The literal key of a `#[Cacheable]` on this method, or null when there
      * is no such attribute, no `key`, or one this cannot read.
      *
      * A key built at runtime -- a constant, a concatenation -- is not judged:
@@ -158,12 +161,13 @@ final class CacheableKeyIgnoresArgumentsAnalyser implements MethodAnalyserInterf
                     continue;
                 }
 
-                foreach ($attribute->args as $arg) {
-                    if (!$arg->name instanceof Identifier) {
-                        continue;
-                    }
+                // Named, or second by position: `#[Cacheable(60, 'user')]`.
+                foreach ($attribute->args as $position => $arg) {
+                    $isKey = $arg->name instanceof Identifier
+                        ? $arg->name->toString() === 'key'
+                        : $position === self::KEY_POSITION;
 
-                    if ($arg->name->toString() === 'key' && $arg->value instanceof String_) {
+                    if ($isKey && $arg->value instanceof String_) {
                         return $arg->value->value;
                     }
                 }

@@ -31,6 +31,17 @@ final class CacheableKeyIgnoresArgumentsAnalyserTest extends TestCase
         self::assertStringContainsString('the first result is served to all of them', $violations[0]->message);
     }
 
+    public function test_a_key_passed_by_position_is_read_too(): void
+    {
+        self::assertCount(1, $this->analyse("#[Cacheable(60, 'user')]", 'int $id'));
+        self::assertSame([], $this->analyse("#[Cacheable(60, 'user:{0}')]", 'int $id'));
+    }
+
+    public function test_a_ttl_alone_by_position_is_not_a_key(): void
+    {
+        self::assertSame([], $this->analyse('#[Cacheable(60)]', 'int $id'));
+    }
+
     public function test_the_finding_names_the_key_and_the_method(): void
     {
         $violations = $this->analyse("#[Cacheable(ttl: 60, key: 'user')]", 'int $id');

@@ -45,4 +45,14 @@ interface FileContentGeneratorInterface
      * @return list<array{path: string, exists: bool}> in the order given
      */
     public function plannedTargets(CommandArguments $commandArguments, array $files, bool $withShortName): array;
+
+    /**
+     * Why each filename without a template has none, before anything is
+     * written: found mid-run, the files generated first stayed behind.
+     *
+     * @param list<string> $filenames
+     *
+     * @return list<string> one message per filename without a template
+     */
+    public function missingTemplates(array $filenames): array;
 }

@@ -9,7 +9,6 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -95,10 +94,33 @@ final class MakeFileDeclaredKindTest extends TestCase
     {
         $this->bootstrapDeclaring('Exporter');
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage($this->stubsDir . '/exporter-maker.txt');
+        $tester = $this->makeFile('Exporter');
 
-        $this->makeFile('Exporter');
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString($this->stubsDir . '/exporter-maker.txt', $tester->getDisplay());
+    }
+
+    /**
+     * Found mid-run, the facade generated first stayed on disk.
+     */
+    public function test_a_missing_stub_is_found_before_any_file_is_written(): void
+    {
+        $this->bootstrapDeclaring('Exporter');
+
+        $tester = $this->makeFiles(['Facade', 'Exporter']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertDirectoryDoesNotExist(self::GENERATED_DIR);
+    }
+
+    public function test_a_dry_run_does_not_promise_a_file_without_a_stub(): void
+    {
+        $this->bootstrapDeclaring('Exporter');
+
+        $tester = $this->makeFiles(['Facade', 'Exporter'], dryRun: true);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringNotContainsString('Would create', $tester->getDisplay());
     }
 
     /**
@@ -155,11 +177,20 @@ final class MakeFileDeclaredKindTest extends TestCase
 
     private function makeFile(string $filename, bool $shortName = false): CommandTester
     {
+        return $this->makeFiles([$filename], $shortName);
+    }
+
+    /**
+     * @param list<string> $filenames
+     */
+    private function makeFiles(array $filenames, bool $shortName = false, bool $dryRun = false): CommandTester
+    {
         $tester = new CommandTester(new MakeFileCommand());
         $tester->execute([
             'path' => self::MODULE_PATH,
-            'filenames' => [$filename],
+            'filenames' => $filenames,
             '--short-name' => $shortName,
+            '--dry-run' => $dryRun,
         ]);
 
         return $tester;

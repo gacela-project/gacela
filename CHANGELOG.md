@@ -29,6 +29,7 @@
 - PHPStan: `getProvidedDependency()` with a key that may be one of several classes is typed as their union, not the first one; a key that may also be a plain string stays `mixed`
 - Static analysis: the `#[Cacheable]` key check reads a key passed by position, `#[Cacheable(60, 'user')]`, not only `key: 'user'`
 - `cached()` called without a method name from a helper caches the `#[Cacheable]` method that called the helper, as the static analysis rule already assumed; the helper's own name was used, and since it has no attribute the callback ran on every call
+- `make:file` checks every template before writing: a declared kind without a published stub left the files generated before it on disk and threw, and `--dry-run` promised the file. It now writes nothing, names the stub to publish and exits 1
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

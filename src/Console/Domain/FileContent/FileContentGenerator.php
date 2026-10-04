@@ -6,6 +6,8 @@ namespace Gacela\Console\Domain\FileContent;
 
 use Gacela\Console\Domain\CommandArguments\CommandArguments;
 
+use RuntimeException;
+
 use function preg_match;
 use function sprintf;
 
@@ -100,6 +102,20 @@ final class FileContentGenerator implements FileContentGeneratorInterface
      * A relative psr-4 directory is relative to the project root, which
      * bin/gacela bootstraps from even when it runs in a subdirectory.
      */
+    public function missingTemplates(array $filenames): array
+    {
+        $messages = [];
+        foreach ($filenames as $filename) {
+            try {
+                $this->stubs->templateFor($filename);
+            } catch (RuntimeException $runtimeException) {
+                $messages[] = $runtimeException->getMessage();
+            }
+        }
+
+        return $messages;
+    }
+
     private function onDisk(string $path): string
     {
         if ($this->rootDir === '' || preg_match('~^(?:[a-zA-Z]:[\\\\/]|[\\\\/])~', $path) === 1) {

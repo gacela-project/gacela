@@ -90,6 +90,18 @@ final class ConsoleFacade extends AbstractFacade
             ->plannedTargets($commandArguments, $files, $withShortName);
     }
 
+    /**
+     * @param list<string> $filenames
+     *
+     * @return list<string>
+     */
+    public function missingTemplates(array $filenames): array
+    {
+        return $this->getFactory()
+            ->createFileContentGenerator()
+            ->missingTemplates($filenames);
+    }
+
     public function generateMinimalFileContent(
         CommandArguments $commandArguments,
         string $filename,

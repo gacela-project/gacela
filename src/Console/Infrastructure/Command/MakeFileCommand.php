@@ -87,6 +87,17 @@ final class MakeFileCommand extends Command
 
         $files = array_map(static fn (string $filename): array => [$filename, ''], $filenames);
 
+        // Every template is found before any file is written, and before a
+        // dry run promises files the real run could not write.
+        $missing = $this->getFacade()->missingTemplates($filenames);
+        if ($missing !== []) {
+            foreach ($missing as $message) {
+                $output->writeln(sprintf('<error>%s</error>', $message));
+            }
+
+            return self::FAILURE;
+        }
+
         // Same rule as make:module: check every target before writing any of
         // them, so a run that would replace hand-written code refuses instead.
         if ($input->getOption('force') !== true) {

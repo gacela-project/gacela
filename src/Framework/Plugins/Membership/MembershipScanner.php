@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Plugins\Membership;
 
+use Closure;
 use Gacela\Framework\Attribute\AsListener;
 use Gacela\Framework\Attribute\Plugin;
 use Gacela\Framework\Attribute\Tag;
@@ -15,7 +16,10 @@ use ReflectionMethod;
 use ReflectionNamedType;
 use SplFileInfo;
 
+use function array_intersect;
 use function array_keys;
+use function array_map;
+use function array_pop;
 use function class_exists;
 use function file_get_contents;
 use function in_array;
@@ -28,6 +32,9 @@ use function str_ends_with;
 use function str_replace;
 use function str_starts_with;
 use function strlen;
+use function strrchr;
+use function substr;
+use function trait_exists;
 use function usort;
 
 use const DIRECTORY_SEPARATOR;
@@ -141,6 +148,71 @@ final class MembershipScanner
         }
 
         $classes = [];
+        $listenerTraits = [];
+        foreach ($this->filesOf($sources) as [$file, $namespaces]) {
+            $declarations = $this->declarationsIn($file);
+            if (!$declarations instanceof SourceDeclarations) {
+                continue;
+            }
+
+            foreach ($this->existing($declarations->classes, $namespaces, class_exists(...)) as $className) {
+                $classes[$className] = true;
+            }
+
+            foreach ($this->existing($declarations->traits, $namespaces, trait_exists(...)) as $trait) {
+                if ($this->declaresAListener($trait)) {
+                    $listenerTraits[$trait] = true;
+                }
+            }
+        }
+
+        if ($listenerTraits !== []) {
+            foreach ($this->classesUsing(array_keys($listenerTraits), $sources) as $className) {
+                $classes[$className] = true;
+            }
+        }
+
+        return array_keys($classes);
+    }
+
+    /**
+     * A class using a trait that declares a listener names no attribute of its
+     * own, so the first pass never reads it. Only paid for when such a trait
+     * exists: every file is read again, and one naming the trait is parsed.
+     *
+     * @param list<string> $traits
+     * @param list<array{list<string>, list<string>}> $sources
+     *
+     * @return list<class-string>
+     */
+    private function classesUsing(array $traits, array $sources): array
+    {
+        $shortNames = array_map(static fn (string $trait): string => substr((string) strrchr('\\' . $trait, '\\'), 1), $traits);
+
+        $classes = [];
+        foreach ($this->filesOf($sources) as [$file, $namespaces]) {
+            $source = (string) file_get_contents($file->getPathname());
+            if (!$this->containsAny($source, $shortNames)) {
+                continue;
+            }
+
+            foreach ($this->existing(SourceDeclarations::of($source)->classes, $namespaces, class_exists(...)) as $className) {
+                if (array_intersect($traits, $this->traitsOf($className)) !== []) {
+                    $classes[] = $className;
+                }
+            }
+        }
+
+        return $classes;
+    }
+
+    /**
+     * @param list<array{list<string>, list<string>}> $sources
+     *
+     * @return iterable<array{SplFileInfo, list<string>}>
+     */
+    private function filesOf(array $sources): iterable
+    {
         foreach ($sources as [$directories, $namespaces]) {
             foreach ($directories as $directory) {
                 if (!is_dir($directory)) {
@@ -148,14 +220,65 @@ final class MembershipScanner
                 }
 
                 foreach ($this->phpFilesIn($directory) as $file) {
-                    foreach ($this->candidateClassesIn($file, $namespaces) as $className) {
-                        $classes[$className] = true;
-                    }
+                    yield [$file, $namespaces];
+                }
+            }
+        }
+    }
+
+    /**
+     * @param class-string $trait
+     */
+    private function declaresAListener(string $trait): bool
+    {
+        foreach ((new ReflectionClass($trait))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            if ($method->getAttributes(AsListener::class) !== []) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Every trait the class takes in, through its parents and other traits.
+     *
+     * @param class-string $className
+     *
+     * @return list<string>
+     */
+    private function traitsOf(string $className): array
+    {
+        $traits = [];
+        $pending = [];
+        for ($class = new ReflectionClass($className); $class instanceof ReflectionClass; $class = $class->getParentClass()) {
+            $pending[] = $class;
+        }
+
+        while (($class = array_pop($pending)) instanceof ReflectionClass) {
+            foreach ($class->getTraits() as $trait) {
+                if (!isset($traits[$trait->getName()])) {
+                    $traits[$trait->getName()] = true;
+                    $pending[] = $trait;
                 }
             }
         }
 
-        return array_keys($classes);
+        return array_keys($traits);
+    }
+
+    /**
+     * @param list<string> $needles
+     */
+    private function containsAny(string $haystack, array $needles): bool
+    {
+        foreach ($needles as $needle) {
+            if (str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -183,11 +306,9 @@ final class MembershipScanner
     }
 
     /**
-     * @param list<string> $namespaces
-     *
-     * @return list<class-string>
+     * Null for a file that cannot name Gacela's attributes.
      */
-    private function candidateClassesIn(SplFileInfo $file, array $namespaces): array
+    private function declarationsIn(SplFileInfo $file): ?SourceDeclarations
     {
         $source = (string) file_get_contents($file->getPathname());
 
@@ -195,22 +316,32 @@ final class MembershipScanner
         // membership from the attribute itself, so a file let through here costs
         // a parse, never a wrong member.
         if (!str_contains($source, '#[') || !str_contains($source, 'Gacela')) {
-            return [];
+            return null;
         }
 
         $declarations = SourceDeclarations::of($source);
-        if (!$declarations->namesAttributeNamespace) {
-            return [];
-        }
 
-        $classes = [];
-        foreach ($declarations->classes as $className) {
-            if ($this->isInside($className, $namespaces) && class_exists($className)) {
-                $classes[] = $className;
+        return $declarations->namesAttributeNamespace ? $declarations : null;
+    }
+
+    /**
+     * @param list<string> $names
+     * @param list<string> $namespaces
+     * @param Closure(string): bool $exists
+     *
+     * @return list<class-string>
+     */
+    private function existing(array $names, array $namespaces, Closure $exists): array
+    {
+        $found = [];
+        foreach ($names as $name) {
+            if ($this->isInside($name, $namespaces) && $exists($name)) {
+                /** @var class-string $name */
+                $found[] = $name;
             }
         }
 
-        return $classes;
+        return $found;
     }
 
     /**

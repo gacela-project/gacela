@@ -218,6 +218,37 @@ final class MembershipScannerTest extends TestCase
     }
 
     /**
+     * The class names no attribute itself, so only the trait leads to it.
+     */
+    public function test_a_listener_a_class_takes_from_a_trait_is_found(): void
+    {
+        $this->write('ListensTrait.php', 'trait ListensTrait { #[\Gacela\Framework\Attribute\AsListener] public function onCountable(\Countable $event): void {} }');
+        $this->write('UsesTrait.php', 'final class UsesTrait { use ListensTrait; }');
+        $this->write('Unrelated.php', 'final class Unrelated {}');
+
+        $listeners = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members()->listeners;
+
+        self::assertSame(
+            [[Countable::class, $this->namespace . '\UsesTrait', 'onCountable']],
+            array_map(static fn (ListenerMember $member): array => $member->toRow(), $listeners),
+        );
+    }
+
+    public function test_a_listener_a_class_takes_through_its_parent_trait_is_read_at_the_parent(): void
+    {
+        $this->write('ParentListensTrait.php', 'trait ParentListensTrait { #[\Gacela\Framework\Attribute\AsListener] public function onCountable(\Countable $event): void {} }');
+        $this->write('ParentUsesTrait.php', 'class ParentUsesTrait { use ParentListensTrait; }');
+        $this->write('ChildOfTraitUser.php', 'final class ChildOfTraitUser extends ParentUsesTrait {}');
+
+        $listeners = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members()->listeners;
+
+        self::assertSame(
+            [[Countable::class, $this->namespace . '\ParentUsesTrait', 'onCountable']],
+            array_map(static fn (ListenerMember $member): array => $member->toRow(), $listeners),
+        );
+    }
+
+    /**
      * @param list<string> $declarations
      */
     #[DataProvider('validDeclarationsARegexMisread')]

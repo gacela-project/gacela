@@ -13,8 +13,8 @@ use function str_contains;
 use function str_starts_with;
 
 /**
- * What one PHP file declares, read from its tokens: the classes it names, and
- * whether it can refer to Gacela's attributes at all.
+ * What one PHP file declares, read from its tokens: the classes and traits it
+ * names, and whether it can refer to Gacela's attributes at all.
  *
  * Tokens rather than a pattern, because the result is output: a regex misread
  * a braced namespace, a keyword in another case, or `class` in a comment, and
@@ -28,9 +28,11 @@ final class SourceDeclarations
 
     /**
      * @param list<string> $classes fully qualified, in the order declared
+     * @param list<string> $traits fully qualified, in the order declared
      */
     private function __construct(
         public readonly array $classes,
+        public readonly array $traits,
         public readonly bool $namesAttributeNamespace,
     ) {
     }
@@ -40,6 +42,7 @@ final class SourceDeclarations
         $tokens = PhpToken::tokenize($source);
         $namespace = '';
         $classes = [];
+        $traits = [];
         $names = str_contains($source, self::ATTRIBUTE_NAMESPACE);
 
         foreach ($tokens as $index => $token) {
@@ -68,10 +71,19 @@ final class SourceDeclarations
                 ) {
                     $classes[] = ($namespace === '' ? '' : $namespace . '\\') . $name->text;
                 }
+
+                continue;
+            }
+
+            if ($token->is(T_TRAIT)) {
+                $name = self::significant($tokens, $index, 1);
+                if ($name instanceof PhpToken && $name->is(T_STRING)) {
+                    $traits[] = ($namespace === '' ? '' : $namespace . '\\') . $name->text;
+                }
             }
         }
 
-        return new self($classes, $names);
+        return new self($classes, $traits, $names);
     }
 
     /**

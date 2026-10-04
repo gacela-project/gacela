@@ -14,6 +14,7 @@
 - Symfony bridge: `#[Inject]` is honoured on a `parent:` service, which has no class of its own when the pass runs; Symfony's autowiring filled the slot instead. An argument the parent sets counts as a conflict too
 - Laravel bridge: `#[Inject]` on a constructor no longer makes the listener call that constructor a second time after Laravel built the object, which ran its side effects twice and failed on a readonly promoted property
 - `#[Plugin]`, `#[Tag]` and `#[AsListener]` are found in files that import them grouped (`use Gacela\Framework\{Attribute\Tag}`) or through an aliased namespace, in a braced namespace, with keywords in another case, after a comment line starting with `class`, and in every class of a file with several; each of these was dropped without a problem reported
+- An `#[AsListener]` method a class takes from a trait is registered even when the class's own file names no Gacela attribute
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

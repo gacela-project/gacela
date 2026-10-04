@@ -8,6 +8,7 @@ use Closure;
 use Gacela\Framework\Attribute\AsListener;
 use Gacela\Framework\Attribute\Plugin;
 use Gacela\Framework\Attribute\Tag;
+use Gacela\Framework\Bootstrap\Package\PackageConfigFinder;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -396,16 +397,20 @@ final class MembershipScanner
         return rtrim(str_replace('\\', '/', $directory), '/');
     }
 
+    /**
+     * Normalized like the refused packages' directories, so `./src` or a `..`
+     * segment does not walk a refused package under a name it is not refused by.
+     */
     private static function resolve(string $path, string $rootDir): string
     {
         if ($path === '') {
-            return $rootDir;
+            return PackageConfigFinder::normalize($rootDir);
         }
 
         if (str_starts_with($path, '/') || (strlen($path) > 1 && $path[1] === ':')) {
-            return $path;
+            return PackageConfigFinder::normalize($path);
         }
 
-        return rtrim($rootDir, '/\\') . DIRECTORY_SEPARATOR . ltrim($path, '/\\');
+        return PackageConfigFinder::normalize(rtrim($rootDir, '/\\') . DIRECTORY_SEPARATOR . ltrim($path, '/\\'));
     }
 }

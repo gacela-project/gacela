@@ -23,6 +23,7 @@
 - An `afterResolving()` hook that throws for a service registered with `addFactory()` or `addLazy()` no longer deletes the registration, which left every later `get()` returning null
 - `debug:module --json` reports an unknown module as `{"error": ...}`, like `debug:dependencies` and `debug:container`, instead of a plain text line
 - A class registered with `addHealthCheck()` that is not a health check is refused with `HealthCheckNotResolvableException` before it is built; through the container its constructor ran, then a second build without arguments failed with an `ArgumentCountError`
+- A refused package's `#[Plugin]`, `#[Tag]` and `#[AsListener]` classes stay out when a module path is written with a `./` or `..` segment; the scan compared the unnormalized path against the normalized refused directory
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

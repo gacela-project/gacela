@@ -67,6 +67,64 @@ final class PackageConfigFinder
     }
 
     /**
+     * Fold the separators and resolve `.` and `..` textually.
+     *
+     * Not `realpath()`: that answers false for a path that does not exist,
+     * which is exactly the declaration `doctor` has to be able to report, and
+     * it resolves symlinks -- so a package installed from a path repository
+     * would be named by wherever it really lives rather than by where the
+     * application's own `vendor/` says it is.
+     *
+     * @internal also how the membership scan writes the module paths it walks,
+     *           so a refused package's directory compares equal to them
+     */
+    public static function normalize(string $path): string
+    {
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+
+        // Whatever is in front of the first segment and is not one: a windows
+        // drive, a root, both, or neither.
+        $prefix = '';
+
+        if (preg_match('#^[A-Za-z]:#', $path) === 1) {
+            $prefix = substr($path, 0, 2);
+            $path = substr($path, 2);
+        }
+
+        // Not trimmed off the path: the loop below drops every empty segment,
+        // which is what a leading -- or doubled -- separator becomes.
+        if (str_starts_with($path, DIRECTORY_SEPARATOR)) {
+            $prefix .= DIRECTORY_SEPARATOR;
+        }
+
+        $segments = [];
+
+        foreach (explode(DIRECTORY_SEPARATOR, $path) as $segment) {
+            if ($segment === '') {
+                continue;
+            }
+
+            if ($segment === '.') {
+                continue;
+            }
+
+            // A `..` with nothing above it stays: dropping it would silently
+            // turn a path pointing outside the vendor directory into one inside
+            // it, and name a file the package never declared.
+            $last = $segments === [] ? null : $segments[array_key_last($segments)];
+
+            if ($segment === '..' && $last !== null && $last !== '..') {
+                array_pop($segments);
+                continue;
+            }
+
+            $segments[] = $segment;
+        }
+
+        return $prefix . implode(DIRECTORY_SEPARATOR, $segments);
+    }
+
+    /**
      * @param array<array-key, mixed> $package
      */
     private function declarationOf(array $package, string $vendorComposerDir): ?PackageConfigDeclaration
@@ -156,7 +214,7 @@ final class PackageConfigFinder
             ? $this->absolutize($installPath, $vendorComposerDir)
             : dirname($vendorComposerDir) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $name);
 
-        return $this->normalize($packageDir . DIRECTORY_SEPARATOR . $declaredPath);
+        return self::normalize($packageDir . DIRECTORY_SEPARATOR . $declaredPath);
     }
 
     private function absolutize(string $path, string $vendorComposerDir): string
@@ -174,60 +232,5 @@ final class PackageConfigFinder
         return str_starts_with($path, '/')
             || str_starts_with($path, '\\\\')
             || preg_match('#^[A-Za-z]:[\\\\/]#', $path) === 1;
-    }
-
-    /**
-     * Fold the separators and resolve `.` and `..` textually.
-     *
-     * Not `realpath()`: that answers false for a path that does not exist,
-     * which is exactly the declaration `doctor` has to be able to report, and
-     * it resolves symlinks -- so a package installed from a path repository
-     * would be named by wherever it really lives rather than by where the
-     * application's own `vendor/` says it is.
-     */
-    private function normalize(string $path): string
-    {
-        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
-
-        // Whatever is in front of the first segment and is not one: a windows
-        // drive, a root, both, or neither.
-        $prefix = '';
-
-        if (preg_match('#^[A-Za-z]:#', $path) === 1) {
-            $prefix = substr($path, 0, 2);
-            $path = substr($path, 2);
-        }
-
-        // Not trimmed off the path: the loop below drops every empty segment,
-        // which is what a leading -- or doubled -- separator becomes.
-        if (str_starts_with($path, DIRECTORY_SEPARATOR)) {
-            $prefix .= DIRECTORY_SEPARATOR;
-        }
-
-        $segments = [];
-
-        foreach (explode(DIRECTORY_SEPARATOR, $path) as $segment) {
-            if ($segment === '') {
-                continue;
-            }
-
-            if ($segment === '.') {
-                continue;
-            }
-
-            // A `..` with nothing above it stays: dropping it would silently
-            // turn a path pointing outside the vendor directory into one inside
-            // it, and name a file the package never declared.
-            $last = $segments === [] ? null : $segments[array_key_last($segments)];
-
-            if ($segment === '..' && $last !== null && $last !== '..') {
-                array_pop($segments);
-                continue;
-            }
-
-            $segments[] = $segment;
-        }
-
-        return $prefix . implode(DIRECTORY_SEPARATOR, $segments);
     }
 }

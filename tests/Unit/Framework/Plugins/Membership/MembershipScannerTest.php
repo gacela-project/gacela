@@ -82,6 +82,19 @@ final class MembershipScannerTest extends TestCase
         self::assertSame([$this->namespace . '\\Kept'], array_map(static fn (PluginMember $member): string => $member->plugin, $members->plugins));
     }
 
+    /**
+     * The refused directory is normalized, so the walked one has to be too.
+     */
+    public function test_an_excluded_directory_is_not_read_through_a_dot_segment_module_path(): void
+    {
+        $this->declare('Kept.php', 'Kept');
+        $this->declare('packages' . DIRECTORY_SEPARATOR . 'refused' . DIRECTORY_SEPARATOR . 'Refused.php', 'Refused');
+
+        $members = MembershipScanner::forPaths(['./', 'packages/../'], $this->root, [$this->namespace], [], [$this->root . DIRECTORY_SEPARATOR . 'packages' . DIRECTORY_SEPARATOR . 'refused'])->members();
+
+        self::assertSame([$this->namespace . '\\Kept'], array_map(static fn (PluginMember $member): string => $member->plugin, $members->plugins));
+    }
+
     public function test_a_plugin_without_a_priority_has_priority_zero(): void
     {
         $this->declare('Plain.php', 'Plain');

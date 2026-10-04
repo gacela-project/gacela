@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.7.1](https://github.com/gacela-project/gacela/compare/2.7.0...2.7.1) - 2026-10-04
+
 ### Added
 
 - `Container::forget($id)` is forwarded from `gacela-project/container` 2.2: it drops what was built for an id and keeps how to build it

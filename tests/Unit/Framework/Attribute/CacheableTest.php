@@ -311,6 +311,23 @@ final class CacheableTest extends TestCase
         self::assertSame(1, $facade->getCallCount());
     }
 
+    /**
+     * The static analysis accepts a #[Cacheable] method that reaches cached()
+     * through a helper, so the runtime must cache it under that method.
+     */
+    public function test_a_helper_calling_cached_without_a_method_caches_the_method_that_called_it(): void
+    {
+        $facade = new TestFacadeWithImplicitHelperCached();
+
+        $first = $facade->find(7);
+        $second = $facade->find(7);
+        $third = $facade->find(8);
+
+        self::assertSame($first, $second);
+        self::assertNotSame($first, $third);
+        self::assertSame(2, $facade->getCallCount());
+    }
+
     public function test_cached_null_value_is_treated_as_a_hit(): void
     {
         $facade = new TestFacadeReturningNull();
@@ -742,6 +759,33 @@ final class TestFacadeWithHelperCached
             ++$this->callCount;
             return 'computed-' . $this->callCount;
         }, $method, $args);
+    }
+}
+
+final class TestFacadeWithImplicitHelperCached
+{
+    use CacheableTrait;
+
+    private int $callCount = 0;
+
+    #[Cacheable(ttl: 3600)]
+    public function find(int $id): string
+    {
+        return $this->viaHelper($id);
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
+    }
+
+    private function viaHelper(int $id): string
+    {
+        return $this->cached(function () use ($id): string {
+            ++$this->callCount;
+
+            return 'found-' . $id . '-' . $this->callCount;
+        });
     }
 }
 

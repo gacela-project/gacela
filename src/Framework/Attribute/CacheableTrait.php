@@ -20,6 +20,7 @@ use function is_int;
 use function is_scalar;
 use function is_string;
 use function md5;
+use function method_exists;
 use function preg_replace_callback;
 use function serialize;
 use function sprintf;
@@ -62,6 +63,9 @@ trait CacheableTrait
 {
     use EventDispatchingCapabilities;
 
+    /** How far up a helper chain `cached()` looks for the `#[Cacheable]` method. */
+    private const int CACHEABLE_CALLER_DEPTH = 8;
+
     /** @var array<string, Cacheable|false> */
     private static array $attributeCache = [];
 
@@ -93,6 +97,8 @@ trait CacheableTrait
      */
     protected function cached(Closure $callback, ?string $method = null, ?array $args = null): mixed
     {
+        $inferred = $method === null;
+        $argsGiven = $args !== null;
         if ($method === null) {
             $frame = debug_backtrace(0, 2)[1] ?? null;
             if ($frame === null) {
@@ -113,6 +119,23 @@ trait CacheableTrait
         }
 
         $attribute = $this->resolveCacheableAttribute($method);
+
+        // Inferred from a helper with no attribute of its own: the static
+        // analysis accepts that, so the method it answers for is the nearest
+        // one of this object up the stack that has `#[Cacheable]`. Only looked
+        // for here, so a hit on the common path pays nothing for it.
+        if ($attribute === null && $inferred) {
+            $frame = $this->cacheableMethodUpTheStack();
+            if ($frame !== null) {
+                $method = $frame['function'];
+                if (!$argsGiven) {
+                    $args = $frame['args'];
+                }
+
+                $attribute = $this->resolveCacheableAttribute($method);
+            }
+        }
+
         if ($attribute === null) {
             return $callback();
         }
@@ -155,6 +178,28 @@ trait CacheableTrait
         }
 
         return $result;
+    }
+
+    /**
+     * @return array{function: string, args: list<mixed>}|null
+     */
+    private function cacheableMethodUpTheStack(): ?array
+    {
+        // [0] this method, [1] cached(), [2] the helper, [3] its caller.
+        $frames = debug_backtrace(0, self::CACHEABLE_CALLER_DEPTH);
+        for ($i = 3, $count = count($frames); $i < $count; ++$i) {
+            $frame = $frames[$i];
+            $class = $frame['class'] ?? null;
+            if ($class === null || !$this instanceof $class) {
+                return null;
+            }
+
+            if (method_exists($this, $frame['function']) && $this->resolveCacheableAttribute($frame['function']) instanceof Cacheable) {
+                return ['function' => $frame['function'], 'args' => $frame['args'] ?? []];
+            }
+        }
+
+        return null;
     }
 
     private function resolveCacheableAttribute(string $method): ?Cacheable

@@ -148,6 +148,31 @@ final class HealthCheckRegistryTest extends TestCase
         HealthCheckRegistry::createHealthChecker();
     }
 
+    /**
+     * Refused before anything is built: through the container, its
+     * constructor ran first, then a second build without arguments failed
+     * with an ArgumentCountError instead of this message.
+     */
+    public function test_class_that_is_not_a_health_check_is_never_built(): void
+    {
+        HealthCheckRegistryNotACheckWithDependency::$built = 0;
+
+        try {
+            Gacela::bootstrap(__DIR__);
+            /** @var class-string<ModuleHealthCheckInterface> $notACheck */
+            $notACheck = HealthCheckRegistryNotACheckWithDependency::class;
+            HealthCheckRegistry::register($notACheck);
+
+            HealthCheckRegistry::createHealthChecker(Gacela::container());
+            self::fail('a class that is not a health check was accepted');
+        } catch (HealthCheckNotResolvableException $healthCheckNotResolvableException) {
+            self::assertStringContainsString('does not implement', $healthCheckNotResolvableException->getMessage());
+            self::assertSame(0, HealthCheckRegistryNotACheckWithDependency::$built);
+        } finally {
+            Gacela::resetCache();
+        }
+    }
+
     public function test_container_provided_instance_is_preferred_over_direct_instantiation(): void
     {
         try {
@@ -255,4 +280,14 @@ final class HealthCheckRegistryConfigurableFake implements ModuleHealthCheckInte
 
 final class HealthCheckRegistryNotACheck
 {
+}
+
+final class HealthCheckRegistryNotACheckWithDependency
+{
+    public static int $built = 0;
+
+    public function __construct(HealthCheckRegistryTestFake $dependency)
+    {
+        ++self::$built;
+    }
 }

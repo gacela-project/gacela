@@ -8,6 +8,8 @@ use Gacela\Framework\Container\Container;
 use ReflectionClass;
 
 use function class_exists;
+use function interface_exists;
+use function is_a;
 
 /**
  * Tracks health checks registered through GacelaConfig::addHealthCheck()
@@ -79,6 +81,15 @@ final class HealthCheckRegistry
      */
     private static function instantiate(string $className, ?Container $container): ModuleHealthCheckInterface
     {
+        // Checked before anything is built: building a class that is not a
+        // check ran its constructor for nothing, then built it again without
+        // arguments and failed with that error instead of this one.
+        if (!is_a($className, ModuleHealthCheckInterface::class, true)) {
+            throw class_exists($className) || interface_exists($className)
+                ? HealthCheckNotResolvableException::notAHealthCheck($className)
+                : HealthCheckNotResolvableException::classNotFound($className);
+        }
+
         if ($container instanceof Container) {
             /** @var mixed $instance */
             $instance = $container->get($className);
@@ -87,15 +98,6 @@ final class HealthCheckRegistry
             }
         }
 
-        if (!class_exists($className)) {
-            throw HealthCheckNotResolvableException::classNotFound($className);
-        }
-
-        $instance = (new ReflectionClass($className))->newInstance();
-        if (!$instance instanceof ModuleHealthCheckInterface) {
-            throw HealthCheckNotResolvableException::notAHealthCheck($className);
-        }
-
-        return $instance;
+        return (new ReflectionClass($className))->newInstance();
     }
 }

@@ -26,6 +26,7 @@
 - A refused package's `#[Plugin]`, `#[Tag]` and `#[AsListener]` classes stay out when a module path is written with a `./` or `..` segment; the scan compared the unnormalized path against the normalized refused directory
 - `ScopedCache` keeps a dependency whose child key is numeric (`'42'`) across a restart, so invalidating its parent still clears it
 - A numeric top-level config key such as `'404'` keeps its name when sources are merged, so an environment file overrides it instead of appending a renumbered copy, and looking up a missing key in an app that has one raises `ConfigException` instead of a `TypeError`
+- PHPStan: `getProvidedDependency()` with a key that may be one of several classes is typed as their union, not the first one; a key that may also be a plain string stays `mixed`
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

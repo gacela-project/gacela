@@ -27,6 +27,16 @@ final class ProvidedDependencyTypes extends AbstractFactory
         assertType(SomeContract::class, $this->getProvidedDependency(SomeContract::class));
     }
 
+    public function eitherOfTwoClassKeysIsTheUnion(bool $flag): void
+    {
+        assertType(MappedFacade::class . '|' . SomeContract::class, $this->getProvidedDependency($flag ? MappedFacade::class : SomeContract::class));
+    }
+
+    public function aClassKeyOrAStringKeyStaysMixed(bool $flag): void
+    {
+        assertType('mixed', $this->getProvidedDependency($flag ? MappedFacade::class : 'some.service'));
+    }
+
     public function stringKeyStaysMixed(): void
     {
         assertType('mixed', $this->getProvidedDependency('some.service'));

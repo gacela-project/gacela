@@ -11,6 +11,7 @@ use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
+use PHPStan\Type\TypeCombinator;
 
 use function class_exists;
 use function count;
@@ -51,14 +52,24 @@ final class GetProvidedDependencyReturnTypeExtension implements DynamicMethodRet
             return null;
         }
 
-        foreach ($scope->getType($args[0]->value)->getConstantStrings() as $constantString) {
-            $className = $constantString->getValue();
-
-            if (class_exists($className) || interface_exists($className)) {
-                return new ObjectType($className);
-            }
+        $constantStrings = $scope->getType($args[0]->value)->getConstantStrings();
+        if ($constantStrings === []) {
+            return null;
         }
 
-        return null;
+        // Every key the argument may hold: typed by the first alone, a call
+        // that can return the second was checked against the wrong class.
+        $types = [];
+        foreach ($constantStrings as $constantString) {
+            $className = $constantString->getValue();
+
+            if (!class_exists($className) && !interface_exists($className)) {
+                return null;
+            }
+
+            $types[] = new ObjectType($className);
+        }
+
+        return TypeCombinator::union(...$types);
     }
 }

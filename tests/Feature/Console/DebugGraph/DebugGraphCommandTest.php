@@ -7,6 +7,7 @@ namespace GacelaTest\Feature\Console\DebugGraph;
 use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -140,6 +141,31 @@ final class DebugGraphCommandTest extends TestCase
 
         self::assertSame(0, $exitCode);
         self::assertSame('', $this->command->getDisplay(), 'an unchanged graph must produce no report for CI to post');
+    }
+
+    /**
+     * @param array<string, mixed> $gate
+     */
+    #[DataProvider('gatesBesideADiff')]
+    public function test_compare_to_refuses_a_gate_it_would_skip(array $gate, string $named): void
+    {
+        $this->command->execute(['--format' => 'json']);
+        $baseline = $this->writeBaseline($this->command->getDisplay());
+
+        $exitCode = $this->command->execute(['--compare-to' => $baseline, ...$gate]);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('would ignore ' . $named, $this->command->getDisplay());
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>, string}>
+     */
+    public static function gatesBesideADiff(): iterable
+    {
+        yield '--check' => [['--check' => true], '--check'];
+        yield '--rules' => [['--rules' => 'rules.json'], '--rules'];
+        yield '--check and --allowed-cycles' => [['--check' => true, '--allowed-cycles' => 'allowed.json'], '--check and --allowed-cycles'];
     }
 
     public function test_compare_to_a_graph_missing_an_edge_reports_it_as_new(): void

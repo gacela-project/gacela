@@ -69,6 +69,21 @@ final class DebugGraphCommand extends Command
 
         $compareTo = ConsoleInput::option($input, 'compare-to');
         if ($compareTo !== '') {
+            // A diff checks nothing, and its output is a report CI posts as it
+            // is: a gate asked for beside it was skipped with a zero exit.
+            $gates = $input->getOption('check') === true
+                ? ['--check', ...$this->optionsNeedingCheck($input)]
+                : $this->optionsNeedingCheck($input);
+            if ($gates !== []) {
+                $output->writeln(sprintf(
+                    '<error>--compare-to only writes a diff, and would ignore %s.</error>',
+                    implode(' and ', $gates),
+                ));
+                $output->writeln('Run <comment>debug:graph --check</comment> as a separate step.');
+
+                return self::FAILURE;
+            }
+
             return $this->writeDiff($compareTo, $graph, $output);
         }
 

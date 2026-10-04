@@ -48,6 +48,12 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
                 continue;
             }
 
+            // Built by a factory, the class constructor is not what Symfony
+            // calls, and its arguments are the factory's.
+            if ($definition->getFactory() !== null) {
+                continue;
+            }
+
             /** @var class-string|null $class */
             $class = $definition->getClass();
             if ($class === null) {

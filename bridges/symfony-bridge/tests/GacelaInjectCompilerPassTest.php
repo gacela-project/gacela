@@ -71,6 +71,16 @@ final class GacelaInjectCompilerPassTest extends TestCase
         self::assertSame(ConcreteBar::class, $bar->getClass());
     }
 
+    public function test_a_factory_built_service_is_left_to_its_factory(): void
+    {
+        $this->container->register('app.factory_built', ServiceWithInject::class)
+            ->setFactory([new Reference('app.service_factory'), 'create']);
+
+        $this->pass->process($this->container);
+
+        self::assertSame([], $this->container->getDefinition('app.factory_built')->getArguments());
+    }
+
     public function test_service_without_inject_is_left_untouched(): void
     {
         $definition = $this->container->register('app.plain', ServiceWithoutInject::class);

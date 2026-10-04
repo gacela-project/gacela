@@ -10,6 +10,7 @@
 - With several `addAppConfig()` calls, config precedence holds layer by layer as documented: a later call's base file no longer overrides an earlier call's environment or local file
 - `validateConfigSchemaOnBoot()` written in `gacela.php` or `gacela-{env}.php` takes effect when `Gacela::bootstrap()` is also given a closure; it was dropped when the two setups were merged
 - `resetInMemoryCache()` written in `gacela.php` or `gacela-{env}.php` takes effect when `Gacela::bootstrap()` is also given a closure; it was read before those files were merged, so a re-bootstrap kept the previous one's resolver caches
+- Symfony bridge: a service built by a factory no longer fails container compilation when its class has an `#[Inject]` constructor parameter; the pass wrote that argument into the factory's arguments
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

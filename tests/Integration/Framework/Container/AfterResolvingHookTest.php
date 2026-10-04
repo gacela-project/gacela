@@ -216,14 +216,17 @@ final class AfterResolvingHookTest extends TestCase
         self::assertSame(1, $calls);
     }
 
-    public function test_a_throwing_inherited_hook_removes_the_scoped_service(): void
+    public function test_a_throwing_inherited_hook_drops_the_scoped_instance_and_keeps_the_service(): void
     {
         $seen = [];
+        $failures = 1;
 
-        $this->bootstrapWith(static function (GacelaConfig $config) use (&$seen): void {
-            $config->afterResolving('report', static function (ReportService $service) use (&$seen): never {
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$seen, &$failures): void {
+            $config->afterResolving('report', static function (ReportService $service) use (&$seen, &$failures): void {
                 $seen[] = $service;
-                throw new RuntimeException('scope hook failed');
+                if ($failures-- > 0) {
+                    throw new RuntimeException('scope hook failed');
+                }
             });
         });
 
@@ -237,22 +240,27 @@ final class AfterResolvingHookTest extends TestCase
             self::assertSame('scope hook failed', $runtimeException->getMessage());
         }
 
-        self::assertCount(1, $seen);
-        self::assertNotSame($seen[0], $scope->get('report'));
+        $rebuilt = $scope->get('report');
+
+        self::assertInstanceOf(ReportService::class, $rebuilt);
+        self::assertNotSame($seen[0], $rebuilt);
     }
 
     public function test_a_throwing_hook_does_not_leave_a_half_built_service_in_the_cache(): void
     {
         $seen = [];
+        $failures = 1;
 
-        $this->bootstrapWith(static function (GacelaConfig $config) use (&$seen): void {
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$seen, &$failures): void {
             // A handler registry is the config-level path that produces a
             // *stored* instance -- bindings and factories build a new one per
             // resolution, so only this one has a cache to be left dirty.
             $config->addHandlerRegistry('dispatcher', ['a' => ReportService::class]);
-            $config->afterResolving('dispatcher', static function (object $service) use (&$seen): never {
+            $config->afterResolving('dispatcher', static function (object $service) use (&$seen, &$failures): void {
                 $seen[] = $service;
-                throw new RuntimeException('hook failed');
+                if ($failures-- > 0) {
+                    throw new RuntimeException('hook failed');
+                }
             });
         });
 
@@ -265,11 +273,14 @@ final class AfterResolvingHookTest extends TestCase
             self::assertSame('hook failed', $runtimeException->getMessage());
         }
 
-        self::assertCount(1, $seen);
+        // The instance whose post-construction wiring failed is dropped, and
+        // the registry is built again rather than lost: the next caller gets
+        // a new one, not the half-wired one and not null.
+        $rebuilt = $container->get('dispatcher');
 
-        // The instance whose post-construction wiring failed is dropped, so the
-        // next caller is not handed it as though the hook had succeeded.
-        self::assertNotSame($seen[0], $container->get('dispatcher'));
+        self::assertIsObject($rebuilt);
+        self::assertNotSame($seen[0], $rebuilt);
+        self::assertSame($rebuilt, $container->get('dispatcher'), 'shared again once rebuilt');
     }
 
     /**

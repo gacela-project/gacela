@@ -27,7 +27,7 @@
     },
     "require": {
         "php": ">=8.3",
-        "gacela-project/container": "^2.1",
+        "gacela-project/container": "^2.2",
         "psr/event-dispatcher": "^1.0"
     },
     "require-dev": {

@@ -310,6 +310,15 @@ final class Container implements ContainerInterface
         $this->inner->remove($id);
     }
 
+    /**
+     * Drop what was built for `$id` and keep how to build it: a shared service
+     * is built again on the next get(), a factory is left as it is.
+     */
+    public function forget(string $id): void
+    {
+        $this->inner->forget($id);
+    }
+
     public function factory(Closure $instance): Closure
     {
         return $this->inner->factory($instance);
@@ -891,9 +900,9 @@ final class Container implements ContainerInterface
      * useful registration is an interface -- "after anything implementing
      * LoggerAwareInterface is built".
      *
-     * A hook that throws takes the instance out of the container with it: a
-     * service whose hook wiring failed must not be served to the next caller as
-     * though it had succeeded.
+     * A hook that throws takes the built instance out of the container with
+     * it: a service whose hook wiring failed must not be served to the next
+     * caller as though it had succeeded. Its registration stays.
      */
     private function fireAfterResolving(string $id, mixed $instance): void
     {
@@ -910,11 +919,9 @@ final class Container implements ContainerInterface
                 try {
                     $callback($instance, $this);
                 } catch (Throwable $exception) {
-                    // A factory keeps no instance to take back, and removing
-                    // its id would delete the registration for good.
-                    if (!$this->inner->isFactory($id)) {
-                        $this->remove($id);
-                    }
+                    // Drops what was built and keeps the registration: a
+                    // shared closure is built again, a factory is untouched.
+                    $this->forget($id);
 
                     throw $exception;
                 }

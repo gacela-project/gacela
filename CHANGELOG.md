@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- `Container::forget($id)` is forwarded from `gacela-project/container` 2.2: it drops what was built for an id and keeps how to build it
+
+### Fixed
+
+- An `afterResolving()` hook that throws for a shared service, such as a handler registry, a plugin stack or a Provider's `set()`, no longer deletes the registration: the built instance is dropped and the next `get()` builds it again. Needs `gacela-project/container` 2.2, now the minimum
+
 ## [2.7.0](https://github.com/gacela-project/gacela/compare/2.6.2...2.7.0) - 2026-10-04
 
 ### Changed

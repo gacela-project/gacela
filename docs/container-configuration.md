@@ -47,7 +47,7 @@ return static function (GacelaConfig $config): void {
 
 **The id may name an interface**, which is the point: one registration covers every implementation, because the match is made against the resolved instance rather than by looking the requested id up in a map.
 
-Hooks fire on container-level resolution — `get()`, `getOrFail()` and `make()` — in registration order. A class the container autowires as a *nested* constructor dependency is not resolved at this level, so hooks do not fire for it. A callback that throws removes the instance rather than leaving a half-wired one for the next caller; a factory (`addFactory()`, `addLazy()`) keeps no instance, so it keeps its registration and builds afresh next time. A container with no hooks pays nothing per resolution.
+Hooks fire on container-level resolution — `get()`, `getOrFail()` and `make()` — in registration order. A class the container autowires as a *nested* constructor dependency is not resolved at this level, so hooks do not fire for it. A callback that throws drops the built instance rather than leaving a half-wired one for the next caller, and keeps the registration: a shared service (a handler registry, a plugin stack, a Provider's `set()`) is built again on the next `get()`, and a factory (`addFactory()`, `addLazy()`) builds afresh as always. A container with no hooks pays nothing per resolution.
 
 Hooks configured here are app-wide and are inherited by the scoped containers that module Factories use.
 

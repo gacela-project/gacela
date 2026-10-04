@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Config;
 
+use ArrayObject;
+use Closure;
 use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\Config\ConfigSourceStamps;
 use Gacela\Framework\Config\MergedConfigCache;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
+use GacelaTest\Fixtures\SortDirection;
 use PHPUnit\Framework\Attributes\DataProvider;
+
 use PHPUnit\Framework\TestCase;
 
 use function file_put_contents;
@@ -110,6 +114,66 @@ final class MergedConfigCacheTest extends TestCase
         yield 'a header that is not a string' => [[$header => ['declared'], 'values' => ['key' => 'value']]];
         yield 'values that are not an array' => [[$header => "declared\n", 'values' => 'value']];
         yield 'no values' => [[$header => "declared\n"]];
+    }
+
+    /**
+     * @param array<string,mixed> $values
+     */
+    #[DataProvider('valuesThatCannotBeReadBack')]
+    public function test_values_that_cannot_be_read_back_are_not_cached(array $values): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+
+        $cache->writeTrusted($values);
+        self::assertFalse($cache->exists(), 'trusted');
+
+        $cache->writeVerified($values, 'declared', ConfigSourceStamps::of([__FILE__]));
+        self::assertFalse($cache->exists(), 'verified');
+    }
+
+    /**
+     * @return iterable<string, array{array<string,mixed>}>
+     */
+    public static function valuesThatCannotBeReadBack(): iterable
+    {
+        yield 'a closure' => [['handler' => static fn (): string => 'hi']];
+        yield 'a nested closure' => [['handlers' => ['a' => 'b', 'c' => [static fn (): null => null]]]];
+        yield 'an object without __set_state()' => [['clock' => new ArrayObject()]];
+        yield 'a closure inside a plain object' => [['options' => (object) ['on' => static fn (): null => null]]];
+    }
+
+    public function test_values_that_cannot_be_read_back_remove_an_older_file(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeTrusted(['key' => 'old']);
+
+        $cache->writeTrusted(['key' => 'new', 'handler' => static fn (): string => 'hi']);
+
+        self::assertFalse($cache->exists());
+    }
+
+    public function test_values_that_export_as_loadable_code_are_cached(): void
+    {
+        $values = [
+            'plain' => (object) ['a' => 1],
+            'enum' => SortDirection::Asc,
+            'nested' => ['list' => [1, 2.5, true, null]],
+        ];
+        $cache = new MergedConfigCache($this->cacheDir);
+
+        $cache->writeTrusted($values);
+
+        self::assertEquals($values, $cache->loadIfCurrent(static fn (): string => 'declared'));
+    }
+
+    public function test_a_file_that_fails_to_load_is_a_miss(): void
+    {
+        $cache = new MergedConfigCache($this->cacheDir);
+        $cache->writeTrusted([]);
+        file_put_contents($cache->filename(), "<?php return ['handler' => " . Closure::class . '::__set_state([])];');
+
+        self::assertNull($cache->loadIfCurrent(static fn (): string => 'declared'));
+        self::assertSame([], $cache->load());
     }
 
     public function test_write_is_best_effort_when_the_cache_directory_cannot_be_created(): void

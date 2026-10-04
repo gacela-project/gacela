@@ -142,7 +142,7 @@ final class CacheWarmOutputFormatterTest extends TestCase
         $this->formatter->writeMergedConfigCacheSkipped();
 
         self::assertSame(
-            $this->lines('Merged config cache: not written, since a config source changed this second or the cache directory is not writable. The next bootstrap writes it.', ''),
+            $this->lines('Merged config cache: not written. Either a config source changed this second (the next bootstrap writes it), a value cannot be cached (a closure, or an object without __set_state()), or the cache directory is not writable.', ''),
             $this->output->fetch(),
         );
     }

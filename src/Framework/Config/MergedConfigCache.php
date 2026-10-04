@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Closure;
+use Error;
 use Gacela\Framework\Cache\FileCache;
+use stdClass;
+use UnitEnum;
 
 use function explode;
+use function get_object_vars;
 use function implode;
 use function is_array;
+use function is_object;
+use function is_resource;
 use function is_string;
+use function method_exists;
 use function sha1;
 use function strlen;
 use function substr;
@@ -62,7 +69,7 @@ final class MergedConfigCache
      */
     public function load(): array
     {
-        $data = $this->read();
+        $data = $this->read() ?? [];
 
         if (!isset($data[self::HEADER])) {
             return $data;
@@ -91,6 +98,10 @@ final class MergedConfigCache
     public function loadIfCurrent(Closure $declarationSignature): ?array
     {
         $data = $this->read();
+        if ($data === null) {
+            return null;
+        }
+
         $header = $data[self::HEADER] ?? null;
 
         if ($header === null) {
@@ -124,7 +135,7 @@ final class MergedConfigCache
      */
     public function writeTrusted(array $values): void
     {
-        FileCache::writeAtomically($this->filename(), $values);
+        $this->write($values, $values);
     }
 
     /**
@@ -135,7 +146,7 @@ final class MergedConfigCache
      */
     public function writeVerified(array $values, string $declarationSignature, array $sources): void
     {
-        FileCache::writeAtomically($this->filename(), [
+        $this->write($values, [
             self::HEADER => $declarationSignature . "\n" . ConfigSourceStamps::pack($sources),
             'values' => $values,
         ]);
@@ -183,16 +194,23 @@ final class MergedConfigCache
     }
 
     /**
-     * @return array<string,mixed>
+     * Null for a file that cannot be loaded, such as one an older version
+     * wrote with a closure in it: a miss, so the next write replaces it.
+     *
+     * @return array<string,mixed>|null
      */
-    private function read(): array
+    private function read(): ?array
     {
-        /**
-         * @psalm-suppress UnresolvableInclude
-         *
-         * @var array<string,mixed> $data
-         */
-        $data = require $this->filename();
+        try {
+            /**
+             * @psalm-suppress UnresolvableInclude
+             *
+             * @var array<string,mixed> $data
+             */
+            $data = require $this->filename();
+        } catch (Error) {
+            return null;
+        }
 
         return $data;
     }
@@ -261,5 +279,48 @@ final class MergedConfigCache
         }
 
         return '-' . substr(sha1(implode("\0", $this->dimensions)), 0, 12);
+    }
+
+    /**
+     * A closure, or an object without `__set_state()`, exports as code that
+     * fails when the file is read, so such values are not cached at all, and
+     * an older file for this configuration goes too rather than answer for it.
+     *
+     * @param array<string,mixed> $values
+     * @param array<string,mixed> $contents
+     */
+    private function write(array $values, array $contents): void
+    {
+        if (!self::isExportable($values)) {
+            FileCache::delete($this->filename());
+
+            return;
+        }
+
+        FileCache::writeAtomically($this->filename(), $contents);
+    }
+
+    private static function isExportable(mixed $value): bool
+    {
+        if (is_array($value)) {
+            /** @var mixed $item */
+            foreach ($value as $item) {
+                if (!self::isExportable($item)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        if (!is_object($value)) {
+            return !is_resource($value);
+        }
+
+        if ($value instanceof stdClass) {
+            return self::isExportable(get_object_vars($value));
+        }
+
+        return $value instanceof UnitEnum || method_exists($value, '__set_state');
     }
 }

@@ -17,6 +17,7 @@ use Gacela\Framework\ServiceResolver\ServiceMapAccessors;
 use function array_filter;
 use function array_values;
 use function class_exists;
+use function ltrim;
 use function str_contains;
 
 final class CacheWarmService
@@ -56,9 +57,12 @@ final class CacheWarmService
     public function filterProductionModules(array $modules): array
     {
         return array_values(array_filter($modules, static function (\Gacela\Console\Domain\AllAppModules\AppModule $module): bool {
-            $className = $module->facadeClass();
-            // Anchor to whole namespace segments (like \Fixtures\ / \Benchmark\); an unanchored
-            // 'Test' substring dropped legitimate modules such as App\Testimonial\TestimonialFacade.
+            // Whole namespace segments, the first one included: an unanchored
+            // 'Test' substring dropped legitimate modules such as
+            // App\Testimonial\TestimonialFacade, and a leading separator only
+            // missed a root `Tests\` namespace from autoload-dev.
+            $className = '\\' . ltrim($module->facadeClass(), '\\');
+
             return !str_contains($className, '\\Test\\')
                 && !str_contains($className, '\\Tests\\')
                 && !str_contains($className, '\\Fixtures\\')

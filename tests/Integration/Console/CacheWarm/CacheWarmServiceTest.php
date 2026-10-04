@@ -118,6 +118,10 @@ final class CacheWarmServiceTest extends TestCase
                 'App\\Tests\\SomeFacade',
                 'App\\Fixtures\\SomeFacade',
                 'App\\Benchmark\\SomeFacade',
+                'Tests\\Fixture\\SomeFacade',
+                'Test\\Fixture\\SomeFacade',
+                'Fixtures\\Module\\SomeFacade',
+                'Benchmark\\Module\\SomeFacade',
                 'App\\Testimonial\\TestimonialFacade',
                 'App\\Testament\\TestamentFacade',
             ],
@@ -129,7 +133,7 @@ final class CacheWarmServiceTest extends TestCase
         );
 
         // 'Test' as a substring of a real word (Testimonial, Testament) must survive;
-        // only the \Test\, \Tests\, \Fixtures\, \Benchmark\ namespace segments are dropped.
+        // only the Test, Tests, Fixtures and Benchmark namespace segments are dropped, the first one too.
         self::assertSame([
             0 => 'App\\Testimonial\\TestimonialFacade',
             1 => 'App\\Testament\\TestamentFacade',

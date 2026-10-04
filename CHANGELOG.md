@@ -11,6 +11,7 @@
 - `validateConfigSchemaOnBoot()` written in `gacela.php` or `gacela-{env}.php` takes effect when `Gacela::bootstrap()` is also given a closure; it was dropped when the two setups were merged
 - `resetInMemoryCache()` written in `gacela.php` or `gacela-{env}.php` takes effect when `Gacela::bootstrap()` is also given a closure; it was read before those files were merged, so a re-bootstrap kept the previous one's resolver caches
 - Symfony bridge: a service built by a factory no longer fails container compilation when its class has an `#[Inject]` constructor parameter; the pass wrote that argument into the factory's arguments
+- Symfony bridge: `#[Inject]` is honoured on a `parent:` service, which has no class of its own when the pass runs; Symfony's autowiring filled the slot instead. An argument the parent sets counts as a conflict too
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

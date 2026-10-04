@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Gacela\SymfonyBridge;
 
+use Closure;
 use Gacela\Container\Attribute\Inject;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use RuntimeException;
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+
 use Symfony\Component\DependencyInjection\Reference;
 
 use function array_key_exists;
@@ -50,12 +53,12 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
 
             // Built by a factory, the class constructor is not what Symfony
             // calls, and its arguments are the factory's.
-            if ($definition->getFactory() !== null) {
+            if ($this->inherited($container, $definition, static fn (Definition $d): string|array|null => $d->getFactory()) !== null) {
                 continue;
             }
 
             /** @var class-string|null $class */
-            $class = $definition->getClass();
+            $class = $this->inherited($container, $definition, static fn (Definition $d): ?string => $d->getClass());
             if ($class === null) {
                 continue;
             }
@@ -70,12 +73,35 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
             }
 
             foreach ($constructor->getParameters() as $parameter) {
-                $this->rewriteIfInjected($id, $definition, $parameter);
+                $this->rewriteIfInjected($container, $id, $definition, $parameter);
             }
         }
     }
 
-    private function rewriteIfInjected(string $id, Definition $definition, ReflectionParameter $parameter): void
+    /**
+     * A `parent:` service has no class or factory of its own until Symfony
+     * resolves it, which happens after this pass, so they are read from the
+     * nearest parent that sets them.
+     *
+     * @template T
+     *
+     * @param Closure(Definition): (T|null) $read
+     *
+     * @return T|null
+     */
+    private function inherited(ContainerBuilder $container, Definition $definition, Closure $read): mixed
+    {
+        $value = $read($definition);
+
+        while ($value === null && $definition instanceof ChildDefinition && $container->hasDefinition($definition->getParent())) {
+            $definition = $container->getDefinition($definition->getParent());
+            $value = $read($definition);
+        }
+
+        return $value;
+    }
+
+    private function rewriteIfInjected(ContainerBuilder $container, string $id, Definition $definition, ReflectionParameter $parameter): void
     {
         // IS_INSTANCEOF, so a subclass re-presenting the attribute under another
         // namespace is honoured too, as `Gacela\Framework\Attribute\Inject` does.
@@ -91,8 +117,7 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
         }
 
         $name = $parameter->getName();
-        $args = $definition->getArguments();
-        if (array_key_exists('$' . $name, $args) || array_key_exists($parameter->getPosition(), $args)) {
+        if ($this->claimsArgument($container, $definition, $parameter)) {
             throw new RuntimeException(sprintf(
                 'Gacela #[Inject] conflicts with an existing Symfony argument on service "%s" parameter "$%s". '
                 . 'Remove the Symfony argument or drop the #[Inject] attribute.',
@@ -105,6 +130,29 @@ final class GacelaInjectCompilerPass implements CompilerPassInterface
             ->setFactory([new Reference($this->gacelaServiceId), 'get'])
             ->setArguments([$target])
             ->setPublic(false));
+    }
+
+    /**
+     * Whether Symfony already has an argument for the parameter, on the service
+     * or a parent it inherits arguments from.
+     */
+    private function claimsArgument(ContainerBuilder $container, Definition $definition, ReflectionParameter $parameter): bool
+    {
+        $keys = ['$' . $parameter->getName(), $parameter->getPosition(), 'index_' . $parameter->getPosition()];
+
+        while (true) {
+            foreach ($keys as $key) {
+                if (array_key_exists($key, $definition->getArguments())) {
+                    return true;
+                }
+            }
+
+            if (!$definition instanceof ChildDefinition || !$container->hasDefinition($definition->getParent())) {
+                return false;
+            }
+
+            $definition = $container->getDefinition($definition->getParent());
+        }
     }
 
     /**

@@ -13,6 +13,7 @@ use GacelaTest\SymfonyBridge\Fixtures\ServiceWithoutInject;
 use GacelaTest\SymfonyBridge\Fixtures\ServiceWithSubclassedInject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -79,6 +80,53 @@ final class GacelaInjectCompilerPassTest extends TestCase
         $this->pass->process($this->container);
 
         self::assertSame([], $this->container->getDefinition('app.factory_built')->getArguments());
+    }
+
+    public function test_a_service_built_by_its_parent_factory_is_left_to_that_factory(): void
+    {
+        $this->container->register('app.base', ServiceWithInject::class)
+            ->setAbstract(true)
+            ->setFactory([new Reference('app.service_factory'), 'create']);
+        $this->container->setDefinition('app.child', new ChildDefinition('app.base'));
+
+        $this->pass->process($this->container);
+
+        self::assertSame([], $this->container->getDefinition('app.child')->getArguments());
+    }
+
+    public function test_a_child_service_gets_the_class_of_its_parent_injected(): void
+    {
+        $this->container->register('app.base', ServiceWithInject::class)->setAbstract(true);
+        $this->container->setDefinition('app.child', new ChildDefinition('app.base'));
+
+        $this->pass->process($this->container);
+
+        $foo = $this->argumentFor('app.child', '$foo');
+        self::assertInstanceOf(Definition::class, $foo);
+        self::assertSame(FooInterface::class, $foo->getClass());
+    }
+
+    public function test_conflict_with_an_argument_a_parent_sets_throws(): void
+    {
+        $this->container->register('app.base', ServiceWithInject::class)
+            ->setAbstract(true)
+            ->setArgument('$foo', new Reference('symfony.foo'));
+        $this->container->setDefinition('app.child', new ChildDefinition('app.base'));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('"app.child" parameter "$foo"');
+
+        $this->pass->process($this->container);
+    }
+
+    public function test_conflict_with_an_indexed_child_argument_throws(): void
+    {
+        $this->container->register('app.base', ServiceWithInject::class)->setAbstract(true);
+        $this->container->setDefinition('app.child', (new ChildDefinition('app.base'))->replaceArgument(0, new Reference('symfony.foo')));
+
+        $this->expectException(RuntimeException::class);
+
+        $this->pass->process($this->container);
     }
 
     public function test_service_without_inject_is_left_untouched(): void

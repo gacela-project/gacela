@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config\PathNormalizer;
 
 use function sprintf;
+use function str_replace;
+use function strpos;
+use function strrpos;
 
 final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterface
 {
@@ -21,8 +24,10 @@ final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterf
             return '';
         }
 
-        // place the file suffix right before the file extension
-        $dotPos = strpos($relativePath, '.');
+        // Before the first dot of the file name, never of a directory such as
+        // `./` or `config.d/`: EnvironmentLayer strips it from the same place.
+        $separatorPos = strrpos(str_replace('\\', '/', $relativePath), '/');
+        $dotPos = strpos($relativePath, '.', $separatorPos === false ? 0 : $separatorPos + 1);
 
         if ($dotPos !== false) {
             $relativePathWithFileSuffix = substr($relativePath, 0, $dotPos)

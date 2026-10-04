@@ -7,12 +7,34 @@ namespace GacelaTest\Unit\Framework\ClassResolver;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\ClassInfo;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Container\Container;
 use GacelaTest\Fixtures\ClassInfoTestingFacade;
 use PHPUnit\Framework\TestCase;
 
 final class ClassInfoTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        ResolvableTypes::resetToBuiltIn();
+    }
+
+    public function test_a_type_ending_in_a_pillar_suffix_keeps_its_own_key(): void
+    {
+        $actual = ClassInfo::from(ClassInfoTestingFacade::class, 'PriceConfig');
+
+        self::assertSame('\GacelaTest\Fixtures\PriceConfig', $actual->getCacheKey());
+    }
+
+    public function test_a_type_ending_in_a_declared_kind_suffix_shares_the_kind_key(): void
+    {
+        ResolvableTypes::syncFrom(['Facade' => ['Facade'], 'Factory' => ['Factory'], 'Config' => ['Config'], 'Provider' => ['Provider'], 'Reader' => ['Reader']]);
+
+        $actual = ClassInfo::from(ClassInfoTestingFacade::class, 'WalletReader');
+
+        self::assertSame('\GacelaTest\Fixtures\Reader', $actual->getCacheKey());
+    }
+
     public function test_anonymous_class(): void
     {
         $facade = new class() extends AbstractFacade {

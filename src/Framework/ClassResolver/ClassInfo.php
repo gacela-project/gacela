@@ -114,12 +114,29 @@ final class ClassInfo implements ClassInfoInterface
          * @var string $callerModuleName
          */
         $callerModuleName = $callerClassParts[count($callerClassParts) - 2] ?? '';
-        $cacheKey = GlobalKey::fromClassName(sprintf('\\%s\\%s', $callerFullNamespace, $resolvableType));
+        $cacheKey = self::cacheKey($callerFullNamespace, $resolvableType);
 
         $self = new self($callerModuleNamespace, $callerModuleName, $cacheKey, $resolvableType);
         self::$callerClassCache[$callerClass][$resolvableType] = $self;
 
         return $self;
+    }
+
+    /**
+     * A pillar is told by its base class, not its name, so a type that only
+     * ends in a pillar suffix (a mapped `PriceConfig`) is not that pillar.
+     * Folding it onto the pillar's key would hand back the module's Config.
+     */
+    private static function cacheKey(string $namespace, string $resolvableType): string
+    {
+        $className = sprintf('\\%s\\%s', $namespace, $resolvableType);
+        $kind = ResolvableType::fromClassName($resolvableType)->resolvableType();
+
+        if ($kind !== $resolvableType && isset(ResolvableTypes::BUILT_IN[$kind])) {
+            return $className;
+        }
+
+        return GlobalKey::fromClassName($className);
     }
 
     private static function normalizeFilename(string $filepath): string

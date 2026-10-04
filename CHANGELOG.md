@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- A `#[ServiceMap]` service whose name ends in a pillar suffix, such as `PriceConfig` or `HttpClientFactory`, no longer shares the cache entry of the module's own Config or Factory: `getPriceConfig()` returned the module's Config, or `getConfig()` failed with a TypeError, depending on which was resolved first
+
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 
 ### Changed

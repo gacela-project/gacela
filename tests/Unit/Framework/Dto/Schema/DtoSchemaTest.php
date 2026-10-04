@@ -57,6 +57,17 @@ final class DtoSchemaTest extends TestCase
     }
 
     /**
+     * PHP method names ignore case: both would generate `getName()`.
+     */
+    public function test_property_names_that_differ_only_in_case_are_refused(): void
+    {
+        $this->expectException(MalformedDtoSchemaException::class);
+        $this->expectExceptionMessage('"name" and "Name"');
+
+        DtoSchema::fromArray(['App\Checkout\Order' => ['name' => DtoType::string(), 'Name' => DtoType::string()]]);
+    }
+
+    /**
      * A default is what makes an absent value legitimate, so requiring it as
      * well is two answers to one question.
      */

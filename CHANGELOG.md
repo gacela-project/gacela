@@ -18,6 +18,7 @@
 - `debug:graph --compare-to` refuses `--check`, `--rules` and `--allowed-cycles` instead of returning before reading them: a CI step passing both exited 0 with a cycle present, or with a rules file that does not exist
 - `debug:graph` and the module assertions no longer report a dependency between a module and another nested in its directory when neither imports the other: the parent read the nested module's files, and a nested module's imports of its own code counted as a dependency on its parent, so `--check` failed on a cycle that was not there
 - `cache:warm` leaves out modules under a root `Tests\`, `Test\`, `Fixtures\` or `Benchmark\` namespace, as it already did for those segments deeper in a namespace
+- `dto:generate` writes a class that compiles when a description holds a closing comment marker or a line break, and a shape whose property names differ only in case (`name`, `Name`) is refused when declared instead of generating two `getName()` methods
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

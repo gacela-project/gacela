@@ -12,6 +12,7 @@ use Gacela\Framework\Dto\Schema\DtoType;
 
 use function implode;
 use function sprintf;
+use function str_replace;
 use function strrpos;
 use function substr;
 use function ucfirst;
@@ -139,7 +140,7 @@ final class DtoClassBuilder
         $method = 'get' . ucfirst($property);
         $doc = $type->description === ''
             ? ''
-            : "    /**\n     * " . $type->description . "\n     */\n";
+            : "    /**\n     * " . $this->docText($type->description) . "\n     */\n";
 
         if (!$type->isRequired) {
             return $doc . sprintf(
@@ -226,5 +227,12 @@ final class DtoClassBuilder
         $position = strrpos($className, '\\');
 
         return $position === false ? $className : substr($className, $position + 1);
+    }
+
+    // A description is free text: a closing comment marker in it would end
+    // the docblock early, and a line break would drop the next line's ` * `.
+    private function docText(string $description): string
+    {
+        return str_replace(['*/', "\r\n", "\n"], ['*\\/', "\n", "\n     * "], $description);
     }
 }

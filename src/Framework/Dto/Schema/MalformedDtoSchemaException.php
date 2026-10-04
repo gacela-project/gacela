@@ -71,4 +71,14 @@ final class MalformedDtoSchemaException extends RuntimeException
             $className,
         ));
     }
+
+    public static function sameNameInAnotherCase(string $className, string $property, string $other): self
+    {
+        return new self(sprintf(
+            'The properties "%s" and "%s" declared on "%s" differ only in case, and would generate the same accessors: php method names ignore case. Rename one.',
+            $property,
+            $other,
+            $className,
+        ));
+    }
 }

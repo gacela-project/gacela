@@ -12,6 +12,7 @@ use function is_int;
 use function is_string;
 use function ksort;
 use function preg_match;
+use function strtolower;
 
 /**
  * Every shape an application declares, by the class each generates.
@@ -91,12 +92,21 @@ final class DtoSchema
     private static function checkedProperties(string $className, array $properties): array
     {
         $checked = [];
+        $byMethodName = [];
 
         /** @var mixed $type */
         foreach ($properties as $property => $type) {
             if (!is_string($property) || preg_match(self::PROPERTY_NAME_PATTERN, $property) !== 1) {
                 throw MalformedDtoSchemaException::notAValidPropertyName($className, (string)$property);
             }
+
+            // PHP method names ignore case, so both would generate one getter.
+            $methodName = strtolower($property);
+            if (isset($byMethodName[$methodName])) {
+                throw MalformedDtoSchemaException::sameNameInAnotherCase($className, $byMethodName[$methodName], $property);
+            }
+
+            $byMethodName[$methodName] = $property;
 
             if (!$type instanceof DtoType) {
                 throw MalformedDtoSchemaException::notAType($className, $property);

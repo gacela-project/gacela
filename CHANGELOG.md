@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.8.0](https://github.com/gacela-project/gacela/compare/2.7.1...2.8.0) - 2026-10-04
+
 ### Changed
 
 - Requires `gacela-project/container` `^2.3`. Two of its fixes change what a caller can see: a constructor parameter typed as a `singleton()` or `#[Singleton]` service now gets the shared instance in a root container too, and `make()` with parameters throws when a key matches no constructor parameter instead of ignoring it. See the container's [2.3.0 notes](https://github.com/gacela-project/container/releases/tag/2.3.0)

@@ -10,6 +10,7 @@ use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Container\SharedPlanCache;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 
 use function array_filter;
@@ -26,6 +27,7 @@ final class CacheManager
         ClassNamePhpCache::FILENAME,
         CustomServicesPhpCache::FILENAME,
         MembershipCache::FILENAME,
+        SharedPlanCache::FILENAME,
     ];
 
     public function clearCache(): void
@@ -33,6 +35,10 @@ final class CacheManager
         foreach ($this->existingCacheFiles() as $cacheFile) {
             FileCache::delete($cacheFile);
         }
+
+        // Or this process writes its own plans back when it exits, and the
+        // file cache:clear just deleted is there again.
+        SharedPlanCache::resetCache();
     }
 
     /**

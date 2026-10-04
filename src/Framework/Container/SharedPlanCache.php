@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Gacela\Framework\Container;
 
 use Gacela\Container\PlanCache;
+use Throwable;
+
+use function register_shutdown_function;
 
 /**
  * One constructor-plan cache for every container Gacela builds.
@@ -27,11 +30,67 @@ use Gacela\Container\PlanCache;
  */
 final class SharedPlanCache
 {
+    public const FILENAME = 'gacela-container-plans.php';
+
     private static ?PlanCache $instance = null;
+
+    private static ?string $file = null;
+
+    private static int $countOnDisk = 0;
+
+    private static bool $writeRegistered = false;
 
     public static function getInstance(): PlanCache
     {
         return self::$instance ??= new PlanCache();
+    }
+
+    /**
+     * Start this process from the plans earlier ones saved in $file, and save
+     * them back when it ends if it planned anything new. Under PHP-FPM every
+     * request starts empty and reflects the same classes again; with this, the
+     * first requests after a deploy plan them and the rest read them.
+     *
+     * The write happens once, at shutdown, and only when the count grew: a warm
+     * application never writes. Entries whose class file changed are dropped
+     * when read, so a deploy that forgets cache:clear plans those by reflection.
+     */
+    public static function persistIn(string $file): void
+    {
+        // A process that already planned (a worker re-bootstrapping) keeps what
+        // it has: it is at least as current as the file.
+        if (!self::$instance instanceof PlanCache) {
+            self::$instance = PlanCache::fromFile($file);
+            self::$countOnDisk = self::$instance->count();
+        } elseif (self::$file !== $file) {
+            self::$countOnDisk = 0;
+        }
+
+        self::$file = $file;
+
+        if (!self::$writeRegistered) {
+            self::$writeRegistered = true;
+            register_shutdown_function(self::writeIfGrown(...));
+        }
+    }
+
+    /**
+     * @internal called at shutdown; public so a long-running process can save
+     *   between jobs
+     */
+    public static function writeIfGrown(): void
+    {
+        if (self::$file === null || !self::$instance instanceof PlanCache || self::$instance->count() <= self::$countOnDisk) {
+            return;
+        }
+
+        try {
+            self::$instance->writeTo(self::$file);
+            self::$countOnDisk = self::$instance->count();
+        } catch (Throwable) {
+            // Plans only save reflection. A cache directory that went away
+            // or turned read-only costs the next request that, nothing more.
+        }
     }
 
     /**
@@ -44,5 +103,7 @@ final class SharedPlanCache
     public static function resetCache(): void
     {
         self::$instance = null;
+        self::$file = null;
+        self::$countOnDisk = 0;
     }
 }

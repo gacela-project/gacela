@@ -24,6 +24,7 @@ tests/**/Users/
 gacela-local.php
 gacela-custom-services*.php
 gacela-class-names*.php
+gacela-container-plans*.php
 gacela-merged-config.php
 .gacelagacela-*.php
 mutation-report.html

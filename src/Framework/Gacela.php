@@ -103,6 +103,10 @@ final class Gacela
             $config = self::createConfig(self::processConfigFnIntoSetup($configFn), $appRootDir);
         }
 
+        // Before init(): the containers it builds take the shared plan cache,
+        // so it has to hold what earlier processes planned by then.
+        self::persistContainerPlans($config);
+
         // Batch the file-cache writes produced while resolving classes during
         // bootstrap into a single atomic write per cache file (like cache:warm
         // does), instead of one full-file rewrite per newly discovered key.
@@ -270,6 +274,27 @@ final class Gacela
         // Resets EventDispatcherProvider too.
         Config::resetInstance();
         Locator::resetInstance();
+    }
+
+    private static function persistContainerPlans(Config $config): void
+    {
+        // With resetInMemoryCache() in the closure, gacela.php is not merged
+        // yet: its file-cache switch and directory would be read too early,
+        // and the directory memoized for every cache after this one.
+        $config->getFactory()->createGacelaFileConfig();
+
+        if (!$config->getSetupGacela()->isFileCacheEnabled()) {
+            return;
+        }
+
+        $cacheDir = $config->getCacheDir();
+        if (!WritableDirectory::isUsable($cacheDir)) {
+            return;
+        }
+
+        SharedPlanCache::persistIn(
+            AbstractPhpFileCache::absoluteFilename($cacheDir, SharedPlanCache::FILENAME, $config->getAppRootDir()),
+        );
     }
 
     private static function createConfig(SetupGacelaInterface $setup, string $appRootDir): Config

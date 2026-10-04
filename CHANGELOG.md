@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- Requires `gacela-project/container` `^2.3`. Two of its fixes change what a caller can see: a constructor parameter typed as a `singleton()` or `#[Singleton]` service now gets the shared instance in a root container too, and `make()` with parameters throws when a key matches no constructor parameter instead of ignoring it. See the container's [2.3.0 notes](https://github.com/gacela-project/container/releases/tag/2.3.0)
+
+### Performance
+
+- With the file cache on, the constructor plans Gacela's containers make are kept in `gacela-container-plans-{appRootHash}.php`. Under PHP-FPM every request reflected the same constructors again; now a process that planned a class the file did not have saves it when it ends, and the next one starts from the file. Measured on the reference app in production mode (PHP 8.5, built-in server, opcache with preloading, 900 interleaved requests each way), a request starting from the file took a median 690μs against 800μs, about 14% less. An entry whose class file changed is dropped when read, and `cache:clear` deletes the file
+
 ## [2.7.1](https://github.com/gacela-project/gacela/compare/2.7.0...2.7.1) - 2026-10-04
 
 ### Added

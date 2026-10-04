@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\ModuleGraph;
 
 use Gacela\Console\Domain\AllAppModules\AppModule;
+use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -14,6 +15,7 @@ use function dirname;
 use function file_get_contents;
 use function is_string;
 use function sort;
+use function str_starts_with;
 
 /**
  * @psalm-type ImportEvidence = array{file: string, line: int, import: string}
@@ -42,9 +44,11 @@ final class ModuleGraphBuilder
             $moduleNames[$module->fullModuleName()] = true;
         }
 
+        $directories = $this->directoriesOf($modules);
+
         $graph = [];
         foreach ($modules as $module) {
-            $graph[$module->fullModuleName()] = $this->dependenciesOf($module, $moduleNames);
+            $graph[$module->fullModuleName()] = $this->dependenciesOf($module, $moduleNames, $directories);
         }
 
         return $graph;
@@ -60,10 +64,13 @@ final class ModuleGraphBuilder
      * same parse and the same namespace matching, so evidence cannot name an
      * edge the graph does not report, nor go missing for one it does.
      *
+     * @param list<AppModule> $modules every module, so a nested one's files
+     *                              are left to it, as the graph leaves them
+     *
      * @return list<ImportEvidence> in the order the module's files are walked,
      *                              and within a file in declaration order
      */
-    public function importsPointingInto(AppModule $module, string $dependencyNamespace): array
+    public function importsPointingInto(AppModule $module, string $dependencyNamespace, array $modules = []): array
     {
         $ownName = $module->fullModuleName();
         if ($dependencyNamespace === $ownName) {
@@ -78,7 +85,7 @@ final class ModuleGraphBuilder
         $owner = [$dependencyNamespace => true];
         $evidence = [];
 
-        foreach ($this->phpSourcesIn($moduleDir) as $file => $source) {
+        foreach ($this->phpSourcesIn($moduleDir, $this->directoriesOf($modules)) as $file => $source) {
             foreach ($this->importParser->importsWithLinesIn($source) as $import) {
                 if ($this->owningModulesOf($import['name'], $owner) === []) {
                     continue;
@@ -93,15 +100,22 @@ final class ModuleGraphBuilder
 
     /**
      * @param array<string, true> $moduleNames
+     * @param list<string> $directories every module's directory
      *
      * @return list<string>
      */
-    private function dependenciesOf(AppModule $module, array $moduleNames): array
+    private function dependenciesOf(AppModule $module, array $moduleNames, array $directories): array
     {
         $ownName = $module->fullModuleName();
         $dependencies = [];
 
-        foreach ($this->moduleImports($module) as $import) {
+        foreach ($this->moduleImports($module, $directories) as $import) {
+            // An import of the module's own code names every module it is
+            // nested in too, and is a dependency on none of them.
+            if (str_starts_with($import, $ownName . '\\')) {
+                continue;
+            }
+
             foreach ($this->owningModulesOf($import, $moduleNames) as $owner) {
                 if ($owner !== $ownName) {
                     $dependencies[$owner] = $owner;
@@ -148,9 +162,11 @@ final class ModuleGraphBuilder
     /**
      * All `use` imports declared across the module's php files.
      *
+     * @param list<string> $directories every module's directory
+     *
      * @return list<string>
      */
-    private function moduleImports(AppModule $module): array
+    private function moduleImports(AppModule $module, array $directories): array
     {
         $moduleDir = $this->moduleDirectory($module);
         if ($moduleDir === null) {
@@ -158,7 +174,7 @@ final class ModuleGraphBuilder
         }
 
         $imports = [];
-        foreach ($this->phpSourcesIn($moduleDir) as $source) {
+        foreach ($this->phpSourcesIn($moduleDir, $directories) as $source) {
             foreach ($this->importParser->importsIn($source) as $import) {
                 $imports[] = $import;
             }
@@ -168,19 +184,31 @@ final class ModuleGraphBuilder
     }
 
     /**
-     * The contents of every php file under a directory, keyed by its path.
+     * The contents of every php file under a directory, keyed by its path,
+     * leaving out any other module's directory nested inside it: those files
+     * are that module's imports, not this one's.
      *
      * Separated so the method above is about imports rather than about
      * traversal: which files are read is one question, what is read out of them
      * is another.
      *
+     * @param list<string> $moduleDirectories
+     *
      * @return iterable<string, string>
      */
-    private function phpSourcesIn(string $directory): iterable
+    private function phpSourcesIn(string $directory, array $moduleDirectories = []): iterable
     {
-        $iterator = new RecursiveIteratorIterator(
+        $nested = [];
+        foreach ($moduleDirectories as $moduleDirectory) {
+            if ($moduleDirectory !== $directory) {
+                $nested[$moduleDirectory] = true;
+            }
+        }
+
+        $iterator = new RecursiveIteratorIterator(new RecursiveCallbackFilterIterator(
             new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
-        );
+            static fn (mixed $current, string $key, RecursiveDirectoryIterator $iterator): bool => !$iterator->hasChildren() || !isset($nested[$iterator->getPathname()]),
+        ));
 
         /** @var SplFileInfo $fileInfo */
         foreach ($iterator as $fileInfo) {
@@ -198,6 +226,24 @@ final class ModuleGraphBuilder
                 yield $path => $contents;
             }
         }
+    }
+
+    /**
+     * @param list<AppModule> $modules
+     *
+     * @return list<string>
+     */
+    private function directoriesOf(array $modules): array
+    {
+        $directories = [];
+        foreach ($modules as $module) {
+            $directory = $this->moduleDirectory($module);
+            if ($directory !== null) {
+                $directories[] = $directory;
+            }
+        }
+
+        return $directories;
     }
 
     private function moduleDirectory(AppModule $module): ?string

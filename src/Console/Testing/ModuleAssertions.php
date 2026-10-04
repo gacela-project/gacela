@@ -272,7 +272,7 @@ trait ModuleAssertions
         }
 
         $lines = '';
-        foreach ((new ModuleGraphBuilder())->importsPointingInto($module, $to) as $import) {
+        foreach ((new ModuleGraphBuilder())->importsPointingInto($module, $to, $modules) as $import) {
             $lines .= sprintf("    %s:%d  use %s;\n", $import['file'], $import['line'], $import['import']);
         }
 

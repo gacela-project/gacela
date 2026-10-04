@@ -16,6 +16,7 @@
 - `#[Plugin]`, `#[Tag]` and `#[AsListener]` are found in files that import them grouped (`use Gacela\Framework\{Attribute\Tag}`) or through an aliased namespace, in a braced namespace, with keywords in another case, after a comment line starting with `class`, and in every class of a file with several; each of these was dropped without a problem reported
 - An `#[AsListener]` method a class takes from a trait is registered even when the class's own file names no Gacela attribute
 - `debug:graph --compare-to` refuses `--check`, `--rules` and `--allowed-cycles` instead of returning before reading them: a CI step passing both exited 0 with a cycle present, or with a rules file that does not exist
+- `debug:graph` and the module assertions no longer report a dependency between a module and another nested in its directory when neither imports the other: the parent read the nested module's files, and a nested module's imports of its own code counted as a dependency on its parent, so `--check` failed on a cycle that was not there
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

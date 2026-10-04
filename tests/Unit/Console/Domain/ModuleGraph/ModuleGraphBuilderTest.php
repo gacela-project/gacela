@@ -77,6 +77,27 @@ final class ModuleGraphBuilderTest extends TestCase
         self::assertSame([], $graph[self::NS . '\Hub']);
     }
 
+    /**
+     * Inner lives in Nest's directory and imports only its own code: neither
+     * depends on the other, so the pair is no cycle.
+     */
+    public function test_a_nested_module_and_its_parent_do_not_depend_on_each_other(): void
+    {
+        $graph = (new ModuleGraphBuilder())->build([
+            $this->module('Nest'),
+            $this->module('Nest\Inner'),
+        ]);
+
+        self::assertSame([self::NS . '\Nest' => [], self::NS . '\Nest\Inner' => []], $graph);
+    }
+
+    public function test_a_parent_module_has_no_evidence_from_a_nested_module_files(): void
+    {
+        $nest = $this->module('Nest');
+
+        self::assertSame([], (new ModuleGraphBuilder())->importsPointingInto($nest, self::NS . '\Nest\Inner', [$nest, $this->module('Nest\Inner')]));
+    }
+
     public function test_no_modules_produce_an_empty_graph(): void
     {
         self::assertSame([], (new ModuleGraphBuilder())->build([]));

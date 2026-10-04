@@ -5,6 +5,7 @@
 ### Changed
 
 - Laravel bridge: an `#[Inject]` property that holds null, such as `?Dep $dep = null` or an untyped one, is injected, as Gacela's own container does; only a value construction set is kept. It used to stay null with no error
+- Behaviour that changes with the fixes below: with several `addAppConfig()` calls the merge now runs layer by layer, so a later call's base file no longer overrides an earlier call's environment or local file; `debug:graph --compare-to` now refuses `--check`, `--rules` and `--allowed-cycles`; and a DTO shape whose property names differ only in case is refused at bootstrap
 
 ### Fixed
 

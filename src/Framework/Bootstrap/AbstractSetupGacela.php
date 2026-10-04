@@ -35,6 +35,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string configSchema = 'configSchema';
 
+    public const string shouldValidateConfigSchemaOnBoot = 'shouldValidateConfigSchemaOnBoot';
+
     public const string dtoSchema = 'dtoSchema';
 
     public const string stubsDir = 'stubsDir';

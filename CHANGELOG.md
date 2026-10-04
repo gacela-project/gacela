@@ -8,6 +8,7 @@
 - An environment config file is found when the config path has a dot before the file name, such as `./config/*.php` or `config.d/*.php`: the env suffix went before that dot (`-prod./config/*.php`), so `app-prod.php` was read by neither the base nor the environment layer
 - A config value holding a closure, or an object without `__set_state()`, no longer breaks every bootstrap after the first with the file cache on: such a configuration is not cached, and a cache file that fails to load is treated as a miss
 - With several `addAppConfig()` calls, config precedence holds layer by layer as documented: a later call's base file no longer overrides an earlier call's environment or local file
+- `validateConfigSchemaOnBoot()` written in `gacela.php` or `gacela-{env}.php` takes effect when `Gacela::bootstrap()` is also given a closure; it was dropped when the two setups were merged
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

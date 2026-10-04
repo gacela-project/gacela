@@ -454,8 +454,11 @@ final class SetupGacela extends AbstractSetupGacela
 
     public function setShouldValidateConfigSchemaOnBoot(?bool $enabled): self
     {
-        $this->properties->shouldValidateConfigSchemaOnBoot = $enabled
-            ?? self::DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT;
+        $this->properties->shouldValidateConfigSchemaOnBoot = $this->setPropertyWithTracking(
+            self::shouldValidateConfigSchemaOnBoot,
+            $enabled,
+            self::DEFAULT_VALIDATE_CONFIG_SCHEMA_ON_BOOT,
+        );
 
         return $this;
     }

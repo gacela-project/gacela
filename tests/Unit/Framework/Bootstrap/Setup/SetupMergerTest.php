@@ -11,6 +11,30 @@ use stdClass;
 
 final class SetupMergerTest extends TestCase
 {
+    public function test_merge_carries_the_config_schema_boot_check(): void
+    {
+        $closure = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+        });
+        $gacelaFile = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->validateConfigSchemaOnBoot();
+        });
+
+        self::assertTrue($closure->merge($gacelaFile)->shouldValidateConfigSchemaOnBoot());
+    }
+
+    public function test_merge_keeps_the_config_schema_boot_check_a_later_setup_does_not_mention(): void
+    {
+        $first = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->validateConfigSchemaOnBoot();
+        });
+        $second = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->setFileCache(false);
+        });
+
+        self::assertTrue($first->merge($second)->shouldValidateConfigSchemaOnBoot());
+    }
+
     public function test_merge_factories_from_two_setups(): void
     {
         $setup1 = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

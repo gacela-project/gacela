@@ -15,6 +15,7 @@ use GacelaTest\LaravelBridge\Fixtures\CountingService;
 use GacelaTest\LaravelBridge\Fixtures\InheritedPropertiesConsumer;
 use GacelaTest\LaravelBridge\Fixtures\InitializedPropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\InjectedConstructorConsumer;
+use GacelaTest\LaravelBridge\Fixtures\NullablePropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\PrivateSetterConsumer;
 use GacelaTest\LaravelBridge\Fixtures\PropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ReadonlyPropertyConsumer;
@@ -123,14 +124,25 @@ final class GacelaInjectTest extends LaravelBridgeTestCase
     }
 
     /**
-     * Injection fills what construction left unset; a property that already
-     * holds a value -- even null -- keeps it.
+     * Injection fills what construction left empty; a value construction set
+     * is kept.
      */
-    public function test_an_initialized_property_keeps_its_value(): void
+    public function test_a_property_construction_set_keeps_its_value(): void
     {
         $consumer = $this->app->make(InitializedPropertyConsumer::class);
 
-        self::assertNull($consumer->service());
+        self::assertSame(InitializedPropertyConsumer::FROM_CONSTRUCTOR, $consumer->service()?->name());
+    }
+
+    /**
+     * A null default is no decision, and Gacela's own container injects it:
+     * the same class must not come out differently from the two.
+     */
+    public function test_a_nullable_property_defaulting_to_null_is_injected(): void
+    {
+        $consumer = $this->app->make(NullablePropertyConsumer::class);
+
+        self::assertInstanceOf(CountingService::class, $consumer->service());
     }
 
     public function test_a_private_setter_is_refused_by_name(): void

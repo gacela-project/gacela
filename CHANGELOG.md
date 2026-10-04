@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Laravel bridge: an `#[Inject]` property that holds null, such as `?Dep $dep = null` or an untyped one, is injected, as Gacela's own container does; only a value construction set is kept. It used to stay null with no error
+
 ### Fixed
 
 - A `#[ServiceMap]` service whose name ends in a pillar suffix, such as `PriceConfig` or `HttpClientFactory`, no longer shares the cache entry of the module's own Config or Factory: `getPriceConfig()` returned the module's Config, or `getConfig()` failed with a TypeError, depending on which was resolved first

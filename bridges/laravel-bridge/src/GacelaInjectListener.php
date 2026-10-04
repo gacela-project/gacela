@@ -156,7 +156,10 @@ final class GacelaInjectListener
         // silence -- the failure the attribute exists to prevent.
         $target = self::propertyTarget($property);
 
-        if ($property->isInitialized($object)) {
+        // Null is no decision: a nullable property defaulting to it, or an
+        // untyped one, is injected, as Gacela's own container does. A value
+        // construction did set is kept.
+        if ($property->isInitialized($object) && $property->getValue($object) !== null) {
             return;
         }
 

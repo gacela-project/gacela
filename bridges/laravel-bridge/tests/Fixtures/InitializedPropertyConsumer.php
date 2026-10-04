@@ -7,13 +7,20 @@ namespace GacelaTest\LaravelBridge\Fixtures;
 use Gacela\Container\Attribute\Inject;
 
 /**
- * The property already holds a value -- null, on purpose. Injection fills what
- * construction left unset; it does not overrule what construction decided.
+ * Construction sets the property. Injection fills what construction left
+ * empty; it does not overrule what construction decided.
  */
 final class InitializedPropertyConsumer
 {
+    public const FROM_CONSTRUCTOR = 'from-constructor';
+
     #[Inject]
-    private ?CountingService $service = null;
+    private ?CountingService $service;
+
+    public function __construct()
+    {
+        $this->service = new CountingService(self::FROM_CONSTRUCTOR);
+    }
 
     public function service(): ?CountingService
     {

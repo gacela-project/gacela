@@ -33,6 +33,8 @@ When the same key appears in several places, later sources win:
 4. the local file (second argument of `addAppConfig(...)`, conventionally `config/local.php`; not env-suffixed, meant for per-machine overrides)
 5. values set in code via `GacelaConfig::addAppConfigKeyValue(s)`
 
+With several `addAppConfig()` calls, each layer spans all of them: every base file comes before any environment file, and every local file comes after both. Within one layer, a later call wins.
+
 #### The base layer excludes the environment files
 
 `config/*.php` is a glob, and it matches `config/app-prod.php` as happily as `config/app.php`. Left at that, step 1 would read every environment's file before step 2 got to choose one, and a key set *only* in `config/app-prod.php` would reach a developer's machine — the base layer having nothing to overwrite it with.

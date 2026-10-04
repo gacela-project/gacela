@@ -8,7 +8,11 @@ use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
 use function array_map;
+use function array_merge;
+use function array_values;
+use function count;
 use function dirname;
+use function max;
 use function preg_match;
 use function serialize;
 use function sha1;
@@ -29,17 +33,32 @@ final class ConfigLoader
     }
 
     /**
+     * Layer by layer across every config item, as the precedence is documented:
+     * all base files, then each environment and dimension layer, then the
+     * local files. Item by item, a second `addAppConfig()` base file overrode
+     * the first one's environment and local files.
+     *
      * @return array<string,mixed>
      */
     public function loadAll(): array
     {
         $allConfigs = [];
+        $configItems = $this->gacelaConfigFile->getConfigItems();
+        $layersByItem = array_map($this->layersOf(...), $configItems);
 
-        foreach ($this->gacelaConfigFile->getConfigItems() as $configItem) {
-            $allConfigs[] = $this->loadConfigsFromPatterns($configItem);
-            // The local file is merged last, so it always overrides the
-            // default and env values; the read cache guarantees it is read
-            // only once even when it also matches a pattern above.
+        $layerCount = max([0, ...array_map(count(...), $layersByItem)]);
+
+        for ($layer = 0; $layer < $layerCount; ++$layer) {
+            foreach ($configItems as $index => $configItem) {
+                foreach ($layersByItem[$index][$layer] ?? [] as $absolutePath) {
+                    $allConfigs[] = $this->readConfigWithCache($absolutePath, $configItem);
+                }
+            }
+        }
+
+        // The read cache reads a local file once even when a pattern above
+        // also matched it; merged again here, it still overrides them.
+        foreach ($configItems as $configItem) {
             $allConfigs[] = $this->readConfigWithCache(
                 $this->pathNormalizer->normalizePathLocal($configItem),
                 $configItem,
@@ -246,15 +265,23 @@ final class ConfigLoader
      */
     private function filesOf(GacelaConfigItem $configItem): array
     {
-        $files = $this->baseLayerFiles($configItem);
+        return array_merge(...$this->layersOf($configItem));
+    }
+
+    /**
+     * The base layer first, then one list per environment or dimension layer.
+     *
+     * @return non-empty-list<list<string>>
+     */
+    private function layersOf(GacelaConfigItem $configItem): array
+    {
+        $layers = [$this->baseLayerFiles($configItem)];
 
         foreach ($this->pathNormalizer->normalizePathPatternsWithSuffixes($configItem) as $pattern) {
-            foreach ($this->pathFinder->matchingPattern($pattern) as $absolutePath) {
-                $files[] = $absolutePath;
-            }
+            $layers[] = array_values($this->pathFinder->matchingPattern($pattern));
         }
 
-        return $files;
+        return $layers;
     }
 
     /**
@@ -325,20 +352,6 @@ final class ConfigLoader
         }
 
         return $directory;
-    }
-
-    /**
-     * @return array<string,mixed>
-     */
-    private function loadConfigsFromPatterns(GacelaConfigItem $configItem): array
-    {
-        $mergedConfigs = [];
-
-        foreach ($this->filesOf($configItem) as $absolutePath) {
-            $mergedConfigs[] = $this->readConfigWithCache($absolutePath, $configItem);
-        }
-
-        return array_merge(...$mergedConfigs);
     }
 
     /**

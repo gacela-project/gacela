@@ -21,7 +21,6 @@ use function file_get_contents;
 use function in_array;
 use function is_dir;
 use function ltrim;
-use function preg_match;
 use function rtrim;
 use function sprintf;
 use function str_contains;
@@ -37,9 +36,10 @@ use const DIRECTORY_SEPARATOR;
  * Finds the `#[Plugin]`, `#[Tag]` and `#[AsListener]` declarations of the
  * application by walking its module paths.
  *
- * A file is loaded only when its source names `Gacela\Framework\Attribute` and declares a class
- * inside `projectNamespaces`: a loose match costs one class load, never a wrong
- * member, because membership is read from the attribute itself.
+ * A file is loaded only when it can name Gacela's attributes, imported or
+ * written out, and declares a class inside `projectNamespaces`: a loose match
+ * costs one class load, never a wrong member, because membership is read from
+ * the attribute itself.
  *
  * @internal
  */
@@ -148,8 +148,7 @@ final class MembershipScanner
                 }
 
                 foreach ($this->phpFilesIn($directory) as $file) {
-                    $className = $this->candidateClassIn($file, $namespaces);
-                    if ($className !== null) {
+                    foreach ($this->candidateClassesIn($file, $namespaces) as $className) {
                         $classes[$className] = true;
                     }
                 }
@@ -186,33 +185,32 @@ final class MembershipScanner
     /**
      * @param list<string> $namespaces
      *
-     * @return class-string|null
+     * @return list<class-string>
      */
-    private function candidateClassIn(SplFileInfo $file, array $namespaces): ?string
+    private function candidateClassesIn(SplFileInfo $file, array $namespaces): array
     {
         $source = (string) file_get_contents($file->getPathname());
 
-        // Loose on purpose: an aliased, grouped or qualified use of either
-        // attribute still names their namespace, and reflection decides
-        // membership from the attribute itself.
-        if (!str_contains($source, '#[') || !str_contains($source, 'Gacela\\Framework\\Attribute')) {
-            return null;
+        // Cheap text checks first, loose on purpose: reflection decides
+        // membership from the attribute itself, so a file let through here costs
+        // a parse, never a wrong member.
+        if (!str_contains($source, '#[') || !str_contains($source, 'Gacela')) {
+            return [];
         }
 
-        // The class keyword may follow its attributes on the same line.
-        if (preg_match('/^\s*namespace\s+([\w\\\\]+)\s*;/m', $source, $namespace) !== 1
-            || preg_match('/^\s*(?:#\[.*?\]\s*)*(?:(?:final|abstract|readonly)\s+)*class\s+(\w+)/m', $source, $class) !== 1
-        ) {
-            return null;
+        $declarations = SourceDeclarations::of($source);
+        if (!$declarations->namesAttributeNamespace) {
+            return [];
         }
 
-        $className = $namespace[1] . '\\' . $class[1];
-
-        if (!$this->isInside($className, $namespaces) || !class_exists($className)) {
-            return null;
+        $classes = [];
+        foreach ($declarations->classes as $className) {
+            if ($this->isInside($className, $namespaces) && class_exists($className)) {
+                $classes[] = $className;
+            }
         }
 
-        return $className;
+        return $classes;
     }
 
     /**

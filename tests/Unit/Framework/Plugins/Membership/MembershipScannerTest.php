@@ -10,16 +10,20 @@ use Gacela\Framework\Plugins\Membership\Members;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use Gacela\Framework\Plugins\Membership\MembershipScanner;
 use Gacela\Framework\Plugins\Membership\PluginMember;
+use Gacela\Framework\Plugins\Membership\TagMember;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function array_reverse;
+use function class_exists;
 use function dirname;
 use function file_put_contents;
 use function is_dir;
 use function mkdir;
 use function rmdir;
 use function sprintf;
+use function str_replace;
 use function strlen;
 use function sys_get_temp_dir;
 use function uniqid;
@@ -211,6 +215,72 @@ final class MembershipScannerTest extends TestCase
             [[Countable::class, $this->namespace . '\\Base', 'on'], [Countable::class, $this->namespace . '\\Child', 'onCountable']],
             array_map(static fn (ListenerMember $member): array => $member->toRow(), $listeners),
         );
+    }
+
+    /**
+     * @param list<string> $declarations
+     */
+    #[DataProvider('validDeclarationsARegexMisread')]
+    public function test_a_tag_is_found_however_the_file_is_written(string $source, array $declarations): void
+    {
+        $file = $this->root . DIRECTORY_SEPARATOR . 'Source.php';
+        file_put_contents($file, str_replace('NS', $this->namespace, $source));
+        $this->files[] = $file;
+        require_once $file;
+
+        self::assertSame($declarations, $this->taggedIn());
+    }
+
+    /**
+     * @return iterable<string, array{string, list<string>}>
+     */
+    public static function validDeclarationsARegexMisread(): iterable
+    {
+        yield 'a grouped import' => [
+            "<?php\nnamespace NS;\nuse Gacela\\Framework\\{Attribute\\Tag};\n#[Tag('t')]\nfinal class Grouped {}\n",
+            ['Grouped'],
+        ];
+        yield 'an aliased namespace import' => [
+            "<?php\nnamespace NS;\nuse Gacela\\Framework as G;\n#[G\\Attribute\\Tag('t')]\nfinal class Aliased {}\n",
+            ['Aliased'],
+        ];
+        yield 'a braced namespace' => [
+            "<?php\nnamespace NS {\n    use Gacela\\Framework\\Attribute\\Tag;\n    #[Tag('t')]\n    final class Braced {}\n}\n",
+            ['Braced'],
+        ];
+        yield 'keywords in another case' => [
+            "<?php\nNamespace NS;\nuse Gacela\\Framework\\Attribute\\Tag;\n#[Tag('t')]\nFinal Class Upper {}\n",
+            ['Upper'],
+        ];
+        yield 'a comment line starting with class' => [
+            "<?php\nnamespace NS;\nuse Gacela\\Framework\\Attribute\\Tag;\n/*\nclass names in this comment are not declarations\n*/\n#[Tag('t')]\nfinal class Commented {}\n",
+            ['Commented'],
+        ];
+        yield 'two classes in one file' => [
+            "<?php\nnamespace NS;\nuse Gacela\\Framework\\Attribute\\Tag;\n#[Tag('t')]\nfinal class First {}\n#[Tag('t')]\nfinal class Second {}\n",
+            ['First', 'Second'],
+        ];
+    }
+
+    public function test_a_file_that_only_imports_other_gacela_classes_is_not_loaded(): void
+    {
+        $file = $this->root . DIRECTORY_SEPARATOR . 'NotLoaded.php';
+        file_put_contents($file, sprintf("<?php\nnamespace %s;\nuse Gacela\\Framework\\AbstractFacade;\n#[\\Attribute]\nfinal class NotLoaded extends AbstractFacade {}\n", $this->namespace));
+        $this->files[] = $file;
+
+        MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members();
+
+        self::assertFalse(class_exists($this->namespace . '\\NotLoaded', false));
+    }
+
+    /**
+     * @return list<string> the short names tagged, sorted
+     */
+    private function taggedIn(): array
+    {
+        $tags = MembershipScanner::forPaths([$this->root], $this->root, [$this->namespace])->members()->tags;
+
+        return array_map(fn (TagMember $member): string => substr($member->class, strlen($this->namespace) + 1), $tags);
     }
 
     /**

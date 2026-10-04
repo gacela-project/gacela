@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.7.0](https://github.com/gacela-project/gacela/compare/2.6.2...2.7.0) - 2026-10-04
+
 ### Changed
 
 - Laravel bridge: an `#[Inject]` property that holds null, such as `?Dep $dep = null` or an untyped one, is injected, as Gacela's own container does; only a value construction set is kept. It used to stay null with no error

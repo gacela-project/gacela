@@ -14,6 +14,7 @@ use GacelaTest\LaravelBridge\Fixtures\ContractSetterConsumer;
 use GacelaTest\LaravelBridge\Fixtures\CountingService;
 use GacelaTest\LaravelBridge\Fixtures\InheritedPropertiesConsumer;
 use GacelaTest\LaravelBridge\Fixtures\InitializedPropertyConsumer;
+use GacelaTest\LaravelBridge\Fixtures\InjectedConstructorConsumer;
 use GacelaTest\LaravelBridge\Fixtures\PrivateSetterConsumer;
 use GacelaTest\LaravelBridge\Fixtures\PropertyConsumer;
 use GacelaTest\LaravelBridge\Fixtures\ReadonlyPropertyConsumer;
@@ -72,6 +73,16 @@ final class GacelaInjectTest extends LaravelBridgeTestCase
      * honor either namespace, and the type is on the member, so the bare form
      * works here.
      */
+    public function test_an_injected_constructor_is_not_called_again(): void
+    {
+        InjectedConstructorConsumer::$constructed = 0;
+
+        $consumer = $this->app->make(InjectedConstructorConsumer::class);
+
+        self::assertSame(1, InjectedConstructorConsumer::$constructed);
+        self::assertInstanceOf(CountingService::class, $consumer->service);
+    }
+
     public function test_a_property_is_injected_after_laravel_builds_the_instance(): void
     {
         $consumer = $this->app->make(PropertyConsumer::class);

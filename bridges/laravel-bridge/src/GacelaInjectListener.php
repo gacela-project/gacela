@@ -93,6 +93,12 @@ final class GacelaInjectListener
 
         $methods = [];
         foreach ($reflection->getMethods() as $method) {
+            // Laravel already called the constructor; calling it again ran its
+            // side effects twice, and failed on a readonly promoted property.
+            if ($method->isConstructor()) {
+                continue;
+            }
+
             if ($method->getAttributes(Inject::class, ReflectionAttribute::IS_INSTANCEOF) !== []) {
                 $methods[] = $method;
             }

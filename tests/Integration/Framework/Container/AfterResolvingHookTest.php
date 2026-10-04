@@ -272,6 +272,35 @@ final class AfterResolvingHookTest extends TestCase
         self::assertNotSame($seen[0], $container->get('dispatcher'));
     }
 
+    /**
+     * A factory keeps no instance, so there is nothing to take back: one failed
+     * hook must not delete the registration and leave every later get() empty.
+     */
+    public function test_a_factory_survives_a_hook_that_threw_once(): void
+    {
+        $failures = 1;
+
+        $this->bootstrapWith(static function (GacelaConfig $config) use (&$failures): void {
+            $config->addFactory('report.builder', static fn (): ReportService => new ReportService());
+            $config->afterResolving('report.builder', static function () use (&$failures): void {
+                if ($failures-- > 0) {
+                    throw new RuntimeException('transient');
+                }
+            });
+        });
+
+        $container = Gacela::container();
+
+        try {
+            $container->get('report.builder');
+            self::fail('the hook was expected to throw');
+        } catch (RuntimeException) {
+        }
+
+        self::assertTrue($container->has('report.builder'));
+        self::assertInstanceOf(ReportService::class, $container->get('report.builder'));
+    }
+
     public function test_a_hook_registered_for_something_else_does_not_stop_a_later_matching_one(): void
     {
         $this->bootstrapWith(static function (GacelaConfig $config): void {

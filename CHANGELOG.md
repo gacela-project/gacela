@@ -20,6 +20,7 @@
 - `cache:warm` leaves out modules under a root `Tests\`, `Test\`, `Fixtures\` or `Benchmark\` namespace, as it already did for those segments deeper in a namespace
 - `dto:generate` writes a class that compiles when a description holds a closing comment marker or a line break, and a shape whose property names differ only in case (`name`, `Name`) is refused when declared instead of generating two `getName()` methods
 - `make:module` and `make:file` name classes after the module's namespace, not its directory: a psr-4 root such as `modules/billing-core/` generated `billing-coreFacade`, which does not parse
+- An `afterResolving()` hook that throws for a service registered with `addFactory()` or `addLazy()` no longer deletes the registration, which left every later `get()` returning null
 
 ## [2.6.2](https://github.com/gacela-project/gacela/compare/2.6.1...2.6.2) - 2026-10-02
 

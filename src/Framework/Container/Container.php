@@ -910,7 +910,12 @@ final class Container implements ContainerInterface
                 try {
                     $callback($instance, $this);
                 } catch (Throwable $exception) {
-                    $this->remove($id);
+                    // A factory keeps no instance to take back, and removing
+                    // its id would delete the registration for good.
+                    if (!$this->inner->isFactory($id)) {
+                        $this->remove($id);
+                    }
+
                     throw $exception;
                 }
             }

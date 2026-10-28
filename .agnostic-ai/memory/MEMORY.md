@@ -1,0 +1,4 @@
+- [infection-mangled-var-directory](infection-mangled-var-directory.md): composer infection can create a \\ar/ directory that breaks composer archive; use git archive
+- [no-double-dash-in-xml-fixture-comments](no-double-dash-in-xml-fixture-comments.md): a -- inside an XML comment in a Psalm fixture makes Psalm report "Missing psalm node"
+- [random-order-seed](random-order-seed.md): phpunit runs in random order; reproduce a flaky failure with --random-order-seed
+- [rector-deletes-fixture-methods](rector-deletes-fixture-methods.md): composer fix lets Rector delete or privatize fixture methods that are unused on purpose

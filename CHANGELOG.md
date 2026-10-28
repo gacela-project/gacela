@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `gacela.cacheableWithoutCachedCall` (Psalm: `GacelaCacheableWithoutCachedCall`) follows `$this->cached()` through any number of private helpers. Before, a `#[Cacheable]` method that reached it through two helpers was reported as never cached, though it was ([#974](https://github.com/gacela-project/gacela/issues/974))
 - `debug:graph --compare-to` refuses `--format` and `--json` instead of ignoring them. Before, asking for a JSON diff wrote the markdown diff with a zero exit ([#975](https://github.com/gacela-project/gacela/issues/975))
 - A class-name, package or `FileCache` entry file that does not parse, is empty, or returns something other than the cache's shape is treated as a miss and rewritten. Before, a truncated class-name cache file failed every bootstrap until someone deleted it ([#977](https://github.com/gacela-project/gacela/issues/977))
 - `make:module` names the module in its closing line. For a module at the psr-4 root it printed the directory instead: `make:module App` with `"App\\": "src/"` ended with `Module 'src' created successfully` ([#973](https://github.com/gacela-project/gacela/issues/973))

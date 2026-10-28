@@ -7,8 +7,8 @@ namespace Gacela\StaticAnalysis\Rules;
 use Gacela\Framework\AbstractFactory;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
+use Gacela\StaticAnalysis\FacadeSurface;
 use Gacela\StaticAnalysis\ResolvedName;
-use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -19,7 +19,6 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeFinder;
 
 use function sprintf;
-use function str_ends_with;
 
 /**
  * A Factory wires its own module up; it does not reach for a Facade to do it.
@@ -61,7 +60,7 @@ final class FactoryDoesNotCallFacadeAnalyser implements ClassAnalyserInterface
             }
 
             $className = ResolvedName::of($new->class);
-            if (!str_ends_with(ShortName::of($className), 'Facade')) {
+            if (!FacadeSurface::isFacade($className)) {
                 continue;
             }
 

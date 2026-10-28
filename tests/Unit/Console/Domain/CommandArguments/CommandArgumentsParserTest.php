@@ -56,6 +56,27 @@ final class CommandArgumentsParserTest extends TestCase
         self::assertSame('src/TestModule/TestSubModule', $args->directory());
     }
 
+    /**
+     * Written the way PHP writes a namespace: the shell makes the user quote it
+     * either way, and every other place they type this name uses backslashes.
+     */
+    public function test_a_backslash_separated_path_resolves_like_the_slash_form(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+        $args = $parser->parse('App\\TestModule\\TestSubModule');
+
+        self::assertSame('App\TestModule\TestSubModule', $args->namespace());
+        self::assertSame('src/TestModule/TestSubModule', $args->directory());
+    }
+
+    public function test_a_path_mixing_both_separators_resolves(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+        $args = $parser->parse('App\\TestModule/TestSubModule');
+
+        self::assertSame('src/TestModule/TestSubModule', $args->directory());
+    }
+
     public function test_parse_multilevel_root_namespace(): void
     {
         $parser = new CommandArgumentsParser($this->exampleMultiLevelComposerJson());

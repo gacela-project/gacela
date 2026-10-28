@@ -84,6 +84,17 @@ final class DebugGraphCommand extends Command
                 return self::FAILURE;
             }
 
+            // Same rule for the format: a CI job asking for a JSON diff would
+            // get markdown and a zero exit.
+            if ($format !== 'text') {
+                $output->writeln(sprintf(
+                    '<error>--compare-to only writes a markdown diff, and would ignore %s.</error>',
+                    $input->getOption('json') === true ? '--json' : '--format=' . $format,
+                ));
+
+                return self::FAILURE;
+            }
+
             return $this->writeDiff($compareTo, $graph, $output);
         }
 

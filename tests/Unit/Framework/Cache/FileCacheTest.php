@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Cache;
 
+use Gacela\Framework\Cache\CacheFilePath;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\FileCacheStats;
 use GacelaTest\Feature\Util\DirectoryUtil;
@@ -43,6 +44,30 @@ final class FileCacheTest extends TestCase
     protected function tearDown(): void
     {
         DirectoryUtil::removeDir($this->cacheDir);
+    }
+
+    /**
+     * The directory is shared and can be truncated under the cache: an entry
+     * that does not load is a miss, not a failure of the caller.
+     */
+    public function test_an_entry_that_does_not_parse_is_a_miss(): void
+    {
+        $this->cache->put('answer', 42);
+        $file = CacheFilePath::forEntry($this->cacheDir, 'answer');
+        self::assertNotNull($file);
+        file_put_contents($file, "<?php return array(\n  'value' => ");
+
+        self::assertNull((new FileCache($this->cacheDir))->get('answer'));
+    }
+
+    public function test_an_entry_that_is_not_the_cache_shape_is_a_miss(): void
+    {
+        $this->cache->put('answer', 42);
+        $file = CacheFilePath::forEntry($this->cacheDir, 'answer');
+        self::assertNotNull($file);
+        file_put_contents($file, "<?php return ['something' => 'else'];");
+
+        self::assertNull((new FileCache($this->cacheDir))->get('answer'));
     }
 
     public function test_has_returns_false_for_missing_key(): void

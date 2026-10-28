@@ -98,6 +98,25 @@ OUT;
     }
 
     /**
+     * The module sits at the psr-4 root, whose directory (`data`) is not its
+     * name: the summary names the module its classes are prefixed with.
+     */
+    public function test_a_root_level_module_is_named_after_its_namespace(): void
+    {
+        $tester = new CommandTester(new MakeModuleCommand());
+
+        try {
+            $tester->execute(['path' => 'Psr4CodeGeneratorData']);
+
+            self::assertStringContainsString("Module 'Psr4CodeGeneratorData' created successfully", $tester->getDisplay());
+        } finally {
+            foreach (['Facade', 'Factory', 'Config', 'Provider'] as $pillar) {
+                @unlink(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'Psr4CodeGeneratorData' . $pillar . '.php');
+            }
+        }
+    }
+
+    /**
      * Scaffolding writes into somebody's project, and `--force` replaces what
      * is there. `dto:generate` could already answer "what would this do?" and
      * the commands that write whole modules could not.

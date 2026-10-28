@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- `debug:graph --compare-to` now refuses `--format` and `--json`: the diff it writes is markdown, and the flags were validated and then ignored with a zero exit. `--compare-to` alone, with no format, still writes the markdown diff
+
 ## [2.8.0](https://github.com/gacela-project/gacela/compare/2.7.1...2.8.0) - 2026-10-04
 
 ### Changed

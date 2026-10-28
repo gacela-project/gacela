@@ -69,6 +69,19 @@ final class DebugGraphCommand extends Command
 
         $compareTo = ConsoleInput::option($input, 'compare-to');
         if ($compareTo !== '') {
+            // The diff always renders markdown, so a --format beside it is
+            // validated above and then read by nothing -- the same silent
+            // ignore the gates below are refused for.
+            $ignoredFormats = $this->formatsIgnoredByDiff($input);
+            if ($ignoredFormats !== []) {
+                $output->writeln(sprintf(
+                    '<error>--compare-to only writes a markdown diff, and would ignore %s.</error>',
+                    implode(' and ', $ignoredFormats),
+                ));
+
+                return self::FAILURE;
+            }
+
             // A diff checks nothing, and its output is a report CI posts as it
             // is: a gate asked for beside it was skipped with a zero exit.
             $gates = $input->getOption('check') === true
@@ -212,6 +225,27 @@ final class DebugGraphCommand extends Command
             if (ConsoleInput::option($input, $option) !== '') {
                 $ignored[] = $flag;
             }
+        }
+
+        return $ignored;
+    }
+
+    /**
+     * The format options the markdown diff does not read, when they were asked for.
+     *
+     * @return list<string>
+     */
+    private function formatsIgnoredByDiff(InputInterface $input): array
+    {
+        $ignored = [];
+
+        $format = ConsoleInput::option($input, 'format');
+        if ($format !== '' && $format !== 'text') {
+            $ignored[] = '--format';
+        }
+
+        if ($input->getOption('json') === true) {
+            $ignored[] = '--json';
         }
 
         return $ignored;

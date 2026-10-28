@@ -137,9 +137,7 @@ final class MakeModuleCommand extends Command
             $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
         }
 
-        $pieces = explode('/', $commandArguments->directory());
-        $moduleName = end($pieces);
-        $output->writeln(sprintf("Module '%s' created successfully", $moduleName));
+        $output->writeln(sprintf("Module '%s' created successfully", $commandArguments->basename()));
 
         return self::SUCCESS;
     }

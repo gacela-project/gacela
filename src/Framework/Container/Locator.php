@@ -6,6 +6,7 @@ namespace Gacela\Framework\Container;
 
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Exception\ServiceNotFoundException;
+use WeakMap;
 
 /**
  * @internal
@@ -13,6 +14,15 @@ use Gacela\Framework\Exception\ServiceNotFoundException;
 final class Locator implements LocatorInterface
 {
     private static ?Locator $instance = null;
+
+    /**
+     * One Locator per container. A single one bound to the first container it
+     * met kept answering from it: an empty one when `Gacela::get()` ran before
+     * bootstrap, the old one after a second bootstrap.
+     *
+     * @var WeakMap<Container, Locator>|null
+     */
+    private static ?WeakMap $byContainer = null;
 
     /** @var array<string, mixed> */
     private array $instanceCache = [];
@@ -25,6 +35,7 @@ final class Locator implements LocatorInterface
     public static function resetInstance(): void
     {
         self::$instance = null;
+        self::$byContainer = null;
     }
 
     /**
@@ -56,13 +67,32 @@ final class Locator implements LocatorInterface
         return self::getInstance($container)->getRequired($className);
     }
 
+    /**
+     * Without a container, a standalone Locator over an empty one.
+     */
     public static function getInstance(?Container $container = null): self
     {
-        if (!self::$instance instanceof self) {
-            self::$instance = new self($container ?? new Container());
+        if (!$container instanceof Container) {
+            if (!self::$instance instanceof self) {
+                self::$instance = new self();
+            }
+
+            return self::$instance;
         }
 
-        return self::$instance;
+        if (!self::$byContainer instanceof WeakMap) {
+            /** @var WeakMap<Container, Locator> $byContainer */
+            $byContainer = new WeakMap();
+            self::$byContainer = $byContainer;
+        }
+
+        $locator = self::$byContainer[$container] ?? null;
+        if (!$locator instanceof self) {
+            $locator = new self($container);
+            self::$byContainer[$container] = $locator;
+        }
+
+        return $locator;
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Architecture;
 
+use Gacela\Framework\Container\Locator;
 use Gacela\Framework\Gacela;
 use GacelaTest\Integration\Architecture\StatefulFixture\Farewell\FarewellFacade;
 use GacelaTest\Integration\Architecture\StatefulFixture\Greeting\Infrastructure\GreetingCommand;
@@ -129,7 +130,8 @@ final class StaticStateCoverageTest extends TestCase
         'AbstractFactory::$containers' => "each module's container, and what its Provider set() in it",
         'AbstractFactory::$providerless' => 'which modules resolved without a Provider, the twin of the containers above',
         'AbstractClassResolver::$cachedInstances' => 'the resolved Facades, Factories, Configs and Providers',
-        'Locator::$instance' => 'the locator, and every singleton Gacela::get() handed out',
+        'Locator::$byContainer' => 'a locator per container, and every singleton Gacela::get() handed out',
+        'Locator::$instance' => 'the standalone locator, over an empty container, and what it handed out',
     ];
 
     protected function tearDown(): void
@@ -151,9 +153,10 @@ final class StaticStateCoverageTest extends TestCase
 
         $this->runWorkload();
         // The request statics the command does not reach: a module without a
-        // Provider, and what Gacela::get() hands out.
+        // Provider, what Gacela::get() hands out, and the standalone locator.
         (new FarewellFacade())->bye('Gacela');
         Gacela::get(FarewellFacade::class);
+        Locator::getSingleton(FarewellFacade::class);
 
         $populated = [];
         foreach ($properties as $key => $property) {

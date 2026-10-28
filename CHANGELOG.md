@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+### Changed
+
+- `Gacela::get()` and `Gacela::getRequired()` before `Gacela::bootstrap()` throw `GacelaNotBootstrappedException`, as `Gacela::container()` does. Before, `get()` returned `null` and pinned an empty container for the rest of the process ([#976](https://github.com/gacela-project/gacela/issues/976))
+
 ### Fixed
 
+- `Gacela::get()` follows the container of the latest bootstrap. Before, it kept the first container it saw: a call before bootstrap made every later `Gacela::get()` return `null`, and a second bootstrap kept serving the first one's bindings. A plugin that takes a `Container` now gets the application container; before, it got a new, empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
 - `gacela.factoryInstantiatesFacade` and `gacela.crossModuleWithoutFacade` (Psalm: `GacelaFacadeInstantiation`, `GacelaCrossModuleAccess`) decide a Facade by `AbstractFacade`, not by the `Facade` suffix. Before, a Factory building a library class such as `PdfFacade` was told to declare it in its Provider, and another module's internal class named `*Facade` passed the boundary check ([#971](https://github.com/gacela-project/gacela/issues/971))
 - Specific listeners run in declaration order when an event matches more than one registered class. Before, a listener on a parent class or interface registered after one on the concrete event still ran before it, because listeners were grouped by the class they were registered for ([#970](https://github.com/gacela-project/gacela/issues/970))
 

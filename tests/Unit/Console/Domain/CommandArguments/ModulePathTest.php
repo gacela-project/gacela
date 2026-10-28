@@ -14,6 +14,16 @@ final class ModulePathTest extends TestCase
         self::assertNull(ModulePath::firstUnusableSegment('App/Blog'));
     }
 
+    public function test_a_backslash_separated_path_is_usable(): void
+    {
+        self::assertNull(ModulePath::firstUnusableSegment('App\\Blog\\Posts'));
+    }
+
+    public function test_a_hyphenated_segment_in_a_backslash_path_is_named_alone(): void
+    {
+        self::assertSame('user-profile', ModulePath::firstUnusableSegment('App\\user-profile'));
+    }
+
     public function test_a_deep_path_is_usable(): void
     {
         self::assertNull(ModulePath::firstUnusableSegment('App/Modules/Billing/Invoices'));

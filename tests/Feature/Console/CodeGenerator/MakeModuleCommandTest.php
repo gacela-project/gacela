@@ -147,6 +147,22 @@ OUT;
         self::assertStringContainsString('Dry run: nothing was written (4 files).', $display);
     }
 
+    public function test_a_backslash_separated_path_previews_the_same_files_as_the_slash_form(): void
+    {
+        $tester = new CommandTester(new MakeModuleCommand());
+        $exitCode = $tester->execute(['path' => 'Psr4CodeGeneratorData\\DryRunModule', '--dry-run' => true]);
+
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $exitCode, $display);
+        foreach (['Facade', 'Factory', 'Config', 'Provider'] as $pillar) {
+            self::assertStringContainsString(
+                sprintf("Would create 'data/DryRunModule/DryRunModule%s.php'", $pillar),
+                $display,
+            );
+        }
+    }
+
     /**
      * The property that makes a preview worth reading: it names the paths the
      * real run writes. Asserting the preview alone would pass for a preview

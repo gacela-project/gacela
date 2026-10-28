@@ -10,6 +10,11 @@ use stdClass;
 
 final class GetRequiredTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Gacela::bootstrap(__DIR__);
+    }
+
     protected function tearDown(): void
     {
         Gacela::resetCache();

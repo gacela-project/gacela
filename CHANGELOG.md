@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+### Changed
+
+- `Gacela::get()` and `Gacela::getRequired()` before `Gacela::bootstrap()` throw `GacelaNotBootstrappedException`, as `Gacela::container()` does. Before, `get()` returned `null` and pinned an empty container for the rest of the process ([#976](https://github.com/gacela-project/gacela/issues/976))
+
 ### Fixed
 
+- `Gacela::get()` follows the container of the latest bootstrap. Before, it kept the first container it saw: a call before bootstrap made every later `Gacela::get()` return `null`, and a second bootstrap kept serving the first one's bindings. A plugin that takes a `Container` now gets the application container; before, it got a new, empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
 - `gacela.cacheableWithoutCachedCall` (Psalm: `GacelaCacheableWithoutCachedCall`) follows `$this->cached()` through any number of private helpers. Before, a `#[Cacheable]` method that reached it through two helpers was reported as never cached, though it was ([#974](https://github.com/gacela-project/gacela/issues/974))
 - `debug:graph --compare-to` refuses `--format` and `--json` instead of ignoring them. Before, asking for a JSON diff wrote the markdown diff with a zero exit ([#975](https://github.com/gacela-project/gacela/issues/975))
 - A class-name, package or `FileCache` entry file that does not parse, is empty, or returns something other than the cache's shape is treated as a miss and rewritten. Before, a truncated class-name cache file failed every bootstrap until someone deleted it ([#977](https://github.com/gacela-project/gacela/issues/977))

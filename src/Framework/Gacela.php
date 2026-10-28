@@ -34,7 +34,14 @@ use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Plugins\Membership\AttributeMembership;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use Gacela\Framework\ServiceResolver\ServiceResolverCache;
+use ReflectionClass;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
+use ReflectionNamedType;
 
+use function class_exists;
+use function is_a;
 use function is_string;
 use function sprintf;
 
@@ -74,6 +81,7 @@ final class Gacela
 
         self::$appRootDir = $appRootDir;
         self::$mainContainer = null;
+        Locator::resetInstance();
 
         // Clear health checks once per bootstrap, before the config files are
         // read, so checks registered across gacela.php + gacela-{env}.php
@@ -133,7 +141,7 @@ final class Gacela
      */
     public static function get(string $className): mixed
     {
-        return Locator::getSingleton($className, self::$mainContainer);
+        return Locator::getSingleton($className, self::container());
     }
 
     /**
@@ -150,7 +158,7 @@ final class Gacela
      */
     public static function getRequired(string $className): object
     {
-        return Locator::getRequiredSingleton($className, self::$mainContainer);
+        return Locator::getRequiredSingleton($className, self::container());
     }
 
     /**
@@ -345,10 +353,48 @@ final class Gacela
         foreach ($plugins as $plugin) {
             /** @var callable $current */
             $current = is_string($plugin)
-                ? self::$mainContainer->get($plugin)
+                ? self::instantiatePlugin($plugin, self::$mainContainer)
                 : $plugin;
 
-            self::$mainContainer->resolve($current);
+            self::$mainContainer->resolve(
+                $current,
+                self::containerArguments(new ReflectionFunction(Closure::fromCallable($current)), self::$mainContainer),
+            );
         }
+    }
+
+    /**
+     * Autowiring builds a fresh, empty container for a parameter typed as one,
+     * so a plugin asking for the container would read none of the bindings,
+     * and its `getLocator()` would answer from that empty one rather than the
+     * one `Gacela::get()` reads. Handed the application container instead.
+     */
+    private static function instantiatePlugin(string $plugin, Container $container): mixed
+    {
+        if (!class_exists($plugin)) {
+            return $container->get($plugin);
+        }
+
+        $constructor = (new ReflectionClass($plugin))->getConstructor();
+        $arguments = $constructor instanceof ReflectionMethod ? self::containerArguments($constructor, $container) : [];
+
+        return $arguments === [] ? $container->get($plugin) : $container->make($plugin, $arguments);
+    }
+
+    /**
+     * @return array<string, Container>
+     */
+    private static function containerArguments(ReflectionFunctionAbstract $function, Container $container): array
+    {
+        $arguments = [];
+
+        foreach ($function->getParameters() as $parameter) {
+            $type = $parameter->getType();
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin() && is_a($container, $type->getName())) {
+                $arguments[$parameter->getName()] = $container;
+            }
+        }
+
+        return $arguments;
     }
 }

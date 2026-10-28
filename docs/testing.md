@@ -70,17 +70,18 @@ The snapshot covers the in-memory class-name cache, the config values, the app r
 
 ### Bootstrapping twice without either of them
 
-Neither is required. But calling `Gacela::bootstrap()` a second time in one process on your own keeps the **previous** boot's services, and says nothing:
+Neither is required. But calling `Gacela::bootstrap()` a second time in one process on your own keeps the **previous** boot's Facades and Factories, and the services they built, and says nothing:
 
 ```php
 Gacela::bootstrap($dir, static fn (GacelaConfig $c) => $c->addBinding(Clock::class, $frozenClock));
-Gacela::get(Clock::class);   // the frozen one, as expected
+(new ReportFacade())->now();   // built with the frozen one, as expected
 
 Gacela::bootstrap($dir, static fn (GacelaConfig $c) => $c->addBinding(Clock::class, $realClock));
-Gacela::get(Clock::class);   // still the frozen one
+(new ReportFacade())->now();   // still the frozen one
+Gacela::get(Clock::class);     // the real one
 ```
 
-The configuration *is* re-read, so the second boot leaves you with new config and old services. Add [`resetInMemoryCache()`](../src/Framework/Bootstrap/GacelaConfig.php) to the closure and both move together:
+`Gacela::get()` follows the container of the latest bootstrap. The configuration is re-read too, so the second boot leaves you with new config and old Facade and Factory services. Add [`resetInMemoryCache()`](../src/Framework/Bootstrap/GacelaConfig.php) to the closure and both move together:
 
 ```php
 Gacela::bootstrap($dir, static function (GacelaConfig $config): void {

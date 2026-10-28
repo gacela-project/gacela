@@ -33,17 +33,16 @@ Run `git diff --stat`, `git diff --cached --stat`, and `git status --short` firs
 
 2. **Stage** the changed files by name. Never `git add -A`.
 
-3. **CHANGELOG check**: a `feat:` or `fix:` change must update `## Unreleased` in `CHANGELOG.md` in this commit. If it is missing, add it now.
+3. **Changelog**: if the change needs an entry and has none, run `/changelog` and stage it.
 
 4. **Message** in conventional commit format:
    - Use the argument as the message when given; otherwise derive it from the staged diff.
-   - Prefixes: `feat:`, `fix:`, `ref:`, `chore:`, `docs:`, `test:`. Add `(<scope>)` for a single module.
-   - Never mention Claude, AI, or LLM.
+   - Follow the commit rules under "Git and pull requests" in `AGENTS.md`.
 
 5. **Commit**:
    ```bash
    git commit -m "<message>"
    ```
-   The pre-commit hook runs `composer quality` and `composer phpunit`, so do not run them again first. If the hook fails, fix the cause, restage, and commit again. Never pass `--no-verify`. Without the hook (it is installed by `composer install`), run `composer test` before committing.
+   The pre-commit hook runs the gate, so do not run it again first. If the hook fails, fix the cause, restage, and commit again. Never pass `--no-verify`. Without the hook (it is installed by `composer install`), run the gate before committing.
 
 6. **Report**: commit hash, message, and files included.

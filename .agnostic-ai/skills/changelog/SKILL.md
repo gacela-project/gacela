@@ -36,4 +36,4 @@ Run `git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~20)..HEAD
    - End with the issue link when there is one: `([#912](https://github.com/gacela-project/gacela/issues/912))`.
    - Prefix breaking changes with **BREAKING**.
 
-5. Edit `CHANGELOG.md`. A `feat:` or `fix:` change ships its entry in the same commit.
+5. Edit `CHANGELOG.md`.

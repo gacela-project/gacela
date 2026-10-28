@@ -53,6 +53,7 @@ gacela-doctor-strict-*/
 # Generated paths. Edit specs, not this block. Run `agnostic-ai sync` to refresh.
 # Not committed: a fresh clone or `git worktree` lacks these until `agnostic-ai sync` runs (e.g. a post-checkout hook).
 /.agents/skills/
+/.agnostic-ai/.command-lock
 /.agnostic-ai/.sync-state
 /.agnostic-ai/local/
 /.agnostic-ai/packs/
@@ -67,6 +68,7 @@ gacela-doctor-strict-*/
 /.claude/skills/
 /.claude/worktrees/
 /.codex/agents/
+/.codex/config.toml
 /.codex/environments/
 /.codex/hooks.json
 /.codex/hooks/

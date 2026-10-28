@@ -13,6 +13,7 @@
 /.claude/settings.local.json
 /.claude/skills/
 /.codex/agents/
+/.codex/config.toml
 /.codex/environments/
 /.codex/hooks.json
 /.codex/hooks/

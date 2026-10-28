@@ -67,6 +67,7 @@ Run `git branch --show-current`, `git status --porcelain`, and `git describe --t
    ```bash
    gh release view X.Y.Z
    ```
+   Use `git archive`, not `composer archive`: `composer infection` writes into fixture directories, and a mangled path can leave a directory such as `\\ar/...` (from `/var/...`). It is gitignored and skipped by rector, but it breaks `composer archive`. Packagist builds from `git archive` too.
 9. Report the release URL.
 
 ## Rules

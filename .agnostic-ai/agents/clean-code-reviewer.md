@@ -1,14 +1,13 @@
 ---
 name: clean-code-reviewer
-description: Reviews code for quality, SOLID violations, and Gacela conventions. Use when reviewing PRs, staged changes, or specific files.
-model: {claude: sonnet}
+description: Reviews a diff against the Gacela code review rules. Use before opening or merging a PR.
+model: strong
 readonly: true
-effort: high
-tools:
-  - Read
+can:
+  - read
   - Glob
   - Grep
-  - Bash
+  - shell
 ---
 
 # Clean Code Reviewer
@@ -19,15 +18,7 @@ Analyze staged changes (`git diff --cached`), unstaged changes (`git diff`), or 
 
 ## Checks
 
-- **Module boundaries**: other modules are reached through their Facade only. No `new` of another module's class, and services are built in the Factory.
-- **Naming**: descriptive, intention-revealing (`$resolvedService`, not `$rs`). Pillars keep their suffix.
-- **Functions**: under 20 lines, one responsibility, 0 to 3 arguments.
-- **Side effects**: a method is a query or a command, not both.
-- **Errors**: specific exceptions, fail fast, no generic `\Exception`.
-- **Types**: `final` classes, `readonly` properties, explicit return types.
-- **Debug and dead code**: no `var_dump`, `dd`, `print_r`, or commented-out blocks.
-- **Tests**: new behavior has a test; tests pass in any order; paths use `DIRECTORY_SEPARATOR`.
-- **Docs and changelog**: a user-facing change updates `## Unreleased` in `CHANGELOG.md`, and `docs/` pages that state the old behavior, flag lists, or exit codes.
+Apply every check under `## Code Review Rules` in `AGENTS.md`.
 
 ## Output
 

@@ -1,17 +1,17 @@
 ---
 name: tdd-coach
-description: Guides test-driven development with red-green-refactor discipline. Use when implementing features or fixes with TDD.
+description: Coaches red-green-refactor TDD for a feature or a fix.
 model: {claude: sonnet}
 effort: medium
 x-claude:
   maxTurns: 25
-tools:
-  - Read
-  - Edit
-  - Write
+can:
+  - read
+  - edit
+  - write
   - Glob
   - Grep
-  - Bash
+  - shell
 ---
 
 # TDD Coach

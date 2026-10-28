@@ -25,16 +25,16 @@ Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff m
 
 ## Instructions
 
-1. **CHANGELOG check**: if the branch has user-facing changes and `CHANGELOG.md` is untouched, add the entry under `## Unreleased` and commit it before pushing.
+1. **Changelog**: if the branch has user-facing changes and `CHANGELOG.md` is untouched, run `/changelog` and commit the entry before pushing.
 
-2. **Local gate**: `composer test` must be green. Never push a red branch.
+2. **Gate**: run the gate. Never push a red branch.
 
 3. **Push**:
    ```bash
    git push -u origin HEAD
    ```
 
-4. **Title**: `<type>(<scope>): <short description>`, under 70 characters. Take the type from the branch prefix (`feat/` → feat, `fix/` → fix, `ref/` → ref, `docs/` → docs). If the argument holds an issue number, start from its title:
+4. **Title**: `<type>(<scope>): <short description>`, under 70 characters. Take the type from the branch prefix. If the argument holds an issue number, start from its title:
    ```bash
    gh issue view <number> --json title -q '.title'
    ```

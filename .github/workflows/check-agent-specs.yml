@@ -1,0 +1,64 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+#
+# The agent instructions (AGENTS.md, CLAUDE.md, .claude/, .codex/) are generated
+# from .agnostic-ai/ and gitignored, so there is nothing committed to diff
+# against. This job checks the specs and that a clean checkout generates them
+# without touching a committed file, such as the managed block in .gitignore.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".agnostic-ai/**"
+      - "agnostic-ai.yaml"
+      - ".gitignore"
+      - ".github/workflows/check-agent-specs.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".agnostic-ai/**"
+      - "agnostic-ai.yaml"
+      - ".gitignore"
+      - ".github/workflows/check-agent-specs.yml"
+
+name: Agent specs
+
+permissions:
+  contents: read
+
+jobs:
+
+  check-agent-specs:
+    name: "Agent specs"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install agnostic-ai
+        run: |
+          export AGNOSTIC_AI_INSTALL_DIR="$HOME/.local/bin"
+          curl -fsSL "https://raw.githubusercontent.com/Chemaclass/agnostic-ai/${AGNOSTIC_AI_VERSION}/scripts/install.sh" | bash
+          echo "$AGNOSTIC_AI_INSTALL_DIR" >> "$GITHUB_PATH"
+        env:
+          # Keep in step with `requires` in agnostic-ai.yaml.
+          AGNOSTIC_AI_VERSION: v0.89.0
+
+      - name: Validate the specs
+        run: agnostic-ai validate
+
+      - name: Lint the specs
+        run: agnostic-ai lint --strict
+
+      - name: Generate the agent instructions
+        run: agnostic-ai sync
+
+      - name: Assert generation changed no committed file
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain
+            git diff
+            echo "agnostic-ai sync changed committed files. Run it locally and commit the result."
+            exit 1
+          fi

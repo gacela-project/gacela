@@ -73,7 +73,7 @@ final class MakeModuleCommand extends Command
                 $path,
                 $unusable,
             ));
-            $output->writeln('Every segment becomes a namespace and a class name -- use <comment>UserProfile</comment>, not <comment>user-profile</comment>.');
+            $output->writeln('Every segment becomes a namespace and a class name -- use <comment>UserProfile</comment>, not <comment>user-profile</comment>; separate segments with / or \\.');
 
             return self::FAILURE;
         }
@@ -137,9 +137,7 @@ final class MakeModuleCommand extends Command
             $output->writeln(sprintf("> Path '%s' created successfully", $fullPath));
         }
 
-        $pieces = explode('/', $commandArguments->directory());
-        $moduleName = end($pieces);
-        $output->writeln(sprintf("Module '%s' created successfully", $moduleName));
+        $output->writeln(sprintf("Module '%s' created successfully", $commandArguments->basename()));
 
         return self::SUCCESS;
     }

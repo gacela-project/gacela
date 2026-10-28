@@ -8,7 +8,6 @@ use Gacela\Framework\Cache\FileCache;
 
 use function array_map;
 use function is_array;
-use function is_file;
 use function is_string;
 
 /**
@@ -49,20 +48,9 @@ final class PackageConfigCache
      */
     public function read(string $fingerprint): ?array
     {
-        $path = $this->path();
+        $cached = FileCache::readArray($this->path());
 
-        if (!is_file($path)) {
-            return null;
-        }
-
-        /**
-         * Written by this class, through {@see FileCache::writeAtomically}.
-         *
-         * @var mixed $cached
-         */
-        $cached = require $path;
-
-        if (!is_array($cached)) {
+        if ($cached === null) {
             return null;
         }
 

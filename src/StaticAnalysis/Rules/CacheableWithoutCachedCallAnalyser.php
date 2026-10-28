@@ -30,8 +30,8 @@ use function str_ends_with;
  * Delegation is allowed, because the documentation describes it: `cached()` can
  * be called from a private helper, which then has to be passed `$method` and
  * `$args` explicitly, since the backtrace would otherwise land on the helper
- * and find no attribute there. So a method that hands off to a sibling which
- * does call `cached()` is silent here.
+ * and find no attribute there. So a method that reaches `cached()` through
+ * siblings, however many hops away, is silent here.
  *
  * That is why this judges the class rather than the method: from a method alone
  * the helper is invisible, and a rule that could not see it would report the
@@ -48,7 +48,7 @@ final class CacheableWithoutCachedCallAnalyser implements ClassAnalyserInterface
      */
     public function analyse(ClassLike $node, AnalysedClassInterface $class): array
     {
-        $cachingMethods = $this->methodsThatCallCached($node);
+        $cachingMethods = $this->methodsThatReachCached($node);
 
         $violations = [];
 
@@ -60,10 +60,6 @@ final class CacheableWithoutCachedCallAnalyser implements ClassAnalyserInterface
             $name = $method->name->toString();
 
             if (in_array($name, $cachingMethods, true)) {
-                continue;
-            }
-
-            if ($this->callsAnyOf($method, $cachingMethods)) {
                 continue;
             }
 
@@ -83,27 +79,32 @@ final class CacheableWithoutCachedCallAnalyser implements ClassAnalyserInterface
     }
 
     /**
+     * The methods that call `$this->cached()`, then every method that calls one
+     * of those, until a pass adds nothing. The set only grows, so a helper cycle
+     * ends the search instead of looping.
+     *
      * @return list<string>
      */
-    private function methodsThatCallCached(ClassLike $node): array
+    private function methodsThatReachCached(ClassLike $node): array
     {
         $names = [];
+        $targets = [self::CACHED];
 
-        foreach ($node->getMethods() as $method) {
-            if ($this->callsThisMethodNamed($method, [self::CACHED])) {
-                $names[] = $method->name->toString();
+        do {
+            $added = false;
+
+            foreach ($node->getMethods() as $method) {
+                $name = $method->name->toString();
+
+                if (!in_array($name, $names, true) && $this->callsThisMethodNamed($method, $targets)) {
+                    $names[] = $name;
+                    $targets[] = $name;
+                    $added = true;
+                }
             }
-        }
+        } while ($added);
 
         return $names;
-    }
-
-    /**
-     * @param list<string> $names
-     */
-    private function callsAnyOf(ClassMethod $method, array $names): bool
-    {
-        return $names !== [] && $this->callsThisMethodNamed($method, $names);
     }
 
     /**

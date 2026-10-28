@@ -8,7 +8,7 @@ models:
   strong: {claude: opus, codex: sol, effort: high}
 
 lint:
-  instructions-words: 900
+  instructions-words: 1000
   codex-chain-bytes: 12288
 
 targets:

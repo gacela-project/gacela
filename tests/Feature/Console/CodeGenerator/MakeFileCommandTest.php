@@ -89,6 +89,24 @@ final class MakeFileCommandTest extends TestCase
         self::assertDirectoryDoesNotExist(__DIR__ . '/src/DryRunFileModule');
     }
 
+    public function test_a_backslash_separated_path_names_the_same_file_as_the_slash_form(): void
+    {
+        $output = new BufferedOutput();
+
+        $bootstrap = new ConsoleBootstrap();
+        $bootstrap->setAutoExit(false);
+
+        $exitCode = $bootstrap->run(
+            new StringInput('make:file "Psr4CodeGenerator\\\\DryRunFileModule" Facade --dry-run'),
+            $output,
+        );
+
+        $display = $output->fetch();
+
+        self::assertSame(Command::SUCCESS, $exitCode, $display);
+        self::assertStringContainsString("Would create 'src/DryRunFileModule/DryRunFileModuleFacade.php'", $display);
+    }
+
     /**
      * The same rule `make:module` applies, and for the same reason: every
      * segment becomes a namespace and a class name, so generating from one that
@@ -109,6 +127,7 @@ final class MakeFileCommandTest extends TestCase
         self::assertSame(Command::FAILURE, $exitCode, $display);
         self::assertStringContainsString('user-profile', $display);
         self::assertStringContainsString('is not a valid PHP name', $display);
+        self::assertStringContainsString('separate segments with / or \\', $display);
 
         // Refused before writing: a half-generated module is worse than none.
         self::assertFileDoesNotExist(__DIR__ . '/src/user-profile/user-profileFacade.php');

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Specific listeners run in declaration order when an event matches more than one registered class. Before, a listener on a parent class or interface registered after one on the concrete event still ran before it, because listeners were grouped by the class they were registered for ([#970](https://github.com/gacela-project/gacela/issues/970))
+
 ## [2.8.0](https://github.com/gacela-project/gacela/compare/2.7.1...2.8.0) - 2026-10-04
 
 ### Changed

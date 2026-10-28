@@ -32,7 +32,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
- * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
+ * @psalm-import-type SpecificListenerList from ConfigurableEventDispatcher
  */
 final class Properties
 {
@@ -90,7 +90,7 @@ final class Properties
     /** @var ?list<callable> */
     public ?array $genericListeners = null;
 
-    /** @var ?SpecificListenersMap */
+    /** @var ?SpecificListenerList */
     public ?array $specificListeners = null;
 
     /**

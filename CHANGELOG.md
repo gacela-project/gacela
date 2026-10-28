@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- A class-name, package or `FileCache` entry file that does not parse, is empty, or returns something other than the cache's shape is treated as a miss and rewritten. Before, a truncated class-name cache file failed every bootstrap until someone deleted it ([#977](https://github.com/gacela-project/gacela/issues/977))
 - `make:module` and `make:file` accept a backslash-separated path, `'App\Blog'`, the way PHP writes a namespace. Before, it was refused as "not a valid PHP name" ([#972](https://github.com/gacela-project/gacela/issues/972))
 - `gacela.factoryInstantiatesFacade` and `gacela.crossModuleWithoutFacade` (Psalm: `GacelaFacadeInstantiation`, `GacelaCrossModuleAccess`) decide a Facade by `AbstractFacade`, not by the `Facade` suffix. Before, a Factory building a library class such as `PdfFacade` was told to declare it in its Provider, and another module's internal class named `*Facade` passed the boundary check ([#971](https://github.com/gacela-project/gacela/issues/971))
 - Specific listeners run in declaration order when an event matches more than one registered class. Before, a listener on a parent class or interface registered after one on the concrete event still ran before it, because listeners were grouped by the class they were registered for ([#970](https://github.com/gacela-project/gacela/issues/970))

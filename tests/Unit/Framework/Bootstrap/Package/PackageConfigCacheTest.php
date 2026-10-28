@@ -61,6 +61,13 @@ final class PackageConfigCacheTest extends TestCase
         self::assertNull($this->cache()->read(self::FINGERPRINT));
     }
 
+    public function test_a_file_that_does_not_parse_is_a_miss(): void
+    {
+        file_put_contents($this->cache()->path(), "<?php return array(\n  'fingerprint' => ");
+
+        self::assertNull($this->cache()->read(self::FINGERPRINT));
+    }
+
     public function test_what_was_written_comes_back_in_order(): void
     {
         $declarations = [

@@ -31,7 +31,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type ConfigKeyValues from SetupGacelaInterface
- * @psalm-import-type SpecificListenersMap from ConfigurableEventDispatcher
+ * @psalm-import-type SpecificListenerList from ConfigurableEventDispatcher
  */
 final class GacelaConfigTransfer
 {
@@ -42,7 +42,7 @@ final class GacelaConfigTransfer
      * @param ?list<string> $dontDiscover
      * @param ?ConfigKeyValues $configKeyValues
      * @param ?list<callable> $genericListeners
-     * @param ?SpecificListenersMap $specificListeners
+     * @param ?SpecificListenerList $specificListeners
      * @param ?list<class-string> $gacelaConfigsToExtend
      * @param ?list<class-string|callable> $plugins
      * @param ?ServicesToExtendMap $servicesToExtend

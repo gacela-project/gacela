@@ -46,6 +46,7 @@ use function str_replace;
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
  * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
+ * @psalm-import-type SpecificListenerList from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
 final class SetupGacela extends AbstractSetupGacela
 {
@@ -621,9 +622,32 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
+     * Grouped by event class, for the reports that count listeners per target.
+     * The dispatcher reads {@see getSpecificListenerList()}, which keeps the
+     * order across targets.
+     *
      * @return SpecificListenersMap|null
      */
     public function getSpecificListeners(): ?array
+    {
+        if ($this->properties->specificListeners === null) {
+            return null;
+        }
+
+        $grouped = [];
+        foreach ($this->properties->specificListeners as [$event, $listener]) {
+            $grouped[$event][] = $listener;
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * @internal Used by SetupEventDispatcher and PropertyMerger - do not call directly
+     *
+     * @return SpecificListenerList|null
+     */
+    public function getSpecificListenerList(): ?array
     {
         return $this->properties->specificListeners;
     }
@@ -1132,7 +1156,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupInitializer - do not call directly
      *
-     * @param ?SpecificListenersMap $listeners
+     * @param ?SpecificListenerList $listeners
      */
     public function setSpecificListeners(?array $listeners): self
     {
@@ -1155,7 +1179,7 @@ final class SetupGacela extends AbstractSetupGacela
     /**
      * @internal Used by SetupMerger - do not call directly
      *
-     * @param SpecificListenersMap $listeners
+     * @param SpecificListenerList $listeners
      */
     public function mergeSpecificListeners(array $listeners): void
     {

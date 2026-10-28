@@ -168,6 +168,42 @@ final class DebugGraphCommandTest extends TestCase
         yield '--check and --allowed-cycles' => [['--check' => true, '--allowed-cycles' => 'allowed.json'], '--check and --allowed-cycles'];
     }
 
+    /**
+     * The diff is markdown whatever the format says, so a CI job asking for a
+     * machine-readable diff got markdown and a zero exit.
+     *
+     * @param array<string, mixed> $format
+     */
+    #[DataProvider('formatsBesideADiff')]
+    public function test_compare_to_refuses_a_format_it_would_ignore(array $format, string $named): void
+    {
+        $this->command->execute(['--format' => 'json']);
+        $baseline = $this->writeBaseline($this->command->getDisplay());
+
+        $exitCode = $this->command->execute(['--compare-to' => $baseline, ...$format]);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('--compare-to only writes a markdown diff, and would ignore ' . $named, $this->command->getDisplay());
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>, string}>
+     */
+    public static function formatsBesideADiff(): iterable
+    {
+        yield '--format=json' => [['--format' => 'json'], '--format=json'];
+        yield '--json' => [['--json' => true], '--json'];
+        yield '--format=mermaid' => [['--format' => 'mermaid'], '--format=mermaid'];
+    }
+
+    public function test_compare_to_still_refuses_an_unknown_format_as_unknown(): void
+    {
+        $exitCode = $this->command->execute(['--compare-to' => 'base.json', '--format' => 'bogus']);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('Unknown format "bogus"', $this->command->getDisplay());
+    }
+
     public function test_compare_to_a_graph_missing_an_edge_reports_it_as_new(): void
     {
         $baseline = $this->writeBaseline(json_encode([

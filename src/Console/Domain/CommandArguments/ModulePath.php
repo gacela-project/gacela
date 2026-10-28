@@ -6,6 +6,7 @@ namespace Gacela\Console\Domain\CommandArguments;
 
 use function explode;
 use function preg_match;
+use function str_replace;
 use function trim;
 
 /**
@@ -31,11 +32,11 @@ final class ModulePath
 
     /**
      * The first segment that cannot be a namespace or class name, or null when
-     * every one of them can.
+     * every one of them can. Segments are separated by `/` or `\`.
      */
     public static function firstUnusableSegment(string $path): ?string
     {
-        foreach (explode('/', trim($path, '/')) as $segment) {
+        foreach (explode('/', trim(str_replace('\\', '/', $path), '/')) as $segment) {
             if (preg_match(self::LABEL, $segment) !== 1) {
                 return $segment;
             }

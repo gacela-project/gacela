@@ -21,9 +21,9 @@ final class MixedOrderBadFactory extends AbstractFactory
     {
         $refs = [];
         $refs[] = new $klass();
+        $refs[] = new Facade();
         $refs[] = new UserService();
         $refs[] = new ShopFacade();
-        $refs[] = new Facade();
         $refs[] = new Sub\Facade();
 
         $refs[] = $this->{$klass}();

@@ -10,6 +10,8 @@ use Gacela\Psalm\CrossModuleSettings;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingFacade;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\InternalHelperFacade;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\NodeFinder;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +35,9 @@ use function array_map;
 final class CrossModuleHandlersTest extends TestCase
 {
     private const ROOT = 'App\Modules';
+
+    /** Real classes, because whether a class is a Facade is read by reflection. */
+    private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
 
     private ?Config $previousConfig = null;
 
@@ -78,9 +83,22 @@ final class CrossModuleHandlersTest extends TestCase
 
     public function test_the_written_half_allows_a_facade(): void
     {
-        $this->configure();
+        $this->configure(self::FIXTURE_ROOT);
 
-        self::assertSame([], $this->writtenViolations('new App\Modules\Billing\BillingFacade();'));
+        self::assertSame([], $this->writtenViolations(
+            'new \\' . BillingFacade::class . '();',
+            self::FIXTURE_ROOT . '\Checkout\CheckoutFactory',
+        ));
+    }
+
+    public function test_the_written_half_reports_a_class_named_like_a_facade_that_is_not_one(): void
+    {
+        $this->configure(self::FIXTURE_ROOT);
+
+        self::assertSame(['gacela.crossModuleWithoutFacade'], $this->identifiers($this->writtenViolations(
+            'new \\' . InternalHelperFacade::class . '();',
+            self::FIXTURE_ROOT . '\Checkout\CheckoutFactory',
+        )));
     }
 
     public function test_the_call_half_finds_nothing_until_it_is_configured(): void
@@ -133,10 +151,10 @@ final class CrossModuleHandlersTest extends TestCase
         self::assertSame([], $this->callViolations('App\Modules\Billing\BillingFacade'));
     }
 
-    private function configure(): void
+    private function configure(string $root = self::ROOT): void
     {
         $settings = CrossModuleSettings::fromPluginConfig(new SimpleXMLElement(
-            '<pluginClass><crossModule rootNamespace="' . self::ROOT . '"/></pluginClass>',
+            '<pluginClass><crossModule rootNamespace="' . $root . '"/></pluginClass>',
         ));
 
         self::assertNotNull($settings);
@@ -148,13 +166,15 @@ final class CrossModuleHandlersTest extends TestCase
     /**
      * @return list<Violation>
      */
-    private function writtenViolations(string $body = 'new App\Modules\Billing\Domain\InvoiceRepository();'): array
-    {
+    private function writtenViolations(
+        string $body = 'new App\Modules\Billing\Domain\InvoiceRepository();',
+        string $className = 'App\Modules\Checkout\CheckoutFactory',
+    ): array {
         $source = "<?php\nfinal class CheckoutFactory\n{\n    public function create()\n    {\n" . $body . "\n    }\n}";
 
         return CrossModuleRules::violationsIn(
             ParseSource::classIn($source),
-            new FakeAnalysedClass('App\Modules\Checkout\CheckoutFactory'),
+            new FakeAnalysedClass($className),
         );
     }
 

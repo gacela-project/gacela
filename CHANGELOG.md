@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `make:module` names the module in its closing line. For a module at the psr-4 root it printed the directory instead: `make:module App` with `"App\\": "src/"` ended with `Module 'src' created successfully` ([#973](https://github.com/gacela-project/gacela/issues/973))
 - `gacela.factoryInstantiatesFacade` and `gacela.crossModuleWithoutFacade` (Psalm: `GacelaFacadeInstantiation`, `GacelaCrossModuleAccess`) decide a Facade by `AbstractFacade`, not by the `Facade` suffix. Before, a Factory building a library class such as `PdfFacade` was told to declare it in its Provider, and another module's internal class named `*Facade` passed the boundary check ([#971](https://github.com/gacela-project/gacela/issues/971))
 - Specific listeners run in declaration order when an event matches more than one registered class. Before, a listener on a parent class or interface registered after one on the concrete event still ran before it, because listeners were grouped by the class they were registered for ([#970](https://github.com/gacela-project/gacela/issues/970))
 

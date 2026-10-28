@@ -63,6 +63,40 @@ final class CacheableWithoutCachedCallAnalyserTest extends TestCase
     }
 
     /**
+     * Extracting a method out of the helper is an ordinary refactoring, and the
+     * method is still cached at runtime.
+     */
+    public function test_reaching_cached_through_two_helpers_is_allowed(): void
+    {
+        self::assertSame([], $this->analyse('
+            #[Cacheable(ttl: 60)]
+            public function twoHops(int $id): int { return $this->viaHelper($id); }
+
+            private function viaHelper(int $id): int { return $this->remembered($id); }
+
+            private function remembered(int $id): int { return $this->cached(fn (): int => $id * 2, "twoHops", [$id]); }
+        '));
+    }
+
+    /**
+     * The set of methods that reach `cached()` only grows, so a cycle ends the
+     * search instead of looping, and nothing in it caches.
+     */
+    public function test_a_helper_cycle_that_never_caches_is_reported(): void
+    {
+        $violations = $this->analyse('
+            #[Cacheable(ttl: 60)]
+            public function looped(int $id): int { return $this->a($id); }
+
+            private function a(int $id): int { return $this->b($id); }
+
+            private function b(int $id): int { return $this->a($id); }
+        ');
+
+        self::assertCount(1, $violations);
+    }
+
+    /**
      * Calling a sibling that does *not* cache is not delegation, so the
      * attribute is still inert.
      */

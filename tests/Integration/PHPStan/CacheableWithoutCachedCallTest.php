@@ -52,6 +52,11 @@ final class CacheableWithoutCachedCallTest extends PhpStanFixtureTestCase
         self::assertStringNotContainsString('::delegated()', $this->findingsOfThisRule());
     }
 
+    public function test_reaching_cached_through_two_helpers_is_left_alone(): void
+    {
+        self::assertStringNotContainsString('::twoHops()', $this->findingsOfThisRule());
+    }
+
     #[Override]
     protected static function configPath(): string
     {

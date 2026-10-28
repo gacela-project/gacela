@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gacela\Framework\Config;
 
 use Closure;
-use Error;
 use Gacela\Framework\Cache\FileCache;
 use stdClass;
 use UnitEnum;
@@ -201,18 +200,8 @@ final class MergedConfigCache
      */
     private function read(): ?array
     {
-        try {
-            /**
-             * @psalm-suppress UnresolvableInclude
-             *
-             * @var array<string,mixed> $data
-             */
-            $data = require $this->filename();
-        } catch (Error) {
-            return null;
-        }
-
-        return $data;
+        /** @var array<string,mixed>|null */
+        return FileCache::readArray($this->filename());
     }
 
     private function appSuffix(): string

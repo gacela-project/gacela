@@ -9,7 +9,7 @@ use Gacela\Framework\Attribute\Cacheable;
 use Gacela\Framework\Attribute\CacheableTrait;
 
 /**
- * All three shapes at once, so the two that must stay silent are asserted
+ * Every shape at once, so the two that must stay silent are asserted
  * against the same run as the one that must be reported.
  *
  * @method CacheableCallFixtureFactory getFactory()
@@ -46,6 +46,20 @@ final class CacheableCallFixtureFacade extends AbstractFacade
     public function delegated(int $id): int
     {
         return $this->viaHelper('delegated', [$id], $id);
+    }
+
+    /**
+     * Silent: the same, one extracted method further away.
+     */
+    #[Cacheable(ttl: 600, key: 'two-hops-{0}')]
+    public function twoHops(int $id): int
+    {
+        return $this->firstHop($id);
+    }
+
+    private function firstHop(int $id): int
+    {
+        return $this->viaHelper('twoHops', [$id], $id);
     }
 
     /**

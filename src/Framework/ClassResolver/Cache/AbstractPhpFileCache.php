@@ -7,7 +7,6 @@ namespace Gacela\Framework\ClassResolver\Cache;
 use Gacela\Framework\Cache\FileCache;
 
 use function array_keys;
-use function file_exists;
 use function sha1;
 use function str_ends_with;
 use function substr;
@@ -221,16 +220,10 @@ abstract class AbstractPhpFileCache implements CacheInterface
      */
     private function getExistingCache(): array
     {
-        $filename = $this->computeAbsoluteFilename();
+        /** @var array<string,string> $content */
+        $content = FileCache::readArray($this->computeAbsoluteFilename()) ?? [];
 
-        if (file_exists($filename)) {
-            /** @var array<string,string> $content */
-            $content = require $filename;
-
-            return $content;
-        }
-
-        return [];
+        return $content;
     }
 
     private function computeAbsoluteFilename(): string

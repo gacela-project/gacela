@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Framework\Locator;
 
+use Gacela\Container\Exception\DependencyInvalidArgumentException;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Container\Locator;
@@ -93,6 +94,29 @@ final class FeatureTest extends TestCase
         });
 
         self::assertSame(Gacela::container(), $seen);
+    }
+
+    public function test_every_container_parameter_of_a_plugin_gets_the_application_one(): void
+    {
+        $seen = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$seen): void {
+            $config->addPlugin(static function (Container $first, Container $second) use (&$seen): void {
+                $seen = [$first, $second];
+            });
+        });
+
+        self::assertSame([Gacela::container(), Gacela::container()], $seen);
+    }
+
+    public function test_a_plugin_with_an_untyped_parameter_gets_the_container_error(): void
+    {
+        $this->expectException(DependencyInvalidArgumentException::class);
+        $this->expectExceptionMessage("No type hint found for parameter '\$label'");
+
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->addPlugin(static function (Container $container, $label): void {
+            });
+        });
     }
 
     /**

@@ -84,7 +84,7 @@ For each issue in the queue:
    ```bash
    gh pr merge --auto --squash --admin
    ```
-   A `BLOCKED` or `REVIEW_REQUIRED` state needs `--admin`. Pull requests run infection on the changed lines only; the full run comes with the push to `main`, so watch that run too.
+   A `BLOCKED` or `REVIEW_REQUIRED` state needs `--admin`. Mutation testing is manual-only. Do not run or dispatch it automatically while processing the queue.
 
 5. **Sync `main`** for the next issue:
    ```bash

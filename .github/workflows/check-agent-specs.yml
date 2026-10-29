@@ -43,7 +43,7 @@ jobs:
           echo "$AGNOSTIC_AI_INSTALL_DIR" >> "$GITHUB_PATH"
         env:
           # Keep in step with `requires` in agnostic-ai.yaml.
-          AGNOSTIC_AI_VERSION: v0.89.0
+          AGNOSTIC_AI_VERSION: v0.90.0
 
       - name: Validate the specs
         run: agnostic-ai validate

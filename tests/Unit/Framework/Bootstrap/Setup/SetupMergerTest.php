@@ -6,11 +6,41 @@ namespace GacelaTest\Unit\Framework\Bootstrap\Setup;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 final class SetupMergerTest extends TestCase
 {
+    public function test_merge_carries_disabled_event_listeners_from_the_later_setup(): void
+    {
+        $closure = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->registerGenericListener(static function (): void {});
+        });
+        $gacelaFile = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->disableEventListeners();
+        });
+
+        $merged = $closure->merge($gacelaFile);
+
+        self::assertFalse($merged->areEventListenersEnabled());
+        self::assertFalse($merged->canCreateEventDispatcher());
+        self::assertInstanceOf(NullEventDispatcher::class, $merged->getEventDispatcher());
+    }
+
+    public function test_merge_keeps_disabled_listeners_when_the_later_setup_does_not_set_the_switch(): void
+    {
+        $first = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->disableEventListeners();
+        });
+        $second = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->registerGenericListener(static function (): void {});
+        });
+
+        self::assertFalse($first->merge($second)->areEventListenersEnabled());
+        self::assertCount(1, $first->getGenericListeners() ?? []);
+    }
+
     public function test_merge_carries_the_config_schema_boot_check(): void
     {
         $closure = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

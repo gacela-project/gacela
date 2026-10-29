@@ -41,6 +41,8 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
 
     public const string stubsDir = 'stubsDir';
 
+    public const string areEventListenersEnabled = 'areEventListenersEnabled';
+
     public const string servicesToExtend = 'servicesToExtend';
 
     public const string providerServicesToExtend = 'providerServicesToExtend';

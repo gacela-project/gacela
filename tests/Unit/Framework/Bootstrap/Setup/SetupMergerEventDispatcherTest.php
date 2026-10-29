@@ -32,6 +32,23 @@ use PHPUnit\Framework\TestCase;
  */
 final class SetupMergerEventDispatcherTest extends TestCase
 {
+    public function test_merge_keeps_listeners_registered_by_a_disabled_setup(): void
+    {
+        $original = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->registerGenericListener(static function (): void {});
+        });
+        $other = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->disableEventListeners();
+            $config->registerGenericListener(static function (): void {});
+            $config->registerSpecificListener(FakeEvent::class, static function (): void {});
+        });
+
+        $merged = $original->merge($other);
+
+        self::assertCount(2, $merged->getGenericListeners() ?? []);
+        self::assertCount(1, $merged->getSpecificListeners()[FakeEvent::class] ?? []);
+    }
+
     public function test_specific_listeners_on_two_matching_targets_run_in_registration_order(): void
     {
         $order = [];

@@ -18,6 +18,8 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use stdClass;
 
+use function dirname;
+
 final class SetupGacelaTest extends TestCase
 {
     public function test_null_event_dispatcher(): void
@@ -527,6 +529,21 @@ final class SetupGacelaTest extends TestCase
         }
 
         self::assertSame(['from-file-key' => 'from-file-value'], $setup->getConfigKeyValues());
+    }
+
+    public function test_source_file_identity_ignores_repeated_separators(): void
+    {
+        $file = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-source-' . uniqid('', true) . '.php';
+        file_put_contents($file, '<?php return static function (\\Gacela\\Framework\\Bootstrap\\GacelaConfig $config): void {};');
+        $repeated = dirname($file) . str_repeat(DIRECTORY_SEPARATOR, 3) . basename($file);
+        try {
+            $setup = SetupGacela::fromFile($repeated);
+            self::assertTrue($setup->wasBuiltFrom($file));
+            self::assertTrue($setup->wasBuiltFrom(str_replace('\\', '/', $file)));
+            self::assertFalse($setup->wasBuiltFrom($file . '.other'));
+        } finally {
+            unlink($file);
+        }
     }
 
     public function test_from_file_with_non_callable_return_yields_default_setup(): void

@@ -96,20 +96,10 @@ final class SetupGacela extends AbstractSetupGacela
         return $setup;
     }
 
-    /**
-     * Whether this setup already holds everything that `gacela.php` declares,
-     * because it was built by reading it.
-     *
-     * Compared with separators normalized: bootstrap joins the path with
-     * DIRECTORY_SEPARATOR and the config factory joins it with "/", which name
-     * the same file everywhere and only differ as strings on windows -- where
-     * the mismatch would quietly restore the double read this answer exists to
-     * prevent.
-     */
     public function wasBuiltFrom(string $gacelaFilePath): bool
     {
         return $this->sourceFilePath !== ''
-            && str_replace('\\', '/', $this->sourceFilePath) === str_replace('\\', '/', $gacelaFilePath);
+            && $this->normalizedSourcePath($this->sourceFilePath) === $this->normalizedSourcePath($gacelaFilePath);
     }
 
     /**
@@ -1184,6 +1174,11 @@ final class SetupGacela extends AbstractSetupGacela
     public function mergeSpecificListeners(array $listeners): void
     {
         $this->propertyMerger->mergeSpecificListeners($listeners);
+    }
+
+    private function normalizedSourcePath(string $path): string
+    {
+        return preg_replace('#/+#', '/', str_replace('\\', '/', $path)) ?? $path;
     }
 
     /**

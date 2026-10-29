@@ -331,7 +331,7 @@ final class PackageDiscoveryTest extends TestCase
     {
         $this->installed->install(['AuditTrail']);
         $cacheDir = $this->installed->cacheDir();
-        $cacheFile = $cacheDir . DIRECTORY_SEPARATOR . PackageConfigCache::FILENAME;
+        $cacheFile = (new PackageConfigCache($cacheDir, $this->installed->appRoot))->path();
         $this->installed->alsoRemove($cacheFile);
 
         $this->bootstrap(static function (GacelaConfig $config) use ($cacheDir): void {

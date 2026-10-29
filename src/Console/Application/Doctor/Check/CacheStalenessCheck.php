@@ -7,6 +7,7 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
+use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
@@ -104,7 +105,7 @@ final class CacheStalenessCheck implements HealthCheck
 
             $cacheMtime = (int) filemtime($cacheFile);
             /** @var array<string,string> $entries */
-            $entries = require $cacheFile;
+            $entries = FileCache::readArray($cacheFile) ?? [];
 
             foreach ($entries as $cacheKey => $className) {
                 $source = ($this->sourceFileResolver)($className);

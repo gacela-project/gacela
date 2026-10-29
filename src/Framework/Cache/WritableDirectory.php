@@ -32,7 +32,7 @@ final class WritableDirectory
 
     private static function probe(string $directory): bool
     {
-        if (!is_dir($directory) && !@mkdir($directory, recursive: true) && !is_dir($directory)) {
+        if (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory)) {
             return false;
         }
 

@@ -6,6 +6,7 @@ namespace Gacela\Framework\Cache;
 
 use Error;
 use Gacela\Framework\Event\Cache\CacheClearedEvent;
+use Gacela\Framework\Event\Cache\CacheWriteFailedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 use function array_key_exists;
@@ -13,7 +14,6 @@ use function bin2hex;
 use function count;
 use function dirname;
 use function fclose;
-use function file_put_contents;
 use function filemtime;
 use function filesize;
 use function flock;
@@ -23,6 +23,7 @@ use function glob;
 use function is_array;
 use function is_file;
 use function is_int;
+use function lstat;
 use function preg_match_all;
 use function preg_quote;
 use function preg_replace;
@@ -68,6 +69,9 @@ final class FileCache
     private const INDEX_FILENAME = '.gacela-filecache.lock';
 
     public readonly string $directory;
+
+    /** @var array<string,true> */
+    private static array $failedWrites = [];
 
     /** @var array<string, array{value: T, expiresAt: int|null}> */
     private array $memory = [];
@@ -245,18 +249,57 @@ final class FileCache
      */
     public static function readArray(string $file): ?array
     {
-        if (!is_file($file)) {
+        if (!self::isSafeToRead($file)) {
             return null;
         }
 
         try {
-            /** @var mixed $data */
+            /**
+             * @var mixed $data
+             *
+             * @psalm-suppress UnresolvableInclude The shared guard checks this dynamic cache path.
+             */
             $data = require $file;
         } catch (Error) {
             return null;
         }
 
         return is_array($data) ? $data : null;
+    }
+
+    public static function isSafeToRead(string $file): bool
+    {
+        $stat = @lstat($file);
+        if ($stat === false || ($stat['mode'] & 0170000) !== 0100000) {
+            return false;
+        }
+
+        if (function_exists('posix_geteuid') && $stat['uid'] !== posix_geteuid()) {
+            return false;
+        }
+
+        if (DIRECTORY_SEPARATOR !== '/') {
+            return true;
+        }
+
+        $directoryPermissions = @fileperms(dirname($file));
+
+        return ($stat['mode'] & 0022) === 0
+            && $directoryPermissions !== false
+            && (($directoryPermissions & 0022) === 0 || ($directoryPermissions & 01000) !== 0);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function failedWrites(): array
+    {
+        return array_keys(self::$failedWrites);
+    }
+
+    public static function resetWriteFailures(): void
+    {
+        self::$failedWrites = [];
     }
 
     /**
@@ -281,24 +324,26 @@ final class FileCache
     public static function writeContentsAtomically(string $file, string $content): bool
     {
         if (!WritableDirectory::isUsable(dirname($file))) {
-            return false;
+            return self::failedWrite($file);
         }
 
         $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
 
-        if (@file_put_contents($tmp, $content, LOCK_EX) !== strlen($content)) {
+        if (!self::writePrivateFile($tmp, $content)) {
             @unlink($tmp);
 
-            return false;
+            return self::failedWrite($file);
         }
 
         if (!@rename($tmp, $file)) {
             @unlink($tmp);
 
-            return false;
+            return self::failedWrite($file);
         }
 
         self::invalidateOpcacheFor($file);
+
+        unset(self::$failedWrites[$file]);
 
         return true;
     }
@@ -436,6 +481,36 @@ final class FileCache
         }
 
         self::writeAtomically($path, $entry);
+    }
+
+    private static function writePrivateFile(string $file, string $content): bool
+    {
+        $previousMask = umask(0077);
+        try {
+            $handle = @fopen($file, 'xb');
+        } finally {
+            umask($previousMask);
+        }
+
+        if ($handle === false) {
+            return false;
+        }
+
+        try {
+            return @fwrite($handle, $content) === strlen($content);
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    private static function failedWrite(string $file): false
+    {
+        self::$failedWrites[$file] = true;
+        if (self::shouldDispatch(CacheWriteFailedEvent::class)) {
+            self::dispatchEvent(new CacheWriteFailedEvent($file));
+        }
+
+        return false;
     }
 
     private static function invalidateOpcacheFor(string $file): void

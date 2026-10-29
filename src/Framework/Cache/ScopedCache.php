@@ -283,16 +283,8 @@ final class ScopedCache
             return;
         }
 
-        /**
-         * The path is built rather than written inline, so Psalm can no longer
-         * partially resolve it -- the file is a graph this class wrote.
-         *
-         * @psalm-suppress UnresolvableInclude
-         *
-         * @var mixed $payload
-         */
-        $payload = require $path;
-        if (!is_array($payload)) {
+        $payload = FileCache::readArray($path);
+        if ($payload === null) {
             return;
         }
 

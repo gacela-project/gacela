@@ -37,7 +37,7 @@ final class PackageConfigCacheTest extends TestCase
      */
     protected function tearDown(): void
     {
-        $file = $this->cacheDir . DIRECTORY_SEPARATOR . PackageConfigCache::FILENAME;
+        $file = $this->cache()->path();
 
         if (is_file($file)) {
             unlink($file);
@@ -51,8 +51,16 @@ final class PackageConfigCacheTest extends TestCase
     public function test_the_file_sits_in_the_cache_directory_under_a_stable_name(): void
     {
         self::assertSame(
-            $this->cacheDir . DIRECTORY_SEPARATOR . 'gacela-discovered-packages.php',
+            $this->cacheDir . DIRECTORY_SEPARATOR . 'gacela-discovered-packages-' . substr(sha1('/app'), 0, 12) . '.php',
             $this->cache()->path(),
+        );
+    }
+
+    public function test_the_cache_filename_is_scoped_to_the_application(): void
+    {
+        self::assertNotSame(
+            (new PackageConfigCache($this->cacheDir, '/app/alpha'))->path(),
+            (new PackageConfigCache($this->cacheDir, '/app/beta'))->path(),
         );
     }
 
@@ -144,13 +152,13 @@ final class PackageConfigCacheTest extends TestCase
 
     private function cache(): PackageConfigCache
     {
-        return new PackageConfigCache($this->cacheDir);
+        return new PackageConfigCache($this->cacheDir, '/app');
     }
 
     private function writeRaw(mixed $payload): void
     {
         file_put_contents(
-            $this->cacheDir . DIRECTORY_SEPARATOR . PackageConfigCache::FILENAME,
+            $this->cache()->path(),
             sprintf('<?php return %s;', var_export($payload, true)),
         );
     }

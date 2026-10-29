@@ -13,8 +13,7 @@ namespace Gacela\Console\Domain\IdeMeta;
  * overwritten, and PhpStorm reads every file in the directory.
  *
  * It belongs in the project tree because that is the only place an editor
- * looks. The cache directory is not an option -- with no file cache configured
- * it defaults to the system temp directory.
+ * looks. The cache directory is not an option because PhpStorm does not scan it.
  */
 final class IdeMetadataPath
 {

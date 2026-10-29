@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- `make:file` gives exact kind names and aliases priority over abbreviations. Declaring a `ConfigReader`, `FactoryBuilder` or `ProviderRegistry` no longer makes the corresponding pillar name ambiguous ([#992](https://github.com/gacela-project/gacela/issues/992))
+
 - `FileCache::clear()` and `stats()` touch only its own entry filenames, preserving framework caches and unrelated PHP files in a shared directory. New entries use a `gacela-fc-` prefix; legacy 40-hex-character filenames remain readable and are removed by `forget()` and `clear()` ([#979](https://github.com/gacela-project/gacela/issues/979))
 
 - `Gacela::addGlobal()` distinguishes anonymous globals registered from same-named files in different directories. File contexts and their internal lookup keys now use the full canonical file path, which stays stable across bootstrap. Registering a different instance for an occupied key throws instead of silently replacing it; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))

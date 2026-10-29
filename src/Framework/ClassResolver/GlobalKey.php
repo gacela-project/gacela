@@ -37,7 +37,7 @@ final class GlobalKey
 
         $resolvableType = ResolvableType::fromClassName($matches['resolvable_type'] ?? '');
 
-        if ($resolvableType->moduleName() === '') {
+        if ($resolvableType->moduleName() === '' || self::isCustomDeclaredClass($matches['pre_namespace'] ?? '', $resolvableType)) {
             return self::$cache[$fullClassName] = sprintf('\\%s', ltrim($fullClassName, '\\'));
         }
 
@@ -49,4 +49,16 @@ final class GlobalKey
 
         return self::$cache[$fullClassName];
     }
+
+    private static function isCustomDeclaredClass(string $namespace, ResolvableType $type): bool
+    {
+        if (isset(ResolvableTypes::BUILT_IN[$type->resolvableType()])) {
+            return false;
+        }
+
+        $namespaceParts = explode('\\', $namespace);
+
+        return $type->moduleName() !== array_pop($namespaceParts);
+    }
+
 }

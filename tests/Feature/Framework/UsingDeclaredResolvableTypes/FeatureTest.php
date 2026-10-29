@@ -11,6 +11,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Exception\ResolvableTypeException;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -33,11 +34,56 @@ final class FeatureTest extends TestCase
         DirectoryUtil::removeDir(self::CACHE_DIR);
     }
 
-    public function test_a_declared_kind_resolves_with_the_module_prefix(): void
+    #[DataProvider('fileCacheModes')]
+    public function test_two_custom_services_ending_in_a_declared_suffix_keep_their_own_identity(bool $fileCache): void
     {
-        $this->bootstrap();
+        $this->bootstrap($fileCache);
+        $service = new Report\ReportService();
+
+        self::assertInstanceOf(Report\SalesExporter::class, $service->getSalesExporter());
+        self::assertInstanceOf(Report\AuditExporter::class, $service->getAuditExporter());
+        self::assertNotSame($service->getSalesExporter(), $service->getAuditExporter());
+        self::assertSame('report-exported', (new Report\ReportFactory())->createExportedReport());
+    }
+
+    #[DataProvider('fileCacheModes')]
+    public function test_a_declared_kind_resolves_with_the_module_prefix(bool $fileCache): void
+    {
+        $this->bootstrap($fileCache);
 
         self::assertSame('report-exported', (new Report\ReportFactory())->createExportedReport());
+    }
+
+    #[DataProvider('fileCacheModes')]
+    public function test_a_declared_kind_resolves_without_the_module_prefix(bool $fileCache): void
+    {
+        $this->bootstrap($fileCache);
+        self::assertSame('plain-exported', (new Plain\PlainFactory())->createExportedReport());
+
+        Gacela::resetCache();
+        $this->bootstrap($fileCache);
+        self::assertSame('plain-exported', (new Plain\PlainFactory())->createExportedReport());
+    }
+
+    public function test_an_override_of_a_custom_service_keeps_its_own_identity(): void
+    {
+        $this->bootstrap();
+        $replacement = new class() extends AbstractExporter {};
+        AnonymousGlobal::overrideExistingResolvedClass(Report\SalesExporter::class, $replacement);
+        $service = new Report\ReportService();
+
+        self::assertSame($replacement, $service->getSalesExporter());
+        self::assertInstanceOf(Report\AuditExporter::class, $service->getAuditExporter());
+        self::assertSame('report-exported', (new Report\ReportFactory())->createExportedReport());
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function fileCacheModes(): iterable
+    {
+        yield 'memory cache' => [false];
+        yield 'file cache' => [true];
     }
 
     /**

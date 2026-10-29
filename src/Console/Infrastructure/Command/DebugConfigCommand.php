@@ -122,6 +122,7 @@ final class DebugConfigCommand extends Command
 
         /** @psalm-suppress MixedAssignment */
         foreach ($values as $key => $value) {
+            $key = (string) $key;
             if ($filter !== '' && !str_contains($key, $filter)) {
                 continue;
             }
@@ -136,6 +137,7 @@ final class DebugConfigCommand extends Command
         // A declared key nothing provides has no value to list, so it would
         // otherwise be the one kind of drift this table cannot show.
         foreach ($schema->declaredKeys() as $key) {
+            $key = (string) $key;
             if (!array_key_exists($key, $values) && ($filter === '' || str_contains($key, $filter))) {
                 $entries[] = ['key' => $key, 'value' => null, 'schema' => self::SCHEMA_MISSING];
             }

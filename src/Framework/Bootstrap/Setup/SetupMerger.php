@@ -45,6 +45,7 @@ final class SetupMerger
         $this->whenChanged($other, SetupGacela::shouldValidateConfigSchemaOnBoot, fn (): SetupGacela => $this->original->setShouldValidateConfigSchemaOnBoot($other->shouldValidateConfigSchemaOnBoot()));
         $this->whenChanged($other, SetupGacela::dtoSchema, fn () => $this->original->mergeDtoSchema($other->getDtoSchema()));
         $this->whenChanged($other, SetupGacela::stubsDir, fn (): SetupGacela => $this->original->setStubsDir($other->getStubsDir()));
+        $this->whenChanged($other, SetupGacela::areEventListenersEnabled, fn (): SetupGacela => $this->original->setAreEventListenersEnabled($other->areEventListenersEnabled()));
         $this->mergeEventDispatcher($other);
         $this->mergeServicesToExtend($other);
         $this->whenChanged($other, SetupGacela::factories, fn () => $this->original->mergeFactories($other->getFactories()));
@@ -98,10 +99,8 @@ final class SetupMerger
      */
     private function mergeEventDispatcher(SetupGacela $other): void
     {
-        if ($other->canCreateEventDispatcher()) {
-            $this->original->mergeGenericListeners($other->getGenericListeners() ?? []);
-            $this->original->mergeSpecificListeners($other->getSpecificListenerList() ?? []);
-        }
+        $this->original->mergeGenericListeners($other->getGenericListeners() ?? []);
+        $this->original->mergeSpecificListeners($other->getSpecificListenerList() ?? []);
 
         $suppliedByOther = $other->getSuppliedEventDispatcher();
 

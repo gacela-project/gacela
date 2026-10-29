@@ -11,6 +11,20 @@ use PHPUnit\Framework\TestCase;
 
 final class ConfigSchemaTest extends TestCase
 {
+    public function test_integer_keys_keep_defaults_and_are_validated(): void
+    {
+        $schema = ConfigSchema::fromArray([
+            404 => ConfigType::string()->default('missing'),
+            500 => ConfigType::int()->required(),
+        ]);
+
+        self::assertSame([404, 500], $schema->declaredKeys());
+        self::assertSame([404 => 'missing'], $schema->defaults());
+        self::assertSame([], $schema->violations([404 => 'missing', 500 => 1]));
+        self::assertSame('500', $schema->violations([])[0]->key);
+        self::assertSame('404', $schema->violations([404 => false, 500 => 1])[0]->key);
+    }
+
     public function test_an_empty_schema_declares_nothing_and_finds_nothing(): void
     {
         $schema = ConfigSchema::empty();

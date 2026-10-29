@@ -19,6 +19,25 @@ A subject with no gating group runs in **neither** CI step and is silently unmea
 
 Both sides of the comparison must run **the same group**. The baseline stores one tag per group (`base_gate`, `base_info`) precisely so a head run is never compared against a base run that did a different amount of work in a different order; that mismatch alone moved a disk-bound subject by ~50%.
 
+### Introducing cache-read security checks
+
+The comparison helper (`.github/phpbench/compare.py`) makes one bounded exception when the base has no `FileCache::isSafeToRead` and the head introduces that method with an early rejection in `FileCache::readArray`. Only these four subjects receive a 40% ceiling for that comparison:
+
+- `BootstrapBench::bench_bootstrap_warm`
+- `BootstrapBench::bench_bootstrap_auto_warmed`
+- `ConfigInitBench::bench_config_init_warm`
+- `ConfigInitBench::bench_config_init_auto_warmed`
+
+Successful per-read security checks add filesystem metadata and ownership checks. Interleaved Linux measurements found about 1.3 microseconds of added work per warm configuration read, around 30% on that short path. CI measured +32.57% for warm configuration reads, +18.38% for automatically warmed reads, +11.22% for warm bootstrap and +9.90% for automatically warmed bootstrap. The 40% ceiling covers the measured security cost plus the existing 10% margin. This accepts that measured cost without removing the checks.
+
+During that transition, CI runs the other gated subjects first (`base_gate_core`, 10%), then those four exact subjects (`base_gate_startup`, 40%). Both commits run identical selections in that order. PhpBench's `--assert` replaces the configured assertion for the selected subjects; the aggregate report still shows their actual times and differences. Once the base contains the guard, every gated subject automatically returns to 10%, including those four. Missing commits or unreadable source stop the comparison. A new method without its read-time rejection receives no allowance.
+
+The helper and its plan are copied into the runner's temporary directory before checking out the base, which may predate the helper. Immutable base and head commit IDs are captured in that plan, and each run verifies its checkout. Focused tests include PhpBench's debug executor to select the actual subject inventory and check assertion replacement with fixed test inputs; these test values are stored only in a temporary directory and are never used by the measured CI runs.
+
+```bash
+python3 -B -m unittest discover -s .github/phpbench -p 'test_*.py'
+```
+
 Rule of thumb: if the subject's average time is below ~0.2μs, it belongs in `informational` and is tagged `micro` — at that scale timer quantization alone moves the mode by ~10%, which would false-fail the gate on unrelated PRs. Subjects in the 0.2–1μs range can stay gated when their `rstdev` holds below ~3% (e.g. the warm-resolve benches).
 
 ## Retries: why the informational benches loosen the threshold

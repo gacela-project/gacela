@@ -42,7 +42,7 @@ final class Config implements ConfigInterface
 
     private ?string $appRootDir = null;
 
-    /** @var array<string,mixed> */
+    /** @var array<array-key,mixed> */
     private array $config = [];
 
     // A separate flag, because a legitimately empty merged config is still "initialized";
@@ -260,7 +260,7 @@ final class Config implements ConfigInterface
      *
      * @throws ConfigException
      *
-     * @return array<string,mixed>
+     * @return array<array-key,mixed>
      */
     public function getAllValues(): array
     {

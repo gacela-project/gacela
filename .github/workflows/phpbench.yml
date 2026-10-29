@@ -4,6 +4,7 @@
 # the PR head against that stored baseline. The assertion configured in
 # phpbench.json (mode(variant.time.avg) <= mode(baseline.time.avg) +/- 10%)
 # fails the job when a benchmarked path regresses by more than 10%.
+# A one-time cache-read security transition is scoped in .github/phpbench/compare.py.
 #
 # Only the `gate` group blocks the merge: those are the stable macro benches.
 # The `micro` group (sub-microsecond subjects, where timer quantization alone
@@ -50,27 +51,37 @@ jobs:
           key: "phpbench-php-8.4-${{ hashFiles('**/composer.lock') }}"
           restore-keys: "phpbench-php-8.4-"
 
-      # Each group is stored under its own tag and compared against a head run
-      # of that same group. Benchmarking the whole suite here and only the
-      # `gate` group on the head would compare two runs that did different
-      # amounts of work in a different order -- which is enough, for a
-      # disk-bound subject, to move the mode by ~50% with no code change.
-      - name: Benchmark base branch (${{ github.base_ref }}) and store as baseline
+      - name: Capture comparison plan before changing checkouts
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git checkout --detach "origin/${{ github.base_ref }}"
+          cp .github/phpbench/compare.py "$RUNNER_TEMP/phpbench-compare.py"
+          python3 "$RUNNER_TEMP/phpbench-compare.py" plan "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/phpbench-plan.json"
+          cat "$RUNNER_TEMP/phpbench-plan.json"
+
+      - name: Benchmark base commit and store baselines
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git checkout --detach "$BASE_SHA"
           composer install --no-interaction --no-progress
-          vendor/bin/phpbench run --tag=base_gate --store --progress=none --group=gate
-          vendor/bin/phpbench run --tag=base_info --store --progress=none --group=informational
+          python3 "$RUNNER_TEMP/phpbench-compare.py" base "$RUNNER_TEMP/phpbench-plan.json"
 
       - name: Restore PR head
-        run: git checkout --detach "${{ github.event.pull_request.head.sha }}"
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git checkout --detach "$HEAD_SHA"
 
       - name: Install PR head dependencies
         run: composer install --no-interaction --no-progress
 
-      - name: Assert no >10% regression against the base baseline (gate group)
-        run: vendor/bin/phpbench run --ref=base_gate --group=gate --report=aggregate --progress=none
+      - name: Assert performance against matching base selections
+        run: python3 "$RUNNER_TEMP/phpbench-compare.py" gate "$RUNNER_TEMP/phpbench-plan.json"
 
       - name: Report non-gating benches against the base baseline (informational, non-blocking)
         continue-on-error: true
-        run: vendor/bin/phpbench run --ref=base_info --group=informational --report=aggregate --progress=none
+        run: python3 "$RUNNER_TEMP/phpbench-compare.py" info "$RUNNER_TEMP/phpbench-plan.json"
+
+      - name: Test benchmark comparison plan
+        run: python3 -B -m unittest discover -s .github/phpbench -p 'test_*.py'

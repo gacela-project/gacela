@@ -6,11 +6,82 @@ namespace GacelaTest\Unit\Framework\Bootstrap\Setup;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Bootstrap\SetupGacela;
+use Gacela\Framework\Config\Schema\ConfigType;
+use Gacela\Framework\Event\Dispatcher\NullEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 final class SetupMergerTest extends TestCase
 {
+    public function test_merge_carries_disabled_event_listeners_from_the_later_setup(): void
+    {
+        $closure = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->registerGenericListener(static function (): void {});
+        });
+        $gacelaFile = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->disableEventListeners();
+        });
+
+        $merged = $closure->merge($gacelaFile);
+
+        self::assertFalse($merged->areEventListenersEnabled());
+        self::assertFalse($merged->canCreateEventDispatcher());
+        self::assertInstanceOf(NullEventDispatcher::class, $merged->getEventDispatcher());
+    }
+
+    public function test_merge_keeps_disabled_listeners_when_the_later_setup_does_not_set_the_switch(): void
+    {
+        $first = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->disableEventListeners();
+        });
+        $second = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->registerGenericListener(static function (): void {});
+        });
+
+        self::assertFalse($first->merge($second)->areEventListenersEnabled());
+        self::assertCount(1, $first->getGenericListeners() ?? []);
+    }
+
+    public function test_merge_handler_registries_preserves_integer_keys_from_an_empty_setup(): void
+    {
+        $first = new SetupGacela();
+        $second = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addHandlerRegistry('status', [404 => stdClass::class]);
+        });
+
+        self::assertSame([404 => stdClass::class], $first->merge($second)->getHandlerRegistries()['status']);
+    }
+
+    public function test_merge_handler_registries_preserves_integer_keys_and_later_values(): void
+    {
+        $first = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addHandlerRegistry('status', [500 => stdClass::class, 404 => self::class, 'named' => self::class]);
+        });
+        $second = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->addHandlerRegistry('status', [404 => stdClass::class, 'named' => stdClass::class]);
+        });
+
+        self::assertSame(
+            [500 => stdClass::class, 404 => stdClass::class, 'named' => stdClass::class],
+            $first->merge($second)->getHandlerRegistries()['status'],
+        );
+    }
+
+    public function test_merge_config_schema_preserves_integer_keys_and_later_values(): void
+    {
+        $first = SetupGacela::fromCallable(static function (GacelaConfig $config): void {
+            $config->declareConfigSchema([500 => ConfigType::int(), 404 => ConfigType::bool()]);
+        });
+        $replacement = ConfigType::string();
+        $second = SetupGacela::fromCallable(static function (GacelaConfig $config) use ($replacement): void {
+            $config->declareConfigSchema([404 => $replacement]);
+        });
+        $schema = $first->merge($second)->getConfigSchema();
+
+        self::assertSame([500, 404], array_keys($schema));
+        self::assertSame($replacement, $schema[404]);
+    }
+
     public function test_merge_carries_the_config_schema_boot_check(): void
     {
         $closure = SetupGacela::fromCallable(static function (GacelaConfig $config): void {

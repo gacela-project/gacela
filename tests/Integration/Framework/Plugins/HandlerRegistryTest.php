@@ -28,6 +28,37 @@ final class HandlerRegistryTest extends TestCase
         CountingHandler::$instantiations = 0;
     }
 
+    public function test_bootstrap_merges_integer_keys_from_gacela_file(): void
+    {
+        $root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-integer-keys-' . uniqid('', true);
+        mkdir($root);
+        $file = $root . DIRECTORY_SEPARATOR . 'gacela.php';
+        file_put_contents($file, <<<'PHP'
+            <?php
+            return static function (\Gacela\Framework\Bootstrap\GacelaConfig $config): void {
+                $config->addHandlerRegistry('status', [404 => \GacelaTest\Integration\Framework\Plugins\Handler\ConcreteHandlerA::class]);
+                $config->declareConfigSchema([404 => \Gacela\Framework\Config\Schema\ConfigType::string()->default('missing')]);
+                $config->addAppConfigKeyValues([500 => 'error']);
+            };
+            PHP);
+
+        try {
+            Gacela::bootstrap($root, static function (GacelaConfig $config): void {
+                $config->setFileCache(false);
+                $config->validateConfigSchemaOnBoot();
+            });
+            $registry = Container::withConfig(Config::getInstance())->get('status');
+
+            self::assertInstanceOf(HandlerRegistry::class, $registry);
+            self::assertInstanceOf(ConcreteHandlerA::class, $registry->get(404));
+            self::assertSame('missing', Config::getInstance()->get('404'));
+            self::assertSame('error', Config::getInstance()->get('500'));
+        } finally {
+            unlink($file);
+            rmdir($root);
+        }
+    }
+
     public function test_registry_is_resolvable_from_container(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {

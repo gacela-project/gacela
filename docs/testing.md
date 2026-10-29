@@ -232,3 +232,9 @@ vendor/bin/gacela make:module App/Greeting --template=service --with-tests
 ```
 
 The `service` template generates the four pillars plus a `Domain` service the Facade delegates to, and `--with-tests` adds a ready-to-run facade test (a `GacelaTestCase`) under the module's `Tests/` directory.
+
+## Anonymous global configuration
+
+`Gacela::addGlobal($config, __FILE__)` registers an anonymous Config, Factory or Provider for anonymous classes declared in that file. Omitting the second argument uses the caller's file. File contexts use the full canonical path with directory separators normalized, so a registration made before bootstrap still resolves after bootstrap. Files such as `Alpha/config.php` and `Beta/config.php` therefore keep separate globals.
+
+Registering a different instance for an existing context and pillar throws a `RuntimeException` naming the key and both classes. Registering the same instance again is allowed. Use `Gacela::overrideExistingResolvedClass()` when replacing a resolved class is intended. Passing an object or an existing class name uses that class's defining file. Other explicit string keys retain their registration keys; internal code that previously used a file's base name should pass the file path instead.

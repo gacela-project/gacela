@@ -16,6 +16,7 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\ClassResolver\Cache\InMemoryCache;
+use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ClassNameFinder\ClassValidator;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
@@ -42,6 +43,7 @@ use ReflectionNamedType;
 
 use function class_exists;
 use function is_a;
+use function is_object;
 use function is_string;
 use function sprintf;
 
@@ -197,12 +199,16 @@ final class Gacela
      */
     public static function addGlobal(object $resolvedClass, object|string $context = ''): void
     {
+        if (is_object($context) || class_exists($context)) {
+            $context = (new ReflectionClass($context))->getFileName() ?: $context;
+        }
+
         if (is_string($context) && is_file($context)) {
-            $context = basename($context, '.php');
+            $context = ClassInfo::contextFromFile($context);
         } elseif ($context === '') {
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $callerFile = $trace[0]['file'] ?? __FILE__;
-            $context = basename($callerFile, '.php');
+            $context = ClassInfo::contextFromFile($callerFile);
         }
 
         AnonymousGlobal::addGlobal($context, $resolvedClass);

@@ -6,6 +6,7 @@ namespace GacelaTest\Integration\Framework;
 
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
@@ -73,15 +74,13 @@ final class GacelaTest extends TestCase
 
         Gacela::addGlobal($service);
 
-        // The caller of addGlobal() is this test file, so the resolved
-        // context should be this file's basename (without `.php`).
         self::assertSame(
             $service,
-            AnonymousGlobal::getByKey(AnonymousGlobal::createCacheKey('GacelaTest', 'Config')),
+            AnonymousGlobal::getByKey(AnonymousGlobal::createCacheKey(ClassInfo::contextFromFile(__FILE__), 'Config')),
         );
     }
 
-    public function test_add_global_with_file_path_context_uses_its_basename(): void
+    public function test_add_global_with_file_path_context_uses_its_path(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
@@ -93,7 +92,7 @@ final class GacelaTest extends TestCase
 
         self::assertSame(
             $service,
-            AnonymousGlobal::getByKey(AnonymousGlobal::createCacheKey('GacelaTest', 'Config')),
+            AnonymousGlobal::getByKey(AnonymousGlobal::createCacheKey(ClassInfo::contextFromFile(__FILE__), 'Config')),
         );
     }
 }

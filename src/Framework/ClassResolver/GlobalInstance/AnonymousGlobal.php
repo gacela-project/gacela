@@ -97,7 +97,7 @@ final class AnonymousGlobal
     {
         $key = self::getGlobalKeyFromClassName($className);
 
-        self::addCachedGlobalInstance($key, $resolvedClass);
+        self::$cachedGlobalInstances[$key] = $resolvedClass;
     }
 
     private static function extractContextNameFromContext(object|string $context): string
@@ -134,6 +134,16 @@ final class AnonymousGlobal
 
     private static function addCachedGlobalInstance(string $key, object $resolvedClass): void
     {
+        $existing = self::$cachedGlobalInstances[$key] ?? null;
+        if ($existing !== null && $existing !== $resolvedClass) {
+            throw new RuntimeException(sprintf(
+                "Global key '%s' is already registered by '%s'; cannot register '%s'.",
+                $key,
+                $existing::class,
+                $resolvedClass::class,
+            ));
+        }
+
         self::$cachedGlobalInstances[$key] = $resolvedClass;
     }
 

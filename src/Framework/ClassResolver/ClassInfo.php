@@ -47,6 +47,16 @@ final class ClassInfo implements ClassInfoInterface
         return self::fromString($caller, $resolvableType);
     }
 
+    public static function contextFromFile(string $file): string
+    {
+        $file = str_replace('\\', '/', realpath($file) ?: $file);
+        if (str_ends_with($file, '.php')) {
+            $file = substr($file, 0, -4);
+        }
+
+        return str_replace('/', '\\', $file);
+    }
+
     public function getModuleNamespace(): string
     {
         return $this->callerModuleNamespace;
@@ -91,18 +101,12 @@ final class ClassInfo implements ClassInfoInterface
             return self::$callerClassCache[$callerClass][$resolvableType];
         }
 
-        /** @var non-empty-list<string> $callerClassParts */
-        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
-        $filepath = end($callerClassParts);
-        $filename = self::normalizeFilename($filepath);
-
-        if (str_contains($callerClass, 'anonymous')) {
-            $callerClassParts = [
-                self::MODULE_NAME_ANONYMOUS . '\\' . $filename,
-                $filepath,
-            ];
+        if (preg_match('/@anonymous\x00(.+):[0-9]+\$/s', $callerClass, $matches) === 1) {
+            return self::$callerClassCache[$callerClass][$resolvableType] = self::fromAnonymousFile($matches[1], $resolvableType);
         }
 
+        /** @var non-empty-list<string> $callerClassParts */
+        $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $callerFullNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
 
         $namespaceParts = explode('\\', $callerFullNamespace);
@@ -139,19 +143,15 @@ final class ClassInfo implements ClassInfoInterface
         return GlobalKey::fromClassName($className);
     }
 
-    private static function normalizeFilename(string $filepath): string
+    private static function fromAnonymousFile(string $file, string $resolvableType): self
     {
-        $filename = basename($filepath);
-        $colonPos = strpos($filename, ':');
-        if ($colonPos !== false) {
-            $filename = substr($filename, 0, $colonPos);
-        }
+        $namespace = self::MODULE_NAME_ANONYMOUS . '\\' . self::contextFromFile($file);
 
-        $dotPos = strpos($filename, '.');
-        if ($dotPos === false) {
-            return $filename;
-        }
-
-        return substr($filename, 0, $dotPos);
+        return new self(
+            self::MODULE_NAME_ANONYMOUS,
+            $namespace,
+            self::cacheKey($namespace, $resolvableType),
+            $resolvableType,
+        );
     }
 }

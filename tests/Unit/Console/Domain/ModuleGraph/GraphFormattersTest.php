@@ -101,6 +101,6 @@ TXT;
         self::assertSame("\n", (new TextGraphFormatter())->format([]));
         self::assertSame("graph TD\n", (new MermaidGraphFormatter())->format([]));
         self::assertSame("digraph modules {\n}\n", (new GraphvizGraphFormatter())->format([]));
-        self::assertSame("[]\n", (new JsonGraphFormatter())->format([]));
+        self::assertSame("{}\n", (new JsonGraphFormatter())->format([]));
     }
 }

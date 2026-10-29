@@ -9,9 +9,13 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function get_object_vars;
 use function sprintf;
+use function str_starts_with;
 
 final class DebugGraphCommandTest extends TestCase
 {
@@ -70,6 +74,41 @@ final class DebugGraphCommandTest extends TestCase
         } finally {
             // Names exactly what this test created.
             rmdir($emptyDir);
+        }
+    }
+
+    public function test_json_format_is_parseable_when_an_existing_module_path_is_empty(): void
+    {
+        $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-graph-json-empty-' . bin2hex(random_bytes(4));
+        $sourceDir = $projectRoot . DIRECTORY_SEPARATOR . 'src';
+        mkdir($sourceDir, 0777, true);
+
+        try {
+            $this->assertEmptyGraphIsJson($projectRoot, ['src']);
+        } finally {
+            rmdir($sourceDir);
+            rmdir($projectRoot);
+        }
+    }
+
+    public function test_json_format_is_parseable_when_only_module_paths_are_invalid(): void
+    {
+        $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-graph-json-invalid-' . bin2hex(random_bytes(4));
+        mkdir($projectRoot, 0777, true);
+
+        try {
+            // Keep this regression focused on empty-graph formatting. The
+            // warning raised for an invalid path is covered by #1023.
+            set_error_handler(static fn (int $severity, string $message): bool => $severity === E_USER_WARNING
+                && str_starts_with($message, 'Gacela: appModulePaths entry "'));
+
+            try {
+                $this->assertEmptyGraphIsJson($projectRoot, ['missing']);
+            } finally {
+                restore_error_handler();
+            }
+        } finally {
+            rmdir($projectRoot);
         }
     }
 
@@ -291,5 +330,26 @@ final class DebugGraphCommandTest extends TestCase
         $this->baselines[] = $path;
 
         return $path;
+    }
+
+    /**
+     * @param list<string> $modulePaths
+     */
+    private function assertEmptyGraphIsJson(string $projectRoot, array $modulePaths): void
+    {
+        Gacela::bootstrap($projectRoot, static function (GacelaConfig $config) use ($modulePaths): void {
+            $config->resetInMemoryCache();
+            $config->setAppModulePaths($modulePaths);
+        });
+
+        $tester = new CommandTester(new DebugGraphCommand());
+        $exitCode = $tester->execute(['--format' => 'json'], ['capture_stderr_separately' => true]);
+
+        self::assertSame(0, $exitCode);
+        self::assertSame('', $tester->getErrorOutput());
+        $graph = json_decode($tester->getDisplay(), flags: JSON_THROW_ON_ERROR);
+
+        self::assertInstanceOf(stdClass::class, $graph);
+        self::assertSame([], get_object_vars($graph));
     }
 }

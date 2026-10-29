@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- `debug:graph --format=json` emits an empty JSON graph when no modules are found, while retaining the text diagnostic ([#1071](https://github.com/gacela-project/gacela/issues/1071))
+
 - Module discovery, undiscovered-facade warnings, project events and `migrate:service-map` scan projects under directories whose names end in `vendor`, such as `myvendor`. Directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))
 - `dto:generate` reports a shape covered only by a `psr-0` prefix as uncovered and exits with an error. Before, it wrote the class to a path Composer could not load ([#1003](https://github.com/gacela-project/gacela/issues/1003))
 - `dto:generate` and package manifest checks use the first directory when a Composer autoload prefix maps to a list, matching `make:module`. Empty or invalid directory lists no longer cause generation or scanning at the package root ([#1024](https://github.com/gacela-project/gacela/issues/1024))

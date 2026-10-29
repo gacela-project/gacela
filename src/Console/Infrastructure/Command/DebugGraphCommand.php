@@ -119,7 +119,7 @@ final class DebugGraphCommand extends Command
             return self::FAILURE;
         }
 
-        if ($graph === []) {
+        if ($graph === [] && $format === 'text') {
             ConsoleSection::noModulesFound(
                 $output,
                 $filter,

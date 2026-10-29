@@ -51,8 +51,8 @@ Listeners can be registered in the `Gacela::bootstrap()` closure and in `gacela.
 
 ```
 Gacela::bootstrap()
- ├─ GacelaBootstrapStartedEvent
  ├─ PackageConfigMergedEvent         (per discovered package, in merge order)
+ ├─ GacelaBootstrapStartedEvent      (after setup assembly, including gacela.php)
  ├─ ReadPhpConfigEvent               (per config file)
  ├─ ConfigInitializedEvent
  └─ GacelaBootstrapFinishedEvent
@@ -213,7 +213,7 @@ All classes live under `Gacela\Framework\Event\`. "Hot path" marks events fired 
 
 | Event | Fires when | Payload | Hot path |
 |---|---|---|---|
-| `GacelaBootstrapStartedEvent` | `Gacela::bootstrap()` begins (after the setup is processed) | `appRootDir()` | no |
+| `GacelaBootstrapStartedEvent` | `Gacela::bootstrap()` begins (after the setup is processed, including `gacela.php`) | `appRootDir()` | no |
 | `PackageConfigMergedEvent` | an installed package's `extra.gacela.config` was read and merged — one per package, in merge order | `packageName()`, `configFile()`, `position()` | no |
 | `GacelaBootstrapFinishedEvent` | bootstrap completed | `durationMs()` | no |
 

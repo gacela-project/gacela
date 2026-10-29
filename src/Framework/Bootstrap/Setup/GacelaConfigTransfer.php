@@ -57,7 +57,7 @@ final class GacelaConfigTransfer
      * @param TagsMap $tags
      * @param AfterResolvingMap $afterResolvingCallbacks
      * @param DefinitionSources $definitions
-     * @param ?array<string, ConfigType> $configSchema
+     * @param ?array<array-key, ConfigType> $configSchema
      * @param ?array<string, array<string, DtoType>> $dtoSchema
      */
     public function __construct(

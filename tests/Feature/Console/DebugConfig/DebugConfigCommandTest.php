@@ -16,6 +16,18 @@ use function sprintf;
 
 final class DebugConfigCommandTest extends TestCase
 {
+    public function test_integer_keys_are_reported_and_filtered_as_text(): void
+    {
+        $entries = $this->debugConfigAsJson(['filter' => '40'], [404 => 'missing', 500 => 'error'], [
+            404 => ConfigType::string(),
+            405 => ConfigType::string()->required(),
+        ]);
+
+        self::assertSame(['404', '405'], array_column($entries, 'key'));
+        self::assertSame('declared', $this->entry($entries, '404')['schema']);
+        self::assertSame('missing', $this->entry($entries, '405')['schema']);
+    }
+
     public function test_an_unknown_format_is_refused_rather_than_answered_with_text(): void
     {
         $tester = $this->debugConfig(['--format' => 'xml'], ['alpha' => 'first']);
@@ -192,8 +204,8 @@ final class DebugConfigCommandTest extends TestCase
 
     /**
      * @param array<string, mixed> $input
-     * @param array<string, mixed> $values
-     * @param array<string, mixed> $schema
+     * @param array<array-key, mixed> $values
+     * @param array<array-key, mixed> $schema
      *
      * @return list<array{key: string, value: mixed, schema: string}>
      */
@@ -225,17 +237,14 @@ final class DebugConfigCommandTest extends TestCase
 
     /**
      * @param array<string, mixed> $input
-     * @param array<string, mixed> $values
-     * @param array<string, mixed> $schema
+     * @param array<array-key, mixed> $values
+     * @param array<array-key, mixed> $schema
      */
     private function debugConfig(array $input, array $values, array $schema = []): CommandTester
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($values, $schema): void {
             $config->resetInMemoryCache();
-            /** @var mixed $value */
-            foreach ($values as $key => $value) {
-                $config->addAppConfigKeyValue($key, $value);
-            }
+            $config->addAppConfigKeyValues($values);
 
             if ($schema !== []) {
                 $config->declareConfigSchema($schema);

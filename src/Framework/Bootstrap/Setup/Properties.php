@@ -75,7 +75,7 @@ final class Properties
     /** @var ?ConfigKeyValues */
     public ?array $configKeyValues = null;
 
-    /** @var ?array<string, ConfigType> */
+    /** @var ?array<array-key, ConfigType> */
     public ?array $configSchema = null;
 
     /** @var ?array<string, array<string, DtoType>> */

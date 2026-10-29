@@ -11,7 +11,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
 /**
  * Main configuration interface for Gacela framework setup.
  *
- * @psalm-type ConfigKeyValues = array<string, mixed>
+ * @psalm-type ConfigKeyValues = array<array-key, mixed>
  */
 interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerConfigurationInterface, CacheConfigurationInterface
 {
@@ -48,7 +48,7 @@ interface SetupGacelaInterface extends BuilderConfigurationInterface, ContainerC
     /**
      * What the application's configuration is declared to contain.
      *
-     * @return array<string, ConfigType>
+     * @return array<array-key, ConfigType>
      */
     public function getConfigSchema(): array;
 

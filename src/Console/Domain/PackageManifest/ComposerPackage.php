@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\PackageManifest;
 
+use Gacela\Console\Domain\ComposerAutoload\Psr4Directory;
+
 use function array_keys;
 use function in_array;
 use function is_array;
@@ -133,9 +135,7 @@ final class ComposerPackage
             /** @var mixed $directory */
             foreach ($section as $prefix => $directory) {
                 if (is_string($prefix) && $prefix !== '') {
-                    // A prefix may map to several directories; only the prefix
-                    // matters here, so the first spelling of it is enough.
-                    $prefixes[$prefix] ??= is_string($directory) ? $directory : '';
+                    $prefixes[$prefix] ??= Psr4Directory::firstOf($directory);
                 }
             }
         }

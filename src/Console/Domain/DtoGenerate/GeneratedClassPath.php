@@ -46,7 +46,7 @@ final class GeneratedClassPath
         // `App\` and `App\Generated\` means the second for a class under it.
         $prefix = Psr4Prefixes::longestMatching($this->psr4Prefixes, $className);
 
-        if ($prefix === null) {
+        if ($prefix === null || $this->psr4Prefixes[$prefix] === '') {
             return null;
         }
 

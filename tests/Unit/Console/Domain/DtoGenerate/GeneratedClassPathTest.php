@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Console\Domain\DtoGenerate;
 
 use Gacela\Console\Domain\DtoGenerate\GeneratedClassPath;
+use Gacela\Console\Domain\PackageManifest\ComposerPackage;
 use PHPUnit\Framework\TestCase;
 
 use function implode;
@@ -72,6 +73,21 @@ final class GeneratedClassPathTest extends TestCase
     public function test_without_any_prefix_nothing_can_be_placed(): void
     {
         self::assertNull((new GeneratedClassPath([], '/repo'))->fileFor('App\Order'));
+    }
+
+    public function test_a_list_valued_manifest_prefix_uses_its_first_directory(): void
+    {
+        $prefixes = ComposerPackage::psr4PrefixesOf(['autoload' => ['psr-4' => ['App\\' => ['src', 'lib']]]]);
+
+        self::assertSame(
+            $this->joined('/repo', 'src', 'Checkout', 'Order.php'),
+            (new GeneratedClassPath($prefixes, '/repo'))->fileFor('App\Checkout\Order'),
+        );
+    }
+
+    public function test_an_empty_directory_cannot_place_a_class(): void
+    {
+        self::assertNull((new GeneratedClassPath(['App\\' => ''], '/repo'))->fileFor('App\Checkout\Order'));
     }
 
     private function joined(string $root, string ...$segments): string

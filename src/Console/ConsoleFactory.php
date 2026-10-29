@@ -67,10 +67,8 @@ use Symfony\Component\Console\Command\Command;
 use function is_dir;
 use function is_string;
 use function preg_match;
-use function sprintf;
 use function str_starts_with;
 use function strlen;
-use function trigger_error;
 
 /**
  * @extends AbstractFactory<ConsoleConfig>
@@ -367,15 +365,6 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
-     * The directories discovery actually walked, as configured rather than as
-     * resolved: `appModulePaths` is what a reader would edit, and an absolute
-     * path expanded from it is noise next to the entry it came from.
-     *
-     * An entry that is not a directory is reported all the same. It scans
-     * nothing, which is exactly what someone reading an empty module list
-     * needs to see -- the `trigger_error` above says so once, on a stream the
-     * command's own output may not share.
-     *
      * @return list<string>
      */
     public function scannedModulePaths(): array
@@ -384,15 +373,6 @@ final class ConsoleFactory extends AbstractFactory
     }
 
     /**
-     * The configured entries that are not directories, so discovery skipped
-     * them.
-     *
-     * Listing one under "Scanned" states something that did not happen, to a
-     * reader who is looking at an empty module list precisely because it did
-     * not. `createModuleScanIterator()` already `trigger_error`s about these,
-     * on a stream a command's own output may not share and which a reader
-     * scanning a report has no reason to be watching.
-     *
      * @return list<string>
      */
     public function unscannedModulePaths(): array
@@ -489,10 +469,6 @@ final class ConsoleFactory extends AbstractFactory
         foreach ($paths as $path) {
             $resolved = $this->resolveScanPath($path, $rootDir);
             if (!is_dir($resolved)) {
-                trigger_error(
-                    sprintf('Gacela: appModulePaths entry "%s" is not a directory, skipping.', $path),
-                    E_USER_WARNING,
-                );
                 continue;
             }
 

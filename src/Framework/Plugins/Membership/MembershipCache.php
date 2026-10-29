@@ -7,6 +7,7 @@ namespace Gacela\Framework\Plugins\Membership;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 
+use function is_array;
 use function is_file;
 use function serialize;
 use function sha1;
@@ -58,12 +59,12 @@ final class MembershipCache
     }
 
     /**
-     * @return Members|null null when the cache was never warmed
+     * @return Members|null null when the cache is missing or unusable
      */
     public function read(): ?Members
     {
         $content = FileCache::readArray($this->path());
-        if ($content === null) {
+        if ($content === null || !isset($content['plugins']) || !is_array($content['plugins'])) {
             return null;
         }
 

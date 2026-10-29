@@ -42,6 +42,10 @@ The default cache directory is `{appRoot}/.gacela/cache`, created with mode `070
 
 A path given here is resolved **relative to the app root**, and a leading `/` does not escape it: `enableFileCache('/var/cache/gacela')` writes to `{appRoot}/var/cache/gacela`. To point the cache at a genuinely absolute path outside the project, use the `GACELA_CACHE_DIR` environment variable, which is read first and taken verbatim — also the handy way to reuse one image across environments.
 
+The directory may be set in `gacela.php` or `gacela-{APP_ENV}.php` even when the bootstrap closure enables file caching. Package discovery and `cache:warm` use that same directory.
+
+When a `gacela-{APP_ENV}.php` file exists, package discovery reads `vendor/composer/installed.json` on each bootstrap and writes its declaration cache after that environment file has merged. This preserves access to package and project external services in the environment configuration. Boots without an environment file keep reading the declaration cache before discovery.
+
 **One exception, on Windows**: a drive-letter path (`C:\cache`, `C:/cache`) is taken as given and does escape the app root, because rebasing it would produce `{appRoot}\C:\cache`, which names nothing. A path already inside the app root is likewise left alone on either platform. So `GACELA_CACHE_DIR` is the portable way to ask for a directory outside the project — the only spelling that means the same thing on both.
 
 Typical wiring:

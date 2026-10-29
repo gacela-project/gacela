@@ -219,6 +219,15 @@ final class ProjectEventFinderTest extends TestCase
         self::assertSame([SomethingHappenedEvent::class], $found);
     }
 
+    public function test_a_directory_whose_name_ends_in_vendor_is_scanned(): void
+    {
+        $this->writeEventFileIn($this->temporaryRoot . DIRECTORY_SEPARATOR . 'myvendor' . DIRECTORY_SEPARATOR . 'src');
+
+        $found = (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find();
+
+        self::assertSame([SomethingHappenedEvent::class], $found);
+    }
+
     #[DataProvider('namespaceStatements')]
     public function test_events_are_found_from_the_namespace_statement(string $source): void
     {

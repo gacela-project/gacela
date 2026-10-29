@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- Module discovery, undiscovered-facade warnings, project events and `migrate:service-map` scan projects under directories whose names end in `vendor`, such as `myvendor`. Directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))
+
 - Integer configuration, schema and handler registry keys keep their values when declared or merged with a bootstrap closure. Later declarations replace matching keys instead of renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
 - `disableEventListeners()` in `gacela.php` or `gacela-{env}.php` takes effect when bootstrap also receives a closure. Registered listeners remain visible in `doctor` and `debug:events` while disabled ([#998](https://github.com/gacela-project/gacela/issues/998))
 

@@ -119,7 +119,7 @@ final class ProjectEventFinder
             || !$fileInfo->isFile()
             || $fileInfo->getExtension() !== 'php'
             || str_starts_with($fileInfo->getFilename(), '.')
-            || str_contains($realPath, 'vendor' . DIRECTORY_SEPARATOR)
+            || str_contains($realPath, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR)
         ) {
             return null;
         }

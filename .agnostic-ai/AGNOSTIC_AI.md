@@ -37,7 +37,7 @@ composer infection         # Mutation testing (needs Xdebug)
 composer phpbench          # Benchmarks (phpbench-base, phpbench-ref to compare)
 ```
 
-The pre-commit hook runs the gate. CI also runs `module-graph`, `infection` and `phpbench`.
+The pre-commit hook runs the gate. CI also runs `module-graph` and `phpbench`. Mutation testing runs only when explicitly requested, locally with `composer infection` or manually through the Infection workflow. Never dispatch it automatically for a push, pull request, schedule, or queue run.
 
 ## Git and pull requests
 

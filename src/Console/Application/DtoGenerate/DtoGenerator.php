@@ -23,11 +23,12 @@ final class DtoGenerator
     ) {
     }
 
-    public function generate(DtoSchema $schema, bool $dryRun): DtoGenerateResult
+    public function generate(DtoSchema $schema, bool $dryRun, bool $force = false): DtoGenerateResult
     {
         $written = [];
         $unchanged = [];
         $unplaceable = [];
+        $refused = [];
 
         foreach ($schema->shapes() as $className => $properties) {
             $file = $this->classPath->fileFor($className);
@@ -39,7 +40,14 @@ final class DtoGenerator
 
             $contents = $this->classBuilder->build($className, $properties);
 
-            if ($this->currentContents($file) === $contents) {
+            $current = $this->currentContents($file);
+
+            if (is_file($file) && !$force && ($current === null || !str_contains($current, DtoClassBuilder::GENERATED_MARKER))) {
+                $refused[$className] = $file;
+                continue;
+            }
+
+            if ($current === $contents) {
                 $unchanged[] = $className;
                 continue;
             }
@@ -52,7 +60,7 @@ final class DtoGenerator
             $written[$className] = $file;
         }
 
-        return new DtoGenerateResult($written, $unchanged, $unplaceable);
+        return new DtoGenerateResult($written, $unchanged, $unplaceable, $refused);
     }
 
     private function currentContents(string $file): ?string
@@ -61,7 +69,7 @@ final class DtoGenerator
             return null;
         }
 
-        $contents = file_get_contents($file);
+        $contents = @file_get_contents($file);
 
         return $contents === false ? null : $contents;
     }

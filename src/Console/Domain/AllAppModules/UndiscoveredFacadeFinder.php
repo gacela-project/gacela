@@ -160,8 +160,6 @@ final class UndiscoveredFacadeFinder
             return '';
         }
 
-        preg_match('#namespace (.*);#', $fileContent, $matches);
-
-        return $matches[1] ?? '';
+        return DeclaredNamespace::of($fileContent);
     }
 }

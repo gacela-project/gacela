@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\ProjectEvents;
 
+use Gacela\Console\Domain\AllAppModules\DeclaredNamespace;
 use Gacela\Framework\Event\GacelaEventInterface;
 use OuterIterator;
 use SplFileInfo;
 
 use function file_get_contents;
 use function is_a;
-use function preg_match;
 use function sort;
 use function str_contains;
 use function str_ends_with;
@@ -187,9 +187,7 @@ final class ProjectEventFinder
 
     private function namespaceOf(string $fileContent): string
     {
-        preg_match('#namespace (.*);#', $fileContent, $matches);
-
-        return $matches[1] ?? '';
+        return DeclaredNamespace::of($fileContent);
     }
 
     private function classNameOf(SplFileInfo $fileInfo): string

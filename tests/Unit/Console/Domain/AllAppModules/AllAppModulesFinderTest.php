@@ -9,6 +9,7 @@ use FilesystemIterator;
 use Gacela\Console\Domain\AllAppModules\AllAppModulesFinder;
 use Gacela\Console\Domain\AllAppModules\AppModuleCreator;
 use Gacela\Console\Domain\AllAppModules\FacadeAncestry;
+use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeFinder;
 use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\Factory\FactoryResolver;
 use Gacela\Framework\ClassResolver\Provider\ProviderResolver;
@@ -557,6 +558,64 @@ final class AllAppModulesFinderTest extends TestCase
             'final class OddFqcnFacade extends \Gacela\Framework\AbstractFacade',
             'OddFqcnFacade',
         ];
+    }
+
+    #[DataProvider('namespaceDeclarations')]
+    public function test_namespace_statement_shapes_are_discovered(string $shape, string $template): void
+    {
+        $dir = $this->createTempModuleDirectory('Shape');
+        $path = $dir . DIRECTORY_SEPARATOR . 'ShapeFacade.php';
+        $namespace = 'TempAllAppModulesNamespace' . $shape;
+        file_put_contents($path, str_replace('$NAMESPACE$', $namespace, $template));
+        require_once $path;
+
+        $file = $this->fileInfoFor($path, 'ShapeFacade.php');
+        $finder = new AllAppModulesFinder($this->iteratorFor($file), $this->createAppModuleCreator());
+        try {
+            $modules = $finder->findAllAppModules('');
+            self::assertCount(1, $modules);
+            self::assertSame($namespace . '\\ShapeFacade', $modules[0]->facadeClass());
+            self::assertSame([], (new UndiscoveredFacadeFinder($this->iteratorFor($file), ['Facade']))->find());
+        } finally {
+            $this->removeDirectory($dir);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function namespaceDeclarations(): iterable
+    {
+        yield 'quoted' => ['Quoted', <<<'PHP'
+            <?php
+            /** Moved from namespace Legacy\Shape; before 2.0. */
+            namespace $NAMESPACE$;
+            final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}
+            PHP];
+        yield 'braced' => ['Braced', <<<'PHP'
+            <?php
+            namespace $NAMESPACE$ {
+                final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}
+            }
+            PHP];
+        yield 'inline' => ['Inline', '<?php namespace $NAMESPACE$; final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}'];
+        yield 'inline strict' => ['InlineStrict', '<?php declare(strict_types=1); namespace $NAMESPACE$; final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}'];
+        yield 'inline license' => ['InlineLicense', '<?php /* license */ namespace $NAMESPACE$; final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}'];
+        yield 'inline strict with comment' => ['InlineStrictComment', '<?php declare(strict_types=1); /* license */ namespace $NAMESPACE$; final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}'];
+        yield 'quoted opening tag' => ['QuotedTag', <<<'PHP'
+            <?php
+            /** Example: <?php namespace Legacy\Shape; */
+            namespace $NAMESPACE$;
+            final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}
+            PHP];
+        yield 'bare namespace in a comment' => ['BareComment', <<<'PHP'
+            <?php
+            /*
+            namespace Legacy\Shape;
+            */
+            namespace $NAMESPACE$;
+            final class ShapeFacade extends \Gacela\Framework\AbstractFacade {}
+            PHP];
     }
 
     private function fileInfoFor(string $path, string $filename, string $extension = 'php'): SplFileInfo

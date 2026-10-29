@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- `disableEventListeners()` in `gacela.php` or `gacela-{env}.php` takes effect when bootstrap also receives a closure. Registered listeners remain visible in `doctor` and `debug:events` while disabled ([#998](https://github.com/gacela-project/gacela/issues/998))
+
 - Console file writers replace a target only after its new content is fully written. A failed or partial write during `migrate:service-map` now leaves the original source intact instead of truncating it; temporary files are cleaned up and existing permission bits are preserved on POSIX ([#1002](https://github.com/gacela-project/gacela/issues/1002))
 - `dto:generate` leaves existing files it did not generate untouched and exits with an error, including with `--dry-run` and `--check`; pass `--force` to replace them ([#1022](https://github.com/gacela-project/gacela/issues/1022))
 - `Gacela::bootstrap()` reads `gacela.php` once when the application root ends in a separator. Plugins no longer run twice and configuration paths are no longer duplicated for that spelling; `Gacela::rootDir()` omits trailing separators on ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))

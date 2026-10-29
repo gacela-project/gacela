@@ -881,7 +881,11 @@ final class SetupGacela extends AbstractSetupGacela
      */
     public function setAreEventListenersEnabled(?bool $flag): self
     {
-        $this->properties->areEventListenersEnabled = $flag ?? self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED;
+        $this->properties->areEventListenersEnabled = $this->setPropertyWithTracking(
+            self::areEventListenersEnabled,
+            $flag,
+            self::DEFAULT_ARE_EVENT_LISTENERS_ENABLED,
+        );
 
         return $this;
     }

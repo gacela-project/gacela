@@ -15,11 +15,13 @@ $cache->forget('user:42');
 $cache->clear();
 ```
 
-- One `.php` file per key (SHA1-hashed), written atomically via staged `.tmp` + `rename`.
+- One `gacela-fc-<sha1>.php` file per key, written atomically via staged `.tmp` + `rename`.
 - TTL per entry; `ttl: 0` means forever.
 - `beginBatch()` / `commitBatch()` defer writes behind a single index-locked flush — useful for warming many entries at once.
 - `stats()` returns entry count, total bytes, and oldest/newest timestamps.
 - Safe against torn reads: concurrent readers see either the previous file or the new one, never a half-written one.
+
+`clear()` and `stats()` act only on this cache's prefixed entries and legacy 40-hex-character `.php` filenames, so the directory can be shared with Gacela's framework caches. Entries written before the filename prefix was added remain readable; `forget()` and `clear()` remove the old copies too.
 
 ## ScopedCache — dependency-aware decorator
 

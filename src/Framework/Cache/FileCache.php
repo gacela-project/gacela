@@ -385,7 +385,11 @@ final class FileCache
             return null;
         }
 
-        $entry = self::readArray($file);
+        if (!is_file($file)) {
+            $file = CacheFilePath::forLegacyEntry($this->directory, $key);
+        }
+
+        $entry = $file === null ? null : self::readArray($file);
 
         if ($entry === null || !array_key_exists('value', $entry)) {
             return null;
@@ -412,6 +416,10 @@ final class FileCache
         }
 
         self::delete($path);
+        $legacy = CacheFilePath::forLegacyEntry($this->directory, $key);
+        if ($legacy !== null) {
+            self::delete($legacy);
+        }
     }
 
     /**
@@ -438,11 +446,6 @@ final class FileCache
     }
 
     /**
-     * The cache files on disk, or none when there is nowhere to look.
-     *
-     * {@see CacheFilePath} owns the "nowhere is not the root" rule, which
-     * is the whole reason this is not a bare glob.
-     *
      * @return list<string>
      */
     private function cacheFiles(): array
@@ -453,7 +456,10 @@ final class FileCache
             return [];
         }
 
-        return glob($pattern) ?: [];
+        $legacyPattern = CacheFilePath::legacyPattern($this->directory);
+        $legacyFiles = $legacyPattern === null ? [] : (glob($legacyPattern) ?: []);
+
+        return [...(glob($pattern) ?: []), ...$legacyFiles];
     }
 
     /**

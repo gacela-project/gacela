@@ -9,6 +9,7 @@
 ### Fixed
 
 - `dto:generate` leaves existing files it did not generate untouched and exits with an error, including with `--dry-run` and `--check`; pass `--force` to replace them ([#1022](https://github.com/gacela-project/gacela/issues/1022))
+- `Gacela::bootstrap()` reads `gacela.php` once when the application root ends in a separator. Plugins no longer run twice and configuration paths are no longer duplicated for that spelling; `Gacela::rootDir()` omits trailing separators on ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))
 
 - Module and project-event discovery read the namespace declaration instead of a namespace quoted in a docblock, and accept braced namespaces. Valid Facades and events in those files are no longer dropped or reported under the quoted namespace ([#995](https://github.com/gacela-project/gacela/issues/995))
 

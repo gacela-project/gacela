@@ -81,7 +81,9 @@ final class Gacela
     {
         $startTime = hrtime(true);
 
+        $appRootDir = self::normalizeRootDir($appRootDir);
         self::$appRootDir = $appRootDir;
+
         self::$mainContainer = null;
         Locator::resetInstance();
 
@@ -309,6 +311,13 @@ final class Gacela
         SharedPlanCache::persistIn(
             AbstractPhpFileCache::absoluteFilename($cacheDir, SharedPlanCache::FILENAME, $config->getAppRootDir()),
         );
+    }
+
+    private static function normalizeRootDir(string $root): string
+    {
+        $trimmed = rtrim($root, '/\\');
+
+        return $trimmed === '' || preg_match('/^[A-Za-z]:$/', $trimmed) === 1 ? $root : $trimmed;
     }
 
     private static function createConfig(SetupGacelaInterface $setup, string $appRootDir): Config

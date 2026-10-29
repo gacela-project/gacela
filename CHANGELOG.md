@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- `dto:generate` reports a shape covered only by a `psr-0` prefix as uncovered and exits with an error. Before, it wrote the class to a path Composer could not load ([#1003](https://github.com/gacela-project/gacela/issues/1003))
+
 - Cache reads reject foreign-owned files, files writable by other users, symlinks and files in directories writable by other users without the sticky bit, including container plans. New PHP cache files are created with mode `0600`. Failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
 - A `GacelaBootstrapStartedEvent` listener in `gacela.php` runs when bootstrap also receives a closure. The event fires once after setup assembly, before configuration initialization and bootstrap completion ([#1009](https://github.com/gacela-project/gacela/issues/1009))
 

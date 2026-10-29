@@ -12,6 +12,7 @@ use GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture\OrderShipped;
 use GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture\ProjectBaseEvent;
 use GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture\SomethingHappenedEvent;
 use OuterIterator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -216,6 +217,36 @@ final class ProjectEventFinderTest extends TestCase
         $found = (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find();
 
         self::assertSame([SomethingHappenedEvent::class], $found);
+    }
+
+    #[DataProvider('namespaceStatements')]
+    public function test_events_are_found_from_the_namespace_statement(string $source): void
+    {
+        mkdir($this->temporaryRoot, 0777, true);
+        $path = $this->temporaryRoot . DIRECTORY_SEPARATOR . 'SomethingHappenedEvent.php';
+        file_put_contents($path, $source);
+
+        $found = (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find();
+
+        self::assertSame([SomethingHappenedEvent::class], $found);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function namespaceStatements(): iterable
+    {
+        yield 'quoted' => [<<<'PHP'
+            <?php
+            /** Moved from namespace Legacy\Events; before 2.0. */
+            namespace GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture;
+            PHP];
+        yield 'braced' => [<<<'PHP'
+            <?php
+            namespace GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture {
+            }
+            PHP];
+        yield 'inline' => ['<?php namespace GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture;'];
     }
 
     public function test_scanning_nothing_finds_nothing(): void

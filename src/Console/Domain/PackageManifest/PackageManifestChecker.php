@@ -121,6 +121,10 @@ final class PackageManifestChecker
         $files = [];
 
         foreach ($package->autoloadPrefixes as $prefix => $directory) {
+            if ($directory === '') {
+                continue;
+            }
+
             if (!$this->ownsPrefix($package, $prefix, $allPackages)) {
                 continue;
             }

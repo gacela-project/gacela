@@ -301,6 +301,25 @@ final class PackageManifestCheckerTest extends TestCase
         self::assertSame([], $this->check());
     }
 
+    public function test_a_list_valued_prefix_scans_its_first_directory_only(): void
+    {
+        $this->writeManifest('composer.json', 'acme/bridge', ['acme/container' => '^1.0'], ['Acme\Bridge\\' => ['src', 'lib']]);
+        $this->writeClass('src/Bootstrapper.php', 'Acme\Bridge', ['Acme\Container\Container']);
+        $this->writeClass('tests/BootstrapperTest.php', 'Acme\Bridge\Tests', ['Acme\Framework\Kernel']);
+        $this->writeClass('vendor/Dependency.php', 'Acme\Bridge\Vendor', ['Acme\Framework\Kernel']);
+        $this->writeClass('lib/Alternate.php', 'Acme\Bridge\Alternate', ['Acme\Framework\Kernel']);
+
+        self::assertSame([], $this->check());
+    }
+
+    public function test_an_empty_directory_list_does_not_scan_the_package_root(): void
+    {
+        $this->writeManifest('composer.json', 'acme/bridge', [], ['Acme\Bridge\\' => []]);
+        $this->writeClass('tests/BootstrapperTest.php', 'Acme\Bridge\Tests', ['Acme\Framework\Kernel']);
+
+        self::assertSame([], $this->check());
+    }
+
     /**
      * @return list<UndeclaredImport>
      */
@@ -338,7 +357,7 @@ final class PackageManifestCheckerTest extends TestCase
 
     /**
      * @param array<string, string> $require
-     * @param array<string, string> $psr4
+     * @param array<string, string|list<string>> $psr4
      * @param array<string, string> $requireDev
      */
     private function writeManifest(

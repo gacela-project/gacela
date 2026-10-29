@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\CommandArguments;
 
 use Gacela\Console\ConsoleConfig;
+use Gacela\Console\Domain\ComposerAutoload\Psr4Directory;
 use InvalidArgumentException;
 
 use function count;
-use function is_string;
 
 /**
  * @psalm-import-type ComposerJsonContent from ConsoleConfig
@@ -101,7 +101,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
     private function foundPsr4(string $psr4Key, string|array $psr4Value, string $desiredNamespace): CommandArguments
     {
         $rootNamespace = rtrim($psr4Key, '\\');
-        $rootDir = rtrim($this->firstDirectoryOf($psr4Value), '/');
+        $rootDir = rtrim(Psr4Directory::firstOf($psr4Value), '/');
 
         // Only the matched prefix is removed. Replacing the namespace text
         // globally also rewrote it where it recurs inside the module name, so
@@ -113,22 +113,6 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             $this->join('\\', $rootNamespace, str_replace('/', '\\', $remainder)),
             $this->join('/', $rootDir, $remainder),
         );
-    }
-
-    /**
-     * Composer allows a psr-4 target to be a single directory or a list of
-     * them. Only the first is used: it is where Composer itself looks first,
-     * and generating into any of the others would be a guess.
-     *
-     * @param string|list<string> $psr4Value
-     */
-    private function firstDirectoryOf(string|array $psr4Value): string
-    {
-        if (is_string($psr4Value)) {
-            return $psr4Value;
-        }
-
-        return $psr4Value[0] ?? '';
     }
 
     /**

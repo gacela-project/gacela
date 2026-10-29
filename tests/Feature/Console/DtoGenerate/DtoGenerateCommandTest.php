@@ -64,7 +64,7 @@ final class DtoGenerateCommandTest extends TestCase
             }
         }
 
-        foreach (['src' . DIRECTORY_SEPARATOR . 'Checkout', 'src', ''] as $relative) {
+        foreach (['src' . DIRECTORY_SEPARATOR . 'Checkout', 'src', 'Checkout', ''] as $relative) {
             $directory = $relative === ''
                 ? $this->projectDir
                 : $this->projectDir . DIRECTORY_SEPARATOR . $relative;
@@ -116,6 +116,55 @@ final class DtoGenerateCommandTest extends TestCase
         } finally {
             $loader->unregister();
         }
+    }
+
+    public function test_a_directory_list_generates_a_class_the_project_autoloader_loads(): void
+    {
+        file_put_contents($this->projectDir . DIRECTORY_SEPARATOR . 'composer.json', json_encode([
+            'autoload' => ['psr-4' => [$this->namespace . '\\' => ['src', 'lib']]],
+        ], JSON_THROW_ON_ERROR));
+        self::assertSame(Command::FAILURE, $this->generate(['--check' => true])->getStatusCode());
+        self::assertSame(Command::SUCCESS, $this->generate()->getStatusCode());
+        self::assertFileExists($this->orderFile());
+        self::assertSame(Command::SUCCESS, $this->generate(['--check' => true])->getStatusCode());
+        $loader = new ClassLoader();
+        $loader->addPsr4($this->namespace . '\\', [$this->projectDir . DIRECTORY_SEPARATOR . 'src', $this->projectDir . DIRECTORY_SEPARATOR . 'lib']);
+        $loader->register();
+
+        try {
+            self::assertSame($this->orderFile(), $loader->findFile($this->orderClass()));
+            self::assertTrue(class_exists($this->orderClass()));
+        } finally {
+            $loader->unregister();
+        }
+    }
+
+    /**
+     * @param list<mixed> $directories
+     */
+    #[DataProvider('unplaceableDirectoryLists')]
+    public function test_a_list_without_a_directory_is_unplaceable(array $directories): void
+    {
+        file_put_contents($this->projectDir . DIRECTORY_SEPARATOR . 'composer.json', json_encode([
+            'autoload' => ['psr-4' => [$this->namespace . '\\' => $directories]],
+        ], JSON_THROW_ON_ERROR));
+
+        $tester = $this->generate();
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('No composer autoload prefix covers ' . $this->orderClass(), $tester->getDisplay());
+        self::assertFileDoesNotExist($this->orderFile());
+        self::assertFileDoesNotExist($this->projectDir . DIRECTORY_SEPARATOR . 'Checkout' . DIRECTORY_SEPARATOR . 'Order.php');
+    }
+
+    /**
+     * @return iterable<string, array{list<mixed>}>
+     */
+    public static function unplaceableDirectoryLists(): iterable
+    {
+        yield 'empty list' => [[]];
+        yield 'no strings' => [[false, 12]];
+        yield 'empty directory' => [['']];
     }
 
     public function test_it_writes_the_class_where_the_projects_own_autoload_looks(): void
@@ -571,6 +620,7 @@ final class DtoGenerateCommandTest extends TestCase
         return [
             $this->projectDir . DIRECTORY_SEPARATOR . 'composer.json',
             $this->orderFile(),
+            $this->projectDir . DIRECTORY_SEPARATOR . 'Checkout' . DIRECTORY_SEPARATOR . 'Order.php',
             $this->projectDir . DIRECTORY_SEPARATOR . 'src'
                 . DIRECTORY_SEPARATOR . 'Checkout' . DIRECTORY_SEPARATOR . 'Invoice.php',
         ];

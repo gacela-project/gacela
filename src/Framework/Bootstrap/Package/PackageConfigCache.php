@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Bootstrap\Package;
 
 use Gacela\Framework\Cache\FileCache;
+use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 
 use function array_map;
 use function is_array;
@@ -28,12 +29,13 @@ final class PackageConfigCache
 
     public function __construct(
         private readonly string $cacheDir,
+        private readonly string $appRootDir,
     ) {
     }
 
     public function path(): string
     {
-        return $this->cacheDir . DIRECTORY_SEPARATOR . self::FILENAME;
+        return AbstractPhpFileCache::absoluteFilename($this->cacheDir, self::FILENAME, $this->appRootDir);
     }
 
     /**

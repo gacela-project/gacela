@@ -22,7 +22,7 @@ use function array_keys;
 final class ConfigSchema
 {
     /**
-     * @param array<string, ConfigType> $types
+     * @param array<array-key, ConfigType> $types
      */
     private function __construct(
         private readonly array $types,
@@ -35,7 +35,7 @@ final class ConfigSchema
     }
 
     /**
-     * @param array<string, mixed> $schema key => ConfigType
+     * @param array<array-key, mixed> $schema key => ConfigType
      *
      * @throws MalformedConfigSchemaException
      */
@@ -46,10 +46,10 @@ final class ConfigSchema
         /** @var mixed $type */
         foreach ($schema as $key => $type) {
             if (!$type instanceof ConfigType) {
-                throw MalformedConfigSchemaException::notAType($key);
+                throw MalformedConfigSchemaException::notAType((string) $key);
             }
 
-            self::assertDeclarationIsCoherent($key, $type);
+            self::assertDeclarationIsCoherent((string) $key, $type);
             $types[$key] = $type;
         }
 
@@ -67,7 +67,7 @@ final class ConfigSchema
     }
 
     /**
-     * @return list<string>
+     * @return list<array-key>
      */
     public function declaredKeys(): array
     {
@@ -77,7 +77,7 @@ final class ConfigSchema
     /**
      * Every key that does not match its declaration, in the order declared.
      *
-     * @param array<string, mixed> $values the merged configuration, as an
+     * @param array<array-key, mixed> $values the merged configuration, as an
      *                                     environment would see it
      *
      * @return list<ConfigSchemaViolation>
@@ -89,14 +89,14 @@ final class ConfigSchema
         foreach ($this->types as $key => $type) {
             if (!array_key_exists($key, $values)) {
                 if ($type->isRequired) {
-                    $violations[] = ConfigSchemaViolation::missing($key, $type);
+                    $violations[] = ConfigSchemaViolation::missing((string) $key, $type);
                 }
 
                 continue;
             }
 
             if (!$type->accepts($values[$key])) {
-                $violations[] = ConfigSchemaViolation::wrongType($key, $type, $values[$key]);
+                $violations[] = ConfigSchemaViolation::wrongType((string) $key, $type, $values[$key]);
             }
         }
 
@@ -106,11 +106,11 @@ final class ConfigSchema
     /**
      * The declared defaults, for the keys that carry one.
      *
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function defaults(): array
     {
-        /** @var array<string, mixed> $defaults */
+        /** @var array<array-key, mixed> $defaults */
         $defaults = [];
 
         foreach ($this->types as $key => $type) {

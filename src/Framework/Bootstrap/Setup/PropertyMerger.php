@@ -107,12 +107,12 @@ final class PropertyMerger
      * Per key, later wins: an extended config refining one key's declaration
      * says nothing about the keys it did not mention.
      *
-     * @param array<string, ConfigType> $schema
+     * @param array<array-key, ConfigType> $schema
      */
     public function mergeConfigSchema(array $schema): void
     {
         $current = $this->setup->getConfigSchema();
-        $this->setup->setConfigSchema(array_merge($current, $schema));
+        $this->setup->setConfigSchema(array_replace($current, $schema));
     }
 
     /**
@@ -360,7 +360,7 @@ final class PropertyMerger
 
         foreach ($list as $key => $inner) {
             /** @var TInner $mergedInner */
-            $mergedInner = array_merge($merged[$key] ?? [], $inner);
+            $mergedInner = array_replace($merged[$key] ?? [], $inner);
             $merged[$key] = $mergedInner;
         }
 

@@ -165,7 +165,7 @@ abstract class AbstractSetupGacela implements SetupGacelaInterface
      * Declaring no schema is the default: nothing is checked until a project
      * says what its configuration is supposed to contain.
      *
-     * @return array<string, ConfigType>
+     * @return array<array-key, ConfigType>
      */
     public function getConfigSchema(): array
     {

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Gacela\Console\Domain\ProjectEvents;
 
 use Gacela\Console\Domain\AllAppModules\DeclaredNamespace;
+use Gacela\Console\Domain\ClassLoading\ClassLoadFailures;
 use Gacela\Framework\Event\GacelaEventInterface;
 use OuterIterator;
 use SplFileInfo;
+use Throwable;
 
 use function file_get_contents;
 use function is_a;
@@ -143,11 +145,20 @@ final class ProjectEventFinder
         /** @var class-string $class */
         $class = $namespace . '\\' . $this->classNameOf($fileInfo);
 
+        if (ClassLoadFailures::reasonFor($class) !== null) {
+            return null;
+        }
+
         // The one load, and the one thing that actually decides: a file can
         // name the interface for any reason -- a listener type-hints it, a
         // service imports it -- and only the class itself says whether an event
         // is what this is.
-        return is_a($class, GacelaEventInterface::class, true) ? $class : null;
+        try {
+            return is_a($class, GacelaEventInterface::class, true) ? $class : null;
+        } catch (Throwable $throwable) {
+            ClassLoadFailures::capture($class, $throwable);
+            return null;
+        }
     }
 
     private function looksLikeAnEvent(SplFileInfo $fileInfo, string $fileContent): bool

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\AllAppModules;
 
+use Gacela\Console\Domain\ClassLoading\ClassLoadFailures;
 use Gacela\Framework\AbstractFacade;
 use OuterIterator;
 use ReflectionClass;
 use SplFileInfo;
+use Throwable;
 
 use function sprintf;
 
@@ -99,11 +101,18 @@ final class AllAppModulesFinder
             }
         }
 
-        if ($this->facadeAncestry->rulesOut($fullyQualifiedClassName)) {
+        if (ClassLoadFailures::reasonFor($fullyQualifiedClassName) !== null
+            || $this->facadeAncestry->rulesOut($fullyQualifiedClassName)
+        ) {
             return null;
         }
 
-        if (!class_exists($fullyQualifiedClassName)) {
+        try {
+            if (!class_exists($fullyQualifiedClassName)) {
+                return null;
+            }
+        } catch (Throwable $throwable) {
+            ClassLoadFailures::capture($fullyQualifiedClassName, $throwable);
             return null;
         }
 

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Domain\AllAppModules;
 
+use Gacela\Console\Domain\ClassLoading\ClassLoadFailures;
 use Gacela\Framework\AbstractFacade;
 use OuterIterator;
 use ReflectionClass;
 use SplFileInfo;
+use Throwable;
 
 use function class_exists;
 use function dirname;
@@ -81,6 +83,26 @@ final class UndiscoveredFacadeFinder
 
         $fullyQualifiedClassName = $namespace . '\\' . $className;
 
+        $reason = ClassLoadFailures::reasonFor($fullyQualifiedClassName);
+        if ($reason !== null) {
+            return new UndiscoveredFacadeFile($realPath, $fullyQualifiedClassName, UndiscoveredFacadeProblem::NotLoadable, $reason);
+        }
+
+        try {
+            return $this->inspectClass($realPath, $fullyQualifiedClassName);
+        } catch (Throwable $throwable) {
+            ClassLoadFailures::capture($fullyQualifiedClassName, $throwable);
+            return new UndiscoveredFacadeFile(
+                $realPath,
+                $fullyQualifiedClassName,
+                UndiscoveredFacadeProblem::NotLoadable,
+                ClassLoadFailures::describe($throwable),
+            );
+        }
+    }
+
+    private function inspectClass(string $realPath, string $fullyQualifiedClassName): ?UndiscoveredFacadeFile
+    {
         if (!class_exists($fullyQualifiedClassName)) {
             // An interface, trait or enum named like a Facade is loadable and
             // simply not a module. Reporting it would be reporting a decision.

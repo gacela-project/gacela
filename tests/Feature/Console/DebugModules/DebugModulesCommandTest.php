@@ -213,7 +213,7 @@ final class DebugModulesCommandTest extends TestCase
         );
     }
 
-    public function test_reports_a_discovery_failure_instead_of_crashing(): void
+    public function test_skips_a_facade_that_cannot_be_autoloaded(): void
     {
         $autoloader = static function (string $class): void {
             if ($class === self::EXPLODING_FACADE) {
@@ -226,12 +226,9 @@ final class DebugModulesCommandTest extends TestCase
 
         $tester = $this->debugModules('ExplodingFixtures', []);
 
-        // A module that cannot even be autoloaded is reported, not fatal.
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString(
-            'Could not discover modules: ' . self::AUTOLOAD_FAILURE,
-            $tester->getDisplay(),
-        );
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('No modules found.', $tester->getDisplay());
+        self::assertStringNotContainsString('Could not discover modules:', $tester->getDisplay());
     }
 
     /**

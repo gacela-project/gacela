@@ -42,7 +42,7 @@ Every stub substitutes `$NAMESPACE$`, `$MODULE_NAME$` and `$CLASS_NAME$`. `docto
 
 ### Generating a kind you declared
 
-A kind declared with [`addResolvableType()`](getting-a-dependency.md#resolve-a-kind-of-my-own) is a filename `make:file` accepts, listed in its help next to the pillars:
+A kind declared with [`addResolvableType()`](getting-a-dependency.md#resolve-a-kind-of-my-own) is a filename `make:file` accepts, listed in its help next to the pillars. An exact kind name or alias always means that kind, even when it also abbreviates another kind.
 
 ```bash
 vendor/bin/gacela make:file App/Wallet Exporter   # generates App/Wallet/WalletExporter.php

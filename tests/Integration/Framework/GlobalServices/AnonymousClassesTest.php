@@ -8,7 +8,6 @@ use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
-use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
@@ -48,13 +47,9 @@ final class AnonymousClassesTest extends TestCase
         self::assertSame('Hello, Chema!', $facade->greet('Chema'));
     }
 
-    /**
-     * Using $this object as context.
-     */
     private function registerConfig(): void
     {
-        AnonymousGlobal::addGlobal(
-            $this,
+        Gacela::addGlobal(
             new class() extends AbstractConfig {
                 /**
                  * @return int[]
@@ -64,16 +59,13 @@ final class AnonymousClassesTest extends TestCase
                     return [1, 2, 3, 4, 5];
                 }
             },
+            $this,
         );
     }
 
-    /**
-     * Using a string (class name) as context.
-     */
     private function registerFactory(): void
     {
-        AnonymousGlobal::addGlobal(
-            'AnonymousClassesTest',
+        Gacela::addGlobal(
             new class() extends AbstractFactory {
                 public function createDomainClass(): object
                 {
@@ -106,13 +98,13 @@ final class AnonymousClassesTest extends TestCase
                     };
                 }
             },
+            self::class,
         );
     }
 
     private function registerAbstractProvider(): void
     {
-        AnonymousGlobal::addGlobal(
-            $this,
+        Gacela::addGlobal(
             new class() extends AbstractProvider {
                 public function provideModuleDependencies(Container $container): void
                 {

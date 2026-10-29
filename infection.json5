@@ -378,7 +378,6 @@
                 "Gacela\\Framework\\Config\\MergedConfigCache::dimensionSuffix",
                 "Gacela\\Framework\\Cache\\FileCache::normalizeDirectory",
                 "Gacela\\StaticAnalysis\\ShortName::of",
-                "Gacela\\Framework\\ClassResolver\\ClassInfo::normalizeFilename",
             ],
         },
         Plus: {

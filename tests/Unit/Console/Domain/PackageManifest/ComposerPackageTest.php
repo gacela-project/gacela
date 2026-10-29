@@ -125,7 +125,7 @@ final class ComposerPackageTest extends TestCase
         self::assertSame(['Acme\\' => 'src'], $package->autoloadPrefixes);
     }
 
-    public function test_a_prefix_mapped_to_several_directories_keeps_the_first(): void
+    public function test_a_prefix_declared_by_both_standards_keeps_the_psr4_directory(): void
     {
         $package = $this->package([
             'name' => 'acme/thing',
@@ -133,6 +133,19 @@ final class ComposerPackageTest extends TestCase
         ]);
 
         self::assertSame(['Acme\\' => 'src'], $package->autoloadPrefixes);
+    }
+
+    public function test_a_prefix_mapped_to_a_list_of_directories_keeps_the_first(): void
+    {
+        $package = $this->package([
+            'name' => 'acme/thing',
+            'autoload' => ['psr-4' => ['Acme\\' => ['src', 'lib']]],
+        ]);
+
+        self::assertSame(['Acme\\' => 'src'], $package->autoloadPrefixes);
+        self::assertSame(['Acme\\' => 'src'], ComposerPackage::psr4PrefixesOf([
+            'autoload' => ['psr-4' => ['Acme\\' => ['src', 'lib']]],
+        ]));
     }
 
     public function test_an_autoload_section_that_is_not_an_object_yields_no_prefixes(): void

@@ -11,6 +11,7 @@ use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\ClassInfoTestingFacade;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 
@@ -30,13 +31,27 @@ final class ClassInfoTest extends TestCase
         self::assertSame('\GacelaTest\Fixtures\PriceConfig', $actual->getCacheKey());
     }
 
-    public function test_a_type_ending_in_a_declared_kind_suffix_shares_the_kind_key(): void
+    #[DataProvider('declaredKindKeys')]
+    public function test_declared_kind_keys(string $type, string $expected): void
     {
-        ResolvableTypes::syncFrom(['Facade' => ['Facade'], 'Factory' => ['Factory'], 'Config' => ['Config'], 'Provider' => ['Provider'], 'Reader' => ['Reader']]);
+        ResolvableTypes::syncFrom(['Reader' => ['Reader', 'Feed']]);
 
-        $actual = ClassInfo::from(ClassInfoTestingFacade::class, 'WalletReader');
+        self::assertSame($expected, ClassInfo::from(ClassInfoTestingFacade::class, $type)->getCacheKey());
+    }
 
-        self::assertSame('\GacelaTest\Fixtures\Reader', $actual->getCacheKey());
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function declaredKindKeys(): iterable
+    {
+        yield 'bare kind' => ['Reader', '\GacelaTest\Fixtures\Reader'];
+        yield 'module kind' => ['FixturesReader', '\GacelaTest\Fixtures\Reader'];
+        yield 'custom kind' => ['WalletReader', '\GacelaTest\Fixtures\WalletReader'];
+        yield 'another custom kind' => ['OrderReader', '\GacelaTest\Fixtures\OrderReader'];
+        yield 'bare alias' => ['Feed', '\GacelaTest\Fixtures\Feed'];
+        yield 'module alias' => ['FixturesFeed', '\GacelaTest\Fixtures\Reader'];
+        yield 'custom alias' => ['WalletFeed', '\GacelaTest\Fixtures\WalletFeed'];
+        yield 'unmatched class' => ['WalletService', '\GacelaTest\Fixtures\WalletService'];
     }
 
     public function test_anonymous_class(): void

@@ -12,7 +12,9 @@ use GacelaTest\Feature\Console\IdeMeta\Billing\BillingProvider;
 use GacelaTest\Feature\Console\IdeMeta\Billing\InvoiceSender;
 use GacelaTest\Feature\Console\IdeMeta\Report\ReportProvider;
 use GacelaTest\Feature\Console\IdeMeta\Report\ReportRenderer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -33,17 +35,48 @@ final class IdeMetaCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        // Only the two entries the command can create, both named from the same
-        // constants the command writes through, under this test's own directory.
         $file = IdeMetadataPath::fileIn(__DIR__);
         if (is_file($file)) {
             unlink($file);
         }
 
         $directory = IdeMetadataPath::directoryIn(__DIR__);
-        if (is_dir($directory)) {
+        if (is_file($directory)) {
+            unlink($directory);
+        } elseif (is_dir($directory)) {
             rmdir($directory);
         }
+    }
+
+    #[DataProvider('blockedModes')]
+    public function test_a_single_file_meta_is_reported_without_being_overwritten(bool $dryRun): void
+    {
+        $file = IdeMetadataPath::directoryIn(__DIR__);
+        $content = "<?php\nnamespace PHPSTORM_META;\n";
+        file_put_contents($file, $content);
+        set_error_handler(static function (int $errno, string $message): never {
+            throw new RuntimeException($message);
+        });
+
+        try {
+            $tester = $this->ideMeta(['--dry-run' => $dryRun]);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame('.phpstorm.meta.php is a file; move it into the .phpstorm.meta.php/ directory, PhpStorm reads every file there', trim($tester->getDisplay()));
+        self::assertSame($content, file_get_contents($file));
+        self::assertFileDoesNotExist(IdeMetadataPath::fileIn(__DIR__));
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function blockedModes(): iterable
+    {
+        yield 'write' => [false];
+        yield 'dry run' => [true];
     }
 
     public function test_it_writes_a_map_typing_each_string_id_by_its_provider_method(): void

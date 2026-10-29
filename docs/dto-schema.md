@@ -62,7 +62,7 @@ This is the opposite rule to [the config schema](config-schema.md), deliberately
 
 ## Where the files go
 
-Only `psr-4` prefixes are read; a shape under a `psr-0` prefix is reported as uncovered.
+Only `psr-4` prefixes are read; a shape under a `psr-0` prefix is reported as uncovered. If a prefix maps to several directories, generation uses the first one. An empty or invalid directory list is reported as unplaceable.
 
 A file at that path that `dto:generate` did not write is left alone and reported; pass `--force` to replace it. `--dry-run` and `--check` report the same refusal without writing.
 

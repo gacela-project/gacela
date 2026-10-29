@@ -5,11 +5,42 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\ClassResolver;
 
 use Gacela\Framework\ClassResolver\GlobalKey;
+use Gacela\Framework\ClassResolver\ResolvableTypes;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 
 final class GlobalKeyTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        ResolvableTypes::resetToBuiltIn();
+    }
+
+    #[DataProvider('declaredKindKeys')]
+    public function test_declared_kind_keys(string $type, string $expected): void
+    {
+        ResolvableTypes::syncFrom(['Reader' => ['Reader', 'Feed']]);
+
+        self::assertSame($expected, GlobalKey::fromClassName('GacelaTest\Fixtures\\' . $type));
+        self::assertSame($expected, GlobalKey::fromClassName('\GacelaTest\Fixtures\\' . $type));
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function declaredKindKeys(): iterable
+    {
+        yield 'bare kind' => ['Reader', '\GacelaTest\Fixtures\Reader'];
+        yield 'module kind' => ['FixturesReader', '\GacelaTest\Fixtures\Reader'];
+        yield 'custom kind' => ['WalletReader', '\GacelaTest\Fixtures\WalletReader'];
+        yield 'another custom kind' => ['OrderReader', '\GacelaTest\Fixtures\OrderReader'];
+        yield 'bare alias' => ['Feed', '\GacelaTest\Fixtures\Feed'];
+        yield 'module alias' => ['FixturesFeed', '\GacelaTest\Fixtures\Reader'];
+        yield 'custom alias' => ['WalletFeed', '\GacelaTest\Fixtures\WalletFeed'];
+        yield 'unmatched class' => ['WalletService', '\GacelaTest\Fixtures\WalletService'];
+    }
+
     public function test_empty_class_name(): void
     {
         self::assertSame('\\', GlobalKey::fromClassName(''));

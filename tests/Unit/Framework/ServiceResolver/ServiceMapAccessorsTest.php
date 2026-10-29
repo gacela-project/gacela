@@ -7,6 +7,7 @@ namespace GacelaTest\Unit\Framework\ServiceResolver;
 use Closure;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\ServiceResolver\DocBlockResolver;
 use Gacela\Framework\ServiceResolver\ServiceMapAccessors;
 use GacelaTest\Unit\Framework\ServiceResolver\Fixtures\ChildWithoutAccessors;
 use GacelaTest\Unit\Framework\ServiceResolver\Fixtures\ClassWithAccessors;
@@ -60,7 +61,7 @@ final class ServiceMapAccessorsTest extends TestCase
 
         self::assertSame(FirstService::class, ServiceMapAccessors::classNameFor($reflection, 'getFacade'));
         self::assertSame(FirstService::class, ServiceMapAccessors::declaredOn($reflection)['getFacade']);
-        self::assertSame([FirstService::class, 'Facade'], ServiceMapAccessors::concretePillarFor(ClassWithAccessors::class, 'getFacade'));
+        self::assertSame([FirstService::class, 'Facade'], DocBlockResolver::concretePillarFor(ClassWithAccessors::class, 'getFacade'));
     }
 
     #[DataProvider('fallbackMappings')]
@@ -69,7 +70,7 @@ final class ServiceMapAccessorsTest extends TestCase
         $reflection = new ReflectionClass(ClassWithAccessors::class);
 
         self::assertSame($expectedClass, ServiceMapAccessors::classNameFor($reflection, $method));
-        self::assertNull(ServiceMapAccessors::concretePillarFor(ClassWithAccessors::class, $method));
+        self::assertNull(DocBlockResolver::concretePillarFor(ClassWithAccessors::class, $method));
         self::assertSame($expectedClass, ServiceMapAccessors::classNameFor($reflection, $method));
     }
 
@@ -92,13 +93,13 @@ final class ServiceMapAccessorsTest extends TestCase
         self::assertSame(FirstService::class, ServiceMapAccessors::classNameFor($reflection, 'getFacade'));
 
         $this->withoutAutoloading(FirstService::class, static function (): void {
-            self::assertNull(ServiceMapAccessors::concretePillarFor(ClassWithAccessors::class, 'getFacade'));
+            self::assertNull(DocBlockResolver::concretePillarFor(ClassWithAccessors::class, 'getFacade'));
         });
 
         self::assertTrue(class_exists(FirstService::class));
         Gacela::resetCache();
 
-        self::assertSame([FirstService::class, 'Facade'], ServiceMapAccessors::concretePillarFor(ClassWithAccessors::class, 'getFacade'));
+        self::assertSame([FirstService::class, 'Facade'], DocBlockResolver::concretePillarFor(ClassWithAccessors::class, 'getFacade'));
     }
 
     /**
@@ -111,7 +112,7 @@ final class ServiceMapAccessorsTest extends TestCase
 
         self::assertNull(ServiceMapAccessors::classNameFor($reflection, 'getFacade'));
         self::assertSame([], ServiceMapAccessors::declaredOn($reflection));
-        self::assertNull(ServiceMapAccessors::concretePillarFor(ChildWithoutAccessors::class, 'getFacade'));
+        self::assertNull(DocBlockResolver::concretePillarFor(ChildWithoutAccessors::class, 'getFacade'));
     }
 
     private function withoutAutoloading(string $target, Closure $check): void

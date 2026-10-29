@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ServiceResolver;
 
-use Gacela\Framework\AbstractConfig;
-use Gacela\Framework\AbstractFacade;
-use Gacela\Framework\AbstractFactory;
 use ReflectionAttribute;
 use ReflectionClass;
 
@@ -27,21 +24,6 @@ final class ServiceMapAccessors
 {
     /** @var array<class-string, array<string, class-string|false>> */
     private static array $classNames = [];
-
-    /** @var array<class-string, array<string, array{class-string, string}|false|null>> */
-    private static array $concretePillars = [];
-
-    /**
-     * @param class-string $callerClass
-     *
-     * @return array{class-string, string}|null
-     */
-    public static function concretePillarFor(string $callerClass, string $method): ?array
-    {
-        $pillar = self::$concretePillars[$callerClass][$method] ??= self::findConcretePillar($callerClass, $method);
-
-        return $pillar === false ? null : $pillar;
-    }
 
     /**
      * The class one accessor resolves to, or null when this class declares no
@@ -85,36 +67,6 @@ final class ServiceMapAccessors
         }
 
         return $accessors;
-    }
-
-    /**
-     * @param class-string $callerClass
-     *
-     * @return array{class-string, string}|false|null
-     */
-    private static function findConcretePillar(string $callerClass, string $method): array|false|null
-    {
-        $className = self::classNameFor(ReflectionClassPool::get($callerClass), $method);
-        $kind = match (true) {
-            $className === null => null,
-            is_a($className, AbstractFacade::class, true) => 'Facade',
-            is_a($className, AbstractFactory::class, true) => 'Factory',
-            is_a($className, AbstractConfig::class, true) => 'Config',
-            default => null,
-        };
-
-        if ($className !== null && $kind === null && !self::isDefined($className)) {
-            return null;
-        }
-
-        return $className !== null && $kind !== null && !ReflectionClassPool::get($className)->isAbstract()
-            ? [$className, $kind]
-            : false;
-    }
-
-    private static function isDefined(string $className): bool
-    {
-        return class_exists($className, false) || interface_exists($className, false) || trait_exists($className, false);
     }
 
     /**

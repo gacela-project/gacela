@@ -19,6 +19,10 @@ final class FileContentIo implements FileContentIoInterface
             return;
         }
 
+        if (is_file($directory)) {
+            throw new RuntimeException(sprintf('"%s" is a file, not a directory', $directory));
+        }
+
         // Recursive: the first module of a new project has no src/ parent yet,
         // so the documented `init` then `make:module` flow created nothing.
         if (mkdir($directory, recursive: true)) {

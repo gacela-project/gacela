@@ -8,7 +8,6 @@ use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolvable;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
-use Gacela\Framework\ServiceResolver\ServiceMapAccessors;
 
 use function array_key_exists;
 
@@ -37,7 +36,7 @@ trait ServiceResolverAwareTrait
             return $this->customServices[$method];
         }
 
-        $pillar = ServiceMapAccessors::concretePillarFor(static::class, $method);
+        $pillar = DocBlockResolver::concretePillarFor(static::class, $method);
         $service = $pillar !== null
             ? AbstractClassResolver::resolveClassName($pillar[0], $pillar[1])
             : $this->resolveService($this->getDocBlockResolver()->getDocBlockResolvable($method));

@@ -82,6 +82,14 @@ abstract class AbstractClassResolver
     }
 
     /**
+     * @param class-string $className
+     */
+    public static function resolveClassName(string $className, string $kind): object
+    {
+        return self::resolveExactClass($className, ClassInfo::from($className, $kind));
+    }
+
+    /**
      * The class this resolver would build for the caller, without building it.
      *
      * @internal
@@ -117,10 +125,7 @@ abstract class AbstractClassResolver
 
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName !== null) {
-            $instance = $this->createInstance($resolvedClassName);
-            if (self::shouldDispatch(ResolvedClassCreatedEvent::class)) {
-                self::dispatchEvent(new ResolvedClassCreatedEvent($classInfo));
-            }
+            $instance = self::resolveExactClass($resolvedClassName, $classInfo);
         } else {
             // Try again with its parent class
             if (is_object($caller)) {
@@ -153,6 +158,35 @@ abstract class AbstractClassResolver
     protected function createDefaultGacelaClass(): ?object
     {
         return null;
+    }
+
+    /**
+     * @param class-string $className
+     */
+    private static function resolveExactClass(string $className, ClassInfo $classInfo): object
+    {
+        $className = ltrim($className, '\\');
+        $cacheKey = 'class:' . $className;
+        $resolved = AnonymousGlobal::getByClassName($className) ?? self::$cachedInstances[$cacheKey] ?? null;
+        if ($resolved !== null) {
+            self::dispatchResolvedClassEvent($classInfo, true);
+
+            return $resolved;
+        }
+
+        /** @var object $instance */
+        $instance = self::pillarContainer()->get($className);
+        self::dispatchResolvedClassEvent($classInfo, false);
+
+        return self::$cachedInstances[$cacheKey] = $instance;
+    }
+
+    private static function dispatchResolvedClassEvent(ClassInfo $classInfo, bool $cached): void
+    {
+        $eventClass = $cached ? ResolvedClassCachedEvent::class : ResolvedClassCreatedEvent::class;
+        if (self::shouldDispatch($eventClass)) {
+            self::dispatchEvent(new $eventClass($classInfo));
+        }
     }
 
     private function resolveCached(string $cacheKey): ?object
@@ -199,26 +233,13 @@ abstract class AbstractClassResolver
     }
 
     /**
-     * @param class-string $resolvedClassName
-     */
-    private function createInstance(string $resolvedClassName): object
-    {
-        // The finder yields `\Fq\Class\Name` while contextual bindings are keyed
-        // by `Fq\Class\Name::class`; normalize so the container can match them.
-        /** @var object $instance */
-        $instance = self::pillarContainer()->get(ltrim($resolvedClassName, '\\'));
-
-        return $instance;
-    }
-
-    /**
      * Asked of the ConfigFactory every time rather than memoized here.
      *
      * A resolver instance can outlive the bootstrap that built it -- the ones
      * held by `ServiceResolverAwareTrait::$docBlockServiceResolvers` are a trait
      * static, which no reset can reach -- and a memo on this object was then a
      * copy of the *previous* application's merged configuration, from which
-     * `createInstance()` built the shared container. A second bootstrap in one
+     * it built the shared container. A second bootstrap in one
      * process therefore resolved its pillars against the first application's
      * bindings: silently, and only for whoever had used a `#[ServiceMap]`
      * accessor before.

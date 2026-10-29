@@ -55,7 +55,7 @@ trait ServiceResolverAwareTrait
             default => null,
         };
 
-        return $className !== null && $kind !== null
+        return $className !== null && $kind !== null && !ReflectionClassPool::get($className)->isAbstract()
             ? AbstractClassResolver::resolveClassName($className, $kind)
             : null;
     }

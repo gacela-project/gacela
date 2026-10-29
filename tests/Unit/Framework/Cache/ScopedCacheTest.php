@@ -468,6 +468,25 @@ final class ScopedCacheTest extends TestCase
         self::assertSame('env', $reopened->get('ns:X'));
     }
 
+    public function test_loadgraph_treats_a_truncated_graph_as_empty_and_rewrites_it(): void
+    {
+        $this->cache->dependsOn('file:a', 'ns:X');
+        file_put_contents(
+            $this->cacheDir . DIRECTORY_SEPARATOR . '.gacela-scoped-cache-graph.php',
+            '<?php return array (',
+        );
+
+        $reopened = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame([], $reopened->dependents('ns:X'));
+        $reopened->dependsOn('file:b', 'ns:X');
+        self::assertSame(['file:b'], $reopened->dependents('ns:X'));
+
+        $persisted = new ScopedCache(new FileCache($this->cacheDir));
+
+        self::assertSame(['file:b'], $persisted->dependents('ns:X'));
+    }
+
     public function test_loadgraph_skips_malformed_entries_keeps_valid_ones(): void
     {
         file_put_contents(

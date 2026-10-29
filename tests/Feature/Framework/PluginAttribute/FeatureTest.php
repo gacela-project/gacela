@@ -107,6 +107,22 @@ final class FeatureTest extends TestCase
         self::assertFileDoesNotExist(MembershipCache::forScan(Config::getInstance()->getCacheDir(), Config::getInstance()->getAppRootDir(), Config::getInstance()->getSetupGacela()->getAppModulePaths(), Config::getInstance()->getSetupGacela()->getProjectNamespaces())->path());
     }
 
+    public function test_a_truncated_cache_is_rebuilt_when_resolving_a_plugin_stack(): void
+    {
+        $this->bootstrap([Central::class], fileCache: true);
+        $config = Config::getInstance();
+        $cache = MembershipCache::forScan($config->getCacheDir(), $config->getAppRootDir(), $config->getSetupGacela()->getAppModulePaths(), $config->getSetupGacela()->getProjectNamespaces());
+        $cache->write(new Members());
+        file_put_contents($cache->path(), "<?php return ['plugins' => [[");
+
+        try {
+            self::assertSame(['central', 'loyalty', 'aliased', 'bundle', 'coupon'], (new CheckoutFacade())->discountNames());
+            self::assertCount(5, $cache->read()?->plugins ?? []);
+        } finally {
+            unlink($cache->path());
+        }
+    }
+
     /**
      * Attribute members only join a declared stack, so forgetting the
      * declaration is the usual way to get here: the error names them.

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Framework\ServiceResolver;
 
+use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceNotFoundException;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
@@ -18,6 +21,7 @@ use GacelaTest\Integration\Framework\ServiceResolver\Billing\BillingAdminConfig;
 use GacelaTest\Integration\Framework\ServiceResolver\Billing\BillingAdminFacade;
 use GacelaTest\Integration\Framework\ServiceResolver\Billing\BillingAdminFactory;
 use GacelaTest\Integration\Framework\ServiceResolver\Billing\BillingFacade;
+use GacelaTest\Integration\Framework\ServiceResolver\Billing\BillingPrivateFactory;
 use GacelaTest\Integration\Framework\ServiceResolver\Billing\Facade as ShortBillingFacade;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeAdminCommand;
 use GacelaTest\Integration\Framework\ServiceResolver\Module\FakeCommand;
@@ -45,6 +49,37 @@ final class DocBlockResolverTest extends TestCase
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->resetInMemoryCache();
         });
+    }
+
+    #[DataProvider('abstractPillars')]
+    public function test_an_abstract_mapped_pillar_keeps_the_default_resolution(string $method, string $expectedClass): void
+    {
+        $resolved = (new FakeAdminCommand())->{$method}();
+
+        self::assertInstanceOf($expectedClass, $resolved);
+        self::assertSame($resolved, (new FakeAdminCommand())->{$method}());
+    }
+
+    /**
+     * @return iterable<string, array{string, class-string}>
+     */
+    public static function abstractPillars(): iterable
+    {
+        yield 'facade' => ['getAbstractFacade', AbstractFacade::class];
+        yield 'factory' => ['getAbstractFactory', AbstractFactory::class];
+        yield 'config' => ['getAbstractConfig', AbstractConfig::class];
+    }
+
+    public function test_a_concrete_mapped_pillar_with_a_private_constructor_uses_its_binding(): void
+    {
+        $expected = BillingPrivateFactory::create();
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($expected): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+            $config->addFactory(BillingPrivateFactory::class, static fn (): BillingPrivateFactory => $expected);
+        });
+
+        self::assertSame($expected, (new FakeAdminCommand())->getPrivateFactory());
     }
 
     #[DataProvider('namedPillars')]

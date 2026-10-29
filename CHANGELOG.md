@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- `migrate:service-map` preserves CRLF line endings on inserted attributes and imports. Files with more than one namespace are left unchanged instead of receiving an import in the wrong namespace ([#994](https://github.com/gacela-project/gacela/issues/994))
+
 - The import parser keeps brace depth balanced for interpolated strings and heredocs. A trait `use` after an interpolation no longer appears as a top-level import in module graphs or package checks, and imports after the class remain visible ([#993](https://github.com/gacela-project/gacela/issues/993))
 
 - `make:file` gives exact kind names and aliases priority over abbreviations. Declaring a `ConfigReader`, `FactoryBuilder` or `ProviderRegistry` no longer makes the corresponding pillar name ambiguous ([#992](https://github.com/gacela-project/gacela/issues/992))

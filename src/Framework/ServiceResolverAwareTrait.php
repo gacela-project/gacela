@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolvable;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
+use Gacela\Framework\ServiceResolver\ReflectionClassPool;
+use Gacela\Framework\ServiceResolver\ServiceMapAccessors;
 
 use function array_key_exists;
 
@@ -35,10 +38,26 @@ trait ServiceResolverAwareTrait
             return $this->customServices[$method];
         }
 
-        $resolvable = $this->getDocBlockResolver()->getDocBlockResolvable($method);
-        $service = $this->resolveService($resolvable);
+        $service = $this->resolveMappedPillar($method)
+            ?? $this->resolveService($this->getDocBlockResolver()->getDocBlockResolvable($method));
 
         return $this->customServices[$method] = $service;
+    }
+
+    private function resolveMappedPillar(string $method): ?object
+    {
+        $className = ServiceMapAccessors::classNameFor(ReflectionClassPool::get(static::class), $method);
+        $kind = match (true) {
+            $className === null => null,
+            is_a($className, AbstractFacade::class, true) => 'Facade',
+            is_a($className, AbstractFactory::class, true) => 'Factory',
+            is_a($className, AbstractConfig::class, true) => 'Config',
+            default => null,
+        };
+
+        return $className !== null && $kind !== null
+            ? AbstractClassResolver::resolveClassName($className, $kind)
+            : null;
     }
 
     private function getDocBlockResolver(): DocBlockResolver

@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- `dto:generate` reports a shape covered only by a `psr-0` prefix as uncovered and exits with an error. Before, it wrote the class to a path Composer could not load ([#1003](https://github.com/gacela-project/gacela/issues/1003))
+
 - Cache reads reject foreign-owned files, files writable by other users, symlinks and files in directories writable by other users without the sticky bit, including container plans. New PHP cache files are created with mode `0600`. Failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
 - Integer configuration, schema and handler registry keys keep their values when declared or merged with a bootstrap closure. Later declarations replace matching keys instead of renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
 - `disableEventListeners()` in `gacela.php` or `gacela-{env}.php` takes effect when bootstrap also receives a closure. Registered listeners remain visible in `doctor` and `debug:events` while disabled ([#998](https://github.com/gacela-project/gacela/issues/998))

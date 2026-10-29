@@ -85,9 +85,7 @@ final class ComposerPackage
     /**
      * The autoload prefixes a decoded manifest declares.
      *
-     * Public and separate from fromDecodedJson() because an application's root
-     * `composer.json` usually has no `name` -- it is never published -- and its
-     * prefixes are still what says where a generated class belongs.
+     * Namespace ownership includes both psr-4 and psr-0 prefixes.
      *
      * @param array<array-key, mixed> $decoded
      *
@@ -96,6 +94,20 @@ final class ComposerPackage
     public static function autoloadPrefixesOf(array $decoded): array
     {
         return self::prefixesOf($decoded['autoload'] ?? null);
+    }
+
+    /**
+     * @param array<array-key, mixed> $decoded
+     *
+     * @return array<string, string>
+     */
+    public static function psr4PrefixesOf(array $decoded): array
+    {
+        if (!isset($decoded['autoload']) || !is_array($decoded['autoload'])) {
+            return [];
+        }
+
+        return self::prefixesOf(['psr-4' => $decoded['autoload']['psr-4'] ?? null]);
     }
 
     /**

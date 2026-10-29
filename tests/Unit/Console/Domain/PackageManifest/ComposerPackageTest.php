@@ -80,6 +80,26 @@ final class ComposerPackageTest extends TestCase
         self::assertSame(['acme/optional'], $package->suggested);
     }
 
+    public function test_generation_prefixes_exclude_psr0_and_autoload_dev(): void
+    {
+        $prefixes = ComposerPackage::psr4PrefixesOf([
+            'autoload' => ['psr-4' => ['Acme\\' => 'src'], 'psr-0' => ['Legacy_' => 'legacy']],
+            'autoload-dev' => ['psr-4' => ['AcmeTest\\' => 'tests']],
+        ]);
+
+        self::assertSame(['Acme\\' => 'src'], $prefixes);
+    }
+
+    public function test_a_psr0_only_manifest_has_no_generation_prefixes(): void
+    {
+        self::assertSame([], ComposerPackage::psr4PrefixesOf(['autoload' => ['psr-0' => ['Legacy_' => 'legacy']]]));
+    }
+
+    public function test_an_invalid_autoload_section_has_no_generation_prefixes(): void
+    {
+        self::assertSame([], ComposerPackage::psr4PrefixesOf(['autoload' => 'invalid']));
+    }
+
     public function test_autoload_prefixes_come_from_psr_4_and_psr_0(): void
     {
         $package = $this->package([

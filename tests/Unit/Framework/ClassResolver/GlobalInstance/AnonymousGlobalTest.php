@@ -7,14 +7,70 @@ namespace GacelaTest\Unit\Framework\ClassResolver\GlobalInstance;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\AbstractProvider;
+use Gacela\Framework\ClassResolver\Config\ConfigResolver;
 use Gacela\Framework\ClassResolver\GlobalInstance\AnonymousGlobal;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Gacela;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
+use RuntimeException;
 
 final class AnonymousGlobalTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Gacela::bootstrap(__DIR__);
+        AnonymousGlobal::resetCache();
+    }
+
+    public function test_two_files_with_one_base_name_keep_their_own_global(): void
+    {
+        $alpha = require __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'Alpha' . DIRECTORY_SEPARATOR . 'config.php';
+        $beta = require __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'Beta' . DIRECTORY_SEPARATOR . 'config.php';
+
+        self::assertSame('Alpha-global', (new ConfigResolver())->resolve($alpha)->get('name'));
+        self::assertSame('Beta-global', (new ConfigResolver())->resolve($beta)->get('name'));
+    }
+
+    public function test_a_different_instance_cannot_replace_a_registered_global(): void
+    {
+        $first = new class() extends AbstractConfig {};
+        $second = new class() extends AbstractConfig {};
+        AnonymousGlobal::addGlobal('duplicate', $first);
+
+        try {
+            AnonymousGlobal::addGlobal('duplicate', $second);
+        } catch (RuntimeException $runtimeException) {
+            self::assertStringContainsString(AnonymousGlobal::createCacheKey('duplicate', 'Config'), $runtimeException->getMessage());
+            self::assertStringContainsString($first::class, $runtimeException->getMessage());
+            self::assertStringContainsString($second::class, $runtimeException->getMessage());
+
+            return;
+        }
+
+        self::fail('Registering a different instance must throw.');
+    }
+
+    public function test_the_same_instance_can_be_registered_again(): void
+    {
+        $instance = new class() extends AbstractConfig {};
+        AnonymousGlobal::addGlobal('same', $instance);
+        AnonymousGlobal::addGlobal('same', $instance);
+
+        self::assertSame($instance, AnonymousGlobal::getByKey(AnonymousGlobal::createCacheKey('same', 'Config')));
+    }
+
+    public function test_an_explicit_override_replaces_the_registered_instance(): void
+    {
+        $first = new class() {};
+        $second = new class() {};
+        AnonymousGlobal::overrideExistingResolvedClass('App\\Module\\Config', $first);
+        AnonymousGlobal::overrideExistingResolvedClass('App\\Module\\Config', $second);
+
+        self::assertSame($second, AnonymousGlobal::getByClassName('App\\Module\\Config'));
+    }
+
     /**
      * The anonymous class is not extending from Abstract[Factory,Config,AbstractProvider]
      * For this reason, the context of this anon-global will be the one of this (test)class

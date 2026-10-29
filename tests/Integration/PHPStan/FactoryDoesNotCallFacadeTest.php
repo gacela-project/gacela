@@ -45,6 +45,19 @@ final class FactoryDoesNotCallFacadeTest extends PhpStanFixtureTestCase
         self::assertStringNotContainsString('WellBehavedFactory', $this->analyseFixture());
     }
 
+    public function test_a_factory_instantiating_a_facade_is_reported(): void
+    {
+        self::assertStringContainsString(
+            'InstantiatingFactory must not instantiate a Facade (found: new GacelaTest\\Integration\\PHPStan\\FactoryFacadeFixture\\Billing\\BillingFacade)',
+            $this->analyseFixture(),
+        );
+    }
+
+    public function test_a_class_named_facade_that_is_not_one_is_not_reported(): void
+    {
+        self::assertStringNotContainsString('LibraryFactory', $this->analyseFixture());
+    }
+
     #[Override]
     protected static function configPath(): string
     {

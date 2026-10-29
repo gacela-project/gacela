@@ -169,6 +169,9 @@ final class DebugGraphCommandTest extends TestCase
     }
 
     /**
+     * The diff is markdown whatever the format says, so a CI job asking for a
+     * machine-readable diff got markdown and a zero exit.
+     *
      * @param array<string, mixed> $format
      */
     #[DataProvider('formatsBesideADiff')]
@@ -180,10 +183,7 @@ final class DebugGraphCommandTest extends TestCase
         $exitCode = $this->command->execute(['--compare-to' => $baseline, ...$format]);
 
         self::assertSame(1, $exitCode);
-        self::assertStringContainsString(
-            '--compare-to only writes a markdown diff, and would ignore ' . $named,
-            $this->command->getDisplay(),
-        );
+        self::assertStringContainsString('--compare-to only writes a markdown diff, and would ignore ' . $named, $this->command->getDisplay());
     }
 
     /**
@@ -191,9 +191,17 @@ final class DebugGraphCommandTest extends TestCase
      */
     public static function formatsBesideADiff(): iterable
     {
-        yield '--format=json' => [['--format' => 'json'], '--format'];
+        yield '--format=json' => [['--format' => 'json'], '--format=json'];
         yield '--json' => [['--json' => true], '--json'];
-        yield '--format mermaid' => [['--format' => 'mermaid'], '--format'];
+        yield '--format=mermaid' => [['--format' => 'mermaid'], '--format=mermaid'];
+    }
+
+    public function test_compare_to_still_refuses_an_unknown_format_as_unknown(): void
+    {
+        $exitCode = $this->command->execute(['--compare-to' => 'base.json', '--format' => 'bogus']);
+
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('Unknown format "bogus"', $this->command->getDisplay());
     }
 
     public function test_compare_to_with_an_explicit_text_format_still_writes_the_diff(): void

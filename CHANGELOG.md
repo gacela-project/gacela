@@ -2,9 +2,30 @@
 
 ## Unreleased
 
+### Changed
+
+- `Gacela::get()` and `Gacela::getRequired()` before `Gacela::bootstrap()` throw `GacelaNotBootstrappedException`, as `Gacela::container()` does. Before, `get()` returned `null` and pinned an empty container for the rest of the process ([#976](https://github.com/gacela-project/gacela/issues/976))
+
 ### Fixed
 
-- `debug:graph --compare-to` now refuses `--format` and `--json`: the diff it writes is markdown, and the flags were validated and then ignored with a zero exit. `--compare-to` alone, with no format, still writes the markdown diff
+- `migrate:service-map` preserves CRLF line endings on inserted attributes and imports. Files with more than one namespace are left unchanged instead of receiving an import in the wrong namespace ([#994](https://github.com/gacela-project/gacela/issues/994))
+
+- The import parser keeps brace depth balanced for interpolated strings and heredocs. A trait `use` after an interpolation no longer appears as a top-level import in module graphs or package checks, and imports after the class remain visible ([#993](https://github.com/gacela-project/gacela/issues/993))
+
+- `make:file` gives exact kind names and aliases priority over abbreviations. Declaring a `ConfigReader`, `FactoryBuilder` or `ProviderRegistry` no longer makes the corresponding pillar name ambiguous ([#992](https://github.com/gacela-project/gacela/issues/992))
+
+- `FileCache::clear()` and `stats()` touch only its own entry filenames, preserving framework caches and unrelated PHP files in a shared directory. New entries use a `gacela-fc-` prefix; legacy 40-hex-character filenames remain readable and are removed by `forget()` and `clear()` ([#979](https://github.com/gacela-project/gacela/issues/979))
+
+- `Gacela::addGlobal()` distinguishes anonymous globals registered from same-named files in different directories. File contexts and their internal lookup keys now use the full canonical file path, which stays stable across bootstrap. Registering a different instance for an occupied key throws instead of silently replacing it; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))
+
+- `Gacela::get()` follows the container of the latest bootstrap. Before, it kept the first container it saw: a call before bootstrap made every later `Gacela::get()` return `null`, and a second bootstrap kept serving the first one's bindings. A plugin that takes a `Container` now gets the application container; before, it got a new, empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
+- `gacela.cacheableWithoutCachedCall` (Psalm: `GacelaCacheableWithoutCachedCall`) follows `$this->cached()` through any number of private helpers. Before, a `#[Cacheable]` method that reached it through two helpers was reported as never cached, though it was ([#974](https://github.com/gacela-project/gacela/issues/974))
+- `debug:graph --compare-to` refuses `--format` and `--json` instead of ignoring them. Before, asking for a JSON diff wrote the markdown diff with a zero exit ([#975](https://github.com/gacela-project/gacela/issues/975))
+- A class-name, package or `FileCache` entry file that does not parse, is empty, or returns something other than the cache's shape is treated as a miss and rewritten. Before, a truncated class-name cache file failed every bootstrap until someone deleted it ([#977](https://github.com/gacela-project/gacela/issues/977))
+- `make:module` names the module in its closing line. For a module at the psr-4 root it printed the directory instead: `make:module App` with `"App\\": "src/"` ended with `Module 'src' created successfully` ([#973](https://github.com/gacela-project/gacela/issues/973))
+- `make:module` and `make:file` accept a backslash-separated path, `'App\Blog'`, the way PHP writes a namespace. Before, it was refused as "not a valid PHP name" ([#972](https://github.com/gacela-project/gacela/issues/972))
+- `gacela.factoryInstantiatesFacade` and `gacela.crossModuleWithoutFacade` (Psalm: `GacelaFacadeInstantiation`, `GacelaCrossModuleAccess`) decide a Facade by `AbstractFacade`, not by the `Facade` suffix. Before, a Factory building a library class such as `PdfFacade` was told to declare it in its Provider, and another module's internal class named `*Facade` passed the boundary check ([#971](https://github.com/gacela-project/gacela/issues/971))
+- Specific listeners run in declaration order when an event matches more than one registered class. Before, a listener on a parent class or interface registered after one on the concrete event still ran before it, because listeners were grouped by the class they were registered for ([#970](https://github.com/gacela-project/gacela/issues/970))
 
 ## [2.8.0](https://github.com/gacela-project/gacela/compare/2.7.1...2.8.0) - 2026-10-04
 

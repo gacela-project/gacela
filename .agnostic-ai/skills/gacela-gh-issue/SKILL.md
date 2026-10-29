@@ -1,5 +1,5 @@
 ---
-description: Take one GitHub issue end to end. Fetch it, branch, implement with TDD, and open a PR that closes it. Use when asked to work on, fix, or implement a specific issue by number or URL.
+description: Take one Gacela GitHub issue end to end with TDD and open a PR that closes it.
 argument-hint: "[issue-number]"
 x-codex:
   interface:
@@ -31,7 +31,7 @@ Run `gh issue view <number> --json title,body,labels,assignees,state,comments` f
 
 4. **Branch** from fresh `main`. Prefix by label: `bug` → `fix/`, `enhancement` → `feat/`, `documentation` → `docs/`, `refactoring` → `ref/`, otherwise `feat/`. Name: `<prefix><number>-<slug>`.
    ```bash
-   git checkout main && git pull
+   git checkout main && git pull --ff-only
    git checkout -b <branch-name>
    ```
 
@@ -49,14 +49,11 @@ Run `gh issue view <number> --json title,body,labels,assignees,state,comments` f
 
 7. Update `docs/` pages that state the old behavior, flag lists, or exit codes.
 
-8. Run the full gate and fix every failure:
-   ```bash
-   composer test
-   ```
+8. Run the gate and fix every failure.
 
 ## Phase 4: Ship
 
-9. Add the `## Unreleased` entry in `CHANGELOG.md` for user-facing changes, in the same commit.
+9. Run `/changelog` for a user-facing change, and commit its entry with the change.
 
 10. Commit:
     ```bash
@@ -74,6 +71,6 @@ Run `gh issue view <number> --json title,body,labels,assignees,state,comments` f
 - [ ] Self-assigned, branch from fresh `main`
 - [ ] Tests written first
 - [ ] Docs swept for the old behavior
-- [ ] `composer test` passes
-- [ ] Changelog updated in the same commit
+- [ ] The gate passes
+- [ ] Changelog entry in the same commit
 - [ ] PR opened and closes the issue

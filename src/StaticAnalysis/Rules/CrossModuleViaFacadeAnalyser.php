@@ -6,10 +6,10 @@ namespace Gacela\StaticAnalysis\Rules;
 
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
+use Gacela\StaticAnalysis\FacadeSurface;
 use Gacela\StaticAnalysis\ModuleBoundary;
 use Gacela\StaticAnalysis\PublicApiSurface;
 use Gacela\StaticAnalysis\ResolvedName;
-use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -21,7 +21,6 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeFinder;
 
 use function sprintf;
-use function str_ends_with;
 
 /**
  * Module A may only reach module B through B's Facade -- gacela's central
@@ -84,7 +83,7 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
                 continue;
             }
 
-            if (str_ends_with(ShortName::of($referenced), 'Facade')) {
+            if (FacadeSurface::isFacade($referenced)) {
                 continue;
             }
 

@@ -8,13 +8,20 @@ use function is_a;
 
 /**
  * @psalm-type SpecificListenersMap = array<class-string, list<callable>>
+ * @psalm-type SpecificListenerList = list<array{0: class-string, 1: callable}>
  */
 final class ConfigurableEventDispatcher implements EventDispatcherInterface
 {
     /** @var list<callable> */
     private array $genericListeners = [];
 
-    /** @var SpecificListenersMap */
+    /**
+     * In registration order across every target: grouping by target would run
+     * a parent-class listener registered last before a concrete one
+     * registered first (#970).
+     *
+     * @var SpecificListenerList
+     */
     private array $specificListeners = [];
 
     /**
@@ -59,7 +66,7 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
      */
     public function registerSpecificListener(string $event, callable $listener): void
     {
-        $this->specificListeners[$event][] = $listener;
+        $this->specificListeners[] = [$event, $listener];
 
         $this->applicableListeners = [];
     }
@@ -96,11 +103,9 @@ final class ConfigurableEventDispatcher implements EventDispatcherInterface
     {
         $listeners = $this->genericListeners;
 
-        foreach ($this->specificListeners as $target => $targetListeners) {
+        foreach ($this->specificListeners as [$target, $listener]) {
             if (is_a($eventClass, $target, true)) {
-                foreach ($targetListeners as $listener) {
-                    $listeners[] = $listener;
-                }
+                $listeners[] = $listener;
             }
         }
 

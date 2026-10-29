@@ -277,7 +277,7 @@ final class SetupGacelaTest extends TestCase
 
         $transfer = $config->toTransfer();
 
-        self::assertSame([$listener1, $listener2], $transfer->specificListeners[FakeEvent::class]);
+        self::assertSame([[FakeEvent::class, $listener1], [FakeEvent::class, $listener2]], $transfer->specificListeners);
     }
 
     public function test_extend_service_multiple_times(): void

@@ -8,6 +8,7 @@ use RuntimeException;
 
 use function count;
 use function implode;
+use function in_array;
 use function sprintf;
 use function str_contains;
 use function strlen;
@@ -103,24 +104,25 @@ final class FilenameSanitizer implements FilenameSanitizerInterface
     }
 
     /**
-     * The kinds the typed word can mean.
-     *
-     * The letters typed, in order, somewhere in the kind's name -- so `cade`
-     * and `tory` reach `Facade` and `Factory`, and `fig` reaches `Config`.
-     * A word that spells a kind out in full reaches it too, which is how
-     * `dependency-provider` finds `Provider`.
-     *
-     * Not a similarity score, because no threshold separates the words that
-     * should match from the words that should not. `de-pr` scores 36% against
-     * `Provider` and `Service` scores 53%, so any cutoff keeping the first
-     * keeps the second -- and `Service` silently produced a `Provider` file.
-     * Asking whether the letters are there answers every case exactly.
-     *
      * @return list<string>
      */
     private function matching(string $filename): array
     {
         $needle = strtolower($filename);
+        foreach ($this->getExpectedFilenames() as $expected) {
+            if (in_array($needle, $this->namesFor($expected), true)) {
+                return [$expected];
+            }
+        }
+
+        return $this->fuzzyMatches($needle);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function fuzzyMatches(string $needle): array
+    {
         $matches = [];
 
         foreach ($this->getExpectedFilenames() as $expected) {

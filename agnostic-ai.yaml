@@ -1,6 +1,15 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/Chemaclass/agnostic-ai/v0.76.0/docs/schemas/config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Chemaclass/agnostic-ai/v0.89.0/docs/schemas/config.schema.json
 version: 1
-requires: ">=0.76.0"
+requires: ">=0.89.0"
+
+builtins: [memory]
+
+models:
+  strong: {claude: opus, codex: sol, effort: high}
+
+lint:
+  instructions-words: 1000
+  codex-chain-bytes: 12288
 
 targets:
   - claude
@@ -14,10 +23,6 @@ gitignore:
 
 coverage:
   accept:
-    - target: codex
-      kind: agents
-      field: tools
-      reason: The tools list is Claude Code's allowlist. Codex has no per-agent allowlist.
     - target: codex
       kind: agents
       field: sandbox_mode

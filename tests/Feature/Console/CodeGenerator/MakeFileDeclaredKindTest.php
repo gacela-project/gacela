@@ -57,6 +57,23 @@ final class MakeFileDeclaredKindTest extends TestCase
         Gacela::resetCache();
     }
 
+    public function test_a_kind_declared_in_gacela_php_does_not_hide_an_exact_pillar_name(): void
+    {
+        $appRoot = $this->stubsDir . DIRECTORY_SEPARATOR . 'app';
+        mkdir($appRoot);
+        file_put_contents($appRoot . DIRECTORY_SEPARATOR . 'composer.json', '{"autoload":{"psr-4":{"App\\\\":"src/"}}}');
+        file_put_contents($appRoot . DIRECTORY_SEPARATOR . 'gacela.php', '<?php return static function (\\Gacela\\Framework\\Bootstrap\\GacelaConfig $config): void { $config->addResolvableType("ConfigReader"); };');
+        Gacela::bootstrap($appRoot, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $tester = new CommandTester(new MakeFileCommand());
+        $tester->execute(['path' => 'App/Blog', 'filenames' => ['Config']]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $tester->getDisplay());
+        self::assertFileExists($appRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Blog' . DIRECTORY_SEPARATOR . 'BlogConfig.php');
+    }
+
     public function test_it_generates_a_declared_kind_from_the_published_stub(): void
     {
         $this->bootstrapDeclaring('Exporter');

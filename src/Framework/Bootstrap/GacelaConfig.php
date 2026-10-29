@@ -42,7 +42,7 @@ use function sprintf;
  * @psalm-import-type AfterResolvingMap from ContainerConfigurationInterface
  * @psalm-import-type DefinitionSources from ContainerConfigurationInterface
  * @psalm-import-type ContextualBindingsMap from ContainerConfigurationInterface
- * @psalm-import-type SpecificListenersMap from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
+ * @psalm-import-type SpecificListenerList from \Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher
  */
 final class GacelaConfig
 {
@@ -90,7 +90,7 @@ final class GacelaConfig
     /** @var list<callable> */
     private ?array $genericListeners = null;
 
-    /** @var SpecificListenersMap */
+    /** @var ?SpecificListenerList */
     private ?array $specificListeners = null;
 
     /** @var list<class-string> */
@@ -697,8 +697,7 @@ final class GacelaConfig
      */
     public function registerSpecificListener(string $event, callable $listener): self
     {
-        $this->specificListeners[$event] ??= [];
-        $this->specificListeners[$event][] = $listener;
+        $this->specificListeners[] = [$event, $listener];
 
         return $this;
     }

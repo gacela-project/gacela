@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Console\Domain\ModuleGraph;
 
 use Gacela\Console\Domain\ModuleGraph\PhpImportParser;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PhpImportParserTest extends TestCase
@@ -141,6 +142,48 @@ final class PhpImportParserTest extends TestCase
             PHP;
 
         self::assertSame(['App\Billing\Invoice'], $this->parse($source));
+    }
+
+    #[DataProvider('braceInterpolations')]
+    public function test_interpolation_keeps_trait_uses_out_and_preserves_import_lines(string $expression): void
+    {
+        $source = str_replace('$EXPRESSION$', $expression, <<<'PHP'
+            <?php
+
+            use App\Billing\Invoice;
+
+            final class Foo
+            {
+                public function greet(string $a): string
+                {
+                    return $EXPRESSION$;
+                }
+
+                use \App\Shared\SomeTrait;
+            }
+
+            use App\Orders\Order;
+            PHP);
+
+        self::assertSame(['App\Billing\Invoice', 'App\Orders\Order'], $this->parse($source));
+        self::assertSame([
+            ['name' => 'App\Billing\Invoice', 'line' => 3],
+            ['name' => 'App\Orders\Order', 'line' => 15 + substr_count($expression, "\n")],
+        ], $this->parseWithLines($source));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function braceInterpolations(): iterable
+    {
+        yield 'double-quoted' => ['"{$a}"'];
+        yield 'heredoc' => [<<<'PHP'
+            <<<TEXT
+            {$a}
+            TEXT
+            PHP];
+        yield 'legacy dollar brace' => ['"${a}"'];
     }
 
     /**

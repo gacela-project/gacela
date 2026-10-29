@@ -100,7 +100,7 @@ final class SetupMerger
     {
         if ($other->canCreateEventDispatcher()) {
             $this->original->mergeGenericListeners($other->getGenericListeners() ?? []);
-            $this->original->mergeSpecificListeners($other->getSpecificListeners() ?? []);
+            $this->original->mergeSpecificListeners($other->getSpecificListenerList() ?? []);
         }
 
         $suppliedByOther = $other->getSuppliedEventDispatcher();

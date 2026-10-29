@@ -9,8 +9,12 @@ use Gacela\Framework\AbstractProvider;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\ClassInfoTestingFacade;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
+
+use function dirname;
 
 final class ClassInfoTest extends TestCase
 {
@@ -42,8 +46,8 @@ final class ClassInfoTest extends TestCase
         $actual = ClassInfo::from($facade, 'Factory');
 
         self::assertSame('module-name@anonymous', $actual->getModuleNamespace(), 'full namespace');
-        self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getModuleName(), 'module');
-        self::assertSame('\module-name@anonymous\ClassInfoTest\Factory', $actual->getCacheKey(), 'cache key');
+        self::assertSame('module-name@anonymous\\' . ClassInfo::contextFromFile(__FILE__), $actual->getModuleName(), 'module');
+        self::assertSame('\\module-name@anonymous\\' . ClassInfo::contextFromFile(__FILE__) . '\\Factory', $actual->getCacheKey(), 'cache key');
     }
 
     public function test_anonymous_provider_class(): void
@@ -56,8 +60,32 @@ final class ClassInfoTest extends TestCase
         $actual = ClassInfo::from($provider, 'Provider');
 
         self::assertSame('module-name@anonymous', $actual->getModuleNamespace(), 'full namespace');
-        self::assertSame('module-name@anonymous\ClassInfoTest', $actual->getModuleName(), 'module');
-        self::assertSame('\module-name@anonymous\ClassInfoTest\Provider', $actual->getCacheKey(), 'cache key');
+        self::assertSame('module-name@anonymous\\' . ClassInfo::contextFromFile(__FILE__), $actual->getModuleName(), 'module');
+        self::assertSame('\\module-name@anonymous\\' . ClassInfo::contextFromFile(__FILE__) . '\\Provider', $actual->getCacheKey(), 'cache key');
+    }
+
+    public function test_context_keeps_the_full_path_before_bootstrap(): void
+    {
+        $root = new ReflectionProperty(Gacela::class, 'appRootDir');
+        $previous = $root->getValue();
+        $root->setValue(null, null);
+
+        try {
+            self::assertSame('C:\\app.php\\Alpha\\config', ClassInfo::contextFromFile('C:\\app.php\\Alpha\\config.php'));
+        } finally {
+            $root->setValue(null, $previous);
+        }
+    }
+
+    public function test_anonymous_context_stays_stable_when_the_application_root_changes(): void
+    {
+        $caller = new class() {};
+        Gacela::bootstrap(dirname(__DIR__));
+        $first = ClassInfo::from($caller, 'Config');
+        self::assertSame('\\module-name@anonymous\\' . ClassInfo::contextFromFile(__FILE__) . '\\Config', $first->getCacheKey());
+
+        Gacela::bootstrap(__DIR__ . DIRECTORY_SEPARATOR);
+        self::assertSame($first, ClassInfo::from($caller, 'Config'));
     }
 
     public function test_object_real_class(): void

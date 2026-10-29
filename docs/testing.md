@@ -70,17 +70,18 @@ The snapshot covers the in-memory class-name cache, the config values, the app r
 
 ### Bootstrapping twice without either of them
 
-Neither is required. But calling `Gacela::bootstrap()` a second time in one process on your own keeps the **previous** boot's services, and says nothing:
+Neither is required. But calling `Gacela::bootstrap()` a second time in one process on your own keeps the **previous** boot's Facades and Factories, and the services they built, and says nothing:
 
 ```php
 Gacela::bootstrap($dir, static fn (GacelaConfig $c) => $c->addBinding(Clock::class, $frozenClock));
-Gacela::get(Clock::class);   // the frozen one, as expected
+(new ReportFacade())->now();   // built with the frozen one, as expected
 
 Gacela::bootstrap($dir, static fn (GacelaConfig $c) => $c->addBinding(Clock::class, $realClock));
-Gacela::get(Clock::class);   // still the frozen one
+(new ReportFacade())->now();   // still the frozen one
+Gacela::get(Clock::class);     // the real one
 ```
 
-The configuration *is* re-read, so the second boot leaves you with new config and old services. Add [`resetInMemoryCache()`](../src/Framework/Bootstrap/GacelaConfig.php) to the closure and both move together:
+`Gacela::get()` follows the container of the latest bootstrap. The configuration is re-read too, so the second boot leaves you with new config and old Facade and Factory services. Add [`resetInMemoryCache()`](../src/Framework/Bootstrap/GacelaConfig.php) to the closure and both move together:
 
 ```php
 Gacela::bootstrap($dir, static function (GacelaConfig $config): void {
@@ -231,3 +232,9 @@ vendor/bin/gacela make:module App/Greeting --template=service --with-tests
 ```
 
 The `service` template generates the four pillars plus a `Domain` service the Facade delegates to, and `--with-tests` adds a ready-to-run facade test (a `GacelaTestCase`) under the module's `Tests/` directory.
+
+## Anonymous global configuration
+
+`Gacela::addGlobal($config, __FILE__)` registers an anonymous Config, Factory or Provider for anonymous classes declared in that file. Omitting the second argument uses the caller's file. File contexts use the full canonical path with directory separators normalized, so a registration made before bootstrap still resolves after bootstrap. Files such as `Alpha/config.php` and `Beta/config.php` therefore keep separate globals.
+
+Registering a different instance for an existing context and pillar throws a `RuntimeException` naming the key and both classes. Registering the same instance again is allowed. Use `Gacela::overrideExistingResolvedClass()` when replacing a resolved class is intended. Passing an object or an existing class name uses that class's defining file. Other explicit string keys retain their registration keys; internal code that previously used a file's base name should pass the file path instead.

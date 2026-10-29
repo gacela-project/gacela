@@ -77,7 +77,7 @@ final class MakeFileCommand extends Command
                 $path,
                 $unusable,
             ));
-            $output->writeln('Every segment becomes a namespace and a class name -- use <comment>UserProfile</comment>, not <comment>user-profile</comment>.');
+            $output->writeln('Every segment becomes a namespace and a class name -- use <comment>UserProfile</comment>, not <comment>user-profile</comment>; separate segments with / or \\.');
 
             return self::FAILURE;
         }

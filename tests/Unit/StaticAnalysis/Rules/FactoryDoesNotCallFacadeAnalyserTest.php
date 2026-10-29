@@ -9,6 +9,9 @@ use Gacela\StaticAnalysis\Rules\FactoryDoesNotCallFacadeAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\Billing\BillingFacade;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\LazySeq\LazySeqFacade;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\Router\Facade;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
@@ -23,11 +26,14 @@ final class FactoryDoesNotCallFacadeAnalyserTest extends TestCase
 
     public function test_instantiating_a_facade_is_reported(): void
     {
-        $violations = $this->analyse('return new App\Billing\BillingFacade();');
+        $violations = $this->analyse('return new \\' . BillingFacade::class . '();');
 
         self::assertCount(1, $violations);
         self::assertSame(
-            'Factory App\Checkout\CheckoutFactory must not instantiate a Facade (found: new App\Billing\BillingFacade). Depend on other modules through their Facade via the Provider.',
+            sprintf(
+                'Factory App\Checkout\CheckoutFactory must not instantiate a Facade (found: new %s). Depend on other modules through their Facade via the Provider.',
+                BillingFacade::class,
+            ),
             $violations[0]->message,
         );
         self::assertSame('gacela.factoryInstantiatesFacade', $violations[0]->identifier);
@@ -51,7 +57,7 @@ final class FactoryDoesNotCallFacadeAnalyserTest extends TestCase
      */
     public function test_both_kinds_are_reported_from_one_class(): void
     {
-        $violations = $this->analyse("new App\Billing\BillingFacade();\n\$this->getFacade();");
+        $violations = $this->analyse('new \\' . BillingFacade::class . "();\n\$this->getFacade();");
 
         self::assertSame(
             ['gacela.factoryInstantiatesFacade', 'gacela.factoryCallsGetFacade'],
@@ -71,8 +77,22 @@ final class FactoryDoesNotCallFacadeAnalyserTest extends TestCase
     public function test_every_instantiation_is_reported(): void
     {
         self::assertCount(2, $this->analyse(
-            "new App\Billing\BillingFacade();\nnew App\Shipping\ShippingFacade();",
+            sprintf("new \\%s();\nnew \\%s();", BillingFacade::class, Facade::class),
         ));
+    }
+
+    /**
+     * Libraries name entry points `*Facade` too, and there is no Provider to
+     * declare one of those in.
+     */
+    public function test_a_class_named_like_a_facade_that_is_not_one_is_not_reported(): void
+    {
+        self::assertSame([], $this->analyse('return new \\' . LazySeqFacade::class . '();'));
+    }
+
+    public function test_a_class_that_cannot_be_loaded_is_not_reported(): void
+    {
+        self::assertSame([], $this->analyse('return new App\Billing\BillingFacade();'));
     }
 
     /**
@@ -104,7 +124,7 @@ final class FactoryDoesNotCallFacadeAnalyserTest extends TestCase
 
     public function test_a_class_that_is_not_a_factory_is_not_checked(): void
     {
-        $node = ParseSource::classIn($this->sourceWith('return new App\Billing\BillingFacade();'));
+        $node = ParseSource::classIn($this->sourceWith('return new \\' . BillingFacade::class . '();'));
         $analyser = new FactoryDoesNotCallFacadeAnalyser();
 
         self::assertSame([], $analyser->analyse($node, new FakeAnalysedClass('App\Checkout\CheckoutService')));

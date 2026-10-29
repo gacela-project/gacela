@@ -9,6 +9,7 @@ use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Event\Dispatcher\CompositeEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\ConfigurableEventDispatcher;
 use Gacela\Framework\Event\Dispatcher\EventDispatcherInterface;
+use Gacela\Framework\Event\GacelaEventInterface;
 use GacelaTest\Unit\Framework\Config\GacelaFileConfig\Factory\FakeEvent;
 use PHPUnit\Framework\TestCase;
 
@@ -31,6 +32,51 @@ use PHPUnit\Framework\TestCase;
  */
 final class SetupMergerEventDispatcherTest extends TestCase
 {
+    public function test_specific_listeners_on_two_matching_targets_run_in_registration_order(): void
+    {
+        $order = [];
+
+        $setup = SetupGacela::fromCallable(static function (GacelaConfig $config) use (&$order): void {
+            $config->registerSpecificListener(GacelaEventInterface::class, static function () use (&$order): void {
+                $order[] = 1;
+            });
+            $config->registerSpecificListener(FakeEvent::class, static function () use (&$order): void {
+                $order[] = 2;
+            });
+            $config->registerSpecificListener(GacelaEventInterface::class, static function () use (&$order): void {
+                $order[] = 3;
+            });
+        });
+
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+
+        self::assertSame([1, 2, 3], $order);
+    }
+
+    public function test_merged_specific_listeners_keep_the_registration_order_of_both_setups(): void
+    {
+        $order = [];
+
+        $setup = SetupGacela::fromCallable(static function (GacelaConfig $config) use (&$order): void {
+            $config->registerSpecificListener(GacelaEventInterface::class, static function () use (&$order): void {
+                $order[] = 1;
+            });
+        });
+        $other = SetupGacela::fromCallable(static function (GacelaConfig $config) use (&$order): void {
+            $config->registerSpecificListener(FakeEvent::class, static function () use (&$order): void {
+                $order[] = 2;
+            });
+            $config->registerSpecificListener(GacelaEventInterface::class, static function () use (&$order): void {
+                $order[] = 3;
+            });
+        });
+
+        $setup->merge($other);
+        $setup->getEventDispatcher()->dispatch(new FakeEvent());
+
+        self::assertSame([1, 2, 3], $order);
+    }
+
     public function test_specific_listeners_from_the_merged_setup_are_recorded_on_it(): void
     {
         $listener = static function (): void {};
@@ -163,7 +209,7 @@ final class SetupMergerEventDispatcherTest extends TestCase
 
         $other = new SetupGacela();
         $other->setAreEventListenersEnabled(true);
-        $other->setSpecificListeners([FakeEvent::class => [static function () use (&$calls): void {
+        $other->setSpecificListeners([[FakeEvent::class, static function () use (&$calls): void {
             ++$calls;
         }]]);
 

@@ -9,6 +9,8 @@ use Gacela\StaticAnalysis\Rules\CrossModuleViaFacadeAnalyser;
 use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingFacade;
+use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\InternalHelperFacade;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\UnpublishedInvoiceDraft;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +38,16 @@ final class CrossModuleViaFacadeAnalyserTest extends TestCase
 
     public function test_reaching_into_another_module_through_its_facade_is_allowed(): void
     {
-        self::assertSame([], $this->analyse('new App\Modules\Billing\BillingFacade();'));
+        self::assertSame([], $this->analyseFixture('new \\' . BillingFacade::class . '();'));
+    }
+
+    /**
+     * Ending in `Facade` makes nothing an entry point: an internal class named
+     * that way is still another module's internals.
+     */
+    public function test_reaching_a_class_named_like_a_facade_that_is_not_one_is_reported(): void
+    {
+        self::assertCount(1, $this->analyseFixture('new \\' . InternalHelperFacade::class . '();'));
     }
 
     public function test_staying_inside_the_module_is_allowed(): void
@@ -271,6 +282,19 @@ final class CrossModuleViaFacadeAnalyserTest extends TestCase
         return $analyser->analyse(
             ParseSource::classIn($this->sourceWith($body)),
             new FakeAnalysedClass($className),
+        );
+    }
+
+    /**
+     * @return list<Violation>
+     */
+    private function analyseFixture(string $body): array
+    {
+        $analyser = new CrossModuleViaFacadeAnalyser(self::FIXTURE_ROOT, 1, [], []);
+
+        return $analyser->analyse(
+            ParseSource::classIn($this->sourceWith($body)),
+            new FakeAnalysedClass(self::FIXTURE_ROOT . '\Checkout\CheckoutFactory'),
         );
     }
 

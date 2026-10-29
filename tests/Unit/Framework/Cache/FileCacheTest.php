@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Cache;
 
+use Gacela\Framework\Cache\CacheFilePath;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\FileCacheStats;
 use GacelaTest\Feature\Util\DirectoryUtil;
@@ -43,6 +44,102 @@ final class FileCacheTest extends TestCase
     protected function tearDown(): void
     {
         DirectoryUtil::removeDir($this->cacheDir);
+    }
+
+    public function test_stats_and_clear_ignore_foreign_files(): void
+    {
+        $foreign = ['gacela-merged-config-v2-abc.php', 'gacela-class-names-abc.php', 'gacela-container-plans-abc.php', 'other.php', 'notes.txt', str_repeat('a', 39) . '.php', str_repeat('a', 41) . '.php', str_repeat('g', 40) . '.php'];
+        foreach ($foreign as $name) {
+            file_put_contents($this->cacheDir . DIRECTORY_SEPARATOR . $name, '<?php return [];');
+        }
+
+        $this->cache->put('answer', 42);
+        self::assertSame(1, $this->cache->stats()->entries);
+
+        $this->cache->clear();
+
+        foreach ($foreign as $name) {
+            self::assertFileExists($this->cacheDir . DIRECTORY_SEPARATOR . $name);
+        }
+
+        self::assertSame(0, $this->cache->stats()->entries);
+        self::assertNull($this->cache->get('answer'));
+    }
+
+    public function test_legacy_entries_are_read_counted_and_forgotten(): void
+    {
+        $legacy = $this->cacheDir . DIRECTORY_SEPARATOR . sha1('legacy') . '.php';
+        file_put_contents($legacy, "<?php return ['value' => 'old', 'expiresAt' => null];");
+
+        self::assertSame('old', $this->cache->get('legacy'));
+        self::assertSame(1, $this->cache->stats()->entries);
+        $this->cache->forget('legacy');
+
+        self::assertFileDoesNotExist($legacy);
+        self::assertNull((new FileCache($this->cacheDir))->get('legacy'));
+    }
+
+    public function test_clear_removes_legacy_entries(): void
+    {
+        $legacy = $this->cacheDir . DIRECTORY_SEPARATOR . sha1('legacy') . '.php';
+        file_put_contents($legacy, "<?php return ['value' => 'old', 'expiresAt' => null];");
+
+        $uppercase = $this->cacheDir . DIRECTORY_SEPARATOR . str_repeat('A', 40) . '.php';
+        file_put_contents($uppercase, "<?php return ['value' => 'old', 'expiresAt' => null];");
+        $this->cache->clear();
+
+        self::assertFileDoesNotExist($legacy);
+        self::assertFileDoesNotExist($uppercase);
+        self::assertNull((new FileCache($this->cacheDir))->get('legacy'));
+    }
+
+    public function test_new_entry_takes_precedence_and_forget_removes_both_names(): void
+    {
+        $legacy = $this->cacheDir . DIRECTORY_SEPARATOR . sha1('answer') . '.php';
+        file_put_contents($legacy, "<?php return ['value' => 'old', 'expiresAt' => null];");
+        $this->cache->put('answer', 'new');
+
+        self::assertFileExists($legacy);
+        self::assertSame('new', (new FileCache($this->cacheDir))->get('answer'));
+        $this->cache->forget('answer');
+
+        self::assertFileDoesNotExist($legacy);
+        self::assertNull((new FileCache($this->cacheDir))->get('answer'));
+    }
+
+    public function test_an_invalid_new_entry_does_not_revive_a_legacy_entry(): void
+    {
+        file_put_contents($this->cacheDir . DIRECTORY_SEPARATOR . sha1('answer') . '.php', "<?php return ['value' => 'old', 'expiresAt' => null];");
+        $this->cache->put('answer', 'new');
+        $file = CacheFilePath::forEntry($this->cacheDir, 'answer');
+        self::assertNotNull($file);
+        file_put_contents($file, '<?php return [];');
+
+        self::assertNull((new FileCache($this->cacheDir))->get('answer'));
+    }
+
+    /**
+     * The directory is shared and can be truncated under the cache: an entry
+     * that does not load is a miss, not a failure of the caller.
+     */
+    public function test_an_entry_that_does_not_parse_is_a_miss(): void
+    {
+        $this->cache->put('answer', 42);
+        $file = CacheFilePath::forEntry($this->cacheDir, 'answer');
+        self::assertNotNull($file);
+        file_put_contents($file, "<?php return array(\n  'value' => ");
+
+        self::assertNull((new FileCache($this->cacheDir))->get('answer'));
+    }
+
+    public function test_an_entry_that_is_not_the_cache_shape_is_a_miss(): void
+    {
+        $this->cache->put('answer', 42);
+        $file = CacheFilePath::forEntry($this->cacheDir, 'answer');
+        self::assertNotNull($file);
+        file_put_contents($file, "<?php return ['something' => 'else'];");
+
+        self::assertNull((new FileCache($this->cacheDir))->get('answer'));
     }
 
     public function test_has_returns_false_for_missing_key(): void
@@ -516,12 +613,13 @@ final class FileCacheTest extends TestCase
     {
         $base = time() - 1_000;
         $files = [
-            'a.php' => ['12345', $base],           // oldest
-            'b.php' => ['1234567', $base + 900],   // newest
-            'c.php' => ['12345678901', $base + 500],
+            'a' => ['12345', $base],           // oldest
+            'b' => ['1234567', $base + 900],   // newest
+            'c' => ['12345678901', $base + 500],
         ];
         foreach ($files as $name => [$content, $mtime]) {
-            $path = $this->cacheDir . '/' . $name;
+            $path = CacheFilePath::forEntry($this->cacheDir, $name);
+            self::assertNotNull($path);
             file_put_contents($path, $content);
             touch($path, $mtime);
         }

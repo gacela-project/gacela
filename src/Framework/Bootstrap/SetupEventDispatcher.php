@@ -32,10 +32,8 @@ final class SetupEventDispatcher
         $configured = new ConfigurableEventDispatcher();
         $configured->registerGenericListeners($setupGacela->getGenericListeners() ?? []);
 
-        foreach ($setupGacela->getSpecificListeners() ?? [] as $event => $listeners) {
-            foreach ($listeners as $callable) {
-                $configured->registerSpecificListener($event, $callable);
-            }
+        foreach ($setupGacela->getSpecificListenerList() ?? [] as [$event, $listener]) {
+            $configured->registerSpecificListener($event, $listener);
         }
 
         if (!$supplied instanceof EventDispatcherInterface) {

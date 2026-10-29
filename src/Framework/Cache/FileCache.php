@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Cache;
 
+use Error;
 use Gacela\Framework\Event\Cache\CacheClearedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
+use function array_key_exists;
 use function bin2hex;
 use function count;
 use function dirname;
@@ -18,7 +20,9 @@ use function flock;
 use function fopen;
 use function function_exists;
 use function glob;
+use function is_array;
 use function is_file;
+use function is_int;
 use function preg_match_all;
 use function preg_quote;
 use function preg_replace;
@@ -232,6 +236,30 @@ final class FileCache
     }
 
     /**
+     * The array a cache file returns, or null when the file is missing, does
+     * not parse, or returns anything else: a miss, so the next write replaces
+     * it. A shared cache directory gets truncated and emptied by full disks and
+     * by other processes, and one bad file must not fail every bootstrap.
+     *
+     * @return array<array-key, mixed>|null
+     */
+    public static function readArray(string $file): ?array
+    {
+        if (!is_file($file)) {
+            return null;
+        }
+
+        try {
+            /** @var mixed $data */
+            $data = require $file;
+        } catch (Error) {
+            return null;
+        }
+
+        return is_array($data) ? $data : null;
+    }
+
+    /**
      * Atomically write a PHP-returning file, staging to a sibling `.tmp` then
      * renaming. Returns false instead of throwing or warning when the directory
      * is unusable or the write fails, so callers can degrade gracefully.
@@ -353,21 +381,30 @@ final class FileCache
     {
         $file = $this->entryPath($key);
 
-        if ($file === null || !is_file($file)) {
+        if ($file === null) {
             return null;
         }
 
-        /**
-         * The path is built rather than written inline, so Psalm can no longer
-         * partially resolve it -- the file is a cache entry this class wrote.
-         *
-         * @psalm-suppress UnresolvableInclude
-         *
-         * @var array{value: T, expiresAt: int|null} $entry
-         */
-        $entry = require $file;
+        if (!is_file($file)) {
+            $file = CacheFilePath::forLegacyEntry($this->directory, $key);
+        }
 
-        return $entry;
+        $entry = $file === null ? null : self::readArray($file);
+
+        if ($entry === null || !array_key_exists('value', $entry)) {
+            return null;
+        }
+
+        $expiresAt = $entry['expiresAt'] ?? null;
+
+        if ($expiresAt !== null && !is_int($expiresAt)) {
+            return null;
+        }
+
+        /** @var T $value */
+        $value = $entry['value'];
+
+        return ['value' => $value, 'expiresAt' => $expiresAt];
     }
 
     private function deleteEntryFile(string $key): void
@@ -379,6 +416,10 @@ final class FileCache
         }
 
         self::delete($path);
+        $legacy = CacheFilePath::forLegacyEntry($this->directory, $key);
+        if ($legacy !== null) {
+            self::delete($legacy);
+        }
     }
 
     /**
@@ -405,11 +446,6 @@ final class FileCache
     }
 
     /**
-     * The cache files on disk, or none when there is nowhere to look.
-     *
-     * {@see CacheFilePath} owns the "nowhere is not the root" rule, which
-     * is the whole reason this is not a bare glob.
-     *
      * @return list<string>
      */
     private function cacheFiles(): array
@@ -420,7 +456,10 @@ final class FileCache
             return [];
         }
 
-        return glob($pattern) ?: [];
+        $legacyPattern = CacheFilePath::legacyPattern($this->directory);
+        $legacyFiles = $legacyPattern === null ? [] : (glob($legacyPattern) ?: []);
+
+        return [...(glob($pattern) ?: []), ...$legacyFiles];
     }
 
     /**

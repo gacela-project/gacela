@@ -193,6 +193,34 @@ final class ConfigurableEventDispatcherTest extends TestCase
         self::assertSame(['parent', 'concrete'], $order);
     }
 
+    public function test_listeners_on_two_matching_targets_run_in_interleaved_registration_order(): void
+    {
+        $order = [];
+        $dispatcher = new ConfigurableEventDispatcher();
+        $dispatcher->registerSpecificListener(
+            AbstractGacelaClassResolverEvent::class,
+            static function () use (&$order): void {
+                $order[] = 1;
+            },
+        );
+        $dispatcher->registerSpecificListener(
+            ResolvedClassCachedEvent::class,
+            static function () use (&$order): void {
+                $order[] = 2;
+            },
+        );
+        $dispatcher->registerSpecificListener(
+            AbstractGacelaClassResolverEvent::class,
+            static function () use (&$order): void {
+                $order[] = 3;
+            },
+        );
+
+        $dispatcher->dispatch($this->resolverEvent());
+
+        self::assertSame([1, 2, 3], $order);
+    }
+
     /**
      * The applicable listeners are computed once per concrete event class and
      * memoized, so registering after that has to throw the memo away -- both

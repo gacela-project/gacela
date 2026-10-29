@@ -63,6 +63,25 @@ final class FilenameSanitizerTest extends TestCase
         self::assertSame(FilenameSanitizer::PROVIDER, $sanitizer->sanitize('dependency-provider'));
     }
 
+    public function test_exact_names_and_aliases_win_over_longer_declared_kinds(): void
+    {
+        $sanitizer = new FilenameSanitizer(['ConfigReader', 'FactoryBuilder', 'ProviderRegistry', 'DependencyProviderRegistry', 'ConfigReaderFactory']);
+
+        self::assertSame(FilenameSanitizer::CONFIG, $sanitizer->sanitize('Config'));
+        self::assertSame(FilenameSanitizer::CONFIG, $sanitizer->sanitize('config'));
+        self::assertSame(FilenameSanitizer::FACTORY, $sanitizer->sanitize('factory'));
+        self::assertSame(FilenameSanitizer::PROVIDER, $sanitizer->sanitize('dependency-provider'));
+        self::assertSame('ConfigReader', $sanitizer->sanitize('ConfigReader'));
+        self::assertSame('FactoryBuilder', $sanitizer->sanitize('fabu'));
+    }
+
+    public function test_an_ambiguous_abbreviation_still_throws_with_declared_kinds(): void
+    {
+        $this->expectExceptionMessage('When using "f", which filename do you mean [Facade or Factory or Config or ConfigReader]?');
+
+        (new FilenameSanitizer(['ConfigReader']))->sanitize('f');
+    }
+
     /**
      * Undeclared, the word reaches nothing.
      *

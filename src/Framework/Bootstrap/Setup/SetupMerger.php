@@ -23,8 +23,7 @@ final class SetupMerger
     public function merge(SetupGacela $other): SetupGacela
     {
         $this->whenChanged($other, SetupGacela::shouldResetInMemoryCache, fn (): \Gacela\Framework\Bootstrap\SetupGacela => $this->original->setShouldResetInMemoryCache($other->shouldResetInMemoryCache()));
-        $this->whenChanged($other, SetupGacela::fileCacheEnabled, fn (): \Gacela\Framework\Bootstrap\SetupGacela => $this->original->setFileCacheEnabled($other->isFileCacheEnabled()));
-        $this->whenChanged($other, SetupGacela::fileCacheDirectory, fn (): \Gacela\Framework\Bootstrap\SetupGacela => $this->original->setFileCacheDirectory($other->getFileCacheDirectory()));
+        $this->original->mergeFileCacheSettings($other);
 
         $this->whenChanged($other, SetupGacela::externalServices, fn () => $this->original->mergeExternalServices($other->externalServices()));
         $this->whenChanged($other, SetupGacela::projectNamespaces, fn () => $this->original->mergeProjectNamespaces($other->getProjectNamespaces()));

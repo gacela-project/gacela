@@ -54,6 +54,9 @@ final class PackageDiscovery
      */
     public const string EVERYTHING = '*';
 
+    /** @var ?Closure(PackageConfigCache): void */
+    private ?Closure $deferredCacheWrite = null;
+
     /**
      * @param ?Closure(): string $cacheDirProvider where to remember the resolved
      *                                             list of declarations. A closure
@@ -83,9 +86,10 @@ final class PackageDiscovery
      *
      * @return list<GacelaConfigFileInterface>
      */
-    public function discover(array $dontDiscover): array
+    public function discover(array $dontDiscover, bool $deferCache = false): array
     {
         PackageDiscoveryRegistry::reset();
+        $this->deferredCacheWrite = null;
 
         // Checked before the disk is touched: `dontDiscover(['*'])` is a project
         // saying it wants nothing but its own configuration deciding what runs
@@ -100,7 +104,7 @@ final class PackageDiscovery
         $configFiles = [];
         $position = 0;
 
-        foreach ($this->declarations() as $declaration) {
+        foreach ($this->declarations($deferCache) as $declaration) {
             if (in_array($declaration->name, $dontDiscover, true)) {
                 PackageDiscoveryRegistry::refuse(RefusedPackage::optedOut($declaration));
                 continue;
@@ -145,9 +149,22 @@ final class PackageDiscovery
     }
 
     /**
+     * @param ?Closure(): string $cacheDirProvider
+     */
+    public function persistDeferredCache(?Closure $cacheDirProvider): void
+    {
+        $write = $this->deferredCacheWrite;
+        $this->deferredCacheWrite = null;
+
+        if ($write instanceof Closure && $cacheDirProvider instanceof Closure) {
+            $write(new PackageConfigCache($cacheDirProvider(), $this->appRootDir));
+        }
+    }
+
+    /**
      * @return list<PackageConfigDeclaration>
      */
-    private function declarations(): array
+    private function declarations(bool $deferCache): array
     {
         $reader = new InstalledPackagesReader($this->appRootDir);
         $fingerprint = $reader->fingerprint();
@@ -162,7 +179,7 @@ final class PackageDiscovery
 
         // Built here rather than in the constructor, so an application with no
         // `installed.json` never asks where the cache directory is.
-        $cache = $this->cache();
+        $cache = $deferCache ? null : $this->cache();
 
         $cached = $cache?->read($fingerprint);
 
@@ -172,7 +189,13 @@ final class PackageDiscovery
 
         $declarations = (new PackageConfigFinder($reader))->find();
 
-        $cache?->write($fingerprint, $declarations);
+        if ($deferCache) {
+            $this->deferredCacheWrite = static function (PackageConfigCache $cache) use ($fingerprint, $declarations): void {
+                $cache->write($fingerprint, $declarations);
+            };
+        } else {
+            $cache?->write($fingerprint, $declarations);
+        }
 
         return $declarations;
     }

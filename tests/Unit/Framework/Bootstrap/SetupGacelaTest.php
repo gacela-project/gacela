@@ -540,6 +540,7 @@ final class SetupGacelaTest extends TestCase
             $setup = SetupGacela::fromFile($repeated);
             self::assertTrue($setup->wasBuiltFrom($file));
             self::assertTrue($setup->wasBuiltFrom(str_replace('\\', '/', $file)));
+            self::assertTrue($setup->wasBuiltFrom(str_replace('/', '\\', $file)));
             self::assertFalse($setup->wasBuiltFrom($file . '.other'));
         } finally {
             unlink($file);

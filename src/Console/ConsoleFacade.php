@@ -213,11 +213,11 @@ final class ConsoleFacade extends AbstractFacade
      * Generate the declared DTO classes, or, with $dryRun, work out what would
      * be written and write nothing.
      */
-    public function generateDtoClasses(bool $dryRun): DtoGenerateResult
+    public function generateDtoClasses(bool $dryRun, bool $force = false): DtoGenerateResult
     {
         return $this->getFactory()
             ->createDtoGenerator()
-            ->generate($this->getFactory()->createDtoSchema(), $dryRun);
+            ->generate($this->getFactory()->createDtoSchema(), $dryRun, $force);
     }
 
     /**

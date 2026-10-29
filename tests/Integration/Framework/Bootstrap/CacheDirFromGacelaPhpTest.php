@@ -199,7 +199,8 @@ PHP_CONFIG);
     private function assertCacheDirectory(string $directory): void
     {
         $expected = $this->root . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . $directory;
-        self::assertSame($expected, Config::getInstance()->getCacheDir());
+        self::assertDirectoryExists($expected);
+        self::assertSame(realpath($expected), realpath(Config::getInstance()->getCacheDir()));
         self::assertFileExists((new PackageConfigCache($expected, $this->root))->path());
         self::assertFileDoesNotExist($expected . DIRECTORY_SEPARATOR . PackageConfigCache::FILENAME);
     }

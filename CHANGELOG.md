@@ -12,6 +12,7 @@
 
 - Module discovery, undiscovered-facade warnings, project events and `migrate:service-map` scan projects under directories whose names end in `vendor`, such as `myvendor`. Directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))
 - `dto:generate` reports a shape covered only by a `psr-0` prefix as uncovered and exits with an error. Before, it wrote the class to a path Composer could not load ([#1003](https://github.com/gacela-project/gacela/issues/1003))
+- Module discovery skips configured paths that are not directories without emitting PHP warnings into JSON output. `doctor` keeps reporting those entries, and `list:modules` text output names them even when other paths contain modules ([#1023](https://github.com/gacela-project/gacela/issues/1023))
 - A truncated scoped-cache dependency graph is ignored and rebuilt on the next dependency update instead of aborting the application ([#1033](https://github.com/gacela-project/gacela/issues/1033))
 
 - Cache reads reject foreign-owned files, files writable by other users, symlinks and files in directories writable by other users without the sticky bit, including container plans. New PHP cache files are created with mode `0600`. Failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))

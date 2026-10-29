@@ -26,6 +26,28 @@ final class ListModulesCommandTest extends TestCase
         $this->command = new CommandTester(new ListModulesCommand());
     }
 
+    #[DataProvider('listingModes')]
+    public function test_skipped_paths_are_named_when_modules_are_found(bool $detailed): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+            $config->setAppModulePaths(['TestModule1', 'not-there']);
+        });
+        $this->command->execute(['--detailed' => $detailed]);
+
+        self::assertStringContainsString('TestModule1', $this->command->getDisplay());
+        self::assertStringContainsString('Not scanned, not a directory: not-there', $this->command->getDisplay());
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function listingModes(): iterable
+    {
+        yield 'simple' => [false];
+        yield 'detailed' => [true];
+    }
+
     public function test_list_modules_simple(): void
     {
         $this->command->execute([]);
@@ -201,10 +223,6 @@ final class ListModulesCommandTest extends TestCase
                 $config->setAppModulePaths(['real', 'not-there']);
             });
 
-            // Discovery also trigger_errors about the entry. That is the
-            // report this one exists to duplicate onto the command's own
-            // output, and phpunit fails the run on a stray warning, so it is
-            // captured and asserted rather than left to escape.
             $notices = [];
             set_error_handler(static function (int $errno, string $errstr) use (&$notices): bool {
                 $notices[] = $errstr;
@@ -225,7 +243,7 @@ final class ListModulesCommandTest extends TestCase
             self::assertStringNotContainsString('Scanned: real, not-there', $display);
             self::assertStringContainsString('not-there', $display);
             self::assertStringContainsString('not a directory', $display);
-            self::assertNotEmpty($notices, 'discovery no longer reports the skipped entry at all');
+            self::assertSame([], $notices);
         } finally {
             // Names exactly what this test created.
             rmdir($emptyDir . '/real');

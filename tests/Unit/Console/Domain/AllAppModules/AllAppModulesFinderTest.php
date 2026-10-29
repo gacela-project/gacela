@@ -82,6 +82,28 @@ final class AllAppModulesFinderTest extends TestCase
         }
     }
 
+    public function test_a_parent_directory_ending_in_vendor_is_scanned(): void
+    {
+        $tempDir = $this->createTempModuleDirectory('myvendor');
+        $filePath = $tempDir . DIRECTORY_SEPARATOR . 'TempFacade.php';
+        $className = 'TempAllAppModulesMyVendor\\TempFacade';
+        $this->writeTempFacadeFile($filePath, $className);
+        require_once $filePath;
+
+        $finder = new AllAppModulesFinder(
+            new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempDir, FilesystemIterator::SKIP_DOTS)),
+            $this->createAppModuleCreator(),
+        );
+
+        try {
+            $modules = $finder->findAllAppModules('');
+            self::assertCount(1, $modules);
+            self::assertSame($className, $modules[0]->facadeClass());
+        } finally {
+            $this->removeDirectory($tempDir);
+        }
+    }
+
     /**
      * `RealFacade extends ProjectBaseFacade extends AbstractFacade` is a normal
      * shape, and comparing the immediate parent by name dropped every module

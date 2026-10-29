@@ -563,7 +563,7 @@ final class ConsoleFactory extends AbstractFactory
         $rootDir = Config::getInstance()->getAppRootDir();
         $decoded = JsonFile::decode($rootDir . DIRECTORY_SEPARATOR . 'composer.json');
 
-        return $decoded === null ? [] : ComposerPackage::autoloadPrefixesOf($decoded);
+        return $decoded === null ? [] : ComposerPackage::psr4PrefixesOf($decoded);
     }
 
     private function createFileContentIo(): FileContentIoInterface

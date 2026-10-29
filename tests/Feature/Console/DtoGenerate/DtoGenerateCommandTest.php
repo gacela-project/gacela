@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\DtoGenerate;
 
+use Composer\Autoload\ClassLoader;
 use Gacela\Console\Infrastructure\Command\DtoGenerateCommand;
 use Gacela\Framework\Attribute\PublicApi;
 use Gacela\Framework\Bootstrap\GacelaConfig;
@@ -71,6 +72,49 @@ final class DtoGenerateCommandTest extends TestCase
             if (is_dir($directory)) {
                 rmdir($directory);
             }
+        }
+    }
+
+    /**
+     * @param array<string, bool> $input
+     */
+    #[DataProvider('refusalModes')]
+    public function test_a_psr0_only_manifest_is_reported_as_uncovered(array $input): void
+    {
+        file_put_contents(
+            $this->projectDir . DIRECTORY_SEPARATOR . 'composer.json',
+            json_encode(['autoload' => ['psr-0' => [$this->namespace . '\\' => 'src']]], JSON_THROW_ON_ERROR),
+        );
+
+        $tester = $this->generate($input);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode(), $tester->getDisplay());
+        self::assertStringContainsString('No composer autoload prefix covers ' . $this->orderClass(), $tester->getDisplay());
+        self::assertFileDoesNotExist($this->orderFile());
+        self::assertSame([], glob($this->projectDir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . '*'));
+    }
+
+    public function test_a_mixed_manifest_generates_a_class_composer_can_autoload(): void
+    {
+        file_put_contents(
+            $this->projectDir . DIRECTORY_SEPARATOR . 'composer.json',
+            json_encode(['autoload' => [
+                'psr-4' => [$this->namespace . '\\' => 'src'],
+                'psr-0' => ['Legacy_' => 'legacy'],
+            ]], JSON_THROW_ON_ERROR),
+        );
+        $tester = $this->generate();
+        $loader = new ClassLoader();
+        $loader->addPsr4($this->namespace . '\\', $this->projectDir . DIRECTORY_SEPARATOR . 'src');
+        $loader->add('Legacy_', $this->projectDir . DIRECTORY_SEPARATOR . 'legacy');
+        $loader->register();
+
+        try {
+            self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+            self::assertSame($this->orderFile(), $loader->findFile($this->orderClass()));
+            self::assertTrue(class_exists($this->orderClass()));
+        } finally {
+            $loader->unregister();
         }
     }
 

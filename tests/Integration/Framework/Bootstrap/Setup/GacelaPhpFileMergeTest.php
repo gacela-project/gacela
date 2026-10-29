@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace GacelaTest\Integration\Framework\Bootstrap\Setup;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use stdClass;
@@ -58,30 +61,40 @@ PHP;
 
     public function test_gacela_php_file_listener_receives_the_bootstrap_started_event(): void
     {
-        // GacelaBootstrapStartedEvent is dispatched before Config::init() merges
-        // the gacela.php setup, so it only reaches this listener if bootstrap
-        // built its setup from the file itself.
-        $gacelaPhpContent = <<<'PHP'
-<?php
-use Gacela\Framework\Bootstrap\GacelaConfig;
-use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
-
-return static function (GacelaConfig $config): void {
-    $config->registerSpecificListener(
-        GacelaBootstrapStartedEvent::class,
-        static function (GacelaBootstrapStartedEvent $event): void {
-            file_put_contents(__DIR__ . '/started-event.txt', $event->appRootDir());
-        },
-    );
-};
-PHP;
-
-        file_put_contents($this->tempDir . '/gacela.php', $gacelaPhpContent);
+        file_put_contents($this->tempDir . DIRECTORY_SEPARATOR . 'gacela.php', $this->gacelaPhpWithStartedListener());
 
         Gacela::bootstrap($this->tempDir);
 
-        self::assertFileExists($this->tempDir . '/started-event.txt');
-        self::assertStringEqualsFile($this->tempDir . '/started-event.txt', $this->tempDir);
+        self::assertStringEqualsFile($this->tempDir . DIRECTORY_SEPARATOR . 'started-event.txt', $this->tempDir . "\n");
+    }
+
+    #[DataProvider('resetBeforeBootstrap')]
+    public function test_file_and_closure_receive_the_started_event_once(bool $reset): void
+    {
+        file_put_contents($this->tempDir . DIRECTORY_SEPARATOR . 'gacela.php', $this->gacelaPhpWithStartedListener());
+        $startedSetups = [];
+
+        Gacela::bootstrap($this->tempDir, static function (GacelaConfig $config) use ($reset, &$startedSetups): void {
+            if ($reset) {
+                $config->resetInMemoryCache();
+            }
+
+            $config->registerSpecificListener(GacelaBootstrapStartedEvent::class, static function (GacelaBootstrapStartedEvent $event) use (&$startedSetups): void {
+                $startedSetups[] = [$event->appRootDir(), Config::getInstance()->getSetupGacela()->isFileCacheEnabled()];
+            });
+        });
+
+        self::assertSame([[$this->tempDir, false]], $startedSetups);
+        self::assertStringEqualsFile($this->tempDir . DIRECTORY_SEPARATOR . 'started-event.txt', $this->tempDir . "\n");
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function resetBeforeBootstrap(): iterable
+    {
+        yield 'without reset' => [false];
+        yield 'with reset' => [true];
     }
 
     public function test_protected_services_from_gacela_php_file_survive_merge(): void
@@ -134,5 +147,24 @@ PHP;
 
         $aliased = $container->get('my-alias');
         self::assertInstanceOf(stdClass::class, $aliased);
+    }
+
+    private function gacelaPhpWithStartedListener(): string
+    {
+        return <<<'PHP'
+<?php
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
+
+return static function (GacelaConfig $config): void {
+    $config->setFileCache(false);
+    $config->registerSpecificListener(
+        GacelaBootstrapStartedEvent::class,
+        static function (GacelaBootstrapStartedEvent $event): void {
+            file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'started-event.txt', $event->appRootDir() . "\n", FILE_APPEND);
+        },
+    );
+};
+PHP;
     }
 }

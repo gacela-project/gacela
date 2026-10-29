@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Console\Infrastructure;
 
 use Gacela\Console\Infrastructure\FileContentIo;
+use GacelaTest\Fixtures\FailingWriteStreamWrapper;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -95,6 +96,7 @@ final class FileContentIoTest extends TestCase
         $this->io->filePutContents($path, 'written');
 
         self::assertSame('written', file_get_contents($path));
+        self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
     }
 
     public function test_it_fails_when_the_file_cannot_be_written(): void
@@ -115,6 +117,89 @@ final class FileContentIoTest extends TestCase
         $this->io->filePutContents($path, 'after');
 
         self::assertSame('after', file_get_contents($path));
+    }
+
+    public function test_it_replaces_a_read_only_file_without_opening_it_for_writing(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            self::markTestSkipped('Read-only file replacement differs on Windows.');
+        }
+
+        $path = $this->workingDir . DIRECTORY_SEPARATOR . 'file.txt';
+        file_put_contents($path, 'before');
+        chmod($path, 0444);
+
+        $this->io->filePutContents($path, 'after');
+
+        self::assertSame('after', file_get_contents($path));
+        self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
+    }
+
+    public function test_a_failed_staging_write_keeps_the_existing_file(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            self::markTestSkipped('Directory write permissions differ on Windows.');
+        }
+
+        $path = $this->workingDir . DIRECTORY_SEPARATOR . 'file.txt';
+        file_put_contents($path, 'before');
+        chmod($this->workingDir, 0555);
+
+        try {
+            $this->silenced(fn (): mixed => $this->io->filePutContents($path, 'after'));
+            self::fail('Writing a staged file in a read-only directory must fail.');
+        } catch (RuntimeException $runtimeException) {
+            self::assertStringContainsString('left as it was', $runtimeException->getMessage());
+            self::assertSame('before', file_get_contents($path));
+            self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
+        } finally {
+            chmod($this->workingDir, 0755);
+        }
+    }
+
+    public function test_a_short_write_is_not_promoted_to_the_target(): void
+    {
+        FailingWriteStreamWrapper::register();
+        FailingWriteStreamWrapper::$bytesWritable = 2;
+        try {
+            $this->expectException(RuntimeException::class);
+            $this->silenced(fn (): mixed => $this->io->filePutContents(FailingWriteStreamWrapper::DIRECTORY . DIRECTORY_SEPARATOR . 'file.txt', 'after'));
+        } finally {
+            FailingWriteStreamWrapper::unregister();
+            self::assertFalse(FailingWriteStreamWrapper::$renamed);
+        }
+    }
+
+    public function test_a_failed_rename_leaves_no_staging_file(): void
+    {
+        $path = $this->workingDir . DIRECTORY_SEPARATOR . 'existing-directory';
+        mkdir($path);
+        file_put_contents($path . DIRECTORY_SEPARATOR . 'original.txt', 'before');
+
+        try {
+            $this->silenced(fn (): mixed => $this->io->filePutContents($path, 'after'));
+            self::fail('Replacing a directory with a file must fail.');
+        } catch (RuntimeException) {
+            self::assertSame('before', file_get_contents($path . DIRECTORY_SEPARATOR . 'original.txt'));
+            self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
+        }
+    }
+
+    public function test_replacement_preserves_existing_permission_bits(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            self::markTestSkipped('Executable permission bits are not supported on Windows.');
+        }
+
+        $path = $this->workingDir . DIRECTORY_SEPARATOR . 'script.php';
+        file_put_contents($path, 'before');
+        chmod($path, 0751);
+
+        $this->io->filePutContents($path, 'after');
+        clearstatcache(true, $path);
+
+        self::assertSame(0751, fileperms($path) & 0777);
+        self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
     }
 
     private static function removeRecursively(string $path): void

@@ -7,6 +7,7 @@ namespace Gacela\Console\Domain\ModuleGraph;
 use function array_column;
 use function count;
 use function explode;
+use function in_array;
 use function is_array;
 use function preg_match;
 use function preg_split;
@@ -83,7 +84,7 @@ final class PhpImportParser
         for ($index = 0, $total = count($tokens); $index < $total; ++$index) {
             $token = $tokens[$index];
 
-            if ($token === '{') {
+            if ($token === '{' || (is_array($token) && in_array($token[0], [T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true))) {
                 ++$depth;
             } elseif ($token === '}') {
                 --$depth;

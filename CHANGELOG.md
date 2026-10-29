@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- The import parser keeps brace depth balanced for interpolated strings and heredocs. A trait `use` after an interpolation no longer appears as a top-level import in module graphs or package checks, and imports after the class remain visible ([#993](https://github.com/gacela-project/gacela/issues/993))
+
 - `make:file` gives exact kind names and aliases priority over abbreviations. Declaring a `ConfigReader`, `FactoryBuilder` or `ProviderRegistry` no longer makes the corresponding pillar name ambiguous ([#992](https://github.com/gacela-project/gacela/issues/992))
 
 - `FileCache::clear()` and `stats()` touch only its own entry filenames, preserving framework caches and unrelated PHP files in a shared directory. New entries use a `gacela-fc-` prefix; legacy 40-hex-character filenames remain readable and are removed by `forget()` and `clear()` ([#979](https://github.com/gacela-project/gacela/issues/979))

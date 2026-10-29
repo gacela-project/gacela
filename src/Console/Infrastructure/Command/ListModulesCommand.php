@@ -74,6 +74,8 @@ final class ListModulesCommand extends Command
             return self::SUCCESS;
         }
 
+        ConsoleSection::unscannedModulePaths($output, $this->getFacade()->unscannedModulePaths());
+
         $this->generateListOfModules(
             $input->getOption('detailed') === true,
             $modules,

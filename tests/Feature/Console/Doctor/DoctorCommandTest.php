@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\Doctor;
 
+use Gacela\Console\Infrastructure\Command\DebugGraphCommand;
+use Gacela\Console\Infrastructure\Command\DebugModulesCommand;
 use Gacela\Console\Infrastructure\Command\DoctorCommand;
+use Gacela\Console\Infrastructure\Command\ListModulesCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
@@ -17,6 +20,7 @@ use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithoutMetadataHealthChec
 use GacelaTest\Feature\Console\Doctor\Fixtures\FakeHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\UnhealthyHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\UnhealthyWithMetadataHealthCheck;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -165,7 +169,56 @@ final class DoctorCommandTest extends TestCase
             rmdir($root);
         }
 
-        self::assertNotEmpty($notices, 'discovery no longer reports the skipped entry at all');
+        self::assertSame([], $notices);
+    }
+
+    /**
+     * @param class-string<Command> $commandClass
+     * @param array<string, bool|string> $input
+     */
+    #[DataProvider('moduleDiscoveryJsonCommands')]
+    public function test_a_configured_path_that_scans_nothing_does_not_break_the_json_document(string $commandClass, array $input): void
+    {
+        $notices = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$notices): bool {
+            $notices[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            Gacela::bootstrap(__DIR__ . '/../ListModules', static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+                $config->setFileCache(false);
+                $config->setAppModulePaths(['TestModule1', 'not-there']);
+            });
+            $tester = new CommandTester(new $commandClass());
+            $tester->execute($input);
+            $decoded = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+            self::assertIsArray($decoded);
+
+            if ($commandClass === DoctorCommand::class) {
+                self::assertSame(['not-there'], $decoded['unscanned']);
+                self::assertIsArray($decoded['checks']);
+                $checks = array_column($decoded['checks'], 'status', 'name');
+                self::assertSame('warn', $checks['module paths']);
+            }
+
+            self::assertSame([], $notices, 'PHP warnings would corrupt the JSON document');
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * @return iterable<string, array{class-string<Command>, array<string, bool|string>}>
+     */
+    public static function moduleDiscoveryJsonCommands(): iterable
+    {
+        yield 'doctor' => [DoctorCommand::class, ['--format' => 'json']];
+        yield 'list modules' => [ListModulesCommand::class, ['--json' => true]];
+        yield 'debug modules' => [DebugModulesCommand::class, ['--json' => true]];
+        yield 'debug graph' => [DebugGraphCommand::class, ['--format' => 'json']];
     }
 
     public function test_the_json_report_carries_the_scanned_paths_too(): void

@@ -130,7 +130,7 @@ final class AllAppModulesFinderTest extends TestCase
         self::assertSame(Module1Facade::class, $actual[0]->facadeClass());
     }
 
-    public function test_app_module_paths_warns_and_skips_missing_directory(): void
+    public function test_app_module_paths_skips_missing_directory_without_warning(): void
     {
         Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
             $config->setAppModulePaths(['does/not/exist', 'Module1']);
@@ -151,7 +151,6 @@ final class AllAppModulesFinderTest extends TestCase
 
         self::assertCount(1, $actual);
         self::assertSame(Module1Facade::class, $actual[0]->facadeClass());
-        self::assertCount(1, $capturedMessages);
-        self::assertStringContainsString('does/not/exist', $capturedMessages[0]);
+        self::assertSame([], $capturedMessages);
     }
 }

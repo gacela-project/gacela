@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ServiceResolver;
 
+use Gacela\Framework\AbstractConfig;
+use Gacela\Framework\AbstractFacade;
+use Gacela\Framework\AbstractFactory;
 use ReflectionAttribute;
 use ReflectionClass;
 
@@ -18,14 +21,28 @@ use ReflectionClass;
  * the analyser and the runtime disagree about the same line of code. Asked
  * here, they can only be differently stale.
  *
- * Callers memoize their own results. A cache here would have to be reset with
- * the rest of the framework's static state and would buy nothing: the runtime
- * already keys its memo by caller-and-method, and the analyser by class.
- *
  * @internal
  */
 final class ServiceMapAccessors
 {
+    /** @var array<class-string, array<string, class-string|false>> */
+    private static array $classNames = [];
+
+    /** @var array<class-string, array<string, array{class-string, string}|false|null>> */
+    private static array $concretePillars = [];
+
+    /**
+     * @param class-string $callerClass
+     *
+     * @return array{class-string, string}|null
+     */
+    public static function concretePillarFor(string $callerClass, string $method): ?array
+    {
+        $pillar = self::$concretePillars[$callerClass][$method] ??= self::findConcretePillar($callerClass, $method);
+
+        return $pillar === false ? null : $pillar;
+    }
+
     /**
      * The class one accessor resolves to, or null when this class declares no
      * such accessor.
@@ -40,16 +57,9 @@ final class ServiceMapAccessors
      */
     public static function classNameFor(ReflectionClass $reflectionClass, string $method): ?string
     {
-        foreach (self::serviceMapAttributes($reflectionClass) as $attribute) {
-            /** @var ServiceMap $serviceMap */
-            $serviceMap = $attribute->newInstance();
+        $className = self::$classNames[$reflectionClass->getName()][$method] ??= self::findClassNameFor($reflectionClass, $method) ?? false;
 
-            if ($serviceMap->method === $method) {
-                return $serviceMap->className;
-            }
-        }
-
-        return null;
+        return $className === false ? null : $className;
     }
 
     /**
@@ -75,6 +85,55 @@ final class ServiceMapAccessors
         }
 
         return $accessors;
+    }
+
+    /**
+     * @param class-string $callerClass
+     *
+     * @return array{class-string, string}|false|null
+     */
+    private static function findConcretePillar(string $callerClass, string $method): array|false|null
+    {
+        $className = self::classNameFor(ReflectionClassPool::get($callerClass), $method);
+        $kind = match (true) {
+            $className === null => null,
+            is_a($className, AbstractFacade::class, true) => 'Facade',
+            is_a($className, AbstractFactory::class, true) => 'Factory',
+            is_a($className, AbstractConfig::class, true) => 'Config',
+            default => null,
+        };
+
+        if ($className !== null && $kind === null && !self::isDefined($className)) {
+            return null;
+        }
+
+        return $className !== null && $kind !== null && !ReflectionClassPool::get($className)->isAbstract()
+            ? [$className, $kind]
+            : false;
+    }
+
+    private static function isDefined(string $className): bool
+    {
+        return class_exists($className, false) || interface_exists($className, false) || trait_exists($className, false);
+    }
+
+    /**
+     * @param ReflectionClass<object> $reflectionClass
+     *
+     * @return class-string|null
+     */
+    private static function findClassNameFor(ReflectionClass $reflectionClass, string $method): ?string
+    {
+        foreach (self::serviceMapAttributes($reflectionClass) as $attribute) {
+            /** @var ServiceMap $serviceMap */
+            $serviceMap = $attribute->newInstance();
+
+            if ($serviceMap->method === $method) {
+                return $serviceMap->className;
+            }
+        }
+
+        return null;
     }
 
     /**

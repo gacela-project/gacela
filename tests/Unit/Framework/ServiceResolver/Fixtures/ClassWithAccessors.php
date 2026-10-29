@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\ServiceResolver\Fixtures;
 
+use Gacela\Framework\AbstractFactory;
 use Gacela\Framework\ServiceResolver\ServiceMap;
 
 #[ServiceMap(method: 'getFacade', className: FirstService::class)]
@@ -11,6 +12,7 @@ use Gacela\Framework\ServiceResolver\ServiceMap;
 // A repeat of an accessor already declared: the runtime returns the first, so
 // this one names a call that never happens.
 #[ServiceMap(method: 'getFacade', className: SecondService::class)]
+#[ServiceMap(method: 'getAbstractFactory', className: AbstractFactory::class)]
 class ClassWithAccessors
 {
 }

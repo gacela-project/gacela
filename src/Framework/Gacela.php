@@ -102,10 +102,6 @@ final class Gacela
 
         $config = self::createConfig($setup, $appRootDir);
 
-        if (self::shouldDispatch(GacelaBootstrapStartedEvent::class)) {
-            self::dispatchEvent(new GacelaBootstrapStartedEvent($appRootDir));
-        }
-
         // With a closure, `gacela.php` is merged into the setup only here, after
         // the caches it may ask to reset were already in use: reset, then build
         // again from the same closure. Memoized, so nothing is read twice
@@ -119,6 +115,10 @@ final class Gacela
         // Before init(): the containers it builds take the shared plan cache,
         // so it has to hold what earlier processes planned by then.
         self::persistContainerPlans($config);
+
+        if (self::shouldDispatch(GacelaBootstrapStartedEvent::class)) {
+            self::dispatchEvent(new GacelaBootstrapStartedEvent($appRootDir));
+        }
 
         // Batch the file-cache writes produced while resolving classes during
         // bootstrap into a single atomic write per cache file (like cache:warm

@@ -136,6 +136,20 @@ final class ConsoleSection
     }
 
     /**
+     * @param list<string> $paths
+     */
+    public static function unscannedModulePaths(OutputInterface $output, array $paths, string $indent = ''): void
+    {
+        if ($paths !== []) {
+            $output->writeln(sprintf(
+                '%sNot scanned, not a directory: %s',
+                $indent,
+                implode(', ', $paths),
+            ));
+        }
+    }
+
+    /**
      * @param list<string> $scannedPaths
      * @param list<string> $unscannedPaths
      */
@@ -149,12 +163,6 @@ final class ConsoleSection
             $output->writeln(sprintf('%sScanned: %s', $indent, implode(', ', $scannedPaths)));
         }
 
-        if ($unscannedPaths !== []) {
-            $output->writeln(sprintf(
-                '%sNot scanned, not a directory: %s',
-                $indent,
-                implode(', ', $unscannedPaths),
-            ));
-        }
+        self::unscannedModulePaths($output, $unscannedPaths, $indent);
     }
 }

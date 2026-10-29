@@ -141,7 +141,7 @@ The **handler registries** check asks the same of `addHandlerRegistry()`, and th
 |---|---|
 | `cache:warm` | Pre-resolves every module class and populates the on-disk caches. `--clear` first, `--attributes` to pre-scan `#[ServiceMap]` and store the `#[Plugin]`, `#[Tag]` and `#[AsListener]` members |
 | `cache:clear` | Removes every Gacela cache file |
-| `dto:generate` | Writes the classes declared with `declareDtoSchema()`. `--dry-run` reports without writing; `--check` does the same and exits non-zero when a class is stale, for CI. See [DTO schema](dto-schema.md) |
+| `dto:generate` | Writes the classes declared with `declareDtoSchema()`. Files it did not generate are left alone; `--force` replaces them. `--dry-run` reports without writing; `--check` does the same and exits non-zero when a class is stale, for CI. See [DTO schema](dto-schema.md) |
 | `ide:meta` | Writes editor metadata typing `getProvidedDependency()` from the `#[Provides]` attributes. `--dry-run` reports without writing. See [IDE metadata](static-analysis.md#ide-metadata) |
 | `profile:report` | Performance profiling report. `--format=table\|json\|summary` (`--json` for the second), `--sort=duration\|memory\|operation`. The recording side is the [Profiler](profiling.md) |
 

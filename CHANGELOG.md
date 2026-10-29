@@ -9,19 +9,14 @@
 ### Fixed
 
 - Console file writers replace a target only after its new content is fully written. A failed or partial write during `migrate:service-map` now leaves the original source intact instead of truncating it; temporary files are cleaned up and existing permission bits are preserved on POSIX ([#1002](https://github.com/gacela-project/gacela/issues/1002))
-
+- `dto:generate` leaves existing files it did not generate untouched and exits with an error, including with `--dry-run` and `--check`; pass `--force` to replace them ([#1022](https://github.com/gacela-project/gacela/issues/1022))
+- `Gacela::bootstrap()` reads `gacela.php` once when the application root ends in a separator. Plugins no longer run twice and configuration paths are no longer duplicated for that spelling; `Gacela::rootDir()` omits trailing separators on ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))
 - Module and project-event discovery read the namespace declaration instead of a namespace quoted in a docblock, and accept braced namespaces. Valid Facades and events in those files are no longer dropped or reported under the quoted namespace ([#995](https://github.com/gacela-project/gacela/issues/995))
-
 - `migrate:service-map` preserves CRLF line endings on inserted attributes and imports. Files with more than one namespace are left unchanged instead of receiving an import in the wrong namespace ([#994](https://github.com/gacela-project/gacela/issues/994))
-
 - The import parser keeps brace depth balanced for interpolated strings and heredocs. A trait `use` after an interpolation no longer appears as a top-level import in module graphs or package checks, and imports after the class remain visible ([#993](https://github.com/gacela-project/gacela/issues/993))
-
 - `make:file` gives exact kind names and aliases priority over abbreviations. Declaring a `ConfigReader`, `FactoryBuilder` or `ProviderRegistry` no longer makes the corresponding pillar name ambiguous ([#992](https://github.com/gacela-project/gacela/issues/992))
-
 - `FileCache::clear()` and `stats()` touch only its own entry filenames, preserving framework caches and unrelated PHP files in a shared directory. New entries use a `gacela-fc-` prefix; legacy 40-hex-character filenames remain readable and are removed by `forget()` and `clear()` ([#979](https://github.com/gacela-project/gacela/issues/979))
-
 - `Gacela::addGlobal()` distinguishes anonymous globals registered from same-named files in different directories. File contexts and their internal lookup keys now use the full canonical file path, which stays stable across bootstrap. Registering a different instance for an occupied key throws instead of silently replacing it; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))
-
 - `Gacela::get()` follows the container of the latest bootstrap. Before, it kept the first container it saw: a call before bootstrap made every later `Gacela::get()` return `null`, and a second bootstrap kept serving the first one's bindings. A plugin that takes a `Container` now gets the application container; before, it got a new, empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
 - `gacela.cacheableWithoutCachedCall` (Psalm: `GacelaCacheableWithoutCachedCall`) follows `$this->cached()` through any number of private helpers. Before, a `#[Cacheable]` method that reached it through two helpers was reported as never cached, though it was ([#974](https://github.com/gacela-project/gacela/issues/974))
 - `debug:graph --compare-to` refuses `--format` and `--json` instead of ignoring them. Before, asking for a JSON diff wrote the markdown diff with a zero exit ([#975](https://github.com/gacela-project/gacela/issues/975))

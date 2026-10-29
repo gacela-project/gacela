@@ -15,6 +15,7 @@ final class IdeMetadataResult
         public readonly bool $changed,
         public readonly int $typedIds,
         public readonly array $ambiguous = [],
+        public readonly ?string $blocked = null,
     ) {
     }
 }

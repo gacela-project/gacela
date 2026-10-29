@@ -174,7 +174,7 @@ The generated file states two things:
 - **An id that names a class or interface resolves to it.** One rule, no scanning, always true — the same thing both analysers do.
 - **Each string id, typed by the return type of the `#[Provides]` method that registers it.** This is type information neither analyser produces.
 
-The file is generated: add `.phpstorm.meta.php/` to `.gitignore` and regenerate it after changing a Provider. `doctor` compares its content against the attributes and reports when they no longer match. The directory form is deliberate, so a project's own hand-written root meta file is left alone.
+The file is generated: add `.phpstorm.meta.php/` to `.gitignore` and regenerate it after changing a Provider. `doctor` compares its content against the attributes and reports when they no longer match. The directory form is deliberate, so a project's own hand-written root meta file is left alone. A project that keeps the single-file `.phpstorm.meta.php` moves it into that directory first; `ide:meta` reports the conflict and writes nothing until then.
 
 Two kinds of id are deliberately left out, and `ide:meta` lists the first kind rather than guessing:
 

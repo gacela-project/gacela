@@ -27,6 +27,15 @@ final class IdeMetadataGenerator
 
     public function generate(bool $dryRun): IdeMetadataResult
     {
+        if (is_file(IdeMetadataPath::directoryIn($this->appRootDir))) {
+            return new IdeMetadataResult(
+                path: IdeMetadataPath::fileIn($this->appRootDir),
+                changed: false,
+                typedIds: 0,
+                blocked: '.phpstorm.meta.php is a file; move it into the .phpstorm.meta.php/ directory, PhpStorm reads every file there',
+            );
+        }
+
         // Unfiltered on purpose: the file describes the whole application, and
         // a partial scan would drop every id the filter left out.
         $map = $this->scanner->scan($this->modulesFinder->findAllAppModules(''));

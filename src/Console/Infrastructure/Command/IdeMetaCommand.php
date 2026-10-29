@@ -37,6 +37,11 @@ final class IdeMetaCommand extends Command
         $dryRun = $input->getOption('dry-run') === true;
         $result = $this->getFacade()->generateIdeMetadata($dryRun);
 
+        if ($result->blocked !== null) {
+            $output->writeln(sprintf('<error>%s</error>', $result->blocked));
+            return Command::FAILURE;
+        }
+
         $this->writeAmbiguous($result, $output);
         $this->writeOutcome($result, $dryRun, $output);
 

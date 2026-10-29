@@ -95,7 +95,7 @@ A subject body must contain only the path it documents. Hoist incidental allocat
 Benches share one process per subject, and the repository shares one machine:
 
 - Reset global state in setup (`resetInMemoryCache()`, `Config::resetInstance()`, `ServiceResolverCache::resetCache()`, ...) so subjects don't leak into each other.
-- **Never enable the file cache without an explicit directory.** With no directory the cache falls back to `sys_get_temp_dir()`, which is shared with every other test run on the machine — stale `gacela-merged-config.php` files from unrelated runs will poison the bench. Use `enableFileCache(__DIR__ . '/.gacela/cache')` and wipe it in `#[BeforeClassMethods]` / `#[AfterClassMethods]` (see `FileCacheBench`).
+- **Never enable the file cache without an explicit directory.** With no directory the cache uses `{appRoot}/.gacela/cache`, which can retain entries from another benchmark run. Use `enableFileCache(__DIR__ . '/.gacela/cache')` and wipe it in `#[BeforeClassMethods]` / `#[AfterClassMethods]` (see `FileCacheBench`).
 
 ## Adding a bench
 

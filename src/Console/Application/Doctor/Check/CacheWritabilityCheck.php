@@ -7,6 +7,7 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Closure;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
+use Gacela\Framework\Cache\FileCache;
 
 use function dirname;
 use function is_dir;
@@ -59,6 +60,11 @@ final class CacheWritabilityCheck implements HealthCheck
 
         if ($this->cacheDir === '') {
             return CheckResult::ok($this->name(), 'no cache directory resolved — nothing is written');
+        }
+
+        $failures = array_filter(FileCache::failedWrites(), fn (string $file): bool => dirname($file) === $this->cacheDir);
+        if ($failures !== []) {
+            return $this->unwritable('cache files could not be written: ' . implode(', ', $failures));
         }
 
         if (is_dir($this->cacheDir)) {

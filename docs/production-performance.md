@@ -101,7 +101,7 @@ Set these in the ini, not by re-executing PHP with `-d` flags from your entry sc
 
 **Preload does not help.** `opcache.preload` runs when a process starts, so a CLI pays it on every command instead of once per pool. Skip step 3.
 
-**Give the tool its own cache directory.** `enableFileCache('')` writes into the system temp directory. File names carry a hash of the application root, so two tools do not read each other's entries, but nothing ever cleans the directory. Pick a directory per tool and version, such as `~/.cache/your-tool/<version>`, or let users set `GACELA_CACHE_DIR`.
+**Give the tool its own cache directory.** `enableFileCache('')` defaults to `{appRoot}/.gacela/cache`, created with mode `0700`. Keep it private to the application user. For tools installed where the application cannot write, pick a directory per tool and version, such as `~/.cache/your-tool/<version>`, or let users set `GACELA_CACHE_DIR`.
 
 **Let the cache warm itself, and do not run `cache:warm` for config users edit.** A merged config cache that `cache:warm` wrote is trusted until the next warm, like a deploy artifact. One written on a miss checks its sources on every hit, at about 1 µs per config file, so a user who edits the tool's config file sees the change on the next command. A CLI whose users own the config wants the second kind, so do not ship a warmed cache.
 

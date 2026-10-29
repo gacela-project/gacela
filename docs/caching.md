@@ -31,12 +31,14 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 
 Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
-    $config->enableFileCache();                  // use the default cache dir
+    $config->enableFileCache();                  // use {appRoot}/.gacela/cache
     // $config->enableFileCache('var/cache');    // or pick one, relative to the app root
     // $config->setFileCache(false);             // explicitly off
     // $config->resetInMemoryCache();            // wipe static caches (tests)
 });
 ```
+
+The default cache directory is `{appRoot}/.gacela/cache`, created with mode `0700`. Keep cache directories private to the application user. Cache files are created with mode `0600`. Cache reads refuse foreign-owned files, files writable by other users and files in non-sticky directories writable by other users. Discovered packages use `gacela-discovered-packages-{appRootHash}.php`, so applications sharing an explicit cache directory keep separate package lists.
 
 A path given here is resolved **relative to the app root**, and a leading `/` does not escape it: `enableFileCache('/var/cache/gacela')` writes to `{appRoot}/var/cache/gacela`. To point the cache at a genuinely absolute path outside the project, use the `GACELA_CACHE_DIR` environment variable, which is read first and taken verbatim — also the handy way to reuse one image across environments.
 

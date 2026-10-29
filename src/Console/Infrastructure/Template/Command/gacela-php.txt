@@ -12,8 +12,7 @@ return static function (GacelaConfig $config): void {
     // Namespaces Gacela scans when resolving a module's pillars.
     $config->setProjectNamespaces($PROJECT_NAMESPACES$);
 
-    // Always pass an explicit directory. Without one the cache falls back to
-    // the system temp directory, which is shared with every other app on the
-    // machine — you would be reading someone else's stale entries.
+    // Keep cache files private to the application user. With no directory,
+    // the cache defaults to .gacela/cache under the application root.
     $config->setFileCache(false, __DIR__ . '/data/cache');
 };

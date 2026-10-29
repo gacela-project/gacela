@@ -288,6 +288,7 @@ All four resolver events extend `AbstractGacelaClassResolverEvent` and expose `c
 | Event | Fires when | Payload | Hot path |
 |---|---|---|---|
 | `CacheClearedEvent` | a Gacela cache file is deleted | `cacheFile()` | no |
+| `CacheWriteFailedEvent` | a cache file could not be written | `cacheFile()` | no |
 | `CacheWarmedEvent` | `vendor/bin/gacela cache:warm` finished | `moduleCount()`, `failedCount()`, `skippedCount()` | no |
 
 `failedCount()` and `skippedCount()` are not the same number. A pillar class a module declares but does not have is *skipped* — a normal shape, not an error. A pillar that is there and blows up on resolution is *failed*. Alert on `failedCount()`.

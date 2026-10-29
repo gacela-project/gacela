@@ -368,7 +368,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @return array<string, ConfigType>
+     * @return array<array-key, ConfigType>
      */
     #[Override]
     public function getConfigSchema(): array
@@ -430,7 +430,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param ?array<string, ConfigType> $configSchema
+     * @param ?array<array-key, ConfigType> $configSchema
      */
     public function setConfigSchema(?array $configSchema): self
     {
@@ -455,7 +455,7 @@ final class SetupGacela extends AbstractSetupGacela
     }
 
     /**
-     * @param array<string, ConfigType> $schema
+     * @param array<array-key, ConfigType> $schema
      */
     public function mergeConfigSchema(array $schema): void
     {

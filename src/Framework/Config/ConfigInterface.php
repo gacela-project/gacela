@@ -52,7 +52,7 @@ interface ConfigInterface
      *
      * @throws ConfigException
      *
-     * @return array<string,mixed>
+     * @return array<array-key,mixed>
      */
     public function getAllValues(): array;
 

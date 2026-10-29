@@ -26,7 +26,7 @@ final class ConfigSchemaCheck implements HealthCheck
      * The values rather than the findings: a check handed both could be handed
      * two that disagree, and then it reports whatever it was told.
      *
-     * @param array<string, mixed> $values the merged configuration, as this
+     * @param array<array-key, mixed> $values the merged configuration, as this
      *                                     environment sees it
      */
     public function __construct(

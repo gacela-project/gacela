@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Bootstrap;
 
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Config\Schema\ConfigType;
 use Gacela\Framework\Dto\Schema\DtoType;
 use Gacela\Framework\Dto\Schema\MalformedDtoSchemaException;
 use Gacela\Framework\Health\HealthCheckRegistry;
@@ -23,6 +24,26 @@ final class GacelaConfigTest extends TestCase
     protected function tearDown(): void
     {
         HealthCheckRegistry::reset();
+    }
+
+    public function test_add_app_config_key_values_preserves_integer_keys_and_later_values(): void
+    {
+        $config = (new GacelaConfig())
+            ->addAppConfigKeyValues(['404' => 'missing', 'name' => 'before'])
+            ->addAppConfigKeyValues([500 => 'error', 404 => 'not-found', 'name' => 'after']);
+
+        self::assertSame([404 => 'not-found', 'name' => 'after', 500 => 'error'], $config->toTransfer()->configKeyValues);
+    }
+
+    public function test_declare_config_schema_preserves_integer_keys_and_later_values(): void
+    {
+        $replacement = ConfigType::string();
+        $error = ConfigType::int();
+        $config = (new GacelaConfig())
+            ->declareConfigSchema([404 => ConfigType::bool()])
+            ->declareConfigSchema([500 => $error, 404 => $replacement]);
+
+        self::assertSame([404 => $replacement, 500 => $error], $config->toTransfer()->configSchema);
     }
 
     public function test_default_php_config_registers_default_paths(): void

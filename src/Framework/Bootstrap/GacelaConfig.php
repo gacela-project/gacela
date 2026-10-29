@@ -75,7 +75,7 @@ final class GacelaConfig
     /** @var ConfigKeyValues */
     private ?array $configKeyValues = null;
 
-    /** @var ?array<string, ConfigType> */
+    /** @var ?array<array-key, ConfigType> */
     private ?array $configSchema = null;
 
     /** @var ?array<string, array<string, DtoType>> */
@@ -505,7 +505,7 @@ final class GacelaConfig
      */
     public function addAppConfigKeyValues(array $config): self
     {
-        $this->configKeyValues = array_merge($this->configKeyValues ?? [], $config);
+        $this->configKeyValues = array_replace($this->configKeyValues ?? [], $config);
 
         return $this;
     }
@@ -528,11 +528,11 @@ final class GacelaConfig
      * Called twice, or reached again through `extendGacelaConfig()`, the
      * declarations merge per key and the later one wins.
      *
-     * @param array<string, ConfigType> $schema
+     * @param array<array-key, ConfigType> $schema
      */
     public function declareConfigSchema(array $schema): self
     {
-        $this->configSchema = array_merge($this->configSchema ?? [], $schema);
+        $this->configSchema = array_replace($this->configSchema ?? [], $schema);
 
         return $this;
     }

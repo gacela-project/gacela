@@ -35,7 +35,7 @@ final class MigrateServiceMapCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->appRoot = sys_get_temp_dir() . '/gacela-migrate-' . bin2hex(random_bytes(6));
+        $this->appRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-migrate-' . bin2hex(random_bytes(6)) . '-myvendor';
         mkdir($this->appRoot . '/Wallet', 0777, true);
 
         Gacela::bootstrap($this->appRoot, static function (GacelaConfig $config): void {
@@ -70,6 +70,21 @@ final class MigrateServiceMapCommandTest extends TestCase
         self::assertStringContainsString('use Gacela\Framework\ServiceResolver\ServiceMap;', $migrated);
         // The docblock the attribute was derived from is left where it was.
         self::assertStringContainsString('@method WalletFacade getFacade()', $migrated);
+    }
+
+    public function test_a_real_vendor_directory_inside_the_project_is_skipped(): void
+    {
+        $this->writeUnmigratedClass();
+        $vendor = $this->appRoot . DIRECTORY_SEPARATOR . 'vendor';
+        mkdir($vendor);
+        $dependency = $vendor . DIRECTORY_SEPARATOR . 'DependencyCommand.php';
+        $source = $this->unmigratedClass('Dependency', 'DependencyCommand', 'DependencyFacade');
+        file_put_contents($dependency, $source);
+
+        $tester = $this->execute();
+
+        self::assertStringContainsString('Declared 1 accessor(s) in 1 file(s)', $tester->getDisplay());
+        self::assertSame($source, file_get_contents($dependency));
     }
 
     public function test_a_dry_run_reports_and_writes_nothing(): void

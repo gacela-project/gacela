@@ -230,6 +230,16 @@ final class UndiscoveredFacadeFinderTest extends TestCase
         self::assertSame([], $this->find($this->fixturePath('Base', 'BaseFacade')));
     }
 
+    public function test_a_directory_ending_in_vendor_is_not_skipped(): void
+    {
+        $path = $this->writeModuleFile('Blog', 'BlogFacade', 'Nowhere\\Nothing\\Blog', 'myvendor');
+
+        $found = $this->find($path);
+
+        self::assertCount(1, $found);
+        self::assertSame('Nowhere\\Nothing\\Blog\\BlogFacade', $found[0]->className);
+    }
+
     private function fixturePath(string $moduleName, string $className): string
     {
         return __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures'

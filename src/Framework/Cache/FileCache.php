@@ -23,6 +23,7 @@ use function glob;
 use function is_array;
 use function is_file;
 use function is_int;
+use function lstat;
 use function preg_match_all;
 use function preg_quote;
 use function preg_replace;
@@ -268,11 +269,12 @@ final class FileCache
 
     public static function isSafeToRead(string $file): bool
     {
-        if (!is_file($file) || is_link($file)) {
+        $stat = @lstat($file);
+        if ($stat === false || ($stat['mode'] & 0170000) !== 0100000) {
             return false;
         }
 
-        if (function_exists('posix_geteuid') && @fileowner($file) !== posix_geteuid()) {
+        if (function_exists('posix_geteuid') && $stat['uid'] !== posix_geteuid()) {
             return false;
         }
 
@@ -280,10 +282,9 @@ final class FileCache
             return true;
         }
 
-        $filePermissions = @fileperms($file);
         $directoryPermissions = @fileperms(dirname($file));
 
-        return $filePermissions !== false && ($filePermissions & 0022) === 0
+        return ($stat['mode'] & 0022) === 0
             && $directoryPermissions !== false
             && (($directoryPermissions & 0022) === 0 || ($directoryPermissions & 01000) !== 0);
     }

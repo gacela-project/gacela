@@ -69,6 +69,26 @@ final class PlantedCacheFileTest extends TestCase
         }
     }
 
+    public function test_a_private_cache_file_is_readable_in_a_sticky_directory(): void
+    {
+        if (DIRECTORY_SEPARATOR !== '/') {
+            self::markTestSkipped('POSIX permissions are required.');
+        }
+
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-sticky-' . uniqid('', true);
+        mkdir($directory);
+        chmod($directory, 01777);
+        $file = $directory . DIRECTORY_SEPARATOR . 'cache.php';
+        try {
+            self::assertTrue(FileCache::writeAtomically($file, ['safe' => 'Value']));
+            self::assertSame(['safe' => 'Value'], FileCache::readArray($file));
+        } finally {
+            WritableDirectory::resetCache();
+            chmod($directory, 0700);
+            DirectoryUtil::removeDir($directory);
+        }
+    }
+
     public function test_writes_keep_cache_files_private_with_a_permissive_umask(): void
     {
         if (DIRECTORY_SEPARATOR !== '/') {
@@ -84,6 +104,31 @@ final class PlantedCacheFileTest extends TestCase
             self::assertSame(0600, fileperms($file) & 0777);
         } finally {
             umask($previous);
+            WritableDirectory::resetCache();
+            DirectoryUtil::removeDir($directory);
+        }
+    }
+
+    public function test_a_directory_is_rejected_before_loading(): void
+    {
+        self::assertFalse(FileCache::isSafeToRead(__DIR__));
+    }
+
+    public function test_a_symlink_to_a_private_cache_file_is_rejected(): void
+    {
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-symlink-' . uniqid('', true);
+        mkdir($directory);
+        $file = $directory . DIRECTORY_SEPARATOR . 'cache.php';
+        $link = $directory . DIRECTORY_SEPARATOR . 'link.php';
+        try {
+            self::assertTrue(FileCache::writeAtomically($file, ['safe' => 'Value']));
+            if (!@symlink($file, $link)) {
+                self::markTestSkipped('Creating symbolic links is unavailable.');
+            }
+
+            self::assertNull(FileCache::readArray($link));
+            self::assertSame(['safe' => 'Value'], FileCache::readArray($file));
+        } finally {
             WritableDirectory::resetCache();
             DirectoryUtil::removeDir($directory);
         }

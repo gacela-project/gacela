@@ -62,6 +62,8 @@ This is the opposite rule to [the config schema](config-schema.md), deliberately
 
 ## Where the files go
 
+Only `psr-4` prefixes are read; a shape under a `psr-0` prefix is reported as uncovered.
+
 A file at that path that `dto:generate` did not write is left alone and reported; pass `--force` to replace it. `--dry-run` and `--check` report the same refusal without writing.
 
 **A shape is declared by the class it generates**, so the file is written where your own `composer.json` `autoload` already looks for that namespace. With `"App\\": "src"`, `App\Checkout\Order` is written to `src/Checkout/Order.php`.

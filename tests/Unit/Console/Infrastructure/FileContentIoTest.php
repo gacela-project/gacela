@@ -63,6 +63,25 @@ final class FileContentIoTest extends TestCase
         self::assertDirectoryExists($this->workingDir);
     }
 
+    public function test_mkdir_reports_an_existing_file_without_a_warning(): void
+    {
+        $file = $this->workingDir . DIRECTORY_SEPARATOR . 'existing-file';
+        file_put_contents($file, 'unchanged');
+        set_error_handler(static function (int $errno, string $message): never {
+            throw new RuntimeException($message);
+        });
+
+        try {
+            $this->io->mkdir($file);
+            self::fail('A file cannot be used as a directory.');
+        } catch (RuntimeException $runtimeException) {
+            self::assertSame(sprintf('"%s" is a file, not a directory', $file), $runtimeException->getMessage());
+            self::assertSame('unchanged', file_get_contents($file));
+        } finally {
+            restore_error_handler();
+        }
+    }
+
     public function test_it_creates_missing_parent_directories(): void
     {
         // The first module of a new project: `src/` does not exist yet, so a

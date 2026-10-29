@@ -254,7 +254,10 @@ final class ScopedCacheTest extends TestCase
     public function test_clear_graph_is_gone_after_restart(): void
     {
         $this->cache->dependsOn('file:a.php', 'ns:X');
+        $graph = $this->cacheDir . DIRECTORY_SEPARATOR . '.gacela-scoped-cache-graph.php';
+        self::assertFileExists($graph);
         $this->cache->clear();
+        self::assertFileDoesNotExist($graph);
 
         $reopened = new ScopedCache(new FileCache($this->cacheDir));
 

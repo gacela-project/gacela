@@ -55,13 +55,15 @@ final class CacheFilePathTest extends TestCase
     public function test_nowhere_yields_no_entry_path(string $directory): void
     {
         self::assertNull(CacheFilePath::forEntry($directory, 'any-key'));
+        self::assertNull(CacheFilePath::forLegacyEntry($directory, 'any-key'));
+        self::assertNull(CacheFilePath::legacyPattern($directory));
         self::assertNull(CacheFilePath::inDirectory($directory, '.gacela-filecache.lock'));
     }
 
-    public function test_a_directory_matches_the_php_files_directly_in_it(): void
+    public function test_a_directory_matches_only_prefixed_entry_files(): void
     {
-        self::assertSame('/var/cache/gacela/*.php', CacheFilePath::pattern('/var/cache/gacela'));
-        self::assertSame('var/cache/*.php', CacheFilePath::pattern('var/cache'));
+        self::assertSame('/var/cache/gacela/gacela-fc-*.php', CacheFilePath::pattern('/var/cache/gacela'));
+        self::assertSame('var/cache/gacela-fc-*.php', CacheFilePath::pattern('var/cache'));
     }
 
     public function test_an_entry_lives_in_the_directory_under_a_hashed_name(): void
@@ -70,7 +72,7 @@ final class CacheFilePathTest extends TestCase
 
         self::assertNotNull($path);
         self::assertStringStartsWith('/var/cache' . DIRECTORY_SEPARATOR, $path);
-        self::assertStringEndsWith('.php', $path);
+        self::assertSame('/var/cache' . DIRECTORY_SEPARATOR . 'gacela-fc-' . sha1('the-key') . '.php', $path);
     }
 
     /**
@@ -103,7 +105,7 @@ final class CacheFilePathTest extends TestCase
      */
     public function test_a_directory_that_does_not_exist_still_gets_paths(): void
     {
-        self::assertSame('/no/such/place/*.php', CacheFilePath::pattern('/no/such/place'));
+        self::assertSame('/no/such/place/gacela-fc-*.php', CacheFilePath::pattern('/no/such/place'));
         self::assertNotNull(CacheFilePath::forEntry('/no/such/place', 'k'));
     }
 }

@@ -18,6 +18,7 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use Throwable;
 
+use function count;
 use function explode;
 use function implode;
 use function sprintf;
@@ -71,7 +72,7 @@ final class ServiceMapMigrator
             return MigrationResult::unchanged($path, $phpCode);
         }
 
-        if ($ast === null) {
+        if ($ast === null || count($this->nodeFinder->findInstanceOf($ast, Namespace_::class)) > 1) {
             return MigrationResult::unchanged($path, $phpCode);
         }
 
@@ -118,7 +119,6 @@ final class ServiceMapMigrator
             return MigrationResult::unchanged($path, $phpCode);
         }
 
-        $lines = explode("\n", $phpCode);
         $imports = $this->importStatements($ast);
         $importInsertion = $this->alreadyImported($imports) ? [] : $this->importInsertion($ast, $imports);
         if ($importInsertion !== [] && !$this->importsStartTheirLines($phpCode, $ast, $imports)) {
@@ -128,29 +128,30 @@ final class ServiceMapMigrator
         return new MigrationResult(
             $path,
             $phpCode,
-            $this->rebuild($lines, $insertions, $importInsertion),
+            $this->rebuild($phpCode, $insertions, $importInsertion),
             $declared,
         );
     }
 
     /**
-     * @param list<string> $lines
      * @param array<int, list<string>> $insertions one-based line => lines to put above it
      * @param array<int, list<string>> $importInsertion one-based line => lines to put above it
      */
-    private function rebuild(array $lines, array $insertions, array $importInsertion): string
+    private function rebuild(string $phpCode, array $insertions, array $importInsertion): string
     {
+        $lineSuffix = str_contains($phpCode, "\r\n") ? "\r" : '';
+        $lines = explode("\n", $phpCode);
         $rebuilt = [];
 
         foreach ($lines as $index => $line) {
             $lineNumber = $index + 1;
 
             foreach ($importInsertion[$lineNumber] ?? [] as $import) {
-                $rebuilt[] = $import;
+                $rebuilt[] = $import . $lineSuffix;
             }
 
             foreach ($insertions[$lineNumber] ?? [] as $attribute) {
-                $rebuilt[] = $attribute;
+                $rebuilt[] = $attribute . $lineSuffix;
             }
 
             $rebuilt[] = $line;
@@ -160,7 +161,7 @@ final class ServiceMapMigrator
     }
 
     /**
-     * The import-block statements of the first namespace, or of the file when
+     * The import-block statements of the file's namespace, or of the file when
      * it declares none.
      *
      * @param array<array-key, Node> $ast

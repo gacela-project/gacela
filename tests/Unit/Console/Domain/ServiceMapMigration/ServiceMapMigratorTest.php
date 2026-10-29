@@ -9,6 +9,7 @@ use Gacela\StaticAnalysis\Rules\ServiceMapMissingAnalyser;
 use PhpCsFixer\Fixer\Import\OrderedImportsFixer;
 use PhpCsFixer\Tokenizer\Tokens;
 use PhpParser\ParserFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SplFileInfo;
 
@@ -112,7 +113,8 @@ final class ServiceMapMigratorTest extends TestCase
      * wrote, and a migration that reformats to add one line is not one anybody
      * runs twice.
      */
-    public function test_only_the_added_lines_differ(): void
+    #[DataProvider('lineEndings')]
+    public function test_only_the_added_lines_differ(string $eol, bool $trailingNewline, bool $mixed): void
     {
         $original = <<<'PHP'
             <?php
@@ -131,15 +133,91 @@ final class ServiceMapMigratorTest extends TestCase
             }
             PHP;
 
+        $original = str_replace("\n", $eol, $original) . ($trailingNewline ? $eol : '');
+        if ($mixed) {
+            $original = str_replace("<?php\n", "<?php\r\n", $original);
+        }
+
+        $insertedEol = $mixed ? "\r\n" : $eol;
         $result = $this->migrator->migrate('Wallet.php', $original);
+        self::assertTrue($result->hasChanges());
+        if ($eol === "\r\n") {
+            self::assertSame(0, preg_match('/(?<!\r)\n/', $result->migratedCode));
+        }
 
         $addedBack = str_replace(
-            ["use Gacela\\Framework\\ServiceResolver\\ServiceMap;\n", "#[ServiceMap(method: 'getFacade', className: WalletFacade::class)]\n"],
+            ['use Gacela\\Framework\\ServiceResolver\\ServiceMap;' . $insertedEol, "#[ServiceMap(method: 'getFacade', className: WalletFacade::class)]" . $insertedEol],
             '',
             $result->migratedCode,
         );
 
         self::assertSame($original, $addedBack);
+    }
+
+    /**
+     * @return iterable<string, array{string, bool, bool}>
+     */
+    public static function lineEndings(): iterable
+    {
+        yield 'LF' => ["\n", false, false];
+        yield 'CRLF' => ["\r\n", false, false];
+        yield 'LF with final newline' => ["\n", true, false];
+        yield 'CRLF with final newline' => ["\r\n", true, false];
+        yield 'mixed' => ["\n", false, true];
+        yield 'mixed with final newline' => ["\n", true, true];
+    }
+
+    public function test_a_file_with_two_namespaces_is_left_alone(): void
+    {
+        $source = <<<'PHP'
+            <?php
+
+            namespace App\Alpha;
+
+            final class Nothing
+            {
+            }
+
+            namespace App\Beta;
+
+            use Gacela\Framework\ServiceResolverAwareTrait;
+
+            /** @method BetaFacade getFacade() */
+            final class Cmd
+            {
+                use ServiceResolverAwareTrait;
+            }
+            PHP;
+
+        $result = $this->migrator->migrate('Cmd.php', $source);
+
+        self::assertFalse($result->hasChanges());
+        self::assertSame($source, $result->migratedCode);
+    }
+
+    public function test_a_single_braced_namespace_still_migrates(): void
+    {
+        $source = <<<'PHP'
+            <?php
+
+            namespace App\Wallet {
+                use Gacela\Framework\ServiceResolverAwareTrait;
+
+                /** @method WalletFacade getFacade() */
+                final class WalletCommand
+                {
+                    use ServiceResolverAwareTrait;
+                }
+            }
+            PHP;
+
+        $result = $this->migrator->migrate('Wallet.php', $source);
+
+        self::assertTrue($result->hasChanges());
+        self::assertSame(['WalletCommand::getFacade()'], $result->declared);
+        self::assertStringContainsString('use Gacela\\Framework\\ServiceResolver\\ServiceMap;', $result->migratedCode);
+        self::assertStringContainsString("#[ServiceMap(method: 'getFacade', className: WalletFacade::class)]", $result->migratedCode);
+        self::assertFalse($this->migrator->migrate('Wallet.php', $result->migratedCode)->hasChanges());
     }
 
     /**

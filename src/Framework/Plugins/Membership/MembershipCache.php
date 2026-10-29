@@ -62,17 +62,12 @@ final class MembershipCache
      */
     public function read(): ?Members
     {
-        if (!$this->isWarm()) {
+        $content = FileCache::readArray($this->path());
+        if ($content === null) {
             return null;
         }
 
-        /**
-         * @psalm-suppress UnresolvableInclude
-         *
-         * @var MembersRows $content
-         */
-        $content = require $this->path();
-
+        /** @var MembersRows $content */
         return Members::fromRows($content);
     }
 

@@ -181,6 +181,6 @@ final class PackageDiscovery
     {
         $provider = $this->cacheDirProvider;
 
-        return $provider instanceof Closure ? new PackageConfigCache($provider()) : null;
+        return $provider instanceof Closure ? new PackageConfigCache($provider(), $this->appRootDir) : null;
     }
 }

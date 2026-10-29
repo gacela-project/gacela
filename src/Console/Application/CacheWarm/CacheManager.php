@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Console\Application\CacheWarm;
 
+use Gacela\Framework\Bootstrap\Package\PackageConfigCache;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
@@ -28,6 +29,7 @@ final class CacheManager
         CustomServicesPhpCache::FILENAME,
         MembershipCache::FILENAME,
         SharedPlanCache::FILENAME,
+        PackageConfigCache::FILENAME,
     ];
 
     public function clearCache(): void

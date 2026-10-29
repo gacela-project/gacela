@@ -11,6 +11,7 @@ use Gacela\Framework\Bootstrap\Package\PackageContribution;
 use Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry;
 use Gacela\Framework\Bootstrap\SetupGacela;
 use Gacela\Framework\Bootstrap\SetupGacelaInterface;
+use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
@@ -263,6 +264,7 @@ final class Gacela
         GacelaFileCache::resetCache();
         AbstractPhpFileCache::resetCache();
         WritableDirectory::resetCache();
+        FileCache::resetWriteFailures();
         ServiceResolverCache::resetCache();
         DocBlockResolver::resetCache();
         ClassResolverCache::resetCache();
@@ -306,9 +308,12 @@ final class Gacela
             return;
         }
 
-        SharedPlanCache::persistIn(
-            AbstractPhpFileCache::absoluteFilename($cacheDir, SharedPlanCache::FILENAME, $config->getAppRootDir()),
-        );
+        $file = AbstractPhpFileCache::absoluteFilename($cacheDir, SharedPlanCache::FILENAME, $config->getAppRootDir());
+        if (is_file($file) && !FileCache::isSafeToRead($file)) {
+            return;
+        }
+
+        SharedPlanCache::persistIn($file);
     }
 
     private static function createConfig(SetupGacelaInterface $setup, string $appRootDir): Config

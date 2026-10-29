@@ -591,7 +591,7 @@ final class Config implements ConfigInterface
     {
         $cacheDir = $this->setup->getFileCacheDirectory();
         if ($cacheDir === '') {
-            return sys_get_temp_dir();
+            return $this->getAppRootDir() . DIRECTORY_SEPARATOR . '.gacela' . DIRECTORY_SEPARATOR . 'cache';
         }
 
         $appRoot = $this->getAppRootDir();

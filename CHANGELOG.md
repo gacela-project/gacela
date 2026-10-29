@@ -14,6 +14,8 @@
 - `dto:generate` reports a shape covered only by a `psr-0` prefix as uncovered and exits with an error. Before, it wrote the class to a path Composer could not load ([#1003](https://github.com/gacela-project/gacela/issues/1003))
 
 - Cache reads reject foreign-owned files, files writable by other users, symlinks and files in directories writable by other users without the sticky bit, including container plans. New PHP cache files are created with mode `0600`. Failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
+- Custom services ending in a declared kind suffix keep distinct resolver cache entries. Resolving or overriding `SalesExporter` no longer replaces `AuditExporter` or the module's conventional `ReportExporter` ([#1016](https://github.com/gacela-project/gacela/issues/1016))
+
 - Integer configuration, schema and handler registry keys keep their values when declared or merged with a bootstrap closure. Later declarations replace matching keys instead of renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
 - `disableEventListeners()` in `gacela.php` or `gacela-{env}.php` takes effect when bootstrap also receives a closure. Registered listeners remain visible in `doctor` and `debug:events` while disabled ([#998](https://github.com/gacela-project/gacela/issues/998))
 - File caching enabled by a bootstrap closure uses the directory declared in `gacela.php` or `gacela-{APP_ENV}.php` for package discovery and application caches. Application processes and `cache:warm` now use the same cache files ([#997](https://github.com/gacela-project/gacela/issues/997))

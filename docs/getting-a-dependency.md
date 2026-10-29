@@ -339,6 +339,8 @@ $config->addResolvableType('Exporter', AbstractExporter::class, ['Exporter', 'Fe
 
 From then on the kind behaves like a pillar. The finder tries `Report\ReportExporter`, then `Report\Exporter`, then the same two shapes for `Feed`, through the same namespaces and rules; the resolver cache holds it; `doctor` knows its suffixes. Suffixes default to the kind's own name, so `addResolvableType('Exporter', AbstractExporter::class)` is the common case.
 
+A class that merely ends in a declared suffix keeps its own identity. Only the bare suffix or the module name followed by that suffix shares the module's instance of the kind.
+
 Reach the resolved class from anywhere the pillars are reachable:
 
 ```php

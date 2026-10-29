@@ -204,6 +204,19 @@ final class DebugGraphCommandTest extends TestCase
         self::assertStringContainsString('Unknown format "bogus"', $this->command->getDisplay());
     }
 
+    public function test_compare_to_with_an_explicit_text_format_still_writes_the_diff(): void
+    {
+        $baseline = $this->writeBaseline(json_encode([
+            self::MODULE_A => [],
+            self::MODULE_B => [],
+        ], JSON_THROW_ON_ERROR));
+
+        $exitCode = $this->command->execute(['--compare-to' => $baseline, '--format' => 'text']);
+
+        self::assertSame(0, $exitCode);
+        self::assertStringContainsString('### Module dependency graph changed', $this->command->getDisplay());
+    }
+
     public function test_compare_to_a_graph_missing_an_edge_reports_it_as_new(): void
     {
         $baseline = $this->writeBaseline(json_encode([

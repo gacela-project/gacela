@@ -8,10 +8,11 @@ use function in_array;
 use function stream_get_wrappers;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
+use function strlen;
 
 /**
- * A filesystem where the directory is writable, writing a file silently
- * produces zero bytes, and deleting it fails -- the shape a full disk or a
+ * A filesystem where the directory is writable, writing a file has a bounded
+ * byte budget (zero by default), and deleting it fails -- the shape a full disk or a
  * stale network mount has, and the only way to reach the staging-failure
  * branch of {@see \Gacela\Framework\Cache\FileCache::writeContentsAtomically}
  * in-process.
@@ -27,12 +28,15 @@ final class FailingWriteStreamWrapper
 
     public static bool $renamed = false;
 
+    public static int $bytesWritable = 0;
+
     /** @var resource|null */
     public $context;
 
     public static function register(): void
     {
         self::$renamed = false;
+        self::$bytesWritable = 0;
 
         if (in_array(self::PROTOCOL, stream_get_wrappers(), true)) {
             stream_wrapper_unregister(self::PROTOCOL);
@@ -53,7 +57,10 @@ final class FailingWriteStreamWrapper
 
     public function stream_write(string $data): int
     {
-        return 0;
+        $written = min(strlen($data), self::$bytesWritable);
+        self::$bytesWritable -= $written;
+
+        return $written;
     }
 
     public function stream_flush(): bool

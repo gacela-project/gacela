@@ -53,6 +53,8 @@ final class ConfigFactory
 
     private static ?string $memoizedAppRootDir = null;
 
+    private ?PackageDiscovery $packageDiscovery = null;
+
     /**
      * @param ?Closure(): string $cacheDirProvider where the resolved list of
      *                                             package config files is
@@ -117,20 +119,25 @@ final class ConfigFactory
         // every installed package that declares a config, and what a project
         // refuses is written in this very file.
         $projectSetup = $projectFactory?->createSetup();
+        $gacelaPhpPath = $this->getGacelaPhpPathFromEnv();
+        $envFactory = $fileIo->existsFile($gacelaPhpPath)
+            ? new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo)
+            : null;
+        $this->mergeFileCacheSettings($projectSetup);
 
         // First, so the project has the last word: the fold below lets a later
         // source win, and so does the setup merge each of these performs.
-        $gacelaConfigFiles = $this->discoverPackages($fileIo, $projectSetup);
+        $gacelaConfigFiles = $this->discoverPackages($fileIo, $projectSetup, $envFactory instanceof GacelaConfigUsingGacelaPhpFileFactory);
 
         if ($projectFactory instanceof GacelaConfigUsingGacelaPhpFileFactory) {
             $gacelaConfigFiles[] = $projectFactory->createGacelaFileConfig();
         }
 
-        $gacelaPhpPath = $this->getGacelaPhpPathFromEnv();
-        if ($fileIo->existsFile($gacelaPhpPath)) {
-            $factoryFromGacelaPhp = new GacelaConfigUsingGacelaPhpFileFactory($gacelaPhpPath, $this->setup, $fileIo);
-            $gacelaConfigFiles[] = $factoryFromGacelaPhp->createGacelaFileConfig();
+        if ($envFactory instanceof GacelaConfigUsingGacelaPhpFileFactory) {
+            $gacelaConfigFiles[] = $envFactory->createGacelaFileConfig();
         }
+
+        $this->packageDiscovery?->persistDeferredCache($this->packageCacheDirProvider());
 
         $merged = array_reduce(
             $gacelaConfigFiles,
@@ -180,7 +187,7 @@ final class ConfigFactory
      *
      * @return list<GacelaConfigFileInterface>
      */
-    private function discoverPackages(FileIoInterface $fileIo, ?SetupGacela $projectSetup): array
+    private function discoverPackages(FileIoInterface $fileIo, ?SetupGacela $projectSetup, bool $deferCache): array
     {
         // One `is_file()` before anything at all is built, because for most
         // applications the answer is "nothing to discover" and it should cost
@@ -201,17 +208,24 @@ final class ConfigFactory
 
         $fromBootstrap = $this->setup instanceof SetupGacela ? $this->setup->getDontDiscover() : [];
 
-        $discovery = new PackageDiscovery(
+        $this->packageDiscovery = new PackageDiscovery(
             $this->appRootDir,
             $this->setup,
             $fileIo,
             $this->packageCacheDirProvider(),
         );
 
-        return $discovery->discover([
+        return $this->packageDiscovery->discover([
             ...$fromBootstrap,
             ...($projectSetup?->getDontDiscover() ?? []),
-        ]);
+        ], $deferCache);
+    }
+
+    private function mergeFileCacheSettings(?SetupGacela $fileSetup): void
+    {
+        if ($this->setup instanceof SetupGacela && $fileSetup instanceof SetupGacela) {
+            $this->setup->mergeFileCacheSettings($fileSetup);
+        }
     }
 
     /**

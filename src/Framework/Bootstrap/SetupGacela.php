@@ -712,6 +712,17 @@ final class SetupGacela extends AbstractSetupGacela
         return $this;
     }
 
+    public function mergeFileCacheSettings(self $other): void
+    {
+        if ($other->isPropertyChanged(self::fileCacheEnabled)) {
+            $this->setFileCacheEnabled($other->isFileCacheEnabled());
+        }
+
+        if ($other->isPropertyChanged(self::fileCacheDirectory)) {
+            $this->setFileCacheDirectory($other->getFileCacheDirectory());
+        }
+    }
+
     public function merge(self $other): self
     {
         return (new SetupMerger($this))->merge($other);

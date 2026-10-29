@@ -9,14 +9,17 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
+use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithMetadataHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithoutMetadataHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\FakeHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\UnhealthyHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\UnhealthyWithMetadataHealthCheck;
+use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Discount;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -27,6 +30,7 @@ use function array_unique;
 use function array_values;
 use function bin2hex;
 use function count;
+use function dirname;
 use function explode;
 use function file_get_contents;
 use function is_dir;
@@ -37,6 +41,7 @@ use function rmdir;
 use function rtrim;
 use function sprintf;
 use function sys_get_temp_dir;
+
 use function unlink;
 
 use const JSON_THROW_ON_ERROR;
@@ -654,6 +659,27 @@ final class DoctorCommandTest extends TestCase
         );
     }
 
+    public function test_json_reports_corrupt_membership_as_not_warmed(): void
+    {
+        $environment = getenv('APP_ENV');
+        putenv('APP_ENV=prod');
+
+        try {
+            file_put_contents($this->bootstrapAttributeDoctor()->path(), "<?php return ['plugins' => [[");
+            $tester = new CommandTester(new DoctorCommand());
+            $tester->execute(['--json' => true]);
+            self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+            /** @var array{checks: list<array{name: string, status: string, remediation: string}>} $report */
+            $report = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+            $checks = array_column($report['checks'], null, 'name');
+            self::assertSame('warn', $checks['plugin, tag and listener attributes']['status']);
+            self::assertStringContainsString('cache:warm --attributes', $checks['plugin, tag and listener attributes']['remediation']);
+        } finally {
+            putenv($environment === false ? 'APP_ENV' : 'APP_ENV=' . $environment);
+            Gacela::resetCache();
+        }
+    }
+
     /**
      * The `--only-problems` changelog entry opens by counting the checks in
      * words -- "<N> checks is a lot of ✓ to read to find the one ⚠" -- and
@@ -731,6 +757,21 @@ final class DoctorCommandTest extends TestCase
                 $config->addHealthCheck($healthCheck);
             }
         });
+    }
+
+    private function bootstrapAttributeDoctor(): MembershipCache
+    {
+        $cacheDir = $this->cacheDir;
+        $root = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'Framework' . DIRECTORY_SEPARATOR . 'PluginAttribute';
+        Gacela::bootstrap($root, static function (GacelaConfig $config) use ($cacheDir): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(true, $cacheDir);
+            $config->setProjectNamespaces(['GacelaTest\\Feature\\Framework\\PluginAttribute\\Checkout']);
+            $config->addPluginStack(Discount::class, []);
+        });
+        $config = Config::getInstance();
+
+        return MembershipCache::forScan($cacheDir, $config->getAppRootDir(), $config->getSetupGacela()->getAppModulePaths(), $config->getSetupGacela()->getProjectNamespaces());
     }
 
     /**

@@ -13,6 +13,7 @@ use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingFaca
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\InternalHelperFacade;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\UnpublishedInvoiceDraft;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;
@@ -23,6 +24,62 @@ final class CrossModuleViaFacadeAnalyserTest extends TestCase
 
     /** Real classes, because the attribute half is read by reflection. */
     private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function namedForms(): iterable
+    {
+        yield 'extends' => ['class CheckoutFactory extends \App\Modules\Billing\Domain\Base {}', 'Base'];
+        yield 'implements' => ['class CheckoutFactory implements \App\Modules\Billing\Domain\Contract {}', 'Contract'];
+        yield 'trait' => ['class CheckoutFactory { use \App\Modules\Billing\Domain\Helper; }', 'Helper'];
+        yield 'attribute' => ['#[\App\Modules\Billing\Domain\Marker] class CheckoutFactory {}', 'Marker'];
+        yield 'instanceof' => ['class CheckoutFactory { public function check($x) { return $x instanceof \App\Modules\Billing\Domain\Thing; }}', 'Thing'];
+        yield 'catch' => ['class CheckoutFactory { public function run($f) { try { $f(); } catch (\App\Modules\Billing\Domain\Problem) {} }}', 'Problem'];
+    }
+
+    #[DataProvider('namedForms')]
+    public function test_named_forms_are_reported_by_both_host_shapes(string $declaration, string $target): void
+    {
+        $source = '<?php ' . $declaration;
+        $analyser = new CrossModuleViaFacadeAnalyser(self::ROOT, 1, [], []);
+        $class = new FakeAnalysedClass('App\Modules\Checkout\CheckoutFactory');
+        foreach ([ParseSource::classInAsPhpStanResolves($source), ParseSource::classInWithNameAttributes($source)] as $node) {
+            $violations = $analyser->analyse($node, $class);
+            self::assertCount(1, $violations);
+            self::assertStringContainsString('App\Modules\Billing\Domain\\' . $target, $violations[0]->message);
+        }
+    }
+
+    public function test_type_declarations_alone_are_not_reported(): void
+    {
+        $source = '<?php class CheckoutFactory { public \App\Modules\Billing\Domain\Thing $value;'
+            . ' public function pass(\App\Modules\Billing\Domain\Thing $value): \App\Modules\Billing\Domain\Thing { return $value; }}';
+        $analyser = new CrossModuleViaFacadeAnalyser(self::ROOT);
+
+        self::assertSame([], $analyser->analyse(ParseSource::classIn($source), new FakeAnalysedClass('App\Modules\Checkout\CheckoutFactory')));
+    }
+
+    public function test_header_and_body_references_to_one_class_are_reported_once(): void
+    {
+        $source = '<?php class CheckoutFactory extends \App\Modules\Billing\Domain\Base {'
+            . ' public function check($x) { return $x instanceof \App\Modules\Billing\Domain\Base; }}';
+        $analyser = new CrossModuleViaFacadeAnalyser(self::ROOT);
+
+        self::assertCount(1, $analyser->analyse(ParseSource::classIn($source), new FakeAnalysedClass('App\Modules\Checkout\CheckoutFactory')));
+    }
+
+    public function test_header_references_keep_facade_and_public_api_exemptions(): void
+    {
+        $analyser = new CrossModuleViaFacadeAnalyser(self::FIXTURE_ROOT);
+        foreach ([BillingFacade::class, PublishedInvoice::class] as $parent) {
+            $node = ParseSource::classIn('<?php class CheckoutFactory extends \\' . $parent . ' {}');
+            self::assertSame([], $analyser->analyse($node, new FakeAnalysedClass(self::FIXTURE_ROOT . '\Checkout\CheckoutFactory')));
+        }
+
+        $node = ParseSource::classIn('<?php class CheckoutFactory extends \App\Modules\Billing\Shared\Invoice {}');
+        self::assertSame([], (new CrossModuleViaFacadeAnalyser(self::ROOT))->analyse($node, new FakeAnalysedClass('App\Modules\Checkout\CheckoutFactory')));
+    }
 
     public function test_reaching_into_another_module_is_reported(): void
     {

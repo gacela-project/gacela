@@ -268,6 +268,20 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
         );
     }
 
+    public function test_reports_all_named_reference_positions(): void
+    {
+        $expected = [];
+        foreach (['ReferenceBase', 'ReferenceContract', 'ReferenceTrait', 'ReferenceMarker', 'ShopException', 'ReferenceThing'] as $name) {
+            $expected[] = [
+                sprintf('Class %s\\User\\NamedReferences references %s\\Shop\\Domain\\%s from another module (%s\\Shop). Cross-module access must go through a Facade.', self::ROOT, self::ROOT, $name, self::ROOT),
+                14,
+                $this->expectedTip(self::ROOT . '\\Shop'),
+            ];
+        }
+
+        $this->analyse([__DIR__ . '/Fixture/CrossModule/User/NamedReferences.php'], $expected);
+    }
+
     protected function getRule(): Rule
     {
         return $this->rule ??= new CrossModuleViaFacadeRule(

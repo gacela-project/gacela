@@ -1,5 +1,9 @@
 # Upgrading
 
+## Unreleased
+
+The opt-in cross-module written-name rule now reports references in `extends`, `implements`, trait uses, attributes, `instanceof`, and `catch` under both PHPStan and Psalm. Existing code may gain findings. Reach the other module through its Facade or publish the referenced class with `#[PublicApi]` or a configured public API segment. Parameter, property, and return types alone remain excluded from this half.
+
 ## Why upgrade to 2.0
 
 The whole runtime change is two lines, and almost everything below follows from the second one:

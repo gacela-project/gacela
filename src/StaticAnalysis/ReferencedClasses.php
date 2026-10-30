@@ -36,9 +36,25 @@ final class ReferencedClasses
      */
     public static function in(ClassLike $node): array
     {
+        return self::collect($node, includeTypeHints: true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function namedIn(ClassLike $node): array
+    {
+        return self::collect($node, includeTypeHints: false);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function collect(ClassLike $node, bool $includeTypeHints): array
+    {
         $names = [];
 
-        foreach (self::nameNodes($node) as $name) {
+        foreach (self::nameNodes($node, $includeTypeHints) as $name) {
             $resolved = ResolvedName::of($name);
             $names[$resolved] = $resolved;
         }
@@ -49,7 +65,7 @@ final class ReferencedClasses
     /**
      * @return array<Name>
      */
-    private static function nameNodes(ClassLike $node): array
+    private static function nameNodes(ClassLike $node, bool $includeTypeHints): array
     {
         $names = self::declarationNames($node);
 
@@ -57,8 +73,8 @@ final class ReferencedClasses
         // kinds twice -- once to select them, once to read them -- is how the
         // two lists drift apart, and a kind missing from either one is a
         // dependency nothing reports.
-        foreach ((new NodeFinder())->find($node, static fn (Node $n): bool => self::referencesOf($n) !== []) as $found) {
-            foreach (self::referencesOf($found) as $name) {
+        foreach ((new NodeFinder())->find($node, static fn (Node $n): bool => self::referencesOf($n, $includeTypeHints) !== []) as $found) {
+            foreach (self::referencesOf($found, $includeTypeHints) as $name) {
                 $names[] = $name;
             }
         }
@@ -88,7 +104,7 @@ final class ReferencedClasses
     /**
      * @return array<Name>
      */
-    private static function referencesOf(Node $node): array
+    private static function referencesOf(Node $node, bool $includeTypeHints): array
     {
         if ($node instanceof Node\Stmt\TraitUse) {
             return $node->traits;
@@ -110,6 +126,10 @@ final class ReferencedClasses
         ) {
             // `new $class` / `$class::CONST` name nothing to match on.
             return $node->class instanceof Name ? [$node->class] : [];
+        }
+
+        if (!$includeTypeHints) {
+            return [];
         }
 
         if ($node instanceof Node\Param) {

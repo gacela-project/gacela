@@ -592,7 +592,6 @@
                 // catch(Throwable)+fallback path (null->get() Error, or the
                 // strict return type throwing TypeError): identical outcome.
                 "Gacela\\Framework\\Health\\HealthCheckRegistry::instantiate",
-                "Gacela\\StaticAnalysis\\Rules\\CrossModuleViaFacadeAnalyser::referencedClasses",
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::analyse",
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateStatement",
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateChain",
@@ -613,7 +612,6 @@
         LogicalOrAllSubExprNegation: {
             ignore: [
                 "Gacela\\StaticAnalysis\\Rules\\FacadeOnlyDelegatesAnalyser::isDelegateChain",
-                "Gacela\\StaticAnalysis\\Rules\\CrossModuleViaFacadeAnalyser::referencedClasses",
                 // Same shape: only a name that is neither a class nor an
                 // interface tells the two branches apart, and a #[Provides]
                 // method whose return type names no existing class fails

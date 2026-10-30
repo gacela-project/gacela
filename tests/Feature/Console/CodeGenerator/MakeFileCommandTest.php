@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\CodeGenerator;
 
+use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
@@ -13,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Tester\CommandTester;
 
 use function sprintf;
 
@@ -132,6 +134,16 @@ final class MakeFileCommandTest extends TestCase
         // Refused before writing: a half-generated module is worse than none.
         self::assertFileDoesNotExist(__DIR__ . '/src/user-profile/user-profileFacade.php');
         self::assertDirectoryDoesNotExist(__DIR__ . '/src/user-profile');
+    }
+
+    public function test_a_fully_qualified_path_creates_the_selected_pillar(): void
+    {
+        $tester = new CommandTester(new MakeFileCommand());
+
+        $exit = $tester->execute(['path' => '\\Psr4CodeGenerator\\TestModule', 'filenames' => ['Facade']]);
+
+        self::assertSame(Command::SUCCESS, $exit, $tester->getDisplay());
+        self::assertFileExists(self::CACHE_DIR . DIRECTORY_SEPARATOR . 'TestModuleFacade.php');
     }
 
     public static function createFilesProvider(): iterable

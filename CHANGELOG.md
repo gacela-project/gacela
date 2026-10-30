@@ -11,6 +11,7 @@
 
 #### Bootstrap and configuration
 
+- Function-name plugins run with container injection and retain declaration order; missing or non-invokable plugins raise `PluginException` naming the plugin ([#1001](https://github.com/gacela-project/gacela/issues/1001))
 - `Gacela::get()` uses the latest bootstrap's container. Plugins receiving a `Container` get the application container instead of an empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
 - A trailing separator in the application root no longer loads `gacela.php` twice, repeats plugins or duplicates configuration paths. `Gacela::rootDir()` removes trailing separators from ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))
 - Integer configuration, schema and handler-registry keys survive bootstrap-closure merges. Later declarations replace matching keys instead of renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
@@ -35,6 +36,7 @@
 
 #### Service resolution
 
+- Handler registries report missing handler classes with their keys and autoloading tips ([#1011](https://github.com/gacela-project/gacela/issues/1011))
 - Facade subclasses inherit their parent module's Factory. Doubles in the same namespace or file keep the correct Factory ([#1017](https://github.com/gacela-project/gacela/issues/1017))
 - `#[ServiceMap]` returns the concrete pillar named by `className`, even outside module naming conventions. Abstract targets retain conventional or default resolution ([#1015](https://github.com/gacela-project/gacela/issues/1015))
 - Custom services ending in a declared kind suffix keep separate resolver cache entries, so resolving or overriding one cannot replace another or the module's conventional service ([#1016](https://github.com/gacela-project/gacela/issues/1016))
@@ -52,8 +54,10 @@
 
 #### Code generation
 
+- `agents:install` replaces long marker blocks without duplicating them and preserves project text after stray start markers ([#1006](https://github.com/gacela-project/gacela/issues/1006))
 - The console binary uses the autoloader named by Composer's proxy, including nested or external custom vendor directories, while loading configuration and generating files from the application root ([#1005](https://github.com/gacela-project/gacela/issues/1005))
 - `make:module` and `make:file` resolve unmatched namespaces through Composer's fallback PSR-4 `""` prefix while keeping named-prefix precedence ([#1008](https://github.com/gacela-project/gacela/issues/1008))
+- `make:module` and `make:file` accept fully qualified paths with a leading backslash. Unknown-path hints preserve separators inside declared namespace prefixes ([#1007](https://github.com/gacela-project/gacela/issues/1007))
 - Console file writes replace targets only after the content is complete. Failed or partial writes preserve the original, remove temporary files and retain existing POSIX permissions ([#1002](https://github.com/gacela-project/gacela/issues/1002))
 - Console writes update symlink targets without replacing the links. Dangling links remain intact and report an error ([#1067](https://github.com/gacela-project/gacela/issues/1067))
 - `dto:generate` rejects shapes covered only by PSR-0 instead of writing classes Composer cannot load. Both DTO generation and package manifest checks use the first PSR-4 directory; generation rejects empty or invalid lists, while manifest scanning skips them ([#1003](https://github.com/gacela-project/gacela/issues/1003), [#1024](https://github.com/gacela-project/gacela/issues/1024))

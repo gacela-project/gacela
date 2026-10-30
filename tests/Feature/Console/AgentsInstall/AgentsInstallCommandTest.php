@@ -116,6 +116,55 @@ final class AgentsInstallCommandTest extends TestCase
         self::assertStringStartsWith("<!-- gacela:end -->\nOur text.\n<!-- gacela:start -->\nMore of ours.\n\n<!-- gacela:start -->\n## Gacela", $this->agents());
     }
 
+    public function test_a_long_block_is_replaced_once_and_the_projects_text_is_preserved(): void
+    {
+        $after = str_repeat("The project keeps this text.\n", 4000);
+        file_put_contents($this->agentsFile(), "Before.\n<!-- gacela:start -->\n" . str_repeat('x', 100000) . "\n<!-- gacela:end -->\n" . $after);
+
+        $this->install();
+        $first = $this->agents();
+        $tester = $this->install();
+
+        self::assertSame($first, $this->agents());
+        self::assertStringStartsWith("Before.\n<!-- gacela:start -->\n## Gacela", $first);
+        self::assertStringEndsWith($after, $first);
+        self::assertSame(1, substr_count($first, '<!-- gacela:end -->'));
+        self::assertStringContainsString('already points at the Gacela guide', $tester->getDisplay());
+    }
+
+    public function test_a_long_stray_marker_gets_one_block_across_repeated_runs(): void
+    {
+        $project = "<!-- gacela:start -->\n" . str_repeat("The project keeps this text.\n", 4000);
+        file_put_contents($this->agentsFile(), $project);
+
+        $this->install();
+        $first = $this->agents();
+        $this->install();
+        $tester = $this->install();
+
+        self::assertSame($first, $this->agents());
+        self::assertStringStartsWith($project . "\n<!-- gacela:start -->", $first);
+        self::assertSame(1, substr_count($first, '<!-- gacela:end -->'));
+        self::assertStringContainsString('already points at the Gacela guide', $tester->getDisplay());
+    }
+
+    public function test_a_stray_start_before_a_valid_block_leaves_intervening_text_alone(): void
+    {
+        $project = "<!-- gacela:start -->\nOur text stays here.\n";
+        file_put_contents($this->agentsFile(), $project . "<!-- gacela:start -->\nold block\n<!-- gacela:end -->\nAfter.\n");
+
+        $this->install();
+        $first = $this->agents();
+        $tester = $this->install();
+
+        self::assertSame($first, $this->agents());
+        self::assertStringStartsWith($project . "<!-- gacela:start -->\n## Gacela", $first);
+        self::assertStringEndsWith("<!-- gacela:end -->\nAfter.\n", $first);
+        self::assertStringNotContainsString('old block', $first);
+        self::assertSame(1, substr_count($first, '<!-- gacela:end -->'));
+        self::assertStringContainsString('already points at the Gacela guide', $tester->getDisplay());
+    }
+
     private function install(): CommandTester
     {
         $tester = new CommandTester(new AgentsInstallCommand($this->appRoot));

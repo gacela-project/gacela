@@ -21,7 +21,7 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 
 `make:module` and `make:file` write into the directory your `composer.json` psr-4 maps the namespace to, including a fallback `""` prefix, resolved from the project root, and print each path relative to that root. Run from a subdirectory, they write to the same place as from the root.
 
-The path takes `/` or `\` between segments: `make:module App/Blog` and `make:module 'App\Blog'` generate the same module.
+The path takes `/` or `\` between segments: `make:module App/Blog` and `make:module 'App\Blog'` generate the same module. A leading backslash is accepted too.
 
 ### Your own stubs
 
@@ -133,7 +133,7 @@ The **plugin stacks** check validates what `addPluginStack()` registered. A stac
 
 The **plugin, tag and listener attributes** check asks the same of the `#[Plugin]` classes, plus one question the central list cannot raise: a `#[Plugin]` naming a contract that `gacela.php` declares no stack for is never read, so the class looks registered and is not. It is an error. Outside `APP_ENV=dev|local|test`, `#[Plugin]`, `#[Tag]` or `#[AsListener]` members found by scanning because `cache:warm --attributes` has not run are a warning. A membership cache file that does not parse or lacks the plugin list is read as not warmed and rewritten on the next runtime scan.
 
-The **handler registries** check asks the same of `addHandlerRegistry()`, and the case is stronger. A registry is looked up *by key*, so the keys a run does not take are exactly the registrations nobody has checked. `LazyHandlerRegistry` raises a `TypeError` for a class that does not exist — on the consumer, wherever that key is first asked for — and a class that does not implement the contract is not refused at all: it is handed back, and the failure surfaces as a call to a method it does not have. Every finding names the key, because the same handler can be registered under several and the key is what a consumer asks for.
+The **handler registries** check asks the same of `addHandlerRegistry()`, and the case is stronger. A registry is looked up *by key*, so the keys a run does not take are exactly the registrations nobody has checked. For a missing class with no container binding, `LazyHandlerRegistry` throws `HandlerRegistryException` when the key is requested; its message names the key and class and includes autoloading tips. A class that does not implement the contract is handed back, and the failure surfaces as a call to a method it does not have. Every finding names the key, because the same handler can be registered under several and the key is what a consumer asks for.
 
 ## Production
 

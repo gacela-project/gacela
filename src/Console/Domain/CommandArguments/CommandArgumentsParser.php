@@ -31,7 +31,7 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
     public function parse(string $desiredNamespace): CommandArguments
     {
         // `App\Blog` is how PHP writes the name; the lookup below walks `/`.
-        $desiredNamespace = str_replace('\\', '/', $desiredNamespace);
+        $desiredNamespace = trim(str_replace('\\', '/', $desiredNamespace), '/');
 
         if (!isset($this->composerJson['autoload'])) {
             throw CommandArgumentsException::noAutoloadFound();

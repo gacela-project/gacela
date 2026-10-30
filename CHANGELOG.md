@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Health reports and `doctor` turn checks that cannot be built or named into unhealthy results and continue running the remaining checks ([#1013](https://github.com/gacela-project/gacela/issues/1013))
+
 - File caching defaults to the private `{appRoot}/.gacela/cache` instead of the system temporary directory. Package cache filenames include the application-root hash ([#1029](https://github.com/gacela-project/gacela/issues/1029))
 - `Gacela::get()` and `getRequired()` throw `GacelaNotBootstrappedException` before bootstrap, matching `container()` ([#976](https://github.com/gacela-project/gacela/issues/976))
 

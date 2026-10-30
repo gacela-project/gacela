@@ -14,8 +14,6 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use stdClass;
 
-use function sprintf;
-
 final class HealthCheckRegistryTest extends TestCase
 {
     protected function setUp(): void
@@ -90,69 +88,22 @@ final class HealthCheckRegistryTest extends TestCase
         self::assertArrayHasKey('SecondFake', $report->getResults());
     }
 
-    /**
-     * A registered check that cannot be resolved is a misconfiguration, not a
-     * reason to report a healthy system: skipping it silently would hide the
-     * very problem health checks exist to surface.
-     */
     public function test_unresolvable_class_string_reports_the_misconfiguration(): void
-    {
-        /** @var class-string<ModuleHealthCheckInterface> $bogus */
-        $bogus = 'GacelaTest\NotExisting\HealthCheck';
-        HealthCheckRegistry::register($bogus);
-
-        $this->expectException(HealthCheckNotResolvableException::class);
-        $this->expectExceptionMessage(
-            'The health check "GacelaTest\NotExisting\HealthCheck" was registered but the class does not exist. '
-            . 'Check the class-string passed to GacelaConfig::addHealthCheck().',
-        );
-
-        HealthCheckRegistry::createHealthChecker();
-    }
-
-    /**
-     * The message names the call to check; the tips name the two things that
-     * usually make a registered class-string resolve to nothing.
-     */
-    public function test_an_unresolvable_class_string_carries_the_tips_for_a_missing_class(): void
     {
         /** @var class-string<ModuleHealthCheckInterface> $bogus */
         $bogus = 'GacelaTest\\NotExisting\\HealthCheck';
         HealthCheckRegistry::register($bogus);
+        HealthCheckRegistry::register(HealthCheckRegistryTestFake::class);
 
-        try {
-            HealthCheckRegistry::createHealthChecker();
-            self::fail('Expected HealthCheckNotResolvableException');
-        } catch (HealthCheckNotResolvableException $healthCheckNotResolvableException) {
-            $message = $healthCheckNotResolvableException->getMessage();
+        $results = HealthCheckRegistry::createHealthChecker()->checkAll()->getResults();
 
-            self::assertStringContainsString("Run 'composer dump-autoload' to refresh autoloader", $message);
-            // What went wrong first, what to try about it after.
-            self::assertStringStartsWith('The health check "', $message);
-        }
+        self::assertTrue($results['HealthCheck']->isUnhealthy());
+        self::assertStringContainsString('class does not exist', $results['HealthCheck']->message);
+        self::assertStringContainsString("Run 'composer dump-autoload' to refresh autoloader", $results['HealthCheck']->message);
+        self::assertSame(HealthCheckNotResolvableException::class, $results['HealthCheck']->metadata['exception']);
+        self::assertTrue($results['Fake']->isHealthy());
     }
 
-    public function test_class_that_is_not_a_health_check_reports_the_misconfiguration(): void
-    {
-        /** @var class-string<ModuleHealthCheckInterface> $notACheck */
-        $notACheck = HealthCheckRegistryNotACheck::class;
-        HealthCheckRegistry::register($notACheck);
-
-        $this->expectException(HealthCheckNotResolvableException::class);
-        $this->expectExceptionMessage(sprintf(
-            'The health check "%s" does not implement %s.',
-            HealthCheckRegistryNotACheck::class,
-            ModuleHealthCheckInterface::class,
-        ));
-
-        HealthCheckRegistry::createHealthChecker();
-    }
-
-    /**
-     * Refused before anything is built: through the container, its
-     * constructor ran first, then a second build without arguments failed
-     * with an ArgumentCountError instead of this message.
-     */
     public function test_class_that_is_not_a_health_check_is_never_built(): void
     {
         HealthCheckRegistryNotACheckWithDependency::$built = 0;
@@ -163,11 +114,64 @@ final class HealthCheckRegistryTest extends TestCase
             $notACheck = HealthCheckRegistryNotACheckWithDependency::class;
             HealthCheckRegistry::register($notACheck);
 
-            HealthCheckRegistry::createHealthChecker(Gacela::container());
-            self::fail('a class that is not a health check was accepted');
-        } catch (HealthCheckNotResolvableException $healthCheckNotResolvableException) {
-            self::assertStringContainsString('does not implement', $healthCheckNotResolvableException->getMessage());
+            $results = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults();
+            $status = $results['HealthCheckRegistryNotACheckWithDependency'];
+
+            self::assertTrue($status->isUnhealthy());
+            self::assertStringContainsString('does not implement', $status->message);
             self::assertSame(0, HealthCheckRegistryNotACheckWithDependency::$built);
+        } finally {
+            Gacela::resetCache();
+        }
+    }
+
+    public function test_abstract_check_without_a_binding_is_an_unhealthy_result(): void
+    {
+        HealthCheckRegistry::register(HealthCheckRegistryAbstractFake::class);
+        HealthCheckRegistry::register(HealthCheckRegistryInterfaceFake::class);
+        HealthCheckRegistry::register(HealthCheckRegistryTestFake::class);
+
+        $results = HealthCheckRegistry::createHealthChecker()->checkAll()->getResults();
+        $status = $results['HealthCheckRegistryAbstractFake'];
+
+        self::assertTrue($status->isUnhealthy());
+        self::assertSame(HealthCheckNotResolvableException::class, $status->metadata['exception']);
+        self::assertStringContainsString('cannot be instantiated', $status->message);
+        self::assertTrue($results['HealthCheckRegistryInterfaceFake']->isUnhealthy());
+        self::assertStringContainsString('cannot be instantiated', $results['HealthCheckRegistryInterfaceFake']->message);
+        self::assertTrue($results['Fake']->isHealthy());
+    }
+
+    public function test_abstract_check_without_a_container_binding_reports_the_registry_error(): void
+    {
+        try {
+            Gacela::bootstrap(__DIR__);
+            HealthCheckRegistry::register(HealthCheckRegistryAbstractFake::class);
+
+            $status = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults()['HealthCheckRegistryAbstractFake'];
+
+            self::assertTrue($status->isUnhealthy());
+            self::assertSame(HealthCheckNotResolvableException::class, $status->metadata['exception']);
+            self::assertStringContainsString('cannot be instantiated', $status->message);
+        } finally {
+            Gacela::resetCache();
+        }
+    }
+
+    public function test_abstract_and_interface_checks_keep_working_container_bindings(): void
+    {
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->addFactory(HealthCheckRegistryAbstractFake::class, static fn (): HealthCheckRegistryConcreteFake => new HealthCheckRegistryConcreteFake());
+                $config->addFactory(HealthCheckRegistryInterfaceFake::class, static fn (): HealthCheckRegistryConcreteFake => new HealthCheckRegistryConcreteFake());
+            });
+            HealthCheckRegistry::register(HealthCheckRegistryAbstractFake::class);
+            HealthCheckRegistry::register(HealthCheckRegistryInterfaceFake::class);
+
+            $report = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll();
+
+            self::assertTrue($report->isHealthy());
+            self::assertArrayHasKey('Bound', $report->getResults());
         } finally {
             Gacela::resetCache();
         }
@@ -211,7 +215,7 @@ final class HealthCheckRegistryTest extends TestCase
         }
     }
 
-    public function test_container_resolution_error_propagates_instead_of_being_swallowed(): void
+    public function test_container_resolution_error_becomes_unhealthy_and_keeps_healthy_peers(): void
     {
         try {
             Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
@@ -223,11 +227,15 @@ final class HealthCheckRegistryTest extends TestCase
                 );
             });
             HealthCheckRegistry::register(HealthCheckRegistryConfigurableFake::class);
+            HealthCheckRegistry::register(HealthCheckRegistryTestFake::class);
 
-            $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('boom from factory');
+            $results = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll()->getResults();
+            $status = $results['HealthCheckRegistryConfigurableFake'];
 
-            HealthCheckRegistry::createHealthChecker(Gacela::container());
+            self::assertTrue($status->isUnhealthy());
+            self::assertStringContainsString('boom from factory', $status->message);
+            self::assertSame(RuntimeException::class, $status->metadata['exception']);
+            self::assertTrue($results['Fake']->isHealthy());
         } finally {
             Gacela::resetCache();
         }
@@ -278,10 +286,6 @@ final class HealthCheckRegistryConfigurableFake implements ModuleHealthCheckInte
     }
 }
 
-final class HealthCheckRegistryNotACheck
-{
-}
-
 final class HealthCheckRegistryNotACheckWithDependency
 {
     public static int $built = 0;
@@ -290,4 +294,25 @@ final class HealthCheckRegistryNotACheckWithDependency
     {
         ++self::$built;
     }
+}
+
+interface HealthCheckRegistryInterfaceFake extends ModuleHealthCheckInterface
+{
+}
+
+abstract class HealthCheckRegistryAbstractFake implements HealthCheckRegistryInterfaceFake
+{
+    public function checkHealth(): HealthStatus
+    {
+        return HealthStatus::healthy();
+    }
+
+    public function getModuleName(): string
+    {
+        return 'Bound';
+    }
+}
+
+final class HealthCheckRegistryConcreteFake extends HealthCheckRegistryAbstractFake
+{
 }

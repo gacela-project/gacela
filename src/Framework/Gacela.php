@@ -31,6 +31,7 @@ use Gacela\Framework\Event\Bootstrap\GacelaBootstrapFinishedEvent;
 use Gacela\Framework\Event\Bootstrap\GacelaBootstrapStartedEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
+use Gacela\Framework\Exception\PluginException;
 use Gacela\Framework\Exception\ServiceNotFoundException;
 use Gacela\Framework\Health\HealthCheckRegistry;
 use Gacela\Framework\Plugins\Membership\AttributeMembership;
@@ -43,7 +44,9 @@ use ReflectionMethod;
 use ReflectionNamedType;
 
 use function class_exists;
+use function get_debug_type;
 use function is_a;
+use function is_callable;
 use function is_object;
 use function is_string;
 use function sprintf;
@@ -371,16 +374,26 @@ final class Gacela
         $plugins = $config->getSetupGacela()->getPlugins();
 
         foreach ($plugins as $plugin) {
-            /** @var callable $current */
-            $current = is_string($plugin)
-                ? self::instantiatePlugin($plugin, self::$mainContainer)
-                : $plugin;
+            $current = self::resolvePlugin($plugin, self::$mainContainer);
 
             self::$mainContainer->resolve(
                 $current,
-                self::containerArguments(new ReflectionFunction(Closure::fromCallable($current)), self::$mainContainer),
+                self::containerArguments(new ReflectionFunction($current), self::$mainContainer),
             );
         }
+    }
+
+    private static function resolvePlugin(string|callable $plugin, Container $container): Closure
+    {
+        $current = is_string($plugin) && !is_callable($plugin)
+            ? self::instantiatePlugin($plugin, $container)
+            : $plugin;
+
+        if (!is_callable($current)) {
+            throw PluginException::notCallable(is_string($plugin) ? $plugin : get_debug_type($plugin));
+        }
+
+        return Closure::fromCallable($current);
     }
 
     /**

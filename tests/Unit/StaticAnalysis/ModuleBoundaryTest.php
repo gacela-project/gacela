@@ -12,6 +12,8 @@ use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedCo
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedStatus;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\UnpublishedInvoiceDraft;
+use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,6 +27,49 @@ final class ModuleBoundaryTest extends TestCase
 
     /** Real classes, because the attribute half is read by reflection. */
     private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
+
+    #[DataProvider('namespaceSpellings')]
+    public function test_root_spellings_keep_the_same_module(string $root): void
+    {
+        $boundary = new ModuleBoundary($root, 1, [], []);
+
+        self::assertSame('App\\Modules\\Billing', $boundary->moduleOf('App\\Modules\\Billing\\Domain\\Invoice'));
+        self::assertNull($boundary->moduleOf('App\\ModulesExtra\\Billing\\Invoice'));
+    }
+
+    #[DataProvider('namespaceSpellings')]
+    public function test_shared_namespace_spellings_exempt_the_same_classes(string $namespace): void
+    {
+        $boundary = new ModuleBoundary('App', 1, [$namespace], []);
+
+        self::assertTrue($boundary->isShared('App\\Modules\\Billing\\Invoice'));
+        self::assertFalse($boundary->isShared('App\\ModulesExtra\\Invoice'));
+    }
+
+    public function test_same_module_names_ignore_case_and_a_leading_separator(): void
+    {
+        self::assertNull($this->boundary()->crossedBy('App\\Modules\\Billing', 'app\\modules\\billing\\Invoice'));
+        self::assertSame('app\\modules\\Shop', $this->boundary()->crossedBy('App\\Modules\\Billing', '\\app\\modules\\Shop\\Invoice'));
+    }
+
+    public function test_a_separator_only_root_is_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('rootNamespace must name a namespace');
+
+        new ModuleBoundary('\\\\', 1, [], []);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function namespaceSpellings(): iterable
+    {
+        yield 'canonical' => ['App\\Modules'];
+        yield 'trailing separator' => ['App\\Modules\\'];
+        yield 'leading separator' => ['\\App\\Modules'];
+        yield 'other case' => ['app\\modules'];
+    }
 
     public function test_a_class_carrying_the_attribute_is_public(): void
     {

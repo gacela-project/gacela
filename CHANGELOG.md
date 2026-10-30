@@ -26,6 +26,7 @@
 
 #### Caching
 
+- `enableFileCache($appRoot)` uses the application root itself instead of appending it to the root a second time ([#1000](https://github.com/gacela-project/gacela/issues/1000))
 - Cache reads, including container plans, reject foreign-owned files, symlinks, files writable by other users and files in directories writable by other users without the sticky bit. New PHP cache files use mode `0600`; failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
 - `cache:warm` and `cache:clear` name files they could not write or remove and exit 1. Failed merged-config writes no longer report stale file sizes as success. Disabled caching retains its warning and successful exit ([#1032](https://github.com/gacela-project/gacela/issues/1032))
 - Malformed, empty or incompatible class-name, package and `FileCache` entries become cache misses and are rewritten ([#977](https://github.com/gacela-project/gacela/issues/977))
@@ -35,6 +36,7 @@
 
 #### Service resolution
 
+- Facade subclasses inherit their parent module's Factory. Doubles in the same namespace or file keep the correct Factory ([#1017](https://github.com/gacela-project/gacela/issues/1017))
 - `#[ServiceMap]` returns the concrete pillar named by `className`, even outside module naming conventions. Abstract targets retain conventional or default resolution ([#1015](https://github.com/gacela-project/gacela/issues/1015))
 - Custom services ending in a declared kind suffix keep separate resolver cache entries, so resolving or overriding one cannot replace another or the module's conventional service ([#1016](https://github.com/gacela-project/gacela/issues/1016))
 - Anonymous globals from same-named files in different directories use distinct, canonical file-path keys that remain stable across bootstrap. Registering a different instance for an occupied key throws; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))
@@ -52,6 +54,7 @@
 #### Code generation
 
 - Console file writes replace targets only after the content is complete. Failed or partial writes preserve the original, remove temporary files and retain existing POSIX permissions ([#1002](https://github.com/gacela-project/gacela/issues/1002))
+- Console writes update symlink targets without replacing the links. Dangling links remain intact and report an error ([#1067](https://github.com/gacela-project/gacela/issues/1067))
 - `dto:generate` rejects shapes covered only by PSR-0 instead of writing classes Composer cannot load. Both DTO generation and package manifest checks use the first PSR-4 directory; generation rejects empty or invalid lists, while manifest scanning skips them ([#1003](https://github.com/gacela-project/gacela/issues/1003), [#1024](https://github.com/gacela-project/gacela/issues/1024))
 - `dto:generate` preserves files it did not generate and exits with an error, including with `--dry-run` and `--check`; `--force` permits replacement ([#1022](https://github.com/gacela-project/gacela/issues/1022))
 - `ide:meta` reports an existing single-file `.phpstorm.meta.php` and explains how to move it to directory form, including with `--dry-run`, without writes or PHP warnings ([#1025](https://github.com/gacela-project/gacela/issues/1025))
@@ -61,6 +64,7 @@
 
 #### Static analysis
 
+- Cross-module checks and declared dependency rules ignore leading or trailing namespace separators and compare namespace names without case sensitivity. Shared namespaces and ignored receivers follow the same rules; a separator-only root fails configuration instead of silently disabling checks ([#1041](https://github.com/gacela-project/gacela/issues/1041))
 - Static-analysis rules treat classes that throw while loading as unloadable, so broken project dependencies do not crash the analysis ([#1042](https://github.com/gacela-project/gacela/issues/1042))
 - `#[Cacheable]` checks follow `$this->cached()` through any number of private helpers instead of reporting a method cached through two helpers as uncached ([#974](https://github.com/gacela-project/gacela/issues/974))
 - The Factory-instantiation and cross-module written-reference rules identify Facades by `AbstractFacade`, rather than the `Facade` suffix, avoiding false findings for library classes and missed findings for internal classes ([#971](https://github.com/gacela-project/gacela/issues/971))

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\PHPStan\Rules;
 
 use Gacela\PHPStan\Rules\CrossModuleViaFacadeRule;
+use InvalidArgumentException;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function sprintf;
 
@@ -25,6 +27,38 @@ final class CrossModuleViaFacadeRuleTest extends RuleTestCase
     private array $sharedNamespaces = [];
 
     private ?Rule $rule = null;
+
+    #[DataProvider('rootSpellings')]
+    public function test_root_spellings_preserve_phpstan_findings(string $root): void
+    {
+        $this->rootNamespace = $root;
+        $this->analyse(
+            [__DIR__ . '/Fixture/CrossModule/User/BadNewFactory.php'],
+            [[
+                'Class GacelaTest\\Unit\\PHPStan\\Rules\\Fixture\\CrossModule\\User\\BadNewFactory references GacelaTest\\Unit\\PHPStan\\Rules\\Fixture\\CrossModule\\Shop\\Domain\\ShopService from another module (GacelaTest\\Unit\\PHPStan\\Rules\\Fixture\\CrossModule\\Shop). Cross-module access must go through a Facade.',
+                9,
+                $this->expectedTip(self::ROOT . '\\Shop'),
+            ]],
+        );
+    }
+
+    public function test_a_separator_only_root_fails_when_phpstan_builds_the_rule(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('rootNamespace must name a namespace');
+
+        new CrossModuleViaFacadeRule('\\');
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function rootSpellings(): iterable
+    {
+        yield 'leading separator' => ['\\' . self::ROOT];
+        yield 'trailing separator' => [self::ROOT . '\\'];
+        yield 'other case' => [strtolower(self::ROOT)];
+    }
 
     public function test_reports_cross_module_new_of_non_facade(): void
     {

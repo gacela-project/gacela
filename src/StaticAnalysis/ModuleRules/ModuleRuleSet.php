@@ -142,9 +142,11 @@ final class ModuleRuleSet
         }
 
         $from = $entry['from'] ?? null;
-        if (!is_string($from) || $from === '') {
+        if (!is_string($from) || trim($from, '\\') === '') {
             throw MalformedModuleRulesException::missingFrom($position);
         }
+
+        $from = trim($from, '\\');
 
         $hasAllow = array_key_exists('allow', $entry);
         $hasDeny = array_key_exists('deny', $entry);
@@ -186,11 +188,11 @@ final class ModuleRuleSet
 
         /** @var mixed $item */
         foreach ($value as $item) {
-            if (!is_string($item) || $item === '') {
+            if (!is_string($item) || trim($item, '\\') === '') {
                 throw MalformedModuleRulesException::nonStringNamespace($position);
             }
 
-            $namespaces[] = $item;
+            $namespaces[] = trim($item, '\\');
         }
 
         return $namespaces;

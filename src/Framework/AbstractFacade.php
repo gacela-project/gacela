@@ -53,7 +53,7 @@ abstract class AbstractFacade
     public function getFactory(): AbstractFactory
     {
         $factory = self::$factories[static::class]
-            ??= (new FactoryResolver())->resolve(static::class);
+            ??= (new FactoryResolver())->resolve($this);
 
         /** @var TFactory $factory */
         return $factory;

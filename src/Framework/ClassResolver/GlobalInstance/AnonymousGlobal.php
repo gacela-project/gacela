@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\ClassResolver\GlobalInstance;
 
+use Gacela\Framework\ClassResolver\CallerInstanceCache;
 use Gacela\Framework\ClassResolver\ClassInfo;
 use Gacela\Framework\ClassResolver\GlobalKey;
 use Gacela\Framework\ClassResolver\ResolvableType;
@@ -37,7 +38,12 @@ final class AnonymousGlobal
      */
     public static function resetCache(): void
     {
+        if (self::$cachedGlobalInstances === []) {
+            return;
+        }
+
         self::$cachedGlobalInstances = [];
+        CallerInstanceCache::reset();
     }
 
     /**
@@ -96,8 +102,12 @@ final class AnonymousGlobal
     public static function overrideExistingResolvedClass(string $className, object $resolvedClass): void
     {
         $key = self::getGlobalKeyFromClassName($className);
+        if ((self::$cachedGlobalInstances[$key] ?? null) === $resolvedClass) {
+            return;
+        }
 
         self::$cachedGlobalInstances[$key] = $resolvedClass;
+        CallerInstanceCache::reset();
     }
 
     private static function extractContextNameFromContext(object|string $context): string
@@ -135,7 +145,11 @@ final class AnonymousGlobal
     private static function addCachedGlobalInstance(string $key, object $resolvedClass): void
     {
         $existing = self::$cachedGlobalInstances[$key] ?? null;
-        if ($existing !== null && $existing !== $resolvedClass) {
+        if ($existing === $resolvedClass) {
+            return;
+        }
+
+        if ($existing !== null) {
             throw new RuntimeException(sprintf(
                 "Global key '%s' is already registered by '%s'; cannot register '%s'.",
                 $key,
@@ -145,6 +159,7 @@ final class AnonymousGlobal
         }
 
         self::$cachedGlobalInstances[$key] = $resolvedClass;
+        CallerInstanceCache::reset();
     }
 
     private static function getGlobalKeyFromClassName(string $className): string

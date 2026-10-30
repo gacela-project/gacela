@@ -43,18 +43,33 @@ final class FileContentIo implements FileContentIoInterface
 
     public function filePutContents(string $path, string $fileContent): void
     {
-        $temporary = $path . '.' . bin2hex(random_bytes(4)) . '.tmp';
+        $target = $this->targetPath($path);
+        $temporary = $target . '.' . bin2hex(random_bytes(4)) . '.tmp';
 
         try {
             if (@file_put_contents($temporary, $fileContent) !== strlen($fileContent)
-                || !$this->copyPermissions($path, $temporary)
-                || !@rename($temporary, $path)
+                || !$this->copyPermissions($target, $temporary)
+                || !@rename($temporary, $target)
             ) {
                 throw new RuntimeException(sprintf('File "%s" was not written; it was left as it was', $path));
             }
         } finally {
             @unlink($temporary);
         }
+    }
+
+    private function targetPath(string $path): string
+    {
+        if (!is_link($path)) {
+            return $path;
+        }
+
+        $target = realpath($path);
+        if ($target === false) {
+            throw new RuntimeException(sprintf('File "%s" was not written; its symlink target could not be resolved', $path));
+        }
+
+        return $target;
     }
 
     private function copyPermissions(string $path, string $temporary): bool

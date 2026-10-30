@@ -91,6 +91,18 @@ OUT;
         self::assertFileExists(sprintf('%s/data/TestModule/%sProvider.php', __DIR__, $fileName));
     }
 
+    public function test_a_fully_qualified_path_creates_the_module_pillars(): void
+    {
+        $tester = new CommandTester(new MakeModuleCommand());
+
+        $exit = $tester->execute(['path' => '\\Psr4CodeGeneratorData\\TestModule']);
+
+        self::assertSame(Command::SUCCESS, $exit, $tester->getDisplay());
+        foreach (['Facade', 'Factory', 'Config', 'Provider'] as $pillar) {
+            self::assertFileExists(self::CACHE_DIR . DIRECTORY_SEPARATOR . 'TestModule' . $pillar . '.php');
+        }
+    }
+
     public static function createModulesProvider(): iterable
     {
         yield 'module' => ['TestModule', false];

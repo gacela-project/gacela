@@ -19,6 +19,12 @@ final class ModulePathTest extends TestCase
         self::assertNull(ModulePath::firstUnusableSegment('App\\Blog\\Posts'));
     }
 
+    public function test_a_fully_qualified_path_is_usable_without_allowing_empty_internal_segments(): void
+    {
+        self::assertNull(ModulePath::firstUnusableSegment('\\App\\Shop'));
+        self::assertSame('', ModulePath::firstUnusableSegment('App//Shop'));
+    }
+
     public function test_a_hyphenated_segment_in_a_backslash_path_is_named_alone(): void
     {
         self::assertSame('user-profile', ModulePath::firstUnusableSegment('App\\user-profile'));

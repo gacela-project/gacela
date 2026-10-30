@@ -21,7 +21,7 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 
 `make:module` and `make:file` write into the directory your `composer.json` psr-4 maps the namespace to, resolved from the project root, and print each path relative to that root. Run from a subdirectory, they write to the same place as from the root.
 
-The path takes `/` or `\` between segments: `make:module App/Blog` and `make:module 'App\Blog'` generate the same module.
+The path takes `/` or `\` between segments: `make:module App/Blog` and `make:module 'App\Blog'` generate the same module. A leading backslash is accepted too.
 
 ### Your own stubs
 

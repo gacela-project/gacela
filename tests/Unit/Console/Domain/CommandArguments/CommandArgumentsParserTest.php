@@ -69,6 +69,23 @@ final class CommandArgumentsParserTest extends TestCase
         self::assertSame('src/TestModule/TestSubModule', $args->directory());
     }
 
+    public function test_a_leading_backslash_names_the_same_module(): void
+    {
+        $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
+
+        $args = $parser->parse('\\App\\TestModule');
+
+        self::assertSame('App\TestModule', $args->namespace());
+        self::assertSame('src/TestModule', $args->directory());
+    }
+
+    public function test_the_known_prefix_list_keeps_internal_backslashes(): void
+    {
+        $this->expectExceptionMessage('No autoload psr-4 match found for Foo/Bar. Known PSR-4: App, App\Test');
+
+        (new CommandArgumentsParser($this->exampleComposerJsonWithMultipleNamespaces()))->parse('Foo/Bar');
+    }
+
     public function test_a_path_mixing_both_separators_resolves(): void
     {
         $parser = new CommandArgumentsParser($this->exampleOneLevelComposerJson());
@@ -96,7 +113,7 @@ final class CommandArgumentsParserTest extends TestCase
     public function test_no_autoload_psr4_match_found(): void
     {
         $this->expectExceptionMessage(
-            'No autoload psr-4 match found for Unknown/Module. Known PSR-4: App, VendorPackage',
+            'No autoload psr-4 match found for Unknown/Module. Known PSR-4: App, Vendor\Package',
         );
 
         $parser = new CommandArgumentsParser($this->exampleComposerJsonWithVendorNamespace());

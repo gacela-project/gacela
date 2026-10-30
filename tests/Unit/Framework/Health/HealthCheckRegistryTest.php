@@ -158,6 +158,25 @@ final class HealthCheckRegistryTest extends TestCase
         }
     }
 
+    public function test_abstract_and_interface_checks_keep_aliases_to_autowirable_checks(): void
+    {
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->addAlias(HealthCheckRegistryAbstractFake::class, HealthCheckRegistryConcreteFake::class);
+                $config->addAlias(HealthCheckRegistryInterfaceFake::class, HealthCheckRegistryConcreteFake::class);
+            });
+            HealthCheckRegistry::register(HealthCheckRegistryAbstractFake::class);
+            HealthCheckRegistry::register(HealthCheckRegistryInterfaceFake::class);
+
+            $report = HealthCheckRegistry::createHealthChecker(Gacela::container())->checkAll();
+
+            self::assertTrue($report->isHealthy());
+            self::assertArrayHasKey('Bound', $report->getResults());
+        } finally {
+            Gacela::resetCache();
+        }
+    }
+
     public function test_abstract_and_interface_checks_keep_working_container_bindings(): void
     {
         try {

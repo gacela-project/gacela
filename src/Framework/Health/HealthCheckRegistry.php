@@ -105,7 +105,7 @@ final class HealthCheckRegistry
     {
         $reflection = new ReflectionClass($className);
 
-        if ($container instanceof Container && ($reflection->isInstantiable() || $container->provides($className))) {
+        if ($container instanceof Container && ($reflection->isInstantiable() || $container->has($className))) {
             /** @var mixed $instance */
             $instance = $container->get($className);
             if ($instance instanceof ModuleHealthCheckInterface) {

@@ -11,6 +11,14 @@ namespace GacelaTest\Integration\Psalm;
  */
 final class DeclaredModuleDependencyTest extends PsalmFixtureTestCase
 {
+    public function test_an_anonymous_class_header_is_reported(): void
+    {
+        $errors = $this->analyseFixture();
+        $this->skipIfPsalmCannotRun($errors);
+
+        self::assertStringContainsString('GacelaDeclaredModuleDependency', $this->errorsIn('AnonymousConsumer.php'));
+    }
+
     public function test_a_dependency_the_rules_file_denies_is_reported(): void
     {
         $errors = $this->analyseFixture();

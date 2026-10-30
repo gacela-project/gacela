@@ -53,6 +53,7 @@
 #### Discovery and diagnostics
 
 - Psalm rejects unknown module-rule XML fields and malformed module depths instead of silently ignoring or truncating them ([#1047](https://github.com/gacela-project/gacela/issues/1047))
+- Declared module dependency checks include anonymous-class parents and interfaces under PHPStan and Psalm ([#1046](https://github.com/gacela-project/gacela/issues/1046))
 
 - Module and event discovery read namespace declarations, including braced namespaces, instead of names quoted in docblocks ([#995](https://github.com/gacela-project/gacela/issues/995))
 - Module discovery, undiscovered-facade checks, project events and `migrate:service-map` accept names such as `myvendor`; directories named exactly `vendor` stay excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))

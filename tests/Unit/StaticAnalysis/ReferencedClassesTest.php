@@ -53,6 +53,15 @@ final class ReferencedClassesTest extends TestCase
         );
     }
 
+    public function test_it_finds_an_anonymous_class_header_and_traits(): void
+    {
+        $node = ParseSource::classInAsPhpStanResolves('<?php class Subject { public function run() {'
+            . ' return new class extends \App\Other\Base implements \App\Other\Contract { use \App\Other\Helper; }; }}');
+
+        self::assertSame(['App\Other\Base', 'App\Other\Contract', 'App\Other\Helper'], ReferencedClasses::in($node));
+        self::assertSame(['App\Other\Helper'], ReferencedClasses::namedIn($node));
+    }
+
     public function test_it_finds_the_parent_class(): void
     {
         self::assertContains('App\Other\Base', $this->referencesIn(

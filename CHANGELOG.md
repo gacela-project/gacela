@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Document that `Gacela::get()` and `getRequired()` cache factory services per id until `resetRequestState()`, while direct container resolutions stay fresh ([#1019](https://github.com/gacela-project/gacela/issues/1019))
+
 - Opt-in cross-module checks report class headers, traits, attributes, `instanceof` and `catch` under PHPStan and Psalm ([#1045](https://github.com/gacela-project/gacela/issues/1045))
 
 - File caching defaults to the private `{appRoot}/.gacela/cache` instead of the system temporary directory. Package cache filenames include the application-root hash ([#1029](https://github.com/gacela-project/gacela/issues/1029))

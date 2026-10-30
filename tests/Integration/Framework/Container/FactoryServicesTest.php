@@ -7,6 +7,7 @@ namespace GacelaTest\Integration\Framework\Container;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Container\Container;
 use Gacela\Framework\Gacela;
+use GacelaTest\Feature\Container\ModuleAttributes\Module\Domain\FreshPrinter;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use stdClass;
@@ -34,6 +35,40 @@ final class FactoryServicesTest extends TestCase
         self::assertInstanceOf(stdClass::class, $instance1);
         self::assertInstanceOf(stdClass::class, $instance2);
         self::assertNotSame($instance1, $instance2, 'Factory should return a new instance each time');
+    }
+
+    public function test_gacela_get_caches_a_registered_factory_until_request_reset(): void
+    {
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+            $config->addFactory(stdClass::class, static fn (): stdClass => new stdClass());
+        });
+
+        $container = Gacela::container();
+        $instance = Gacela::get(stdClass::class);
+
+        self::assertNotSame($container->get(stdClass::class), $container->get(stdClass::class));
+        self::assertSame($instance, Gacela::get(stdClass::class));
+        self::assertSame($instance, Gacela::getRequired(stdClass::class));
+
+        Gacela::resetRequestState();
+
+        self::assertNotSame($instance, Gacela::get(stdClass::class));
+    }
+
+    public function test_gacela_get_caches_an_attributed_factory_until_request_reset(): void
+    {
+        Gacela::bootstrap(__DIR__);
+
+        $container = Gacela::container();
+        $instance = Gacela::get(FreshPrinter::class);
+
+        self::assertNotSame($container->get(FreshPrinter::class), $container->get(FreshPrinter::class));
+        self::assertSame($instance, Gacela::get(FreshPrinter::class));
+        self::assertSame($instance, Gacela::getRequired(FreshPrinter::class));
+
+        Gacela::resetRequestState();
+
+        self::assertNotSame($instance, Gacela::get(FreshPrinter::class));
     }
 
     public function test_factory_service_with_dependencies(): void

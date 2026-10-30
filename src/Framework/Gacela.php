@@ -141,6 +141,8 @@ final class Gacela
     }
 
     /**
+     * Cache one instance per id, including factory services, until resetRequestState() clears the Locator.
+     *
      * @template T
      *
      * @param  class-string<T>  $className

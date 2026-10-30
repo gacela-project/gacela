@@ -125,6 +125,12 @@ final class CacheWarmOutputFormatter
         $this->output->writeln('');
     }
 
+    public function writePluginMembershipSkipped(): void
+    {
+        $this->output->writeln('<comment>Membership cache: not written, file caching is disabled</comment>');
+        $this->output->writeln('');
+    }
+
     public function writePluginMembershipInfo(string $cacheFile, int $pluginCount, int $tagCount, int $listenerCount): void
     {
         $this->output->writeln(sprintf('<fg=cyan>Membership cache:</> %s', $cacheFile));

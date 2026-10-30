@@ -90,7 +90,7 @@ final class ConfigSourceStamps
         $lines = [];
 
         foreach ($stamps as $path => $stamp) {
-            $lines[] = $path . "\t" . $stamp;
+            $lines[] = rawurlencode($path) . "\t" . $stamp;
         }
 
         return implode("\n", $lines);
@@ -105,7 +105,7 @@ final class ConfigSourceStamps
 
         foreach (explode("\n", $packed) as $line) {
             [$path, $stamp] = explode("\t", $line, 2) + [1 => ''];
-            $stamps[$path] = $stamp;
+            $stamps[rawurldecode($path)] = $stamp;
         }
 
         return $stamps;

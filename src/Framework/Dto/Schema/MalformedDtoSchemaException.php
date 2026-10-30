@@ -63,6 +63,11 @@ final class MalformedDtoSchemaException extends RuntimeException
         ));
     }
 
+    public static function reservedClassName(string $className, string $shortName): self
+    {
+        return new self(sprintf('The short class name "%s" in shape "%s" is reserved by PHP.', $shortName, $className));
+    }
+
     public static function notAValidPropertyName(string $className, string $property): self
     {
         return new self(sprintf(

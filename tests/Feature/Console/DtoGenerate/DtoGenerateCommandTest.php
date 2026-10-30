@@ -167,6 +167,34 @@ final class DtoGenerateCommandTest extends TestCase
         yield 'empty directory' => [['']];
     }
 
+    #[DataProvider('validThisPropertyNames')]
+    public function test_other_this_property_cases_generate_a_loadable_class(string $property): void
+    {
+        /** @var class-string $class */
+        $class = $this->orderClass();
+        Gacela::bootstrap($this->projectDir, static function (GacelaConfig $config) use ($class, $property): void {
+            $config->resetInMemoryCache();
+            $config->setFileCache(false);
+            $config->declareDtoSchema($class, [$property => DtoType::string()]);
+        });
+        $tester = new CommandTester(new DtoGenerateCommand());
+
+        self::assertSame(Command::SUCCESS, $tester->execute([]));
+        require $this->orderFile();
+        $order = $class::fromArray([$property => 'kept']);
+
+        self::assertSame([$property => 'kept'], $order->toArray());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function validThisPropertyNames(): iterable
+    {
+        yield 'capitalized' => ['This'];
+        yield 'uppercase' => ['THIS'];
+    }
+
     public function test_it_writes_the_class_where_the_projects_own_autoload_looks(): void
     {
         $tester = $this->generate();

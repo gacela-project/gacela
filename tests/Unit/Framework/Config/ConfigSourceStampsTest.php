@@ -7,6 +7,7 @@ namespace GacelaTest\Unit\Framework\Config;
 use Gacela\Framework\Config\ConfigSourceStamps;
 use PHPUnit\Framework\TestCase;
 
+use function clearstatcache;
 use function file_put_contents;
 use function rename;
 use function rmdir;
@@ -117,6 +118,19 @@ final class ConfigSourceStampsTest extends TestCase
     public function test_a_stamp_from_the_current_second_could_miss_a_change(): void
     {
         self::assertTrue(ConfigSourceStamps::couldMissAChange(['/a' => '999:10:1', '/b' => '1000:10:2'], 1_000));
+    }
+
+    public function test_real_stamps_keep_the_exact_second_boundary(): void
+    {
+        $at = 1_000_000;
+        $file = $this->write('boundary.php', 'value', $at);
+        clearstatcache(true, $file);
+        $stamps = ConfigSourceStamps::of([$file]);
+
+        self::assertSame($at, (int) $stamps[$file]);
+        self::assertTrue(ConfigSourceStamps::couldMissAChange($stamps, $at));
+        self::assertTrue(ConfigSourceStamps::couldMissAChange($stamps, $at - 1));
+        self::assertFalse(ConfigSourceStamps::couldMissAChange($stamps, $at + 1));
     }
 
     public function test_a_missing_path_cannot_miss_a_change(): void

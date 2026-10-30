@@ -10,12 +10,16 @@ use Gacela\Console\Infrastructure\ConsoleBootstrap;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
+use Gacela\Framework\Config\AppEnv;
 use Gacela\Framework\Config\Config;
+use Gacela\Framework\Config\MergedConfigCache;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 use function dirname;
@@ -28,6 +32,8 @@ use function unlink;
 
 final class CacheClearCommandTest extends TestCase
 {
+    use ReadOnlyDirTrait;
+
     /**
      * Named as a string rather than `::class`: the class is `@internal`
      * upstream, and reaching into it is the point -- there is no public way to
@@ -58,8 +64,74 @@ final class CacheClearCommandTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreReadOnlyDirs();
         $this->removeGeneratedCaches();
         DirectoryUtil::removeDir(__DIR__ . '/cache');
+    }
+
+    public function test_cache_clear_names_every_file_it_cannot_remove_and_fails(): void
+    {
+        $dir = $this->createReadOnlyDirOrSkip('cache-clear', static function (string $dir): void {
+            file_put_contents($dir . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME, '<?php return [];');
+            file_put_contents($dir . DIRECTORY_SEPARATOR . CustomServicesPhpCache::FILENAME, '<?php return [];');
+            (new MergedConfigCache($dir, AppEnv::current(), __DIR__))->writeTrusted([]);
+        });
+        $previous = getenv('GACELA_CACHE_DIR');
+        putenv('GACELA_CACHE_DIR=' . $dir);
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache()->enableFileCache();
+            });
+            $command = new CommandTester(new CacheClearCommand());
+            $exit = $command->execute([]);
+            $mergedFilename = Config::getInstance()->mergedConfigCacheFilename();
+        } finally {
+            putenv($previous === false ? 'GACELA_CACHE_DIR' : 'GACELA_CACHE_DIR=' . $previous);
+        }
+
+        self::assertSame(Command::FAILURE, $exit);
+        foreach ([ClassNamePhpCache::FILENAME, CustomServicesPhpCache::FILENAME, basename($mergedFilename)] as $file) {
+            self::assertStringContainsString('Could not remove: ' . $dir . DIRECTORY_SEPARATOR . $file, $command->getDisplay());
+            self::assertFileExists($dir . DIRECTORY_SEPARATOR . $file);
+        }
+
+        self::assertStringNotContainsString('Cleared cache file', $command->getDisplay());
+        self::assertStringNotContainsString('Cache cleared successfully!', $command->getDisplay());
+    }
+
+    public function test_cache_clear_reports_partial_success_without_claiming_the_retained_path_was_removed(): void
+    {
+        if (!is_dir(dirname($this->cacheFile))) {
+            mkdir(dirname($this->cacheFile), 0777, true);
+        }
+
+        mkdir($this->cacheFile);
+        file_put_contents($this->customServicesCacheFile, '<?php return [];');
+        try {
+            $command = new CommandTester(new CacheClearCommand());
+            $exit = $command->execute([]);
+
+            self::assertSame(Command::FAILURE, $exit);
+            self::assertStringContainsString('Could not remove: ' . $this->cacheFile, $command->getDisplay());
+            self::assertStringNotContainsString('Cleared cache file: ' . $this->cacheFile, $command->getDisplay());
+            self::assertStringContainsString('Cleared cache file: ' . $this->customServicesCacheFile, $command->getDisplay());
+            self::assertFileDoesNotExist($this->customServicesCacheFile);
+        } finally {
+            rmdir($this->cacheFile);
+        }
+    }
+
+    public function test_cache_clear_reports_a_sibling_tuple_when_the_current_tuple_has_no_file(): void
+    {
+        $sibling = new MergedConfigCache(dirname($this->mergedConfigCacheFile), AppEnv::current(), __DIR__, ['eu']);
+        $sibling->writeTrusted([]);
+
+        $command = new CommandTester(new CacheClearCommand());
+
+        self::assertSame(Command::SUCCESS, $command->execute([]));
+        self::assertStringContainsString('Cleared merged config cache: ' . $sibling->filename(), $command->getDisplay());
+        self::assertStringNotContainsString('No cache files found', $command->getDisplay());
+        self::assertFileDoesNotExist($sibling->filename());
     }
 
     public function test_cache_clear_command_is_registered_in_the_console_application(): void

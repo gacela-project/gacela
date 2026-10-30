@@ -6,6 +6,7 @@ namespace GacelaTest\Feature\Console\CacheWarm;
 
 use Gacela\Console\Infrastructure\Command\CacheWarmCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
@@ -15,6 +16,8 @@ use Gacela\Framework\Event\Cache\CacheWarmedEvent;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use GacelaTest\Fixtures\ReadOnlyDirTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -31,6 +34,8 @@ use function unlink;
 
 final class CacheWarmCommandTest extends TestCase
 {
+    use ReadOnlyDirTrait;
+
     private CommandTester $command;
 
     private string $cacheFile;
@@ -70,7 +75,135 @@ final class CacheWarmCommandTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreReadOnlyDirs();
         $this->removeGeneratedCaches();
+    }
+
+    public function test_cache_warm_fails_when_enabled_caches_cannot_be_written(): void
+    {
+        $dir = $this->createReadOnlyDirOrSkip('cache-warm');
+        $previous = getenv('GACELA_CACHE_DIR');
+        putenv('GACELA_CACHE_DIR=' . $dir);
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache()->enableFileCache();
+            });
+            $command = new CommandTester(new CacheWarmCommand());
+            $exit = $command->execute(['--attributes' => true]);
+        } finally {
+            putenv($previous === false ? 'GACELA_CACHE_DIR' : 'GACELA_CACHE_DIR=' . $previous);
+        }
+
+        self::assertSame(Command::FAILURE, $exit);
+        self::assertStringContainsString('Cache file was not created', $command->getDisplay());
+        self::assertStringContainsString('could not write the membership cache', $command->getDisplay());
+    }
+
+    public function test_cache_warm_does_not_report_a_stale_merged_file_as_written(): void
+    {
+        $previous = getenv('GACELA_CACHE_DIR');
+        try {
+            $this->createReadOnlyDirOrSkip('cache-warm-stale', static function (string $dir): void {
+                putenv('GACELA_CACHE_DIR=' . $dir);
+                Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                    $config->resetInMemoryCache()->enableFileCache();
+                });
+                file_put_contents(Config::getInstance()->mergedConfigCacheFilename(), '<?php return ["stale" => true];');
+            });
+            $filename = Config::getInstance()->mergedConfigCacheFilename();
+            $command = new CommandTester(new CacheWarmCommand());
+            $exit = $command->execute([]);
+        } finally {
+            putenv($previous === false ? 'GACELA_CACHE_DIR' : 'GACELA_CACHE_DIR=' . $previous);
+        }
+
+        self::assertSame(Command::FAILURE, $exit);
+        self::assertStringContainsString('Could not write: ' . $filename, $command->getDisplay());
+        self::assertStringNotContainsString('Merged config size:', $command->getDisplay());
+        self::assertStringEqualsFile($filename, '<?php return ["stale" => true];');
+    }
+
+    #[DataProvider('persistenceInvalidations')]
+    public function test_a_retained_stale_file_makes_persistence_invalidation_fail(bool $verified): void
+    {
+        $source = __DIR__ . DIRECTORY_SEPARATOR . 'gacela-invalidate-source-' . bin2hex(random_bytes(4)) . '.php';
+        file_put_contents($source, $verified ? '<?php return ["current" => true];' : '<?php return ["handler" => static fn (): string => "current"];');
+        touch($source, time() + 60);
+        $previous = getenv('GACELA_CACHE_DIR');
+        try {
+            $dir = $this->createReadOnlyDirOrSkip('cache-invalidation', static function (string $dir) use ($source, $verified): void {
+                putenv('GACELA_CACHE_DIR=' . $dir);
+                Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($source, $verified): void {
+                    $config->resetInMemoryCache()->enableFileCache();
+                    $config->addAppConfig(basename($source));
+                    if ($verified) {
+                        $config->enableVerifiedConfigCacheWarm();
+                    }
+                });
+                (new CommandTester(new CacheWarmCommand()))->execute([]);
+                file_put_contents(Config::getInstance()->mergedConfigCacheFilename(), '<?php return ["stale" => true];');
+            });
+            $filename = Config::getInstance()->mergedConfigCacheFilename();
+            $command = new CommandTester(new CacheWarmCommand());
+            self::assertSame(Command::FAILURE, $command->execute([]));
+            self::assertStringContainsString('Could not write: ' . $filename, $command->getDisplay());
+            self::assertStringNotContainsString('Merged config size:', $command->getDisplay());
+            self::assertContains($filename, FileCache::failedWrites());
+            self::assertStringEqualsFile($filename, '<?php return ["stale" => true];');
+            chmod($dir, 0755);
+
+            self::assertSame(Command::SUCCESS, (new CommandTester(new CacheWarmCommand()))->execute([]));
+            self::assertFileDoesNotExist($filename);
+            self::assertNotContains($filename, FileCache::failedWrites());
+        } finally {
+            putenv($previous === false ? 'GACELA_CACHE_DIR' : 'GACELA_CACHE_DIR=' . $previous);
+            unlink($source);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function persistenceInvalidations(): iterable
+    {
+        yield 'non-exportable value' => [false];
+        yield 'source-stamp race' => [true];
+    }
+
+    public function test_membership_write_failure_is_fatal_and_a_successful_retry_clears_it(): void
+    {
+        if (!is_dir(dirname($this->membershipCacheFile))) {
+            mkdir(dirname($this->membershipCacheFile), 0777, true);
+        }
+
+        mkdir($this->membershipCacheFile);
+        try {
+            $command = new CommandTester(new CacheWarmCommand());
+            self::assertSame(Command::FAILURE, $command->execute(['--attributes' => true]));
+            self::assertStringContainsString('could not write the membership cache to ' . $this->membershipCacheFile, $command->getDisplay());
+            self::assertFileExists($this->cacheFile);
+            self::assertFileExists($this->mergedConfigCacheFile);
+            rmdir($this->membershipCacheFile);
+
+            self::assertSame(Command::SUCCESS, (new CommandTester(new CacheWarmCommand()))->execute(['--attributes' => true]));
+            self::assertNotContains($this->membershipCacheFile, FileCache::failedWrites());
+        } finally {
+            if (is_dir($this->membershipCacheFile)) {
+                rmdir($this->membershipCacheFile);
+            }
+        }
+    }
+
+    public function test_an_unrelated_process_write_failure_does_not_fail_a_healthy_warm(): void
+    {
+        self::assertSame(Command::SUCCESS, $this->command->execute([]));
+        $unrelated = $this->uncreatableDir('unrelated-cache') . DIRECTORY_SEPARATOR . 'cache.php';
+        self::assertFalse(FileCache::writeAtomically($unrelated, []));
+        $command = new CommandTester(new CacheWarmCommand());
+
+        self::assertSame(Command::SUCCESS, $command->execute([]));
+        self::assertStringNotContainsString($unrelated, $command->getDisplay());
+        self::assertContains($unrelated, FileCache::failedWrites());
     }
 
     public function test_cache_warm_dispatches_cache_warmed_event(): void
@@ -273,6 +406,7 @@ final class CacheWarmCommandTest extends TestCase
                 'Warning: Cache file was not created. File caching might be disabled.',
                 $display,
             );
+            self::assertSame(Command::SUCCESS, $command->getStatusCode());
             self::assertStringContainsString('Enable file caching in your gacela.php configuration:', $display);
             self::assertStringNotContainsString('Cache size:', $display);
             self::assertFileDoesNotExist(Config::getInstance()->mergedConfigCacheFilename());

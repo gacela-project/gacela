@@ -20,6 +20,7 @@
 - A truncated scoped-cache dependency graph is ignored and rebuilt on the next dependency update instead of aborting the application ([#1033](https://github.com/gacela-project/gacela/issues/1033))
 
 - Cache reads reject foreign-owned files, files writable by other users, symlinks and files in directories writable by other users without the sticky bit, including container plans. New PHP cache files are created with mode `0600`. Failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
+- `cache:warm` and `cache:clear` name cache files they could not write or remove and exit with status 1. A failed merged-config write no longer reports the stale file's size as a successful warm; disabled file caching keeps its existing warning and successful exit ([#1032](https://github.com/gacela-project/gacela/issues/1032))
 - A `GacelaBootstrapStartedEvent` listener in `gacela.php` runs when bootstrap also receives a closure. The event fires once after setup assembly, before configuration initialization and bootstrap completion ([#1009](https://github.com/gacela-project/gacela/issues/1009))
 
 - Corrupt attribute membership caches are treated as not warmed. Resolving a plugin stack rebuilds the file, and `doctor --json` reports a warning instead of aborting ([#1010](https://github.com/gacela-project/gacela/issues/1010))

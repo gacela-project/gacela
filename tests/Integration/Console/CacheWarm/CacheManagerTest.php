@@ -12,6 +12,7 @@ use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
+use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
@@ -28,6 +29,8 @@ use const DIRECTORY_SEPARATOR;
 
 final class CacheManagerTest extends TestCase
 {
+    use ReadOnlyDirTrait;
+
     private string $cacheDir;
 
     private CacheManager $cacheManager;
@@ -48,6 +51,7 @@ final class CacheManagerTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreReadOnlyDirs();
         foreach ((array) glob($this->cacheDir . DIRECTORY_SEPARATOR . '*') as $file) {
             @unlink((string) $file);
         }
@@ -132,11 +136,29 @@ final class CacheManagerTest extends TestCase
         $classNameCache = $this->writeCacheFile(ClassNamePhpCache::FILENAME, 16);
         $customServicesCache = $this->writeCacheFile(CustomServicesPhpCache::FILENAME, 16);
 
-        $this->cacheManager->clearCache();
+        self::assertSame([], $this->cacheManager->clearCache());
 
         self::assertFileDoesNotExist($classNameCache);
         self::assertFileDoesNotExist($customServicesCache);
         self::assertSame([], $this->cacheManager->getExistingCacheFilesWithSize());
+    }
+
+    public function test_clear_returns_every_path_that_could_not_be_removed(): void
+    {
+        $dir = $this->createReadOnlyDirOrSkip('cache-manager-clear', static function (string $dir): void {
+            file_put_contents($dir . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME, '<?php return [];');
+        });
+        $previous = getenv('GACELA_CACHE_DIR');
+        putenv('GACELA_CACHE_DIR=' . $dir);
+        try {
+            Gacela::bootstrap(__DIR__, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache()->enableFileCache();
+            });
+
+            self::assertSame([$dir . DIRECTORY_SEPARATOR . ClassNamePhpCache::FILENAME], (new CacheManager())->clearCache());
+        } finally {
+            putenv($previous === false ? 'GACELA_CACHE_DIR' : 'GACELA_CACHE_DIR=' . $previous);
+        }
     }
 
     private function writeCacheFile(string $filename, int $bytes): string

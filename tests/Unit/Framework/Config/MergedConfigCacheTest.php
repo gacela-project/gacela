@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Framework\Config;
 
 use ArrayObject;
 use Closure;
+use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\Config\ConfigSourceStamps;
 use Gacela\Framework\Config\MergedConfigCache;
@@ -42,6 +43,43 @@ final class MergedConfigCacheTest extends TestCase
         WritableDirectory::resetCache();
         $this->restoreReadOnlyDirs();
         $this->removeCacheDirIfExists();
+    }
+
+    public function test_clear_reports_retained_files_for_every_dimension_tuple(): void
+    {
+        $dir = $this->createReadOnlyDirOrSkip('merged-clear', static function (string $dir): void {
+            (new MergedConfigCache($dir, 'prod', '/app', ['eu']))->writeTrusted([]);
+            (new MergedConfigCache($dir, 'prod', '/app', ['us']))->writeTrusted([]);
+        });
+        $eu = new MergedConfigCache($dir, 'prod', '/app', ['eu']);
+        $us = new MergedConfigCache($dir, 'prod', '/app', ['us']);
+
+        $retained = $eu->clear();
+
+        self::assertCount(2, $retained);
+        self::assertContains($eu->filename(), $retained);
+        self::assertContains($us->filename(), $retained);
+    }
+
+    public function test_failed_invalidation_is_recorded_and_a_successful_retry_clears_it(): void
+    {
+        $dir = $this->createReadOnlyDirOrSkip('invalidate-merged', static function (string $dir): void {
+            (new MergedConfigCache($dir))->writeTrusted(['stale' => true]);
+        });
+        $cache = new MergedConfigCache($dir);
+        try {
+            $cache->writeTrusted(['handler' => static fn (): null => null]);
+            self::assertContains($cache->filename(), FileCache::failedWrites());
+            self::assertFileExists($cache->filename());
+            chmod($dir, 0755);
+
+            $cache->writeTrusted(['handler' => static fn (): null => null]);
+
+            self::assertNotContains($cache->filename(), FileCache::failedWrites());
+            self::assertFileDoesNotExist($cache->filename());
+        } finally {
+            FileCache::resetWriteFailures([$cache->filename()]);
+        }
     }
 
     public function test_a_trusted_file_is_served_without_a_look_at_any_source(): void

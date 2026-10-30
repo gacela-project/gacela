@@ -13,6 +13,7 @@ use Gacela\Console\Application\CacheWarm\PerformanceMetrics;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Console\Domain\AllAppModules\AppModule;
 use Gacela\Framework\Bootstrap\Package\PackageDiscoveryRegistry;
+use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\GacelaFileCache;
 use Gacela\Framework\Config\Config;
@@ -33,6 +34,7 @@ use Throwable;
 use function count;
 use function file_exists;
 use function filesize;
+use function in_array;
 
 /**
  * @method ConsoleFacade getFacade()
@@ -64,11 +66,12 @@ final class CacheWarmCommand extends Command
         $clearCache = $input->getOption('clear') === true;
         $warmAttributes = $input->getOption('attributes') === true;
 
-        if ($clearCache) {
-            $cacheManager->clearCache();
-            Config::getInstance()->clearMergedConfigCache();
-            $formatter->writeCacheCleared();
+        if ($clearCache && !$this->clearExistingCaches($cacheManager, $formatter)) {
+            return Command::FAILURE;
         }
+
+        $writePaths = $cacheManager->warmCacheFilePaths();
+        FileCache::resetWriteFailures($writePaths);
 
         [$modules, $moduleDiscoveryFailed] = $this->discoverModules($formatter);
         $modules = $cacheWarmService->filterProductionModules($modules);
@@ -100,18 +103,40 @@ final class CacheWarmCommand extends Command
             memoryUsed: $metrics->formatMemoryUsed(),
         );
 
-        $this->displayCacheInfo($cacheManager, $formatter);
-        if ($warmAttributes) {
-            $this->warmPluginMembership($formatter);
+        $classCacheWritten = $this->displayCacheInfo($cacheManager, $formatter);
+        $membershipWritten = !$warmAttributes || $this->warmPluginMembership($formatter);
+        $cacheEnabled = (new GacelaFileCache(Config::getInstance()))->isEnabled();
+        $mergedConfigWritten = !$cacheEnabled || $this->warmAndDisplayMergedConfigCache($formatter);
+        $failedWrites = array_values(array_intersect($writePaths, FileCache::failedWrites()));
+        if ($cacheEnabled && !$classCacheWritten && !in_array($cacheManager->getCacheFilePath(), $failedWrites, true)) {
+            $failedWrites[] = $cacheManager->getCacheFilePath();
         }
 
-        if ((new GacelaFileCache(Config::getInstance()))->isEnabled()) {
-            $this->warmAndDisplayMergedConfigCache($formatter);
+        if ($cacheEnabled) {
+            foreach ($failedWrites as $filename) {
+                $formatter->writeCouldNotWrite($filename);
+            }
         }
 
-        return $moduleDiscoveryFailed || $failedCount > 0
-            ? Command::FAILURE
-            : Command::SUCCESS;
+        $cacheFailed = $cacheEnabled && (!$classCacheWritten || !$membershipWritten || !$mergedConfigWritten || $failedWrites !== []);
+
+        return $moduleDiscoveryFailed || $failedCount > 0 || $cacheFailed ? Command::FAILURE : Command::SUCCESS;
+    }
+
+    private function clearExistingCaches(CacheManager $manager, CacheWarmOutputFormatter $formatter): bool
+    {
+        $failed = [...$manager->clearCache(), ...Config::getInstance()->clearMergedConfigCache()];
+        foreach ($failed as $filename) {
+            $formatter->writeCouldNotRemove($filename);
+        }
+
+        if ($failed !== []) {
+            return false;
+        }
+
+        $formatter->writeCacheCleared();
+
+        return true;
     }
 
     /**
@@ -134,7 +159,7 @@ final class CacheWarmCommand extends Command
         }
     }
 
-    private function warmPluginMembership(CacheWarmOutputFormatter $formatter): void
+    private function warmPluginMembership(CacheWarmOutputFormatter $formatter): bool
     {
         $config = Config::getInstance();
         $setup = $config->getSetupGacela();
@@ -144,29 +169,41 @@ final class CacheWarmCommand extends Command
         if ($members->problems !== []) {
             $formatter->writeMembershipProblems($members->problems);
 
-            return;
+            return false;
         }
 
+        FileCache::resetWriteFailures([$cache->path()]);
         if (!$cache->write($members)) {
             $formatter->writePluginMembershipWarning($cache->path());
 
-            return;
+            return false;
         }
 
         $formatter->writePluginMembershipInfo($cache->path(), count($members->plugins), count($members->tags), count($members->listeners));
+
+        return true;
     }
 
-    private function warmAndDisplayMergedConfigCache(CacheWarmOutputFormatter $formatter): void
+    private function warmAndDisplayMergedConfigCache(CacheWarmOutputFormatter $formatter): bool
     {
-        $filename = Config::getInstance()->writeMergedConfigCache();
+        $config = Config::getInstance();
+        FileCache::resetWriteFailures([$config->mergedConfigCacheFilename()]);
+        $filename = $config->writeMergedConfigCache();
+        if (in_array($filename, FileCache::failedWrites(), true)) {
+            $formatter->writeCouldNotWrite($filename);
+
+            return false;
+        }
 
         if (!file_exists($filename)) {
             $formatter->writeMergedConfigCacheSkipped();
 
-            return;
+            return true;
         }
 
         $formatter->writeMergedConfigCacheInfo($filename, BytesFormatter::format((int) filesize($filename)));
+
+        return true;
     }
 
     /**
@@ -186,14 +223,18 @@ final class CacheWarmCommand extends Command
     private function displayCacheInfo(
         CacheManager $cacheManager,
         CacheWarmOutputFormatter $formatter,
-    ): void {
-        if ($cacheManager->cacheFileExists()) {
+    ): bool {
+        if ($cacheManager->cacheFileExists() && !in_array($cacheManager->getCacheFilePath(), FileCache::failedWrites(), true)) {
             $cacheFile = $cacheManager->getCacheFilePath();
             $cacheSize = $cacheManager->getFormattedCacheFileSize();
             $formatter->writeCacheInfo($cacheFile, $cacheSize);
-        } else {
-            $formatter->writeCacheWarning();
+
+            return true;
         }
+
+        $formatter->writeCacheWarning();
+
+        return false;
     }
 
     private function getHelpText(): string

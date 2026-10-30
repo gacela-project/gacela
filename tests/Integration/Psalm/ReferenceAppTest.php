@@ -18,11 +18,13 @@ final class ReferenceAppTest extends PsalmFixtureTestCase
 {
     public function test_the_reference_application_has_no_findings(): void
     {
-        $output = $this->analyseFixture('json');
+        $result = $this->fixtureOutput('json');
+        $output = $result->combined();
         $this->skipIfPsalmCannotRun($output);
+        self::assertTrue($result->isCompleteAnalysis(), $output);
         self::assertStringNotContainsString('ServiceMapAccessors is internal', $output, 'The framework trait must be usable outside Gacela.');
 
-        $findings = ReferenceAppDiagnostics::in($output);
+        $findings = ReferenceAppDiagnostics::in($result->stdout);
 
         self::assertSame([], $findings, 'psalm reported: ' . json_encode($findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
     }

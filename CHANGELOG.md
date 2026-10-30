@@ -93,7 +93,7 @@
 - ServiceMap migration checks ignore `@method` mentioned in prose while still reading real method tags ([#1050](https://github.com/gacela-project/gacela/issues/1050))
 
 - Psalm ignores `#[ServiceMap]` targets expressed with constants other than `X::class` instead of assigning the constant owner as the accessor's return type ([#1048](https://github.com/gacela-project/gacela/issues/1048))
-- The Psalm reference-app check selects structured diagnostics by file path consistently on Windows and POSIX ([#1082](https://github.com/gacela-project/gacela/issues/1082))
+- The Psalm reference-app check selects structured diagnostics by file path on Windows and POSIX. Stderr stays visible to raw checks and separate from JSON ([#1082](https://github.com/gacela-project/gacela/issues/1082))
 - Cache attribute rules inspect only Gacela's `Cacheable` attribute and leave attributes from other libraries alone ([#1049](https://github.com/gacela-project/gacela/issues/1049))
 - First-class `cached(...)` callables produce diagnostics without crashing analysis. First-class `getProvidedDependency(...)` callables keep their declared types ([#1043](https://github.com/gacela-project/gacela/issues/1043))
 - Cross-module and declared-dependency rules ignore leading or trailing namespace separators and compare names without case sensitivity. Shared namespaces and ignored receivers follow the same rules; separator-only roots fail configuration ([#1041](https://github.com/gacela-project/gacela/issues/1041))

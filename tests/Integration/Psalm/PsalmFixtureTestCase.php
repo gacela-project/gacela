@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use function escapeshellarg;
 use function explode;
 use function implode;
-use function shell_exec;
 use function sprintf;
 use function str_contains;
 use function substr;
@@ -25,10 +24,15 @@ abstract class PsalmFixtureTestCase extends TestCase
 {
     private const ROOT = __DIR__ . '/../../..';
 
-    /** @var array<string, string> */
+    /** @var array<string, PsalmOutput> */
     private static array $outputs = [];
 
     final protected function analyseFixture(string $outputFormat = 'text'): string
+    {
+        return $this->fixtureOutput($outputFormat)->combined();
+    }
+
+    final protected function fixtureOutput(string $outputFormat = 'text'): PsalmOutput
     {
         $key = static::configPath() . '#' . $outputFormat;
 
@@ -92,19 +96,19 @@ abstract class PsalmFixtureTestCase extends TestCase
         self::markTestSkipped('Psalm cannot run in this dependency set: ' . substr($output, -2000));
     }
 
-    private function runPsalm(string $outputFormat): string
+    private function runPsalm(string $outputFormat): PsalmOutput
     {
         // No `-d error_reporting=...` here: Psalm re-execs itself through
         // xdebug-handler before it analyses anything, and the restarted process
         // does not inherit the flag. Deprecation noise is therefore dealt with
         // where it lands -- see skipIfPsalmCannotRun().
         $command = sprintf(
-            '%s --config=%s --no-progress --no-cache --output-format=%s 2>&1',
+            '%s --config=%s --no-progress --no-cache --output-format=%s',
             escapeshellarg(self::ROOT . '/vendor/bin/psalm'),
             escapeshellarg(static::configPath()),
             escapeshellarg($outputFormat),
         );
 
-        return (string)shell_exec($command);
+        return PsalmOutput::fromCommand($command);
     }
 }

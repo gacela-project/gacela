@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Psalm;
 
+use JsonException;
 use stdClass;
 use UnexpectedValueException;
 
@@ -36,7 +37,12 @@ final class ReferenceAppDiagnostics
      */
     private static function decode(string $json): array
     {
-        $diagnostics = json_decode($json, flags: JSON_THROW_ON_ERROR);
+        try {
+            $diagnostics = json_decode($json, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $jsonException) {
+            throw new UnexpectedValueException('Psalm output is not JSON: ' . substr($json, 0, 4000), 0, $jsonException);
+        }
+
         if (!is_array($diagnostics)) {
             throw new UnexpectedValueException('Expected a list of Psalm diagnostics.');
         }

@@ -10,6 +10,7 @@ use Gacela\Framework\Health\HealthLevel;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class HealthCheckerTest extends TestCase
 {
@@ -64,13 +65,34 @@ final class HealthCheckerTest extends TestCase
 
         $status = $report->getResults()['FailingModule'];
         self::assertTrue($status->isUnhealthy());
-        self::assertStringContainsString('Health check failed', $status->message);
-        self::assertArrayHasKey('exception', $status->metadata);
-        self::assertArrayHasKey('file', $status->metadata);
-        self::assertArrayHasKey('line', $status->metadata);
-        self::assertSame(Exception::class, $status->metadata['exception']);
-        self::assertIsString($status->metadata['file']);
-        self::assertIsInt($status->metadata['line']);
+        self::assertSame('Health check failed: Unexpected error', $status->message);
+        self::assertSame(['exception' => Exception::class], $status->metadata);
+    }
+
+    public function test_a_thrown_exception_does_not_add_a_location_to_the_serialized_report(): void
+    {
+        $check = $this->createStub(ModuleHealthCheckInterface::class);
+        $check->method('getModuleName')->willReturn('Db');
+        $check->method('checkHealth')->willThrowException(new RuntimeException('db down'));
+
+        $report = (new HealthChecker([$check]))->checkAll()->toArray();
+        $status = $report['modules']['Db'];
+
+        self::assertSame('unhealthy', $status['level']);
+        self::assertSame('Health check failed: db down', $status['message']);
+        self::assertSame(['exception' => RuntimeException::class], $status['metadata']);
+        self::assertArrayNotHasKey('file', $status['metadata']);
+        self::assertArrayNotHasKey('line', $status['metadata']);
+    }
+
+    public function test_metadata_supplied_by_a_check_is_serialized_unchanged(): void
+    {
+        $metadata = ['file' => 'provided-by-check.php', 'line' => 42, 'context' => ['retries' => 3]];
+        $check = $this->createHealthCheck('Db', HealthStatus::unhealthy('db down', $metadata));
+
+        $report = (new HealthChecker([$check]))->checkAll()->toArray();
+
+        self::assertSame($metadata, $report['modules']['Db']['metadata']);
     }
 
     public function test_count_returns_number_of_checks(): void

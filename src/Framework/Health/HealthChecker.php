@@ -38,7 +38,7 @@ final class HealthChecker
             } catch (Throwable $e) {
                 $status = HealthStatus::unhealthy(
                     sprintf('Health check failed: %s', $e->getMessage()),
-                    ['exception' => $e::class, 'file' => $e->getFile(), 'line' => $e->getLine()],
+                    ['exception' => $e::class],
                 );
             }
 

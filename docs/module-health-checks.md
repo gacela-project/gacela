@@ -104,6 +104,8 @@ HealthStatus::unhealthy('Unreachable', ['retries' => 3]);
 
 ## HTTP endpoint
 
+Metadata is whatever a check puts there; strip anything you would not show an anonymous caller before returning it.
+
 ```php
 public function healthCheck(): Response
 {
@@ -145,7 +147,7 @@ $report->toArray();
 
 - **Be fast** — checks should complete in under a second. Prefer a quick ping (`SELECT 1`) over full queries.
 - **Include metadata** — latency, error codes, retry counts help diagnose issues.
-- **Let exceptions go** — you do not need a `try`/`catch`. `HealthChecker` turns any `Throwable` out of a check into an `unhealthy` result carrying the exception, file and line as metadata.
+- **Let exceptions go**: you do not need a `try`/`catch`. `HealthChecker` turns any `Throwable` out of a check into an `unhealthy` result. The message is retained, and metadata records the exception class.
 - **Pick the right level** — reserve `unhealthy` for real outages; use `degraded` for slow-but-working.
 
 ## API reference

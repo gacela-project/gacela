@@ -6,12 +6,14 @@ namespace GacelaTest\Unit\Console\Application\Doctor\Check;
 
 use Gacela\Console\Application\Doctor\Check\StubHealthCheck;
 use Gacela\Console\Application\Doctor\CheckStatus;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
 use function bin2hex;
+use function dirname;
 use function file_put_contents;
 use function implode;
 use function is_dir;
@@ -43,6 +45,40 @@ final class StubHealthCheckTest extends TestCase
         if ($this->stubsDir !== '' && is_dir($this->stubsDir)) {
             $this->removeRecursively($this->stubsDir);
         }
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function publishedPaths(): iterable
+    {
+        foreach (['-plain', '-[v1]', '-{eu,us}', '-[v1]{eu,us}'] as $suffix) {
+            foreach (['unknown.txt', 'service/unknown.txt'] as $filename) {
+                yield $suffix . ':' . $filename => [$suffix, $filename];
+            }
+        }
+    }
+
+    #[DataProvider('publishedPaths')]
+    public function test_unknown_stubs_are_found_in_literal_directories(string $suffix, string $filename): void
+    {
+        $this->useDirectorySuffix($suffix);
+        $this->publish($filename, self::USABLE_STUB);
+
+        self::assertArrayHasKey($filename, StubHealthCheck::readPublished($this->stubsDir));
+        $result = $this->check()->run();
+
+        self::assertSame(CheckStatus::Warn, $result->status);
+        self::assertStringContainsString($filename . ' matches no template', implode(' | ', $result->details));
+    }
+
+    public function test_known_and_declared_stubs_remain_usable_in_a_literal_directory(): void
+    {
+        $this->useDirectorySuffix('-[v1]{eu,us}');
+        $this->publish('facade-maker.txt', self::USABLE_STUB);
+        $this->publish('exporter-maker.txt', self::USABLE_STUB);
+
+        self::assertSame(CheckStatus::Ok, $this->check(['Exporter'])->run()->status);
     }
 
     public function test_a_declared_kinds_stub_is_one_the_scaffolder_reads(): void
@@ -86,9 +122,21 @@ final class StubHealthCheckTest extends TestCase
         );
     }
 
+    private function useDirectorySuffix(string $suffix): void
+    {
+        rmdir($this->stubsDir);
+        $this->stubsDir .= $suffix;
+        mkdir($this->stubsDir, 0777, true);
+    }
+
     private function publish(string $filename, string $contents): void
     {
-        file_put_contents($this->stubsDir . '/' . $filename, $contents);
+        $path = $this->stubsDir . '/' . $filename;
+        if (!is_dir(dirname($path))) {
+            mkdir(dirname($path), 0777, true);
+        }
+
+        file_put_contents($path, $contents);
     }
 
     private function removeRecursively(string $directory): void

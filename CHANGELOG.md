@@ -54,6 +54,7 @@
 - `#[Provides]` methods typed with either container interface receive the container when resolved ([#1018](https://github.com/gacela-project/gacela/issues/1018))
 - Handler registries name missing handler classes, their keys and autoloading tips ([#1011](https://github.com/gacela-project/gacela/issues/1011))
 - Facade subclasses inherit their parent module's Factory. Doubles in the same namespace or file keep the correct Factory ([#1017](https://github.com/gacela-project/gacela/issues/1017))
+- Global-namespace Facades resolve their matching Factories with distinct cache entries. Missing pillars name the caller and its lack of namespace ([#1020](https://github.com/gacela-project/gacela/issues/1020))
 - `#[ServiceMap]` returns the concrete pillar named by `className`, including outside module naming conventions. Abstract targets keep conventional or default resolution ([#1015](https://github.com/gacela-project/gacela/issues/1015))
 - Custom services ending in a declared kind suffix have separate resolver cache entries. Resolving or overriding one cannot replace another or the module's conventional service ([#1016](https://github.com/gacela-project/gacela/issues/1016))
 - Anonymous globals in same-named files in different directories have distinct, canonical file-path keys that stay stable across bootstraps. Registering a different instance for an occupied key throws; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))

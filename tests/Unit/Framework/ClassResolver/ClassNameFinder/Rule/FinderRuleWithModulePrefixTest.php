@@ -17,6 +17,15 @@ final class FinderRuleWithModulePrefixTest extends TestCase
         $this->rule = new FinderRuleWithModulePrefix();
     }
 
+    public function test_a_global_caller_has_no_synthetic_module_namespace(): void
+    {
+        self::assertSame(
+            '\RootFactory',
+            $this->rule->buildClassCandidate('', 'Factory', ClassInfo::from('RootFacade', 'Factory')),
+        );
+        self::assertSame('\Root\RootFactory', $this->rule->buildClassCandidate('', 'Factory', ClassInfo::from('Root\\RootFacade', 'Factory')));
+    }
+
     public function test_build_without_project_namespace(): void
     {
         $projectNamespace = '';

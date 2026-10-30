@@ -21,6 +21,7 @@ final class ClassInfo implements ClassInfoInterface
         private readonly string $callerModuleName,
         private readonly string $cacheKey,
         private readonly string $resolvableType = '',
+        private readonly bool $globalNamespace = false,
     ) {
     }
 
@@ -67,6 +68,11 @@ final class ClassInfo implements ClassInfoInterface
         return $this->callerModuleName;
     }
 
+    public function isInGlobalNamespace(): bool
+    {
+        return $this->globalNamespace;
+    }
+
     public function getCacheKey(): string
     {
         return $this->cacheKey;
@@ -105,6 +111,10 @@ final class ClassInfo implements ClassInfoInterface
             return self::$callerClassCache[$callerClass][$resolvableType] = self::fromAnonymousFile($matches[1], $resolvableType);
         }
 
+        if (!str_contains(ltrim($callerClass, '\\'), '\\')) {
+            return self::$callerClassCache[$callerClass][$resolvableType] = self::fromGlobalClass($callerClass, $resolvableType);
+        }
+
         /** @var non-empty-list<string> $callerClassParts */
         $callerClassParts = explode('\\', ltrim($callerClass, '\\'));
         $callerFullNamespace = implode('\\', array_slice($callerClassParts, 0, count($callerClassParts) - 1));
@@ -141,6 +151,13 @@ final class ClassInfo implements ClassInfoInterface
         }
 
         return GlobalKey::fromClassName($className);
+    }
+
+    private static function fromGlobalClass(string $callerClass, string $resolvableType): self
+    {
+        $moduleName = ResolvableType::fromClassName(ltrim($callerClass, '\\'))->moduleName();
+
+        return new self('', $moduleName, '\\' . $moduleName . $resolvableType, $resolvableType, true);
     }
 
     private static function fromAnonymousFile(string $file, string $resolvableType): self

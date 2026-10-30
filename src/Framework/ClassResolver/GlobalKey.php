@@ -33,6 +33,11 @@ final class GlobalKey
             return self::$cache[$fullClassName];
         }
 
+        $normalized = ltrim($fullClassName, '\\');
+        if (!str_contains($normalized, '\\')) {
+            return self::$cache[$fullClassName] = '\\' . $normalized;
+        }
+
         preg_match('~(?<pre_namespace>.*)\\\(?<resolvable_type>.*)~', $fullClassName, $matches);
 
         $resolvableType = ResolvableType::fromClassName($matches['resolvable_type'] ?? '');

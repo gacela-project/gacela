@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\BinGacela;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
@@ -50,6 +51,46 @@ final class BinGacelaTest extends TestCase
         self::assertSame(1, $exitCode, 'a PHP Error escaping bootstrap must still exit 1');
         self::assertStringContainsString('gacela script failed', $stderr);
         self::assertStringNotContainsString('gacela script failed', $stdout);
+        self::assertMatchesRegularExpression('/bin[\\\\\/]gacela:[0-9]+/', $stderr);
+    }
+
+    #[DataProvider('errorVerbosity')]
+    public function test_an_escaping_command_error_reports_its_location_and_verbose_trace(bool $verbose): void
+    {
+        $autoload = var_export(dirname(__DIR__, 4) . '/vendor/autoload.php', true);
+        $stub = '<?php namespace { require ' . $autoload . '; }' . <<<'PHP'
+            namespace Gacela\Framework {
+                class Gacela {
+                    public static function bootstrap(string $root): void {}
+                    public static function version(): string { return 'test'; }
+                }
+            }
+            namespace Gacela\Console\Infrastructure {
+                class ConsoleBootstrap extends \Symfony\Component\Console\Application {
+                    protected function getDefaultCommands(): array {
+                        $command = new \Symfony\Component\Console\Command\Command('explode');
+                        $command->setCode(static function (): never { throw new \Error('command exploded'); });
+                        return [...parent::getDefaultCommands(), $command];
+                    }
+                }
+            }
+            PHP;
+
+        [$exit, , $stderr] = $this->runBinGacela($stub, arguments: $verbose ? ['explode', '-v'] : ['explode']);
+
+        self::assertSame(1, $exit);
+        self::assertStringContainsString('command exploded', $stderr);
+        self::assertMatchesRegularExpression('/In autoload.php line [0-9]+/', $stderr);
+        self::assertSame($verbose, str_contains($stderr, 'Exception trace:'));
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function errorVerbosity(): iterable
+    {
+        yield 'normal' => [false];
+        yield 'verbose' => [true];
     }
 
     /**
@@ -119,9 +160,11 @@ final class BinGacelaTest extends TestCase
      * $subdirectory, when given, is created under the project root and used as the working
      * directory, leaving the autoloader above it.
      *
+     * @param list<string> $arguments
+     *
      * @return array{int, string, string, string} exit code, stdout, stderr, project root
      */
-    private function runBinGacela(?string $autoloadStub, string $subdirectory = ''): array
+    private function runBinGacela(?string $autoloadStub, string $subdirectory = '', array $arguments = []): array
     {
         $binGacela = dirname(__DIR__, 4) . '/bin/gacela';
         $projectRoot = sys_get_temp_dir() . '/gacela-bin-' . uniqid('', true);
@@ -139,7 +182,7 @@ final class BinGacelaTest extends TestCase
         }
 
         try {
-            [$exitCode, $stdout, $stderr] = $this->runPhpScript($binGacela, $cwd);
+            [$exitCode, $stdout, $stderr] = $this->runPhpScript($binGacela, $cwd, $arguments);
 
             // Resolved, because __DIR__ inside the stub reports the real path
             // and the system temp dir is a symlink on macOS.
@@ -171,9 +214,11 @@ final class BinGacelaTest extends TestCase
     }
 
     /**
+     * @param list<string> $arguments
+     *
      * @return array{int, string, string} exit code, stdout, stderr
      */
-    private function runPhpScript(string $script, string $cwd): array
+    private function runPhpScript(string $script, string $cwd, array $arguments = []): array
     {
         $descriptors = [
             0 => ['pipe', 'r'],
@@ -181,7 +226,7 @@ final class BinGacelaTest extends TestCase
             2 => ['pipe', 'w'],
         ];
 
-        $process = proc_open([PHP_BINARY, $script], $descriptors, $pipes, $cwd);
+        $process = proc_open([PHP_BINARY, $script, ...$arguments], $descriptors, $pipes, $cwd);
         self::assertIsResource($process);
 
         fclose($pipes[0]);

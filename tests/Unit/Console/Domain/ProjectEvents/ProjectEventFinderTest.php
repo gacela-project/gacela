@@ -258,6 +258,39 @@ final class ProjectEventFinderTest extends TestCase
         yield 'inline' => ['<?php namespace GacelaTest\Unit\Console\Domain\ProjectEvents\Fixture;'];
     }
 
+    #[DataProvider('unloadableEvents')]
+    public function test_an_unloadable_event_does_not_hide_healthy_events(string $body): void
+    {
+        mkdir($this->temporaryRoot, 0777, true);
+        $namespace = 'UnloadableEvent' . bin2hex(random_bytes(4));
+        $path = $this->temporaryRoot . DIRECTORY_SEPARATOR . 'BrokenEvent.php';
+        file_put_contents($path, "<?php\nnamespace " . $namespace . ";\n" . $body);
+        $this->writeEventFileIn($this->temporaryRoot . DIRECTORY_SEPARATOR . 'healthy');
+        $autoload = static function (string $class) use ($namespace, $path): void {
+            if ($class === $namespace . '\\BrokenEvent') {
+                require $path;
+            }
+        };
+        spl_autoload_register($autoload);
+
+        try {
+            self::assertSame([SomethingHappenedEvent::class], (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find());
+            self::assertSame([SomethingHappenedEvent::class], (new ProjectEventFinder($this->iteratorFor($this->temporaryRoot)))->find());
+        } finally {
+            spl_autoload_unregister($autoload);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unloadableEvents(): iterable
+    {
+        yield 'syntax error' => ['class BrokenEvent { public function x(): void { if ( } }'];
+        yield 'missing parent' => ['class BrokenEvent extends MissingEvent {}'];
+        yield 'error after declaration' => ['class BrokenEvent implements \\Gacela\\Framework\\Event\\GacelaEventInterface { public function toString(): string { return self::class; } } strlen([]);'];
+    }
+
     public function test_scanning_nothing_finds_nothing(): void
     {
         self::assertSame([], (new ProjectEventFinder(new AppendIterator()))->find());

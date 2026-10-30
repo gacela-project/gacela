@@ -50,9 +50,10 @@ use Symfony\Component\Console\Application;
         Gacela::bootstrap($projectRoot);
 
         $bootstrap = new ConsoleBootstrap(name: 'Gacela', version: Gacela::version());
+        $bootstrap->setCatchErrors(true);
         $bootstrap->run();
     } catch (Throwable $e) {
-        fwrite(STDERR, 'gacela script failed. Error: ' . $e->getMessage() . PHP_EOL);
+        fwrite(STDERR, 'gacela script failed. Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL);
         exit(1);
     }
 })();

@@ -18,6 +18,7 @@
 - Trailing root separators no longer load `gacela.php` twice or duplicate plugins and config paths. `Gacela::rootDir()` removes trailing separators from ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))
 - Config preserves filesystem and Windows drive roots instead of changing them to the working directory or a drive-relative path ([#1066](https://github.com/gacela-project/gacela/issues/1066))
 - Config loading and cache clearing handle glob characters in application roots and cache directory names ([#1034](https://github.com/gacela-project/gacela/issues/1034))
+- `doctor` finds unknown published templates under literal directories containing glob characters, at both supported scan depths ([#1102](https://github.com/gacela-project/gacela/issues/1102))
 - Integer config, schema and handler-registry keys survive bootstrap-closure merges. Later declarations replace matching keys without renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
 - Bootstrap closures honor cache directories declared in `gacela.php` or `gacela-{APP_ENV}.php` for package and application caches, matching `cache:warm` ([#997](https://github.com/gacela-project/gacela/issues/997))
 - Dotted environment and dimension names load only their matching config layers. Multipart filenames and shared config keep their existing rules ([#1031](https://github.com/gacela-project/gacela/issues/1031))

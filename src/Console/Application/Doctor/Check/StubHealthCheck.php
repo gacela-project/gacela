@@ -7,6 +7,7 @@ namespace Gacela\Console\Application\Doctor\Check;
 use Gacela\Console\Application\Doctor\CheckResult;
 use Gacela\Console\Application\Doctor\HealthCheck;
 use Gacela\Console\Domain\FileContent\StubFiles;
+use Gacela\Framework\Cache\GlobLiteral;
 
 use function count;
 use function file_get_contents;
@@ -134,8 +135,9 @@ final class StubHealthCheck implements HealthCheck
     private static function strayFiles(string $stubsDir, array $declaredKinds): array
     {
         $stray = [];
+        $escapedDirectory = GlobLiteral::escape($stubsDir);
 
-        foreach ([...(glob($stubsDir . '/*.txt') ?: []), ...(glob($stubsDir . '/*/*.txt') ?: [])] as $path) {
+        foreach ([...(glob($escapedDirectory . '/*.txt') ?: []), ...(glob($escapedDirectory . '/*/*.txt') ?: [])] as $path) {
             // glob() answers in the platform's own separator, and the names
             // this is compared against are written with '/'. On windows every
             // `service/...` stub would otherwise be reported as one the

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Gacela\Psalm;
 
 use Gacela\Framework\ServiceResolver\ServiceMap;
+use Gacela\StaticAnalysis\ResolvedName;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use Psalm\Plugin\EventHandler\AfterClassLikeVisitInterface;
@@ -14,8 +16,6 @@ use Psalm\Plugin\EventHandler\Event\AfterClassLikeVisitEvent;
 use Psalm\Storage\MethodStorage;
 use Psalm\Type;
 
-use function is_string;
-use function ltrim;
 use function strtolower;
 
 /**
@@ -66,20 +66,9 @@ final class ServiceMapPseudoMethods implements AfterClassLikeVisitInterface
         }
     }
 
-    /**
-     * Names are not rewritten in place at visit time; the resolver leaves the
-     * fully-qualified form on the node as an attribute.
-     */
     private static function resolvedName(Node $node): ?string
     {
-        if (!$node instanceof Name) {
-            return null;
-        }
-
-        /** @var mixed $resolved */
-        $resolved = $node->getAttribute('resolvedName');
-
-        return ltrim(is_string($resolved) ? $resolved : $node->toString(), '\\');
+        return $node instanceof Name ? ResolvedName::of($node) : null;
     }
 
     /**
@@ -99,7 +88,11 @@ final class ServiceMapPseudoMethods implements AfterClassLikeVisitInterface
                 $method = $arg->value->value;
             }
 
-            if ($name === 'className' && $arg->value instanceof ClassConstFetch) {
+            if ($name === 'className'
+                && $arg->value instanceof ClassConstFetch
+                && $arg->value->name instanceof Identifier
+                && $arg->value->name->toLowerString() === 'class'
+            ) {
                 $className = self::resolvedName($arg->value->class);
             }
         }

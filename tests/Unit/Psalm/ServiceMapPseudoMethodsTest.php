@@ -16,6 +16,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psalm\Plugin\EventHandler\Event\AfterClassLikeVisitEvent;
 use Psalm\Storage\ClassLikeStorage;
@@ -147,6 +148,47 @@ final class ServiceMapPseudoMethodsTest extends TestCase
         ));
 
         self::assertArrayHasKey('getfacade', $storage->pseudo_methods);
+    }
+
+    public function test_a_named_class_constant_registers_nothing(): void
+    {
+        $fetch = new ClassConstFetch(new Name('WalletModule'), new Identifier('FACADE'));
+        $fetch->class->setAttribute('resolvedName', 'App\Wallet\WalletModule');
+
+        $storage = $this->visit($this->attributeWithArgs([
+            new Arg(new String_('getFacade'), name: new Identifier('method')),
+            new Arg($fetch, name: new Identifier('className')),
+        ]));
+
+        self::assertCount(0, $storage->pseudo_methods);
+    }
+
+    /**
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function classSpellings(): iterable
+    {
+        yield 'named lower' => ['class', true];
+        yield 'named upper' => ['CLASS', true];
+        yield 'named mixed' => ['ClAsS', true];
+        yield 'positional lower' => ['class', false];
+        yield 'positional upper' => ['CLASS', false];
+        yield 'positional mixed' => ['ClAsS', false];
+    }
+
+    #[DataProvider('classSpellings')]
+    public function test_class_constant_spelling_is_case_insensitive(string $spelling, bool $named): void
+    {
+        $fetch = $this->classConstFetch(self::FACADE);
+        $fetch->name = new Identifier($spelling);
+
+        $storage = $this->visit($this->attributeWithArgs([
+            new Arg(new String_('getFacade'), name: $named ? new Identifier('method') : null),
+            new Arg($fetch, name: $named ? new Identifier('className') : null),
+        ]));
+
+        self::assertArrayHasKey('getfacade', $storage->pseudo_methods);
+        self::assertSame(self::FACADE, (string) $storage->pseudo_methods['getfacade']->return_type);
     }
 
     public function test_it_ignores_a_method_argument_that_is_not_a_literal_string(): void

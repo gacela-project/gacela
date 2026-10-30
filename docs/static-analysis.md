@@ -140,7 +140,7 @@ Gacela does not register this for you: the kind is yours, so is the base, and a 
 
 ## Typed pillar accessors
 
-Declare the pillar with `#[ServiceMap]` and the accessor gets a real return type under both analysers:
+Declare the pillar with `#[ServiceMap]` and the accessor gets a real return type under both analysers. Write `className` as `X::class`; Psalm cannot evaluate other constants when it registers the accessor.
 
 ```php
 #[ServiceMap(method: 'getFacade', className: CheckoutFacade::class)]

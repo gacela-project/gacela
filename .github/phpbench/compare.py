@@ -57,7 +57,7 @@ def commands(plan, phase):
     elif phase != "gate":
         raise ValueError("Expected base, gate or info phase")
     for tag, group, pattern, tolerance in groups:
-        command = ["vendor/bin/phpbench", "run", f"--group={group}", "--progress=none"]
+        command = ["vendor/bin/phpbench", "run", f"--group={group}", "--progress=plain"]
         if pattern:
             command.append(f"--filter={pattern}")
         if phase == "base":

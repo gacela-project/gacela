@@ -61,6 +61,8 @@
 
 #### Discovery and diagnostics
 
+- Benchmark CI logs the failing subject and original PHP exception while preserving failure exit codes and performance limits ([#1078](https://github.com/gacela-project/gacela/issues/1078))
+
 - Psalm rejects unknown module-rule XML fields and malformed module depths instead of silently ignoring or truncating them ([#1047](https://github.com/gacela-project/gacela/issues/1047))
 - Declared module dependency checks include anonymous-class parents and interfaces under PHPStan and Psalm ([#1046](https://github.com/gacela-project/gacela/issues/1046))
 

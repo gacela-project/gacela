@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\PHPStan\Reflection;
 
 use Gacela\Framework\AbstractFactory;
+use Gacela\StaticAnalysis\LoadedClass;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
@@ -13,9 +14,7 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 
-use function class_exists;
 use function count;
-use function interface_exists;
 
 /**
  * Types `getProvidedDependency(Foo::class)` as `Foo`.
@@ -63,7 +62,7 @@ final class GetProvidedDependencyReturnTypeExtension implements DynamicMethodRet
         foreach ($constantStrings as $constantString) {
             $className = $constantString->getValue();
 
-            if (!class_exists($className) && !interface_exists($className)) {
+            if (!LoadedClass::exists($className)) {
                 return null;
             }
 

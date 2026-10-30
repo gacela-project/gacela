@@ -25,6 +25,16 @@ final class CacheWarmOutputFormatter
         $this->output->writeln('');
     }
 
+    public function writeCouldNotRemove(string $filename): void
+    {
+        $this->output->writeln(sprintf('<error>✗ Could not remove: %s</error>', $filename));
+    }
+
+    public function writeCouldNotWrite(string $filename): void
+    {
+        $this->output->writeln(sprintf('<error>✗ Could not write: %s</error>', $filename));
+    }
+
     public function writeCacheCleared(): void
     {
         $this->output->writeln('<fg=yellow>Cleared existing cache</>');

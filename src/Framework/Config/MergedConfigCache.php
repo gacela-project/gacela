@@ -151,34 +151,27 @@ final class MergedConfigCache
         ]);
     }
 
-    public function clear(): void
+    /**
+     * @return list<string>
+     */
+    public function clear(): array
     {
-        FileCache::delete($this->filename());
-
-        // Every other dimension tuple of this application too. Clearing only
-        // the tuple this process happens to be leaves the other regions'
-        // answers on disk, and the next deploy of one of them reads its own
-        // stale file back. Anchored to this app's hash, so another
-        // application sharing the cache dir is not touched.
-        foreach ($this->siblingTupleFilenames() as $filename) {
-            FileCache::delete($filename);
-        }
-
-        // Also drop a cache written before filenames were app-scoped, so
-        // clearing leaves no stale pre-#465 file behind in a shared dir, and
-        // every file written before sources were recorded.
-        foreach (['', self::VERSION] as $version) {
-            foreach ($this->appSuffix() === '' ? [''] : ['', $this->appSuffix()] as $appSuffix) {
-                $filename = $this->buildFilename($appSuffix, $version);
-                if ($filename !== $this->filename()) {
-                    FileCache::delete($filename);
-                }
+        $failed = [];
+        foreach ($this->filenamesToClear() as $filename) {
+            if (!FileCache::delete($filename)) {
+                $failed[] = $filename;
             }
         }
 
-        foreach ($this->siblingTupleFilenames('') as $filename) {
-            FileCache::delete($filename);
-        }
+        return $failed;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function existingFilenames(): array
+    {
+        return array_values(array_filter($this->filenamesToClear(), file_exists(...)));
     }
 
     /**
@@ -190,6 +183,21 @@ final class MergedConfigCache
     public function filename(): string
     {
         return $this->buildFilename($this->appSuffix(), self::VERSION);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function filenamesToClear(): array
+    {
+        $files = [$this->filename(), ...$this->siblingTupleFilenames(), ...$this->siblingTupleFilenames('')];
+        foreach (['', self::VERSION] as $version) {
+            foreach ($this->appSuffix() === '' ? [''] : ['', $this->appSuffix()] as $appSuffix) {
+                $files[] = $this->buildFilename($appSuffix, $version);
+            }
+        }
+
+        return array_values(array_unique($files));
     }
 
     /**
@@ -281,7 +289,7 @@ final class MergedConfigCache
     private function write(array $values, array $contents): void
     {
         if (!self::isExportable($values)) {
-            FileCache::delete($this->filename());
+            FileCache::discardForWrite($this->filename());
 
             return;
         }

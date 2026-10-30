@@ -357,7 +357,7 @@ final class Config implements ConfigInterface
             // A file touched this second could change again unseen. Nothing is
             // left, not even an older trusted file, so the next bootstrap writes
             // it. This file only: the other regions' caches are still good.
-            FileCache::delete($cache->filename());
+            FileCache::discardForWrite($cache->filename());
         } else {
             $cache->writeVerified($merged, ConfigLoader::declarationSignatureOf($gacelaConfigFile), $sources);
         }
@@ -367,10 +367,12 @@ final class Config implements ConfigInterface
 
     /**
      * @internal
+     *
+     * @return list<string>
      */
-    public function clearMergedConfigCache(): void
+    public function clearMergedConfigCache(): array
     {
-        $this->createMergedConfigCache()->clear();
+        return $this->createMergedConfigCache()->clear();
     }
 
     /**

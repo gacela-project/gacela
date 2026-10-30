@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\PHPStan\Reflection;
 
+use Error;
 use Gacela\Framework\AbstractFactory;
 use Gacela\PHPStan\Reflection\GetProvidedDependencyReturnTypeExtension;
 use GacelaTest\Unit\PHPStan\Reflection\Fixture\MappedFacade;
@@ -27,6 +28,23 @@ final class GetProvidedDependencyReturnTypeExtensionTest extends TestCase
     protected function setUp(): void
     {
         $this->extension = new GetProvidedDependencyReturnTypeExtension();
+    }
+
+    public function test_a_key_whose_autoload_throws_is_left_alone(): void
+    {
+        $key = 'App\\PhpStanDependency\\ThrowsOnLoad';
+        $loader = static function (string $class) use ($key): void {
+            if ($class === $key) {
+                throw new Error('Missing optional dependency');
+            }
+        };
+        spl_autoload_register($loader);
+
+        try {
+            self::assertNull($this->typeFor(new ConstantStringType($key), $key));
+        } finally {
+            spl_autoload_unregister($loader);
+        }
     }
 
     public function test_applies_to_the_factory_base_class(): void

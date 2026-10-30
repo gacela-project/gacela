@@ -297,9 +297,20 @@ final class FileCache
         return array_keys(self::$failedWrites);
     }
 
-    public static function resetWriteFailures(): void
+    /**
+     * @param list<string>|null $files
+     */
+    public static function resetWriteFailures(?array $files = null): void
     {
-        self::$failedWrites = [];
+        if ($files === null) {
+            self::$failedWrites = [];
+
+            return;
+        }
+
+        foreach ($files as $file) {
+            unset(self::$failedWrites[$file]);
+        }
     }
 
     /**
@@ -348,22 +359,41 @@ final class FileCache
         return true;
     }
 
+    public static function discardForWrite(string $file): bool
+    {
+        if (!self::delete($file)) {
+            return self::failedWrite($file);
+        }
+
+        unset(self::$failedWrites[$file]);
+
+        return true;
+    }
+
     /**
      * Remove a cache file the same way this class writes one: tolerate an
      * already-absent file (read-only dir, race) and invalidate any compiled
      * opcode so a stale bytecode copy is not served after the file is gone.
      * Shared by every Gacela cache-clear path so they stay consistent.
      */
-    public static function delete(string $file): void
+    public static function delete(string $file): bool
     {
-        if (is_file($file)) {
-            @unlink($file);
-            self::invalidateOpcacheFor($file);
-
-            if (self::shouldDispatch(CacheClearedEvent::class)) {
-                self::dispatchEvent(new CacheClearedEvent($file));
-            }
+        if (!file_exists($file)) {
+            return true;
         }
+
+        @unlink($file);
+        clearstatcache(true, $file);
+        if (file_exists($file)) {
+            return false;
+        }
+
+        self::invalidateOpcacheFor($file);
+        if (self::shouldDispatch(CacheClearedEvent::class)) {
+            self::dispatchEvent(new CacheClearedEvent($file));
+        }
+
+        return true;
     }
 
     /**

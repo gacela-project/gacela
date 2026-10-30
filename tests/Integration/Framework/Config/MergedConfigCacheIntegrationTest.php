@@ -11,9 +11,11 @@ use Gacela\Framework\Config\MergedConfigCache;
 use Gacela\Framework\Gacela;
 use PHPUnit\Framework\TestCase;
 
+use function clearstatcache;
 use function count;
 use function dirname;
 use function file_put_contents;
+use function filemtime;
 use function getenv;
 use function is_file;
 use function mkdir;
@@ -159,16 +161,12 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertSame('second-value', Config::getInstance()->get('src'));
     }
 
-    /**
-     * `stat()` gives whole seconds, and a directory on ext4 or NTFS keeps its
-     * size when a file is added, so a stamp taken in the second of a change
-     * cannot see a second change in that same second.
-     */
-    public function test_a_source_touched_this_second_is_not_cached_yet(): void
+    public function test_an_unsettled_source_is_not_cached_yet(): void
     {
         $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
         file_put_contents($file, "<?php return ['src' => 'now'];");
         $this->createdFiles[] = $file;
+        $this->markSourceUnsettled($file);
 
         $this->bootstrapApp();
 
@@ -399,12 +397,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertSame('after-the-edit', $written['values']['src']);
     }
 
-    /**
-     * Stamps taken in the second of a change cannot see another change in it,
-     * so a verified warm then writes nothing, and removes what an earlier
-     * trusted warm left, rather than serve it unchecked.
-     */
-    public function test_a_verified_warm_of_a_source_touched_this_second_leaves_no_file(): void
+    public function test_a_verified_warm_of_an_unsettled_source_removes_the_stale_file(): void
     {
         $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
         $this->writeAppConfig($file, 'trusted');
@@ -412,7 +405,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         Config::getInstance()->writeMergedConfigCache();
         self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
 
-        touch($file);
+        $this->markSourceUnsettled($file);
         $this->bootstrapWatching([], verifiedWarm: true);
         $filename = Config::getInstance()->writeMergedConfigCache();
 
@@ -633,9 +626,19 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         file_put_contents($filename, sprintf('<?php return %s;', var_export($data, true)));
     }
 
+    private function markSourceUnsettled(string $file): void
+    {
+        // One hour exceeds the integration job timeout without relying on a second boundary.
+        $at = time() + 3600;
+        touch($file, $at);
+        clearstatcache(true, $file);
+
+        self::assertSame($at, filemtime($file));
+    }
+
     /**
      * Backdated, each write later than the one before: a source touched in the
-     * current second is not cached yet (see the same-second test), and these
+     * current second is not cached yet, and these
      * tests are about what a cached stamp catches.
      */
     private function writeAppConfig(string $file, string $value): void

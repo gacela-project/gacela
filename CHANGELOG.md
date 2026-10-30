@@ -4,52 +4,66 @@
 
 ### Changed
 
-- File caching defaults to the private `{appRoot}/.gacela/cache` directory instead of the system temporary directory. Discovered-package cache filenames carry the application-root hash ([#1029](https://github.com/gacela-project/gacela/issues/1029))
-
-- `Gacela::get()` and `Gacela::getRequired()` before `Gacela::bootstrap()` throw `GacelaNotBootstrappedException`, as `Gacela::container()` does. Before, `get()` returned `null` and pinned an empty container for the rest of the process ([#976](https://github.com/gacela-project/gacela/issues/976))
+- File caching defaults to the private `{appRoot}/.gacela/cache` instead of the system temporary directory. Package cache filenames include the application-root hash ([#1029](https://github.com/gacela-project/gacela/issues/1029))
+- `Gacela::get()` and `getRequired()` throw `GacelaNotBootstrappedException` before bootstrap, matching `container()` ([#976](https://github.com/gacela-project/gacela/issues/976))
 
 ### Fixed
 
+#### Bootstrap and configuration
+
+- `Gacela::get()` uses the latest bootstrap's container. Plugins receiving a `Container` get the application container instead of an empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
+- A trailing separator in the application root no longer loads `gacela.php` twice, repeats plugins or duplicates configuration paths. `Gacela::rootDir()` removes trailing separators from ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))
+- Integer configuration, schema and handler-registry keys survive bootstrap-closure merges. Later declarations replace matching keys instead of renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
+- With a bootstrap closure, file caching uses the directory declared in `gacela.php` or `gacela-{APP_ENV}.php` for package and application caches, matching `cache:warm` ([#997](https://github.com/gacela-project/gacela/issues/997))
+- Environment and dimension names containing dots load only for their matching environment chain. Multipart filenames and shared configuration keep their existing rules ([#1031](https://github.com/gacela-project/gacela/issues/1031))
+
+#### Events
+
+- `GacelaBootstrapStartedEvent` listeners in `gacela.php` run with a bootstrap closure, once after setup assembly and before configuration initialization and bootstrap completion ([#1009](https://github.com/gacela-project/gacela/issues/1009))
+- `disableEventListeners()` in `gacela.php` or `gacela-{env}.php` works with a bootstrap closure. Disabled listeners remain visible in `doctor` and `debug:events` ([#998](https://github.com/gacela-project/gacela/issues/998))
+- Listeners run in declaration order when an event matches several registered classes, including parent classes and interfaces ([#970](https://github.com/gacela-project/gacela/issues/970))
+
+#### Caching
+
+- Cache reads, including container plans, reject foreign-owned files, symlinks, files writable by other users and files in directories writable by other users without the sticky bit. New PHP cache files use mode `0600`; failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
+- `cache:warm` and `cache:clear` name files they could not write or remove and exit 1. Failed merged-config writes no longer report stale file sizes as success. Disabled caching retains its warning and successful exit ([#1032](https://github.com/gacela-project/gacela/issues/1032))
+- Malformed, empty or incompatible class-name, package and `FileCache` entries become cache misses and are rewritten ([#977](https://github.com/gacela-project/gacela/issues/977))
+- Corrupt attribute membership caches rebuild when a plugin stack resolves; `doctor --json` reports a warning instead of aborting ([#1010](https://github.com/gacela-project/gacela/issues/1010))
+- Truncated scoped-cache dependency graphs rebuild on the next dependency update instead of aborting the application ([#1033](https://github.com/gacela-project/gacela/issues/1033))
+- `FileCache::clear()` and `stats()` affect only their own entry filenames. New entries use `gacela-fc-`; legacy 40-hex-character filenames remain readable and removable through `forget()` and `clear()` ([#979](https://github.com/gacela-project/gacela/issues/979))
+
+#### Service resolution
+
+- `#[ServiceMap]` returns the concrete pillar named by `className`, even outside module naming conventions. Abstract targets retain conventional or default resolution ([#1015](https://github.com/gacela-project/gacela/issues/1015))
+- Custom services ending in a declared kind suffix keep separate resolver cache entries, so resolving or overriding one cannot replace another or the module's conventional service ([#1016](https://github.com/gacela-project/gacela/issues/1016))
+- Anonymous globals from same-named files in different directories use distinct, canonical file-path keys that remain stable across bootstrap. Registering a different instance for an occupied key throws; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))
+
+#### Discovery and diagnostics
+
+- Module and event discovery read namespace declarations, including braced namespaces, instead of namespace names quoted in docblocks ([#995](https://github.com/gacela-project/gacela/issues/995))
+- Module discovery, undiscovered-facade checks, project events and `migrate:service-map` accept directories such as `myvendor`; directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))
+- Discovery skips files PHP cannot compile or load. `doctor` reports the error's file and line; command errors retain their location and verbose trace ([#1026](https://github.com/gacela-project/gacela/issues/1026))
+- Invalid module directories no longer emit PHP warnings into JSON. `doctor` reports them, and `list:modules` names them in text even when other paths contain modules ([#1023](https://github.com/gacela-project/gacela/issues/1023))
+- `debug:graph --format=json` emits an empty graph when no modules are found; text output retains its diagnostic ([#1071](https://github.com/gacela-project/gacela/issues/1071))
+- `debug:graph --compare-to` rejects `--format` and `--json` instead of silently returning a Markdown diff ([#975](https://github.com/gacela-project/gacela/issues/975))
+- Import parsing keeps brace depth balanced through interpolated strings and heredocs. Trait-use statements are no longer mistaken for namespace imports in module graphs or package checks, and imports after a class remain visible ([#993](https://github.com/gacela-project/gacela/issues/993))
+
+#### Code generation
+
+- Console file writes replace targets only after the content is complete. Failed or partial writes preserve the original, remove temporary files and retain existing POSIX permissions ([#1002](https://github.com/gacela-project/gacela/issues/1002))
+- `dto:generate` rejects shapes covered only by PSR-0 instead of writing classes Composer cannot load. Both DTO generation and package manifest checks use the first PSR-4 directory; generation rejects empty or invalid lists, while manifest scanning skips them ([#1003](https://github.com/gacela-project/gacela/issues/1003), [#1024](https://github.com/gacela-project/gacela/issues/1024))
+- `dto:generate` preserves files it did not generate and exits with an error, including with `--dry-run` and `--check`; `--force` permits replacement ([#1022](https://github.com/gacela-project/gacela/issues/1022))
+- `ide:meta` reports an existing single-file `.phpstorm.meta.php` and explains how to move it to directory form, including with `--dry-run`, without writes or PHP warnings ([#1025](https://github.com/gacela-project/gacela/issues/1025))
+- `migrate:service-map` preserves CRLF endings in inserted attributes and imports, and leaves files with multiple namespaces unchanged ([#994](https://github.com/gacela-project/gacela/issues/994))
+- `make:file` prefers exact kind names and aliases over abbreviations, so names such as `ConfigReader` no longer make pillar names ambiguous ([#992](https://github.com/gacela-project/gacela/issues/992))
+- `make:module` and `make:file` accept backslash-separated namespace paths. `make:module` prints the module name, including at a PSR-4 root ([#972](https://github.com/gacela-project/gacela/issues/972), [#973](https://github.com/gacela-project/gacela/issues/973))
+
+#### Static analysis
+
 - Cross-module checks and declared dependency rules ignore leading or trailing namespace separators and compare namespace names without case sensitivity. Shared namespaces and ignored receivers follow the same rules; a separator-only root fails configuration instead of silently disabling checks ([#1041](https://github.com/gacela-project/gacela/issues/1041))
-
-- `debug:graph --format=json` emits an empty JSON graph when no modules are found, while retaining the text diagnostic ([#1071](https://github.com/gacela-project/gacela/issues/1071))
-
-- Module discovery, undiscovered-facade warnings, project events and `migrate:service-map` scan projects under directories whose names end in `vendor`, such as `myvendor`. Directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))
-- Module and project-event discovery skip files PHP cannot compile or load. `doctor` reports the PHP error with its file and line under undiscovered facades, and command errors retain their location and verbose trace ([#1026](https://github.com/gacela-project/gacela/issues/1026))
-- `dto:generate` reports a shape covered only by a `psr-0` prefix as uncovered and exits with an error. Before, it wrote the class to a path Composer could not load ([#1003](https://github.com/gacela-project/gacela/issues/1003))
-- `dto:generate` and package manifest checks use the first directory when a Composer autoload prefix maps to a list, matching `make:module`. Empty or invalid directory lists no longer cause generation or scanning at the package root ([#1024](https://github.com/gacela-project/gacela/issues/1024))
-- Module discovery skips configured paths that are not directories without emitting PHP warnings into JSON output. `doctor` keeps reporting those entries, and `list:modules` text output names them even when other paths contain modules ([#1023](https://github.com/gacela-project/gacela/issues/1023))
-- A truncated scoped-cache dependency graph is ignored and rebuilt on the next dependency update instead of aborting the application ([#1033](https://github.com/gacela-project/gacela/issues/1033))
-
-- Cache reads reject foreign-owned files, files writable by other users, symlinks and files in directories writable by other users without the sticky bit, including container plans. New PHP cache files are created with mode `0600`. Failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
-- A `GacelaBootstrapStartedEvent` listener in `gacela.php` runs when bootstrap also receives a closure. The event fires once after setup assembly, before configuration initialization and bootstrap completion ([#1009](https://github.com/gacela-project/gacela/issues/1009))
-
-- Corrupt attribute membership caches are treated as not warmed. Resolving a plugin stack rebuilds the file, and `doctor --json` reports a warning instead of aborting ([#1010](https://github.com/gacela-project/gacela/issues/1010))
-- Integer configuration, schema and handler registry keys keep their values when declared or merged with a bootstrap closure. Later declarations replace matching keys instead of renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
-- `disableEventListeners()` in `gacela.php` or `gacela-{env}.php` takes effect when bootstrap also receives a closure. Registered listeners remain visible in `doctor` and `debug:events` while disabled ([#998](https://github.com/gacela-project/gacela/issues/998))
-- File caching enabled by a bootstrap closure uses the directory declared in `gacela.php` or `gacela-{APP_ENV}.php` for package discovery and application caches. Application processes and `cache:warm` now use the same cache files ([#997](https://github.com/gacela-project/gacela/issues/997))
-- Configuration files for environments or dimensions containing a dot, such as `app-prod.v2.php`, are excluded from the base layer and loaded only for the matching environment chain. Multipart filenames and ordinary shared configuration retain their naming rules ([#1031](https://github.com/gacela-project/gacela/issues/1031))
-
-- Console file writers replace a target only after its new content is fully written. A failed or partial write during `migrate:service-map` now leaves the original source intact instead of truncating it; temporary files are cleaned up and existing permission bits are preserved on POSIX ([#1002](https://github.com/gacela-project/gacela/issues/1002))
-- `ide:meta` reports an existing single-file `.phpstorm.meta.php` with instructions to move it into the directory form, including with `--dry-run`, without writing files or emitting a PHP warning ([#1025](https://github.com/gacela-project/gacela/issues/1025))
-- `dto:generate` leaves existing files it did not generate untouched and exits with an error, including with `--dry-run` and `--check`; pass `--force` to replace them ([#1022](https://github.com/gacela-project/gacela/issues/1022))
-- `Gacela::bootstrap()` reads `gacela.php` once when the application root ends in a separator. Plugins no longer run twice and configuration paths are no longer duplicated for that spelling; `Gacela::rootDir()` omits trailing separators on ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))
-- Module and project-event discovery read the namespace declaration instead of a namespace quoted in a docblock, and accept braced namespaces. Valid Facades and events in those files are no longer dropped or reported under the quoted namespace ([#995](https://github.com/gacela-project/gacela/issues/995))
-- `migrate:service-map` preserves CRLF line endings on inserted attributes and imports. Files with more than one namespace are left unchanged instead of receiving an import in the wrong namespace ([#994](https://github.com/gacela-project/gacela/issues/994))
-- The import parser keeps brace depth balanced for interpolated strings and heredocs. A trait `use` after an interpolation no longer appears as a top-level import in module graphs or package checks, and imports after the class remain visible ([#993](https://github.com/gacela-project/gacela/issues/993))
-- `make:file` gives exact kind names and aliases priority over abbreviations. Declaring a `ConfigReader`, `FactoryBuilder` or `ProviderRegistry` no longer makes the corresponding pillar name ambiguous ([#992](https://github.com/gacela-project/gacela/issues/992))
-- Custom services ending in a declared kind suffix keep distinct resolver cache entries. Resolving or overriding `SalesExporter` no longer replaces `AuditExporter` or the module's conventional `ReportExporter` ([#1016](https://github.com/gacela-project/gacela/issues/1016))
-- `FileCache::clear()` and `stats()` touch only its own entry filenames, preserving framework caches and unrelated PHP files in a shared directory. New entries use a `gacela-fc-` prefix; legacy 40-hex-character filenames remain readable and are removed by `forget()` and `clear()` ([#979](https://github.com/gacela-project/gacela/issues/979))
-- `Gacela::addGlobal()` distinguishes anonymous globals registered from same-named files in different directories. File contexts and their internal lookup keys now use the full canonical file path, which stays stable across bootstrap. Registering a different instance for an occupied key throws instead of silently replacing it; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))
-- `#[ServiceMap]` returns the concrete pillar class named by `className`, including a Facade, Factory or Config named outside its module convention. Abstract pillar targets retain conventional or default resolution ([#1015](https://github.com/gacela-project/gacela/issues/1015))
-- `Gacela::get()` follows the container of the latest bootstrap. Before, it kept the first container it saw: a call before bootstrap made every later `Gacela::get()` return `null`, and a second bootstrap kept serving the first one's bindings. A plugin that takes a `Container` now gets the application container; before, it got a new, empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
-- `gacela.cacheableWithoutCachedCall` (Psalm: `GacelaCacheableWithoutCachedCall`) follows `$this->cached()` through any number of private helpers. Before, a `#[Cacheable]` method that reached it through two helpers was reported as never cached, though it was ([#974](https://github.com/gacela-project/gacela/issues/974))
-- `debug:graph --compare-to` refuses `--format` and `--json` instead of ignoring them. Before, asking for a JSON diff wrote the markdown diff with a zero exit ([#975](https://github.com/gacela-project/gacela/issues/975))
-- A class-name, package or `FileCache` entry file that does not parse, is empty, or returns something other than the cache's shape is treated as a miss and rewritten. Before, a truncated class-name cache file failed every bootstrap until someone deleted it ([#977](https://github.com/gacela-project/gacela/issues/977))
-- `make:module` names the module in its closing line. For a module at the psr-4 root it printed the directory instead: `make:module App` with `"App\\": "src/"` ended with `Module 'src' created successfully` ([#973](https://github.com/gacela-project/gacela/issues/973))
-- `make:module` and `make:file` accept a backslash-separated path, `'App\Blog'`, the way PHP writes a namespace. Before, it was refused as "not a valid PHP name" ([#972](https://github.com/gacela-project/gacela/issues/972))
-- `gacela.factoryInstantiatesFacade` and `gacela.crossModuleWithoutFacade` (Psalm: `GacelaFacadeInstantiation`, `GacelaCrossModuleAccess`) decide a Facade by `AbstractFacade`, not by the `Facade` suffix. Before, a Factory building a library class such as `PdfFacade` was told to declare it in its Provider, and another module's internal class named `*Facade` passed the boundary check ([#971](https://github.com/gacela-project/gacela/issues/971))
-- Specific listeners run in declaration order when an event matches more than one registered class. Before, a listener on a parent class or interface registered after one on the concrete event still ran before it, because listeners were grouped by the class they were registered for ([#970](https://github.com/gacela-project/gacela/issues/970))
+- Static-analysis rules treat classes that throw while loading as unloadable, so broken project dependencies do not crash the analysis ([#1042](https://github.com/gacela-project/gacela/issues/1042))
+- `#[Cacheable]` checks follow `$this->cached()` through any number of private helpers instead of reporting a method cached through two helpers as uncached ([#974](https://github.com/gacela-project/gacela/issues/974))
+- The Factory-instantiation and cross-module written-reference rules identify Facades by `AbstractFacade`, rather than the `Facade` suffix, avoiding false findings for library classes and missed findings for internal classes ([#971](https://github.com/gacela-project/gacela/issues/971))
 
 ## [2.8.0](https://github.com/gacela-project/gacela/compare/2.7.1...2.8.0) - 2026-10-04
 

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Cache;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\WritableDirectory;
+use Gacela\Framework\Event\Cache\CacheClearedEvent;
+use Gacela\Framework\Gacela;
 use GacelaTest\Fixtures\FailingWriteStreamWrapper;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\WarningCollectorTrait;
@@ -39,6 +42,41 @@ final class FileCacheDegradationTest extends TestCase
     {
         WritableDirectory::resetCache();
         $this->restoreReadOnlyDirs();
+    }
+
+    public function test_delete_reports_failure_without_an_event_if_the_file_remains(): void
+    {
+        $dir = $this->createReadOnlyDirOrSkip('delete-cache', static function (string $dir): void {
+            file_put_contents($dir . DIRECTORY_SEPARATOR . 'cache.php', '<?php return [];');
+        });
+        $events = [];
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use (&$events): void {
+            $config->resetInMemoryCache()->setFileCache(false);
+            $config->registerSpecificListener(CacheClearedEvent::class, static function (CacheClearedEvent $event) use (&$events): void {
+                $events[] = $event;
+            });
+        });
+        try {
+            self::assertFalse(FileCache::delete($dir . DIRECTORY_SEPARATOR . 'cache.php'));
+            self::assertSame([], $events);
+            self::assertFileExists($dir . DIRECTORY_SEPARATOR . 'cache.php');
+        } finally {
+            Gacela::resetCache();
+        }
+    }
+
+    public function test_delete_reports_success_when_the_file_is_removed_or_already_absent(): void
+    {
+        $file = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-delete-' . uniqid('', true);
+        file_put_contents($file, '<?php return [];');
+
+        try {
+            self::assertTrue(FileCache::delete($file));
+            self::assertTrue(FileCache::delete($file));
+            self::assertFileDoesNotExist($file);
+        } finally {
+            @unlink($file);
+        }
     }
 
     /**

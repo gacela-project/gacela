@@ -137,6 +137,16 @@ final class CacheWarmOutputFormatterTest extends TestCase
         );
     }
 
+    public function test_a_skipped_membership_cache_says_file_caching_is_disabled(): void
+    {
+        $this->formatter->writePluginMembershipSkipped();
+
+        self::assertSame(
+            $this->lines('Membership cache: not written, file caching is disabled', ''),
+            $this->output->fetch(),
+        );
+    }
+
     public function test_a_skipped_merged_config_cache_says_why_and_what_follows(): void
     {
         $this->formatter->writeMergedConfigCacheSkipped();

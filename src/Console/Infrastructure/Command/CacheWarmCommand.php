@@ -104,8 +104,12 @@ final class CacheWarmCommand extends Command
         );
 
         $classCacheWritten = $this->displayCacheInfo($cacheManager, $formatter);
-        $membershipWritten = !$warmAttributes || $this->warmPluginMembership($formatter);
         $cacheEnabled = (new GacelaFileCache(Config::getInstance()))->isEnabled();
+        $membershipWritten = !$warmAttributes || !$cacheEnabled || $this->warmPluginMembership($formatter);
+        if ($warmAttributes && !$cacheEnabled) {
+            $formatter->writePluginMembershipSkipped();
+        }
+
         $mergedConfigWritten = !$cacheEnabled || $this->warmAndDisplayMergedConfigCache($formatter);
         $failedWrites = array_values(array_intersect($writePaths, FileCache::failedWrites()));
         if ($cacheEnabled && !$classCacheWritten && !in_array($cacheManager->getCacheFilePath(), $failedWrites, true)) {

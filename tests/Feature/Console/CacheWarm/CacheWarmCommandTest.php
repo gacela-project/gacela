@@ -352,6 +352,19 @@ final class CacheWarmCommandTest extends TestCase
         );
     }
 
+    public function test_attributes_write_no_files_when_file_caching_is_disabled(): void
+    {
+        $this->withEmptyCacheDir(static function (string $cacheDir): void {
+            $command = new CommandTester(new CacheWarmCommand());
+            $command->execute(['--attributes' => true]);
+
+            self::assertSame(Command::SUCCESS, $command->getStatusCode());
+            self::assertSame([], glob($cacheDir . DIRECTORY_SEPARATOR . '*'));
+            self::assertStringContainsString('Membership cache: not written, file caching is disabled', $command->getDisplay());
+            self::assertStringNotContainsString('Membership cache: ' . $cacheDir, $command->getDisplay());
+        });
+    }
+
     public function test_cache_warm_with_attributes_stores_the_plugin_membership(): void
     {
         $this->command->execute(['--attributes' => true]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
+use Error;
 use Gacela\Framework\AbstractConfig;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\AbstractFactory;
@@ -17,6 +18,23 @@ use PHPUnit\Framework\TestCase;
 
 final class SuffixExtendsAnalyserTest extends TestCase
 {
+    public function test_a_pillar_whose_facade_autoload_throws_is_not_checked(): void
+    {
+        $facade = 'App\\Unloadable\\UnloadableFacade';
+        $loader = static function (string $class) use ($facade): void {
+            if ($class === $facade) {
+                throw new Error('Missing optional dependency');
+            }
+        };
+        spl_autoload_register($loader);
+
+        try {
+            self::assertSame([], $this->analyseAs('Factory', AbstractFactory::class, 'App\\Unloadable\\UnloadableFactory'));
+        } finally {
+            spl_autoload_unregister($loader);
+        }
+    }
+
     public function test_a_facade_extending_the_pillar_is_allowed(): void
     {
         self::assertSame([], $this->analyse('App\Checkout\CheckoutFacade', [AbstractFacade::class]));

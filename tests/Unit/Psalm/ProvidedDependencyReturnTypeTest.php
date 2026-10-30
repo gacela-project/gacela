@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Psalm;
 
+use Error;
 use Gacela\Framework\AbstractFactory;
 use Gacela\Psalm\ProvidedDependencyReturnType;
 use GacelaTest\Unit\Psalm\Fixture\ProvidedClock;
@@ -51,6 +52,23 @@ final class ProvidedDependencyReturnTypeTest extends TestCase
     protected function tearDown(): void
     {
         (new ReflectionProperty(Config::class, 'instance'))->setValue(null, $this->previousConfig);
+    }
+
+    public function test_a_key_whose_autoload_throws_is_left_alone(): void
+    {
+        $key = 'App\\PsalmDependency\\ThrowsOnLoad';
+        $loader = static function (string $class) use ($key): void {
+            if ($class === $key) {
+                throw new Error('Missing optional dependency');
+            }
+        };
+        spl_autoload_register($loader);
+
+        try {
+            self::assertNull($this->returnTypeFor($this->literal($key)));
+        } finally {
+            spl_autoload_unregister($loader);
+        }
     }
 
     public function test_it_applies_to_the_factory_base_class(): void

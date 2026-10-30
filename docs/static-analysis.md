@@ -97,7 +97,7 @@ The pillar rules apply to **classes**. An interface, trait or enum named after a
 
 A Factory, Config or Provider, or a kind you declared, is only reported where the resolver would pick it up: named `{Module}{Suffix}` or just `{Suffix}`, with `{Module}` the last segment of its namespace, in a namespace that has a Facade (`{Module}Facade` or `Facade`, extending `AbstractFacade`) for resolution to start from. An `ExpressionParserFactory` in `App\Compiler\Domain\Parser` is a factory, not the `Parser` module's pillar, and a `LazySeqConfig` beside a `LazySeq` collection with no Facade is no module's Config, so both are left alone. A Facade has no such shape, since it is whatever class the caller instantiates, so every `*Facade` is checked.
 
-The Factory and cross-module rules ask the class, not its name: a Facade there is a class that extends `AbstractFacade`. A library's `PdfFacade` built in a Factory is not reported, and another module's internal `HelperFacade` is a cross-module reference like any other class. A class the analyser cannot load counts as no Facade.
+The Factory and cross-module rules ask the class, not its name: a Facade there is a class that extends `AbstractFacade`. A library's `PdfFacade` built in a Factory is not reported, and another module's internal `HelperFacade` is a cross-module reference like any other class. A class the analyser cannot load counts as no Facade. A class whose file throws while loading counts the same way.
 
 Suppressing one rule:
 

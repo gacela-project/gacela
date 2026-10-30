@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\StaticAnalysis\Rules;
 
+use Error;
 use Gacela\StaticAnalysis\PublicApiSurface;
 use Gacela\StaticAnalysis\Rules\CrossModuleMethodCallAnalyser;
 use Gacela\StaticAnalysis\Violation;
@@ -25,6 +26,24 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
     private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
 
     private const FIXTURE_CALLER = self::FIXTURE_ROOT . '\Checkout\CheckoutFactory';
+
+    public function test_a_receiver_whose_autoload_throws_is_reported(): void
+    {
+        $receiver = self::FIXTURE_ROOT . '\\Billing\\ThrowsOnLoad';
+        $loader = static function (string $class) use ($receiver): void {
+            if ($class === $receiver) {
+                throw new Error('Missing optional dependency');
+            }
+        };
+        spl_autoload_register($loader);
+
+        try {
+            self::assertCount(1, $this->analyseReal([$receiver]));
+            self::assertSame([], $this->analyseReal([$receiver], [$receiver]));
+        } finally {
+            spl_autoload_unregister($loader);
+        }
+    }
 
     public function test_a_call_on_another_modules_type_is_reported(): void
     {

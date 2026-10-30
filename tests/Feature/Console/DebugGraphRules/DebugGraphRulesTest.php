@@ -52,6 +52,17 @@ final class DebugGraphRulesTest extends TestCase
         $this->files = [];
     }
 
+    public function test_rule_namespace_spelling_does_not_change_the_cli_verdict(): void
+    {
+        $rules = $this->writeRules([
+            ['from' => '\\' . strtolower(self::PAYMENT) . '\\', 'deny' => ['\\' . strtolower(self::ADMIN) . '\\'], 'reason' => 'reviewed'],
+        ]);
+
+        self::assertSame(1, $this->command->execute(['--check' => true, '--rules' => $rules]));
+        self::assertStringContainsString('Forbidden dependency:', $this->command->getDisplay());
+        self::assertStringNotContainsString('governs nothing', $this->command->getDisplay());
+    }
+
     public function test_check_fails_on_a_dependency_a_rule_denies(): void
     {
         $rules = $this->writeRules([

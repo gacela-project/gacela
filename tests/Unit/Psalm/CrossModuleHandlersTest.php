@@ -12,8 +12,10 @@ use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\BillingFacade;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\InternalHelperFacade;
+use InvalidArgumentException;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\NodeFinder;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psalm\Config;
 use Psalm\NodeTypeProvider;
@@ -66,6 +68,33 @@ final class CrossModuleHandlersTest extends TestCase
         CrossModuleRules::configure(null);
         CrossModuleCallRules::configure(null);
         (new ReflectionProperty(Config::class, 'instance'))->setValue(null, $this->previousConfig);
+    }
+
+    #[DataProvider('rootSpellings')]
+    public function test_root_spellings_preserve_both_psalm_checks(string $root): void
+    {
+        $this->configure($root);
+
+        self::assertCount(1, $this->writtenViolations());
+        self::assertCount(1, $this->callViolations('App\\Modules\\Billing\\Domain\\InvoiceRepository'));
+    }
+
+    public function test_a_separator_only_root_fails_when_psalm_is_configured(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('rootNamespace must name a namespace');
+
+        $this->configure('\\');
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function rootSpellings(): iterable
+    {
+        yield 'leading separator' => ['\\App\\Modules'];
+        yield 'trailing separator' => ['App\\Modules\\'];
+        yield 'other case' => ['app\\modules'];
     }
 
     public function test_the_written_half_finds_nothing_until_it_is_configured(): void

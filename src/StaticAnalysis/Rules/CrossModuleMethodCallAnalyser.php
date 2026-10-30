@@ -42,6 +42,9 @@ final class CrossModuleMethodCallAnalyser
 {
     private readonly ModuleBoundary $boundary;
 
+    /** @var list<string> */
+    private readonly array $ignoreReceivers;
+
     /**
      * @param list<string> $sharedNamespaces  namespaces exempt from the boundary check
      * @param list<string> $ignoreReceivers   classes and interfaces a call may land on
@@ -54,9 +57,10 @@ final class CrossModuleMethodCallAnalyser
         string $rootNamespace,
         int $modulePathSegments = 1,
         array $sharedNamespaces = [],
-        private readonly array $ignoreReceivers = [],
+        array $ignoreReceivers = [],
         array $publicApiSegments = PublicApiSurface::DEFAULT_SEGMENTS,
     ) {
+        $this->ignoreReceivers = array_map(static fn (string $receiver): string => trim($receiver, '\\'), $ignoreReceivers);
         $this->boundary = new ModuleBoundary(
             $rootNamespace,
             $modulePathSegments,
@@ -158,7 +162,7 @@ final class CrossModuleMethodCallAnalyser
         }
 
         foreach ($this->ignoreReceivers as $ignored) {
-            if ($receiver === $ignored || LoadedClass::isA($receiver, $ignored)) {
+            if (strcasecmp(ltrim($receiver, '\\'), $ignored) === 0 || LoadedClass::isA($receiver, $ignored)) {
                 return true;
             }
         }

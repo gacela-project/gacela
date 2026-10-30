@@ -10,6 +10,7 @@ use Gacela\StaticAnalysis\Violation;
 use GacelaTest\Unit\StaticAnalysis\Double\FakeAnalysedClass;
 use GacelaTest\Unit\StaticAnalysis\Double\ParseSource;
 use GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule\Billing\PublishedInvoice;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;
@@ -20,6 +21,30 @@ final class DeclaredModuleDependencyAnalyserTest extends TestCase
 
     /** Real classes, because `#[PublicApi]` is read by reflection. */
     private const FIXTURE_ROOT = 'GacelaTest\Unit\StaticAnalysis\Rules\Fixture\CrossModule';
+
+    #[DataProvider('rootSpellings')]
+    public function test_namespace_spellings_keep_declared_dependencies_enforced(string $root): void
+    {
+        $rules = ModuleRuleSet::fromDecodedJson(['rules' => [[
+            'from' => '\\app\\modules\\payment\\',
+            'deny' => ['\\app\\modules\\admin\\'],
+            'reason' => 'reviewed',
+        ]]]);
+        $analyser = new DeclaredModuleDependencyAnalyser($root, $rules);
+        $node = ParseSource::classIn('<?php class Service { public function run() { return new \\App\\Modules\\Admin\\AdminFacade(); } }');
+
+        self::assertCount(1, $analyser->analyse($node, new FakeAnalysedClass('App\\Modules\\Payment\\Service')));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function rootSpellings(): iterable
+    {
+        yield 'leading separator' => ['\\App\\Modules'];
+        yield 'trailing separator' => ['App\\Modules\\'];
+        yield 'other case' => ['app\\modules'];
+    }
 
     public function test_a_dependency_a_rule_denies_is_reported_with_its_reason(): void
     {

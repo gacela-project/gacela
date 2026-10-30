@@ -27,6 +27,13 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
 
     private const FIXTURE_CALLER = self::FIXTURE_ROOT . '\Checkout\CheckoutFactory';
 
+    public function test_an_unloadable_ignored_receiver_ignores_separators_and_case(): void
+    {
+        $analyser = new CrossModuleMethodCallAnalyser(self::ROOT, ignoreReceivers: ['\\app\\modules\\billing\\domain\\invoicerepository\\']);
+
+        self::assertSame([], $analyser->analyse(self::CALLER, ['App\\Modules\\Billing\\Domain\\InvoiceRepository']));
+    }
+
     public function test_a_receiver_whose_autoload_throws_is_reported(): void
     {
         $receiver = self::FIXTURE_ROOT . '\\Billing\\ThrowsOnLoad';
@@ -40,6 +47,7 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
         try {
             self::assertCount(1, $this->analyseReal([$receiver]));
             self::assertSame([], $this->analyseReal([$receiver], [$receiver]));
+            self::assertSame([], $this->analyseReal([$receiver], ['\\' . strtolower($receiver) . '\\']));
         } finally {
             spl_autoload_unregister($loader);
         }

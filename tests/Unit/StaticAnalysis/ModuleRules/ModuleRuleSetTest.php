@@ -10,6 +10,21 @@ use PHPUnit\Framework\TestCase;
 
 final class ModuleRuleSetTest extends TestCase
 {
+    public function test_namespace_separators_and_case_preserve_deny_and_allow_rules(): void
+    {
+        $deny = $this->rules([
+            ['from' => '\\app\\payment\\', 'deny' => ['\\app\\admin\\'], 'reason' => 'reviewed'],
+        ]);
+        $allow = $this->rules([
+            ['from' => '\\app\\payment\\', 'allow' => ['\\app\\admin\\'], 'reason' => 'reviewed'],
+        ]);
+
+        self::assertSame(['app\\payment', 'app\\admin'], $deny->declaredNamespaces());
+        self::assertNotNull($deny->violationFor('App\\Payment', 'App\\Admin'));
+        self::assertNull($allow->violationFor('App\\Payment', 'App\\Admin'));
+        self::assertNotNull($allow->violationFor('App\\Payment', 'App\\Other'));
+    }
+
     public function test_an_empty_rule_set_forbids_nothing(): void
     {
         $rules = ModuleRuleSet::empty();
@@ -107,13 +122,13 @@ final class ModuleRuleSetTest extends TestCase
         self::assertNull($rules->violationFor('App\Payment', 'App\Admin'));
     }
 
-    public function test_matching_is_case_sensitive(): void
+    public function test_matching_ignores_case(): void
     {
         $rules = $this->rules([
             ['from' => 'App\Payment', 'deny' => ['App\Admin'], 'reason' => 'reviewed'],
         ]);
 
-        self::assertNull($rules->violationFor('app\payment', 'app\admin'));
+        self::assertNotNull($rules->violationFor('app\payment', 'app\admin'));
     }
 
     public function test_every_namespace_a_rule_names_is_declared(): void

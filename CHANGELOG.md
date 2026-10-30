@@ -60,6 +60,7 @@
 
 #### Static analysis
 
+- Cross-module checks and declared dependency rules ignore leading or trailing namespace separators and compare namespace names without case sensitivity. Shared namespaces and ignored receivers follow the same rules; a separator-only root fails configuration instead of silently disabling checks ([#1041](https://github.com/gacela-project/gacela/issues/1041))
 - Static-analysis rules treat classes that throw while loading as unloadable, so broken project dependencies do not crash the analysis ([#1042](https://github.com/gacela-project/gacela/issues/1042))
 - `#[Cacheable]` checks follow `$this->cached()` through any number of private helpers instead of reporting a method cached through two helpers as uncached ([#974](https://github.com/gacela-project/gacela/issues/974))
 - The Factory-instantiation and cross-module written-reference rules identify Facades by `AbstractFacade`, rather than the `Facade` suffix, avoiding false findings for library classes and missed findings for internal classes ([#971](https://github.com/gacela-project/gacela/issues/971))

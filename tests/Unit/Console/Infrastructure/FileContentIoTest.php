@@ -6,10 +6,13 @@ namespace GacelaTest\Unit\Console\Infrastructure;
 
 use Gacela\Console\Infrastructure\FileContentIo;
 use GacelaTest\Fixtures\FailingWriteStreamWrapper;
+use GacelaTest\Fixtures\ReadOnlyDirTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 use function bin2hex;
+use function dirname;
 use function file_get_contents;
 use function file_put_contents;
 use function random_bytes;
@@ -20,6 +23,8 @@ use function sys_get_temp_dir;
 
 final class FileContentIoTest extends TestCase
 {
+    use ReadOnlyDirTrait;
+
     private string $workingDir = '';
 
     private FileContentIo $io;
@@ -35,6 +40,7 @@ final class FileContentIoTest extends TestCase
     protected function tearDown(): void
     {
         self::removeRecursively($this->workingDir);
+        $this->restoreReadOnlyDirs();
     }
 
     public function test_it_creates_a_missing_directory(): void
@@ -138,6 +144,123 @@ final class FileContentIoTest extends TestCase
         self::assertSame('after', file_get_contents($path));
     }
 
+    #[DataProvider('symlinkTargets')]
+    public function test_it_preserves_a_file_symlink_and_updates_its_target(bool $relative): void
+    {
+        [$target, $link, $destination] = $this->symlinkToTarget($relative);
+
+        $this->io->filePutContents($link, 'after');
+
+        self::assertTrue(is_link($link));
+        self::assertSame($destination, readlink($link));
+        self::assertSame('after', file_get_contents($target));
+        self::assertSame('after', file_get_contents($link));
+        self::assertSame([], glob(dirname($target) . DIRECTORY_SEPARATOR . '*.tmp'));
+        self::assertSame([], glob(dirname($link) . DIRECTORY_SEPARATOR . '*.tmp'));
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function symlinkTargets(): iterable
+    {
+        yield 'absolute' => [false];
+        yield 'relative' => [true];
+    }
+
+    public function test_it_preserves_a_chain_of_relative_file_symlinks(): void
+    {
+        [$target, $link, $destination] = $this->symlinkToTarget(true);
+        $entry = $this->workingDir . DIRECTORY_SEPARATOR . 'entry.txt';
+        $this->symlinkOrSkip('links' . DIRECTORY_SEPARATOR . 'alias.txt', $entry);
+        $entryDestination = readlink($entry);
+
+        $this->io->filePutContents($entry, 'after');
+
+        self::assertTrue(is_link($entry));
+        self::assertTrue(is_link($link));
+        self::assertSame($entryDestination, readlink($entry));
+        self::assertSame($destination, readlink($link));
+        self::assertSame('after', file_get_contents($target));
+        self::assertSame([], glob(dirname($target) . DIRECTORY_SEPARATOR . '*.tmp'));
+    }
+
+    public function test_a_dangling_symlink_is_rejected_without_replacing_it(): void
+    {
+        $link = $this->workingDir . DIRECTORY_SEPARATOR . 'alias.txt';
+        $target = $this->workingDir . DIRECTORY_SEPARATOR . 'missing.txt';
+        $this->symlinkOrSkip('missing.txt', $link);
+
+        try {
+            $this->io->filePutContents($link, 'after');
+            self::fail('An unresolved symlink must be left intact.');
+        } catch (RuntimeException $runtimeException) {
+            self::assertStringContainsString('symlink target could not be resolved', $runtimeException->getMessage());
+            self::assertTrue(is_link($link));
+            self::assertSame('missing.txt', readlink($link));
+            self::assertFileDoesNotExist($target);
+            self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
+        }
+    }
+
+    public function test_a_failed_symlink_target_write_preserves_the_link_and_target(): void
+    {
+        $directory = $this->createReadOnlyDirOrSkip('symlink-target', static function (string $directory): void {
+            file_put_contents($directory . DIRECTORY_SEPARATOR . 'target.txt', 'before');
+        });
+        $target = $directory . DIRECTORY_SEPARATOR . 'target.txt';
+        $link = $this->workingDir . DIRECTORY_SEPARATOR . 'alias.txt';
+        $this->symlinkOrSkip($target, $link);
+
+        try {
+            $this->io->filePutContents($link, 'after');
+            self::fail('Staging beside the read-only target must fail.');
+        } catch (RuntimeException $runtimeException) {
+            self::assertStringContainsString('left as it was', $runtimeException->getMessage());
+            self::assertTrue(is_link($link));
+            self::assertSame($target, readlink($link));
+            self::assertSame('before', file_get_contents($target));
+            self::assertSame([], glob($directory . DIRECTORY_SEPARATOR . '*.tmp'));
+            self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
+        }
+    }
+
+    public function test_a_failed_symlink_target_rename_preserves_the_link_and_directory(): void
+    {
+        $target = $this->workingDir . DIRECTORY_SEPARATOR . 'target';
+        $link = $this->workingDir . DIRECTORY_SEPARATOR . 'alias';
+        mkdir($target);
+        file_put_contents($target . DIRECTORY_SEPARATOR . 'original.txt', 'before');
+        $this->symlinkOrSkip($target, $link);
+
+        try {
+            $this->io->filePutContents($link, 'after');
+            self::fail('Replacing the target directory must fail.');
+        } catch (RuntimeException) {
+            self::assertTrue(is_link($link));
+            self::assertSame($target, readlink($link));
+            self::assertSame('before', file_get_contents($target . DIRECTORY_SEPARATOR . 'original.txt'));
+            self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
+        }
+    }
+
+    public function test_replacement_through_a_symlink_preserves_target_permissions(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            self::markTestSkipped('Executable permission bits are not supported on Windows.');
+        }
+
+        [$target, $link] = $this->symlinkToTarget(false);
+        chmod($target, 0751);
+
+        $this->io->filePutContents($link, 'after');
+        clearstatcache(true, $target);
+
+        self::assertSame('after', file_get_contents($target));
+        self::assertSame(0751, fileperms($target) & 0777);
+        self::assertTrue(is_link($link));
+    }
+
     public function test_it_replaces_a_read_only_file_without_opening_it_for_writing(): void
     {
         if (DIRECTORY_SEPARATOR === '\\') {
@@ -223,7 +346,7 @@ final class FileContentIoTest extends TestCase
 
     private static function removeRecursively(string $path): void
     {
-        if (is_file($path)) {
+        if (is_link($path) || is_file($path)) {
             unlink($path);
             return;
         }
@@ -239,6 +362,33 @@ final class FileContentIoTest extends TestCase
         }
 
         rmdir($path);
+    }
+
+    /**
+     * @return array{string, string, string}
+     */
+    private function symlinkToTarget(bool $relative): array
+    {
+        $targetDirectory = $this->workingDir . DIRECTORY_SEPARATOR . 'target';
+        $linkDirectory = $this->workingDir . DIRECTORY_SEPARATOR . 'links';
+        mkdir($targetDirectory);
+        mkdir($linkDirectory);
+        $target = $targetDirectory . DIRECTORY_SEPARATOR . 'file.txt';
+        $link = $linkDirectory . DIRECTORY_SEPARATOR . 'alias.txt';
+        $destination = $relative ? '..' . DIRECTORY_SEPARATOR . 'target' . DIRECTORY_SEPARATOR . 'file.txt' : $target;
+        file_put_contents($target, 'before');
+        $this->symlinkOrSkip($destination, $link);
+        $storedDestination = readlink($link);
+        self::assertIsString($storedDestination);
+
+        return [$target, $link, $storedDestination];
+    }
+
+    private function symlinkOrSkip(string $target, string $link): void
+    {
+        if (!@symlink($target, $link)) {
+            self::markTestSkipped('Creating symbolic links is unavailable.');
+        }
     }
 
     /**

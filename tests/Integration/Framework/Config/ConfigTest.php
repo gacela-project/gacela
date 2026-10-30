@@ -10,6 +10,7 @@ use Gacela\Framework\Config\Config;
 use Gacela\Framework\Config\ConfigFactory;
 use Gacela\Framework\Exception\GacelaNotBootstrappedException;
 use Gacela\Framework\Gacela;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function getcwd;
@@ -39,6 +40,30 @@ final class ConfigTest extends TestCase
     public function test_null_as_default_value_from_undefined_key(): void
     {
         self::assertNull(Config::getInstance()->get('undefined-key', null));
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function rootDirectories(): iterable
+    {
+        yield 'native root' => [DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR];
+        yield 'POSIX root' => ['/', '/'];
+        yield 'Windows drive root' => ['C:\\', 'C:\\'];
+        yield 'Windows drive root with slash' => ['C:/', 'C:/'];
+        yield 'empty fallback' => ['', getcwd() ?: ''];
+        yield 'zero fallback' => ['0', getcwd() ?: ''];
+        yield 'ordinary path' => [__DIR__, __DIR__];
+        yield 'redundant trailing separators' => [__DIR__ . str_repeat(DIRECTORY_SEPARATOR, 3), __DIR__];
+    }
+
+    #[DataProvider('rootDirectories')]
+    public function test_root_directory_normalization(string $root, string $expected): void
+    {
+        $config = Config::createWithSetup(new SetupGacela());
+        $config->setAppRootDir($root);
+
+        self::assertSame($expected, $config->getAppRootDir());
     }
 
     public function test_normalize_app_root_dir(): void

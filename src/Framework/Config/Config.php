@@ -385,7 +385,8 @@ final class Config implements ConfigInterface
 
     public function setAppRootDir(string $dir): self
     {
-        $this->appRootDir = rtrim($dir, DIRECTORY_SEPARATOR);
+        $trimmed = rtrim($dir, DIRECTORY_SEPARATOR);
+        $this->appRootDir = $trimmed === '' || preg_match('/^[A-Za-z]:$/', $trimmed) === 1 ? $dir : $trimmed;
 
         if ($this->appRootDir === '' || $this->appRootDir === '0') {
             $this->appRootDir = getcwd() ?: '';

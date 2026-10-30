@@ -12,9 +12,12 @@ final readonly class PsalmOutput
     {
     }
 
-    public static function fromCommand(string $command): self
+    /**
+     * @param list<string> $command
+     */
+    public static function fromCommand(array $command): self
     {
-        $process = Process::fromShellCommandline($command, timeout: null);
+        $process = new Process($command, timeout: null);
         $exitCode = $process->run();
 
         return new self($process->getOutput(), $process->getErrorOutput(), $exitCode);

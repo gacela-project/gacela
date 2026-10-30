@@ -6,10 +6,8 @@ namespace GacelaTest\Integration\Psalm;
 
 use PHPUnit\Framework\TestCase;
 
-use function escapeshellarg;
 use function explode;
 use function implode;
-use function sprintf;
 use function str_contains;
 use function substr;
 
@@ -102,12 +100,14 @@ abstract class PsalmFixtureTestCase extends TestCase
         // xdebug-handler before it analyses anything, and the restarted process
         // does not inherit the flag. Deprecation noise is therefore dealt with
         // where it lands -- see skipIfPsalmCannotRun().
-        $command = sprintf(
-            '%s --config=%s --no-progress --no-cache --output-format=%s',
-            escapeshellarg(self::ROOT . '/vendor/bin/psalm'),
-            escapeshellarg(static::configPath()),
-            escapeshellarg($outputFormat),
-        );
+        $command = [
+            PHP_BINARY,
+            self::ROOT . '/vendor/bin/psalm',
+            '--config=' . static::configPath(),
+            '--no-progress',
+            '--no-cache',
+            '--output-format=' . $outputFormat,
+        ];
 
         return PsalmOutput::fromCommand($command);
     }

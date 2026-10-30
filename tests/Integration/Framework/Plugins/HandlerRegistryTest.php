@@ -7,6 +7,7 @@ namespace GacelaTest\Integration\Framework\Plugins;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Container\Container;
+use Gacela\Framework\Exception\HandlerRegistryException;
 use Gacela\Framework\Gacela;
 use Gacela\Framework\Plugins\HandlerRegistry;
 use Gacela\Framework\Plugins\LazyHandlerRegistry;
@@ -90,6 +91,24 @@ final class HandlerRegistryTest extends TestCase
 
         self::assertInstanceOf(ConcreteHandlerA::class, $registry->get('a'));
         self::assertInstanceOf(ConcreteHandlerB::class, $registry->get('b'));
+    }
+
+    public function test_a_missing_handler_is_named_when_its_registered_key_is_requested(): void
+    {
+        /** @var class-string $missing */
+        $missing = 'App\\Export\\CsvHandlerTypo';
+        Gacela::bootstrap(__DIR__, static function (GacelaConfig $config) use ($missing): void {
+            $config->addHandlerRegistry('dispatcher', ['csv' => $missing]);
+        });
+
+        /** @var HandlerRegistry $registry */
+        $registry = Container::withConfig(Config::getInstance())->get('dispatcher');
+        self::assertTrue($registry->has('csv'));
+        self::assertSame(['csv'], $registry->keys());
+        $this->expectException(HandlerRegistryException::class);
+        $this->expectExceptionMessage('"' . $missing . '" is registered under key "csv"');
+
+        $registry->get('csv');
     }
 
     public function test_handler_constructor_dependencies_are_auto_wired(): void

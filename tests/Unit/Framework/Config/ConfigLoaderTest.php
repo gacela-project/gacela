@@ -244,6 +244,19 @@ final class ConfigLoaderTest extends TestCase
         self::assertSame([$base], $loader->sourceFiles());
     }
 
+    public function test_the_base_pattern_skips_a_layer_with_a_dotted_suffix(): void
+    {
+        $base = $this->pathTo('app.php');
+        $layer = $this->pathTo('app-prod.v2.php');
+        $loader = $this->loaderReading([
+            $base => ['billing.currency' => 'EUR'],
+            $layer => ['payment.endpoint' => 'live'],
+        ], patternMatches: [$base, $layer]);
+
+        self::assertSame(['billing.currency' => 'EUR'], $loader->loadAll());
+        self::assertSame([$base], $loader->sourceFiles());
+    }
+
     /**
      * The middle link of the chain may not exist -- a project with `app.php` and
      * `app-prod-eu.php` and no `app-prod.php` -- so one strip is not enough to

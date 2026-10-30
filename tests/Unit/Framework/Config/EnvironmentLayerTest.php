@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Config;
 
 use Gacela\Framework\Config\EnvironmentLayer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -204,6 +205,51 @@ final class EnvironmentLayerTest extends TestCase
         $layers = EnvironmentLayer::within($paths);
 
         self::assertNotSame([], array_diff($paths, array_keys($layers)));
+    }
+
+    #[DataProvider('dottedSuffixes')]
+    public function test_a_dotted_suffix_is_a_layer(string $baseName, string $layerName, string $suffix): void
+    {
+        $base = $this->path($baseName);
+        $layer = $this->path($layerName);
+
+        $layers = EnvironmentLayer::within([$base, $layer]);
+
+        self::assertSame([$layer], array_keys($layers));
+        self::assertSame($base, $layers[$layer]->basePath);
+        self::assertSame($suffix, $layers[$layer]->suffix);
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function dottedSuffixes(): iterable
+    {
+        yield 'php' => ['app.php', 'app-prod.v2.php', 'prod.v2'];
+        yield 'json' => ['app.json', 'app-prod.v2.json', 'prod.v2'];
+        yield 'yaml' => ['app.yaml', 'app-prod.v2.yaml', 'prod.v2'];
+        yield 'multipart filename' => ['default.app.php', 'default-prod.v2.app.php', 'prod.v2'];
+        yield 'without extension' => ['app', 'app-prod.v2', 'prod.v2'];
+        yield 'dimension after dotted environment' => ['app.php', 'app-prod.v2-eu.php', 'prod.v2-eu'];
+    }
+
+    public function test_a_multipart_extension_keeps_its_existing_base_when_a_shorter_extension_also_matches(): void
+    {
+        $base = $this->path('default.app.php');
+        $layer = $this->path('default-prod.app.php');
+
+        $layers = EnvironmentLayer::within([$this->path('default.php'), $base, $layer]);
+
+        self::assertSame($base, $layers[$layer]->basePath);
+        self::assertSame('prod', $layers[$layer]->suffix);
+    }
+
+    public function test_a_dash_in_a_multipart_extension_remains_part_of_a_shared_filename(): void
+    {
+        self::assertSame([], EnvironmentLayer::within([
+            $this->path('default.app.php'),
+            $this->path('default.app-special.php'),
+        ]));
     }
 
     private function path(string $name): string

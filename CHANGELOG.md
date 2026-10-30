@@ -53,6 +53,7 @@
 
 #### Code generation
 
+- `agents:install` replaces long marker blocks without duplicating them and preserves project text after stray start markers ([#1006](https://github.com/gacela-project/gacela/issues/1006))
 - The console binary uses the autoloader named by Composer's proxy, including nested or external custom vendor directories, while loading configuration and generating files from the application root ([#1005](https://github.com/gacela-project/gacela/issues/1005))
 - Console file writes replace targets only after the content is complete. Failed or partial writes preserve the original, remove temporary files and retain existing POSIX permissions ([#1002](https://github.com/gacela-project/gacela/issues/1002))
 - Console writes update symlink targets without replacing the links. Dangling links remain intact and report an error ([#1067](https://github.com/gacela-project/gacela/issues/1067))

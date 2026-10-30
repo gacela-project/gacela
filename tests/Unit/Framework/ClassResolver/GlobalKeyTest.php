@@ -41,6 +41,12 @@ final class GlobalKeyTest extends TestCase
         yield 'unmatched class' => ['WalletService', '\GacelaTest\Fixtures\WalletService'];
     }
 
+    public function test_global_pillar_keys_are_independent_of_a_leading_separator(): void
+    {
+        self::assertSame('\\RootFactory', GlobalKey::fromClassName('RootFactory'));
+        self::assertSame('\\RootFactory', GlobalKey::fromClassName('\\RootFactory'));
+    }
+
     public function test_empty_class_name(): void
     {
         self::assertSame('\\', GlobalKey::fromClassName(''));

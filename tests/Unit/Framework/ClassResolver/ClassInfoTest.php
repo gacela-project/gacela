@@ -24,6 +24,18 @@ final class ClassInfoTest extends TestCase
         ResolvableTypes::resetToBuiltIn();
     }
 
+    public function test_global_pillars_keep_distinct_module_contexts(): void
+    {
+        $root = ClassInfo::from('RootFacade', 'Factory');
+        $other = ClassInfo::from('OtherRootFacade', 'Factory');
+
+        self::assertSame('Root', $root->getModuleName());
+        self::assertSame('', $root->getModuleNamespace());
+        self::assertSame('\\RootFactory', $root->getCacheKey());
+        self::assertSame('\\OtherRootFactory', $other->getCacheKey());
+        self::assertNotSame(ClassInfo::from('Root\\RootFacade', 'Factory')->getCacheKey(), $root->getCacheKey());
+    }
+
     public function test_a_type_ending_in_a_pillar_suffix_keeps_its_own_key(): void
     {
         $actual = ClassInfo::from(ClassInfoTestingFacade::class, 'PriceConfig');

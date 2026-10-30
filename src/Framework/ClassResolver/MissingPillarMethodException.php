@@ -6,6 +6,7 @@ namespace Gacela\Framework\ClassResolver;
 
 use RuntimeException;
 
+use function is_object;
 use function sprintf;
 
 /**
@@ -36,15 +37,28 @@ final class MissingPillarMethodException extends RuntimeException
         object|string|null $caller = null,
     ): self {
         $message = sprintf(
-            "Module `%s` has no `%s`, so `%s()` has nowhere to be defined.\n"
+            "%s has no `%s`, so `%s()` has nowhere to be defined.\n"
             . 'Add `%s` (or check its filename matches its class name -- `gacela doctor` reports that too).',
-            $moduleName,
+            self::callerDescription($moduleName, $caller),
             $kind,
             $method,
             $expectedClass,
         );
 
         return new self($message . self::hintFor($caller, $kind, $expectedClass));
+    }
+
+    /**
+     * @param object|class-string|null $caller
+     */
+    private static function callerDescription(string $moduleName, object|string|null $caller): string
+    {
+        $className = is_object($caller) ? $caller::class : ltrim($caller ?? '', '\\');
+        if ($className !== '' && !str_contains($className, '\\')) {
+            return sprintf('`%s` (which has no namespace)', $className);
+        }
+
+        return sprintf('Module `%s`', $moduleName);
     }
 
     /**

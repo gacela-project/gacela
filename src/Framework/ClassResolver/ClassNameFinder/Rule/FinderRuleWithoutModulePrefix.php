@@ -12,6 +12,10 @@ final class FinderRuleWithoutModulePrefix implements FinderRuleInterface
 {
     public function buildClassCandidate(string $projectNamespace, string $resolvableType, ClassInfo $classInfo): string
     {
+        if ($projectNamespace === '' && $classInfo->isInGlobalNamespace()) {
+            return '\\' . $resolvableType;
+        }
+
         if ($projectNamespace !== '') {
             return sprintf(
                 '\\%s\\%s\\%s',

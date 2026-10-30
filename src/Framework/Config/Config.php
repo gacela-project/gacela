@@ -603,7 +603,8 @@ final class Config implements ConfigInterface
         }
 
         if ($cacheDir[0] === '/' || $cacheDir[0] === '\\') {
-            if (str_starts_with($cacheDir, $appRoot . '/')
+            if ($cacheDir === $appRoot
+                || str_starts_with($cacheDir, $appRoot . '/')
                 || str_starts_with($cacheDir, $appRoot . '\\')
             ) {
                 return $cacheDir;

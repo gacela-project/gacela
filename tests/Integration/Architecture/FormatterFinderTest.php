@@ -6,6 +6,7 @@ namespace GacelaTest\Integration\Architecture;
 
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PhpCsFixer\ConfigInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SplFileInfo;
 
@@ -54,6 +55,8 @@ final class FormatterFinderTest extends TestCase
         $repository = dirname(__DIR__, 3);
         copy($repository . '/.php-cs-fixer.dist.php', $this->root . '/.php-cs-fixer.dist.php');
         copy($repository . '/.gitignore', $this->root . '/.gitignore');
+        // The isolated repository has no index identifying this tracked fixture.
+        file_put_contents($this->root . '/.gitignore', "\n!tests/Fixture/gacela-local.php\n", FILE_APPEND);
         file_put_contents($this->root . '/.git', 'gitdir: external-worktree-metadata');
     }
 
@@ -62,8 +65,23 @@ final class FormatterFinderTest extends TestCase
         DirectoryUtil::removeDir($this->root);
     }
 
-    public function test_a_git_file_keeps_generated_caches_out_and_source_fixtures_in(): void
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function metadataTypes(): iterable
     {
+        yield 'linked worktree' => [true];
+        yield 'ordinary checkout' => [false];
+    }
+
+    #[DataProvider('metadataTypes')]
+    public function test_metadata_keeps_generated_caches_out_and_source_fixtures_in(bool $worktree): void
+    {
+        if (!$worktree) {
+            unlink($this->root . '/.git');
+            mkdir($this->root . '/.git');
+        }
+
         foreach ([...self::SOURCE_FILES, ...self::CACHE_FILES] as $path) {
             $this->writePhpFile($path);
         }

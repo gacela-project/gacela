@@ -6,10 +6,67 @@ namespace GacelaTest\Unit\Console\Domain\CommandArguments;
 
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsException;
 use Gacela\Console\Domain\CommandArguments\CommandArgumentsParser;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class CommandArgumentsParserTest extends TestCase
 {
+    #[DataProvider('fallbackPaths')]
+    public function test_a_fallback_prefix_maps_namespaces_under_its_directory(string $path, string $namespace, string $basename): void
+    {
+        $parser = new CommandArgumentsParser(['autoload' => ['psr-4' => ['' => 'src/']]]);
+
+        $arguments = $parser->parse($path);
+
+        self::assertSame($namespace, $arguments->namespace());
+        self::assertSame('src/' . $path, $arguments->directory());
+        self::assertSame($basename, $arguments->basename());
+    }
+
+    public function test_named_prefixes_win_over_the_fallback_and_keep_the_longest_match(): void
+    {
+        $parser = new CommandArgumentsParser(['autoload' => ['psr-4' => ['' => 'fallback/', 'App\\' => 'app/', 'App\\Shop\\' => 'specific/']]]);
+
+        self::assertSame('specific/Cart', $parser->parse('App/Shop/Cart')->directory());
+        self::assertSame('app/Blog', $parser->parse('App/Blog')->directory());
+    }
+
+    public function test_a_dev_named_prefix_wins_over_the_main_fallback(): void
+    {
+        $parser = new CommandArgumentsParser([
+            'autoload' => ['psr-4' => ['' => 'src/']],
+            'autoload-dev' => ['psr-4' => ['Tests\\' => 'tests/']],
+        ]);
+
+        self::assertSame('tests/Unit', $parser->parse('Tests/Unit')->directory());
+    }
+
+    public function test_duplicate_fallbacks_keep_main_autoload_precedence(): void
+    {
+        $parser = new CommandArgumentsParser([
+            'autoload' => ['psr-4' => ['' => 'src/']],
+            'autoload-dev' => ['psr-4' => ['' => 'tests/']],
+        ]);
+
+        self::assertSame('src/Blog', $parser->parse('Blog')->directory());
+    }
+
+    public function test_a_fallback_target_list_uses_the_first_directory(): void
+    {
+        $parser = new CommandArgumentsParser(['autoload' => ['psr-4' => ['' => ['src/', 'generated/']]]]);
+
+        self::assertSame('src/Blog', $parser->parse('Blog')->directory());
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function fallbackPaths(): iterable
+    {
+        yield 'one level' => ['Blog', 'Blog', 'Blog'];
+        yield 'nested' => ['Shop/Cart', 'Shop\\Cart', 'Cart'];
+    }
+
     public function test_exception_when_no_autoload_found(): void
     {
         $this->expectExceptionObject(CommandArgumentsException::noAutoloadFound());

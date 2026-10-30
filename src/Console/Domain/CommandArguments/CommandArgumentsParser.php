@@ -57,6 +57,10 @@ final class CommandArgumentsParser implements CommandArgumentsParserInterface
             }
         }
 
+        if (isset($psr4All[''])) {
+            return $this->foundPsr4('', $psr4All[''], $desiredNamespace);
+        }
+
         // Every prefix the lookup above searched, not just `autoload`: this list
         // is the only thing the reader has to compare their typo against, and
         // one missing the `autoload-dev` prefixes reads as "Gacela does not see

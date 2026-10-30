@@ -85,7 +85,7 @@ class NativePhpBenchTest(unittest.TestCase):
         profile = Path(directory) / "phpbench.json"
         profile.write_text(json.dumps(config))
         command = [
-            "vendor/bin/phpbench", "run", "--config=" + str(profile), "--group=gate", "--progress=none",
+            "vendor/bin/phpbench", "run", "--config=" + str(profile), "--group=gate", "--progress=plain",
             "--iterations=1", "--revs=1", "--warmup=1",
             "--executor=" + json.dumps({"executor": "debug", "times": [time]}),
             "--dump-file=" + str(output),
@@ -100,6 +100,38 @@ class NativePhpBenchTest(unittest.TestCase):
             for benchmark in root.iter("benchmark")
             for subject in benchmark.findall("subject")
         }
+
+    def test_a_benchmark_exception_keeps_its_subject_message_and_failure_status(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "DiagnosticFailureBench.php"
+            fixture.write_text("""<?php
+use PhpBench\\Attributes as Bench;
+#[Bench\\Groups(['gate'])]
+final class DiagnosticFailureBench
+{
+    public function benchThrows(): void
+    {
+        throw new RuntimeException('known benchmark exception');
+    }
+}
+""")
+            config = json.loads(Path("phpbench.json").read_text())
+            config["runner.bootstrap"] = str(Path("vendor/autoload.php").resolve())
+            config["runner.path"] = str(fixture)
+            config["storage.xml_storage_path"] = str(Path(directory) / "storage")
+            profile = Path(directory) / "phpbench.json"
+            profile.write_text(json.dumps(config))
+            command = next(compare.commands({"transition": False}, "base"))
+            result = subprocess.run(
+                command + ["--config=" + str(profile), "--iterations=1", "--revs=1", "--warmup=1"],
+                text=True,
+                capture_output=True,
+            )
+            output = result.stdout + result.stderr
+            self.assertEqual(1, result.returncode, output)
+            self.assertIn("DiagnosticFailureBench", output)
+            self.assertIn("benchThrows", output)
+            self.assertIn("known benchmark exception", output)
 
     def test_native_filters_partition_the_actual_gate_inventory(self):
         with tempfile.TemporaryDirectory() as directory:

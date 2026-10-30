@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\Psalm\RulesFixture;
 
+use Closure;
 use Gacela\Framework\AbstractFacade;
 use Gacela\Framework\Attribute\Cacheable;
 use Gacela\Framework\Attribute\CacheableTrait;
@@ -24,4 +25,10 @@ final class CachedFacade extends AbstractFacade
     {
         return $this->cached(fn (): string => $this->getFactory()->createThing());
     }
+
+    public function firstClassCached(): Closure
+    {
+        return $this->cached(...);
+    }
+
 }

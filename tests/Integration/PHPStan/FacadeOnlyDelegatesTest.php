@@ -55,6 +55,14 @@ final class FacadeOnlyDelegatesTest extends PhpStanFixtureTestCase
         self::assertStringNotContainsString('delegated()', $this->analyseFixture());
     }
 
+    public function test_a_first_class_cached_callable_is_reported(): void
+    {
+        self::assertStringContainsString(
+            'DelegationFixtureFacade::firstClassCached() must only delegate',
+            $this->analyseFixture(),
+        );
+    }
+
     #[Override]
     protected static function configPath(): string
     {

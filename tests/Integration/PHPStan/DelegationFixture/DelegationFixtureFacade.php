@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Integration\PHPStan\DelegationFixture;
 
+use Closure;
 use Gacela\Framework\AbstractFacade;
 
 /**
@@ -31,4 +32,10 @@ final class DelegationFixtureFacade extends AbstractFacade
     {
         return $this->getFactory()->total($a, $b);
     }
+
+    public function firstClassCached(): Closure
+    {
+        return $this->cached(...);
+    }
+
 }

@@ -40,7 +40,7 @@ final class ProvidedDependencyReturnType implements MethodReturnTypeProviderInte
 
     public static function getMethodReturnType(MethodReturnTypeProviderEvent $event): ?Union
     {
-        if ($event->getMethodNameLowercase() !== self::METHOD) {
+        if ($event->getMethodNameLowercase() !== self::METHOD || $event->getStmt()->isFirstClassCallable()) {
             return null;
         }
 

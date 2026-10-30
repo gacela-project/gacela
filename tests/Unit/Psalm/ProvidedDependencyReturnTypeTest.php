@@ -15,6 +15,7 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\VariadicPlaceholder;
 use PHPUnit\Framework\TestCase;
 use Psalm\Config;
 use Psalm\NodeTypeProvider;
@@ -163,6 +164,13 @@ final class ProvidedDependencyReturnTypeTest extends TestCase
         self::assertNull($this->returnTypeFor($this->literal(ProvidedClock::class), args: $args));
     }
 
+    public function test_a_first_class_callable_is_left_alone(): void
+    {
+        $event = $this->event('getprovideddependency', [new VariadicPlaceholder()], $this->createStub(StatementsSource::class));
+
+        self::assertNull(ProvidedDependencyReturnType::getMethodReturnType($event));
+    }
+
     /**
      * @param list<Arg>|null $args
      */
@@ -189,7 +197,7 @@ final class ProvidedDependencyReturnTypeTest extends TestCase
      * the constructor also demands a `Codebase`, which is final and wants a whole
      * analysis context. Bypassing it keeps the test about the hook.
      *
-     * @param list<Arg> $args
+     * @param list<Arg|VariadicPlaceholder> $args
      */
     private function event(string $method, array $args, StatementsSource $source): MethodReturnTypeProviderEvent
     {

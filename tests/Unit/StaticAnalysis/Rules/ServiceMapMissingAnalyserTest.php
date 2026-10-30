@@ -15,6 +15,53 @@ use function sprintf;
 
 final class ServiceMapMissingAnalyserTest extends TestCase
 {
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function proseDocblocks(): iterable
+    {
+        yield 'one-line prose' => ['/** The @method tag names the accessor for the IDE. */'];
+        yield 'prose beside a declared tag' => ["/**\n * The @method tag names the accessor.\n * @method WalletFacade getFacade()\n */"];
+    }
+
+    #[DataProvider('proseDocblocks')]
+    public function test_prose_does_not_name_an_accessor_under_either_host(string $docblock): void
+    {
+        $source = '<?php namespace App\Wallet; use Gacela\Framework\ServiceResolverAwareTrait;'
+            . ' use Gacela\Framework\ServiceResolver\ServiceMap; ' . $docblock
+            . " #[ServiceMap(method: 'getFacade', className: WalletFacade::class)]"
+            . ' final class WalletCommand { use ServiceResolverAwareTrait; }';
+        $analyser = new ServiceMapMissingAnalyser();
+        $class = new FakeAnalysedClass('App\Wallet\WalletCommand');
+
+        foreach ([ParseSource::classInAsPhpStanResolves($source), ParseSource::classInWithNameAttributes($source)] as $node) {
+            self::assertSame([], $analyser->analyse($node, $class));
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function methodTagForms(): iterable
+    {
+        yield 'one-line' => ['/** @method WalletFacade getFacade() */'];
+        yield 'static' => ['/** @method static WalletFacade getFacade() */'];
+        yield 'without parameter list' => ['/** @method WalletFacade getFacade */'];
+        yield 'multiline' => ["/**\n * @method WalletFacade getFacade()\n */"];
+        yield 'without leading star' => ["/**\n @method WalletFacade getFacade()\n */"];
+    }
+
+    #[DataProvider('methodTagForms')]
+    public function test_real_method_tag_positions_still_name_accessors(string $docblock): void
+    {
+        $source = '<?php namespace App\Wallet; use Gacela\Framework\ServiceResolverAwareTrait; '
+            . $docblock . ' final class WalletCommand { use ServiceResolverAwareTrait; }';
+        $violations = $this->analyse($source);
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('getFacade()', $violations[0]->message);
+    }
+
     public function test_a_method_docblock_without_the_attribute_is_reported(): void
     {
         $violations = $this->analyse(

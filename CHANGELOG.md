@@ -89,6 +89,8 @@
 
 #### Static analysis
 
+- ServiceMap migration checks ignore `@method` mentioned in prose while still reading real method tags ([#1050](https://github.com/gacela-project/gacela/issues/1050))
+
 - Psalm ignores `#[ServiceMap]` targets expressed with constants other than `X::class` instead of assigning the constant owner as the accessor's return type ([#1048](https://github.com/gacela-project/gacela/issues/1048))
 - Cache attribute rules inspect only Gacela's `Cacheable` attribute and leave attributes from other libraries alone ([#1049](https://github.com/gacela-project/gacela/issues/1049))
 - First-class `cached(...)` callables produce diagnostics without crashing analysis. First-class `getProvidedDependency(...)` callables keep their declared types ([#1043](https://github.com/gacela-project/gacela/issues/1043))

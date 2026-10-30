@@ -57,7 +57,7 @@ Reach for `extendService()` instead when you need to *replace* what comes out, a
 
 ## Service Aliases
 
-Reference the same service with different names.
+Reference the same service with different names. An alias configured with `addAlias()` may point to another configured alias; a loop is refused at bootstrap and its ids are listed.
 
 ```php
 return static function (GacelaConfig $config): void {

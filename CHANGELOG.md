@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Configured service aliases follow chains to their final service and reject loops during bootstrap with the alias ids in the error ([#1021](https://github.com/gacela-project/gacela/issues/1021))
 - Static analysis reports first-class `cached(...)` callables without crashing and leaves first-class `getProvidedDependency(...)` callables to their declared types ([#1043](https://github.com/gacela-project/gacela/issues/1043))
 - `#[Provides]` methods typed with either container interface receive the container when resolved ([#1018](https://github.com/gacela-project/gacela/issues/1018))
 

@@ -46,6 +46,18 @@ final class DeclaredModuleDependencyAnalyserTest extends TestCase
         yield 'other case' => ['app\\modules'];
     }
 
+    public function test_an_anonymous_class_header_is_checked_under_both_hosts(): void
+    {
+        $source = '<?php namespace App\Modules\Payment; use App\Modules\Admin\Base;'
+            . ' final class PaymentFactory { public function create(): object { return new class extends Base {}; }}';
+        $analyser = new DeclaredModuleDependencyAnalyser(self::ROOT, $this->rules());
+        $class = new FakeAnalysedClass('App\Modules\Payment\PaymentFactory');
+
+        foreach ([ParseSource::classInAsPhpStanResolves($source), ParseSource::classInWithNameAttributes($source)] as $node) {
+            self::assertCount(1, $analyser->analyse($node, $class));
+        }
+    }
+
     public function test_a_dependency_a_rule_denies_is_reported_with_its_reason(): void
     {
         $violations = $this->analyse('new App\Modules\Admin\AdminFacade();');

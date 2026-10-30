@@ -161,17 +161,25 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertSame('second-value', Config::getInstance()->get('src'));
     }
 
-    public function test_an_unsettled_source_is_not_cached_yet(): void
+    public function test_a_future_source_is_cached_and_reused(): void
     {
         $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
-        file_put_contents($file, "<?php return ['src' => 'now'];");
-        $this->createdFiles[] = $file;
-        $this->markSourceUnsettled($file);
+        $this->writeAppConfig($file, 'future');
+        $this->markSourceFuture($file);
+        $this->bootstrapApp();
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
 
+        self::assertSame('future', Config::getInstance()->get('src'));
+        self::assertFileExists($filename);
+        $this->replaceCachedValues($filename, ['src' => 'from-cache']);
         $this->bootstrapApp();
 
-        self::assertSame('now', Config::getInstance()->get('src'));
-        self::assertFileDoesNotExist(Config::getInstance()->mergedConfigCacheFilename());
+        self::assertSame('from-cache', Config::getInstance()->get('src'));
+
+        file_put_contents($file, "<?php return ['src' => 'edited'];");
+        $this->bootstrapApp();
+
+        self::assertSame('edited', Config::getInstance()->get('src'));
     }
 
     public function test_a_settled_source_is_cached(): void
@@ -397,7 +405,7 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertSame('after-the-edit', $written['values']['src']);
     }
 
-    public function test_a_verified_warm_of_an_unsettled_source_removes_the_stale_file(): void
+    public function test_a_verified_warm_of_a_future_source_replaces_the_stale_file(): void
     {
         $file = $this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
         $this->writeAppConfig($file, 'trusted');
@@ -405,11 +413,13 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         Config::getInstance()->writeMergedConfigCache();
         self::assertFileExists(Config::getInstance()->mergedConfigCacheFilename());
 
-        $this->markSourceUnsettled($file);
+        $this->writeAppConfig($file, 'future');
+        $this->markSourceFuture($file);
         $this->bootstrapWatching([], verifiedWarm: true);
         $filename = Config::getInstance()->writeMergedConfigCache();
 
-        self::assertFileDoesNotExist($filename);
+        self::assertFileExists($filename);
+        self::assertSame('future', (require $filename)['values']['src']);
     }
 
     /**
@@ -626,9 +636,8 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         file_put_contents($filename, sprintf('<?php return %s;', var_export($data, true)));
     }
 
-    private function markSourceUnsettled(string $file): void
+    private function markSourceFuture(string $file): void
     {
-        // One hour exceeds the integration job timeout without relying on a second boundary.
         $at = time() + 3600;
         touch($file, $at);
         clearstatcache(true, $file);

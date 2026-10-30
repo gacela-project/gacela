@@ -115,6 +115,11 @@ final class ConfigSourceStampsTest extends TestCase
         self::assertFalse(ConfigSourceStamps::couldMissAChange(['/a' => '999:10:1'], 1_000));
     }
 
+    public function test_a_stamp_from_a_later_second_cannot_miss_a_change(): void
+    {
+        self::assertFalse(ConfigSourceStamps::couldMissAChange(['/a' => '5000:10:1'], 1_000));
+    }
+
     public function test_a_stamp_from_the_current_second_could_miss_a_change(): void
     {
         self::assertTrue(ConfigSourceStamps::couldMissAChange(['/a' => '999:10:1', '/b' => '1000:10:2'], 1_000));
@@ -129,7 +134,7 @@ final class ConfigSourceStampsTest extends TestCase
 
         self::assertSame($at, (int) $stamps[$file]);
         self::assertTrue(ConfigSourceStamps::couldMissAChange($stamps, $at));
-        self::assertTrue(ConfigSourceStamps::couldMissAChange($stamps, $at - 1));
+        self::assertFalse(ConfigSourceStamps::couldMissAChange($stamps, $at - 1));
         self::assertFalse(ConfigSourceStamps::couldMissAChange($stamps, $at + 1));
     }
 

@@ -119,6 +119,8 @@ final class DoctorCommand extends Command
 
         ConsoleSection::title($output, 'Gacela Doctor');
 
+        $this->reportMissingConfig($output);
+
         // Every check below works from the modules discovery returned, so the
         // paths it walked bound all of them at once. `appModulePaths` narrowing
         // the scan is invisible in a report of twenty ticks otherwise.
@@ -187,6 +189,19 @@ final class DoctorCommand extends Command
             ),
             CheckStatus::Ok => $this->finish($output, '<fg=green>✓ All checks passed</>', Command::SUCCESS),
         };
+    }
+
+    private function reportMissingConfig(OutputInterface $output): void
+    {
+        $root = Gacela::rootDir();
+        if (is_file($root . DIRECTORY_SEPARATOR . 'gacela.php')) {
+            return;
+        }
+
+        $output->writeln(sprintf(
+            'gacela.php: not found at %s, running on defaults with any configured overrides',
+            $root,
+        ), OutputInterface::OUTPUT_RAW);
     }
 
     /**

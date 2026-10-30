@@ -4,6 +4,8 @@
 
 ### Changed
 
+- `doctor` text output names the application root when the optional `gacela.php` is missing. The notice remains visible with `--only-problems` and does not affect the exit status ([#1028](https://github.com/gacela-project/gacela/issues/1028))
+
 - Document that `Gacela::get()` and `getRequired()` cache factory services per id until `resetRequestState()`, while direct container resolutions stay fresh ([#1019](https://github.com/gacela-project/gacela/issues/1019))
 
 - Opt-in cross-module checks report class headers, traits, attributes, `instanceof` and `catch` under PHPStan and Psalm ([#1045](https://github.com/gacela-project/gacela/issues/1045))

@@ -86,6 +86,48 @@ final class DoctorCommandTest extends TestCase
         }
     }
 
+    public function test_a_root_without_gacela_php_is_named_as_running_on_defaults(): void
+    {
+        Gacela::bootstrap($this->cacheDir, static function (GacelaConfig $config): void {
+            $config->resetInMemoryCache();
+        });
+
+        $tester = new CommandTester(new DoctorCommand());
+        $tester->execute([]);
+
+        self::assertStringContainsString('gacela.php: not found at ' . $this->cacheDir, $tester->getDisplay());
+        self::assertStringContainsString('running on defaults', $tester->getDisplay());
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+    }
+
+    public function test_missing_gacela_php_is_informational_with_only_problems_and_strict(): void
+    {
+        $tester = $this->doctor([], ['--only-problems' => true, '--strict' => true]);
+
+        self::assertStringContainsString('gacela.php: not found at ' . __DIR__, $tester->getDisplay());
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+    }
+
+    public function test_a_root_with_gacela_php_has_no_defaults_notice(): void
+    {
+        $configFile = $this->cacheDir . DIRECTORY_SEPARATOR . 'gacela.php';
+        file_put_contents($configFile, '<?php return static function (): void {};');
+
+        try {
+            Gacela::bootstrap($this->cacheDir, static function (GacelaConfig $config): void {
+                $config->resetInMemoryCache();
+            });
+
+            $tester = new CommandTester(new DoctorCommand());
+            $tester->execute([]);
+
+            self::assertStringNotContainsString('gacela.php: not found', $tester->getDisplay());
+            self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        } finally {
+            unlink($configFile);
+        }
+    }
+
     /**
      * `doctor` runs more checks than any other command and is the only one
      * whose exit code depends on a distinction the flags do not explain: an

@@ -15,6 +15,9 @@ $finder = Finder::create()
     ->in(__DIR__ . '/bridges/symfony-bridge/tests')
     ->in(__DIR__ . '/bridges/laravel-bridge/src')
     ->in(__DIR__ . '/bridges/laravel-bridge/tests')
+    // Finder misses root ignores when a linked worktree has a .git file.
+    ->notName('/^(?:gacela-(?:class-names|custom-services|container-plans|merged-config).*|\.gacelagacela-.*)\.php$/D')
+    ->notPath('~(?:^|/)(?:\.gacela|\.cache|\.gacela-cache-[^/]*|[^/]*\.cache|[^/]*cachegacela-[^/]*)(?:/|$)~')
     ->ignoreVCSIgnored(true);
 
 return (new Config())

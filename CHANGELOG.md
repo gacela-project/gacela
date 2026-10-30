@@ -9,6 +9,8 @@
 
 ### Fixed
 
+- `#[Provides]` methods typed with either container interface receive the container when resolved ([#1018](https://github.com/gacela-project/gacela/issues/1018))
+
 #### Bootstrap and configuration
 
 - Function-name plugins run with container injection and retain declaration order; missing or non-invokable plugins raise `PluginException` naming the plugin ([#1001](https://github.com/gacela-project/gacela/issues/1001))

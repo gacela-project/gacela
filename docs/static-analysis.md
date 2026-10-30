@@ -97,7 +97,9 @@ The pillar rules apply to **classes**. An interface, trait or enum named after a
 
 A Factory, Config or Provider, or a kind you declared, is only reported where the resolver would pick it up: named `{Module}{Suffix}` or just `{Suffix}`, with `{Module}` the last segment of its namespace, in a namespace that has a Facade (`{Module}Facade` or `Facade`, extending `AbstractFacade`) for resolution to start from. An `ExpressionParserFactory` in `App\Compiler\Domain\Parser` is a factory, not the `Parser` module's pillar, and a `LazySeqConfig` beside a `LazySeq` collection with no Facade is no module's Config, so both are left alone. A Facade has no such shape, since it is whatever class the caller instantiates, so every `*Facade` is checked.
 
-The Factory and cross-module rules ask the class, not its name: a Facade there is a class that extends `AbstractFacade`. A library's `PdfFacade` built in a Factory is not reported, and another module's internal `HelperFacade` is a cross-module reference like any other class. A class the analyser cannot load counts as no Facade. A class whose file throws while loading counts the same way.
+The Factory rule and the written-name cross-module rule ask the class, not its name: a Facade there is a class that extends `AbstractFacade`. A library's `PdfFacade` built in a Factory is not reported, and `new HelperFacade()` across a module boundary is reported like any other class if `HelperFacade` does not extend `AbstractFacade`. A class the analyser cannot load counts as no Facade. A class whose file throws while loading counts the same way.
+
+The method-call rule keeps the name convention, because the interface a consumer holds (`BillingFacadeInterface`) need not extend anything that identifies it as a Facade: a call on a `*Facade` or `*FacadeInterface` receiver is allowed regardless of its inheritance. See [what it accepts](module-boundaries.md#what-it-accepts).
 
 Suppressing one rule:
 

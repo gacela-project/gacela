@@ -39,6 +39,7 @@
 
 #### Container and service resolution
 
+- Configured service aliases follow chains to their final service and reject loops during bootstrap with the alias ids in the error ([#1021](https://github.com/gacela-project/gacela/issues/1021))
 - `#[Provides]` methods typed with either container interface receive the container when resolved ([#1018](https://github.com/gacela-project/gacela/issues/1018))
 - Handler registries name missing handler classes, their keys and autoloading tips ([#1011](https://github.com/gacela-project/gacela/issues/1011))
 - Facade subclasses inherit their parent module's Factory. Doubles in the same namespace or file keep the correct Factory ([#1017](https://github.com/gacela-project/gacela/issues/1017))

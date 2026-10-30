@@ -804,7 +804,7 @@ final class Container implements ContainerInterface
             self::notifyBindingRegistered($id, $announce);
         }
 
-        foreach ($containerConfig->getAliases() as $alias => $id) {
+        foreach ((new AliasMap($containerConfig->getAliases()))->resolved() as $alias => $id) {
             $container->alias($alias, $id);
             self::notifyBindingRegistered($alias, $announce);
         }

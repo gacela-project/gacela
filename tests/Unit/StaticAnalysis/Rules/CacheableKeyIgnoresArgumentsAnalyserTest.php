@@ -20,6 +20,11 @@ use function sprintf;
  */
 final class CacheableKeyIgnoresArgumentsAnalyserTest extends TestCase
 {
+    public function test_a_foreign_cacheable_attribute_is_not_judged(): void
+    {
+        self::assertSame([], $this->analyse('#[\Hyperf\Cache\Annotation\Cacheable(60, "users")]', 'int $id'));
+    }
+
     public function test_a_key_without_a_placeholder_on_a_method_with_arguments_is_reported(): void
     {
         $violations = $this->analyse("#[Cacheable(ttl: 60, key: 'user')]", 'int $id');
@@ -182,13 +187,9 @@ final class CacheableKeyIgnoresArgumentsAnalyserTest extends TestCase
         self::assertSame([], $this->analyse('', 'int $id'));
     }
 
-    /**
-     * Written either way round: on an imported name, or on a partially
-     * qualified one.
-     */
-    public function test_a_partially_qualified_attribute_name_is_recognised(): void
+    public function test_a_fully_qualified_attribute_name_is_recognised(): void
     {
-        self::assertCount(1, $this->analyse("#[Attribute\\Cacheable(key: 'user')]", 'int $id'));
+        self::assertCount(1, $this->analyse("#[\\Gacela\\Framework\\Attribute\\Cacheable(key: 'user')]", 'int $id'));
     }
 
     /**

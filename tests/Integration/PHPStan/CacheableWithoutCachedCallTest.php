@@ -57,6 +57,20 @@ final class CacheableWithoutCachedCallTest extends PhpStanFixtureTestCase
         self::assertStringNotContainsString('::twoHops()', $this->findingsOfThisRule());
     }
 
+    public function test_foreign_cacheable_attributes_are_not_judged_by_either_rule(): void
+    {
+        $errors = $this->analyseFixture();
+
+        self::assertStringContainsString('ForeignCacheFacade::imported()', $errors);
+        self::assertStringContainsString('ForeignCacheFacade::qualified()', $errors);
+        self::assertStringNotContainsString('ForeignCacheFacade::imported() carries', $errors);
+        self::assertStringNotContainsString('ForeignCacheFacade::qualified() carries', $errors);
+        self::assertStringNotContainsString('The #[Cacheable] key "foreign-import"', $errors);
+        self::assertStringNotContainsString('The #[Cacheable] key "foreign-qualified"', $errors);
+        self::assertStringContainsString('ForeignCacheFacade::gacelaPartial() carries #[Cacheable]', $errors);
+        self::assertStringContainsString('The #[Cacheable] key "gacela-partial"', $errors);
+    }
+
     #[Override]
     protected static function configPath(): string
     {

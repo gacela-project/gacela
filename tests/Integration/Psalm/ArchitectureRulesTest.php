@@ -44,6 +44,21 @@ final class ArchitectureRulesTest extends PsalmFixtureTestCase
         );
     }
 
+    public function test_foreign_cacheable_attributes_are_not_judged_by_either_rule(): void
+    {
+        $this->skipIfPsalmCannotRun($this->analyseFixture());
+        $errors = $this->errorsIn('ForeignCacheFacade.php');
+
+        self::assertStringContainsString('ForeignCacheFacade::imported()', $errors);
+        self::assertStringContainsString('ForeignCacheFacade::qualified()', $errors);
+        self::assertStringNotContainsString('ForeignCacheFacade::imported() carries', $errors);
+        self::assertStringNotContainsString('ForeignCacheFacade::qualified() carries', $errors);
+        self::assertStringNotContainsString('The #[Cacheable] key "foreign-import"', $errors);
+        self::assertStringNotContainsString('The #[Cacheable] key "foreign-qualified"', $errors);
+        self::assertStringContainsString('ForeignCacheFacade::gacelaPartial() carries #[Cacheable]', $errors);
+        self::assertStringContainsString('The #[Cacheable] key "gacela-partial"', $errors);
+    }
+
     public function test_a_factory_may_not_instantiate_a_facade(): void
     {
         $this->skipIfPsalmCannotRun($this->analyseFixture());

@@ -11,37 +11,56 @@ use Symfony\Component\Console\Application;
 
     $cwd = getcwd() ?: '.';
 
-    // Walk up for the nearest vendor/autoload.php, so the command works from
-    // anywhere in the project the way composer tooling is expected to. This
-    // cannot use anything from src/: it runs before the autoloader exists.
+    $autoload = $GLOBALS['_composer_autoload_path'] ?? null;
+    if (!\is_string($autoload) || !is_file($autoload)) {
+        $autoload = null;
+    }
+
     $projectRoot = null;
-    for ($dir = $cwd;; $dir = $parent) {
-        if (file_exists($dir . '/vendor/autoload.php')) {
+    if ($autoload !== null) {
+        require $autoload;
+        $installedFile = \dirname($autoload) . '/composer/installed.php';
+        if (is_file($installedFile)) {
+            // The proxy's metadata is independent of other registered Composer loaders.
+            $installed = require $installedFile;
+            $rootPackage = \is_array($installed) ? ($installed['root'] ?? null) : null;
+            $installedRoot = \is_array($rootPackage) ? ($rootPackage['install_path'] ?? null) : null;
+            $root = \is_string($installedRoot) ? realpath($installedRoot) : false;
+            if ($root !== false && is_file($root . '/composer.json')) {
+                $projectRoot = $root;
+            }
+        }
+    }
+
+    for ($dir = $cwd; $projectRoot === null; $dir = $parent) {
+        $marker = $autoload === null ? '/vendor/autoload.php' : '/composer.json';
+        if (is_file($dir . $marker)) {
             $projectRoot = $dir;
             break;
         }
 
-        $parent = dirname($dir);
+        $parent = \dirname($dir);
         if ($parent === $dir) {
             break;
         }
     }
 
     if ($projectRoot === null) {
-        fwrite(
-            STDERR,
-            "Cannot load composer's autoload file: no vendor/autoload.php in "
-            . $cwd . ' or any parent directory' . PHP_EOL,
-        );
+        $error = $autoload === null
+            ? "Cannot load composer's autoload file: no vendor/autoload.php in " . $cwd . ' or any parent directory'
+            : 'Cannot locate the Composer project root for ' . $autoload;
+        fwrite(STDERR, $error . PHP_EOL);
         exit(1);
     }
 
-    require $projectRoot . '/vendor/autoload.php';
+    if ($autoload === null) {
+        require $projectRoot . '/vendor/autoload.php';
+    }
 
     try {
         if (!class_exists(Application::class)) {
             $error = 'Cannot find class: %s. Did you forgot to require `%s` in your composer?';
-            throw new RuntimeException(sprintf($error, Application::class, 'symfony/console'));
+            throw new RuntimeException(\sprintf($error, Application::class, 'symfony/console'));
         }
 
         // The project root, not the invoking directory: bootstrapping with a

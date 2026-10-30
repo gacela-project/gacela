@@ -1,6 +1,6 @@
 # CLI commands
 
-Gacela ships a console binary. In your project it is `vendor/bin/gacela`; run it with no arguments (or `list`) to see everything with its options.
+Gacela ships a console binary. In your project it is `vendor/bin/gacela` (or `<vendor-dir>/bin/gacela` when `config.vendor-dir` is set); run it with no arguments (or `list`) to see everything with its options.
 
 ```bash
 vendor/bin/gacela               # list every command

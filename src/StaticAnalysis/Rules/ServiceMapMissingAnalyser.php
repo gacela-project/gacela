@@ -87,7 +87,7 @@ final class ServiceMapMissingAnalyser implements ClassAnalyserInterface
      * it either -- `DocBlockParser` matches the name at a word boundary, so a
      * tag written without one still resolves and so must still be reported.
      */
-    private const METHOD_TAG = '#@method\s+(?:static\s+)?(?P<type>[^\s(]+)\s+(?P<name>\w+)#';
+    private const METHOD_TAG = '#^[ \t]*(?:/?\*+[ \t]*)?@method\s+(?:static\s+)?(?P<type>[^\s(]+)\s+(?P<name>\w+)#m';
 
     /**
      * @return list<Violation>

@@ -24,6 +24,15 @@ final class StaticAnalysisDocsTest extends TestCase
 {
     private const DOCS = __DIR__ . '/../../../docs/static-analysis.md';
 
+    public function test_the_page_says_which_cross_module_half_asks_the_class(): void
+    {
+        $docs = $this->docs();
+
+        self::assertStringNotContainsString('The Factory and cross-module rules ask the class, not its name', $docs);
+        self::assertStringContainsString('The Factory rule and the written-name cross-module rule ask the class, not its name', $docs);
+        self::assertStringContainsString('The method-call rule keeps the name convention', $docs);
+    }
+
     public function test_every_rule_is_documented_with_both_of_its_suppression_keys(): void
     {
         $documented = $this->documentedPairs();

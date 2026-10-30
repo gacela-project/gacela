@@ -75,6 +75,7 @@
 
 #### Static analysis
 
+- Cache attribute rules inspect only Gacela's `Cacheable` attribute and leave attributes from other libraries alone ([#1049](https://github.com/gacela-project/gacela/issues/1049))
 - First-class `cached(...)` callables produce diagnostics without crashing analysis. First-class `getProvidedDependency(...)` callables keep their declared types ([#1043](https://github.com/gacela-project/gacela/issues/1043))
 - Cross-module and declared-dependency rules ignore leading or trailing namespace separators and compare names without case sensitivity. Shared namespaces and ignored receivers follow the same rules; separator-only roots fail configuration ([#1041](https://github.com/gacela-project/gacela/issues/1041))
 - Static-analysis rules treat classes that throw while loading as unloadable instead of crashing analysis ([#1042](https://github.com/gacela-project/gacela/issues/1042))

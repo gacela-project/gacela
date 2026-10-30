@@ -32,6 +32,7 @@
 
 #### Caching
 
+- `cached()` reached through a closure caches under the enclosing attributed method instead of throwing; callback parameters keep individual results separate ([#1030](https://github.com/gacela-project/gacela/issues/1030))
 - `enableFileCache($appRoot)` uses the application root itself instead of appending it to the root a second time ([#1000](https://github.com/gacela-project/gacela/issues/1000))
 - Cache reads, including container plans, reject foreign-owned files, symlinks, files writable by other users and files in directories writable by other users without the sticky bit. New PHP cache files use mode `0600`; failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
 - `cache:warm` and `cache:clear` name files they could not write or remove and exit 1. Failed merged-config writes no longer report stale file sizes as success. Disabled caching retains its warning and successful exit ([#1032](https://github.com/gacela-project/gacela/issues/1032))

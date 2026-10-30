@@ -28,9 +28,11 @@ abstract class PsalmFixtureTestCase extends TestCase
     /** @var array<string, string> */
     private static array $outputs = [];
 
-    final protected function analyseFixture(): string
+    final protected function analyseFixture(string $outputFormat = 'text'): string
     {
-        return self::$outputs[static::configPath()] ??= $this->runPsalm();
+        $key = static::configPath() . '#' . $outputFormat;
+
+        return self::$outputs[$key] ??= $this->runPsalm($outputFormat);
     }
 
     /**
@@ -90,16 +92,17 @@ abstract class PsalmFixtureTestCase extends TestCase
         self::markTestSkipped('Psalm cannot run in this dependency set: ' . substr($output, -2000));
     }
 
-    private function runPsalm(): string
+    private function runPsalm(string $outputFormat): string
     {
         // No `-d error_reporting=...` here: Psalm re-execs itself through
         // xdebug-handler before it analyses anything, and the restarted process
         // does not inherit the flag. Deprecation noise is therefore dealt with
         // where it lands -- see skipIfPsalmCannotRun().
         $command = sprintf(
-            '%s --config=%s --no-progress --no-cache --output-format=text 2>&1',
+            '%s --config=%s --no-progress --no-cache --output-format=%s 2>&1',
             escapeshellarg(self::ROOT . '/vendor/bin/psalm'),
             escapeshellarg(static::configPath()),
+            escapeshellarg($outputFormat),
         );
 
         return (string)shell_exec($command);

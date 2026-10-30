@@ -6,12 +6,6 @@ namespace GacelaTest\Integration\Psalm;
 
 use Override;
 
-use function array_filter;
-use function array_values;
-use function explode;
-use function implode;
-use function str_contains;
-
 /**
  * The reference application through the other analyser.
  *
@@ -22,23 +16,15 @@ use function str_contains;
  */
 final class ReferenceAppTest extends PsalmFixtureTestCase
 {
-    /**
-     * Lines about the application, rather than the whole output: Psalm prints
-     * nothing at all on a clean run, but it is not the only thing that can
-     * reach this stream, and a crash is asserted on separately.
-     */
     public function test_the_reference_application_has_no_findings(): void
     {
-        $output = $this->analyseFixture();
+        $output = $this->analyseFixture('json');
         $this->skipIfPsalmCannotRun($output);
         self::assertStringNotContainsString('ServiceMapAccessors is internal', $output, 'The framework trait must be usable outside Gacela.');
 
-        $findings = array_values(array_filter(
-            explode("\n", $output),
-            static fn (string $line): bool => str_contains($line, 'Invoicing' . DIRECTORY_SEPARATOR),
-        ));
+        $findings = ReferenceAppDiagnostics::in($output);
 
-        self::assertSame([], $findings, "psalm reported:\n" . implode("\n", $findings));
+        self::assertSame([], $findings, 'psalm reported: ' . json_encode($findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
     }
 
     #[Override]

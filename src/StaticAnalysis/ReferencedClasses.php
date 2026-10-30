@@ -36,7 +36,7 @@ final class ReferencedClasses
      */
     public static function in(ClassLike $node): array
     {
-        return self::collect($node, includeTypeHints: true);
+        return self::collect($node, includeTypeDeclarations: true);
     }
 
     /**
@@ -44,17 +44,17 @@ final class ReferencedClasses
      */
     public static function namedIn(ClassLike $node): array
     {
-        return self::collect($node, includeTypeHints: false);
+        return self::collect($node, includeTypeDeclarations: false);
     }
 
     /**
      * @return list<string>
      */
-    private static function collect(ClassLike $node, bool $includeTypeHints): array
+    private static function collect(ClassLike $node, bool $includeTypeDeclarations): array
     {
         $names = [];
 
-        foreach (self::nameNodes($node, $includeTypeHints) as $name) {
+        foreach (self::nameNodes($node, $includeTypeDeclarations) as $name) {
             $resolved = ResolvedName::of($name);
             $names[$resolved] = $resolved;
         }
@@ -65,7 +65,7 @@ final class ReferencedClasses
     /**
      * @return array<Name>
      */
-    private static function nameNodes(ClassLike $node, bool $includeTypeHints): array
+    private static function nameNodes(ClassLike $node, bool $includeTypeDeclarations): array
     {
         $names = self::declarationNames($node);
 
@@ -73,8 +73,8 @@ final class ReferencedClasses
         // kinds twice -- once to select them, once to read them -- is how the
         // two lists drift apart, and a kind missing from either one is a
         // dependency nothing reports.
-        foreach ((new NodeFinder())->find($node, static fn (Node $n): bool => self::referencesOf($n, $includeTypeHints) !== []) as $found) {
-            foreach (self::referencesOf($found, $includeTypeHints) as $name) {
+        foreach ((new NodeFinder())->find($node, static fn (Node $n): bool => self::referencesOf($n, $includeTypeDeclarations) !== []) as $found) {
+            foreach (self::referencesOf($found, $includeTypeDeclarations) as $name) {
                 $names[] = $name;
             }
         }
@@ -83,9 +83,6 @@ final class ReferencedClasses
     }
 
     /**
-     * What the class header itself names -- the one place the references are not
-     * found by walking the body.
-     *
      * @return array<Name>
      */
     private static function declarationNames(ClassLike $node): array
@@ -104,8 +101,12 @@ final class ReferencedClasses
     /**
      * @return array<Name>
      */
-    private static function referencesOf(Node $node, bool $includeTypeHints): array
+    private static function referencesOf(Node $node, bool $includeTypeDeclarations): array
     {
+        if ($node instanceof ClassLike) {
+            return $includeTypeDeclarations ? self::declarationNames($node) : [];
+        }
+
         if ($node instanceof Node\Stmt\TraitUse) {
             return $node->traits;
         }
@@ -128,7 +129,7 @@ final class ReferencedClasses
             return $node->class instanceof Name ? [$node->class] : [];
         }
 
-        if (!$includeTypeHints) {
+        if (!$includeTypeDeclarations) {
             return [];
         }
 

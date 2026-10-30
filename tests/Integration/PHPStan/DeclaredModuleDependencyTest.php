@@ -16,6 +16,13 @@ use Override;
  */
 final class DeclaredModuleDependencyTest extends PhpStanFixtureTestCase
 {
+    public function test_an_anonymous_class_header_is_reported(): void
+    {
+        $errors = $this->analyseFixture();
+
+        self::assertStringContainsString('AnonymousConsumer.php', $errors);
+    }
+
     public function test_a_dependency_the_rules_file_denies_is_reported(): void
     {
         $errors = $this->analyseFixture();

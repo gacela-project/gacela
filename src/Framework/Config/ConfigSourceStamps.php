@@ -68,7 +68,7 @@ final class ConfigSourceStamps
     public static function couldMissAChange(array $stamps, int $now): bool
     {
         foreach ($stamps as $stamp) {
-            if ($stamp !== '' && (int) $stamp >= $now) {
+            if ($stamp !== '' && (int) $stamp === $now) {
                 return true;
             }
         }

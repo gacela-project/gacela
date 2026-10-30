@@ -12,11 +12,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use function file_get_contents;
 use function file_put_contents;
 use function is_file;
-use function preg_match;
-use function preg_quote;
-use function preg_replace;
 use function rtrim;
 use function sprintf;
+use function strlen;
 
 /**
  * Points the project's `AGENTS.md` at the guide Gacela ships for coding agents.
@@ -91,15 +89,17 @@ final class AgentsInstallCommand extends Command
             return self::BLOCK . "\n";
         }
 
-        // A start marker, then an end marker with no other start between: a
-        // stray marker left by hand never makes a match span the text after it.
-        $start = preg_quote(self::START, '/');
-        $pattern = '/' . $start . '(?:(?!' . $start . ').)*?' . preg_quote(self::END, '/') . '/s';
-
-        if (preg_match($pattern, $current) === 1) {
-            return (string) preg_replace($pattern, self::BLOCK, $current, 1);
+        $start = strpos($current, self::START);
+        $end = $start === false ? false : strpos($current, self::END, $start + strlen(self::START));
+        if ($start === false || $end === false) {
+            return rtrim($current) . "\n\n" . self::BLOCK . "\n";
         }
 
-        return rtrim($current) . "\n\n" . self::BLOCK . "\n";
+        // Earlier starts are stray when another start appears before the end.
+        while (($next = strpos($current, self::START, $start + strlen(self::START))) !== false && $next < $end) {
+            $start = $next;
+        }
+
+        return substr_replace($current, self::BLOCK, $start, $end + strlen(self::END) - $start);
     }
 }

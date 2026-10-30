@@ -11,6 +11,7 @@
 ### Fixed
 
 - Module discovery, undiscovered-facade warnings, project events and `migrate:service-map` scan projects under directories whose names end in `vendor`, such as `myvendor`. Directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))
+- Module and project-event discovery skip files PHP cannot compile or load. `doctor` reports the PHP error with its file and line under undiscovered facades, and command errors retain their location and verbose trace ([#1026](https://github.com/gacela-project/gacela/issues/1026))
 - `dto:generate` reports a shape covered only by a `psr-0` prefix as uncovered and exits with an error. Before, it wrote the class to a path Composer could not load ([#1003](https://github.com/gacela-project/gacela/issues/1003))
 - `dto:generate` and package manifest checks use the first directory when a Composer autoload prefix maps to a list, matching `make:module`. Empty or invalid directory lists no longer cause generation or scanning at the package root ([#1024](https://github.com/gacela-project/gacela/issues/1024))
 - Module discovery skips configured paths that are not directories without emitting PHP warnings into JSON output. `doctor` keeps reporting those entries, and `list:modules` text output names them even when other paths contain modules ([#1023](https://github.com/gacela-project/gacela/issues/1023))

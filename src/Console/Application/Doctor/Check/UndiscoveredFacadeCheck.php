@@ -52,7 +52,7 @@ final class UndiscoveredFacadeCheck implements HealthCheck
                 '%s — %s (%s)',
                 $facade->className,
                 $facade->problem === UndiscoveredFacadeProblem::NotLoadable
-                    ? 'php cannot load this class'
+                    ? 'php cannot load this class' . ($facade->reason === '' ? '' : ': ' . $facade->reason)
                     : 'does not extend AbstractFacade',
                 $facade->path,
             );

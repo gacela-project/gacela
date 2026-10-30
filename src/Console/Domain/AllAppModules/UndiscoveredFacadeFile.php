@@ -20,6 +20,7 @@ final class UndiscoveredFacadeFile
         public readonly string $path,
         public readonly string $className,
         public readonly UndiscoveredFacadeProblem $problem,
+        public readonly string $reason = '',
     ) {
     }
 }

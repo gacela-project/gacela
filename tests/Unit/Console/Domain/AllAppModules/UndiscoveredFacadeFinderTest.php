@@ -10,6 +10,7 @@ use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeFile;
 use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeFinder;
 use Gacela\Console\Domain\AllAppModules\UndiscoveredFacadeProblem;
 use IteratorIterator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use SplFileInfo;
@@ -78,6 +79,66 @@ final class UndiscoveredFacadeFinderTest extends TestCase
      * named right, and composer cannot map the namespace -- so discovery skips
      * it and nothing anywhere says why.
      */
+    #[DataProvider('unloadableBodies')]
+    public function test_reports_the_php_error_and_location(string $body): void
+    {
+        $namespace = 'Unloadable' . bin2hex(random_bytes(4));
+        $path = $this->writeModuleFile('Broken', 'BrokenFacade', $namespace);
+        file_put_contents($path, "<?php\nnamespace " . $namespace . ";\n" . $body);
+        $realPath = realpath($path);
+        self::assertIsString($realPath);
+        $autoload = static function (string $class) use ($namespace, $path): void {
+            if ($class === $namespace . '\\BrokenFacade') {
+                require $path;
+            }
+        };
+        spl_autoload_register($autoload);
+
+        try {
+            $found = $this->find($path);
+            self::assertCount(1, $found);
+            self::assertSame(UndiscoveredFacadeProblem::NotLoadable, $found[0]->problem);
+            self::assertNotSame('', $found[0]->reason);
+            self::assertStringContainsString($realPath . ':3', $found[0]->reason);
+            self::assertSame($found[0]->reason, $this->find($path)[0]->reason);
+        } finally {
+            spl_autoload_unregister($autoload);
+        }
+    }
+
+    public function test_an_undefined_class_is_retried_after_the_source_is_fixed(): void
+    {
+        $namespace = 'Repairable' . bin2hex(random_bytes(4));
+        $class = $namespace . '\\BrokenFacade';
+        $path = $this->writeModuleFile('Broken', 'BrokenFacade', $namespace);
+        file_put_contents($path, '<?php namespace ' . $namespace . '; class BrokenFacade extends MissingParent {}');
+        $autoload = static function (string $candidate) use ($class, $path): void {
+            if ($candidate === $class) {
+                require $path;
+            }
+        };
+        spl_autoload_register($autoload);
+
+        try {
+            self::assertSame(UndiscoveredFacadeProblem::NotLoadable, $this->find($path)[0]->problem);
+            file_put_contents($path, '<?php namespace ' . $namespace . '; class BrokenFacade extends \\Gacela\\Framework\\AbstractFacade {}');
+            self::assertSame([], $this->find($path));
+            self::assertTrue(class_exists($class, false));
+        } finally {
+            spl_autoload_unregister($autoload);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unloadableBodies(): iterable
+    {
+        yield 'syntax error' => ['class BrokenFacade extends \\Gacela\\Framework\\AbstractFacade { public function x(): void { if ( } }'];
+        yield 'missing parent' => ['class BrokenFacade extends MissingParent {}'];
+        yield 'load-time type error' => ['strlen([]); class BrokenFacade extends \\Gacela\\Framework\\AbstractFacade {}'];
+    }
+
     public function test_reports_a_facade_php_cannot_load(): void
     {
         $path = $this->writeModuleFile('Blog', 'BlogFacade', 'Nowhere\\Nothing\\Blog');

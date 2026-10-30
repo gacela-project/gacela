@@ -129,7 +129,7 @@ Call `CacheableConfig::setStorage()` once at bootstrap. All facades using `Cache
 
 | `$ttl` | meaning |
 |---|---|
-| `> 0` | the entry expires that many seconds from now |
+| `> 0` | the entry expires that many seconds from now, or has no expiry if the timestamp exceeds the integer range |
 | `0` | the entry is stored **without expiry** — not "expire immediately" |
 | `< 0` | the entry is already expired when written, so no read returns it |
 

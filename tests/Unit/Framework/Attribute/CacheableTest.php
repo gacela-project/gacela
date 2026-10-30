@@ -133,6 +133,16 @@ final class CacheableTest extends TestCase
         self::assertSame(2, $facade->getNonCachedCallCount());
     }
 
+    public function test_an_attribute_with_an_overflowing_ttl_is_cached_in_memory(): void
+    {
+        CacheableConfig::setStorage(new InMemoryCacheStorage());
+        $facade = new TestFacadeWithCache();
+
+        self::assertSame(1, $facade->getUnboundedData());
+        self::assertSame(1, $facade->getUnboundedData());
+        self::assertSame(1, $facade->getCallCount());
+    }
+
     public function test_cache_expires_after_ttl(): void
     {
         $facade = new TestFacadeWithCacheShortTTL();
@@ -621,6 +631,12 @@ final class TestFacadeWithCache
     private int $argsCallCount = 0;
 
     private int $nonCachedCallCount = 0;
+
+    #[Cacheable(ttl: PHP_INT_MAX)]
+    public function getUnboundedData(): int
+    {
+        return $this->cached(fn (): int => ++$this->callCount);
+    }
 
     #[Cacheable(ttl: 3600)]
     public function getExpensiveData(): string

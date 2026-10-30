@@ -97,6 +97,19 @@ final class CrossModuleRulesTest extends PsalmFixtureTestCase
         );
     }
 
+    public function test_reports_all_named_reference_positions(): void
+    {
+        $this->skipIfPsalmCannotRun($this->analyseFixture());
+        $errors = $this->errorsIn('NamedReferences.php');
+
+        foreach (['ReferenceBase', 'ReferenceContract', 'ReferenceTrait', 'ReferenceMarker', 'ShopException', 'ReferenceThing'] as $name) {
+            self::assertStringContainsString(
+                'references ' . __NAMESPACE__ . '\\CrossModuleFixture\\Shop\\Domain\\' . $name . ' from another module',
+                $errors,
+            );
+        }
+    }
+
     protected static function configPath(): string
     {
         return __DIR__ . '/CrossModuleFixture/psalm-cross-module-fixture.xml';

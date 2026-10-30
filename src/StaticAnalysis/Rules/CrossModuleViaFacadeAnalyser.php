@@ -9,23 +9,16 @@ use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\FacadeSurface;
 use Gacela\StaticAnalysis\ModuleBoundary;
 use Gacela\StaticAnalysis\PublicApiSurface;
-use Gacela\StaticAnalysis\ResolvedName;
+use Gacela\StaticAnalysis\ReferencedClasses;
 use Gacela\StaticAnalysis\Violation;
-use PhpParser\Node;
-use PhpParser\Node\Expr\ClassConstFetch;
-use PhpParser\Node\Expr\New_;
-use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Expr\StaticPropertyFetch;
-use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\NodeFinder;
 
 use function sprintf;
 
 /**
  * Module A may only reach module B through B's Facade -- gacela's central
  * architectural claim, checked wherever the source writes the other module's
- * name: `new`, a static call, a class constant, a static property.
+ * name: expressions, headers, traits, attributes and caught exception types.
  *
  * A boundary crossed through an injected dependency writes no name at the call
  * site, so it is invisible here; {@see CrossModuleMethodCallAnalyser} resolves
@@ -75,9 +68,8 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
         }
 
         $violations = [];
-        $seen = [];
 
-        foreach ($this->referencedClasses($node) as $referenced) {
+        foreach (ReferencedClasses::namedIn($node) as $referenced) {
             $refModule = $this->boundary->crossedBy($currentModule, $referenced);
             if ($refModule === null) {
                 continue;
@@ -93,12 +85,6 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
                 continue;
             }
 
-            // One class referenced twenty times is one boundary to fix.
-            if (isset($seen[$referenced])) {
-                continue;
-            }
-
-            $seen[$referenced] = true;
             $violations[] = new Violation(
                 sprintf(
                     'Class %s references %s from another module (%s). Cross-module access must go through a Facade.',
@@ -114,31 +100,4 @@ final class CrossModuleViaFacadeAnalyser implements ClassAnalyserInterface
         return $violations;
     }
 
-    /**
-     * Every place the source writes another class's name.
-     *
-     * @return list<string>
-     */
-    private function referencedClasses(ClassLike $node): array
-    {
-        $refs = (new NodeFinder())->find(
-            $node,
-            static fn (Node $n): bool => $n instanceof New_
-                || $n instanceof StaticCall
-                || $n instanceof ClassConstFetch
-                || $n instanceof StaticPropertyFetch,
-        );
-
-        $names = [];
-
-        foreach ($refs as $ref) {
-            /** @var ClassConstFetch|New_|StaticCall|StaticPropertyFetch $ref */
-            // `new $class` / `$class::CONST` name nothing to match on.
-            if ($ref->class instanceof Name) {
-                $names[] = ResolvedName::of($ref->class);
-            }
-        }
-
-        return $names;
-    }
 }

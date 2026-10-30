@@ -40,6 +40,19 @@ final class ReferencedClassesTest extends TestCase
         ));
     }
 
+    public function test_named_references_exclude_type_hints_without_changing_full_collection(): void
+    {
+        $node = ParseSource::classInAsPhpStanResolves('<?php class Subject extends \App\Other\Base {'
+            . ' public \App\Other\PropertyType $value;'
+            . ' public function run(\App\Other\ParamType $value): \App\Other\ReturnType {} }');
+
+        self::assertSame(['App\Other\Base'], ReferencedClasses::namedIn($node));
+        self::assertSame(
+            ['App\Other\Base', 'App\Other\PropertyType', 'App\Other\ReturnType', 'App\Other\ParamType'],
+            ReferencedClasses::in($node),
+        );
+    }
+
     public function test_it_finds_the_parent_class(): void
     {
         self::assertContains('App\Other\Base', $this->referencesIn(

@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Opt-in cross-module checks report class headers, traits, attributes, `instanceof` and `catch` under PHPStan and Psalm ([#1045](https://github.com/gacela-project/gacela/issues/1045))
+
 - File caching defaults to the private `{appRoot}/.gacela/cache` instead of the system temporary directory. Package cache filenames include the application-root hash ([#1029](https://github.com/gacela-project/gacela/issues/1029))
 - `Gacela::get()` and `getRequired()` throw `GacelaNotBootstrappedException` before bootstrap, matching `container()` ([#976](https://github.com/gacela-project/gacela/issues/976))
 - Health reports and `doctor` mark checks that cannot be built or named as unhealthy, then continue. Caught failures report the exception class and message without adding file or line metadata ([#1013](https://github.com/gacela-project/gacela/issues/1013), [#1014](https://github.com/gacela-project/gacela/issues/1014))

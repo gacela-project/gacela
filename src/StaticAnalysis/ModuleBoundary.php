@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Gacela\StaticAnalysis;
 
+use InvalidArgumentException;
+
 use function array_pop;
 use function array_slice;
 use function count;
 use function explode;
 use function implode;
 use function in_array;
-use function str_starts_with;
 use function strlen;
 use function substr;
 
@@ -23,6 +24,11 @@ use function substr;
  */
 final class ModuleBoundary
 {
+    private readonly string $rootNamespace;
+
+    /** @var list<string> */
+    private readonly array $sharedNamespaces;
+
     /**
      * No defaults here on purpose: the rules built on this are the public API
      * and carry them, so a default repeated here would be a second answer to the
@@ -44,11 +50,17 @@ final class ModuleBoundary
      *                                         module's public sub-namespaces
      */
     public function __construct(
-        private readonly string $rootNamespace,
+        string $rootNamespace,
         private readonly int $modulePathSegments,
-        private readonly array $sharedNamespaces,
+        array $sharedNamespaces,
         private readonly array $publicApiSegments,
     ) {
+        $this->rootNamespace = trim($rootNamespace, '\\');
+        if ($this->rootNamespace === '') {
+            throw new InvalidArgumentException('rootNamespace must name a namespace, got an empty one.');
+        }
+
+        $this->sharedNamespaces = array_map(static fn (string $namespace): string => trim($namespace, '\\'), $sharedNamespaces);
     }
 
     /**
@@ -58,8 +70,9 @@ final class ModuleBoundary
      */
     public function moduleOf(string $class): ?string
     {
+        $class = ltrim($class, '\\');
         $prefix = $this->rootNamespace . '\\';
-        if (!str_starts_with($class, $prefix)) {
+        if (strncasecmp($class, $prefix, strlen($prefix)) !== 0) {
             return null;
         }
 
@@ -69,7 +82,7 @@ final class ModuleBoundary
             return null;
         }
 
-        return $this->rootNamespace . '\\' . implode('\\', array_slice($segments, 0, $this->modulePathSegments));
+        return substr($class, 0, strlen($prefix)) . implode('\\', array_slice($segments, 0, $this->modulePathSegments));
     }
 
     /**
@@ -116,7 +129,7 @@ final class ModuleBoundary
     {
         $module = $this->moduleOf($referenced);
 
-        if ($module === null || $module === $fromModule || $this->isShared($referenced)) {
+        if ($module === null || strcasecmp($module, ltrim($fromModule, '\\')) === 0 || $this->isShared($referenced)) {
             return null;
         }
 

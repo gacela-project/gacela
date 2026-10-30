@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- Cross-module checks and declared dependency rules ignore leading or trailing namespace separators and compare namespace names without case sensitivity. Shared namespaces and ignored receivers follow the same rules; a separator-only root fails configuration instead of silently disabling checks ([#1041](https://github.com/gacela-project/gacela/issues/1041))
+
 - `debug:graph --format=json` emits an empty JSON graph when no modules are found, while retaining the text diagnostic ([#1071](https://github.com/gacela-project/gacela/issues/1071))
 
 - Module discovery, undiscovered-facade warnings, project events and `migrate:service-map` scan projects under directories whose names end in `vendor`, such as `myvendor`. Directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))

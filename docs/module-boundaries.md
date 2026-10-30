@@ -76,6 +76,8 @@ A `<crossModule>` without a `rootNamespace` is a configuration error and stops t
 
 ### What it accepts
 
+Namespaces are compared the way PHP compares them: case does not matter, and a leading or trailing backslash is ignored. A root containing only backslashes is a configuration error.
+
 - `sharedNamespaces` entries are exempt in both directions: references into them are always allowed, and classes inside them are not checked. Matching is namespace-boundary aware — `App\Modules\Shared` does not exempt `App\Modules\SharedFoo`.
 - A **call** on a `*Facade` or a `*FacadeInterface` is allowed; consumers type-hint the interface, which is the same sanctioned crossing. A **written reference** is allowed only for `*Facade`, because naming `SomeFacadeInterface::class` is not a call through one.
 - A **call on a `Throwable`** is allowed, always. A module throws its own exception type and a neighbour catches it and asks for `getMessage()`: that is reading, not collaborating, and the boundary a Facade protects is not crossed by it. Without this, every `catch` block of a typed exception is a finding — 24 of the 53 the rule raised on a 1100-file codebase were exactly that. The *named* reference is still reported: `new ShopException(...)` writes another module's name, which is the other half's business.

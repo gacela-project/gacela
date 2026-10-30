@@ -26,6 +26,13 @@ final class CrossModuleMethodCallAnalyserTest extends TestCase
 
     private const FIXTURE_CALLER = self::FIXTURE_ROOT . '\Checkout\CheckoutFactory';
 
+    public function test_an_unloadable_ignored_receiver_ignores_separators_and_case(): void
+    {
+        $analyser = new CrossModuleMethodCallAnalyser(self::ROOT, ignoreReceivers: ['\\app\\modules\\billing\\domain\\invoicerepository\\']);
+
+        self::assertSame([], $analyser->analyse(self::CALLER, ['App\\Modules\\Billing\\Domain\\InvoiceRepository']));
+    }
+
     public function test_a_call_on_another_modules_type_is_reported(): void
     {
         $violations = $this->analyse(['App\Modules\Billing\Domain\InvoiceRepository']);

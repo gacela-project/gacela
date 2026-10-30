@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\StaticAnalysis;
 
-use function str_starts_with;
+use function strcasecmp;
+use function strlen;
+use function strncasecmp;
+use function trim;
 
 /**
  * Whether a namespace covers a name, on the namespace boundary.
@@ -18,7 +21,12 @@ final class NamespaceMatch
 {
     public static function covers(string $namespace, string $candidate): bool
     {
-        return $candidate === $namespace || str_starts_with($candidate, $namespace . '\\');
+        $namespace = trim($namespace, '\\');
+        $candidate = trim($candidate, '\\');
+
+        return $namespace !== ''
+            && (strcasecmp($candidate, $namespace) === 0
+                || strncasecmp($candidate, $namespace . '\\', strlen($namespace) + 1) === 0);
     }
 
     /**

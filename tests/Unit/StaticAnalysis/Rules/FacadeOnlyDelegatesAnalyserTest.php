@@ -131,6 +131,11 @@ final class FacadeOnlyDelegatesAnalyserTest extends TestCase
         ));
     }
 
+    public function test_a_first_class_cached_callable_is_reported(): void
+    {
+        self::assertCount(1, $this->analyse('return $this->cached(...);'));
+    }
+
     public function test_a_cached_call_without_arguments_is_reported(): void
     {
         self::assertCount(1, $this->analyse('return $this->cached();'));

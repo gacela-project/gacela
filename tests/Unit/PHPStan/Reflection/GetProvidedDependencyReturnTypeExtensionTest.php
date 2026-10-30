@@ -13,6 +13,7 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\VariadicPlaceholder;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\Constant\ConstantStringType;
@@ -108,6 +109,17 @@ final class GetProvidedDependencyReturnTypeExtensionTest extends TestCase
 
         self::assertNull($this->extension->getTypeFromMethodCall($this->method('getProvidedDependency'), $noArgs, $scope));
         self::assertNull($this->extension->getTypeFromMethodCall($this->method('getProvidedDependency'), $twoArgs, $scope));
+    }
+
+    public function test_a_first_class_callable_is_left_alone(): void
+    {
+        $call = new MethodCall(new Variable('this'), 'getProvidedDependency', [new VariadicPlaceholder()]);
+
+        self::assertNull($this->extension->getTypeFromMethodCall(
+            $this->method('getProvidedDependency'),
+            $call,
+            $this->createStub(Scope::class),
+        ));
     }
 
     private function typeFor(Type $argumentType, string $rawValue): ?Type

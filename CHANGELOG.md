@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Static analysis reports first-class `cached(...)` callables without crashing and leaves first-class `getProvidedDependency(...)` callables to their declared types ([#1043](https://github.com/gacela-project/gacela/issues/1043))
 - `#[Provides]` methods typed with either container interface receive the container when resolved ([#1018](https://github.com/gacela-project/gacela/issues/1018))
 
 #### Bootstrap and configuration

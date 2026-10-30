@@ -178,7 +178,7 @@ final class FacadeOnlyDelegatesAnalyser implements MethodAnalyserInterface
      */
     private function isCachedDelegation(Expr $expr): bool
     {
-        if (!$expr instanceof MethodCall) {
+        if (!$expr instanceof MethodCall || $expr->isFirstClassCallable()) {
             return false;
         }
 

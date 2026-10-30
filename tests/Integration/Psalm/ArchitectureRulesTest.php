@@ -34,6 +34,16 @@ final class ArchitectureRulesTest extends PsalmFixtureTestCase
         );
     }
 
+    public function test_a_first_class_cached_callable_is_reported(): void
+    {
+        $this->skipIfPsalmCannotRun($this->analyseFixture());
+
+        self::assertStringContainsString(
+            'GacelaFacadeOnlyDelegates: Facade method ' . RulesFixture\CachedFacade::class . '::firstClassCached()',
+            $this->errorsIn('CachedFacade.php'),
+        );
+    }
+
     public function test_a_factory_may_not_instantiate_a_facade(): void
     {
         $this->skipIfPsalmCannotRun($this->analyseFixture());

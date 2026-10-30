@@ -46,6 +46,10 @@ final class GetProvidedDependencyReturnTypeExtension implements DynamicMethodRet
         MethodCall $methodCall,
         Scope $scope,
     ): ?Type {
+        if ($methodCall->isFirstClassCallable()) {
+            return null;
+        }
+
         $args = $methodCall->getArgs();
         if (count($args) !== 1) {
             return null;

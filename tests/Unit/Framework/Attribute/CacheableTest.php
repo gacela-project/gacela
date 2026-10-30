@@ -349,6 +349,15 @@ final class CacheableTest extends TestCase
         self::assertSame(4, $facade->calls);
     }
 
+    public function test_a_closure_capturing_a_loop_variable_caches_each_value(): void
+    {
+        $facade = new TestFacadeWithClosureCached();
+
+        self::assertSame([2, 4, 2], $facade->loop([1, 2, 1]));
+        self::assertSame([2, 4, 2], $facade->loop([1, 2, 1]));
+        self::assertSame(2, $facade->calls);
+    }
+
     public function test_a_closure_without_an_attributed_method_runs_uncached(): void
     {
         $facade = new TestFacadeWithClosureCached();
@@ -1059,6 +1068,22 @@ final class TestFacadeWithClosureCached
     public function map(array $ids, int $factor = 2): array
     {
         return array_map(fn (int $id): int => $this->cached(fn (): int => $this->compute($id * $factor)), $ids);
+    }
+
+    /**
+     * @param list<int> $ids
+     *
+     * @return list<int>
+     */
+    #[Cacheable]
+    public function loop(array $ids): array
+    {
+        $result = [];
+        foreach ($ids as $id) {
+            $result[] = (fn (): int => $this->cached(fn (): int => $this->compute($id * 2)))();
+        }
+
+        return $result;
     }
 
     public function uncached(int $id): int

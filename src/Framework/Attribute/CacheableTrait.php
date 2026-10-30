@@ -12,6 +12,7 @@ use ReflectionFunction;
 use ReflectionMethod;
 use stdClass;
 
+use function array_values;
 use function count;
 use function debug_backtrace;
 use function end;
@@ -127,7 +128,7 @@ trait CacheableTrait
         // one of this object up the stack that has `#[Cacheable]`. Only looked
         // for here, so a hit on the common path pays nothing for it.
         if ($attribute === null && $inferred) {
-            $frame = $this->cacheableMethodUpTheStack();
+            $frame = $this->cacheableMethodUpTheStack($callback);
             if ($frame !== null) {
                 $method = $frame['function'];
                 if (!$argsGiven) {
@@ -185,17 +186,21 @@ trait CacheableTrait
     /**
      * @return array{function: string, args: list<mixed>}|null
      */
-    private function cacheableMethodUpTheStack(): ?array
+    private function cacheableMethodUpTheStack(Closure $callback): ?array
     {
         $closureArgs = [];
+        $throughClosure = false;
         foreach ($this->cacheableCallerFrames() as $frame) {
             if (!method_exists($this, $frame['function'])) {
                 $closureArgs = [...$frame['args'], ...$closureArgs];
+                $throughClosure = true;
                 continue;
             }
 
             if ($this->resolveCacheableAttribute($frame['function']) instanceof Cacheable) {
-                return ['function' => $frame['function'], 'args' => [...$frame['args'], ...$closureArgs]];
+                $captured = $throughClosure ? array_values((new ReflectionFunction($callback))->getStaticVariables()) : [];
+
+                return ['function' => $frame['function'], 'args' => [...$frame['args'], ...$closureArgs, ...$captured]];
             }
         }
 

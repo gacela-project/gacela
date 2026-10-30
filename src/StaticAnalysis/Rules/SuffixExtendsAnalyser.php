@@ -9,6 +9,7 @@ use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\ClassResolver\ResolvableTypes;
 use Gacela\StaticAnalysis\AnalysedClassInterface;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
+use Gacela\StaticAnalysis\FacadeSurface;
 use Gacela\StaticAnalysis\ResolvedName;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
@@ -21,11 +22,9 @@ use PhpParser\Node\Stmt\ClassMethod;
 use function array_filter;
 use function array_pop;
 use function array_values;
-use function class_exists;
 use function count;
 use function explode;
 use function implode;
-use function is_subclass_of;
 use function sprintf;
 use function str_ends_with;
 
@@ -141,7 +140,7 @@ final class SuffixExtendsAnalyser implements ClassAnalyserInterface
     {
         foreach ([$module . ResolvableTypes::FACADE, ResolvableTypes::FACADE] as $shortName) {
             $candidate = $namespace . '\\' . $shortName;
-            if (class_exists($candidate) && is_subclass_of($candidate, AbstractFacade::class)) {
+            if (FacadeSurface::isFacade($candidate)) {
                 return true;
             }
         }

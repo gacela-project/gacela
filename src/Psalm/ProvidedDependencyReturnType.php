@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Gacela\Psalm;
 
 use Gacela\Framework\AbstractFactory;
+use Gacela\StaticAnalysis\LoadedClass;
 use PhpParser\Node\Arg;
 use Psalm\Plugin\EventHandler\Event\MethodReturnTypeProviderEvent;
 use Psalm\Plugin\EventHandler\MethodReturnTypeProviderInterface;
 use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Union;
 
-use function class_exists;
 use function count;
-use function interface_exists;
 
 /**
  * Types `getProvidedDependency(Foo::class)` as `Foo`, the way
@@ -81,7 +80,7 @@ final class ProvidedDependencyReturnType implements MethodReturnTypeProviderInte
             // so that this and the PHPStan extension answer identically for the
             // same key -- two analysers disagreeing about what a Provider
             // supplies would be worse than either being conservative.
-            if (class_exists($literal->value) || interface_exists($literal->value)) {
+            if (LoadedClass::exists($literal->value)) {
                 return $literal->value;
             }
         }

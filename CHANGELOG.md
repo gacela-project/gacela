@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- Static-analysis rules treat classes that throw while loading as unloadable, so broken project dependencies do not crash the analysis ([#1042](https://github.com/gacela-project/gacela/issues/1042))
+
 - `debug:graph --format=json` emits an empty JSON graph when no modules are found, while retaining the text diagnostic ([#1071](https://github.com/gacela-project/gacela/issues/1071))
 
 - Module discovery, undiscovered-facade warnings, project events and `migrate:service-map` scan projects under directories whose names end in `vendor`, such as `myvendor`. Directories named exactly `vendor` remain excluded ([#1004](https://github.com/gacela-project/gacela/issues/1004))

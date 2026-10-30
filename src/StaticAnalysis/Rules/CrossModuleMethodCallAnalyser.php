@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Gacela\StaticAnalysis\Rules;
 
+use Gacela\StaticAnalysis\LoadedClass;
 use Gacela\StaticAnalysis\ModuleBoundary;
 use Gacela\StaticAnalysis\PublicApiSurface;
 use Gacela\StaticAnalysis\ShortName;
 use Gacela\StaticAnalysis\Violation;
 use Throwable;
 
-use function is_a;
 use function sprintf;
 use function str_ends_with;
 
@@ -153,18 +153,12 @@ final class CrossModuleMethodCallAnalyser
      */
     private function isExempt(string $receiver): bool
     {
-        if (is_a($receiver, Throwable::class, true)) {
+        if (LoadedClass::isA($receiver, Throwable::class)) {
             return true;
         }
 
         foreach ($this->ignoreReceivers as $ignored) {
-            /**
-             * @psalm-suppress ArgumentTypeCoercion a configured entry is a string
-             *                 somebody typed, not a proven class-string; `is_a()`
-             *                 answering false for one that names nothing is the
-             *                 behaviour the exact match above exists to cover
-             */
-            if ($receiver === $ignored || is_a($receiver, $ignored, true)) {
+            if ($receiver === $ignored || LoadedClass::isA($receiver, $ignored)) {
                 return true;
             }
         }

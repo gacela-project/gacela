@@ -34,6 +34,7 @@
 
 #### Service resolution
 
+- Facade subclasses inherit their parent module's Factory. Doubles in the same namespace or file keep the correct Factory ([#1017](https://github.com/gacela-project/gacela/issues/1017))
 - `#[ServiceMap]` returns the concrete pillar named by `className`, even outside module naming conventions. Abstract targets retain conventional or default resolution ([#1015](https://github.com/gacela-project/gacela/issues/1015))
 - Custom services ending in a declared kind suffix keep separate resolver cache entries, so resolving or overriding one cannot replace another or the module's conventional service ([#1016](https://github.com/gacela-project/gacela/issues/1016))
 - Anonymous globals from same-named files in different directories use distinct, canonical file-path keys that remain stable across bootstrap. Registering a different instance for an occupied key throws; `overrideExistingResolvedClass()` still replaces it ([#978](https://github.com/gacela-project/gacela/issues/978))

@@ -17,6 +17,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 
 use function is_array;
 use function is_object;
+
 use function ltrim;
 
 abstract class AbstractClassResolver
@@ -53,6 +54,7 @@ abstract class AbstractClassResolver
     public static function resetInstances(): void
     {
         self::$cachedInstances = [];
+        CallerInstanceCache::reset();
     }
 
     /**
@@ -113,8 +115,8 @@ abstract class AbstractClassResolver
     protected function doResolve(object|string $caller, ?string $previousCacheKey = null): ?object
     {
         $classInfo = ClassInfo::from($caller, $this->getResolvableType());
-        $cacheKey = $previousCacheKey ?? $classInfo->getCacheKey();
-        $resolvedClass = $this->resolveCached($cacheKey);
+        $registrationKey = $previousCacheKey ?? $classInfo->getCacheKey();
+        $resolvedClass = $this->resolveCached($registrationKey, $caller);
         if ($resolvedClass !== null) {
             if (self::shouldDispatch(ResolvedClassCachedEvent::class)) {
                 self::dispatchEvent(new ResolvedClassCachedEvent($classInfo));
@@ -123,32 +125,28 @@ abstract class AbstractClassResolver
             return $resolvedClass;
         }
 
+        // A resolution listener can invalidate this cache before the result is stored.
+        $callerToken = CallerInstanceCache::token();
         $resolvedClassName = $this->findClassName($classInfo);
         if ($resolvedClassName !== null) {
             $instance = self::resolveExactClass($resolvedClassName, $classInfo);
+            self::$cachedInstances[$registrationKey] = $instance;
         } else {
-            // Try again with its parent class
-            if (is_object($caller)) {
-                $parentClass = get_parent_class($caller);
-                if ($parentClass !== false) {
-                    if (self::shouldDispatch(ResolvedClassTriedFromParentEvent::class)) {
-                        self::dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
-                    }
-
-                    return $this->doResolve($parentClass, $cacheKey);
+            [$instance, $classInfo] = $this->resolveFromParents($caller, $classInfo);
+            if ($instance === null) {
+                if (self::shouldDispatch(ResolvedCreatedDefaultClassEvent::class)) {
+                    self::dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
                 }
+
+                $instance = $this->createDefaultGacelaClass();
             }
 
-            if (self::shouldDispatch(ResolvedCreatedDefaultClassEvent::class)) {
-                self::dispatchEvent(new ResolvedCreatedDefaultClassEvent($classInfo));
+            if (CallerInstanceCache::isCurrent($callerToken)) {
+                $this->cacheCallerInstance($registrationKey, $caller, $instance);
             }
-
-            $instance = $this->createDefaultGacelaClass();
         }
 
-        self::$cachedInstances[$cacheKey] = $instance;
-
-        return self::$cachedInstances[$cacheKey];
+        return $instance;
     }
 
     /**
@@ -158,6 +156,79 @@ abstract class AbstractClassResolver
     protected function createDefaultGacelaClass(): ?object
     {
         return null;
+    }
+
+    /**
+     * @param object|class-string $caller
+     */
+    private function cacheCallerInstance(string $registrationKey, object|string $caller, ?object $instance): void
+    {
+        $callerClass = ltrim(is_object($caller) ? $caller::class : $caller, '\\');
+        CallerInstanceCache::$instances[$registrationKey][$callerClass] = $instance;
+        CallerInstanceCache::$instances[$registrationKey]['\\' . $callerClass] = $instance;
+    }
+
+    /**
+     * @param object|class-string $caller
+     *
+     * @return array{?object, ClassInfo}
+     */
+    private function resolveFromParents(object|string $caller, ClassInfo $classInfo): array
+    {
+        $visited = [$classInfo->getCacheKey() => true];
+        foreach ($this->parentClasses($caller) as $parentClass) {
+            $parentInfo = ClassInfo::from($parentClass, $this->getResolvableType());
+            if (isset($visited[$parentInfo->getCacheKey()])) {
+                continue;
+            }
+
+            $visited[$parentInfo->getCacheKey()] = true;
+            $this->dispatchParentRetry($classInfo);
+            $classInfo = $parentInfo;
+            $instance = $this->resolveParentInfo($parentInfo);
+            if ($instance !== null) {
+                return [$instance, $classInfo];
+            }
+        }
+
+        return [null, $classInfo];
+    }
+
+    /**
+     * @param object|class-string $caller
+     *
+     * @return iterable<class-string>
+     */
+    private function parentClasses(object|string $caller): iterable
+    {
+        if (!is_object($caller) && !class_exists($caller)) {
+            return;
+        }
+
+        while (($caller = get_parent_class($caller)) !== false) {
+            yield $caller;
+        }
+    }
+
+    private function resolveParentInfo(ClassInfo $classInfo): ?object
+    {
+        $global = AnonymousGlobal::getByKey($classInfo->getCacheKey());
+        if ($global !== null) {
+            self::dispatchResolvedClassEvent($classInfo, true);
+
+            return $global;
+        }
+
+        $className = $this->findClassName($classInfo);
+
+        return $className === null ? null : self::resolveExactClass($className, $classInfo);
+    }
+
+    private function dispatchParentRetry(ClassInfo $classInfo): void
+    {
+        if (self::shouldDispatch(ResolvedClassTriedFromParentEvent::class)) {
+            self::dispatchEvent(new ResolvedClassTriedFromParentEvent($classInfo));
+        }
     }
 
     /**
@@ -189,10 +260,14 @@ abstract class AbstractClassResolver
         }
     }
 
-    private function resolveCached(string $cacheKey): ?object
+    /**
+     * @param object|class-string $caller
+     */
+    private function resolveCached(string $registrationKey, object|string $caller): ?object
     {
-        return AnonymousGlobal::getByKey($cacheKey)
-            ?? self::$cachedInstances[$cacheKey]
+        return AnonymousGlobal::getByKey($registrationKey)
+            ?? self::$cachedInstances[$registrationKey]
+            ?? CallerInstanceCache::$instances[$registrationKey][is_object($caller) ? $caller::class : $caller]
             ?? null;
     }
 

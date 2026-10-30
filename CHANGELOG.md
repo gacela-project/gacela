@@ -33,6 +33,7 @@
 
 - `cache:warm --attributes` skips membership-cache writes when file caching is disabled and reports the reason ([#1027](https://github.com/gacela-project/gacela/issues/1027))
 - Config files with future timestamps can warm and reuse verified merged-config caches instead of disabling caching until the clock catches up ([#1036](https://github.com/gacela-project/gacela/issues/1036))
+- Verified merged-config caches preserve source paths containing tabs, newlines, percent signs and non-ASCII characters ([#1039](https://github.com/gacela-project/gacela/issues/1039))
 
 - Merged-config caches inspect all properties of `__set_state()` objects and skip values containing closures, removing older cache files instead of writing files that cannot load ([#1035](https://github.com/gacela-project/gacela/issues/1035))
 - `cached()` calls through closures use the enclosing attributed method instead of throwing. Callback parameters keep individual results separate ([#1030](https://github.com/gacela-project/gacela/issues/1030))

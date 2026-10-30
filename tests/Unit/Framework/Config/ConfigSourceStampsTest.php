@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GacelaTest\Unit\Framework\Config;
 
 use Gacela\Framework\Config\ConfigSourceStamps;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function clearstatcache;
@@ -141,6 +142,30 @@ final class ConfigSourceStampsTest extends TestCase
     public function test_a_missing_path_cannot_miss_a_change(): void
     {
         self::assertFalse(ConfigSourceStamps::couldMissAChange(['/missing' => ''], 1_000));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unusualPaths(): iterable
+    {
+        yield 'tab' => ["/tmp/my\tdir/config/app.php"];
+        yield 'newline' => ["/tmp/my\ndir/config/app.php"];
+        yield 'percent escape' => ['/tmp/my%09dir/config/app.php'];
+        yield 'non-ASCII' => ['/tmp/é/config/app.php'];
+    }
+
+    #[DataProvider('unusualPaths')]
+    public function test_packing_preserves_unusual_path_characters(string $path): void
+    {
+        $stamps = [$path => '999:10:1', $path . '.local' => '998:20:2'];
+
+        self::assertSame($stamps, ConfigSourceStamps::unpack(ConfigSourceStamps::pack($stamps)));
+    }
+
+    public function test_an_unescaped_ordinary_path_from_an_older_cache_is_readable(): void
+    {
+        self::assertSame(['/app/config/a.php' => '999:10:1'], ConfigSourceStamps::unpack("/app/config/a.php\t999:10:1"));
     }
 
     public function test_packing_round_trips(): void

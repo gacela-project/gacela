@@ -131,6 +131,27 @@ final class MergedConfigCacheIntegrationTest extends TestCase
         self::assertFalse(is_file($filename), 'an empty merged config is not worth caching');
     }
 
+    public function test_a_cache_under_a_root_containing_a_tab_is_reused(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            self::markTestSkipped('Windows does not allow tabs in directory names.');
+        }
+
+        rmdir($this->appDir . DIRECTORY_SEPARATOR . 'config');
+        rmdir($this->appDir);
+        $this->appDir .= "\tapp";
+        mkdir($this->appDir . DIRECTORY_SEPARATOR . 'config', 0777, true);
+        $this->writeAppConfig($this->appDir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php', 'source');
+        $this->bootstrapApp();
+        $filename = Config::getInstance()->mergedConfigCacheFilename();
+
+        self::assertFileExists($filename);
+        $this->replaceCachedValues($filename, ['src' => 'from-cache']);
+        $this->bootstrapApp();
+
+        self::assertSame('from-cache', Config::getInstance()->get('src'));
+    }
+
     public function test_auto_warmed_cache_is_reused_on_next_bootstrap(): void
     {
         // First bootstrap auto-warms the cache from the fixture config files.

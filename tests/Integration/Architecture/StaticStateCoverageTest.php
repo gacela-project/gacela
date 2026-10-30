@@ -133,6 +133,8 @@ final class StaticStateCoverageTest extends TestCase
         'AbstractFactory::$containers' => "each module's container, and what its Provider set() in it",
         'AbstractFactory::$providerless' => 'which modules resolved without a Provider, the twin of the containers above',
         'AbstractClassResolver::$cachedInstances' => 'the resolved Facades, Factories, Configs and Providers',
+        'CallerInstanceCache::$instances' => 'inherited and default pillar instances kept separately for each caller',
+        'CallerInstanceCache::$token' => 'the identity of the current caller-instance cache, invalidated together with its entries',
         'Locator::$byContainer' => 'a locator per container, and every singleton Gacela::get() handed out',
         'Locator::$instance' => 'the standalone locator, over an empty container, and what it handed out',
     ];

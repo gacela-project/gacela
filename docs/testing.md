@@ -160,6 +160,8 @@ The double extends `AbstractFactory`, not `BlogFactory`. It only has to carry th
 
 **If `BlogFactory` is `final`, that is the only form available.** A `final` class cannot be subclassed (PHP raises a fatal error) and cannot be doubled by PHPUnit either (`ClassIsFinalException`), so neither `new class() extends BlogFactory` nor `$this->createStub(BlogFactory::class)` compiles or runs. `make:module` generates `final` pillars, and this codebase prefers them, so assume that is the case unless you know otherwise.
 
+A named or anonymous subclass of a non-final Facade reaches the real module's Factory when its own namespace has none. Doubles for different modules keep their inherited Factories separate even in the same namespace or file; a global Factory explicitly registered for that scope still applies to both.
+
 Extending the real Factory is worth it when it is *not* final and you want to keep its other `create*()` methods and override one:
 
 ```php

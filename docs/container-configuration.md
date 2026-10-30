@@ -4,7 +4,7 @@ Configure your dependency injection container in `gacela.php`.
 
 ## Factory Services
 
-Create a new instance on each resolution (non-singleton).
+Create a new instance on each container resolution (non-singleton).
 
 ```php
 use Gacela\Framework\Bootstrap\GacelaConfig;
@@ -15,6 +15,8 @@ return static function (GacelaConfig $config): void {
 ```
 
 Every call to `$container->get('session')` returns a new instance.
+
+`Gacela::get()` and `Gacela::getRequired()` cache one instance per id, including factory services, until `Gacela::resetRequestState()` clears the Locator. Read a factory through `Gacela::container()->get()` or through `getProvidedDependency()` in a module Factory to get a new instance each time.
 
 ## Protected Services
 
@@ -386,6 +388,8 @@ final class ConnectionPool {}   // one instance, cached and reused
 #[Factory]
 final class ReportBuilder {}    // fresh instance on every resolution
 ```
+
+`#[Factory]` produces a fresh instance through the container or `getProvidedDependency()` in a module Factory. `Gacela::get()` and `Gacela::getRequired()` still cache one instance per id until `Gacela::resetRequestState()` clears the Locator.
 
 ```php
 final class MyModuleFactory extends AbstractFactory

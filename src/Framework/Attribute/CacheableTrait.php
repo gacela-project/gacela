@@ -8,6 +8,7 @@ use Closure;
 use Gacela\Framework\Event\Attribute\CacheableHitEvent;
 use Gacela\Framework\Event\Attribute\CacheableMissEvent;
 use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
+use ReflectionFunction;
 use ReflectionMethod;
 use stdClass;
 
@@ -15,6 +16,7 @@ use function count;
 use function debug_backtrace;
 use function end;
 use function explode;
+use function function_exists;
 use function hrtime;
 use function is_int;
 use function is_scalar;
@@ -64,7 +66,7 @@ trait CacheableTrait
     use EventDispatchingCapabilities;
 
     /** How far up a helper chain `cached()` looks for the `#[Cacheable]` method. */
-    private const int CACHEABLE_CALLER_DEPTH = 8;
+    private const int CACHEABLE_CALLER_DEPTH = 9;
 
     /** @var array<string, Cacheable|false> */
     private static array $attributeCache = [];
@@ -185,27 +187,55 @@ trait CacheableTrait
      */
     private function cacheableMethodUpTheStack(): ?array
     {
-        // [0] this method, [1] cached(), [2] the helper, [3] its caller.
-        $frames = debug_backtrace(0, self::CACHEABLE_CALLER_DEPTH);
-        for ($i = 3, $count = count($frames); $i < $count; ++$i) {
-            $frame = $frames[$i];
-            $class = $frame['class'] ?? null;
-            if ($class === null || !$this instanceof $class) {
-                return null;
+        $closureArgs = [];
+        foreach ($this->cacheableCallerFrames() as $frame) {
+            if (!method_exists($this, $frame['function'])) {
+                $closureArgs = [...$frame['args'], ...$closureArgs];
+                continue;
             }
 
-            if (method_exists($this, $frame['function']) && $this->resolveCacheableAttribute($frame['function']) instanceof Cacheable) {
-                return ['function' => $frame['function'], 'args' => $frame['args'] ?? []];
+            if ($this->resolveCacheableAttribute($frame['function']) instanceof Cacheable) {
+                return ['function' => $frame['function'], 'args' => [...$frame['args'], ...$closureArgs]];
             }
         }
 
         return null;
     }
 
+    /**
+     * @return iterable<array{function: string, args: list<mixed>}>
+     */
+    private function cacheableCallerFrames(): iterable
+    {
+        $frames = debug_backtrace(0, self::CACHEABLE_CALLER_DEPTH);
+        for ($i = 3, $count = count($frames); $i < $count; ++$i) {
+            $frame = $frames[$i];
+            $class = $frame['class'] ?? null;
+            if ($class === null && $this->isInternalFunction($frame['function'])) {
+                continue;
+            }
+
+            if ($class === null || !$this instanceof $class) {
+                return;
+            }
+
+            yield ['function' => $frame['function'], 'args' => $frame['args'] ?? []];
+        }
+    }
+
+    private function isInternalFunction(string $function): bool
+    {
+        return function_exists($function) && (new ReflectionFunction($function))->isInternal();
+    }
+
     private function resolveCacheableAttribute(string $method): ?Cacheable
     {
         $cacheKey = static::class . '::' . $method;
         if (!isset(self::$attributeCache[$cacheKey])) {
+            if (!method_exists($this, $method)) {
+                return null;
+            }
+
             $attributes = (new ReflectionMethod($this, $method))->getAttributes(Cacheable::class);
             self::$attributeCache[$cacheKey] = $attributes === [] ? false : $attributes[0]->newInstance();
         }

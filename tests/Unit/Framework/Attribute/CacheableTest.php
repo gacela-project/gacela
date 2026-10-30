@@ -328,6 +328,36 @@ final class CacheableTest extends TestCase
         self::assertSame(2, $facade->getCallCount());
     }
 
+    public function test_a_closure_caches_under_the_attributed_method(): void
+    {
+        $facade = new TestFacadeWithClosureCached();
+
+        self::assertSame(7, $facade->find(7));
+        self::assertSame(7, $facade->find(7));
+        self::assertSame(8, $facade->find(8));
+        self::assertSame(2, $facade->calls);
+    }
+
+    public function test_an_array_map_callback_caches_each_argument_in_its_enclosing_context(): void
+    {
+        $facade = new TestFacadeWithClosureCached();
+
+        self::assertSame([2, 4, 2], $facade->map([1, 2, 1]));
+        self::assertSame([2, 4, 2], $facade->map([1, 2, 1]));
+        self::assertSame(2, $facade->calls);
+        self::assertSame([3, 6, 3], $facade->map([1, 2, 1], 3));
+        self::assertSame(4, $facade->calls);
+    }
+
+    public function test_a_closure_without_an_attributed_method_runs_uncached(): void
+    {
+        $facade = new TestFacadeWithClosureCached();
+
+        self::assertSame(7, $facade->uncached(7));
+        self::assertSame(7, $facade->uncached(7));
+        self::assertSame(2, $facade->calls);
+    }
+
     public function test_cached_null_value_is_treated_as_a_hit(): void
     {
         $facade = new TestFacadeReturningNull();
@@ -1005,5 +1035,41 @@ final class RecordingCacheStorage implements CacheStorageInterface
     public function deleteByPrefix(string $prefix): void
     {
         $this->delegate->deleteByPrefix($prefix);
+    }
+}
+
+final class TestFacadeWithClosureCached
+{
+    use CacheableTrait;
+
+    public int $calls = 0;
+
+    #[Cacheable]
+    public function find(int $id): int
+    {
+        return (fn (): int => $this->cached(fn (): int => $this->compute($id)))();
+    }
+
+    /**
+     * @param list<int> $ids
+     *
+     * @return list<int>
+     */
+    #[Cacheable]
+    public function map(array $ids, int $factor = 2): array
+    {
+        return array_map(fn (int $id): int => $this->cached(fn (): int => $this->compute($id * $factor)), $ids);
+    }
+
+    public function uncached(int $id): int
+    {
+        return (fn (): int => $this->cached(fn (): int => $this->compute($id)))();
+    }
+
+    private function compute(int $id): int
+    {
+        ++$this->calls;
+
+        return $id;
     }
 }

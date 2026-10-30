@@ -31,6 +31,17 @@ final class CacheableWithoutCachedCallAnalyserTest extends TestCase
         '));
     }
 
+    public function test_cached_reached_through_a_closure_is_allowed(): void
+    {
+        self::assertSame([], $this->analyse('
+            #[Cacheable]
+            public function mapped(array $ids): array
+            {
+                return array_map(fn (int $id): int => $this->cached(fn (): int => $id), $ids);
+            }
+        '));
+    }
+
     public function test_an_attributed_method_that_never_calls_cached_is_reported(): void
     {
         $violations = $this->analyse('

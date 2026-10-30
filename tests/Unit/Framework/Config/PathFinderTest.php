@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GacelaTest\Unit\Framework\Config;
 
+use Gacela\Framework\Cache\GlobLiteral;
 use Gacela\Framework\Config\PathFinder;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,20 @@ final class PathFinderTest extends TestCase
     {
         DirectoryUtil::removeDir($this->tempDir);
         PathFinder::resetCache();
+    }
+
+    public function test_brace_expansion_between_character_classes_under_a_literal_root(): void
+    {
+        $directory = $this->tempDir . '/{literal}';
+        mkdir($directory);
+        file_put_contents($directory . '/a.php', '<?php');
+        file_put_contents($directory . '/b.php', '<?php');
+        $pattern = GlobLiteral::escape($directory) . '/[ab]{,x}[.]php';
+
+        self::assertSame(
+            [$directory . '/a.php', $directory . '/b.php'],
+            (new PathFinder())->matchingPattern($pattern),
+        );
     }
 
     public function test_an_empty_pattern_matches_nothing(): void

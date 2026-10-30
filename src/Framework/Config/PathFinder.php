@@ -6,6 +6,7 @@ namespace Gacela\Framework\Config;
 
 use function define;
 use function defined;
+use function str_contains;
 
 final class PathFinder implements PathFinderInterface
 {
@@ -31,6 +32,10 @@ final class PathFinder implements PathFinderInterface
 
         if (isset(self::$cache[$pattern])) {
             return self::$cache[$pattern];
+        }
+
+        if (str_contains($pattern, '[{]') || str_contains($pattern, '[}]')) {
+            return self::$cache[$pattern] = GlobPattern::matching($pattern);
         }
 
         // GLOB_BRACE is not available on some non-GNU systems (Solaris, Alpine Linux).

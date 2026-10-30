@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\PathNormalizer;
 
+use Gacela\Framework\Cache\GlobLiteral;
+
 use function sprintf;
 use function str_replace;
 use function strpos;
@@ -39,7 +41,7 @@ final class WithSuffixAbsolutePathStrategy implements AbsolutePathStrategyInterf
 
         return sprintf(
             '%s/%s',
-            rtrim($this->appRootDir, '/'),
+            rtrim(GlobLiteral::escape($this->appRootDir), '/'),
             ltrim($relativePathWithFileSuffix, '/'),
         );
     }

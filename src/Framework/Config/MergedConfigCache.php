@@ -6,6 +6,7 @@ namespace Gacela\Framework\Config;
 
 use Closure;
 use Gacela\Framework\Cache\FileCache;
+use Gacela\Framework\Cache\GlobLiteral;
 use stdClass;
 use UnitEnum;
 
@@ -250,7 +251,7 @@ final class MergedConfigCache
             ? $withoutExtension
             : substr($withoutExtension, 0, -strlen($this->dimensionSuffix()));
 
-        return glob($stem . '-*' . self::FILENAME_EXTENSION) ?: [];
+        return glob(GlobLiteral::escape($stem) . '-*' . self::FILENAME_EXTENSION) ?: [];
     }
 
     /**

@@ -16,6 +16,7 @@
 
 #### Bootstrap and configuration
 
+- Application roots and cache directories containing glob metacharacters load configuration and clear cache files correctly ([#1034](https://github.com/gacela-project/gacela/issues/1034))
 - Function-name plugins run with container injection and retain declaration order; missing or non-invokable plugins raise `PluginException` naming the plugin ([#1001](https://github.com/gacela-project/gacela/issues/1001))
 - `Gacela::get()` uses the latest bootstrap's container. Plugins receiving a `Container` get the application container instead of an empty one ([#976](https://github.com/gacela-project/gacela/issues/976))
 - A trailing separator in the application root no longer loads `gacela.php` twice, repeats plugins or duplicates configuration paths. `Gacela::rootDir()` removes trailing separators from ordinary directories ([#996](https://github.com/gacela-project/gacela/issues/996))

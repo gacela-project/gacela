@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config\PathNormalizer;
 
+use Gacela\Framework\Cache\GlobLiteral;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 use Gacela\Framework\Config\PathNormalizerInterface;
 
@@ -54,7 +55,8 @@ final class AbsolutePathNormalizer implements PathNormalizerInterface
 
     public function normalizePathLocal(GacelaConfigItem $configItem): string
     {
-        return $this->absolutePathStrategies[self::WITHOUT_SUFFIX]
-            ->generateAbsolutePath($configItem->pathLocal());
+        $root = $this->absolutePathStrategies[self::WITHOUT_SUFFIX]->generateAbsolutePath('');
+
+        return GlobLiteral::unescape($root) . ltrim($configItem->pathLocal(), '/');
     }
 }

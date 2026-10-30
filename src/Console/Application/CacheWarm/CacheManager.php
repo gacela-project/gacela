@@ -6,6 +6,7 @@ namespace Gacela\Console\Application\CacheWarm;
 
 use Gacela\Framework\Bootstrap\Package\PackageConfigCache;
 use Gacela\Framework\Cache\FileCache;
+use Gacela\Framework\Cache\GlobLiteral;
 use Gacela\Framework\ClassResolver\Cache\AbstractPhpFileCache;
 use Gacela\Framework\ClassResolver\Cache\ClassNamePhpCache;
 use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
@@ -163,7 +164,7 @@ final class CacheManager
         $appScoped = AbstractPhpFileCache::absoluteFilename($cacheDir, $filename, $appRoot);
 
         // The app-scoped name minus `.php`, plus one fingerprint segment.
-        return glob(substr($appScoped, 0, -4) . '-*.php') ?: [];
+        return glob(GlobLiteral::escape(substr($appScoped, 0, -4)) . '-*.php') ?: [];
     }
 
     private function cacheDir(): string

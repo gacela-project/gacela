@@ -46,6 +46,23 @@ final class FileCacheTest extends TestCase
         DirectoryUtil::removeDir($this->cacheDir);
     }
 
+    public function test_stats_and_clear_match_a_literal_cache_directory(): void
+    {
+        $directory = $this->cacheDir . DIRECTORY_SEPARATOR . 'cache[v1]{eu,us}';
+        $cache = new FileCache($directory);
+        $cache->put('answer', 42);
+
+        $legacy = $directory . DIRECTORY_SEPARATOR . sha1('legacy') . '.php';
+        file_put_contents($legacy, "<?php return ['value' => 'old', 'expiresAt' => null];");
+        self::assertSame(2, $cache->stats()->entries);
+
+        $cache->clear();
+
+        self::assertSame(0, $cache->stats()->entries);
+        self::assertFileDoesNotExist($legacy);
+        self::assertNull((new FileCache($directory))->get('answer'));
+    }
+
     public function test_stats_and_clear_ignore_foreign_files(): void
     {
         $foreign = ['gacela-merged-config-v2-abc.php', 'gacela-class-names-abc.php', 'gacela-container-plans-abc.php', 'other.php', 'notes.txt', str_repeat('a', 39) . '.php', str_repeat('a', 41) . '.php', str_repeat('g', 40) . '.php'];

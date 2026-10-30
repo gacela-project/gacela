@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\StaticAnalysis\Rules;
 
 use Gacela\StaticAnalysis\AnalysedClassInterface;
+use Gacela\StaticAnalysis\CacheableAttribute;
 use Gacela\StaticAnalysis\MethodAnalyserInterface;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Identifier;
@@ -14,7 +15,6 @@ use PhpParser\Node\Stmt\ClassMethod;
 use function count;
 use function preg_match_all;
 use function sprintf;
-use function str_ends_with;
 
 /**
  * A `#[Cacheable]` key that never mentions the arguments, on a method that has
@@ -39,8 +39,6 @@ use function str_ends_with;
  */
 final class CacheableKeyIgnoresArgumentsAnalyser implements MethodAnalyserInterface
 {
-    private const ATTRIBUTE = 'Cacheable';
-
     /** `Cacheable::__construct(int $ttl, ?string $key)` */
     private const KEY_POSITION = 1;
 
@@ -157,7 +155,7 @@ final class CacheableKeyIgnoresArgumentsAnalyser implements MethodAnalyserInterf
     {
         foreach ($method->attrGroups as $group) {
             foreach ($group->attrs as $attribute) {
-                if (!$this->isCacheable($attribute->name->toString())) {
+                if (!CacheableAttribute::isOn($attribute)) {
                     continue;
                 }
 
@@ -177,12 +175,4 @@ final class CacheableKeyIgnoresArgumentsAnalyser implements MethodAnalyserInterf
         return null;
     }
 
-    /**
-     * Written either way round: `#[Cacheable]` on an imported name, or
-     * `#[Attribute\Cacheable]` on a partially qualified one.
-     */
-    private function isCacheable(string $name): bool
-    {
-        return $name === self::ATTRIBUTE || str_ends_with($name, '\\' . self::ATTRIBUTE);
-    }
 }

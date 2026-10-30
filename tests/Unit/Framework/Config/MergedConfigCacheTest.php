@@ -13,6 +13,7 @@ use Gacela\Framework\Config\MergedConfigCache;
 use GacelaTest\Feature\Util\DirectoryUtil;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\SortDirection;
+use GacelaTest\Fixtures\ValueWithCallback;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -162,9 +163,13 @@ final class MergedConfigCacheTest extends TestCase
     {
         $cache = new MergedConfigCache($this->cacheDir);
 
+        $cache->writeTrusted(['old' => true]);
+        self::assertTrue($cache->exists());
         $cache->writeTrusted($values);
         self::assertFalse($cache->exists(), 'trusted');
 
+        $cache->writeVerified(['old' => true], 'declared', ConfigSourceStamps::of([__FILE__]));
+        self::assertTrue($cache->exists());
         $cache->writeVerified($values, 'declared', ConfigSourceStamps::of([__FILE__]));
         self::assertFalse($cache->exists(), 'verified');
     }
@@ -174,9 +179,20 @@ final class MergedConfigCacheTest extends TestCase
      */
     public static function valuesThatCannotBeReadBack(): iterable
     {
+        $cycle = (object) [];
+        $cycle->options = new ValueWithCallback($cycle);
+
+        $recursive = [];
+        $recursive['self'] = &$recursive;
+
+        yield 'recursive array property' => [['options' => new ValueWithCallback($recursive)]];
+        yield 'cyclic exportable object' => [['options' => $cycle->options]];
         yield 'a closure' => [['handler' => static fn (): string => 'hi']];
         yield 'a nested closure' => [['handlers' => ['a' => 'b', 'c' => [static fn (): null => null]]]];
         yield 'an object without __set_state()' => [['clock' => new ArrayObject()]];
+        yield 'a closure in a private property' => [['options' => new ValueWithCallback(static fn (): null => null)]];
+        yield 'a closure in an array property' => [['options' => new ValueWithCallback(['on' => static fn (): null => null])]];
+        yield 'a closure in a nested object' => [['options' => new ValueWithCallback(new ValueWithCallback(static fn (): null => null))]];
         yield 'a closure inside a plain object' => [['options' => (object) ['on' => static fn (): null => null]]];
     }
 
@@ -192,8 +208,11 @@ final class MergedConfigCacheTest extends TestCase
 
     public function test_values_that_export_as_loadable_code_are_cached(): void
     {
+        $shared = new ValueWithCallback('plain');
         $values = [
+            'shared objects' => [$shared, $shared],
             'plain' => (object) ['a' => 1],
+            'exportable object' => new ValueWithCallback(['scalar' => 1, 'enum' => SortDirection::Asc, 'nested' => new ValueWithCallback('plain')]),
             'enum' => SortDirection::Asc,
             'nested' => ['list' => [1, 2.5, true, null]],
         ];

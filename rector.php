@@ -9,6 +9,7 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveEmptyClassMethodRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveParentDelegatingClassMethodRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedConstructorParamRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPromotedPropertyRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\DeadCode\Rector\Node\RemoveNonExistingVarAnnotationRector;
 use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
@@ -95,6 +96,8 @@ return static function (RectorConfig $rectorConfig): void {
         RemoveEmptyClassMethodRector::class => [__DIR__ . '/tests'],
         RemoveUnusedPublicMethodParameterRector::class => [__DIR__ . '/tests'],
         RemoveUnusedConstructorParamRector::class => [__DIR__ . '/tests'],
+        // var_export() reads this private property when writing merged config fixtures.
+        RemoveUnusedPromotedPropertyRector::class => [__DIR__ . '/tests/Fixtures/ValueWithCallback.php'],
         RemoveParentDelegatingClassMethodRector::class => [__DIR__ . '/tests'],
         RemoveUnusedVariableAssignRector::class => [__DIR__ . '/tests'],
         // The container writes `#[Inject]` properties through

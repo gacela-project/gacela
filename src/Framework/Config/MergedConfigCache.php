@@ -7,11 +7,11 @@ namespace Gacela\Framework\Config;
 use Closure;
 use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\GlobLiteral;
+use ReflectionReference;
 use stdClass;
 use UnitEnum;
 
 use function explode;
-use function get_object_vars;
 use function implode;
 use function is_array;
 use function is_object;
@@ -19,6 +19,7 @@ use function is_resource;
 use function is_string;
 use function method_exists;
 use function sha1;
+use function spl_object_id;
 use function strlen;
 use function substr;
 
@@ -298,27 +299,59 @@ final class MergedConfigCache
         FileCache::writeAtomically($this->filename(), $contents);
     }
 
-    private static function isExportable(mixed $value): bool
+    /**
+     * @param array<string, true> $ancestors
+     */
+    private static function isExportable(mixed $value, array $ancestors = []): bool
     {
         if (is_array($value)) {
-            /** @var mixed $item */
-            foreach ($value as $item) {
-                if (!self::isExportable($item)) {
-                    return false;
-                }
-            }
-
-            return true;
+            return self::allExportable($value, $ancestors);
         }
 
         if (!is_object($value)) {
             return !is_resource($value);
         }
 
-        if ($value instanceof stdClass) {
-            return self::isExportable(get_object_vars($value));
+        if ($value instanceof UnitEnum) {
+            return true;
         }
 
-        return $value instanceof UnitEnum || method_exists($value, '__set_state');
+        if (!$value instanceof stdClass && !method_exists($value, '__set_state')) {
+            return false;
+        }
+
+        $id = 'object:' . spl_object_id($value);
+        if (isset($ancestors[$id])) {
+            return false;
+        }
+
+        return self::allExportable((array) $value, $ancestors + [$id => true]);
+    }
+
+    /**
+     * @param array<array-key, mixed> $values
+     * @param array<string, true> $ancestors
+     */
+    private static function allExportable(array $values, array $ancestors): bool
+    {
+        /** @var mixed $value */
+        foreach ($values as $key => $value) {
+            $path = $ancestors;
+            $reference = ReflectionReference::fromArrayElement($values, $key);
+            if ($reference instanceof ReflectionReference) {
+                $id = 'reference:' . $reference->getId();
+                if (isset($path[$id])) {
+                    return false;
+                }
+
+                $path[$id] = true;
+            }
+
+            if (!self::isExportable($value, $path)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

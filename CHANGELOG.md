@@ -28,6 +28,7 @@
 
 #### Caching
 
+- Merged-config caches inspect all properties of `__set_state()` objects and skip values containing closures, removing older cache files instead of writing files that cannot load ([#1035](https://github.com/gacela-project/gacela/issues/1035))
 - `cached()` calls through closures use the enclosing attributed method instead of throwing. Callback parameters keep individual results separate ([#1030](https://github.com/gacela-project/gacela/issues/1030))
 - `enableFileCache($appRoot)` accepts the root directly instead of appending it again ([#1000](https://github.com/gacela-project/gacela/issues/1000))
 - Cache reads, including container plans, reject foreign-owned files, symlinks, files writable by others and files in directories writable by others without the sticky bit. New PHP cache files use mode `0600`; failed writes dispatch `CacheWriteFailedEvent` and appear in `doctor` ([#1029](https://github.com/gacela-project/gacela/issues/1029))
@@ -39,6 +40,7 @@
 
 #### Container and service resolution
 
+- Configured service aliases follow chains to their final service and reject loops during bootstrap with the alias ids in the error ([#1021](https://github.com/gacela-project/gacela/issues/1021))
 - `#[Provides]` methods typed with either container interface receive the container when resolved ([#1018](https://github.com/gacela-project/gacela/issues/1018))
 - Handler registries name missing handler classes, their keys and autoloading tips ([#1011](https://github.com/gacela-project/gacela/issues/1011))
 - Facade subclasses inherit their parent module's Factory. Doubles in the same namespace or file keep the correct Factory ([#1017](https://github.com/gacela-project/gacela/issues/1017))
@@ -75,6 +77,7 @@
 #### Static analysis
 
 - Psalm ignores `#[ServiceMap]` targets expressed with constants other than `X::class` instead of assigning the constant owner as the accessor's return type ([#1048](https://github.com/gacela-project/gacela/issues/1048))
+- Cache attribute rules inspect only Gacela's `Cacheable` attribute and leave attributes from other libraries alone ([#1049](https://github.com/gacela-project/gacela/issues/1049))
 - First-class `cached(...)` callables produce diagnostics without crashing analysis. First-class `getProvidedDependency(...)` callables keep their declared types ([#1043](https://github.com/gacela-project/gacela/issues/1043))
 - Cross-module and declared-dependency rules ignore leading or trailing namespace separators and compare names without case sensitivity. Shared namespaces and ignored receivers follow the same rules; separator-only roots fail configuration ([#1041](https://github.com/gacela-project/gacela/issues/1041))
 - Static-analysis rules treat classes that throw while loading as unloadable instead of crashing analysis ([#1042](https://github.com/gacela-project/gacela/issues/1042))

@@ -50,6 +50,7 @@ final class ClassRules implements AfterClassLikeAnalysisInterface
     public static function afterStatementAnalysis(AfterClassLikeAnalysisEvent $event): ?bool
     {
         $node = $event->getStmt();
+        AttributeNames::resolveIn($node, $event->getStatementsSource()->getAliases());
 
         ReportedIssues::report(
             self::violationsIn($node, new StorageAnalysedClass($event->getClasslikeStorage(), $event->getCodebase())),

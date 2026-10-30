@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\StaticAnalysis\Rules;
 
 use Gacela\StaticAnalysis\AnalysedClassInterface;
+use Gacela\StaticAnalysis\CacheableAttribute;
 use Gacela\StaticAnalysis\ClassAnalyserInterface;
 use Gacela\StaticAnalysis\Violation;
 use PhpParser\Node\Expr\MethodCall;
@@ -16,7 +17,6 @@ use PhpParser\NodeFinder;
 
 use function in_array;
 use function sprintf;
-use function str_ends_with;
 
 /**
  * Reports a `#[Cacheable]` method that never reaches `$this->cached()`.
@@ -39,8 +39,6 @@ use function str_ends_with;
  */
 final class CacheableWithoutCachedCallAnalyser implements ClassAnalyserInterface
 {
-    private const ATTRIBUTE = 'Cacheable';
-
     private const CACHED = 'cached';
 
     /**
@@ -136,11 +134,7 @@ final class CacheableWithoutCachedCallAnalyser implements ClassAnalyserInterface
     {
         foreach ($method->attrGroups as $group) {
             foreach ($group->attrs as $attribute) {
-                $name = $attribute->name->toString();
-
-                // Written either way round: `#[Cacheable]` on an imported name,
-                // or `#[Attribute\Cacheable]` on a partially qualified one.
-                if ($name === self::ATTRIBUTE || str_ends_with($name, '\\' . self::ATTRIBUTE)) {
+                if (CacheableAttribute::isOn($attribute)) {
                     return true;
                 }
             }

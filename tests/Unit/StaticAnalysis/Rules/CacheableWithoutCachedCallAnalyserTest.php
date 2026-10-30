@@ -16,6 +16,14 @@ use function sprintf;
 
 final class CacheableWithoutCachedCallAnalyserTest extends TestCase
 {
+    public function test_a_foreign_cacheable_attribute_is_not_judged(): void
+    {
+        self::assertSame([], $this->analyse('
+            #[\Hyperf\Cache\Annotation\Cacheable(60, "users")]
+            public function user(int $id): int { return $id; }
+        '));
+    }
+
     public function test_a_method_with_no_attribute_is_not_judged(): void
     {
         self::assertSame([], $this->analyse('
@@ -176,10 +184,10 @@ final class CacheableWithoutCachedCallAnalyserTest extends TestCase
     /**
      * Written either way round, as the sibling cacheable rule accepts it.
      */
-    public function test_a_partially_qualified_attribute_is_recognised(): void
+    public function test_a_fully_qualified_attribute_is_recognised(): void
     {
         self::assertCount(1, $this->analyse('
-            #[Attribute\Cacheable(ttl: 60)]
+            #[\Gacela\Framework\Attribute\Cacheable(ttl: 60)]
             public function forgot(int $id): int { return $id * 2; }
         '));
     }

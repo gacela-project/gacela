@@ -28,6 +28,7 @@ use GacelaTest\Feature\Console\Doctor\Fixtures\UnhealthyWithMetadataHealthCheck;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Discount;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -511,6 +512,22 @@ final class DoctorCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertContains('✓ module health: FakeModule', $this->linesOf($tester));
+    }
+
+    public function test_a_throwing_health_check_retains_its_exception_and_message_without_location_metadata(): void
+    {
+        $check = $this->createStub(ModuleHealthCheckInterface::class);
+        $check->method('getModuleName')->willReturn('ThrowingModule');
+        $check->method('checkHealth')->willThrowException(new RuntimeException('db down'));
+        $tester = $this->doctor([$check]);
+        $display = $tester->getDisplay();
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('module health: ThrowingModule', $display);
+        self::assertStringContainsString('Health check failed: db down', $display);
+        self::assertStringContainsString('exception: ' . RuntimeException::class, $display);
+        self::assertStringNotContainsString('file: ', $display);
+        self::assertStringNotContainsString('line: ', $display);
     }
 
     public function test_a_degraded_check_is_a_warning_and_lists_its_metadata(): void

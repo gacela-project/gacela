@@ -7,13 +7,13 @@ vendor/bin/gacela               # list every command
 vendor/bin/gacela help doctor   # options for one command
 ```
 
-Every command except `init` needs a bootstrappable project — a `gacela.php` in the app root. `init` is the one that creates it.
+Every command bootstraps the Composer project root. When run through Composer's binary proxy, it uses the root recorded with that autoloader; otherwise it finds the nearest directory holding `vendor/autoload.php`. `init` creates the optional `gacela.php`; without one, commands use Gacela's defaults with any configured overrides, and `doctor` names the root in an informational line in its text output, including with `--only-problems`.
 
 ## Scaffolding
 
 | Command | What it does |
 |---|---|
-| `init` | Creates the `gacela.php` a project needs before anything else works, plus the `config/app.php` it declares. `--force` regenerates `gacela.php` and never touches your config |
+| `init` | Creates the optional `gacela.php`, plus the `config/app.php` it declares. `--force` regenerates `gacela.php` and never touches your config |
 | `agents:install` | Points the project's `AGENTS.md` at the guide Gacela ships for coding agents, between markers it alone rewrites. See [coding agents](coding-agents.md) |
 | `make:module App/Blog` | Generates a module. `--template=basic\|service\|minimal`, `--minimal`, `--with-tests` (service template only — refused on the others rather than ignored), `--short-name`, `--force` to replace files that already exist, `--dry-run` to see what it would write |
 | `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared. `--short-name`, `--force` to replace files that already exist, `--dry-run` to see what it would write |

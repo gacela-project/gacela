@@ -72,6 +72,8 @@ final class CrossModuleSettings
             return null;
         }
 
+        PluginXml::rejectUnknown($crossModule, ['rootNamespace', 'modulePathSegments'], ['sharedNamespace', 'ignoreReceiver', 'publicApiSegment']);
+
         return new self(
             PluginXml::requiredAttribute(
                 $crossModule,

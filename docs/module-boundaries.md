@@ -72,6 +72,8 @@ One `<crossModule>` element enables both halves:
 </plugins>
 ```
 
+An unknown attribute or child element under `<crossModule>` or `<moduleRules>` is a configuration error, as a wrong key is under PHPStan. An explicit `modulePathSegments` must be a positive whole number; omit it to use one segment.
+
 A `<crossModule>` without a `rootNamespace` is a configuration error and stops the run. A rule that quietly does nothing is worse than no rule: it reads as a green check, and nothing would ever tell you the boundary went unchecked.
 
 ### What it accepts

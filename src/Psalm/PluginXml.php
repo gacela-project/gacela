@@ -9,7 +9,12 @@ use Psalm\Exception\ConfigException;
 use SimpleXMLElement;
 
 use function count;
+use function ctype_digit;
+use function filter_var;
+use function in_array;
+use function ltrim;
 use function sprintf;
+use function substr;
 use function trim;
 
 /**
@@ -61,19 +66,29 @@ final class PluginXml
      */
     public static function modulePathSegments(SimpleXMLElement $element): int
     {
-        $segments = trim((string)($element['modulePathSegments'] ?? ''));
-
-        if ($segments === '') {
+        if (!isset($element['modulePathSegments'])) {
             return 1;
         }
 
-        if ((int)$segments < 1) {
+        $segments = trim((string)$element['modulePathSegments']);
+        $depth = filter_var(ltrim($segments, '0'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if (!ctype_digit($segments) || $depth === false) {
             throw new ConfigException(
                 'modulePathSegments must be a positive number of namespace segments, got: ' . $segments,
             );
         }
 
-        return (int)$segments;
+        return $depth;
+    }
+
+    /**
+     * @param list<string> $attributes
+     * @param list<string> $children
+     */
+    public static function rejectUnknown(SimpleXMLElement $element, array $attributes, array $children): void
+    {
+        self::rejectUnknownAttributes($element, $attributes);
+        self::rejectUnknownChildren($element, $children);
     }
 
     /**
@@ -118,6 +133,39 @@ final class PluginXml
         }
 
         return self::childValues($element, 'publicApiSegment');
+    }
+
+    /**
+     * @param list<string> $allowed
+     */
+    private static function rejectUnknownAttributes(SimpleXMLElement $element, array $allowed): void
+    {
+        foreach ($element->attributes() ?? [] as $name => $attribute) {
+            if (!in_array($name, $allowed, true)) {
+                throw new ConfigException(sprintf('<%s> does not take attribute "%s".', $element->getName(), $name));
+            }
+        }
+    }
+
+    /**
+     * @param list<string> $allowed
+     */
+    private static function rejectUnknownChildren(SimpleXMLElement $element, array $allowed): void
+    {
+        /** @var iterable<SimpleXMLElement> $children */
+        $children = $element->children() ?? [];
+        foreach ($children as $child) {
+            $name = $child->getName();
+            if (in_array($name, $allowed, true)) {
+                continue;
+            }
+
+            $singular = substr($name, 0, -1);
+            $hint = in_array($singular, $allowed, true) && $name === $singular . 's'
+                ? sprintf('; did you mean <%s>?', $singular)
+                : '.';
+            throw new ConfigException(sprintf('<%s> does not take <%s>%s', $element->getName(), $name, $hint));
+        }
     }
 
     /**

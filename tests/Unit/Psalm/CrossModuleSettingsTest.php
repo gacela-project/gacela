@@ -6,6 +6,7 @@ namespace GacelaTest\Unit\Psalm;
 
 use Gacela\Psalm\CrossModuleSettings;
 use Gacela\StaticAnalysis\PublicApiSurface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psalm\Exception\ConfigException;
 use SimpleXMLElement;
@@ -162,14 +163,50 @@ final class CrossModuleSettingsTest extends TestCase
     }
 
     /**
-     * Whitespace is not a value, so it means the same as leaving the attribute
-     * out -- not a depth of zero, which would throw.
+     * @return iterable<string, array{string}>
      */
-    public function test_a_blank_module_depth_is_the_default(): void
+    public static function malformedDepths(): iterable
     {
-        $settings = $this->settings('<crossModule rootNamespace="App\Modules" modulePathSegments="  "/>');
+        foreach (['', '  ', '2abc', '1.9', '+2', '1e2', '99999999999999999999999999'] as $value) {
+            yield $value => [$value];
+        }
+    }
 
-        self::assertSame(1, $settings->modulePathSegments);
+    #[DataProvider('malformedDepths')]
+    public function test_a_malformed_depth_fails_loudly(string $value): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('modulePathSegments must be a positive number');
+
+        $this->settings('<crossModule rootNamespace="App\Modules" modulePathSegments="' . $value . '"/>');
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function unknownFields(): iterable
+    {
+        yield 'shared namespaces' => ['<sharedNamespaces/>', '<crossModule> does not take <sharedNamespaces>; did you mean <sharedNamespace>?'];
+        yield 'ignored receivers' => ['<ignoreReceivers/>', '<crossModule> does not take <ignoreReceivers>; did you mean <ignoreReceiver>?'];
+        yield 'public API segments' => ['<publicApiSegments/>', '<crossModule> does not take <publicApiSegments>; did you mean <publicApiSegment>?'];
+        yield 'unknown child' => ['<mystery/>', '<crossModule> does not take <mystery>.'];
+    }
+
+    #[DataProvider('unknownFields')]
+    public function test_unknown_children_name_the_field_and_suggest_known_singulars(string $child, string $expected): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage($expected);
+
+        $this->settings('<crossModule rootNamespace="App\Modules">' . $child . '</crossModule>');
+    }
+
+    public function test_unknown_attributes_fail_loudly(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('modulePathSegment');
+
+        $this->settings('<crossModule rootNamespace="App\Modules" modulePathSegment="2"/>');
     }
 
     public function test_a_module_depth_below_one_fails_loudly(): void
@@ -188,10 +225,6 @@ final class CrossModuleSettingsTest extends TestCase
         $this->settings('<crossModule rootNamespace="App\Modules" modulePathSegments="-1"/>');
     }
 
-    /**
-     * `(int)` turns anything unparseable into 0, which is caught -- but only
-     * because the cast happens before the comparison.
-     */
     public function test_a_module_depth_that_is_not_a_number_fails_loudly(): void
     {
         $this->expectException(ConfigException::class);

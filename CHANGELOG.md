@@ -61,6 +61,8 @@
 
 #### Discovery and diagnostics
 
+- CS-Fixer skips ignored generated cache files in linked worktrees while retaining source and config fixtures ([#1073](https://github.com/gacela-project/gacela/issues/1073))
+
 - Benchmark CI logs the failing subject and original PHP exception while preserving failure exit codes and performance limits ([#1078](https://github.com/gacela-project/gacela/issues/1078))
 
 - Psalm rejects unknown module-rule XML fields and malformed module depths instead of silently ignoring or truncating them ([#1047](https://github.com/gacela-project/gacela/issues/1047))

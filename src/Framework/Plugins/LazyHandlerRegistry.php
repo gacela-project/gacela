@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Framework\Plugins;
 
 use Gacela\Container\ContainerInterface;
+use Gacela\Framework\Exception\HandlerRegistryException;
 use OutOfBoundsException;
 
 use function array_key_exists;
@@ -61,8 +62,11 @@ final class LazyHandlerRegistry implements HandlerRegistry
             ));
         }
 
+        $className = $this->handlers[$key];
+        $this->ensureHandlerClassExists($key, $className);
+
         /** @var THandler $instance */
-        $instance = $this->container->get($this->handlers[$key]);
+        $instance = $this->container->get($className);
         $this->resolved[$key] = $instance;
 
         return $instance;
@@ -82,5 +86,12 @@ final class LazyHandlerRegistry implements HandlerRegistry
         $keys = array_keys($this->handlers);
 
         return $keys;
+    }
+
+    private function ensureHandlerClassExists(string|int $key, string $className): void
+    {
+        if (!$this->container->has($className) && !class_exists($className) && !interface_exists($className)) {
+            throw HandlerRegistryException::classDoesNotExist($key, $className);
+        }
     }
 }

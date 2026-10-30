@@ -44,6 +44,7 @@
 - Corrupt attribute membership caches rebuild when a plugin stack resolves. `doctor --json` warns instead of aborting ([#1010](https://github.com/gacela-project/gacela/issues/1010))
 - Truncated scoped-cache dependency graphs rebuild on the next dependency update instead of aborting the application ([#1033](https://github.com/gacela-project/gacela/issues/1033))
 - `FileCache::clear()` and `stats()` touch only entry files. New names start with `gacela-fc-`; legacy 40-character hex filenames remain readable and removable through `forget()` and `clear()` ([#979](https://github.com/gacela-project/gacela/issues/979))
+- Cache lifetimes beyond the integer timestamp range mean no expiry instead of throwing, for file caches and `#[Cacheable]` memory storage ([#1038](https://github.com/gacela-project/gacela/issues/1038))
 
 #### Container and service resolution
 

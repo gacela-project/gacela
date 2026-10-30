@@ -360,6 +360,14 @@ final class FileCacheTest extends TestCase
         self::assertStringStartsWith('\\\\', $result);
     }
 
+    public function test_a_ttl_past_the_integer_range_means_forever(): void
+    {
+        $this->cache->put('key', 'eternal', ttl: PHP_INT_MAX);
+
+        self::assertSame('eternal', $this->cache->get('key'));
+        self::assertSame('eternal', (new FileCache($this->cacheDir))->get('key'));
+    }
+
     public function test_ttl_zero_means_forever(): void
     {
         $cache = new FileCache($this->cacheDir, defaultTtl: 0);

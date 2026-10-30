@@ -16,7 +16,7 @@ $cache->clear();
 ```
 
 - One `gacela-fc-<sha1>.php` file per key, written atomically via staged `.tmp` + `rename`.
-- TTL per entry; `ttl: 0` means forever.
+- TTL per entry; `ttl: 0` or a lifetime beyond the integer timestamp range means forever.
 - `beginBatch()` / `commitBatch()` defer writes behind a single index-locked flush — useful for warming many entries at once.
 - `stats()` returns entry count, total bytes, and oldest/newest timestamps.
 - Safe against torn reads: concurrent readers see either the previous file or the new one, never a half-written one.

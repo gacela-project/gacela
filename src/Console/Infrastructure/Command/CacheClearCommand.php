@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gacela\Console\Infrastructure\Command;
 
 use Gacela\Console\Application\CacheWarm\CacheManager;
+use Gacela\Console\Application\CacheWarm\CacheWarmOutputFormatter;
 use Gacela\Console\ConsoleFacade;
 use Gacela\Container\Container as GacelaContainer;
 use Gacela\Framework\Config\Config;
@@ -15,7 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
 
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function file_exists;
+use function in_array;
 use function sprintf;
 
 /**
@@ -37,8 +38,8 @@ final class CacheClearCommand extends Command
     {
         $cacheManager = new CacheManager();
         $config = Config::getInstance();
-        $mergedConfigCacheFile = $config->mergedConfigCacheFilename();
-        $mergedConfigCacheExists = file_exists($mergedConfigCacheFile);
+        $mergedConfigCacheFiles = $config->mergedConfigCache()->existingFilenames();
+        $mergedConfigCacheExists = $mergedConfigCacheFiles !== [];
 
         $output->writeln('<info>Clearing Gacela cache...</info>');
         $output->writeln('');
@@ -55,14 +56,18 @@ final class CacheClearCommand extends Command
 
         $clearedFiles = $cacheManager->getExistingCacheFilesWithSize();
 
-        if ($clearedFiles === [] && !$mergedConfigCacheExists) {
+        $failedFiles = [...$cacheManager->clearCache(), ...$config->clearMergedConfigCache()];
+
+        if ($clearedFiles === [] && !$mergedConfigCacheExists && $failedFiles === []) {
             $output->writeln('<comment>No cache files found.</comment>');
             return Command::SUCCESS;
         }
 
-        $cacheManager->clearCache();
-
         foreach ($clearedFiles as $cacheFile => $cacheSize) {
+            if (in_array($cacheFile, $failedFiles, true)) {
+                continue;
+            }
+
             $output->writeln(sprintf(
                 '<info>✓</info> Cleared cache file: <comment>%s</comment> (<comment>%s</comment>)',
                 $cacheFile,
@@ -70,8 +75,10 @@ final class CacheClearCommand extends Command
             ));
         }
 
-        if ($mergedConfigCacheExists) {
-            $config->clearMergedConfigCache();
+        foreach ($mergedConfigCacheFiles as $mergedConfigCacheFile) {
+            if (in_array($mergedConfigCacheFile, $failedFiles, true)) {
+                continue;
+            }
 
             $output->writeln(sprintf(
                 '<info>✓</info> Cleared merged config cache: <comment>%s</comment>',
@@ -80,6 +87,15 @@ final class CacheClearCommand extends Command
         }
 
         $output->writeln('');
+        if ($failedFiles !== []) {
+            $formatter = new CacheWarmOutputFormatter($output);
+            foreach ($failedFiles as $file) {
+                $formatter->writeCouldNotRemove($file);
+            }
+
+            return Command::FAILURE;
+        }
+
         $output->writeln('<info>Cache cleared successfully!</info>');
 
         return Command::SUCCESS;

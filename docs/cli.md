@@ -145,4 +145,4 @@ The **handler registries** check asks the same of `addHandlerRegistry()`, and th
 | `ide:meta` | Writes editor metadata typing `getProvidedDependency()` from the `#[Provides]` attributes. `--dry-run` reports without writing. See [IDE metadata](static-analysis.md#ide-metadata) |
 | `profile:report` | Performance profiling report. `--format=table\|json\|summary` (`--json` for the second), `--sort=duration\|memory\|operation`. The recording side is the [Profiler](profiling.md) |
 
-`cache:warm` only writes anything when the file cache is enabled; the deploy sequence is in [production performance](production-performance.md).
+`cache:warm` only writes anything when the file cache is enabled; the deploy sequence is in [production performance](production-performance.md). Both cache commands name files they could not write or remove and exit with status 1. With file caching disabled, `cache:warm` keeps its warning and exits successfully.

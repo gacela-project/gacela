@@ -32,15 +32,33 @@ final class CacheManager
         PackageConfigCache::FILENAME,
     ];
 
-    public function clearCache(): void
+    /**
+     * @return list<string>
+     */
+    public function clearCache(): array
     {
+        $failed = [];
         foreach ($this->existingCacheFiles() as $cacheFile) {
-            FileCache::delete($cacheFile);
+            if (!FileCache::delete($cacheFile)) {
+                $failed[$cacheFile] = $cacheFile;
+            }
         }
 
-        // Or this process writes its own plans back when it exits, and the
-        // file cache:clear just deleted is there again.
+        // Prevent the shutdown handler from writing the removed plan cache back.
         SharedPlanCache::resetCache();
+
+        return array_values($failed);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function warmCacheFilePaths(): array
+    {
+        return [
+            $this->getCacheFilePath(),
+            AbstractPhpFileCache::absoluteFilename($this->cacheDir(), CustomServicesPhpCache::FILENAME, Config::getInstance()->getAppRootDir()),
+        ];
     }
 
     /**

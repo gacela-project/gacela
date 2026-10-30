@@ -77,6 +77,10 @@ final class ConfigDimensionsTest extends TestCase
         yield 'path separator' => ['eu/west'];
         yield 'glob wildcard' => ['e*'];
         yield 'space' => ['eu west'];
+        yield 'trailing newline' => ["prod\n"];
+        yield 'embedded newline' => ["pro\nd"];
+        yield 'carriage return' => ["prod\r"];
+        yield 'tab' => ["prod\t"];
     }
 
     public function test_the_ordinary_alphabet_is_accepted(): void

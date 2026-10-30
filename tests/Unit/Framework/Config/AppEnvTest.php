@@ -81,6 +81,10 @@ final class AppEnvTest extends TestCase
         yield 'absolute path' => ['/etc/passwd'];
         yield 'glob wildcard' => ['eu*'];
         yield 'space' => ['a b'];
+        yield 'trailing newline' => ["prod\n"];
+        yield 'embedded newline' => ["pro\nd"];
+        yield 'carriage return' => ["prod\r"];
+        yield 'tab' => ["prod\t"];
     }
 
     #[DataProvider('acceptedValuesProvider')]

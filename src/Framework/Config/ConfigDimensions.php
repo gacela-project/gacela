@@ -27,7 +27,7 @@ final class ConfigDimensions
      * enough that no plausible existing `APP_ENV` stops working, narrow enough
      * that `/` and `..` cannot walk out of the config directory.
      */
-    private const VALUE_PATTERN = '/^[A-Za-z0-9_.-]*$/';
+    private const VALUE_PATTERN = '/^[A-Za-z0-9_.-]*$/D';
 
     /**
      * @param list<string> $values

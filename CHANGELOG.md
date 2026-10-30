@@ -20,6 +20,7 @@
 - Integer config, schema and handler-registry keys survive bootstrap-closure merges. Later declarations replace matching keys without renumbering them ([#999](https://github.com/gacela-project/gacela/issues/999))
 - Bootstrap closures honor cache directories declared in `gacela.php` or `gacela-{APP_ENV}.php` for package and application caches, matching `cache:warm` ([#997](https://github.com/gacela-project/gacela/issues/997))
 - Dotted environment and dimension names load only their matching config layers. Multipart filenames and shared config keep their existing rules ([#1031](https://github.com/gacela-project/gacela/issues/1031))
+- Environment and dimension values ending in a newline are rejected before they can skip config layers or enter cache filenames ([#1037](https://github.com/gacela-project/gacela/issues/1037))
 - Function-name plugins receive container dependencies and keep declaration order. Missing or non-callable plugins raise `PluginException` naming the plugin ([#1001](https://github.com/gacela-project/gacela/issues/1001))
 
 #### Events

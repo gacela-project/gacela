@@ -232,13 +232,15 @@ final class FileContentIoTest extends TestCase
         mkdir($target);
         file_put_contents($target . DIRECTORY_SEPARATOR . 'original.txt', 'before');
         $this->symlinkOrSkip($target, $link);
+        $destination = readlink($link);
+        self::assertIsString($destination);
 
         try {
             $this->io->filePutContents($link, 'after');
             self::fail('Replacing the target directory must fail.');
         } catch (RuntimeException) {
             self::assertTrue(is_link($link));
-            self::assertSame($target, readlink($link));
+            self::assertSame($destination, readlink($link));
             self::assertSame('before', file_get_contents($target . DIRECTORY_SEPARATOR . 'original.txt'));
             self::assertSame([], glob($this->workingDir . DIRECTORY_SEPARATOR . '*.tmp'));
         }
@@ -346,6 +348,11 @@ final class FileContentIoTest extends TestCase
 
     private static function removeRecursively(string $path): void
     {
+        if (DIRECTORY_SEPARATOR === '\\' && is_link($path) && is_dir($path)) {
+            rmdir($path);
+            return;
+        }
+
         if (is_link($path) || is_file($path)) {
             unlink($path);
             return;

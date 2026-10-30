@@ -51,6 +51,7 @@
 
 #### Code generation
 
+- The console binary uses the autoloader named by Composer's proxy, including nested or external custom vendor directories, while loading configuration and generating files from the application root ([#1005](https://github.com/gacela-project/gacela/issues/1005))
 - Console file writes replace targets only after the content is complete. Failed or partial writes preserve the original, remove temporary files and retain existing POSIX permissions ([#1002](https://github.com/gacela-project/gacela/issues/1002))
 - `dto:generate` rejects shapes covered only by PSR-0 instead of writing classes Composer cannot load. Both DTO generation and package manifest checks use the first PSR-4 directory; generation rejects empty or invalid lists, while manifest scanning skips them ([#1003](https://github.com/gacela-project/gacela/issues/1003), [#1024](https://github.com/gacela-project/gacela/issues/1024))
 - `dto:generate` preserves files it did not generate and exits with an error, including with `--dry-run` and `--check`; `--force` permits replacement ([#1022](https://github.com/gacela-project/gacela/issues/1022))

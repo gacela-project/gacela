@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\CodeGenerator;
 
+use Composer\InstalledVersions;
 use Gacela\Console\Infrastructure\Command\MakeFileCommand;
 use Gacela\Console\Infrastructure\Command\MakeModuleCommand;
 use Gacela\Framework\Bootstrap\GacelaConfig;
 use Gacela\Framework\Gacela;
 use GacelaTest\Feature\Util\DirectoryUtil;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -184,6 +186,133 @@ final class MakeFromASubdirectoryTest extends TestCase
         self::assertStringContainsString('App\\Hello', $list['output']);
     }
 
+    #[DataProvider('customVendorDirectories')]
+    public function test_a_composer_proxy_uses_the_application_root_with_a_custom_vendor_directory(string $layout): void
+    {
+        $vendor = $layout === 'external' ? $this->absoluteTarget : $this->inRoot(...explode('/', $layout));
+        $proxy = $this->createComposerProxy($vendor, $layout === 'external' ? $vendor : $layout);
+        $this->writeApplicationConfig();
+
+        $make = $this->runScript($proxy, 'make:module App/Hello');
+
+        self::assertSame(0, $make['exit'], $make['output']);
+        self::assertFileExists($this->inRoot('src', 'Hello', 'HelloFacade.php'));
+        self::assertFileExists($this->inRoot('config-read.txt'));
+        self::assertDirectoryDoesNotExist($this->subDirectory . DIRECTORY_SEPARATOR . 'src');
+        $list = $this->runScript($proxy, 'list:modules');
+        self::assertSame(0, $list['exit'], $list['output']);
+        self::assertStringContainsString('App\\Hello', $list['output']);
+    }
+
+    public function test_a_bundled_composer_loader_does_not_replace_the_proxy_project_root(): void
+    {
+        $vendor = $this->inRoot('lib');
+        $proxy = $this->createComposerProxy($vendor, 'lib', true);
+        $this->writeApplicationConfig();
+
+        $make = $this->runScript($proxy, 'make:module App/Hello');
+
+        self::assertSame(0, $make['exit'], $make['output']);
+        self::assertFileExists($this->inRoot('src', 'Hello', 'HelloFacade.php'));
+        self::assertFileExists($this->inRoot('config-read.txt'));
+        self::assertDirectoryDoesNotExist($vendor . DIRECTORY_SEPARATOR . 'tool' . DIRECTORY_SEPARATOR . 'src');
+    }
+
+    public function test_the_proxy_autoloader_takes_precedence_over_a_default_vendor_directory(): void
+    {
+        $proxy = $this->createComposerProxy($this->inRoot('lib'), 'lib');
+        mkdir($this->inRoot('vendor'));
+        file_put_contents($this->inRoot('vendor', 'autoload.php'), '<?php throw new RuntimeException("Wrong autoloader");');
+
+        $run = $this->runScript($proxy, 'list');
+
+        self::assertSame(0, $run['exit'], $run['output']);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function customVendorDirectories(): iterable
+    {
+        yield 'custom directory' => ['lib'];
+        yield 'nested directory' => ['build/dependencies'];
+        yield 'external directory' => ['external'];
+    }
+
+    private function createComposerProxy(string $vendor, string $configuredDirectory, bool $bundledTool = false): string
+    {
+        mkdir($vendor . DIRECTORY_SEPARATOR . 'bin', 0777, true);
+        file_put_contents($this->inRoot('composer.json'), json_encode([
+            'autoload' => ['psr-4' => ['App\\' => 'src/']],
+            'config' => ['vendor-dir' => $configuredDirectory],
+        ], JSON_THROW_ON_ERROR));
+        file_put_contents($vendor . DIRECTORY_SEPARATOR . 'composer.json', '{"name":"decoy/package"}');
+        $this->writeProxyMetadata($vendor);
+        if ($bundledTool) {
+            $this->writeBundledAutoloader($vendor);
+        }
+
+        $this->writeProxyAutoloader($vendor, $bundledTool);
+        $proxy = $vendor . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'gacela';
+        file_put_contents($proxy, implode("\n", [
+            '<?php',
+            "\$GLOBALS['_composer_bin_dir'] = __DIR__;",
+            "\$GLOBALS['_composer_autoload_path'] = __DIR__ . '/../autoload.php';",
+            'include ' . var_export((string)realpath(self::REPO_ROOT . '/bin/gacela'), true) . ';',
+        ]));
+
+        return $proxy;
+    }
+
+    private function writeApplicationConfig(): void
+    {
+        file_put_contents($this->inRoot('gacela.php'), <<<'PHP'
+            <?php
+            return static function (\Gacela\Framework\Bootstrap\GacelaConfig $config): void {
+                $config->setFileCache(false);
+                file_put_contents(__DIR__ . '/config-read.txt', 'loaded');
+            };
+            PHP);
+    }
+
+    private function writeBundledAutoloader(string $vendor): void
+    {
+        $tool = $vendor . DIRECTORY_SEPARATOR . 'tool';
+        $toolVendor = $tool . DIRECTORY_SEPARATOR . 'vendor';
+        mkdir($toolVendor, 0777, true);
+        file_put_contents($tool . DIRECTORY_SEPARATOR . 'composer.json', '{"name":"acme/tool","autoload":{"psr-4":{"App\\\\":"src/"}}}');
+        $this->writeProxyMetadata($toolVendor, $tool);
+        file_put_contents($toolVendor . DIRECTORY_SEPARATOR . 'autoload.php', implode("\n", [
+            '<?php',
+            '$loader = new \Composer\Autoload\ClassLoader(__DIR__);',
+            '$loader->register(true);',
+            'return $loader;',
+        ]));
+    }
+
+    private function writeProxyMetadata(string $vendor, ?string $projectRoot = null): void
+    {
+        $root = InstalledVersions::getRootPackage();
+        $root['install_path'] = $projectRoot ?? $this->appRoot;
+        $root['name'] = $projectRoot === null ? 'acme/app' : 'acme/tool';
+        $root['type'] = 'project';
+        mkdir($vendor . DIRECTORY_SEPARATOR . 'composer');
+        file_put_contents($vendor . DIRECTORY_SEPARATOR . 'composer' . DIRECTORY_SEPARATOR . 'installed.php', '<?php return ' . var_export(['root' => $root, 'versions' => []], true) . ';');
+    }
+
+    private function writeProxyAutoloader(string $vendor, bool $bundledTool): void
+    {
+        file_put_contents($vendor . DIRECTORY_SEPARATOR . 'autoload.php', implode("\n", [
+            '<?php',
+            'require ' . var_export((string)realpath(self::REPO_ROOT . '/vendor/autoload.php'), true) . ';',
+            '$loader = new \Composer\Autoload\ClassLoader(__DIR__);',
+            '$loader->addPsr4("App\\\\", ' . var_export($this->inRoot('src'), true) . ');',
+            '$loader->register(true);',
+            $bundledTool ? 'require ' . var_export($vendor . DIRECTORY_SEPARATOR . 'tool' . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php', true) . ';' : '',
+            'return $loader;',
+        ]));
+    }
+
     private function inRoot(string ...$segments): string
     {
         return $this->appRoot . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $segments);
@@ -194,7 +323,14 @@ final class MakeFromASubdirectoryTest extends TestCase
      */
     private function runBinGacela(string $arguments): array
     {
-        $bin = (string)realpath(self::REPO_ROOT . '/bin/gacela');
+        return $this->runScript((string)realpath(self::REPO_ROOT . '/bin/gacela'), $arguments);
+    }
+
+    /**
+     * @return array{exit: int, output: string}
+     */
+    private function runScript(string $bin, string $arguments): array
+    {
 
         // Under infection a child inherits XDEBUG_MODE=coverage, which only
         // slows it down. putenv, because Windows has no `VAR=x cmd` prefix.

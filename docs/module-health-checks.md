@@ -69,6 +69,8 @@ return static function (GacelaConfig $config): void {
 public function addHealthCheck(string|ModuleHealthCheckInterface $check): self
 ```
 
+If a registered check cannot be built, it reports an unhealthy result under its short class name, including the construction error. If `getModuleName()` throws, the result uses the full class name. Other checks continue running, and `doctor` reports the failure in text or JSON with exit code 1.
+
 Running the command surfaces each registered check as a `module health: <module name>` line:
 
 ```

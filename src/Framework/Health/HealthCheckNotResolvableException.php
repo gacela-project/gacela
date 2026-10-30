@@ -25,6 +25,14 @@ final class HealthCheckNotResolvableException extends RuntimeException
         ) . ErrorSuggestionHelper::addHelpfulTip('class_not_found'));
     }
 
+    public static function notInstantiable(string $className): self
+    {
+        return new self(sprintf(
+            'The health check "%s" cannot be instantiated. Register a concrete implementation or provide a container binding.',
+            $className,
+        ));
+    }
+
     public static function notAHealthCheck(string $className): self
     {
         return new self(sprintf(

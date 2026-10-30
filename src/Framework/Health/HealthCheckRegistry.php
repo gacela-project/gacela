@@ -6,6 +6,7 @@ namespace Gacela\Framework\Health;
 
 use Gacela\Framework\Container\Container;
 use ReflectionClass;
+use Throwable;
 
 use function class_exists;
 use function interface_exists;
@@ -63,7 +64,11 @@ final class HealthCheckRegistry
                 continue;
             }
 
-            $resolved[] = self::instantiate($check, $container);
+            try {
+                $resolved[] = self::instantiate($check, $container);
+            } catch (Throwable $exception) {
+                $resolved[] = new UnbuildableHealthCheck($check, $exception);
+            }
         }
 
         return $resolved;
@@ -90,7 +95,17 @@ final class HealthCheckRegistry
                 : HealthCheckNotResolvableException::classNotFound($className);
         }
 
-        if ($container instanceof Container) {
+        return self::build($className, $container);
+    }
+
+    /**
+     * @param class-string<ModuleHealthCheckInterface> $className
+     */
+    private static function build(string $className, ?Container $container): ModuleHealthCheckInterface
+    {
+        $reflection = new ReflectionClass($className);
+
+        if ($container instanceof Container && ($reflection->isInstantiable() || $container->has($className))) {
             /** @var mixed $instance */
             $instance = $container->get($className);
             if ($instance instanceof ModuleHealthCheckInterface) {
@@ -98,6 +113,10 @@ final class HealthCheckRegistry
             }
         }
 
-        return (new ReflectionClass($className))->newInstance();
+        if (!$reflection->isInstantiable()) {
+            throw HealthCheckNotResolvableException::notInstantiable($className);
+        }
+
+        return $reflection->newInstance();
     }
 }

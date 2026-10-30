@@ -50,6 +50,8 @@ final class ModuleRulesSettings
             return null;
         }
 
+        PluginXml::rejectUnknown($moduleRules, ['rootNamespace', 'file', 'modulePathSegments'], ['sharedNamespace']);
+
         return new self(
             PluginXml::requiredAttribute(
                 $moduleRules,

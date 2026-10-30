@@ -17,9 +17,12 @@ use Gacela\Framework\Gacela;
 use Gacela\Framework\Health\HealthStatus;
 use Gacela\Framework\Health\ModuleHealthCheckInterface;
 use Gacela\Framework\Plugins\Membership\MembershipCache;
+use GacelaTest\Feature\Console\Doctor\Fixtures\AbstractHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithMetadataHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\DegradedWithoutMetadataHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\FakeHealthCheck;
+use GacelaTest\Feature\Console\Doctor\Fixtures\NeedsPdoHealthCheck;
+use GacelaTest\Feature\Console\Doctor\Fixtures\ThrowingNameHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\UnhealthyHealthCheck;
 use GacelaTest\Feature\Console\Doctor\Fixtures\UnhealthyWithMetadataHealthCheck;
 use GacelaTest\Feature\Framework\PluginAttribute\Checkout\Discount;
@@ -38,6 +41,7 @@ use function count;
 use function dirname;
 use function explode;
 use function file_get_contents;
+use function implode;
 use function is_dir;
 use function json_decode;
 use function mkdir;
@@ -456,6 +460,50 @@ final class DoctorCommandTest extends TestCase
         self::assertSame('✓ All checks passed', array_pop($lines));
         self::assertSame('✓ module health: FakeModule', array_pop($lines));
         self::assertStringContainsString('FakeHealthCheck ran', $tester->getDisplay());
+    }
+
+    /**
+     * @param class-string<ModuleHealthCheckInterface> $className
+     */
+    #[DataProvider('failingHealthChecks')]
+    public function test_a_failing_health_check_keeps_text_diagnostics_running(string $className, string $name, string $error): void
+    {
+        $tester = $this->doctor([$className, FakeHealthCheck::class]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('module health: ' . $name, $tester->getDisplay());
+        self::assertStringContainsString($error, $tester->getDisplay());
+        self::assertContains('✓ module health: FakeModule', $this->statusLinesOf($tester));
+        self::assertStringContainsString('cache staleness', $tester->getDisplay());
+    }
+
+    /**
+     * @param class-string<ModuleHealthCheckInterface> $className
+     */
+    #[DataProvider('failingHealthChecks')]
+    public function test_a_failing_health_check_keeps_json_diagnostics_running(string $className, string $name, string $error): void
+    {
+        $tester = $this->doctor([$className, FakeHealthCheck::class], ['--json' => true]);
+        /** @var array{status: string, checks: list<array{name: string, status: string, details: list<string>}>} $report */
+        $report = json_decode($tester->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+        $checks = array_column($report['checks'], null, 'name');
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame('error', $report['status']);
+        self::assertSame('error', $checks[$name]['status']);
+        self::assertStringContainsString($error, implode(' ', $checks[$name]['details']));
+        self::assertSame('ok', $checks['FakeModule']['status']);
+        self::assertArrayHasKey('cache staleness', $checks);
+    }
+
+    /**
+     * @return iterable<string, array{class-string<ModuleHealthCheckInterface>, string, string}>
+     */
+    public static function failingHealthChecks(): iterable
+    {
+        yield 'constructor' => [NeedsPdoHealthCheck::class, 'NeedsPdoHealthCheck', 'dsn'];
+        yield 'abstract' => [AbstractHealthCheck::class, 'AbstractHealthCheck', 'cannot be instantiated'];
+        yield 'module name' => [ThrowingNameHealthCheck::class, ThrowingNameHealthCheck::class, 'module name unavailable'];
     }
 
     public function test_a_health_check_instance_is_accepted_too(): void

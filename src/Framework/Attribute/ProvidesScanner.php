@@ -144,7 +144,7 @@ final class ProvidesScanner
         foreach ($method->getParameters() as $parameter) {
             $type = $parameter->getType();
 
-            if ($type instanceof ReflectionNamedType && $type->getName() === Container::class) {
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin() && is_a(Container::class, $type->getName(), true)) {
                 return true;
             }
         }

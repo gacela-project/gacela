@@ -19,7 +19,7 @@ Every command except `init` needs a bootstrappable project — a `gacela.php` in
 | `make:file App/Blog Facade Factory` | Generates named files into an existing module — the four pillars, plus any kind the project declared. `--short-name`, `--force` to replace files that already exist, `--dry-run` to see what it would write |
 | `stubs:publish` | Copies the scaffolder's templates into the project so `make:*` generates your house style. `--template=basic\|service`, `--force`, `--dry-run` |
 
-`make:module` and `make:file` write into the directory your `composer.json` psr-4 maps the namespace to, resolved from the project root, and print each path relative to that root. Run from a subdirectory, they write to the same place as from the root.
+`make:module` and `make:file` write into the directory your `composer.json` psr-4 maps the namespace to, including a fallback `""` prefix, resolved from the project root, and print each path relative to that root. Run from a subdirectory, they write to the same place as from the root.
 
 The path takes `/` or `\` between segments: `make:module App/Blog` and `make:module 'App\Blog'` generate the same module. A leading backslash is accepted too.
 

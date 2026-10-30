@@ -81,6 +81,16 @@ final class ProvidesScannerTest extends TestCase
         self::assertSame('no-container', $container->get('paramless'));
     }
 
+    public function test_passes_container_to_methods_typed_with_its_interfaces(): void
+    {
+        $container = new Container();
+
+        ProvidesScanner::scan(new ProviderWithContainerParam(), $container);
+
+        self::assertSame(Container::class, $container->get('framework_interface'));
+        self::assertSame(Container::class, $container->get('container_interface'));
+    }
+
     public function test_only_container_typed_params_receive_the_container(): void
     {
         $container = new Container();

@@ -41,6 +41,55 @@ final class DtoSchemaTest extends TestCase
         DtoSchema::fromArray(['Checkout.Order' => ['reference' => DtoType::string()]]);
     }
 
+    #[DataProvider('reservedShortNames')]
+    public function test_a_reserved_short_class_name_is_refused(string $shortName): void
+    {
+        $this->expectException(MalformedDtoSchemaException::class);
+        $this->expectExceptionMessage('"' . $shortName . '"');
+
+        DtoSchema::fromArray(['App\\Checkout\\' . $shortName => ['total' => DtoType::int()]]);
+    }
+
+    public function test_reserved_words_are_allowed_inside_the_namespace(): void
+    {
+        self::assertTrue(DtoSchema::fromArray(['App\\List\\Order' => []])->declares('App\\List\\Order'));
+        self::assertTrue(DtoSchema::fromArray(['App\\Checkout\\Enum' => []])->declares('App\\Checkout\\Enum'));
+    }
+
+    public function test_the_literal_this_property_is_refused(): void
+    {
+        $this->expectExceptionObject(MalformedDtoSchemaException::notAValidPropertyName('App\\Checkout\\Order', 'this'));
+
+        DtoSchema::fromArray(['App\\Checkout\\Order' => ['this' => DtoType::string()]]);
+    }
+
+    #[DataProvider('validThisSpellings')]
+    public function test_other_property_cases_are_valid(string $property): void
+    {
+        $schema = DtoSchema::fromArray(['App\\Checkout\\Order' => [$property => DtoType::string()]]);
+
+        self::assertArrayHasKey($property, $schema->shapes()['App\\Checkout\\Order']);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function reservedShortNames(): iterable
+    {
+        foreach (['List', 'Class', 'Match', 'Function', 'Fn', 'Array', 'String', 'Int', 'Float', 'Bool', 'Object', 'Mixed', 'Null', 'Void', 'Iterable', 'Never', 'True', 'False', 'Self', 'Parent', 'Static', 'Callable', 'Readonly', 'mAtCh'] as $name) {
+            yield $name => [$name];
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function validThisSpellings(): iterable
+    {
+        yield 'capitalized' => ['This'];
+        yield 'uppercase' => ['THIS'];
+    }
+
     public function test_a_property_that_is_not_a_type_is_refused(): void
     {
         $this->expectException(MalformedDtoSchemaException::class);

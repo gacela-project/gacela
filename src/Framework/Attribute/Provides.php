@@ -12,7 +12,7 @@ use Attribute;
  * The annotated method's return value is registered under `$id` in the
  * Container; the method is wrapped in a lazy closure, so it is only invoked
  * when the service is resolved. If the method signature declares a
- * `Container` parameter, the Container is passed through on resolve.
+ * `Container` or either `ContainerInterface` parameter, the Container is passed through on resolve.
  *
  * Example:
  * ```php

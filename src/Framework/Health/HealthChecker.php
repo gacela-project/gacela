@@ -33,7 +33,10 @@ final class HealthChecker
         $statusesByModule = [];
 
         foreach ($this->healthChecks as $healthCheck) {
+            $moduleName = $healthCheck::class;
+
             try {
+                $moduleName = $healthCheck->getModuleName();
                 $status = $healthCheck->checkHealth();
             } catch (Throwable $e) {
                 $status = HealthStatus::unhealthy(
@@ -42,7 +45,7 @@ final class HealthChecker
                 );
             }
 
-            $statusesByModule[$healthCheck->getModuleName()][] = $status;
+            $statusesByModule[$moduleName][] = $status;
         }
 
         $results = [];

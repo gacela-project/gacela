@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace GacelaTest\Feature\Console\DtoGenerate;
 
+use Gacela\Framework\Bootstrap\GacelaConfig;
+use Gacela\Framework\Dto\Schema\DtoType;
+use GacelaTest\Feature\Util\DirectoryUtil;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
@@ -65,6 +69,42 @@ final class DtoGenerateBootstrapFailureTest extends TestCase
         self::assertSame(1, $exitCode);
         self::assertStringContainsString('External service "clock" not found', $stderr);
         self::assertStringNotContainsString('No shape declared', $stdout);
+    }
+
+    #[DataProvider('reservedShapes')]
+    public function test_reserved_names_fail_before_any_dto_is_written(string $shortName, string $property, string $message): void
+    {
+        $class = var_export('AcmeShop\\Checkout\\' . $shortName, true);
+        $type = '\\' . DtoType::class . '::string()';
+        file_put_contents($this->gacelaFile(), '<?php return static function (\\' . GacelaConfig::class . ' $config): void {'
+            . '$config->declareDtoSchema("AcmeShop\\\\Checkout\\\\AValid", ["value" => ' . $type . ']);'
+            . '$config->declareDtoSchema(' . $class . ', [' . var_export($property, true) . ' => ' . $type . ']); };');
+        $composer = $this->projectRoot . DIRECTORY_SEPARATOR . 'composer.json';
+        file_put_contents($composer, '{"autoload":{"psr-4":{"AcmeShop\\\\":"src/"}}}');
+
+        try {
+            [$exitCode, $stdout, $stderr] = $this->runDtoGenerate();
+
+            self::assertSame(1, $exitCode);
+            self::assertStringContainsString($message, $stderr);
+            self::assertStringNotContainsString('wrote', $stdout);
+            self::assertDirectoryDoesNotExist($this->projectRoot . DIRECTORY_SEPARATOR . 'src');
+        } finally {
+            DirectoryUtil::removeDir($this->projectRoot . DIRECTORY_SEPARATOR . 'src');
+            unlink($composer);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function reservedShapes(): iterable
+    {
+        foreach (['List', 'Class', 'Match', 'String', 'Object', 'Mixed'] as $name) {
+            yield $name => [$name, 'value', $name];
+        }
+
+        yield 'this property' => ['Order', 'this', 'this'];
     }
 
     /**

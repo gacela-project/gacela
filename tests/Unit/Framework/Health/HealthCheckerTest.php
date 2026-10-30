@@ -95,6 +95,20 @@ final class HealthCheckerTest extends TestCase
         self::assertSame($metadata, $report['modules']['Db']['metadata']);
     }
 
+    public function test_a_throwing_module_name_becomes_unhealthy_and_keeps_healthy_peers(): void
+    {
+        $check = $this->createStub(ModuleHealthCheckInterface::class);
+        $check->method('getModuleName')->willThrowException(new Exception('name unavailable'));
+        $healthy = $this->createHealthCheck('HealthyModule', HealthStatus::healthy());
+
+        $results = (new HealthChecker([$check, $healthy]))->checkAll()->getResults();
+
+        self::assertTrue($results[$check::class]->isUnhealthy());
+        self::assertStringContainsString('name unavailable', $results[$check::class]->message);
+        self::assertSame(Exception::class, $results[$check::class]->metadata['exception']);
+        self::assertTrue($results['HealthyModule']->isHealthy());
+    }
+
     public function test_count_returns_number_of_checks(): void
     {
         $check1 = $this->createHealthCheck('Module1', HealthStatus::healthy());

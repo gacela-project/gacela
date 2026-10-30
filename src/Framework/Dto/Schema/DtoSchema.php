@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Dto\Schema;
 
+use PhpToken;
+
 use function array_key_exists;
+use function in_array;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -24,6 +27,8 @@ use function strtolower;
 final class DtoSchema
 {
     private const CLASS_NAME_PATTERN = '/^[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*(\\\\[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*)+$/';
+
+    private const RESERVED_TYPE_NAMES = ['string', 'int', 'float', 'bool', 'object', 'mixed', 'null', 'void', 'never', 'iterable', 'true', 'false', 'self', 'parent', 'static'];
 
     private const PROPERTY_NAME_PATTERN = '/^[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*$/';
 
@@ -55,6 +60,12 @@ final class DtoSchema
                 throw MalformedDtoSchemaException::notAValidClassName($className);
             }
 
+            $separator = strrpos($className, '\\');
+            $shortName = $separator === false ? $className : substr($className, $separator + 1);
+            if (self::isReservedClassName($shortName)) {
+                throw MalformedDtoSchemaException::reservedClassName($className, $shortName);
+            }
+
             /** @var class-string $className */
             $checked[$className] = self::checkedProperties($className, (array)$properties);
         }
@@ -84,6 +95,15 @@ final class DtoSchema
         return array_key_exists($className, $this->shapes);
     }
 
+    private static function isReservedClassName(string $shortName): bool
+    {
+        if (in_array(strtolower($shortName), self::RESERVED_TYPE_NAMES, true)) {
+            return true;
+        }
+
+        return !PhpToken::tokenize('<?php class ' . $shortName . ' {}')[3]->is(T_STRING);
+    }
+
     /**
      * @param array<array-key, mixed> $properties
      *
@@ -96,7 +116,7 @@ final class DtoSchema
 
         /** @var mixed $type */
         foreach ($properties as $property => $type) {
-            if (!is_string($property) || preg_match(self::PROPERTY_NAME_PATTERN, $property) !== 1) {
+            if (!is_string($property) || $property === 'this' || preg_match(self::PROPERTY_NAME_PATTERN, $property) !== 1) {
                 throw MalformedDtoSchemaException::notAValidPropertyName($className, (string)$property);
             }
 

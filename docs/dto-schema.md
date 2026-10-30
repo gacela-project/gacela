@@ -77,6 +77,7 @@ A shape under a namespace no `autoload` prefix covers is reported and the comman
 
 ## Rules worth knowing
 
+- PHP reserved words cannot be short class names, and the exact property name `this` is refused. Reserved words remain valid in namespace segments.
 - **The output is derived. Do not edit it.** Regenerating an unchanged declaration produces a byte-identical file, so a repeat run leaves version control quiet.
 - **The generated class carries `#[PublicApi]`.** A declared shape is data crossing a boundary by definition, so the [cross-module rules](module-boundaries.md#what-a-module-exports) let another module read it without going through the owning module's Facade — without anybody having to say so once per analyser, in a file whose header says not to edit it.
 - **Declaration order never matters.** Shapes and properties are emitted sorted, so two config sources produce the same class whichever loads first.

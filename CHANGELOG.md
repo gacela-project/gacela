@@ -53,6 +53,7 @@
 
 #### Code generation
 
+- DTO schemas reject reserved short class names and the literal property name `this` before writing generated files ([#1012](https://github.com/gacela-project/gacela/issues/1012))
 - `agents:install` replaces long marker blocks without duplicating them and preserves project text after stray start markers ([#1006](https://github.com/gacela-project/gacela/issues/1006))
 - The console binary uses the autoloader named by Composer's proxy, including nested or external custom vendor directories, while loading configuration and generating files from the application root ([#1005](https://github.com/gacela-project/gacela/issues/1005))
 - `make:module` and `make:file` accept fully qualified paths with a leading backslash. Unknown-path hints preserve separators inside declared namespace prefixes ([#1007](https://github.com/gacela-project/gacela/issues/1007))

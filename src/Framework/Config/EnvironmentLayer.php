@@ -91,34 +91,47 @@ final class EnvironmentLayer
     private static function of(string $path, array $matched): ?self
     {
         $basename = basename($path);
-        $directory = substr($path, 0, strlen($path) - strlen($basename));
-
-        // Before the first dot, which is where the suffix would have been
-        // inserted: `default.app.php` is suffixed as `default-prod.app.php`.
         $dot = strpos($basename, '.');
-        $name = $dot === false ? $basename : substr($basename, 0, $dot);
-        $extension = $dot === false ? '' : substr($basename, $dot);
-
+        $candidate = $dot === false ? $basename : substr($basename, 0, $dot);
         $found = null;
-        $candidate = $name;
 
-        // A dash at position 0 is not a suffix separator: stripping it would
-        // leave no name at all, and `-prod.php` refines nothing.
         while (($dash = strrpos($candidate, '-')) !== false && $dash > 0) {
             $candidate = substr($candidate, 0, $dash);
-            $sibling = $directory . $candidate . $extension;
-
-            if (isset($matched[$sibling])) {
-                // Kept rather than returned: with both `app-prod.php` and
-                // `app.php` beside it, `app-prod-eu.php` is a layer of the base
-                // file, and its suffix is the whole `prod-eu` that the
-                // environment-and-dimensions chain has to resolve to. Stopping
-                // at the first hit would report the middle link and a suffix of
-                // `eu`, which no chain ever resolves to on its own.
-                $found = new self($path, $sibling, substr($name, strlen($candidate) + 1));
-            }
+            $found = self::withStem($path, $candidate, $matched) ?? $found;
         }
 
         return $found;
+    }
+
+    /**
+     * @param array<string,array-key> $matched
+     */
+    private static function withStem(string $path, string $stem, array $matched): ?self
+    {
+        $basename = basename($path);
+        $directory = substr($path, 0, strlen($path) - strlen($basename));
+        $suffixStart = strlen($stem) + 1;
+
+        foreach (self::extensionStarts($basename, $suffixStart) as $extensionStart) {
+            $sibling = $directory . $stem . substr($basename, $extensionStart);
+            if (isset($matched[$sibling])) {
+                return new self($path, $sibling, substr($basename, $suffixStart, $extensionStart - $suffixStart));
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return iterable<int>
+     */
+    private static function extensionStarts(string $basename, int $after): iterable
+    {
+        while (($dot = strpos($basename, '.', $after)) !== false) {
+            yield $dot;
+            $after = $dot + 1;
+        }
+
+        yield strlen($basename);
     }
 }

@@ -31,6 +31,7 @@ final class ReferenceAppTest extends PsalmFixtureTestCase
     {
         $output = $this->analyseFixture();
         $this->skipIfPsalmCannotRun($output);
+        self::assertStringNotContainsString('ServiceMapAccessors is internal', $output, 'The framework trait must be usable outside Gacela.');
 
         $findings = array_values(array_filter(
             explode("\n", $output),

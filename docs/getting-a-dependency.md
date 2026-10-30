@@ -33,6 +33,8 @@ final class SendInvoiceController
 }
 ```
 
+The accessor returns the exact concrete pillar class named by the attribute, including a pillar whose name differs from the module convention. An abstract Facade, Factory or Config target keeps conventional resolution and its existing default fallback.
+
 The trait is what supplies the `__call()` that reads the attribute. Without it `$this->getFacade()` is a plain undefined method, attribute or no attribute.
 
 **From inside a Factory, do not do this.** A Factory reaches another module through its own **Provider**, not by calling `getFacade()` on itself:

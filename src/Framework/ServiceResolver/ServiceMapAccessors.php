@@ -18,14 +18,13 @@ use ReflectionClass;
  * the analyser and the runtime disagree about the same line of code. Asked
  * here, they can only be differently stale.
  *
- * Callers memoize their own results. A cache here would have to be reset with
- * the rest of the framework's static state and would buy nothing: the runtime
- * already keys its memo by caller-and-method, and the analyser by class.
- *
  * @internal
  */
 final class ServiceMapAccessors
 {
+    /** @var array<class-string, array<string, class-string|false>> */
+    private static array $classNames = [];
+
     /**
      * The class one accessor resolves to, or null when this class declares no
      * such accessor.
@@ -40,16 +39,9 @@ final class ServiceMapAccessors
      */
     public static function classNameFor(ReflectionClass $reflectionClass, string $method): ?string
     {
-        foreach (self::serviceMapAttributes($reflectionClass) as $attribute) {
-            /** @var ServiceMap $serviceMap */
-            $serviceMap = $attribute->newInstance();
+        $className = self::$classNames[$reflectionClass->getName()][$method] ??= self::findClassNameFor($reflectionClass, $method) ?? false;
 
-            if ($serviceMap->method === $method) {
-                return $serviceMap->className;
-            }
-        }
-
-        return null;
+        return $className === false ? null : $className;
     }
 
     /**
@@ -75,6 +67,25 @@ final class ServiceMapAccessors
         }
 
         return $accessors;
+    }
+
+    /**
+     * @param ReflectionClass<object> $reflectionClass
+     *
+     * @return class-string|null
+     */
+    private static function findClassNameFor(ReflectionClass $reflectionClass, string $method): ?string
+    {
+        foreach (self::serviceMapAttributes($reflectionClass) as $attribute) {
+            /** @var ServiceMap $serviceMap */
+            $serviceMap = $attribute->newInstance();
+
+            if ($serviceMap->method === $method) {
+                return $serviceMap->className;
+            }
+        }
+
+        return null;
     }
 
     /**

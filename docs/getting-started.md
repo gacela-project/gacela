@@ -44,6 +44,7 @@ So a match is excluded from the base layer when stripping one or more trailing `
 ```
 config/app.php             → base layer
 config/app-prod.php        → app          → a file: layer of app.php, read when APP_ENV=prod
+config/app-prod.v2.php     → app          → a file: layer of app.php, read when APP_ENV=prod.v2
 config/app-prod-eu.php     → app-prod, app → a file: layer of app.php, read when APP_ENV=prod APP_REGION=eu
 config/local.php           → nothing to strip: base layer
 ```

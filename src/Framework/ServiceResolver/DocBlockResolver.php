@@ -51,11 +51,26 @@ final class DocBlockResolver
      */
     private static array $normalizedTypes = [];
 
+    /** @var array<class-string, array<string, array{class-string, string}|false|null>> */
+    private static array $concretePillars = [];
+
     /**
      * @param class-string $callerClass
      */
     private function __construct(private readonly string $callerClass)
     {
+    }
+
+    /**
+     * @param class-string $callerClass
+     *
+     * @return array{class-string, string}|null
+     */
+    public static function concretePillarFor(string $callerClass, string $method): ?array
+    {
+        $pillar = self::$concretePillars[$callerClass][$method] ??= self::findConcretePillar($callerClass, $method);
+
+        return $pillar === false ? null : $pillar;
     }
 
     public static function fromCaller(object $caller): self
@@ -71,12 +86,6 @@ final class DocBlockResolver
         return new self($callerClass);
     }
 
-    /**
-     * Deliberately only `$normalizedTypes`. The two statics beside it outlive a
-     * reset on purpose -- file contents cannot change under a compiled process,
-     * and re-warning about a fallback already reported would be noise -- so
-     * clearing them here would undo a decision, not a cache.
-     */
     public static function resetCache(): void
     {
         self::$normalizedTypes = [];
@@ -225,6 +234,32 @@ final class DocBlockResolver
         $phpFile = self::$fileContentCache[$fileName];
 
         return (new UseBlockParser())->getUseStatement($className, $phpFile);
+    }
+
+    /**
+     * @param class-string $callerClass
+     *
+     * @return array{class-string, string}|false|null
+     */
+    private static function findConcretePillar(string $callerClass, string $method): array|false|null
+    {
+        $className = ServiceMapAccessors::classNameFor(ReflectionClassPool::get($callerClass), $method);
+        if ($className === null) {
+            return false;
+        }
+
+        foreach (self::SPECIAL_RESOLVABLE_TYPES as $kind => $baseClass) {
+            if (is_a($className, $baseClass, true)) {
+                return ReflectionClassPool::get($className)->isAbstract() ? false : [$className, $kind];
+            }
+        }
+
+        return self::isDefined($className) ? false : null;
+    }
+
+    private static function isDefined(string $className): bool
+    {
+        return class_exists($className, false) || interface_exists($className, false) || trait_exists($className, false);
     }
 
     /**

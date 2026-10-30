@@ -85,6 +85,8 @@ final class UndiscoveredFacadeFinderTest extends TestCase
         $namespace = 'Unloadable' . bin2hex(random_bytes(4));
         $path = $this->writeModuleFile('Broken', 'BrokenFacade', $namespace);
         file_put_contents($path, "<?php\nnamespace " . $namespace . ";\n" . $body);
+        $realPath = realpath($path);
+        self::assertIsString($realPath);
         $autoload = static function (string $class) use ($namespace, $path): void {
             if ($class === $namespace . '\\BrokenFacade') {
                 require $path;
@@ -97,7 +99,7 @@ final class UndiscoveredFacadeFinderTest extends TestCase
             self::assertCount(1, $found);
             self::assertSame(UndiscoveredFacadeProblem::NotLoadable, $found[0]->problem);
             self::assertNotSame('', $found[0]->reason);
-            self::assertStringContainsString($path . ':3', $found[0]->reason);
+            self::assertStringContainsString($realPath . ':3', $found[0]->reason);
             self::assertSame($found[0]->reason, $this->find($path)[0]->reason);
         } finally {
             spl_autoload_unregister($autoload);

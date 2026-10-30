@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework;
 
+use Gacela\Framework\ClassResolver\AbstractClassResolver;
 use Gacela\Framework\ClassResolver\DocBlockService\DocBlockServiceResolver;
 use Gacela\Framework\ServiceResolver\DocBlockResolvable;
 use Gacela\Framework\ServiceResolver\DocBlockResolver;
@@ -35,8 +36,10 @@ trait ServiceResolverAwareTrait
             return $this->customServices[$method];
         }
 
-        $resolvable = $this->getDocBlockResolver()->getDocBlockResolvable($method);
-        $service = $this->resolveService($resolvable);
+        $pillar = DocBlockResolver::concretePillarFor(static::class, $method);
+        $service = $pillar !== null
+            ? AbstractClassResolver::resolveClassName($pillar[0], $pillar[1])
+            : $this->resolveService($this->getDocBlockResolver()->getDocBlockResolvable($method));
 
         return $this->customServices[$method] = $service;
     }

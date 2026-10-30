@@ -27,6 +27,8 @@ final class UnloadableModuleTest extends TestCase
         mkdir($root . DIRECTORY_SEPARATOR . 'Healthy');
         $path = $root . DIRECTORY_SEPARATOR . 'Broken' . DIRECTORY_SEPARATOR . 'BrokenFacade.php';
         file_put_contents($path, '<?php' . "\nnamespace " . $namespace . '\\Broken;' . "\n" . $body);
+        $realPath = realpath($path);
+        self::assertIsString($realPath);
         file_put_contents(
             $root . DIRECTORY_SEPARATOR . 'Healthy' . DIRECTORY_SEPARATOR . 'HealthyFacade.php',
             '<?php namespace ' . $namespace . '\\Healthy; final class HealthyFacade extends \\Gacela\\Framework\\AbstractFacade {}',
@@ -61,7 +63,7 @@ final class UnloadableModuleTest extends TestCase
             $checks = array_column($report['checks'], null, 'name');
             self::assertSame('warn', $checks['undiscovered facades']['status']);
             self::assertStringContainsString($message, implode(' ', $checks['undiscovered facades']['details']));
-            self::assertStringContainsString($path . ':3', implode(' ', $checks['undiscovered facades']['details']));
+            self::assertStringContainsString($realPath . ':3', implode(' ', $checks['undiscovered facades']['details']));
             self::assertArrayHasKey('IDE metadata', $checks);
             Gacela::bootstrap($root, static function (GacelaConfig $config) use ($namespace): void {
                 $config->resetInMemoryCache();

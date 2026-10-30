@@ -128,6 +128,18 @@ final class ConfigTest extends TestCase
         );
     }
 
+    public function test_get_cache_dir_takes_the_app_root_itself_as_given(): void
+    {
+        $appRoot = DIRECTORY_SEPARATOR . 'app';
+        foreach ([$appRoot, $appRoot . DIRECTORY_SEPARATOR] as $directory) {
+            $setup = SetupGacela::fromGacelaConfig((new GacelaConfig())->enableFileCache($directory));
+            $config = Config::createWithSetup($setup);
+            $config->setAppRootDir($appRoot);
+
+            self::assertSame($appRoot, $config->getCacheDir());
+        }
+    }
+
     public function test_get_cache_dir_prefixes_relative_path_with_app_root_and_separator(): void
     {
         $appRoot = Config::getInstance()->getAppRootDir();

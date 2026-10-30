@@ -11,6 +11,7 @@ use Gacela\Framework\Event\Dispatcher\EventDispatchingCapabilities;
 use ReflectionFunction;
 use ReflectionMethod;
 use stdClass;
+use Throwable;
 
 use function array_values;
 use function count;
@@ -101,6 +102,7 @@ trait CacheableTrait
     protected function cached(Closure $callback, ?string $method = null, ?array $args = null): mixed
     {
         $inferred = $method === null;
+        $throughClosure = false;
         $argsGiven = $args !== null;
         if ($method === null) {
             $frame = debug_backtrace(0, 2)[1] ?? null;
@@ -131,6 +133,7 @@ trait CacheableTrait
             $frame = $this->cacheableMethodUpTheStack($callback);
             if ($frame !== null) {
                 $method = $frame['function'];
+                $throughClosure = $frame['closure'];
                 if (!$argsGiven) {
                     $args = $frame['args'];
                 }
@@ -144,7 +147,15 @@ trait CacheableTrait
         }
 
         $storage = CacheableConfig::getStorage();
-        $cacheKey = $this->buildCacheKey($method, $args, $attribute);
+        try {
+            $cacheKey = $this->buildCacheKey($method, $args, $attribute);
+        } catch (Throwable $throwable) {
+            if (!$throughClosure || $argsGiven) {
+                throw $throwable;
+            }
+
+            return $callback();
+        }
 
         $miss = self::$cacheMissSentinel ??= new stdClass();
         /** @var mixed $cached */
@@ -184,7 +195,7 @@ trait CacheableTrait
     }
 
     /**
-     * @return array{function: string, args: list<mixed>}|null
+     * @return array{function: string, args: list<mixed>, closure: bool}|null
      */
     private function cacheableMethodUpTheStack(Closure $callback): ?array
     {
@@ -200,7 +211,7 @@ trait CacheableTrait
             if ($this->resolveCacheableAttribute($frame['function']) instanceof Cacheable) {
                 $captured = $throughClosure ? array_values((new ReflectionFunction($callback))->getStaticVariables()) : [];
 
-                return ['function' => $frame['function'], 'args' => [...$frame['args'], ...$closureArgs, ...$captured]];
+                return ['function' => $frame['function'], 'args' => [...$frame['args'], ...$closureArgs, ...$captured], 'closure' => $throughClosure];
             }
         }
 

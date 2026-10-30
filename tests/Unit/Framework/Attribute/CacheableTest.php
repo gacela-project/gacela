@@ -358,6 +358,15 @@ final class CacheableTest extends TestCase
         self::assertSame(2, $facade->calls);
     }
 
+    public function test_nonserializable_captured_inputs_run_uncached(): void
+    {
+        $facade = new TestFacadeWithClosureCached();
+
+        self::assertSame(42, $facade->callback());
+        self::assertSame(42, $facade->callback());
+        self::assertSame(2, $facade->calls);
+    }
+
     public function test_a_closure_without_an_attributed_method_runs_uncached(): void
     {
         $facade = new TestFacadeWithClosureCached();
@@ -1084,6 +1093,14 @@ final class TestFacadeWithClosureCached
         }
 
         return $result;
+    }
+
+    #[Cacheable]
+    public function callback(): int
+    {
+        $load = fn (): int => $this->compute(42);
+
+        return (fn (): int => $this->cached(static fn (): int => $load()))();
     }
 
     public function uncached(int $id): int

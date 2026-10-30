@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gacela\Framework\Config;
 
+use Gacela\Framework\Cache\GlobLiteral;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigFileInterface;
 use Gacela\Framework\Config\GacelaFileConfig\GacelaConfigItem;
 
@@ -143,8 +144,9 @@ final class ConfigLoader
             // directory they are in, so a file that matches later counts too.
             // Not the directory of a plain path: that is often the root, which
             // anything writing a cache or a dotfile there would change.
-            if (strpbrk($pattern, '*?[{') === false) {
-                $paths[] = $pattern;
+            $escapedRoot = !$this->isAbsolute($watched);
+            if (!$this->hasPattern($pattern, $escapedRoot)) {
+                $paths[] = $escapedRoot ? GlobLiteral::unescape($pattern) : $pattern;
                 continue;
             }
 
@@ -152,7 +154,7 @@ final class ConfigLoader
                 $paths[] = $match;
             }
 
-            $paths[] = $this->nearestLiteralDirectory($pattern);
+            $paths[] = $this->nearestLiteralDirectory($pattern, $escapedRoot);
         }
 
         return $paths;
@@ -346,15 +348,20 @@ final class ConfigLoader
             || str_contains($path, '://');
     }
 
-    private function nearestLiteralDirectory(string $pattern): string
+    private function hasPattern(string $pattern, bool $escapedRoot): bool
+    {
+        return $escapedRoot ? GlobLiteral::hasPattern($pattern) : strpbrk($pattern, '*?[{') !== false;
+    }
+
+    private function nearestLiteralDirectory(string $pattern, bool $escapedRoot = true): string
     {
         $directory = dirname($pattern);
 
-        while (strpbrk($directory, '*?[{') !== false && dirname($directory) !== $directory) {
+        while ($this->hasPattern($directory, $escapedRoot) && dirname($directory) !== $directory) {
             $directory = dirname($directory);
         }
 
-        return $directory;
+        return $escapedRoot ? GlobLiteral::unescape($directory) : $directory;
     }
 
     /**

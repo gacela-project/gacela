@@ -12,6 +12,8 @@ use Gacela\Framework\ClassResolver\Cache\CustomServicesPhpCache;
 use Gacela\Framework\ClassResolver\ClassResolverCache;
 use Gacela\Framework\Config\Config;
 use Gacela\Framework\Gacela;
+use Gacela\Framework\Plugins\Membership\MembershipCache;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -19,11 +21,8 @@ use function dirname;
 use function file_put_contents;
 use function is_dir;
 use function mkdir;
-use function rmdir;
 use function str_repeat;
 use function uniqid;
-
-use function unlink;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -37,7 +36,7 @@ final class CacheManagerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cacheDir = __DIR__ . DIRECTORY_SEPARATOR . '.gacela-cache-' . uniqid('', true);
+        $this->cacheDir = __DIR__ . DIRECTORY_SEPARATOR . '.gacela-cache-[v1]{eu,us}-' . uniqid('', true);
         mkdir($this->cacheDir, 0o777, true);
 
         $cacheDir = $this->cacheDir;
@@ -52,11 +51,7 @@ final class CacheManagerTest extends TestCase
     protected function tearDown(): void
     {
         $this->restoreReadOnlyDirs();
-        foreach ((array) glob($this->cacheDir . DIRECTORY_SEPARATOR . '*') as $file) {
-            @unlink((string) $file);
-        }
-
-        @rmdir($this->cacheDir);
+        DirectoryUtil::removeDir($this->cacheDir);
     }
 
     /**
@@ -141,6 +136,22 @@ final class CacheManagerTest extends TestCase
         self::assertFileDoesNotExist($classNameCache);
         self::assertFileDoesNotExist($customServicesCache);
         self::assertSame([], $this->cacheManager->getExistingCacheFilesWithSize());
+    }
+
+    public function test_clear_removes_every_membership_fingerprint(): void
+    {
+        $paths = [];
+        foreach (['first', 'second'] as $fingerprint) {
+            $path = (new MembershipCache($this->cacheDir, Config::getInstance()->getAppRootDir(), $fingerprint))->path();
+            file_put_contents($path, '<?php return [];');
+            $paths[] = $path;
+        }
+
+        self::assertSame([], $this->cacheManager->clearCache());
+
+        foreach ($paths as $path) {
+            self::assertFileDoesNotExist($path);
+        }
     }
 
     public function test_clear_returns_every_path_that_could_not_be_removed(): void

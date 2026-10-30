@@ -21,7 +21,7 @@ final class CacheFilePath
             return null;
         }
 
-        return $directory . '/' . self::ENTRY_PREFIX . '*.php';
+        return GlobLiteral::escape($directory) . '/' . self::ENTRY_PREFIX . '*.php';
     }
 
     /**
@@ -38,7 +38,7 @@ final class CacheFilePath
             return null;
         }
 
-        return $directory . '/' . str_repeat('[0-9a-fA-F]', 40) . '.php';
+        return GlobLiteral::escape($directory) . '/' . str_repeat('[0-9a-fA-F]', 40) . '.php';
     }
 
     public static function forLegacyEntry(string $directory, string $key): ?string

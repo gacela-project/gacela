@@ -10,14 +10,14 @@ use Gacela\Framework\Cache\FileCache;
 use Gacela\Framework\Cache\WritableDirectory;
 use Gacela\Framework\Config\ConfigSourceStamps;
 use Gacela\Framework\Config\MergedConfigCache;
+use GacelaTest\Feature\Util\DirectoryUtil;
 use GacelaTest\Fixtures\ReadOnlyDirTrait;
 use GacelaTest\Fixtures\SortDirection;
-use PHPUnit\Framework\Attributes\DataProvider;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function file_put_contents;
-use function rmdir;
 use function sprintf;
 use function str_replace;
 use function strlen;
@@ -34,7 +34,7 @@ final class MergedConfigCacheTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-merged-config-test-' . uniqid('', true);
+        $this->cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gacela-merged-config-test-[v1]{eu,us}-' . uniqid('', true);
         WritableDirectory::resetCache();
     }
 
@@ -525,10 +525,6 @@ final class MergedConfigCacheTest extends TestCase
 
     private function removeCacheDirIfExists(): void
     {
-        foreach (glob($this->cacheDir . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
-            @unlink($file);
-        }
-
-        @rmdir($this->cacheDir);
+        DirectoryUtil::removeDir($this->cacheDir);
     }
 }

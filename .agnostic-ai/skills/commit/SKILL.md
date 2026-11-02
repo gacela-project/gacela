@@ -1,5 +1,5 @@
 ---
-description: Auto-fix, verify, and commit changes with a conventional commit message
+description: Use to fix style, run the gate and commit with a conventional message.
 argument-hint: "[optional commit message]"
 disable-model-invocation: true
 x-claude:

@@ -1,5 +1,5 @@
 ---
-description: Push the branch and open a PR with a concise description and one label
+description: Use to push the branch and open a Gacela pull request.
 argument-hint: "[issue-number]"
 disable-model-invocation: true
 x-claude:
@@ -25,9 +25,9 @@ Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff m
 
 ## Instructions
 
-1. **Changelog**: if the branch has user-facing changes and `CHANGELOG.md` is untouched, run `/changelog` and commit the entry before pushing.
+1. **Changelog**: for user-facing changes with `CHANGELOG.md` untouched, run `/changelog` and commit the entry first.
 
-2. **Gate**: run the gate. Never push a red branch.
+2. **Gate**: run it. Never push a red branch.
 
 3. **Push**:
    ```bash
@@ -40,9 +40,9 @@ Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff m
    ```
 
 5. **Body**: read `.github/PULL_REQUEST_TEMPLATE.md` first and use its exact section headers, emojis included. Never hardcode them.
-   - Say *what* changed and *why*, not how.
+   - Say what changed and why, not how.
    - Add `Closes #<number>` so the merge closes the issue.
-   - Keep it under 15 lines. No session links, tool footers, or attribution trailers.
+   - Under 15 lines. No session links, footers or attribution.
 
 6. **Create**:
    ```bash
@@ -53,7 +53,7 @@ Run `git branch --show-current`, `git log main..HEAD --oneline`, and `git diff m
    EOF
    )"
    ```
-   Pick the one most relevant label:
+   One label:
    - `bug`: `fix/` branch
    - `enhancement`: `feat/` branch
    - `refactoring`: `ref/` branch, no behavior change

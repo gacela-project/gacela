@@ -1,5 +1,5 @@
 ---
-description: Take one Gacela GitHub issue end to end with TDD and open a PR that closes it.
+description: Use to fix, implement or pick up one Gacela GitHub issue by number, through to a PR.
 argument-hint: "[issue-number]"
 x-codex:
   interface:
@@ -20,9 +20,9 @@ Run `gh issue view <number> --json title,body,labels,assignees,state,comments` f
 
 ## Phase 1: Setup
 
-1. **Parse the issue number** (strip a leading `#`). Read the body and every comment: later comments often change the scope.
+1. **Parse the issue number** (strip a leading `#`). Read the body and every comment; later ones change the scope.
 
-2. **Check the claims.** Verify on current `main` that the problem still exists before acting on the issue's findings. If it is already fixed, say so on the issue and stop.
+2. **Check the claims** on current `main`. If already fixed, say so on the issue and stop.
 
 3. **Assign yourself** if unassigned:
    ```bash
@@ -37,23 +37,19 @@ Run `gh issue view <number> --json title,body,labels,assignees,state,comments` f
 
 ## Phase 2: Plan
 
-5. Plan before coding:
-   - The acceptance scenario the issue asks for, and what is out of scope.
-   - Affected files, respecting module boundaries (Facades only across modules).
-   - The TDD order: which failing test comes first.
-   Stay in the issue's scope. File a follow-up issue for unrelated problems you find.
+5. Plan before coding: the acceptance scenario and non-goals; affected files (Facades only across modules); the first failing test. Stay in scope; file a follow-up issue for unrelated problems.
 
 ## Phase 3: Implement
 
 6. TDD: failing test first, minimal code to pass, then refactor with tests green.
 
-7. Update `docs/` pages that state the old behavior, flag lists, or exit codes.
+7. Update `docs/` pages that state the old behavior, flags or exit codes.
 
-8. Run the gate and fix every failure.
+8. Run the gate; fix every failure.
 
 ## Phase 4: Ship
 
-9. Run `/changelog` for a user-facing change, and commit its entry with the change.
+9. For a user-facing change, run `/changelog` and commit its entry with the change.
 
 10. Commit:
     ```bash
@@ -63,7 +59,7 @@ Run `gh issue view <number> --json title,body,labels,assignees,state,comments` f
     Related to #<number>"
     ```
 
-11. Open the PR with the `pr` skill and `#<number>`, so the body says `Closes #<number>`.
+11. Open the PR with the `pr` skill and `#<number>` (body says `Closes #<number>`).
 
 ## Checklist
 

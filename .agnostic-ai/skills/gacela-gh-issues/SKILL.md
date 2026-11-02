@@ -1,5 +1,5 @@
 ---
-description: Work ready Gacela issues that are unassigned or yours through gacela-gh-issue.
+description: Use to work the queue of open Gacela issues that are unassigned or yours, several in a row.
 argument-hint: "[--limit N] [--label foo] [--dry-run]"
 disable-model-invocation: true
 x-claude:
@@ -14,7 +14,7 @@ x-codex:
 
 ## Purpose
 
-Process every ready GitHub issue that is **unassigned** or **assigned to the current user (`@me`)** through `gacela-gh-issue`. Work sequentially by default; honor explicit priority, parallelism and continuation instructions. Keep one owner, branch and PR per issue, and wait for dependencies to merge.
+Run `gacela-gh-issue` on every open issue that is unassigned or assigned to `@me`. Work sequentially unless told otherwise; follow explicit priority and parallelism instructions. One owner, branch and PR per issue; wait for dependencies to merge.
 
 ## Args
 
@@ -26,7 +26,7 @@ Strip a leading `#` from issue numbers.
 
 ## Phase 1: Discover
 
-Fetch open issues that are unassigned **or** assigned to `@me`. GitHub search does not OR these cleanly, so run two queries and merge:
+Search cannot OR these, so run two queries and merge:
 
 ```bash
 # Unassigned
@@ -40,11 +40,11 @@ gh issue list --state open --assignee "@me" \
 
 Merge:
 - Deduplicate by `number`.
-- Keep only issues whose `assignees` is empty or holds the current user (`gh api user -q .login`). Drop anyone else's.
+- Keep issues whose `assignees` is empty or holds the current user (`gh api user -q .login`).
 - Apply `--label`.
-- Follow the user's requested order and bugs-first policy. Otherwise sort by priority label, then oldest `createdAt`. Apply `--limit` after ordering.
+- Order as the user asked, bugs first. Otherwise by priority label, then oldest `createdAt`. Apply `--limit` after ordering.
 
-Print the queue, one `#<num> <title> [unassigned|@me]` per line. If it is empty, exit cleanly.
+Print one `#<num> <title> [unassigned|@me]` per line. Exit if empty.
 
 ## Phase 2: Worktree Sanity
 
@@ -54,7 +54,7 @@ Before touching any issue:
 git status --porcelain
 ```
 
-Refuse new work in a dirty worktree. When resuming an issue, inspect and continue its owned changes instead of treating them as unrelated dirt. Never auto-stash or reset another session's work. Historical reflog entries do not prove concurrent editing; inspect the current branch, worktree and live processes.
+Refuse new work in a dirty worktree. When resuming an issue, continue its own changes. Never stash or reset another session's work; check the current branch, worktree and live processes, not the reflog.
 
 For sequential work, sync `main`:
 
@@ -62,52 +62,52 @@ For sequential work, sync `main`:
 git checkout main && git pull --ff-only origin main
 ```
 
-If the pull refuses because `main` has diverged from `origin/main`, report it and preserve it. Never reset `main`.
+If `main` has diverged from `origin/main`, report it. Never reset `main`.
 
-For authorized parallel work, give each independent issue an isolated worktree and branch from fresh `origin/main`; do not switch a checkout another worker owns. Respect the requested concurrency limit and coordinate expensive checks centrally. Never run typechecks concurrently.
+For authorized parallel work, give each issue its own worktree and a branch from fresh `origin/main`; never switch a checkout another worker owns. Respect the concurrency limit, run expensive checks centrally, never run typechecks concurrently.
 
 ## Phase 3: Process Loop
 
-For each ready issue, within the authorized concurrency limit:
+For each ready issue:
 
-1. **Re-check assignment**, since someone may have taken it:
+1. **Re-check assignment**:
    ```bash
    gh issue view <num> --json assignees -q '.assignees[].login'
    ```
-   Empty or only you: proceed. Any other login: skip the issue. Recheck current code and related PRs before starting, since another worker may already have fixed it.
+   Empty or only you: proceed. Any other login: skip. Check current code and related PRs: it may already be fixed.
 
-2. **Run the `gacela-gh-issue` skill** with the issue number. It owns self-assignment, the branch, the TDD implementation, the gate, the changelog entry, the `Related to #<num>` commit, and the PR.
+2. **Run the `gacela-gh-issue` skill** with the issue number. It owns assignment, branch, TDD, gate, changelog, commit and PR.
 
 3. **Wait for CI**:
    ```bash
    gh pr checks --watch
    ```
-   Required checks must be green on the current head before merging. Fix routine failures on the branch. On continuation or an observation timeout, inspect the live run or process before restarting it; a missing tool handle is not proof it stopped.
+   Required checks must be green on the current head before merging. Fix routine failures on the branch. After a timeout, inspect the live run before restarting it.
 
 4. **Merge**:
    ```bash
    gh pr merge --auto --squash --admin
    ```
-   A `BLOCKED` or `REVIEW_REQUIRED` state needs `--admin`. Mutation testing is manual-only. Do not run or dispatch it automatically while processing the queue.
+   `BLOCKED` or `REVIEW_REQUIRED` needs `--admin`. Never run or dispatch mutation testing from the queue.
 
-5. **Sync `main`** in its owned checkout for the next issue:
+5. **Sync `main`**:
    ```bash
    git checkout main && git pull --ff-only origin main
    ```
 
-After another PR merges, update affected branches, resolve conflicts and repeat checks affected by the update. Reuse successful validation on unchanged code instead of running the same gate in the worker, main thread and commit hook.
+After a PR merges, update affected branches, resolve conflicts and rerun only the checks the update affects. Do not repeat a gate on unchanged code.
 
 ## Stop Conditions
 
-Repair routine test, style and CI failures within the issue. If the issue cannot proceed, report the exact blocker and preserve its worktree. Stop the run by default; when the user explicitly asked to keep going, continue only with independent ready issues. Never count a pending or failed check as green, retry blindly, or force a blocked dependency.
+Fix routine test, style and CI failures within the issue. If it cannot proceed, report the exact blocker and keep its worktree. Stop the run, unless the user asked to keep going: then continue only with independent ready issues. Never count a pending or failed check as green, retry blindly, or force a blocked dependency.
 
-Stop starting issues when `--limit` is reached or no ready issue remains. Report each unresolved issue and its PR or branch.
+Stop at `--limit` or when no ready issue remains. Report each unresolved issue with its PR or branch.
 
 ## Dry Run
 
-With `--dry-run`, run Phase 1 only and print the queue. No assignment, no branches, no commits.
+Run Phase 1 only and print the queue. Change nothing.
 
 ## Notes
 
-- PRs run CI on Windows too. When a change touches paths, check the Windows job before merging.
-- Keep one issue per PR unless the issue asks otherwise.
+- CI runs on Windows too: for a change that touches paths, check the Windows job before merging.
+- One issue per PR unless the issue says otherwise.

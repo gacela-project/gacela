@@ -1,5 +1,5 @@
 ---
-description: Update the CHANGELOG.md Unreleased section from recent commits or a manual entry
+description: Use to add a user-facing entry to CHANGELOG.md Unreleased.
 argument-hint: "[entry text]"
 disable-model-invocation: true
 x-claude:

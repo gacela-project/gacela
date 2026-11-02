@@ -37,7 +37,7 @@ composer infection         # Mutation testing (needs Xdebug)
 composer phpbench          # Benchmarks (phpbench-base, phpbench-ref to compare)
 ```
 
-The pre-commit hook runs the gate. CI also runs `module-graph` and `phpbench`. Mutation testing runs only when explicitly requested, locally with `composer infection` or manually through the Infection workflow. Never dispatch it automatically for a push, pull request, schedule, or queue run.
+The pre-commit hook runs the gate. CI also runs `module-graph` and `phpbench`. Run mutation testing only on request (`composer infection` or the Infection workflow); never dispatch it for a push, pull request, schedule or queue run.
 
 ## Git and pull requests
 
@@ -45,4 +45,4 @@ The pre-commit hook runs the gate. CI also runs `module-graph` and `phpbench`. M
 - Never mention Claude, AI, or LLM in commits, PRs, or issues.
 - Branch prefixes: `feat/`, `fix/`, `ref/`, `docs/`.
 - `feat:` and `fix:` changes update `## Unreleased` in `CHANGELOG.md` in the same commit.
-- PRs follow `.github/PULL_REQUEST_TEMPLATE.md` exactly, emoji headers included. Assign `@me` and pick one label: `bug`, `enhancement`, `refactoring`, `documentation`, `pure testing`, `dependencies`. One concern per PR. List the validation you ran (at least the gate), link the issue, and add screenshots when docs or CLI output change.
+- PRs follow `.github/PULL_REQUEST_TEMPLATE.md` exactly, emoji headers included. Assign `@me`, one label: `bug`, `enhancement`, `refactoring`, `documentation`, `pure testing`, `dependencies`. One concern per PR. List validation run (at least the gate), link the issue, add screenshots when docs or CLI output change.

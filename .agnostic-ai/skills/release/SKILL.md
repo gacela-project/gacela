@@ -1,5 +1,5 @@
 ---
-description: Create a new versioned Gacela release via release.sh
+description: Use to cut, publish or roll back a versioned Gacela release.
 argument-hint: "[version]"
 disable-model-invocation: true
 x-claude:
@@ -12,7 +12,7 @@ x-codex:
 
 # Release
 
-`release.sh` is the release automation. Always run it; never do release steps by hand. `.github/RELEASE.md` has the full reference.
+Run `release.sh` for every release step; never do them by hand. Reference: `.github/RELEASE.md`.
 
 ## Context
 
@@ -38,11 +38,11 @@ Run `git branch --show-current`, `git status --porcelain`, and `git describe --t
    Abort if empty.
 4. Pick the version:
    - If the argument is `X.Y.Z`, validate the format.
-   - Otherwise suggest a bump from the Unreleased content: breaking → major, `### Added` → minor, fixes only → patch. With no version, `release.sh` bumps the minor.
+   - Otherwise suggest a bump from Unreleased: breaking → major, `### Added` → minor, fixes only → patch. With no version, `release.sh` bumps the minor.
 
 ### Phase 2: Dry run
 
-5. Preview, and confirm the output with the user before going on:
+5. Preview and confirm the output with the user:
    ```bash
    ./release.sh X.Y.Z --dry-run
    ```
@@ -53,25 +53,25 @@ Run `git branch --show-current`, `git status --porcelain`, and `git describe --t
    ```bash
    ./release.sh X.Y.Z
    ```
-   The script rewrites `CHANGELOG.md`, checks that CI is green for HEAD through GitHub check-runs (it does not run the tests locally), commits `chore(release): X.Y.Z`, creates a signed tag `X.Y.Z`, pushes `main` and the tag, and creates the GitHub release from the changelog section. The version comes from the git tag, so no file holds it.
+   The script rewrites `CHANGELOG.md`, checks GitHub check-runs are green for HEAD (no local tests), commits `chore(release): X.Y.Z`, creates a signed tag `X.Y.Z`, pushes `main` and the tag, and creates the GitHub release from the changelog section. No file holds the version; the tag does.
 
 7. If it fails midway:
    ```bash
    ./release.sh --rollback
    ```
-   This restores `CHANGELOG.md` from the latest backup.
+   Restores `CHANGELOG.md` from the latest backup.
 
 ### Phase 4: Verify
 
-8. Confirm the release, then check the published artifact: the tag on Packagist, and `git archive X.Y.Z` for what ships.
+8. Check the release, the tag on Packagist, and `git archive X.Y.Z` for what ships.
    ```bash
    gh release view X.Y.Z
    ```
-   Use `git archive`, not `composer archive`: `composer infection` writes into fixture directories, and a mangled path can leave a directory such as `\\ar/...` (from `/var/...`). It is gitignored and skipped by rector, but it breaks `composer archive`. Packagist builds from `git archive` too.
+   Use `git archive`, not `composer archive`: `composer infection` can leave a mangled fixture directory such as `\\ar/...` (from `/var/...`) that breaks `composer archive`. Packagist builds from `git archive`.
 9. Report the release URL.
 
 ## Rules
 
 - Tags are unprefixed: `1.14.2`, never `v1.14.2`.
 - Never run `git tag` or `gh release create` by hand.
-- Use `--skip-tests` (skips the CI check) or `--force` (skips confirmation) only when the user asks. `--without-gh-release` tags and pushes without a GitHub release.
+- Use `--skip-tests` (skips the CI check) or `--force` (skips confirmation) only when asked. `--without-gh-release` tags and pushes without a GitHub release.

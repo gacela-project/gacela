@@ -1,5 +1,5 @@
 ---
-description: Run performance benchmarks, create baselines, and compare results
+description: Use to run PHPBench benchmarks, save a baseline or compare against one.
 argument-hint: "[run|baseline|compare|filter]"
 disable-model-invocation: true
 x-claude:

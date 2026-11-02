@@ -1,6 +1,6 @@
 ---
 name: clean-code-reviewer
-description: Reviews a diff against the Gacela code review rules. Use before opening or merging a PR.
+description: Use before opening or merging a PR to review a diff against the Gacela code review rules.
 model: strong
 readonly: true
 can:
